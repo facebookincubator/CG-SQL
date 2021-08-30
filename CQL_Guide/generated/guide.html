@@ -441,7 +441,7 @@
 <li><a href="#cql0084-second-argument-must-be-a-string-in-function-group_concat">CQL0084: second argument must be a string in function ‘group_concat’</a></li>
 <li><a href="#cql0085-all-arguments-must-be-strings-strftime">CQL0085: all arguments must be strings ‘strftime’</a></li>
 <li><a href="#cql0086-first-argument-must-be-a-string-in-function-function">CQL0086: first argument must be a string in function ‘function’</a></li>
-<li><a href="#cql0087-available-for-re-use">CQL0087 available for re-use</a></li>
+<li><a href="#cql0087-first-argument-must-be-of-type-real-function">CQL0087: first argument must be of type real ‘function’</a></li>
 <li><a href="#cql0088-user-function-may-not-appear-in-the-context-of-a-sql-statement-function_name">CQL0088: User function may not appear in the context of a SQL statement ‘function_name’</a></li>
 <li><a href="#cql0089-user-function-may-only-appear-in-the-context-of-a-sql-statement-function_name">CQL0089: User function may only appear in the context of a SQL statement ‘function_name’</a></li>
 <li><a href="#cql0090-stored-proc-calls-may-not-appear-in-the-context-of-a-sql-statement-proc_name">CQL0090: Stored proc calls may not appear in the context of a SQL statement ‘proc_name’</a></li>
@@ -3239,6 +3239,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <li>julianday</li>
 <li>substr</li>
 <li>replace</li>
+<li>round</li>
 <li>trim</li>
 <li>ltrim</li>
 <li>rtrim</li>
@@ -6566,7 +6567,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Thu Aug 19 10:57:53 PDT 2021</p>
+<p>Snapshot as of Mon Aug 30 15:00:54 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8410,7 +8411,8 @@ enforce_pop_stmt:
 <h3 id="cql0086-first-argument-must-be-a-string-in-function-function">CQL0086: first argument must be a string in function ‘function’</h3>
 <p>The first argument of the function is the formatting string. The other arguments are variable and many complex conversions will apply.</p>
 <hr />
-<h3 id="cql0087-available-for-re-use">CQL0087 available for re-use</h3>
+<h3 id="cql0087-first-argument-must-be-of-type-real-function">CQL0087: first argument must be of type real ‘function’</h3>
+<p>The first argument of the function (e.g. round) should be of type ‘real’.</p>
 <hr />
 <h3 id="cql0088-user-function-may-not-appear-in-the-context-of-a-sql-statement-function_name">CQL0088: User function may not appear in the context of a SQL statement ‘function_name’</h3>
 <p>External C functions declared with <code>declare function ...</code> are not for use in sqlite. They may not appear inside statements.</p>
@@ -9847,7 +9849,7 @@ enforce_pop_stmt:
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Thu Aug 19 10:57:54 PDT 2021</p>
+<p>Snapshot as of Mon Aug 30 15:00:55 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -10150,7 +10152,8 @@ view:  &#39;{&#39;
        opt_attributes
        projection
        &#39;&quot;select&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
-       &#39;&quot;selectArgs&quot;&#39; &#39;:&#39; &#39;[&#39; &#39;]&#39;
+       &#39;&quot;selectArgs&quot;&#39; &#39;:&#39; &#39;[&#39; &#39;]&#39; &#39;,&#39;
+       dependencies
        &#39;}&#39;
   ;
 

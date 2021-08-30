@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_OBJC)
+
+// stubs to avoid link errors
+cql_noexport void cg_objc_main(ast_node *head) {}
+
+#else
+
 // Perform codegen of the various nodes to "Obj-C".
 
 #include "cg_objc.h"
@@ -595,3 +602,5 @@ cql_noexport void cg_objc_main(ast_node *head) {
   objc_extension_header = NULL;
   is_string_column_encoded = 0;
 }
+
+#endif

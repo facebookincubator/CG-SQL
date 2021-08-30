@@ -225,8 +225,14 @@ cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
 
+cql_noexport bool_t is_select_stmt(ast_node *_Nullable ast);
+cql_noexport bool_t is_delete_stmt(ast_node *_Nullable ast);
+cql_noexport bool_t is_insert_stmt(ast_node *_Nullable ast);
+cql_noexport bool_t is_update_stmt(ast_node *_Nullable ast);
+
 cql_noexport bool_t is_strlit(ast_node *_Nullable node);
 cql_noexport bool_t is_id(ast_node *_Nullable node);
+cql_noexport bool_t is_id_or_dot(ast_node *_Nullable node);
 cql_noexport bool_t is_proclit(ast_node *_Nullable node);
 cql_noexport bool_t is_at_rc(ast_node *_Nullable node);
 cql_noexport bool_t is_primitive(ast_node *_Nullable  node);
@@ -269,62 +275,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   PRI_CONCAT  ||
 */
 
-/*
------  NOT is weaker than bitwise &
-sqlite> select not 2 & 1;
-1
-sqlite> select (not 2) & 1;
-0
-sqlite> select not (2 & 1);
-1
-
------  NOT is weaker than BETWEEN
-sqlite> select not 0 between -1 and 2;
-0
-sqlite> select (not 0) between -1 and 2;
-1
-sqlite> select not (0 between -1 and 2);
-0
-
------  NOT is stronger than logical AND
-sqlite> select not 1 and (1/0);
-0
-sqlite> select not 0 and (1/0);
-[error]
-
------  NOT is weaker than <=
-sqlite> select not 0 <= 1;
-0
-sqlite> select not (0 <= 1);
-0
-sqlite> select (not 0) <= 1;
-1
-
------  ~ is stronger than *
-sqlite> select ~1*3;
--6
-sqlite> select (~1)*3;
--6
-sqlite> select ~(1*3);
--4
-
------ between is equal to equality and left to right
-sqlite> select 1=2 between 2 and 2;
-0
-sqlite> select 1=(2 between 2 and 2);
-1
-sqlite> select (1=2) between 2 and 2;
-0
-
-sqlite> select 0 between -2 and -1 = 4;
-0
-sqlite> select (0 between -2 and -1) = 4;
-0
-sqlite> select 0 between -2 and (-1 = 4);
-1
-
-
-*/
+#define has_hex_prefix(s) (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
 
 #define EXPR_PRI_ROOT -999
 #define EXPR_PRI_ASSIGN 0

@@ -5,6 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_GEN_SQL)
+
+// stubs to avoid link errors, 
+
+cql_noexport void gen_init() {}
+cql_export void gen_cleanup() {}
+cql_noexport void gen_misc_attrs_to_stdout(ast_node *ast) {}
+cql_noexport void gen_to_stdout(ast_node *ast, gen_func fn) {}
+cql_noexport void gen_one_stmt_to_stdout(ast_node *ast) {}
+cql_noexport void gen_stmt_list_to_stdout(ast_node *ast) {}
+
+#else
+
 // (re)generate equivalent SQL to what we parsed
 // validate the tree shape in painful detail as we go
 
@@ -574,6 +587,10 @@ static void gen_col_def(ast_node *def) {
 
   gen_printf("%s ", name);
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+  // with no SEM we can't do this conversion, we're just doing vanilla echos
+  gen_data_type(data_type);
+#else
   if (gen_callbacks && gen_callbacks->long_to_int_conv && def->sem && (def->sem->sem_type & SEM_TYPE_AUTOINCREMENT)) {
     // semantic checking must have already validated that this is either an integer or long_integer
     sem_t core_type = core_type_of(def->sem->sem_type);
@@ -583,6 +600,7 @@ static void gen_col_def(ast_node *def) {
   else {
     gen_data_type(data_type);
   }
+#endif
   gen_col_attrs(attrs);
 }
 
@@ -614,6 +632,15 @@ cql_noexport bool_t eval_column_callback(ast_node *ast) {
   return suppress;
 }
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// if SEM isn't in the picture there are no "variables"
+bool_t eval_variables_callback(ast_node *ast) {
+  return false;
+}
+
+#else
+
 bool_t eval_variables_callback(ast_node *ast) {
   bool_t suppress = 0;
   if (gen_callbacks && gen_callbacks->variables_callback && ast->sem && is_variable(ast->sem->sem_type)) {
@@ -624,6 +651,7 @@ bool_t eval_variables_callback(ast_node *ast) {
   }
   return suppress;
 }
+#endif
 
 cql_noexport void gen_col_or_key(ast_node *def) {
   if (is_ast_col_def(def)) {
@@ -920,6 +948,11 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   EXTRACT_STRING(left, ast->left);
   EXTRACT_STRING(right, ast->right);
 
+
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+  // simple case if SEM is not available
+  gen_printf("%s.%s", left, right);
+#else
   if (!strcmp("ARGUMENTS", left) && ast->sem && ast->sem->name) {
     // special case for rewritten arguments, hide the "ARGUMENTS." stuff
     gen_printf("%s", ast->sem->name);
@@ -927,6 +960,7 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   else {
     gen_printf("%s.%s", left, right);
   }
+#endif
 }
 
 static void gen_expr_in_pred(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -1326,6 +1360,9 @@ static void gen_expr_cast(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
       return;
     }
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+  // with no SEM we can't do optimization, nor is there any need
+#else
     if (expr->sem && ast->sem) {
       // If the expression is already of the correct type (less nullability), we don't need the cast at all.
       sem_t core_type_expr = core_type_of(expr->sem->sem_type);
@@ -1337,7 +1374,9 @@ static void gen_expr_cast(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
         return;
       }
     }
+#endif
   }
+
   gen_printf("CAST(");
   gen_expr(expr, EXPR_PRI_ROOT);
   gen_printf(" AS ");
@@ -1395,9 +1434,13 @@ static void gen_select_expr_list(ast_node *ast) {
   symtab *temp = used_alias_syms;
   used_alias_syms = NULL;
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+  // if there is no SEM then we can't do this minificiation
+#else
   if (ast->sem && gen_callbacks && gen_callbacks->minify_aliases) {
     used_alias_syms = ast->sem->used_symbols;
   }
+#endif
 
   for (ast_node *item = ast; item; item = item->right) {
     ast_node *expr = item->left;
@@ -2625,6 +2668,9 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
   }
   gen_printf(")");
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+  // if no SEM then we can't do the full declaration, do the best we can with just AST
+#else
   if (ast->sem) {
     if (has_out_stmt_result(ast)) {
       gen_printf(" OUT");
@@ -2667,6 +2713,7 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
       gen_printf(" USING TRANSACTION");
     }
   }
+#endif
 }
 
 static void gen_typed_name(ast_node *ast) {
@@ -3652,3 +3699,5 @@ cql_export void gen_cleanup() {
   gen_callbacks = NULL;
   used_alias_syms = NULL;
 }
+
+#endif

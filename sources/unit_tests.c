@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_UNIT_TESTS)
+
+// stubs to avoid link errors
+cql_noexport void run_unit_tests() {}
+
+#else
+
 #include "cql.h"
 #include "cg_common.h"
 #include "unit_tests.h"
@@ -165,3 +172,5 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
   TEST_ASSERT(test_frag_tricky_case());
 }
+
+#endif

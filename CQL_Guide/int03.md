@@ -57,7 +57,7 @@ information.  See [Part 2](https://cgsql.dev/cql-guide/int02) for those details.
 // variables and any loose calls or DML.  Any code that needs to run in the
 // global scope will be added to the global_proc.  This is the only codegen
 // error that is possible.  If you need global code and you don't have a global
-// proc then you can't proceed.  Semantic analysis doƒesn't want to know that stuff.
+// proc then you can't proceed.  Semantic analysis doesn't want to know that stuff.
 // Otherwise all we do is set up the most general buffers for the global case and
 // spit out a function with the correct name.
 cql_noexport void cg_c_main(ast_node *head) { ... }
@@ -73,7 +73,7 @@ are some samples from that table with the most common options:
   DDL_STMT_INIT(create_table_stmt);
   DDL_STMT_INIT(create_view_stmt);
 ```
-The DDL (Data Definition Lanaguage) statements all get the same handling:  The text of the statement
+The DDL (Data Definition Language) statements all get the same handling:  The text of the statement
 is generated from the AST. Any variables are bound and then the statement is executed.  The work
 is done with `cg_bound_sql_statement` which will be discussed later.
 
@@ -131,7 +131,7 @@ such as the `if_stmt` AST node mapping to `cg_if_stmt`.
   STMT_INIT(assign);
 ```
 
-The next group of declarations arethe expressions, with precedence and operator specified.
+The next group of declarations are the expressions, with precedence and operator specified.
 There is a lot of code sharing between AST types as you can see from this sample:
 
 ```C
@@ -192,7 +192,7 @@ Finally, many built-in functions need special codegen, such as:
 ### Character Buffers and Byte Buffers
 
 The first kind of text output that CQL could produce was the AST echoing.  This was originally done directly with `fprintf` but
-that was never going to be flexible enough -- we have to be able to emitt that output into other places like comments, or the text of
+that was never going to be flexible enough -- we have to be able to emit that output into other places like comments, or the text of
 SQL statements.  This need forces that pass to use character buffers, which we touched on in Part 1.  C Code generation
 has a more profound dependency on character buffers -- they are literally all over `cg_c.c` and we need to go over how they are used
 if we're going to understand the codegen passes.
@@ -299,7 +299,7 @@ This means that while processing a procedure the codegen that declares say scrat
 which would go to `cg_scratch_vars_output`, is going to target the `proc_locals` buffer
 which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is invoked the
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
-will go into there rather than being acculated at the global level.
+will go into there rather than being accumulated at the global level.
 
 Note: it's possible to have code that is not in a procedure (see [`--global_proc`](https://cgsql.dev/cql-guide/x1#--global_proc-name)).
 
@@ -325,7 +325,7 @@ came late to the CQL compiler. However the CQL runtime `cqlrt.c` (and `cqlrt_com
 These functions *are* used in the generated code to create result sets at runtime.
 
 `bytebuf` was so useful that it found its way back from the runtime into the compiler itself, and is used by
-other code-generators like the schema upgrader.   The semantic analyzer also uses it to help with query
+other code-generators like the schema upgraded.   The semantic analyzer also uses it to help with query
 fragments and to track the various upgrade annotations.
 
 Both `charbuf` and `bytebuf` are simple enough that they don't need special discussion. Surveying
@@ -458,7 +458,7 @@ void combine(cql_nullable_int32 x, cql_nullable_int32 y, cql_nullable_int32 *_No
 * `*result` : holds the answer, it's null if either of `_tmp_n_int_1.is_null`, `_tmp_n_int_2.is_null` is true
    * otherwise it's `_tmp_n_int_1.value + _tmp_n_int_2.value`
 
-So, in general, we need to emit arbitarily many statements in the course of evaluating even simple looking expressions
+So, in general, we need to emit arbitrarily many statements in the course of evaluating even simple looking expressions
 and we need good mechanisms to manage that.  This is what we'll talk about in the coming sections.
 
 #### Managing Scratch Variables
@@ -520,7 +520,7 @@ So again, we have exactly the text we need to test for null, and the test we nee
 Additional notes:
 
 * scratch variables can be re-used, they are on a "stack"
-* a bitmask is used to track which scratch variables have aleady had a declaration emitted, so they are only declared once
+* a bitmask is used to track which scratch variables have already had a declaration emitted, so they are only declared once
 * the variable name is based on the current value of the `stack_level` variable which is increased in a push/pop fashion as temporaries come in and out of scope
   * this strategy isn't perfect, but the C compiler can consolidate locals even if the CQL codegen is not perfect so it ends up being not so bad
   * importantly, there is one `stack_level` variable for all temporaries not one `stack_level` for every type of temporary, this seemed like a reasonable simplification
@@ -624,7 +624,7 @@ static void cg_expr_is_null(ast_node *expr, charbuf *is_null, charbuf *value) {
   bprintf(is_null, "0"); // the result of is null is never null
 
   // The fact that this is not constant not null for not null reference types reflects
-  // the weird state of affairs with uninitualized reference variables which
+  // the weird state of affairs with uninitialized reference variables which
   // must be null even if they are typed not null.
 
   if (is_not_nullable(sem_type_expr) && !is_ref_type(sem_type_expr)) {
@@ -676,7 +676,7 @@ How do we know that parens are not needed here? It seems like the operand of `IS
 
 So, none of these require further wrapping regardless of what is above the `IS NULL` node in the tree because of the high strength of the `.` and `!` operators.
 
-Other cases are usually simpler, such as "no parentheses need to be added by the child node becasue it will be used as the argument to a helper
+Other cases are usually simpler, such as "no parentheses need to be added by the child node because it will be used as the argument to a helper
 function so there will always be parens hard-coded anyway".  However these things need to be carefully tested hence the huge variety of codegen tests.
 
 Note that after calling `cg_expr` the stack level was artificially increased.  We'll get to that in the next section.  For now, looking at `POP_EVAL` we
@@ -1171,7 +1171,7 @@ the text `"test"` was created and how that gets more complicated.
 The first thing to remember is that the generator creates C programs.  That means
 no matter what kind of literal we might be processing it's ending up encoded as a C string for the C
 compiler.  The C compiler will be the first thing the decodes the text the generator produces and
-puts the byte we need into the final programs data segment or whereever.  That means if we have
+puts the byte we need into the final programs data segment or wherever.  That means if we have
 SQL format strings that need to go to SQLite they will be twice-encoded, the SQL string is escaped
 as needed for SQLite and *that* is escaped again for the C compiler.
 
@@ -1203,7 +1203,7 @@ Let's review that in some detail:
   * internal newlines do not require escaping in SQL, they are in the string as the newline character not '\n' or anything like that
     * to be completely precise the byte value 0x0a is in the string unescaped
   * internal single quotes don't require escaping in C, these have to be doubled in a SQL string
-  * the outer double quotes are removed and replaced by single quoates during this process
+  * the outer double quotes are removed and replaced by single quotes during this process
   * the AST now has a valid SQL formatted string possibly with weird characters in it
   * as before, this string has to be formatted for the C compiler so now it has to be escaped again
   * the single quotes require no further processing, though now there are quite a few of them
@@ -1319,7 +1319,7 @@ cql_cleanup:
   * the type of binding is encoded very economically
   * the "2" here refers to two arguments
 * the usual error processing happens with `cql_error_trace` and `goto cql_cleanup`
-* the statment is executed with `sqlite3_step`
+* the statement is executed with `sqlite3_step`
 * temporary statements are finalized immediately with `cql_finalize_stmt`
   * in this case its redundant because the code is going to fall through to cleanup anyway
   * in general there could be many statements and we want to finalize immediately
@@ -1714,7 +1714,7 @@ Do to the `FETCH` we do the following:
   * again, we do it this way so that there is less error checking needed in the generated code
   * also, there are fewer function calls so the code is overall smaller
   * trivia: `multibind` and `multifetch` are totally references to _The Fifth Element_
-    * hence, they should be pronouced like Leeloo saying "multipass"
+    * hence, they should be pronounced like Leeloo saying "multipass"
 * `multifetch` uses the varargs to clobber the contents of the target variables if there is no row according to `_rc_`
 * `multifetch` uses the `CQL_DATA_TYPE_NOT_NULL` to decide if it should ask SQLite first if the column is null
 
@@ -1797,7 +1797,7 @@ This is done by:
 
 ### Cursors With Storage
 
-We now come to the big motivating reasons for having the notion of shapes in the CQL langauge.
+We now come to the big motivating reasons for having the notion of shapes in the CQL language.
 This particular case was the first such example in the language and it's very commonly
 used and saves you a lot of typing.  Like the other examples it's only sugar in that
 it doesn't give you any new language powers you didn't have, but it does give clarity
@@ -1861,7 +1861,7 @@ Let's look at what's different here:
 
 That's pretty much it.  The beauty of this is that you can't get the declarations of your locals wrong
 and you don't have to list them all no matter how big the data is.  If the data shape changes the
-cursor change automatically changes to accomodate it.  Everything is still statically typed.
+cursor change automatically changes to accommodate it.  Everything is still statically typed.
 
 Now lets look at the loop pattern:
 

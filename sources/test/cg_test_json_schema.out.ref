@@ -1634,7 +1634,9 @@
         }
       ],
       "select" : "SELECT id, name FROM Foo",
-      "selectArgs" : [  ]
+      "selectArgs" : [  ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo" ]
     }
 
     The statement ending at line XXXX
@@ -1663,19 +1665,21 @@
         }
       ],
       "select" : "SELECT id, name FROM Foo",
-      "selectArgs" : [  ]
+      "selectArgs" : [  ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo" ]
     }
 
     The statement ending at line XXXX
 
     CREATE VIEW MyOtherView AS
     SELECT *
-      FROM Foo
+      FROM MyView
 
     ,
     {
       "name" : "MyOtherView",
-      "CRC" : "3780930254538624223",
+      "CRC" : "-1954362021923391672",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -1691,8 +1695,11 @@
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM Foo",
-      "selectArgs" : [  ]
+      "select" : "SELECT id, name FROM MyView",
+      "selectArgs" : [  ],
+      "fromTables" : [ "Foo" ],
+      "usesViews" : [ "MyView" ],
+      "usesTables" : [ "Foo" ]
     }
 
     The statement ending at line XXXX
@@ -1733,7 +1740,9 @@
         }
       ],
       "select" : "SELECT id, name FROM Foo",
-      "selectArgs" : [  ]
+      "selectArgs" : [  ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo" ]
     }
 
     The statement ending at line XXXX
@@ -1763,7 +1772,9 @@
         }
       ],
       "select" : "SELECT id, name FROM Foo",
-      "selectArgs" : [  ]
+      "selectArgs" : [  ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo" ]
     }
 
     The statement ending at line XXXX
@@ -1794,7 +1805,9 @@
         }
       ],
       "select" : "SELECT id, name FROM Foo",
-      "selectArgs" : [  ]
+      "selectArgs" : [  ],
+      "fromTables" : [ "Foo" ],
+      "usesTables" : [ "Foo" ]
     }
 
     The statement ending at line XXXX
@@ -1827,7 +1840,9 @@
         }
       ],
       "select" : "SELECT 1 AS foo, T1.id, T1.name FROM T1",
-      "selectArgs" : [  ]
+      "selectArgs" : [  ],
+      "fromTables" : [ "T1" ],
+      "usesTables" : [ "T1" ]
     }
   ],
   "indices" : [

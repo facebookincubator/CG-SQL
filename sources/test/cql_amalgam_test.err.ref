@@ -5,7 +5,7 @@ Error at test/cql_amalgam_test_semantic_error.sql:XXXX : in str : CQL0069: name 
 semantic errors present; no code gen.
 
 -- RUN test/cql_amalgam_test_syntax_error.sql:
-Error at test/cql_amalgam_test_syntax_error.sql:XXXX : syntax error, unexpected end of file, expecting ';'
+Error at test/cql_amalgam_test_syntax_error.sql:XXXX : syntax error, unexpected SELECT
 Parse errors found, no further passes will run.
 
 -- RUN test/cql_amalgam_test_success.sql:

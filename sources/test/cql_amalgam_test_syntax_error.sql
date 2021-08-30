@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-select 1
+select select

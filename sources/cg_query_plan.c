@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_QUERY_PLAN)
+
+// stubs to avoid link errors
+cql_noexport void cg_query_plan_main(ast_node *head) {}
+
+#else
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -613,3 +621,5 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   query_plans = NULL;
   cg_qp_callbacks = NULL;
 }
+
+#endif

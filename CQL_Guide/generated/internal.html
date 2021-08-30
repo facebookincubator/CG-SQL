@@ -279,6 +279,20 @@
 <li><a href="#result-sets">Result Sets</a></li>
 <li><a href="#recap-1">Recap</a></li>
 </ul></li>
+<li><a href="#part-4-testing">Part 4: Testing</a>
+<ul>
+<li><a href="#preface-3">Preface</a></li>
+</ul></li>
+<li><a href="#testing">Testing</a>
+<ul>
+<li><a href="#parse-tests">Parse Tests</a></li>
+<li><a href="#sematic-tests">Sematic Tests</a></li>
+<li><a href="#code-generation-tests">Code Generation Tests</a></li>
+<li><a href="#run-tests">Run Tests</a></li>
+<li><a href="#schema-upgrade-testing">Schema Upgrade Testing</a></li>
+<li><a href="#testing-the-line-directives-produced-by-cql">Testing the <code>#line</code> directives produced by CQL</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul></li>
 </ul>
 </nav>
 <!--- @generated -->
@@ -290,13 +304,13 @@
 -- LICENSE file in the root directory of this source tree.
 -->
 <h3 id="preface">Preface</h3>
-<p>The following is a summary of the implementation theory of the CQL compiler. This is an adjuct to the Guide proper, which describes the language, and to a lesser extent the code that the compiler generates.</p>
+<p>The following is a summary of the implementation theory of the CQL compiler. This is an adjunct to the Guide proper, which describes the language, and to a lesser extent the code that the compiler generates.</p>
 <p>The actual code is heavily commented, so it’s better to read the code to see the details of how any particular operation happens rather than try to guess from the language specification or from this overview. However, some things, like general principles, really are nowhere (or everywhere) in the codebase and it’s important to understand how things hang together.</p>
 <p>If you choose to go on adventures in the source code, especially if you aren’t already familiar with compilers and how they are typically built, this document is a good place to start.</p>
 <h2 id="general-structure">General Structure</h2>
 <p>The CQL compiler uses a very standard lex+yacc parser, though to be more precise it’s flex+bison. The grammar is a large subset of the SQLite dialect of SQL augmented with control flow and compiler directives. As a consequence, it’s a useful asset in-and-of-itself. If you’re looking for an economical SQL grammar, you could do a lot worse than start with the one CQL uses. The grammar is of course in the usual <code>.y</code> format that bison consumes but it’s also extracted into more readable versions for use in the railroad diagram and the Guide documentation. Any of those sources would be a good starting place for a modest SQL project in need of a grammar.</p>
 <h3 id="lexical-analysis">Lexical Analysis</h3>
-<p>Inside of <code>cql.l</code> you’ll find the formal defintion of all the tokens. These of course correspond to the various tokens needed to parse the SQL language, plus a few more of the CQL control flow extensions. There’s no need to discuss the approximately 150 such tokens, but the following points are of general interest:</p>
+<p>Inside of <code>cql.l</code> you’ll find the formal definition of all the tokens. These of course correspond to the various tokens needed to parse the SQL language, plus a few more of the CQL control flow extensions. There’s no need to discuss the approximately 150 such tokens, but the following points are of general interest:</p>
 <ul>
 <li>the lexer expects plain text files, and all the tokens are defined in plain ASCII only, however
 <ul>
@@ -314,7 +328,6 @@
 <ul>
 <li>the second option is actually the longest token, so without the trailing qualifier it would be preferred</li>
 <li>hence, where a continuation is possible, the trailing context must be specified in multi=word tokens</li>
-<li>a quick reading shows this isn’t done completely consistently and that should be fixed…</li>
 </ul></li>
 </ul></li>
 <li>there is special processing needed to lex <code>/* ... */</code> comments correctly</li>
@@ -354,7 +367,7 @@
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable left<span class="op">;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable right<span class="op">;</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> ast_node<span class="op">;</span></span></code></pre></div>
-<p>This node gives the tree its shape, this is is how all the expression operators and statments get encoded. An example shows this more clearly:</p>
+<p>This node gives the tree its shape and is how all the expression operators and statements get encoded. An example shows this more clearly:</p>
 <pre><code>SET X := 1 + 3;
 
   {assign}
@@ -404,7 +417,7 @@
 <li><code>cstr_literal</code> : true if the string was specified using “C” syntax (see below)</li>
 </ul>
 <p>CQL supports C style string literals with C style escapes such as <code>"foo\n"</code>. These are normalized into the SQL version of the same literal so that SQLite will see a literal it understands. However, if the origin of the string was the C string form (i.e. like <code>"foo"</code> rather than <code>'bar'</code>) then the <code>cstr_literal</code> boolean flag will be set. When echoing the program back as plain text, the C string will be converted back to the C form for display to a user. But when providing the string to Sqlite, it’s in SQL format.</p>
-<p>Identifiers can be distinguised from string literals because the quotation marks (always <code>''</code>) are still in the string.</p>
+<p>Identifiers can be distinguished from string literals because the quotation marks (always <code>''</code>) are still in the string.</p>
 <p>This node type is always a leaf.</p>
 <h4 id="the-number-node-num_ast_node">The Number Node <code>num_ast_node</code></h4>
 <div class="sourceCode" id="cb9"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> num_ast_node <span class="op">{</span></span>
@@ -416,7 +429,7 @@
 <li><code>num_type</code> : the kind of numeric</li>
 <li><code>value</code> : the text of the number</li>
 </ul>
-<p>All numerics are stored as strings so that there is no loss of precision. This is important because it is entirely possible that the CQL compiler is built with a different floating point library, than the target system, or different integer sizes. As a result CQL does not evaluate anything outside of an explicit <code>const(...)</code> expression. This policy avoids integer overflows at compile time or loss of floating point precesion. Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.</p>
+<p>All numerics are stored as strings so that there is no loss of precision. This is important because it is entirely possible that the CQL compiler is built with a different floating point library, than the target system, or different integer sizes. As a result CQL does not evaluate anything outside of an explicit <code>const(...)</code> expression. This policy avoids integer overflows at compile time or loss of floating point precision. Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.</p>
 <p>This node type is always a leaf.</p>
 <h3 id="examples">Examples</h3>
 <h4 id="example-1-a-let-statement-and-expression">Example 1: A LET statement and expression</h4>
@@ -459,7 +472,7 @@ END IF;
         | {let_stmt}
           | {name z}
           | {strlit &#39;this&#39;}</code></pre>
-<p>Note that the string “this” was normalized to ‘this’ (which was trivial in this case) but rest assured that <code>cstr_literal</code> was set. This is shown because the text of the statement came out with double quotes. The text above was not the input to the compiler, the compiler was actually given this text</p>
+<p>Note that the string “this” was normalized to ‘this’ (which was trivial in this case) but rest assured that <code>cstr_literal</code> was set. This is shown because the text of the statement came out with double quotes. The text above was not the input to the compiler, the compiler was actually given this text:</p>
 <pre><code>if x then let x := 1.5e7; else if y then let y := &#39;that&#39;; else let z := &quot;this&quot;; end if;</code></pre>
 <p>And it was normalized into what you see as part of the output. We’ll talk about this output echoing in coming sections. As you can see, the compiler can be used as a SQL normalizer/beautifier.</p>
 <h4 id="example-3-a-select-statement">Example 3: A SELECT statement</h4>
@@ -500,7 +513,7 @@ LIMIT 3;
       | | {int 3}
       | {select_offset}</code></pre>
 <p>As you can see the trees rapidly get more complex. The <code>SELECT</code> statement has many optional pieces and so the AST actually has places in its skeleton where these could go but are absent (e.g. <code>GROUP BY</code>, <code>HAVING</code>, <code>ORDER BY</code>, and <code>OFFSET</code> are all missing).</p>
-<p>The shape of the AST is largely self evident from the above, but you can easily cross check it against what’s in <code>cql.y</code> for details and then look at <code>gen_sql.c</code> for decoding tips (discussed below).</p>
+<p>The shape of the AST is largely self-evident from the above, but you can easily cross check it against what’s in <code>cql.y</code> for details and then look at <code>gen_sql.c</code> for decoding tips (discussed below).</p>
 <p>The compiler can produce these diagrams in ‘dot’ format which makes pretty pictures, but the reality is that for non-trivial examples those pictures are so large as to be unreadable whereas the simple text format remains readable even up to several hundred lines of output. The text is also readily searchable, and diffable. The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.</p>
 <p>We’ll discuss semantic analysis in <a href="https://cgsql.dev/cql-guide/int02">Part 2</a>.</p>
 <h3 id="ast-definitions">AST definitions</h3>
@@ -530,11 +543,11 @@ AST(or)</code></pre>
 <h2 id="echoing-the-ast">Echoing the AST</h2>
 <p>The first set of features that were built (after parsing) provided the ability to echo back the parse tree as SQL again. This all happens in <code>gen_sql.c</code>. Since this code has to be able to echo back any tree, it often has the best and simplest examples of how to crack the AST for any particular type of node you might be interested in.</p>
 <p>There are several reasons why we might want to echo the SQL, but the inescapable one is this: any hunk of SQL that appears as part of a CQL program (i.e. DDL/DML rather than control flow like <code>IF</code>/<code>WHILE</code>) has to go to SQLite and SQLite expects that code to be plain text. So the AST must be reformatted as plain text that is exactly equivalent to the original input. The process of parsing removes extra white space and parentheses, so to get something that looks reasonable some standard formatting (including indenting) is applied to the output text. This has the effect of normalizing the input and potentially beautifying it as well (especially if it was poorly formatted initially).</p>
-<p>To see these features you need only run cql with no arguments, by default it reads <code>stdin</code>, makes the AST, and then emits the normalized, formatted text. If there are no syntax errors, the input and the output should be equivalent.</p>
+<p>To see these features, you need only run cql with no arguments. By default, it reads <code>stdin</code>, makes the AST, and then emits the normalized, formatted text. If there are no syntax errors, the input and the output should be equivalent.</p>
 <p>Standard formatting is essential, but CQL also has a number of extra demands.</p>
 <p>CQL includes a lot of versioning directives like <code>@create(...)</code> <code>@delete(...)</code> and so forth. SQLite should never see these things when the DDL for SQLite is emitted. But when echoing the input they should be included. Additionally, any local or global variables in a SQL statement should be replaced with <code>?</code> in the text that goes to SQLite and then followed up with binding instructions. We’ll cover the binding more in the section code generation, but importantly this also has to significantly alter the output. As a result the standard formatter includes extensive configurability to get these various results.</p>
 <h3 id="configuring-the-output-with-callbacks-and-flags">Configuring the Output with Callbacks and Flags</h3>
-<p>Some of these features, like variable binding, require a callback to the formatter’s client. The client gets a notification, along with a few control variables, and it can then decide exactly what goes in the output The control structure is <code>struct gen_sql_callbacks</code>, and it is described below. This structure includes the various callbacks (all of which are optional) and each callback gets a ‘context’ pointer of its choice. The context pointer is some arbitrary <code>void *</code> value that you provide, which will be given to your function along with the AST pointer relevant to the call. The callback also gets the current output buffer so it can choose to emit something (like ‘?’) into the stream.</p>
+<p>Some of these features, like variable binding, require a callback to the formatter’s client. The client gets a notification, along with a few control variables, and it can then decide exactly what goes in the output. The control structure is <code>struct gen_sql_callbacks</code>, and it is described below. This structure includes the various callbacks (all of which are optional) and each callback gets a ‘context’ pointer of its choice. The context pointer is some arbitrary <code>void *</code> value that you provide, which will be given to your function along with the AST pointer relevant to the call. The callback also gets the current output buffer so it can choose to emit something (like ‘?’) into the stream.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// signature for a callback, you get your context plus the ast</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">// if you return true then the normal output is suppressed</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">// in any case the output you provide is emitted</span></span>
@@ -625,13 +638,13 @@ AST(or)</code></pre>
 <span id="cb17-69"><a href="#cb17-69" aria-hidden="true" tabindex="-1"></a>  <span class="co">// boolean storage.</span></span>
 <span id="cb17-70"><a href="#cb17-70" aria-hidden="true" tabindex="-1"></a>  bool_t long_to_int_conv<span class="op">;</span></span>
 <span id="cb17-71"><a href="#cb17-71" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> gen_sql_callbacks<span class="op">;</span></span></code></pre></div>
-<p>Each callback can be best understood by reading the source, so we’ll avoid trying to precisely define it here. But it is helpful to give the jist of these options.</p>
+<p>Each callback can be best understood by reading the source, so we’ll avoid trying to precisely define it here. But it is helpful to give the gist of these options.</p>
 <ul>
 <li><code>mode</code> : one of the three enum modes that control overall behavior</li>
 <li><code>variables_callback</code> : invoked when a variable appears in the SQL, the caller can record the specific variable and then use it for binding</li>
 <li><code>col_def_callback</code> : when creating the “baseline” schema you don’t want column definitions from later schema to be included, this gives you a chance to suppress them</li>
 <li><code>star_callback</code> : normally the <code>*</code> in <code>select *</code> or <code>select T.*</code> is expanded when emitting for SQLite, this callback does the expansion when appropriate</li>
-<li><code>if_not_exists_callback</code> : when generating DDL for schema upgrade you typically want to force <code>IF NOT EXISTS</code> to be added to the schema even if it wasn’t present in the declaration, this callback lets you do that</li>
+<li><code>if_not_exists_callback</code> : when generating DDL for schema upgrade you typically want to force <code>IF NOT EXISTS</code> to be added to the schema even if it wasn’t present in the declaration; this callback lets you do that</li>
 <li><code>convert_hex</code> : if true, hex constants are converted to decimal; used when emitting JSON because JSON doesn’t understand hex constants</li>
 <li><code>minify_casts</code> : minification converts casts like <code>CAST(NULL AS TEXT)</code> to just <code>NULL</code> – the former is only useful for type information, SQLite does need to see it</li>
 <li><code>minify_aliases</code> : unused column aliases as in <code>select foo.x as some_really_long_alias</code> can be removed from the output when targeting SQLite to save space</li>
@@ -644,7 +657,7 @@ AST(or)</code></pre>
 <li><code>ast</code> : the part of the tree to print</li>
 <li><code>_callbacks</code> : the optional callbacks described above</li>
 </ul>
-<p>To use these you’ll need to these functions as well.</p>
+<p>To use these you’ll need to these functions as well:</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_init<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> gen_cleanup<span class="op">(</span><span class="dt">void</span><span class="op">);</span></span></code></pre></div>
 <p>You’ll want to call <code>gen_init()</code> one time before doing any generation. That sets up the necessary tables. When you’re done use <code>gen_cleanup()</code> to release any memory that was allocated in setup. You don’t have to do the cleanup step if the process is going to exit anyway, however, because of the amalgam options, <code>cql_main()</code> assumes it might be called again and so it tidies things up rather than risk leaking.</p>
@@ -737,16 +750,16 @@ AST(or)</code></pre>
 <span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot;END IF&quot;</span><span class="op">);</span></span>
 <span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>There is a general boiler plate sort of recursive form to all of these, they follow the same basic shape. These patterns are designed to make it impossible to walk the tree incorrectly. If the tree shape changes because of a grammar change, you get immediate concrete failures were the tree walk has to change. Since there are test cases to cover every tree shape you can always be sure you have it exactly right if the macros do not force assertion failures.</p>
+<p>There is a general boilerplate sort of recursive form to all of these; they follow the same basic shape. These patterns are designed to make it impossible to walk the tree incorrectly. If the tree shape changes because of a grammar change, you get immediate concrete failures where the tree walk has to change. Since there are test cases to cover every tree shape you can always be sure you have it exactly right if the macros do not force assertion failures.</p>
 <p>The steps were:</p>
 <ul>
 <li>use <code>Contract</code> to assert that the node we are given is the type we expect</li>
 <li>use <code>EXTRACT</code> macros (detailed below) to get the tree parts you want starting from your root</li>
 <li>use <code>gen_printf</code> to emit the constant pieces of the statement</li>
-<li>use recursion to print sub fragments (like the IF condition in this case)</li>
+<li>use recursion to print sub-fragments (like the IF condition in this case)</li>
 <li>test the tree fragments where optional pieces are present, emit them as needed</li>
 </ul>
-<p>It might be instructive to include <code>gen_cond_action</code>, it is entirely unremarkable:</p>
+<p>It might be instructive to include <code>gen_cond_action</code>; it is entirely unremarkable:</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_cond_action<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_cond_action<span class="op">(</span>ast<span class="op">));</span></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  EXTRACT<span class="op">(</span>stmt_list<span class="op">,</span> ast<span class="op">-&gt;</span>right<span class="op">);</span></span>
@@ -755,7 +768,7 @@ AST(or)</code></pre>
 <span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  gen_printf<span class="op">(</span><span class="st">&quot; THEN</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
 <span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  gen_stmt_list<span class="op">(</span>stmt_list<span class="op">);</span></span>
 <span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>A <code>cond_action</code> node has an expression on the left and a statement list on the right it can appear in the base <code>IF x THEN y</code> part of the <code>IF</code> or as <code>ELSE IF x THEN y</code>. Either case is formatted the same.</p>
+<p>A <code>cond_action</code> node has an expression on the left and a statement list on the right; it can appear in the base <code>IF x THEN y</code> part of the <code>IF</code> or as <code>ELSE IF x THEN y</code>. Either case is formatted the same.</p>
 <h4 id="extraction-macros">Extraction Macros</h4>
 <p>These macros are used by all the parts of CQL that walk the AST. They are designed to make it impossible for you to get the tree shape wrong without immediately failing. We do not ever want to walk off the tree in some exotic way and then continue to several levels of recursion before things go wrong. CQL locks this down by checking the node type at every step – any problems are found immediately, exactly at the extraction site, and can be quickly corrected. Again 100% coverage of all the tree shapes makes this rock solid, so CQL never compromises on 100% code coverage. The most common macros all appear in this example:</p>
 <ul>
@@ -788,8 +801,8 @@ AST(or)</code></pre>
 <li><code>EXTRACT_ANY_NOTNULL</code> : as above but not optional</li>
 <li><code>EXTRACT_NUM_TYPE</code> : extracts the num_type field from a numeric AST node</li>
 </ul>
-<p>The <code>ANY</code> variants are usually re-dispatched with something like <code>gen_expr</code> that uses the name table again (and that will check the type) or else extracted value is checked with ad hoc logic immediately after extraction if it’s perhaps one of two or three variations. In all cases the idea is to force a failure very quickly. <code>gen_root_expr()</code> for instance in the <code>if_cond</code> example will fail immediately if the node it gets is not an expression type.</p>
-<p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few sample and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> function into a new/needed semantic analysis or code-generation functions.</p>
+<p>The <code>ANY</code> variants are usually re-dispatched with something like <code>gen_expr</code> that uses the name table again (and that will check the type) or else the extracted value is checked with ad hoc logic immediately after extraction if it’s perhaps one of two or three variations. In all cases the idea is to force a failure very quickly. <code>gen_root_expr()</code> for instance in the <code>if_cond</code> example will fail immediately if the node it gets is not an expression type.</p>
+<p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few samples and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> function into a new/needed semantic analysis or code-generation function.</p>
 <h2 id="part-2-semantic-analysis">Part 2: Semantic Analysis</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -1475,7 +1488,7 @@ AST(or)</code></pre>
 <li>true + 2 -&gt; integer</li>
 <li>‘x’ + 1 -&gt; not compatible</li>
 </ul>
-<p>Note that <code>sem_combine_types</code> assumes the types have already been checked for compatability and will use <code>Contract</code> to enforce this. You should be using other helpers like <code>is_numeric_compat</code> and friends to ensure the types agree before computing the combined type. A list of values that must be compatible with each other (e.g. in <code>needle IN (haystack)</code>) can be checked using <code>sem_verify_compat</code> repeatedly.</p>
+<p>Note that <code>sem_combine_types</code> assumes the types have already been checked for compatibility and will use <code>Contract</code> to enforce this. You should be using other helpers like <code>is_numeric_compat</code> and friends to ensure the types agree before computing the combined type. A list of values that must be compatible with each other (e.g. in <code>needle IN (haystack)</code>) can be checked using <code>sem_verify_compat</code> repeatedly.</p>
 <h4 id="example-validator-sem_verify_assignment">Example Validator : sem_verify_assignment</h4>
 <p>The <code>sem_verify_assignment</code> function is used any time there is something like a logical <code>assignment</code> going on. There are two important cases:</p>
 <ul>
@@ -1752,7 +1765,7 @@ AST(or)</code></pre>
 <li>if it’s not my case, return <code>CONTINUE</code></li>
 <li>if it is my case return <code>STOP</code> (maybe with an error)</li>
 </ul>
-<p>Some of the mini-resolvers have quite a few steps but any one mini-resolver is only about a screenful of code and it does one job.</p>
+<p>Some of the mini-resolvers have quite a few steps, but any one mini-resolver is only about a screenful of code and it does one job.</p>
 <h3 id="structure-types-and-the-notion-of-shapes">Structure types and the notion of Shapes</h3>
 <p>Earlier we discussed <code>SEM_TYPE_STRUCT</code> briefly. Recall the basic notion of the <code>structure</code> type:</p>
 <div class="sourceCode" id="cb69"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="co">// for tables and views and the result of a select</span></span>
@@ -2240,7 +2253,7 @@ AST(or)</code></pre>
 <span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a><span class="co">// variables and any loose calls or DML.  Any code that needs to run in the</span></span>
 <span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a><span class="co">// global scope will be added to the global_proc.  This is the only codegen</span></span>
 <span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a><span class="co">// error that is possible.  If you need global code and you don&#39;t have a global</span></span>
-<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a><span class="co">// proc then you can&#39;t proceed.  Semantic analysis doƒesn&#39;t want to know that stuff.</span></span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a><span class="co">// proc then you can&#39;t proceed.  Semantic analysis doesn&#39;t want to know that stuff.</span></span>
 <span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Otherwise all we do is set up the most general buffers for the global case and</span></span>
 <span id="cb88-7"><a href="#cb88-7" aria-hidden="true" tabindex="-1"></a><span class="co">// spit out a function with the correct name.</span></span>
 <span id="cb88-8"><a href="#cb88-8" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> cg_c_main<span class="op">(</span>ast_node <span class="op">*</span>head<span class="op">)</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span></code></pre></div>
@@ -2380,7 +2393,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <p>One interesting but unexpected feature of <code>charbuf</code> is that it provides helper methods for indenting a buffer by whatever amount you like. This turns out to be invaluable in creating well formatted C code because of course we want (e.g.) the body of an <code>if</code> statement to be indented. CQL tries to create well formatted code that is readable by humans as much as possible.</p>
 <h4 id="byte-buffers">Byte Buffers</h4>
 <p>The byte buffers type, creatively called <code>bytebuf</code> is less commonly used. It is a peer to <code>charbuf</code> and provides a growable binary buffer. <code>bytebuf</code> is often used to hold arrays of structures. Interestingly, <code>cg_c.c</code> doesn’t currently consume byte buffers, the presence of <code>bytebuf.c</code> actually came late to the CQL compiler. However the CQL runtime <code>cqlrt.c</code> (and <code>cqlrt_common.c</code>) provide <code>cql_bytebuf_open</code>, <code>cql_bytebuf_alloc</code> and, <code>cql_bytebuf_close</code> which are akin to the <code>charbuf</code> methods. These functions <em>are</em> used in the generated code to create result sets at runtime.</p>
-<p><code>bytebuf</code> was so useful that it found its way back from the runtime into the compiler itself, and is used by other code-generators like the schema upgrader. The semantic analyzer also uses it to help with query fragments and to track the various upgrade annotations.</p>
+<p><code>bytebuf</code> was so useful that it found its way back from the runtime into the compiler itself, and is used by other code-generators like the schema upgraded. The semantic analyzer also uses it to help with query fragments and to track the various upgrade annotations.</p>
 <p>Both <code>charbuf</code> and <code>bytebuf</code> are simple enough that they don’t need special discussion. Surveying their code and comments is an excellent exercise for the reader.</p>
 <h3 id="expressions">Expressions</h3>
 <p>Many of the output needs of CQL stemmed from the base case of creating the code for CQL expressions. A simple CQL expression like:</p>
@@ -4220,5 +4233,609 @@ cql_cleanup:
 <li>the use of <code>charbuf</code> to create and assemble fragments</li>
 </ul>
 <p>As with the other parts, this is not a complete discussion of the code but a useful survey that should enable readers enough context to understand <code>cg_c.c</code> and the runtime helpers in <code>cqlrt.c</code> and <code>cqlrt_common.c</code>. Good luck in your personal exploration.</p>
+<h2 id="part-4-testing">Part 4: Testing</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<h3 id="preface-3">Preface</h3>
+<p>Part 4 continues with a discussion of the essentials testing frameworks for the CQL compiler. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how testing happens in general – the core strategies and implementation choices – so that when reading the tests you will have an idea how it all hangs together. To accomplish this, various key tools will be explained in detail as well as selected examples of their use.</p>
+<h2 id="testing">Testing</h2>
+<p>There are several types of tests in the system, all of which are launched by the <code>test.sh</code> script which builds the compiler and does a full test pass, there are well over 3000 tests as of this writing. Broadly these are in these few categories:</p>
+<ul>
+<li><strong>parse tests</strong> : these are in <code>test.sql</code>
+<ul>
+<li>the test script verifies that the compiler can parse this file with no errors</li>
+<li>the parse pass echoes what it read in normalized form, this is compared against a reference copy and any differences are noted</li>
+<li>differences can be accepted by using the <code>ok.sh</code> script</li>
+<li>verification here is very light and in fact much of parsing is actually tested in the next pass</li>
+</ul></li>
+<li><strong>semantic tests</strong> : these are in <code>sem_test.sql</code>
+<ul>
+<li>the file has no parse errors but it has MANY semantic errors, nearly every such error in fact</li>
+<li>semantic analysis is run with the <code>--test</code> flag which produces AST fragments and echoed CQL</li>
+<li>the test file includes patterns which either must appear, or must not appear, in the output to pass the test</li>
+<li>the AST includes full type information, so virtually anything about the semantic results can be, and is, verified</li>
+<li>many tests are designed to exercise the parser as well, ensuring that the correct AST was built and then analyzed
+<ul>
+<li>e.g. operator precedence can be verified here</li>
+<li>the AST echoing logic can also be verified here, e.g. placement of parenthesis in the echoed output</li>
+</ul></li>
+<li>any semantic rewrites can be verified here because the rewritten form is emitted in the test output, not the original input</li>
+<li>all other operations that happen during the semantic pass (e.g. constant evaluation) are also tested here</li>
+<li>the full semantic output is also normalized (e.g. removing line numbers) and is compared against a reference copy, any differences are noted</li>
+<li>differences can be accepted by using the <code>ok.sh</code> script</li>
+<li>there are additional files to test different modes like “previous schema” validation (q.v.) as well as dev mode and the schema migrator, the files in this family are: <code>sem_test.sql</code>, <code>sem_test_dev.sql</code>, <code>sem_test_migrate.sql</code>, <code>sem_test_prev.sql</code></li>
+</ul></li>
+<li><strong>code gen tests</strong> : the basic test in this family is <code>cg_test.sql</code> which has the C codegen tests
+<ul>
+<li>these test files do pattern matching just like the semantic case except the codegen output is checked rather than the AST</li>
+<li>the test output is normalized and checked against a reference, just like the semantic tests</li>
+<li>there is generally no need to check for errors in test output because all errors are detected during semantic analysis</li>
+<li>there are MANY tests in this family, at least one for each of the various generators:
+<ul>
+<li><code>cg_test.sql</code>, <code>cg_test_assembly_query.sql</code>, <code>cg_test_base_fragment.sql</code>, <code>cg_test_base_java_fragment.sql</code>, <code>cg_test_c_type_getters.sql</code>, <code>cg_test_extension_fragment.sql</code>, <code>cg_test_extension_java_fragment.sql</code>, <code>cg_test_generate_copy.sql</code>, <code>cg_test_generated_from.sql</code>, <code>cg_test_json_schema.sql</code>, <code>cg_test_no_result_set.sql</code>, <code>cg_test_out_object.sql</code>, <code>cg_test_out_union.sql</code>, <code>cg_test_prev_invalid.sql</code>, <code>cg_test_query_plan.sql</code>, <code>cg_test_schema_upgrade.sql</code>, <code>cg_test_single_proc_not_nullable.sql</code>, <code>cg_test_single_proc_nullable.sql</code>, <code>cg_test_suppressed.sql</code>, <code>cg_test_test_helpers.sql</code>, <code>cg_test_with_object.sql</code>,</li>
+</ul></li>
+</ul></li>
+<li><strong>run tests</strong> : the main run test creatively named <code>run_test.sql</code>
+<ul>
+<li>this test code is compiled and excuted</li>
+<li>the test contains expectations like any other unit test</li>
+<li>it has CQL parts and C parts, the C parts test the C API to the procedures, plus do initial setup</li>
+<li>these test include uses of all CQL features and all of the CQL runtime features</li>
+<li>the schema upgrader tests are arguably “run tests” as well in that they run the code but they have a much different verification strategy</li>
+</ul></li>
+<li><strong>unit test</strong> : the compiler supports the <code>--run_unit_tests</code> flag
+<ul>
+<li>this causes the compile to self-test certain of its helper functions that are otherwise difficult to test</li>
+<li>mostly this is buffers that need to be growable to but in practice only grow with huge input files</li>
+<li>other exotic cases that would be hard to reliability hit in some other fashion are covered by this code</li>
+</ul></li>
+</ul>
+<p>Test coverage is maintained at 100% line coverage (sometimes there are a few hours when it drops to 99.9% or something like that but this never lasts). Branch coverage is not especially targetted but is nonethless quite high. To see the true branch coverage you have to build the compiler with the asserts (Contract and Invariant) off. Last time it was measured, it was well over 80%.</p>
+<p>To start the tests you should run <code>test.sh</code>, this launches <code>common/test_common.sh</code> to do the work. This structure allows anyone to make their own harness that launches the common test passes and adds their own extra tests, or passes in additional flags. <code>test.sh</code> itself uses <code>make</code> to build the compiler.</p>
+<p>To get the coverage report, use <code>cov.sh</code> which in turn launches <code>test.sh</code> with suitable flags and then assembles the coverage report using <code>gcovr</code>.</p>
+<h3 id="parse-tests">Parse Tests</h3>
+<p>Looking at <code>test/test_common.sh</code> we find the source for the most basic test. This is entirely unremarkable stuff.</p>
+<div class="sourceCode" id="cb215"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb215-1"><a href="#cb215-1" aria-hidden="true" tabindex="-1"></a><span class="fu">basic_test()</span> <span class="kw">{</span></span>
+<span id="cb215-2"><a href="#cb215-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 2 -- BASIC PARSING TEST&#39;</span></span>
+<span id="cb215-3"><a href="#cb215-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/test.sql&quot;</span></span>
+<span id="cb215-4"><a href="#cb215-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="va">${CQL}</span> <span class="at">--dev</span> <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/test.sql&quot;</span> <span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/test.out&quot;</span></span>
+<span id="cb215-5"><a href="#cb215-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb215-6"><a href="#cb215-6" aria-hidden="true" tabindex="-1"></a>   <span class="bu">echo</span> basic parsing test failed</span>
+<span id="cb215-7"><a href="#cb215-7" aria-hidden="true" tabindex="-1"></a>   <span class="ex">failed</span></span>
+<span id="cb215-8"><a href="#cb215-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb215-9"><a href="#cb215-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;  computing diffs (empty if none)&quot;</span></span>
+<span id="cb215-10"><a href="#cb215-10" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> test.out</span>
+<span id="cb215-11"><a href="#cb215-11" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<ul>
+<li>it’s “STAGE 2” because “STAGE 1” was the build</li>
+<li>all it tries to do is run the compiler over <code>test/test.sql</code></li>
+<li>if there are errors the test fails</li>
+<li>if there are any differences between <code>test.out</code> and <code>test.out.ref</code> the test fails</li>
+</ul>
+<p>That’s it.</p>
+<h3 id="sematic-tests">Sematic Tests</h3>
+<p>The semantic tests are not much different but this is where the pattern matching comes in.</p>
+<p>First let’s look at the shell script:</p>
+<div class="sourceCode" id="cb216"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb216-1"><a href="#cb216-1" aria-hidden="true" tabindex="-1"></a><span class="fu">semantic_test()</span> <span class="kw">{</span></span>
+<span id="cb216-2"><a href="#cb216-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST&#39;</span></span>
+<span id="cb216-3"><a href="#cb216-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running semantic analysis test</span>
+<span id="cb216-4"><a href="#cb216-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="ex">sem_check</span> <span class="at">--sem</span> <span class="at">--print</span> <span class="at">--dev</span> <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/sem_test.sql&quot;</span> <span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.out&quot;</span> <span class="dv">2</span><span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.err&quot;</span></span>
+<span id="cb216-5"><a href="#cb216-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb216-6"><a href="#cb216-6" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&quot;CQL semantic analysis returned unexpected error code&quot;</span></span>
+<span id="cb216-7"><a href="#cb216-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">cat</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.err&quot;</span></span>
+<span id="cb216-8"><a href="#cb216-8" aria-hidden="true" tabindex="-1"></a>     <span class="ex">failed</span></span>
+<span id="cb216-9"><a href="#cb216-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb216-10"><a href="#cb216-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb216-11"><a href="#cb216-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> validating output trees</span>
+<span id="cb216-12"><a href="#cb216-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cql-verify&quot;</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/sem_test.sql&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/sem_test.out&quot;</span></span>
+<span id="cb216-13"><a href="#cb216-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb216-14"><a href="#cb216-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> failed verification</span>
+<span id="cb216-15"><a href="#cb216-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb216-16"><a href="#cb216-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb216-17"><a href="#cb216-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb216-18"><a href="#cb216-18" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running dev semantic analysis test</span>
+<span id="cb216-19"><a href="#cb216-19" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span> same thing again for sem_test_dev.sql</span>
+<span id="cb216-20"><a href="#cb216-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb216-21"><a href="#cb216-21" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;  computing diffs (empty if none)&quot;</span></span>
+<span id="cb216-22"><a href="#cb216-22" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> sem_test.out</span>
+<span id="cb216-23"><a href="#cb216-23" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> sem_test.err</span>
+<span id="cb216-24"><a href="#cb216-24" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span> same thing again for sem_test_dev.out and .err</span>
+<span id="cb216-25"><a href="#cb216-25" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>There are basically 3 steps:</p>
+<ul>
+<li>run the compiler over <code>test/sem_test.sql</code>
+<ul>
+<li>fail if this generates no errors (yes you read that right, see below)</li>
+</ul></li>
+<li>do the pattern matching on the output using <code>cql-verify</code> to ensure the patterns match (discussed below)
+<ul>
+<li>fail if the output is not consistent with the patterns</li>
+</ul></li>
+<li>compare the reference output for the AST and the errors
+<ul>
+<li>fail if there are any differences</li>
+</ul></li>
+</ul>
+<p>In the first step the compiler MUST produce an error code, let’s look at <code>sem_check</code> to see why:</p>
+<div class="sourceCode" id="cb217"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb217-1"><a href="#cb217-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sem_check()</span> <span class="kw">{</span></span>
+<span id="cb217-2"><a href="#cb217-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">${CQL}</span> <span class="st">&quot;</span><span class="va">$@</span><span class="st">&quot;</span></span>
+<span id="cb217-3"><a href="#cb217-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$?</span><span class="st">&quot;</span> <span class="ot">-ne</span> <span class="st">&quot;1&quot;</span> <span class="bu">]</span></span>
+<span id="cb217-4"><a href="#cb217-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb217-5"><a href="#cb217-5" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;All semantic analysis checks have errors in the test&#39;</span></span>
+<span id="cb217-6"><a href="#cb217-6" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;the normal return code is &quot;1&quot; -- any other return code is bad news&#39;</span></span>
+<span id="cb217-7"><a href="#cb217-7" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;A return code of zero indicates we reported success in the face of errors&#39;</span></span>
+<span id="cb217-8"><a href="#cb217-8" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">&#39;A return code other than 1 indicates an unexpected fatal error of some type&#39;</span></span>
+<span id="cb217-9"><a href="#cb217-9" aria-hidden="true" tabindex="-1"></a>     <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb217-10"><a href="#cb217-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb217-11"><a href="#cb217-11" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>In short <code>sem_test.sql</code> is FULL of semantic errors, that’s part of the test. If the compiler reports success something is <em>seriously</em> wrong.</p>
+<p>In the next phase we’re going to do some pattern matching, let’s look at a couple of examples to illustrate how this works. The program <code>cql-verify</code> actually does all this matching and that program is itself written in (mostly) CQL which is cute. It can be found in the <code>tester</code> directory.</p>
+<p>Here’s a very simple example:</p>
+<div class="sourceCode" id="cb218"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb218-1"><a href="#cb218-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: we&#39;ll be using printf in lots of places in the tests as an external proc</span></span>
+<span id="cb218-2"><a href="#cb218-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {declare_proc_no_check_stmt}: ok</span></span>
+<span id="cb218-3"><a href="#cb218-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- - Error</span></span>
+<span id="cb218-4"><a href="#cb218-4" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> <span class="kw">PROCEDURE</span> printf <span class="kw">NO</span> <span class="kw">CHECK</span>;</span></code></pre></div>
+<p>The code under test is of course <code>DECLARE PROCEDURE printf NO CHECK</code>. The patterns happen immediately before this code. Let’s look at each line:</p>
+<ul>
+<li><code>-- TEST: etc.</code> : this is just a comment, it means nothing and serves no purpose other than documentation</li>
+<li><code>-- + {declare_proc_no_check_stmt}: ok</code> : the comment stats with <code>" + "</code>, this is a trigger
+<ul>
+<li>the test output from the statement under test must include indicated text</li>
+<li>this happens to be the text for the AST of <code>declare_proc_no_check_stmt</code> after semantic success</li>
+<li>there is no type info hence the <code>ok</code> designation (recall <code>SEM_TYPE_OK</code>)</li>
+</ul></li>
+<li><code>-- Error</code> : the comment starts with <code>" - "</code>, this is a trigger
+<ul>
+<li>the test output from the statement under test must NOT include indicated text</li>
+<li>in this case that means no reported erros</li>
+</ul></li>
+</ul>
+<p>Easy enough. Now does this happen?</p>
+<p>The test output includes:</p>
+<ul>
+<li>text like “The statement ending at line XXXX” where XXXX is appropriate line number</li>
+<li>an echo of the statement that was analyzed (after any rewrites)</li>
+<li>the AST of that statement including semantic type info that was computed</li>
+</ul>
+<p>Using the value of XXXX the tester searches the test file in this case <code>sem_test.sql</code>, it extracts the test patterns that happen AFTER the previous XXXX value for the previous statement and up to the indicated line number. This is The Price Is Right algorithm where you read up to the designated lines without going over.</p>
+<p>Each pattern is matched, or not matched, using the SQL <code>LIKE</code> or <code>NOT LIKE</code> operator. In case of errors the tester writes out the actual output and the expected patterns having all this information handy.</p>
+<p>The line numbers are all changed to literally “XXXX” after this pass so that the difference in later passes is not a cascade of of trivial line number changes in otherwise identical output.</p>
+<p>Let’s look at another example:</p>
+<div class="sourceCode" id="cb219"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb219-1"><a href="#cb219-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: create a table using type discrimation: kinds</span></span>
+<span id="cb219-2"><a href="#cb219-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {create_table_stmt}: with_kind: { id: integer&lt;some_key&gt;, cost: real&lt;dollars&gt;, value: real&lt;dollars&gt; }</span></span>
+<span id="cb219-3"><a href="#cb219-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {col_def}: id: integer&lt;some_key&gt;</span></span>
+<span id="cb219-4"><a href="#cb219-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {col_def}: cost: real&lt;dollars&gt;</span></span>
+<span id="cb219-5"><a href="#cb219-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {col_def}: value: real&lt;dollars&gt;</span></span>
+<span id="cb219-6"><a href="#cb219-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- - Error</span></span>
+<span id="cb219-7"><a href="#cb219-7" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> <span class="kw">table</span> with_kind(</span>
+<span id="cb219-8"><a href="#cb219-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">integer</span><span class="op">&lt;</span>some_key<span class="op">&gt;</span>,</span>
+<span id="cb219-9"><a href="#cb219-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">cost</span> <span class="dt">real</span><span class="op">&lt;</span>dollars<span class="op">&gt;</span>,</span>
+<span id="cb219-10"><a href="#cb219-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">value</span> <span class="dt">real</span><span class="op">&lt;</span>dollars<span class="op">&gt;</span></span>
+<span id="cb219-11"><a href="#cb219-11" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>This reads pretty easily now:</p>
+<ul>
+<li><code>{create_table_stmt}</code> : the struct type of the table must be an exact match for what is expected</li>
+<li><code>{col_def}</code> : there are 3 different <code>{col_def}</code> nodes, one for each column</li>
+<li><code>- Error</code> : there are no reported errors</li>
+</ul>
+<p>So there are no errors reported nor are there any in the AST. At least the part of the AST that was checked. The AST actually had other stuff too but it’s normal to just test the “essential” stuff. There are many tests that try many variations and we don’t want to check every fact in every case of every test.</p>
+<p>If you want to see the whole AST output for this, it’s easy enough. It’s sitting in <code>sem_test.out.ref</code></p>
+<pre><code>The statement ending at line XXXX
+
+CREATE TABLE with_kind(
+  id INTEGER&lt;some_key&gt;,
+  cost REAL&lt;dollars&gt;,
+  value REAL&lt;dollars&gt;
+);
+
+  {create_table_stmt}: with_kind: { id: integer&lt;some_key&gt;, cost: real&lt;dollars&gt;, value: real&lt;dollars&gt; }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name with_kind}
+  | {col_key_list}
+    | {col_def}: id: integer&lt;some_key&gt;
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer&lt;some_key&gt;
+    |       | {name some_key}
+    | {col_key_list}
+      | {col_def}: cost: real&lt;dollars&gt;
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name cost}
+      |     | {type_real}: real&lt;dollars&gt;
+      |       | {name dollars}
+      | {col_key_list}
+        | {col_def}: value: real&lt;dollars&gt;
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name value}
+              | {type_real}: real&lt;dollars&gt;
+                | {name dollars}</code></pre>
+<p>As you can see there was potentially a lot more than could have been verified but those view key lines were selected because their correctness really implies the rest. In fact just the <code>{create_table_stmt}</code> line really was enough to know that everthing was fine.</p>
+<p>Let’s look at one more example, this time on that is checking for errors. Many tests check for errors because correctly reporting errors is the primary job of <code>sem.c</code>. It’s fair to say that there are more tests for error cases than there are for correct cases because there are a lot more ways to write code incorrectly than correctly. Here’s the test:</p>
+<div class="sourceCode" id="cb221"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb221-1"><a href="#cb221-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: join with bogus ON expression type</span></span>
+<span id="cb221-2"><a href="#cb221-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + Error % expected numeric expression &#39;ON&#39;</span></span>
+<span id="cb221-3"><a href="#cb221-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- +1 Error</span></span>
+<span id="cb221-4"><a href="#cb221-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {select_stmt}: err</span></span>
+<span id="cb221-5"><a href="#cb221-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {on}: err</span></span>
+<span id="cb221-6"><a href="#cb221-6" aria-hidden="true" tabindex="-1"></a><span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> foo</span>
+<span id="cb221-7"><a href="#cb221-7" aria-hidden="true" tabindex="-1"></a><span class="kw">inner</span> <span class="kw">join</span> bar <span class="kw">as</span> T2 <span class="kw">on</span> <span class="st">&#39;v&#39;</span></span>
+<span id="cb221-8"><a href="#cb221-8" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span> <span class="st">&#39;w&#39;</span></span>
+<span id="cb221-9"><a href="#cb221-9" aria-hidden="true" tabindex="-1"></a><span class="kw">having</span> <span class="st">&#39;x&#39;</span></span>
+<span id="cb221-10"><a href="#cb221-10" aria-hidden="true" tabindex="-1"></a><span class="kw">limit</span> <span class="st">&#39;y&#39;</span>;</span></code></pre></div>
+<ul>
+<li><code>+ Error % expected numeric expression 'ON'</code> : there must be a reported Error message with the indicated error text</li>
+<li><code>+1 Error</code> : this indicates that there must be <em>exactly</em> 1 match for the pattern “Error” (i.e. exactly one error)
+<ul>
+<li>note that there are several problems with the test statement but error processing is supposed to stop after the first</li>
+</ul></li>
+<li><code>-- + {on}: err</code> : verifies that the ON clause was marked as being in error</li>
+<li><code>-- + {select_stmt}: err</code> : verifies that the error correctly propogated up to the top level statement</li>
+</ul>
+<p>Note that the patterns can be in any order and every pattern is matched against the whole input so for instance:</p>
+<pre><code>-- + {on}: err
+-- + {on}: err</code></pre>
+<p>The above does not imply that there are two such <code>{on}</code> nodes. The second line will match the same text as the first. To to enforce that there were exactly two matches you use:</p>
+<pre><code>-- +2 {on}: err</code></pre>
+<p>There is no syntax for “at least two matches” though one could easily be added. So far it hasn’t been especially necessary.</p>
+<p>As we’ll see this simple pattern is used in many other tests. All that is required for it work is output with lines of the form “The statement ending at line XXXX”</p>
+<p>The <code>sem_test_dev.sql</code> test file is a set of tests that are run with the <code>--dev</code> flag passed to CQL. This is the mode where certain statements that are prohibited in production code are verified. This file is very small indeed and the exact prohibitions are left as an exercise to the reader.</p>
+<h3 id="code-generation-tests">Code Generation Tests</h3>
+<p>The test logic for the “codegen” family of tests (<code>cg_test*.sql</code>) is virtually identical to the semantic test family. The same testing utililty is used, and it works the same way, looking for the same marker. The only difference in this stage is that the test output is generated code, not an AST. The codegen tests are a great way to lock down important code fragments in the output. Note that the codegen tests do not actually execute any generated code. That’s the next category.</p>
+<p>Here’s an sample test:</p>
+<div class="sourceCode" id="cb224"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb224-1"><a href="#cb224-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: unused temp in unary not emitted</span></span>
+<span id="cb224-2"><a href="#cb224-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- - cql_int32 _tmp_int_0 = 0;</span></span>
+<span id="cb224-3"><a href="#cb224-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- - cql_int32 _tmp_int_1 = 0;</span></span>
+<span id="cb224-4"><a href="#cb224-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- + o = i.value;</span></span>
+<span id="cb224-5"><a href="#cb224-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- + o = - 1;</span></span>
+<span id="cb224-6"><a href="#cb224-6" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> proc unused_temp(i <span class="dt">integer</span>, <span class="kw">out</span> o <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>)</span>
+<span id="cb224-7"><a href="#cb224-7" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb224-8"><a href="#cb224-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> o <span class="op">:=</span> <span class="fu">coalesce</span>(i, <span class="op">-</span><span class="dv">1</span>);</span>
+<span id="cb224-9"><a href="#cb224-9" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
+<p>This test is verifying one of the optimizations that we talked about in <a href="https://cgsql.dev/cql-guide/int03#result-variables">Part 3</a>. In many cases temporary variables for results (such as function calls) can be elided.</p>
+<ul>
+<li><code>- cql_int32 _tmp_int_0 = 0;</code> : verifies that this temporary is NOT created</li>
+<li><code>- cql_int32 _tmp_int_1 = 0;</code> : likewise</li>
+<li><code>+ o = i.value;</code> : the first alternative in coalesce directly assigns to <code>o</code></li>
+<li><code>+ o = - 1;</code> : as does the second</li>
+</ul>
+<p>It might be helpful to look at the full output, which as always is in a <code>.ref</code> file. In this case <code>cg_test.c.ref</code>. Here is the full output with the line number normalized:</p>
+<div class="sourceCode" id="cb225"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb225-1"><a href="#cb225-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The statement ending at line XXXX</span></span>
+<span id="cb225-2"><a href="#cb225-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-3"><a href="#cb225-3" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb225-4"><a href="#cb225-4" aria-hidden="true" tabindex="-1"></a><span class="co">CREATE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL)</span></span>
+<span id="cb225-5"><a href="#cb225-5" aria-hidden="true" tabindex="-1"></a><span class="re">BEGIN</span></span>
+<span id="cb225-6"><a href="#cb225-6" aria-hidden="true" tabindex="-1"></a><span class="co">  SET o := coalesce(i, -1);</span></span>
+<span id="cb225-7"><a href="#cb225-7" aria-hidden="true" tabindex="-1"></a><span class="re">END</span><span class="co">;</span></span>
+<span id="cb225-8"><a href="#cb225-8" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span>
+<span id="cb225-9"><a href="#cb225-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-10"><a href="#cb225-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _PROC_ &quot;unused_temp&quot;</span></span>
+<span id="cb225-11"><a href="#cb225-11" aria-hidden="true" tabindex="-1"></a><span class="co">// export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);</span></span>
+<span id="cb225-12"><a href="#cb225-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> unused_temp<span class="op">(</span>cql_nullable_int32 i<span class="op">,</span> cql_int32 <span class="op">*</span>_Nonnull o<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb225-13"><a href="#cb225-13" aria-hidden="true" tabindex="-1"></a>  cql_contract_argument_notnull<span class="op">((</span><span class="dt">void</span> <span class="op">*)</span>o<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb225-14"><a href="#cb225-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-15"><a href="#cb225-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">*</span>o <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="co">// set out arg to non-garbage</span></span>
+<span id="cb225-16"><a href="#cb225-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">do</span> <span class="op">{</span></span>
+<span id="cb225-17"><a href="#cb225-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>i<span class="op">.</span>is_null<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb225-18"><a href="#cb225-18" aria-hidden="true" tabindex="-1"></a>      <span class="op">*</span>o <span class="op">=</span> i<span class="op">.</span>value<span class="op">;</span></span>
+<span id="cb225-19"><a href="#cb225-19" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb225-20"><a href="#cb225-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb225-21"><a href="#cb225-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>o <span class="op">=</span> <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb225-22"><a href="#cb225-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">while</span> <span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb225-23"><a href="#cb225-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-24"><a href="#cb225-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb225-25"><a href="#cb225-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#undef _PROC_</span></span></code></pre></div>
+<p>As we can see, the test has picked out the bits that it wanted to verify. The <code>coalesce</code> function is verified elsewhere – in this test we’re making sure that this pattern doesn’t cause extra temporaries.</p>
+<p>Let’s take a quick look at the part of <code>test_common.sh</code> that runs this:</p>
+<div class="sourceCode" id="cb226"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb226-1"><a href="#cb226-1" aria-hidden="true" tabindex="-1"></a><span class="fu">code_gen_c_test()</span> <span class="kw">{</span></span>
+<span id="cb226-2"><a href="#cb226-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 5 -- C CODE GEN TEST&#39;</span></span>
+<span id="cb226-3"><a href="#cb226-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running codegen test</span>
+<span id="cb226-4"><a href="#cb226-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="va">${CQL}</span> <span class="at">--test</span> <span class="at">--cg</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.h&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.c&quot;</span> <span class="dt">\</span></span>
+<span id="cb226-5"><a href="#cb226-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_exports.out&quot;</span> <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/cg_test.sql&quot;</span> <span class="dt">\</span></span>
+<span id="cb226-6"><a href="#cb226-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--global_proc</span> cql_startup <span class="at">--generate_exports</span> <span class="dv">2</span><span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.err&quot;</span></span>
+<span id="cb226-7"><a href="#cb226-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb226-8"><a href="#cb226-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;ERROR:&quot;</span></span>
+<span id="cb226-9"><a href="#cb226-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.err&quot;</span></span>
+<span id="cb226-10"><a href="#cb226-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb226-11"><a href="#cb226-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb226-12"><a href="#cb226-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-13"><a href="#cb226-13" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> validating codegen</span>
+<span id="cb226-14"><a href="#cb226-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cql-verify&quot;</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/cg_test.sql&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.c&quot;</span></span>
+<span id="cb226-15"><a href="#cb226-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb226-16"><a href="#cb226-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;ERROR: failed verification&quot;</span></span>
+<span id="cb226-17"><a href="#cb226-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb226-18"><a href="#cb226-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb226-19"><a href="#cb226-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-20"><a href="#cb226-20" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> testing for successful compilation of generated C</span>
+<span id="cb226-21"><a href="#cb226-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span> <span class="at">-f</span> out/cg_test_c.o</span>
+<span id="cb226-22"><a href="#cb226-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="ex">do_make</span> out/cg_test_c.o</span>
+<span id="cb226-23"><a href="#cb226-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb226-24"><a href="#cb226-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;ERROR: failed to compile the C code from the code gen test&quot;</span></span>
+<span id="cb226-25"><a href="#cb226-25" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb226-26"><a href="#cb226-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb226-27"><a href="#cb226-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-28"><a href="#cb226-28" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span></span>
+<span id="cb226-29"><a href="#cb226-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-30"><a href="#cb226-30" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;  computing diffs (empty if none)&quot;</span></span>
+<span id="cb226-31"><a href="#cb226-31" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> cg_test_c.c</span>
+<span id="cb226-32"><a href="#cb226-32" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> cg_test_c.h</span>
+<span id="cb226-33"><a href="#cb226-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-34"><a href="#cb226-34" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span> other tests</span>
+<span id="cb226-35"><a href="#cb226-35" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>Briefly reviewing this, we see the following important steps:</p>
+<ul>
+<li><code>{CQL} --test --cg etc.</code> : run the compiler on the test input
+<ul>
+<li>the test fails if there are any errors</li>
+</ul></li>
+<li><code>cql-verify</code> : performs the pattern matching
+<ul>
+<li>the output has the same statement markers as in the semantic case</li>
+</ul></li>
+<li><code>do_make</code> : use <code>make</code> to build the generated code ensuring it compiles cleanly
+<ul>
+<li>if the C compiler returns any failure, the test fails</li>
+</ul></li>
+<li><code>on_diff_exit</code> : compares the test output to the reference output
+<ul>
+<li>any difference fails the test</li>
+</ul></li>
+</ul>
+<p>This is all remarkably similar to the semantic tests. All the code generators are tested in the same way.</p>
+<h3 id="run-tests">Run Tests</h3>
+<p>The last category of tests actually does execution. The main “run test” happens at “stage 13”, because there are <em>many</em> codegen tests for the various output formats and these all pass before before we try to execute anything. This is not so bad because the tests are quite quick with a full test pass taking less than 90s on my laptop.</p>
+<div class="sourceCode" id="cb227"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb227-1"><a href="#cb227-1" aria-hidden="true" tabindex="-1"></a><span class="fu">run_test()</span> <span class="kw">{</span></span>
+<span id="cb227-2"><a href="#cb227-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 13 -- RUN CODE TEST&#39;</span></span>
+<span id="cb227-3"><a href="#cb227-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running codegen test with execution</span>
+<span id="cb227-4"><a href="#cb227-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="fu">cc</span> <span class="at">-E</span> <span class="at">-x</span> c <span class="at">-w</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/run_test.sql&quot;</span> <span class="dt">\</span></span>
+<span id="cb227-5"><a href="#cb227-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test_cpp.out&quot;</span></span>
+<span id="cb227-6"><a href="#cb227-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-7"><a href="#cb227-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> preprocessing failed.</span>
+<span id="cb227-8"><a href="#cb227-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-9"><a href="#cb227-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="ex">!</span> <span class="va">${CQL}</span> <span class="at">--nolines</span> <span class="dt">\</span></span>
+<span id="cb227-10"><a href="#cb227-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--cg</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test.h&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test.c&quot;</span> <span class="dt">\</span></span>
+<span id="cb227-11"><a href="#cb227-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test_cpp.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb227-12"><a href="#cb227-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--global_proc</span> cql_startup <span class="at">--rt</span> c</span>
+<span id="cb227-13"><a href="#cb227-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-14"><a href="#cb227-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> codegen failed.</span>
+<span id="cb227-15"><a href="#cb227-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-16"><a href="#cb227-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="ex">!</span> <span class="er">(</span><span class="bu">echo</span> <span class="st">&quot;  compiling code&quot;</span><span class="kw">;</span> <span class="ex">do_make</span> run_test <span class="kw">)</span></span>
+<span id="cb227-17"><a href="#cb227-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-18"><a href="#cb227-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> build failed</span>
+<span id="cb227-19"><a href="#cb227-19" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-20"><a href="#cb227-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="ex">!</span> <span class="er">(</span><span class="bu">echo</span> <span class="st">&quot;  executing tests&quot;</span><span class="kw">;</span> <span class="st">&quot;./</span><span class="va">${OUT_DIR}</span><span class="st">/a.out&quot;</span><span class="kw">)</span></span>
+<span id="cb227-21"><a href="#cb227-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-22"><a href="#cb227-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> tests failed</span>
+<span id="cb227-23"><a href="#cb227-23" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-24"><a href="#cb227-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb227-25"><a href="#cb227-25" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span></span></code></pre></div>
+<p>The main structure is mostly what one would expect:</p>
+<ul>
+<li><code>cc -E -x c</code> : this is used to pre-process the run test file so that we can use C pre-processor features to define tests
+<ul>
+<li>there are quite a few helpful macros as we’ll see</li>
+<li>if pre-processing fails, the test fails</li>
+</ul></li>
+<li><code>{CQL} --nolines --cg ...</code> : this is used to create the <code>.h</code> and <code>.c</code> file for the compiland
+<ul>
+<li><code>--nolines</code> is used to suppress the <code>#</code> directives that would associate the generated code with the .sql file</li>
+<li>compilation failures cause the test to fail</li>
+</ul></li>
+<li><code>do_make</code> : as before this causes <code>make</code> to build the compiland (<code>run_test</code>)
+<ul>
+<li>this build target includes the necessary bootstrap code to open a database and start the tests</li>
+<li>any failures cause the test to fail</li>
+</ul></li>
+<li><code>a.out</code> : the tests execute
+<ul>
+<li>the tests return a failure status code if anything goes wrong</li>
+<li>any failure causes the test to fail</li>
+</ul></li>
+</ul>
+<p>The test file <code>run_test.sql</code> includes test macros from <code>cqltest.h</code> – all of these are very simple. The main ones are <code>BEGIN_SUITE</code>, <code>END_SUITE</code>, <code>BEGIN_TEST</code> and <code>END_TEST</code> for structure; and <code>EXPECT</code> to verify a boolean expression.</p>
+<p>Here’s a simple test case with several expectations:</p>
+<pre><code>BEGIN_TEST(arithmetic)
+  EXPECT_SQL_TOO((1 + 2) * 3 == 9);
+  EXPECT_SQL_TOO(1 + 2 * 3 == 7);
+  EXPECT_SQL_TOO(6 / 3 == 2);
+  EXPECT_SQL_TOO(7 - 5 == 2);
+  EXPECT_SQL_TOO(6 % 5 == 1);
+  EXPECT_SQL_TOO(5 / 2.5 == 2);
+  EXPECT_SQL_TOO(-(1+3) == -4);
+  EXPECT_SQL_TOO(-1+3 == 2);
+  EXPECT_SQL_TOO(1+-3 == -2);
+  EXPECT_SQL_TOO(longs.neg == -1);
+  EXPECT_SQL_TOO(-longs.neg == 1);
+  EXPECT_SQL_TOO(- -longs.neg == -1);
+END_TEST(arithmetic)</code></pre>
+<p>We should also reveal <code>EXPECT_SQL_TOO</code>, discussed below:</p>
+<div class="sourceCode" id="cb229"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb229-1"><a href="#cb229-1" aria-hidden="true" tabindex="-1"></a><span class="op">--</span> use this <span class="cf">for</span> both normal eval and SQLite eval</span>
+<span id="cb229-2"><a href="#cb229-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define EXPECT_SQL_TOO(x) EXPECT(x); EXPECT((select x))</span></span></code></pre></div>
+<p>Now back to the test:</p>
+<ul>
+<li><code>EXPECT(x)</code> : verifies that <code>x</code> is true (i.e. a non-zero numeric)
+<ul>
+<li>not used directly in this example</li>
+</ul></li>
+<li><code>EXPECT_SQL_TOO</code> : as the definition shows,
+<ul>
+<li><code>x</code> must be true (as above)</li>
+<li><code>(select x)</code> must also be true,
+<ul>
+<li>i.e. when SQLite is asked to evaluate the expression the result is also a “pass”</li>
+</ul></li>
+<li>this is used to verify consistency of order of operations and other evaluations that must be the same in both forms</li>
+<li>note that when <code>(select ...)</code> is used, CQL plays no part in evaluating the expression, the text of the expression goes to SQLite and any variables are bound as described in Part 3.</li>
+</ul></li>
+</ul>
+<p>The run test exercises many features, but the testing strategy is always the same:</p>
+<ul>
+<li>exercise some code pattern</li>
+<li>use <code>EXPECT</code> to validate the results are correct</li>
+<li>the expressions in the <code>EXPECT</code> are usually crafted carefully to show that a certain mistake is not being made
+<ul>
+<li>e.g. expressions where the result would be different if there are bugs in order of operations</li>
+<li>e.g. expressions that would crash with divide by zero if code that isn’t supposed to run actually ran</li>
+</ul></li>
+</ul>
+<h3 id="schema-upgrade-testing">Schema Upgrade Testing</h3>
+<p>The schema upgrade tester is quite a bit different than the others and relies heavily on execution of the upgraders. Before we get into that there is a preliminary topic:</p>
+<h4 id="previous-schema-validation">“Previous Schema” Validation</h4>
+<p>In order to ensure that it is possible to create an upgrader, CQL provides features to validate the current schema against the previous schema ensuring that nothing has been done that would make an upgrader impossible. This is more fully discussed in <a href="https://cgsql.dev/cql-guide/ch11">Chapter 11</a> of the Guide.</p>
+<p>“Previous Schema” validation is a form of semantic check and so its testing happens as described above. Importantly, as with the other back-end passes the schema upgrader does not have to concern itself with error cases as they are already ruled out. The upgrader itself will be the subject of Part 5.</p>
+<h4 id="packing-list">Packing List</h4>
+<p>The test assets for upgrade tests are found in the <code>upgrade</code> directory and consist of * <code>SchemaPersistentV0.sql</code> : baseline version of the test schema * <code>SchemaPersistentV1.sql</code> : v1 of the test schema * <code>SchemaPersistentV2.sql</code> : v2 of the test schema * <code>SchemaPersistentV3.sql</code> : v3 of the test schema * <code>downgrade_test.c</code> : a test that simulates attemping to go backwards in schema versions * <code>upgrade_test.c</code> : the C harness that launches the upgraders and fires the tests * <code>upgrade_test.sh</code> : the shell script that makes all this happen * <code>upgrade_validate.sql</code> : some simple code that sanity checks the recorded schema version against tables in it * used to ensure that the schema we are on is the schema we think we are on, not to validate all facets of it * also renders the contents of <code>sqlite_master</code> in a canonical form</p>
+<p>We haven’t yet discussed the internals of schema upgrade, so for purposes of this part we’re only going to discuss how the testing proceeds. The upgrade will be considered “magic” for now.</p>
+<p>In addition to these assets, we also have reference files: * <code>upgrade_schema_v0.out.ref</code> : expected content of v0 * <code>upgrade_schema_v1.out.ref</code> : expected content of v1 * <code>upgrade_schema_v2.out.ref</code> : expected content of v2 * <code>upgrade_schema_v3.out.ref</code> : expected content of v3</p>
+<h4 id="upgrade_validate.sql"><code>upgrade_validate.sql</code></h4>
+<p>This file has a single procedure <code>validate_transition</code> which does the two jobs: * emits the canonicalized version of <code>sqlite_master</code> to the output * this is needed because <code>sqlite_master</code> text can vary between Sqlite versions * checks for basic things that should be present in a given version</p>
+<p>The output of the validator looks like this:</p>
+<pre><code>reference results for version 0
+
+----- g1 -----
+
+type: table
+tbl_name: g1
+CREATE TABLE g1(
+  id INTEGER PRIMARY KEY,
+  name TEXT)
+
+----- sqlite_autoindex_test_cql_schema_facets_1 -----
+
+type: index
+tbl_name: test_cql_schema_facets
+
+----- test_cql_schema_facets -----
+
+type: table
+tbl_name: test_cql_schema_facets
+CREATE TABLE test_cql_schema_facets(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG_INT NOT NULL)</code></pre>
+<p>The formatting rules are very simple and so the output is pretty readable.</p>
+<p>The verifications are very simple.</p>
+<p>First this happens:</p>
+<div class="sourceCode" id="cb231"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb231-1"><a href="#cb231-1" aria-hidden="true" tabindex="-1"></a>let version <span class="op">:=</span> <span class="fu">cast</span>(test_cql_get_facet_version(<span class="ot">&quot;cql_schema_version&quot;</span>) <span class="kw">as</span> <span class="dt">integer</span>);</span></code></pre></div>
+<p>The printing happens, then this simple validation:</p>
+<div class="sourceCode" id="cb232"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb232-1"><a href="#cb232-1" aria-hidden="true" tabindex="-1"></a>  let recreate_sql <span class="op">:=</span> (</span>
+<span id="cb232-2"><a href="#cb232-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">select</span> sql <span class="kw">from</span> sqlite_master</span>
+<span id="cb232-3"><a href="#cb232-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> name <span class="op">=</span> <span class="st">&#39;test_this_table_will_become_create&#39;</span></span>
+<span id="cb232-4"><a href="#cb232-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">nothing</span> <span class="kw">null</span>);</span>
+<span id="cb232-5"><a href="#cb232-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb232-6"><a href="#cb232-6" aria-hidden="true" tabindex="-1"></a><span class="op">..</span>.</span>
+<span id="cb232-7"><a href="#cb232-7" aria-hidden="true" tabindex="-1"></a> <span class="kw">switch</span> version</span>
+<span id="cb232-8"><a href="#cb232-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">when</span> <span class="dv">0</span> <span class="cf">then</span></span>
+<span id="cb232-9"><a href="#cb232-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> recreate_sql <span class="kw">is</span> <span class="kw">null</span> <span class="kw">or</span> recreate_sql <span class="kw">not</span> <span class="kw">like</span> <span class="st">&#39;%xyzzy INTEGER%&#39;</span> <span class="cf">then</span></span>
+<span id="cb232-10"><a href="#cb232-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">call</span> printf(<span class="ot">&quot;ERROR! test_this_table_will_become_create should have a column named xyzzy in v%d\n&quot;</span>, version);</span>
+<span id="cb232-11"><a href="#cb232-11" aria-hidden="true" tabindex="-1"></a>      throw;</span>
+<span id="cb232-12"><a href="#cb232-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span> <span class="cf">if</span>;</span>
+<span id="cb232-13"><a href="#cb232-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">..</span>.</span>
+<span id="cb232-14"><a href="#cb232-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span></span>
+<span id="cb232-15"><a href="#cb232-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">call</span> printf(<span class="ot">&quot;ERROR! expected schema version v%d\n&quot;</span>, version);</span>
+<span id="cb232-16"><a href="#cb232-16" aria-hidden="true" tabindex="-1"></a>    throw;</span>
+<span id="cb232-17"><a href="#cb232-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span>;</span></code></pre></div>
+<p>In short, the version number must be one of the valid versions and each version is expecting that particular table to be in some condition it can recognize.</p>
+<p>The real validation is done by noting any changes in the reference output plus a series of invariants.</p>
+<h4 id="prosecution-of-the-upgrade-test">Prosecution of the Upgrade Test</h4>
+<p>** Launch **</p>
+<p>We kick things off as follows:</p>
+<ul>
+<li><code>test.sh</code> calls <code>upgrade/upgrade_test.sh</code>
+<ul>
+<li>this test doesn’t usually run standalone (but it can)</li>
+</ul></li>
+</ul>
+<p>** Build Stage **</p>
+<p>This creates the various binaries we will need:</p>
+<ul>
+<li><code>upgrade_validate.sql</code> is compiled down to C
+<ul>
+<li>this code works for all schema versions, it’s generic</li>
+</ul></li>
+<li><code>SchemaPersistentV[0-3].sql</code> are compiled into C (this takes two steps)
+<ul>
+<li>first, the CQL upgrader is generated from the schema</li>
+<li>second, the CQL upgrader is compiled to C</li>
+</ul></li>
+<li><code>make</code> is used to lower all of the C into executables <code>upgrade[0-3]</code> plus <code>downgrade_test</code>
+<ul>
+<li>the shared validation code is linked into all 4 upgraders</li>
+<li><code>downgrade_test.c</code> is linked with the code for <code>upgrade1</code></li>
+</ul></li>
+</ul>
+<p>** Basic Upgrades **</p>
+<p>Here we test going from scratch to each of the 4 target versions:</p>
+<ul>
+<li><code>upgrade[0-3]</code> are each run in turn with no initial database
+<ul>
+<li>i.e. their target database is deleted before each run</li>
+</ul></li>
+<li>the validation output is compared against the reference output
+<ul>
+<li>any differences fail the test</li>
+</ul></li>
+</ul>
+<p>** Previous Schema Validation **</p>
+<p>This sanity checks that the chain of schema we have built should work when upgrading from one version to the next:</p>
+<ul>
+<li>try each schema with this predecessor:
+<ul>
+<li><code>SchemaPersistentV1.sql</code> with <code>SchemaPersistentV0.sql</code> as the previous</li>
+<li><code>SchemaPersistentV2.sql</code> with <code>SchemaPersistentV1.sql</code> as the previous</li>
+<li><code>SchemaPersistentV3.sql</code> with <code>SchemaPersistentV2.sql</code> as the previous</li>
+</ul></li>
+<li>if any of these produce errors something is structurally wrong with the test or else previous schema validation is broken</li>
+</ul>
+<p>** Two-Step Upgrades **</p>
+<p>Now we verify that we can go from any version to any other version with a stop in between to persist.</p>
+<p>An example should make this clearer:</p>
+<ul>
+<li>We start from scratch and go to v2
+<ul>
+<li>this should produce the v2 reference schema output as before</li>
+</ul></li>
+<li>We run the v4 upgrader on this v2 schema
+<ul>
+<li>this should produce the v4 reference schema output as before</li>
+<li>i.e. if we go from nothing to v2 to v4 we get the same as if we just go to v4 directly</li>
+</ul></li>
+</ul>
+<p>There are quite a few combinations like this, the test output lists them all:</p>
+<pre><code>Upgrade from nothing to v0, then to v0 -- must match direct update to v0
+Upgrade from nothing to v0, then to v1 -- must match direct update to v1
+Upgrade from nothing to v1, then to v1 -- must match direct update to v1
+Upgrade from nothing to v0, then to v2 -- must match direct update to v2
+Upgrade from nothing to v1, then to v2 -- must match direct update to v2
+Upgrade from nothing to v2, then to v2 -- must match direct update to v2
+Upgrade from nothing to v0, then to v3 -- must match direct update to v3
+Upgrade from nothing to v1, then to v3 -- must match direct update to v3
+Upgrade from nothing to v2, then to v3 -- must match direct update to v3
+Upgrade from nothing to v3, then to v3 -- must match direct update to v3</code></pre>
+<p>Note that one of the combinations tested is starting on <code>Vn</code> and “upgrading” from there to <code>Vn</code>. This should do nothing.</p>
+<p>** Testing downgrade **</p>
+<p>Here we make sure that any attempt to “go backwards” results in an error.</p>
+<ul>
+<li>the <code>v3</code> schema created by the previous test is used as input to the downgrade test</li>
+<li>the downgrade test was linked with the <code>v2</code> upgrader</li>
+<li>when executed the <code>v2</code> upgrader should report the error
+<ul>
+<li>this test’s verifier checks for a correct error report</li>
+</ul></li>
+<li>the test test fails if the error is no correctly reported</li>
+</ul>
+<p>The combination of testing reference outputs plus testing these many invariants at various stages results in a powerful integration test. The actual schema for the varios versions includes all the supported transitions such as creating and deleting tables and columns, and recreating views, indicies, and triggers.</p>
+<p>All of the possible transitions are more fully discussed in <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> of the Guide which pairs nicely with the previous schema validions discussed in <a href="https://cgsql.dev/cql-guide/ch11">Chapter 11</a>.</p>
+<h3 id="testing-the-line-directives-produced-by-cql">Testing the <code>#line</code> directives produced by CQL</h3>
+<p>[An additional section should be added for the code that verifies the source line number mappings even though this is a pretty exotic case.]</p>
+<h3 id="summary">Summary</h3>
+<p>While there are a few more isolated verifications that happen in <code>test.sh</code> and of course there is the plumbing necessary to let <code>cov.sh</code> use the test script to create coverage reports, the above forms make up the vast majority of the test patterns.</p>
+<p>Generally, the test files are designed to hold as many tests as can reasonably fit with the gating factor being cases where different flags are necessary. There are two different stages were many different tiny input files are used to create trivial failures like missing command line arguments and such. But those cases are all just looking for simple error text and a failure code, so they should be self-evident. With so many options, many such baby tests are needed.</p>
 </body>
 </html>

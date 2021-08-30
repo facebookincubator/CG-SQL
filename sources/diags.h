@@ -42,3 +42,9 @@
     #define _Nullable
 #endif
 #endif
+
+#if defined(CQL_AMALGAM_LEAN)
+// in this version there are going to be unused stubs a-plenty
+#pragma clang diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic ignored "-Wunused-variable"
+#endif

@@ -7,6 +7,12 @@
 
 #pragma once
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// minimal stuff goes here (none at this point)
+
+#else
+
 #include "ast.h"
 #include "bytebuf.h"
 #include "symtab.h"
@@ -29,3 +35,5 @@ cql_noexport ast_node *_Nonnull eval_set(ast_node *_Nonnull expr, eval_node *_No
 cql_noexport void eval_cast_to(eval_node *_Nonnull result, sem_t sem_type);
 cql_noexport void eval_add_one(eval_node *_Nonnull result);
 cql_noexport void eval_format_number(eval_node *_Nonnull result, charbuf *_Nonnull output);
+
+#endif

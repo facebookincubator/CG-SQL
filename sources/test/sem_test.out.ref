@@ -8859,6 +8859,359 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
+SET X := ( SELECT round() );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := round();
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {call}: err
+    | {name round}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT round(1, 2, 3) );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     |           | {arg_list}
+    |     |             | {int 3}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT round(1.5, 'x') );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0082: second argument must be numeric 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.5}: real notnull
+    |     |         | {arg_list}
+    |     |           | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT round(1, 2) );
+
+Error at test/sem_test.sql:XXXX : in call : CQL0087: first argument must be of type real 'round'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET ll := ( SELECT round(1.0, 2) );
+
+  {let_stmt}: ll: longint notnull variable
+  | {name ll}: ll: longint notnull variable
+  | {select_stmt}: _anon: longint notnull
+    | {select_core_list}: select: { _anon: longint notnull }
+    | | {select_core}: select: { _anon: longint notnull }
+    |   | {select_expr_list_con}: select: { _anon: longint notnull }
+    |     | {select_expr_list}: select: { _anon: longint notnull }
+    |     | | {select_expr}: longint notnull
+    |     |   | {call}: longint notnull
+    |     |     | {name round}: longint notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET ll := ( SELECT round(1.0) );
+
+  {assign}: ll: longint notnull variable
+  | {name ll}: ll: longint notnull variable
+  | {select_stmt}: _anon: longint notnull
+    | {select_core_list}: select: { _anon: longint notnull }
+    | | {select_core}: select: { _anon: longint notnull }
+    |   | {select_expr_list_con}: select: { _anon: longint notnull }
+    |     | {select_expr_list}: select: { _anon: longint notnull }
+    |     | | {select_expr}: longint notnull
+    |     |   | {call}: longint notnull
+    |     |     | {name round}: longint notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET NLL := ( SELECT round(nullable(1.0)) );
+
+  {let_stmt}: NLL: longint variable
+  | {name NLL}: NLL: longint variable
+  | {select_stmt}: _anon: longint
+    | {select_core_list}: select: { _anon: longint }
+    | | {select_core}: select: { _anon: longint }
+    |   | {select_expr_list_con}: select: { _anon: longint }
+    |     | {select_expr_list}: select: { _anon: longint }
+    |     | | {select_expr}: longint
+    |     |   | {call}: longint
+    |     |     | {name round}: longint
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: real
+    |     |           | {name nullable}: real
+    |     |           | {call_arg_list}
+    |     |             | {call_filter_clause}
+    |     |             | {arg_list}: ok
+    |     |               | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET NLL := ( SELECT round(1.0, nullable(1)) );
+
+  {assign}: NLL: longint variable
+  | {name NLL}: NLL: longint variable
+  | {select_stmt}: _anon: longint
+    | {select_core_list}: select: { _anon: longint }
+    | | {select_core}: select: { _anon: longint }
+    |   | {select_expr_list_con}: select: { _anon: longint }
+    |     | {select_expr_list}: select: { _anon: longint }
+    |     | | {select_expr}: longint
+    |     |   | {call}: longint
+    |     |     | {name round}: longint
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {call}: integer
+    |     |             | {name nullable}: integer
+    |     |             | {call_arg_list}
+    |     |               | {call_filter_clause}
+    |     |               | {arg_list}: ok
+    |     |                 | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET SNL := ( SELECT round(sensitive(nullable(1.0))) );
+
+  {let_stmt}: SNL: longint variable sensitive
+  | {name SNL}: SNL: longint variable sensitive
+  | {select_stmt}: _anon: longint sensitive
+    | {select_core_list}: select: { _anon: longint sensitive }
+    | | {select_core}: select: { _anon: longint sensitive }
+    |   | {select_expr_list_con}: select: { _anon: longint sensitive }
+    |     | {select_expr_list}: select: { _anon: longint sensitive }
+    |     | | {select_expr}: longint sensitive
+    |     |   | {call}: longint sensitive
+    |     |     | {name round}: longint sensitive
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: real sensitive
+    |     |           | {name sensitive}: real sensitive
+    |     |           | {call_arg_list}
+    |     |             | {call_filter_clause}
+    |     |             | {arg_list}: ok
+    |     |               | {call}: real
+    |     |                 | {name nullable}: real
+    |     |                 | {call_arg_list}
+    |     |                   | {call_filter_clause}
+    |     |                   | {arg_list}: ok
+    |     |                     | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET SNL := ( SELECT round(nullable(1.0), sensitive(1)) );
+
+  {assign}: SNL: longint variable sensitive
+  | {name SNL}: SNL: longint variable sensitive
+  | {select_stmt}: _anon: longint sensitive
+    | {select_core_list}: select: { _anon: longint sensitive }
+    | | {select_core}: select: { _anon: longint sensitive }
+    |   | {select_expr_list_con}: select: { _anon: longint sensitive }
+    |     | {select_expr_list}: select: { _anon: longint sensitive }
+    |     | | {select_expr}: longint sensitive
+    |     |   | {call}: longint sensitive
+    |     |     | {name round}: longint sensitive
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: real
+    |     |         | | {name nullable}: real
+    |     |         | | {call_arg_list}
+    |     |         |   | {call_filter_clause}
+    |     |         |   | {arg_list}: ok
+    |     |         |     | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {call}: integer notnull sensitive
+    |     |             | {name sensitive}: integer notnull sensitive
+    |     |             | {call_arg_list}
+    |     |               | {call_filter_clause}
+    |     |               | {arg_list}: ok
+    |     |                 | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET ll := ( SELECT round(1.0, 2.0) );
+
+Error at test/sem_test.sql:XXXX : in num : CQL0001: operands must be an integer type, not real 'ROUND argument 2'
+
+  {assign}: err
+  | {name ll}: ll: longint notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name round}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     |         | {arg_list}
+    |     |           | {dbl 2.0}: err
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 SET X := ( SELECT avg(1, 2)
   FROM foo );
 
@@ -20611,16 +20964,6 @@ SELECT *
     | {delete_attr}
       | {version_annotation}
         | {int 2}
-
-The statement ending at line XXXX
-
-DECLARE ll LONG_INT NOT NULL;
-
-  {declare_vars_type}: longint notnull
-  | {name_list}: ll: longint notnull variable
-  | | {name ll}: ll: longint notnull variable
-  | {notnull}: longint notnull
-    | {type_long}: longint
 
 The statement ending at line XXXX
 
@@ -68160,6 +68503,1047 @@ END;
       | {let_stmt}: z4: integer variable
         | {name z4}: z4: integer variable
         | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC requires_out_returns_bool (OUT a INTEGER, OUT b BOOL)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name requires_out_returns_bool}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer variable out
+      | | {out}
+      | | {param_detail}: a: integer variable out
+      |   | {name a}: a: integer variable out
+      |   | {type_int}: integer
+      | {params}
+        | {param}: b: bool variable out
+          | {out}
+          | {param_detail}: b: bool variable out
+            | {name b}: b: bool variable out
+            | {type_bool}: bool
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_respect_out_args_in_true_conditions ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF a IS NOT NULL AND requires_out_returns_bool(a) THEN
+    LET x := a;
+  END IF;
+  IF requires_out_returns_bool(b) AND b IS NOT NULL THEN
+    LET y := b;
+  END IF;
+  IF c IS NOT NULL AND requires_out_returns_bool(c) AND c IS NOT NULL THEN
+    LET z := c;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_respect_out_args_in_true_conditions}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {and}: bool
+      | | | | {is_not}: bool notnull
+      | | | | | {name a}: a: integer variable
+      | | | | | {null}: null
+      | | | | {call}: bool
+      | | |   | {name requires_out_returns_bool}
+      | | |   | {call_arg_list}
+      | | |     | {call_filter_clause}
+      | | |     | {arg_list}: ok
+      | | |       | {name a}: a: integer variable
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x: integer variable
+      | |     | {name x}: x: integer variable
+      | |     | {name a}: a: integer variable
+      | | {if_alt}: ok
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {and}: bool
+      | | | | {call}: bool
+      | | | | | {name requires_out_returns_bool}
+      | | | | | {call_arg_list}
+      | | | |   | {call_filter_clause}
+      | | | |   | {arg_list}: ok
+      | | | |     | {name b}: b: integer variable
+      | | | | {is_not}: bool notnull
+      | | |   | {name b}: b: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: y: integer notnull variable
+      | |     | {name y}: y: integer notnull variable
+      | |     | {call}: b: integer notnull variable
+      | |       | {name cql_inferred_notnull}: b: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name b}: b: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {if_stmt}: bool
+        | {cond_action}: bool
+        | | {and}: bool
+        | | | {and}: bool
+        | | | | {is_not}: bool notnull
+        | | | | | {name c}: c: integer variable
+        | | | | | {null}: null
+        | | | | {call}: bool
+        | | |   | {name requires_out_returns_bool}
+        | | |   | {call_arg_list}
+        | | |     | {call_filter_clause}
+        | | |     | {arg_list}: ok
+        | | |       | {name c}: c: integer variable
+        | | | {is_not}: bool notnull
+        | |   | {name c}: c: integer variable
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: z: integer notnull variable
+        |     | {name z}: z: integer notnull variable
+        |     | {call}: c: integer notnull variable
+        |       | {name cql_inferred_notnull}: c: integer notnull variable
+        |       | {call_arg_list}
+        |         | {call_filter_clause}
+        |         | {arg_list}: ok
+        |           | {name c}: c: integer inferred_notnull variable
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_respect_out_args_in_false_conditions ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF a IS NULL OR requires_out_returns_bool(a) THEN
+    LET dummy0 := 0;
+  ELSE
+    LET x := a;
+  END IF;
+  IF requires_out_returns_bool(b) OR b IS NULL THEN
+    LET dummy1 := 0;
+  ELSE
+    LET y := b;
+  END IF;
+  IF c IS NULL OR requires_out_returns_bool(c) OR c IS NULL THEN
+    LET dummy2 := 0;
+  ELSE
+    LET z := c;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_respect_out_args_in_false_conditions}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {or}: bool
+      | | | | {is}: bool notnull
+      | | | | | {name a}: a: integer variable
+      | | | | | {null}: null
+      | | | | {call}: bool
+      | | |   | {name requires_out_returns_bool}
+      | | |   | {call_arg_list}
+      | | |     | {call_filter_clause}
+      | | |     | {arg_list}: ok
+      | | |       | {name a}: a: integer variable
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: dummy0: integer notnull variable
+      | |     | {name dummy0}: dummy0: integer notnull variable
+      | |     | {int 0}: integer notnull
+      | | {if_alt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {let_stmt}: x: integer variable
+      |         | {name x}: x: integer variable
+      |         | {name a}: a: integer variable
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {or}: bool
+      | | | | {call}: bool
+      | | | | | {name requires_out_returns_bool}
+      | | | | | {call_arg_list}
+      | | | |   | {call_filter_clause}
+      | | | |   | {arg_list}: ok
+      | | | |     | {name b}: b: integer variable
+      | | | | {is}: bool notnull
+      | | |   | {name b}: b: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: dummy1: integer notnull variable
+      | |     | {name dummy1}: dummy1: integer notnull variable
+      | |     | {int 0}: integer notnull
+      | | {if_alt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {let_stmt}: y: integer notnull variable
+      |         | {name y}: y: integer notnull variable
+      |         | {call}: b: integer notnull variable
+      |           | {name cql_inferred_notnull}: b: integer notnull variable
+      |           | {call_arg_list}
+      |             | {call_filter_clause}
+      |             | {arg_list}: ok
+      |               | {name b}: b: integer inferred_notnull variable
+      | {if_stmt}: bool
+        | {cond_action}: bool
+        | | {or}: bool
+        | | | {or}: bool
+        | | | | {is}: bool notnull
+        | | | | | {name c}: c: integer variable
+        | | | | | {null}: null
+        | | | | {call}: bool
+        | | |   | {name requires_out_returns_bool}
+        | | |   | {call_arg_list}
+        | | |     | {call_filter_clause}
+        | | |     | {arg_list}: ok
+        | | |       | {name c}: c: integer variable
+        | | | {is}: bool notnull
+        | |   | {name c}: c: integer variable
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: dummy2: integer notnull variable
+        |     | {name dummy2}: dummy2: integer notnull variable
+        |     | {int 0}: integer notnull
+        | {if_alt}: ok
+          | {else}: ok
+            | {stmt_list}: ok
+              | {let_stmt}: z: integer notnull variable
+                | {name z}: z: integer notnull variable
+                | {call}: c: integer notnull variable
+                  | {name cql_inferred_notnull}: c: integer notnull variable
+                  | {call_arg_list}
+                    | {call_filter_clause}
+                    | {arg_list}: ok
+                      | {name c}: c: integer inferred_notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_respect_out_args_in_false_conditions_for_guards ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF a IS NULL OR requires_out_returns_bool(a) THEN
+    RETURN;
+  END IF;
+  LET x := a;
+  IF requires_out_returns_bool(b) OR b IS NULL THEN
+    RETURN;
+  END IF;
+  LET y := b;
+  IF c IS NULL OR requires_out_returns_bool(c) OR c IS NULL THEN
+    RETURN;
+  END IF;
+  LET z := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_respect_out_args_in_false_conditions_for_guards}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {or}: bool
+      | | | | {is}: bool notnull
+      | | | | | {name a}: a: integer variable
+      | | | | | {null}: null
+      | | | | {call}: bool
+      | | |   | {name requires_out_returns_bool}
+      | | |   | {call_arg_list}
+      | | |     | {call_filter_clause}
+      | | |     | {arg_list}: ok
+      | | |       | {name a}: a: integer variable
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x: integer variable
+      | | {name x}: x: integer variable
+      | | {name a}: a: integer variable
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {or}: bool
+      | | | | {call}: bool
+      | | | | | {name requires_out_returns_bool}
+      | | | | | {call_arg_list}
+      | | | |   | {call_filter_clause}
+      | | | |   | {arg_list}: ok
+      | | | |     | {name b}: b: integer variable
+      | | | | {is}: bool notnull
+      | | |   | {name b}: b: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: y: integer notnull variable
+      | | {name y}: y: integer notnull variable
+      | | {call}: b: integer notnull variable
+      |   | {name cql_inferred_notnull}: b: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name b}: b: integer inferred_notnull variable
+      | {if_stmt}: bool
+      | | {cond_action}: bool
+      | | | {or}: bool
+      | | | | {or}: bool
+      | | | | | {is}: bool notnull
+      | | | | | | {name c}: c: integer variable
+      | | | | | | {null}: null
+      | | | | | {call}: bool
+      | | | |   | {name requires_out_returns_bool}
+      | | | |   | {call_arg_list}
+      | | | |     | {call_filter_clause}
+      | | | |     | {arg_list}: ok
+      | | | |       | {name c}: c: integer variable
+      | | | | {is}: bool notnull
+      | | |   | {name c}: c: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: z: integer notnull variable
+        | {name z}: z: integer notnull variable
+        | {call}: c: integer notnull variable
+          | {name cql_inferred_notnull}: c: integer notnull variable
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name c}: c: integer inferred_notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC unimprovements_do_not_negatively_affect_later_branches ()
+BEGIN
+  DECLARE a INTEGER;
+  LET x0 := a;
+  IF a IS NULL THEN
+    RETURN;
+  END IF;
+  LET x1 := a;
+  IF 0 THEN
+    SET a := NULL;
+    LET x2 := a;
+  ELSE IF 0 THEN
+    LET x3 := a;
+    SET a := NULL;
+    LET x4 := a;
+  ELSE
+    LET x5 := a;
+  END IF;
+  LET x6 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name unimprovements_do_not_negatively_affect_later_branches}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {name a}: a: integer variable
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name a}: a: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x1: integer notnull variable
+      | | {name x1}: x1: integer notnull variable
+      | | {call}: a: integer notnull variable
+      |   | {name cql_inferred_notnull}: a: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name a}: a: integer inferred_notnull variable
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable
+      | |   | | {name a}: a: integer variable
+      | |   | | {null}: null
+      | |   | {let_stmt}: x2: integer variable
+      | |     | {name x2}: x2: integer variable
+      | |     | {name a}: a: integer variable
+      | | {if_alt}: ok
+      |   | {elseif}: integer notnull
+      |   | | {cond_action}: integer notnull
+      |   |   | {int 0}: integer notnull
+      |   |   | {stmt_list}: ok
+      |   |     | {let_stmt}: x3: integer notnull variable
+      |   |     | | {name x3}: x3: integer notnull variable
+      |   |     | | {call}: a: integer notnull variable
+      |   |     |   | {name cql_inferred_notnull}: a: integer notnull variable
+      |   |     |   | {call_arg_list}
+      |   |     |     | {call_filter_clause}
+      |   |     |     | {arg_list}: ok
+      |   |     |       | {name a}: a: integer inferred_notnull variable
+      |   |     | {assign}: a: integer variable
+      |   |     | | {name a}: a: integer variable
+      |   |     | | {null}: null
+      |   |     | {let_stmt}: x4: integer variable
+      |   |       | {name x4}: x4: integer variable
+      |   |       | {name a}: a: integer variable
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {let_stmt}: x5: integer notnull variable
+      |         | {name x5}: x5: integer notnull variable
+      |         | {call}: a: integer notnull variable
+      |           | {name cql_inferred_notnull}: a: integer notnull variable
+      |           | {call_arg_list}
+      |             | {call_filter_clause}
+      |             | {arg_list}: ok
+      |               | {name a}: a: integer inferred_notnull variable
+      | {let_stmt}: x6: integer variable
+        | {name x6}: x6: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC nested_unimprovements_do_not_negatively_affect_later_branches ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  IF a IS NULL OR b IS NULL OR c IS NULL THEN
+    RETURN;
+  END IF;
+  LET x0 := a;
+  LET y0 := b;
+  LET z0 := c;
+  IF 0 THEN
+    IF 0 THEN
+      SET a := NULL;
+      IF 0 THEN
+        SET b := NULL;
+      ELSE
+        SET a := 42;
+        SET c := NULL;
+        LET x1 := a;
+        LET y1 := b;
+        LET z1 := c;
+        SET a := NULL;
+        IF a IS NULL THEN
+          SET a := NULL;
+        ELSE IF c IS NULL THEN
+          SET b := NULL;
+          LET x2 := a;
+          LET y2 := b;
+          LET z2 := c;
+        ELSE IF requires_out_returns_bool(a) THEN
+          LET x3 := a;
+          LET y3 := b;
+          LET z3 := c;
+          SET b := NULL;
+          SET c := NULL;
+        ELSE
+          LET x4 := a;
+          LET y4 := b;
+          LET z4 := c;
+        END IF;
+        LET x5 := a;
+        LET y5 := b;
+        LET z5 := c;
+        SET a := 42;
+        SET b := 42;
+        SET c := 42;
+      END IF;
+      LET x6 := a;
+      LET y6 := b;
+      LET z6 := c;
+    ELSE
+      LET x7 := a;
+      LET y7 := b;
+      LET z7 := c;
+    END IF;
+    LET x8 := a;
+    LET y8 := b;
+    LET z8 := c;
+  ELSE
+    LET x9 := a;
+    LET y9 := b;
+    LET z9 := c;
+  END IF;
+  LET x10 := a;
+  LET y10 := b;
+  LET z10 := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name nested_unimprovements_do_not_negatively_affect_later_branches}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {or}: bool notnull
+      | | | | {or}: bool notnull
+      | | | | | {is}: bool notnull
+      | | | | | | {name a}: a: integer variable
+      | | | | | | {null}: null
+      | | | | | {is}: bool notnull
+      | | | |   | {name b}: b: integer variable
+      | | | |   | {null}: null
+      | | | | {is}: bool notnull
+      | | |   | {name c}: c: integer variable
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x0: integer notnull variable
+      | | {name x0}: x0: integer notnull variable
+      | | {call}: a: integer notnull variable
+      |   | {name cql_inferred_notnull}: a: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name a}: a: integer inferred_notnull variable
+      | {let_stmt}: y0: integer notnull variable
+      | | {name y0}: y0: integer notnull variable
+      | | {call}: b: integer notnull variable
+      |   | {name cql_inferred_notnull}: b: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name b}: b: integer inferred_notnull variable
+      | {let_stmt}: z0: integer notnull variable
+      | | {name z0}: z0: integer notnull variable
+      | | {call}: c: integer notnull variable
+      |   | {name cql_inferred_notnull}: c: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name c}: c: integer inferred_notnull variable
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: integer notnull
+      | |   | | {cond_action}: integer notnull
+      | |   | | | {int 0}: integer notnull
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {assign}: a: integer variable
+      | |   | |   | | {name a}: a: integer variable
+      | |   | |   | | {null}: null
+      | |   | |   | {if_stmt}: integer notnull
+      | |   | |   | | {cond_action}: integer notnull
+      | |   | |   | | | {int 0}: integer notnull
+      | |   | |   | | | {stmt_list}: ok
+      | |   | |   | |   | {assign}: b: integer variable
+      | |   | |   | |     | {name b}: b: integer variable
+      | |   | |   | |     | {null}: null
+      | |   | |   | | {if_alt}: ok
+      | |   | |   |   | {else}: ok
+      | |   | |   |     | {stmt_list}: ok
+      | |   | |   |       | {assign}: a: integer variable
+      | |   | |   |       | | {name a}: a: integer variable
+      | |   | |   |       | | {int 42}: integer notnull
+      | |   | |   |       | {assign}: c: integer variable
+      | |   | |   |       | | {name c}: c: integer variable
+      | |   | |   |       | | {null}: null
+      | |   | |   |       | {let_stmt}: x1: integer notnull variable
+      | |   | |   |       | | {name x1}: x1: integer notnull variable
+      | |   | |   |       | | {call}: a: integer notnull variable
+      | |   | |   |       |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   | |   |       |   | {call_arg_list}
+      | |   | |   |       |     | {call_filter_clause}
+      | |   | |   |       |     | {arg_list}: ok
+      | |   | |   |       |       | {name a}: a: integer inferred_notnull variable
+      | |   | |   |       | {let_stmt}: y1: integer notnull variable
+      | |   | |   |       | | {name y1}: y1: integer notnull variable
+      | |   | |   |       | | {call}: b: integer notnull variable
+      | |   | |   |       |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   | |   |       |   | {call_arg_list}
+      | |   | |   |       |     | {call_filter_clause}
+      | |   | |   |       |     | {arg_list}: ok
+      | |   | |   |       |       | {name b}: b: integer inferred_notnull variable
+      | |   | |   |       | {let_stmt}: z1: integer variable
+      | |   | |   |       | | {name z1}: z1: integer variable
+      | |   | |   |       | | {name c}: c: integer variable
+      | |   | |   |       | {assign}: a: integer variable
+      | |   | |   |       | | {name a}: a: integer variable
+      | |   | |   |       | | {null}: null
+      | |   | |   |       | {if_stmt}: bool notnull
+      | |   | |   |       | | {cond_action}: bool notnull
+      | |   | |   |       | | | {is}: bool notnull
+      | |   | |   |       | | | | {name a}: a: integer variable
+      | |   | |   |       | | | | {null}: null
+      | |   | |   |       | | | {stmt_list}: ok
+      | |   | |   |       | |   | {assign}: a: integer variable
+      | |   | |   |       | |     | {name a}: a: integer variable
+      | |   | |   |       | |     | {null}: null
+      | |   | |   |       | | {if_alt}: ok
+      | |   | |   |       |   | {elseif}: bool notnull
+      | |   | |   |       |   | | {cond_action}: bool notnull
+      | |   | |   |       |   | | | {is}: bool notnull
+      | |   | |   |       |   | | | | {name c}: c: integer variable
+      | |   | |   |       |   | | | | {null}: null
+      | |   | |   |       |   | | | {stmt_list}: ok
+      | |   | |   |       |   | |   | {assign}: b: integer variable
+      | |   | |   |       |   | |   | | {name b}: b: integer variable
+      | |   | |   |       |   | |   | | {null}: null
+      | |   | |   |       |   | |   | {let_stmt}: x2: integer notnull variable
+      | |   | |   |       |   | |   | | {name x2}: x2: integer notnull variable
+      | |   | |   |       |   | |   | | {call}: a: integer notnull variable
+      | |   | |   |       |   | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   | |   |       |   | |   |   | {call_arg_list}
+      | |   | |   |       |   | |   |     | {call_filter_clause}
+      | |   | |   |       |   | |   |     | {arg_list}: ok
+      | |   | |   |       |   | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | |   |       |   | |   | {let_stmt}: y2: integer variable
+      | |   | |   |       |   | |   | | {name y2}: y2: integer variable
+      | |   | |   |       |   | |   | | {name b}: b: integer variable
+      | |   | |   |       |   | |   | {let_stmt}: z2: integer variable
+      | |   | |   |       |   | |     | {name z2}: z2: integer variable
+      | |   | |   |       |   | |     | {name c}: c: integer variable
+      | |   | |   |       |   | | {elseif}: bool
+      | |   | |   |       |   |   | {cond_action}: bool
+      | |   | |   |       |   |     | {call}: bool
+      | |   | |   |       |   |     | | {name requires_out_returns_bool}
+      | |   | |   |       |   |     | | {call_arg_list}
+      | |   | |   |       |   |     |   | {call_filter_clause}
+      | |   | |   |       |   |     |   | {arg_list}: ok
+      | |   | |   |       |   |     |     | {name a}: a: integer inferred_notnull variable
+      | |   | |   |       |   |     | {stmt_list}: ok
+      | |   | |   |       |   |       | {let_stmt}: x3: integer variable
+      | |   | |   |       |   |       | | {name x3}: x3: integer variable
+      | |   | |   |       |   |       | | {name a}: a: integer variable
+      | |   | |   |       |   |       | {let_stmt}: y3: integer notnull variable
+      | |   | |   |       |   |       | | {name y3}: y3: integer notnull variable
+      | |   | |   |       |   |       | | {call}: b: integer notnull variable
+      | |   | |   |       |   |       |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   | |   |       |   |       |   | {call_arg_list}
+      | |   | |   |       |   |       |     | {call_filter_clause}
+      | |   | |   |       |   |       |     | {arg_list}: ok
+      | |   | |   |       |   |       |       | {name b}: b: integer inferred_notnull variable
+      | |   | |   |       |   |       | {let_stmt}: z3: integer notnull variable
+      | |   | |   |       |   |       | | {name z3}: z3: integer notnull variable
+      | |   | |   |       |   |       | | {call}: c: integer notnull variable
+      | |   | |   |       |   |       |   | {name cql_inferred_notnull}: c: integer notnull variable
+      | |   | |   |       |   |       |   | {call_arg_list}
+      | |   | |   |       |   |       |     | {call_filter_clause}
+      | |   | |   |       |   |       |     | {arg_list}: ok
+      | |   | |   |       |   |       |       | {name c}: c: integer inferred_notnull variable
+      | |   | |   |       |   |       | {assign}: b: integer variable
+      | |   | |   |       |   |       | | {name b}: b: integer variable
+      | |   | |   |       |   |       | | {null}: null
+      | |   | |   |       |   |       | {assign}: c: integer variable
+      | |   | |   |       |   |         | {name c}: c: integer variable
+      | |   | |   |       |   |         | {null}: null
+      | |   | |   |       |   | {else}: ok
+      | |   | |   |       |     | {stmt_list}: ok
+      | |   | |   |       |       | {let_stmt}: x4: integer variable
+      | |   | |   |       |       | | {name x4}: x4: integer variable
+      | |   | |   |       |       | | {name a}: a: integer variable
+      | |   | |   |       |       | {let_stmt}: y4: integer notnull variable
+      | |   | |   |       |       | | {name y4}: y4: integer notnull variable
+      | |   | |   |       |       | | {call}: b: integer notnull variable
+      | |   | |   |       |       |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   | |   |       |       |   | {call_arg_list}
+      | |   | |   |       |       |     | {call_filter_clause}
+      | |   | |   |       |       |     | {arg_list}: ok
+      | |   | |   |       |       |       | {name b}: b: integer inferred_notnull variable
+      | |   | |   |       |       | {let_stmt}: z4: integer notnull variable
+      | |   | |   |       |         | {name z4}: z4: integer notnull variable
+      | |   | |   |       |         | {call}: c: integer notnull variable
+      | |   | |   |       |           | {name cql_inferred_notnull}: c: integer notnull variable
+      | |   | |   |       |           | {call_arg_list}
+      | |   | |   |       |             | {call_filter_clause}
+      | |   | |   |       |             | {arg_list}: ok
+      | |   | |   |       |               | {name c}: c: integer inferred_notnull variable
+      | |   | |   |       | {let_stmt}: x5: integer variable
+      | |   | |   |       | | {name x5}: x5: integer variable
+      | |   | |   |       | | {name a}: a: integer variable
+      | |   | |   |       | {let_stmt}: y5: integer variable
+      | |   | |   |       | | {name y5}: y5: integer variable
+      | |   | |   |       | | {name b}: b: integer variable
+      | |   | |   |       | {let_stmt}: z5: integer variable
+      | |   | |   |       | | {name z5}: z5: integer variable
+      | |   | |   |       | | {name c}: c: integer variable
+      | |   | |   |       | {assign}: a: integer variable
+      | |   | |   |       | | {name a}: a: integer variable
+      | |   | |   |       | | {int 42}: integer notnull
+      | |   | |   |       | {assign}: b: integer variable
+      | |   | |   |       | | {name b}: b: integer variable
+      | |   | |   |       | | {int 42}: integer notnull
+      | |   | |   |       | {assign}: c: integer variable
+      | |   | |   |         | {name c}: c: integer variable
+      | |   | |   |         | {int 42}: integer notnull
+      | |   | |   | {let_stmt}: x6: integer variable
+      | |   | |   | | {name x6}: x6: integer variable
+      | |   | |   | | {name a}: a: integer variable
+      | |   | |   | {let_stmt}: y6: integer variable
+      | |   | |   | | {name y6}: y6: integer variable
+      | |   | |   | | {name b}: b: integer variable
+      | |   | |   | {let_stmt}: z6: integer variable
+      | |   | |     | {name z6}: z6: integer variable
+      | |   | |     | {name c}: c: integer variable
+      | |   | | {if_alt}: ok
+      | |   |   | {else}: ok
+      | |   |     | {stmt_list}: ok
+      | |   |       | {let_stmt}: x7: integer notnull variable
+      | |   |       | | {name x7}: x7: integer notnull variable
+      | |   |       | | {call}: a: integer notnull variable
+      | |   |       |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   |       |   | {call_arg_list}
+      | |   |       |     | {call_filter_clause}
+      | |   |       |     | {arg_list}: ok
+      | |   |       |       | {name a}: a: integer inferred_notnull variable
+      | |   |       | {let_stmt}: y7: integer notnull variable
+      | |   |       | | {name y7}: y7: integer notnull variable
+      | |   |       | | {call}: b: integer notnull variable
+      | |   |       |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   |       |   | {call_arg_list}
+      | |   |       |     | {call_filter_clause}
+      | |   |       |     | {arg_list}: ok
+      | |   |       |       | {name b}: b: integer inferred_notnull variable
+      | |   |       | {let_stmt}: z7: integer notnull variable
+      | |   |         | {name z7}: z7: integer notnull variable
+      | |   |         | {call}: c: integer notnull variable
+      | |   |           | {name cql_inferred_notnull}: c: integer notnull variable
+      | |   |           | {call_arg_list}
+      | |   |             | {call_filter_clause}
+      | |   |             | {arg_list}: ok
+      | |   |               | {name c}: c: integer inferred_notnull variable
+      | |   | {let_stmt}: x8: integer variable
+      | |   | | {name x8}: x8: integer variable
+      | |   | | {name a}: a: integer variable
+      | |   | {let_stmt}: y8: integer variable
+      | |   | | {name y8}: y8: integer variable
+      | |   | | {name b}: b: integer variable
+      | |   | {let_stmt}: z8: integer variable
+      | |     | {name z8}: z8: integer variable
+      | |     | {name c}: c: integer variable
+      | | {if_alt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {let_stmt}: x9: integer notnull variable
+      |       | | {name x9}: x9: integer notnull variable
+      |       | | {call}: a: integer notnull variable
+      |       |   | {name cql_inferred_notnull}: a: integer notnull variable
+      |       |   | {call_arg_list}
+      |       |     | {call_filter_clause}
+      |       |     | {arg_list}: ok
+      |       |       | {name a}: a: integer inferred_notnull variable
+      |       | {let_stmt}: y9: integer notnull variable
+      |       | | {name y9}: y9: integer notnull variable
+      |       | | {call}: b: integer notnull variable
+      |       |   | {name cql_inferred_notnull}: b: integer notnull variable
+      |       |   | {call_arg_list}
+      |       |     | {call_filter_clause}
+      |       |     | {arg_list}: ok
+      |       |       | {name b}: b: integer inferred_notnull variable
+      |       | {let_stmt}: z9: integer notnull variable
+      |         | {name z9}: z9: integer notnull variable
+      |         | {call}: c: integer notnull variable
+      |           | {name cql_inferred_notnull}: c: integer notnull variable
+      |           | {call_arg_list}
+      |             | {call_filter_clause}
+      |             | {arg_list}: ok
+      |               | {name c}: c: integer inferred_notnull variable
+      | {let_stmt}: x10: integer variable
+      | | {name x10}: x10: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y10: integer variable
+      | | {name y10}: y10: integer variable
+      | | {name b}: b: integer variable
+      | {let_stmt}: z10: integer variable
+        | {name z10}: z10: integer variable
+        | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC reverting_improvements_and_unimprovements_restores_original_state ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  DECLARE d INTEGER;
+  IF b IS NULL THEN
+    RETURN;
+  END IF;
+  SET c := 42;
+  LET x0 := a;
+  LET y0 := b;
+  LET z0 := c;
+  LET w0 := d;
+  IF 0 THEN
+    IF a IS NOT NULL THEN
+      LET x1 := a;
+      LET y1 := b;
+      LET z1 := c;
+      LET w1 := d;
+      SET b := NULL;
+      SET c := NULL;
+      IF c IS NOT NULL THEN
+        LET dummy := 0;
+      END IF;
+      SET d := 42;
+      LET x2 := a;
+      LET y2 := b;
+      LET z2 := c;
+      LET w2 := d;
+    END IF;
+    LET x3 := a;
+    LET y3 := b;
+    LET z3 := c;
+    LET w3 := d;
+    SET a := NULL;
+  ELSE
+    LET x4 := a;
+    LET y4 := b;
+    LET z4 := c;
+    LET w4 := d;
+  END IF;
+  LET x5 := a;
+  LET y5 := b;
+  LET z5 := c;
+  LET w5 := d;
+END;
+
+  {create_proc_stmt}: ok
+  | {name reverting_improvements_and_unimprovements_restores_original_state}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: d: integer variable
+      | | | {name d}: d: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name b}: b: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {assign}: c: integer variable
+      | | {name c}: c: integer variable
+      | | {int 42}: integer notnull
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y0: integer notnull variable
+      | | {name y0}: y0: integer notnull variable
+      | | {call}: b: integer notnull variable
+      |   | {name cql_inferred_notnull}: b: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name b}: b: integer inferred_notnull variable
+      | {let_stmt}: z0: integer notnull variable
+      | | {name z0}: z0: integer notnull variable
+      | | {call}: c: integer notnull variable
+      |   | {name cql_inferred_notnull}: c: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name c}: c: integer inferred_notnull variable
+      | {let_stmt}: w0: integer variable
+      | | {name w0}: w0: integer variable
+      | | {name d}: d: integer variable
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is_not}: bool notnull
+      | |   | | | | {name a}: a: integer variable
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {let_stmt}: x1: integer notnull variable
+      | |   | |   | | {name x1}: x1: integer notnull variable
+      | |   | |   | | {call}: a: integer notnull variable
+      | |   | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   | |   |   | {call_arg_list}
+      | |   | |   |     | {call_filter_clause}
+      | |   | |   |     | {arg_list}: ok
+      | |   | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | |   | {let_stmt}: y1: integer notnull variable
+      | |   | |   | | {name y1}: y1: integer notnull variable
+      | |   | |   | | {call}: b: integer notnull variable
+      | |   | |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+      | |   | |   |   | {call_arg_list}
+      | |   | |   |     | {call_filter_clause}
+      | |   | |   |     | {arg_list}: ok
+      | |   | |   |       | {name b}: b: integer inferred_notnull variable
+      | |   | |   | {let_stmt}: z1: integer notnull variable
+      | |   | |   | | {name z1}: z1: integer notnull variable
+      | |   | |   | | {call}: c: integer notnull variable
+      | |   | |   |   | {name cql_inferred_notnull}: c: integer notnull variable
+      | |   | |   |   | {call_arg_list}
+      | |   | |   |     | {call_filter_clause}
+      | |   | |   |     | {arg_list}: ok
+      | |   | |   |       | {name c}: c: integer inferred_notnull variable
+      | |   | |   | {let_stmt}: w1: integer variable
+      | |   | |   | | {name w1}: w1: integer variable
+      | |   | |   | | {name d}: d: integer variable
+      | |   | |   | {assign}: b: integer variable
+      | |   | |   | | {name b}: b: integer variable
+      | |   | |   | | {null}: null
+      | |   | |   | {assign}: c: integer variable
+      | |   | |   | | {name c}: c: integer variable
+      | |   | |   | | {null}: null
+      | |   | |   | {if_stmt}: bool notnull
+      | |   | |   | | {cond_action}: bool notnull
+      | |   | |   | | | {is_not}: bool notnull
+      | |   | |   | | | | {name c}: c: integer variable
+      | |   | |   | | | | {null}: null
+      | |   | |   | | | {stmt_list}: ok
+      | |   | |   | |   | {let_stmt}: dummy: integer notnull variable
+      | |   | |   | |     | {name dummy}: dummy: integer notnull variable
+      | |   | |   | |     | {int 0}: integer notnull
+      | |   | |   | | {if_alt}: ok
+      | |   | |   | {assign}: d: integer variable
+      | |   | |   | | {name d}: d: integer variable
+      | |   | |   | | {int 42}: integer notnull
+      | |   | |   | {let_stmt}: x2: integer notnull variable
+      | |   | |   | | {name x2}: x2: integer notnull variable
+      | |   | |   | | {call}: a: integer notnull variable
+      | |   | |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      | |   | |   |   | {call_arg_list}
+      | |   | |   |     | {call_filter_clause}
+      | |   | |   |     | {arg_list}: ok
+      | |   | |   |       | {name a}: a: integer inferred_notnull variable
+      | |   | |   | {let_stmt}: y2: integer variable
+      | |   | |   | | {name y2}: y2: integer variable
+      | |   | |   | | {name b}: b: integer variable
+      | |   | |   | {let_stmt}: z2: integer variable
+      | |   | |   | | {name z2}: z2: integer variable
+      | |   | |   | | {name c}: c: integer variable
+      | |   | |   | {let_stmt}: w2: integer notnull variable
+      | |   | |     | {name w2}: w2: integer notnull variable
+      | |   | |     | {call}: d: integer notnull variable
+      | |   | |       | {name cql_inferred_notnull}: d: integer notnull variable
+      | |   | |       | {call_arg_list}
+      | |   | |         | {call_filter_clause}
+      | |   | |         | {arg_list}: ok
+      | |   | |           | {name d}: d: integer inferred_notnull variable
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x3: integer variable
+      | |   | | {name x3}: x3: integer variable
+      | |   | | {name a}: a: integer variable
+      | |   | {let_stmt}: y3: integer variable
+      | |   | | {name y3}: y3: integer variable
+      | |   | | {name b}: b: integer variable
+      | |   | {let_stmt}: z3: integer variable
+      | |   | | {name z3}: z3: integer variable
+      | |   | | {name c}: c: integer variable
+      | |   | {let_stmt}: w3: integer variable
+      | |   | | {name w3}: w3: integer variable
+      | |   | | {name d}: d: integer variable
+      | |   | {assign}: a: integer variable
+      | |     | {name a}: a: integer variable
+      | |     | {null}: null
+      | | {if_alt}: ok
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {let_stmt}: x4: integer variable
+      |       | | {name x4}: x4: integer variable
+      |       | | {name a}: a: integer variable
+      |       | {let_stmt}: y4: integer notnull variable
+      |       | | {name y4}: y4: integer notnull variable
+      |       | | {call}: b: integer notnull variable
+      |       |   | {name cql_inferred_notnull}: b: integer notnull variable
+      |       |   | {call_arg_list}
+      |       |     | {call_filter_clause}
+      |       |     | {arg_list}: ok
+      |       |       | {name b}: b: integer inferred_notnull variable
+      |       | {let_stmt}: z4: integer notnull variable
+      |       | | {name z4}: z4: integer notnull variable
+      |       | | {call}: c: integer notnull variable
+      |       |   | {name cql_inferred_notnull}: c: integer notnull variable
+      |       |   | {call_arg_list}
+      |       |     | {call_filter_clause}
+      |       |     | {arg_list}: ok
+      |       |       | {name c}: c: integer inferred_notnull variable
+      |       | {let_stmt}: w4: integer variable
+      |         | {name w4}: w4: integer variable
+      |         | {name d}: d: integer variable
+      | {let_stmt}: x5: integer variable
+      | | {name x5}: x5: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y5: integer variable
+      | | {name y5}: y5: integer variable
+      | | {name b}: b: integer variable
+      | {let_stmt}: z5: integer variable
+      | | {name z5}: z5: integer variable
+      | | {name c}: c: integer variable
+      | {let_stmt}: w5: integer variable
+        | {name w5}: w5: integer variable
+        | {name d}: d: integer variable
 
 The statement ending at line XXXX
 

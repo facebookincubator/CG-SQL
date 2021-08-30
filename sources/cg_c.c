@@ -7,6 +7,15 @@
 
 // Perform codegen of the various nodes to "C".
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_CG_C)
+
+// stubs to avoid link errors.
+cql_noexport void cg_c_main(ast_node *head) {}
+cql_noexport void cg_c_init(void) {}
+cql_noexport void cg_c_cleanup() {}
+
+#else
+
 #include "cg_c.h"
 
 #include "ast.h"
@@ -7375,3 +7384,5 @@ cql_noexport void cg_c_cleanup() {
   temp_cstr_count = 0;
   temp_statement_emitted = false;
 }
+
+#endif

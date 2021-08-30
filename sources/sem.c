@@ -5,6 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// stubs to avoid link errors, 
+
+cql_noexport void sem_main(ast_node *head) {}
+cql_noexport void sem_cleanup() {}
+cql_noexport void print_sem_type(struct sem_node *sem) {}
+
+#else
+
 // Perform semantic analysis of the various nodes and validate type correctness
 // the semantic nodes contain enough information that code can be generated
 // include, importantly, data about the shape of any given select statement
@@ -44,22 +54,6 @@
 
 static symtab *non_sql_stmts;
 static symtab *sql_stmts;
-
-// When validating against the previous schema we need to make sure all these items
-// have been validated.  Any that are found in the old schema must match appropriately
-// and any that are not found must have suitable @create markers.
-cql_data_defn( list_item *all_tables_list );
-cql_data_defn( list_item *all_functions_list );
-cql_data_defn( list_item *all_views_list );
-cql_data_defn( list_item *all_indices_list );
-cql_data_defn( list_item *all_triggers_list );
-cql_data_defn( list_item *all_regions_list );
-cql_data_defn( list_item *all_ad_hoc_list );
-cql_data_defn( list_item *all_select_functions_list );
-cql_data_defn( list_item *all_enums_list );
-cql_data_defn( bool_t use_encode );
-cql_data_defn( CSTR _Nullable encode_context_column );
-cql_data_defn( symtab *encode_columns );
 
 // Note: initialized statics are moot because in amalgam mode the code
 // will not be reloaded... you have to re-initialize all statics in the cleanup function
@@ -114,10 +108,35 @@ static bytebuf *deployable_validations;
 // used both for unsetting improvements when the scope of an improvement ends
 // and for keeping track of improvements that require special treatment (i.e.,
 // improvements of globals must be unset at every CALL).
-typedef struct notnull_improvement_item {
+typedef struct notnull_improvement_context_item {
   sem_t *type;
-  struct notnull_improvement_item *next;
-} notnull_improvement_item;
+  struct notnull_improvement_context_item *next;
+} notnull_improvement_context_item;
+
+// A `notnull_improvement_context` is simply a list of context items.
+typedef notnull_improvement_context_item *notnull_improvement_context;
+
+// Indicates whether an improvement was set or unset within a
+// `notnull_improvement_history_item`.
+typedef enum {
+  NOTNULL_IMPROVEMENT_DELTA_WAS_SET,
+  NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET,
+} notnull_improvement_delta;
+
+// A list node used to record a nullability improvement or un-improvement. These
+// can be later replayed in the order opposite of that in which they originally
+// occurred with the converse action being taken at each step, thus restoring
+// the original state of the world before any improvements or un-improvements
+// were made. In essence, they are nothing more than a
+// `notnull_improvement_context_item` with a `notnull_improvement_delta`.
+typedef struct notnull_improvement_history_item {
+  sem_t *type;
+  notnull_improvement_delta delta;
+  struct notnull_improvement_history_item *next;
+} notnull_improvement_history_item;
+
+// A `notnull_improvement_history` is simply a list of history items.
+typedef notnull_improvement_history_item *notnull_improvement_history;
 
 // If a function has been registered via `FUNC_INIT`, its associated analysis
 // function must conform to the type `sem_func`. When called, its argument list
@@ -186,7 +205,8 @@ static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_n
 static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 static void sem_set_notnull_improved(CSTR name, CSTR scope);
 static void sem_unset_notnull_improved(CSTR name, CSTR scope);
-static void sem_unset_notnull_improvement_items(notnull_improvement_item *item);
+static void sem_unset_notnull_improvements_in_context(notnull_improvement_context context);
+static void sem_revert_notnull_improvement_history(notnull_improvement_history history);
 static void sem_set_notnull_improvements_for_true_condition(ast_node *expr, ast_node *select_expr_list);
 static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
 
@@ -311,12 +331,6 @@ static int32_t sem_stmt_level;
 // for making unique names of between temporaries
 static int32_t between_count;
 
-// If creating debug/test output, we will hold errors for a given statement in this buffer.
-cql_data_defn( charbuf *error_capture );
-
-// The flags for the global proc (which has no ast node) this is what captures loose statements
-cql_data_defn( sem_t global_proc_flags );
-
 // If we are nested in a loop/while.
 static int32_t loop_depth;
 
@@ -339,9 +353,6 @@ static int32_t schema_upgrade_version;
 // In a schema upgrade script we don't hide tables and we don't use create statements
 // in procs as declarations.
 static bool_t schema_upgrade_script;
-
-// If there is a current proc, it's root ast.
-cql_data_defn(ast_node *current_proc);
 
 // The current schema region if any, these do not nest
 static CSTR current_region;
@@ -375,10 +386,10 @@ static CSTR annotation_target;
 static bool_t is_analyzing_notnull_rewrite;
 
 // This keeps track of all global variables that may currently be improved to be
-// NOT NULL. We need this because we must unimprove all such variables before
+// NOT NULL. We need this because we must un-improve all such variables before
 // every CALL (because we don't do interprocedural analysis and cannot know
 // which globals may have been set to NULL).
-static notnull_improvement_item *notnull_improved_globals;
+static notnull_improvement_context global_notnull_improvement_context;
 
 // This is the context into which any nonnull improvements made will be
 // recorded. Each context holds all of the improvements that were made while it
@@ -387,21 +398,81 @@ static notnull_improvement_item *notnull_improved_globals;
 // remain in whichever context was the current context when it was first set.
 // This is okay because the goal of maintaining contexts is merely to be able to
 // unset all improvements within a given context when it ends.
-static notnull_improvement_item *current_notnull_improvement_context;
+static notnull_improvement_context current_notnull_improvement_context;
+
+// This is the history into which all nonnull improvements *and* un-improvements
+// made will be recorded when `contingent_notnull_improvement_context_depth` is
+// greater than zero (i.e., whenever a contingent improvement context is in
+// effect). It is used to restore the state of the world to what it was at the
+// moment the current contingent improvement context was pushed.
+static notnull_improvement_history_item *current_notnull_improvement_history;
+
+// Tracks whether or not the current nonnull improvement context, if any, is
+// contingent (i.e., may or may not be entered depending upon the truth of some
+// condition). The sole reason for tracking this is to be able to assert that a
+// contignent context is not pushed when the current context is already
+// contingent. The reason for asserting this is that contingent contexts are
+// meant to be used for branches within a conditional (e.g., the 'x', 'y', and
+// 'z' statement lists in 'IF cond THEN x ELSE IF y ELSE z END IF') and should
+// always be within a non-contingent context that encapsulates the entire set of
+// branches (as that context gathers all of the un-improvements that result
+// within any of the branches so that re-improvements resulting from history
+// reverts can be un-set appropriately when the non-contingent context is
+// eventually popped).
+static bool_t is_current_notnull_improvement_context_contingent = false;
+
+// Tracks how many contingent notnull improvement contexts are currently in
+// effect. This allows us the optimization of not recording items into the
+// history when `contingent_notnull_improvement_context_depth` is 0 as they
+// would not be of any future use.
+static uint32_t contingent_notnull_improvement_context_depth = 0;
 
 // Pushes a new context for nullability improvements. All improvements set while
 // the context is active will be unset at the corresponding
 // `POP_NOTNULL_IMPROVEMENT_CONTEXT`.
 #define PUSH_NOTNULL_IMPROVEMENT_CONTEXT() \
-  notnull_improvement_item *saved_notnull_improvement_context = \
+  notnull_improvement_context_item *saved_notnull_improvement_context = \
     current_notnull_improvement_context; \
-  current_notnull_improvement_context = NULL;
+  current_notnull_improvement_context = NULL; \
+  bool_t saved_is_current_notnull_improvement_context_contingent = \
+    is_current_notnull_improvement_context_contingent; \
+  is_current_notnull_improvement_context_contingent = false;
 
-// Unsets all improvements made within the current context and reverts to the
+// Un-sets all improvements made within the current context and reverts to the
 // previous context.
 #define POP_NOTNULL_IMPROVEMENT_CONTEXT() \
-  sem_unset_notnull_improvement_items(current_notnull_improvement_context); \
-  current_notnull_improvement_context = saved_notnull_improvement_context;
+  sem_unset_notnull_improvements_in_context(current_notnull_improvement_context); \
+  current_notnull_improvement_context = saved_notnull_improvement_context; \
+  is_current_notnull_improvement_context_contingent = \
+    saved_is_current_notnull_improvement_context_contingent;
+
+// Similar to `PUSH_NOTNULL_IMPROVEMENT_CONTEXT`, but used for contexts that
+// will only be entered at runtime if some condition is true. This is used for
+// each branch in an IF (and soon CASE and IIF) to allow any improvements and
+// un-improvements made within to be reverted, and the original state of the
+// world restored, before checking the next branch. This must only be used when
+// the current context is not contingent; see
+// `is_current_notnull_improvement_context_contingent`.
+#define PUSH_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() \
+  notnull_improvement_history_item *saved_notnull_improvement_history = \
+    current_notnull_improvement_history; \
+  current_notnull_improvement_history = NULL; \
+  contingent_notnull_improvement_context_depth++; \
+  is_current_notnull_improvement_context_contingent = true;
+
+// Pops the current contingent improvement context, reverting all improvements
+// and un-improvements made within, and reverts to the previous context. Should
+// no contingent contexts remain after the pop, an invariant enforces that
+// `current_notnull_improvement_history` is NULL (which must be the case because
+// we never record history when a contingent context is not in effect).
+#define POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() \
+  sem_revert_notnull_improvement_history(current_notnull_improvement_history); \
+  current_notnull_improvement_history = saved_notnull_improvement_history; \
+  contingent_notnull_improvement_context_depth--; \
+  if (contingent_notnull_improvement_context_depth == 0) { \
+    Invariant(!current_notnull_improvement_history); \
+  } \
+  is_current_notnull_improvement_context_contingent = false;
 
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
@@ -488,12 +559,6 @@ static symtab *misc_attributes;
 static ast_node *current_table_ast;
 static CSTR current_table_name;
 
-cql_data_defn( symtab *schema_regions );
-
-// These are the symbol tables with the accumulated included/excluded regions
-cql_data_defn( symtab *included_regions );
-cql_data_defn( symtab *excluded_regions );
-
 // during previous schema validations when we hit the previous section we have to
 // save these, they the new schema for later comparison
 static symtab *new_regions;
@@ -513,10 +578,6 @@ typedef struct cte_state {
 
 // top of the cte chain
 static cte_state *cte_cur;
-
-// all the schema annotations
-cql_data_defn( bytebuf *schema_annotations );
-cql_data_defn( bytebuf *recreate_annotations );
 
 // If the current context is a upsert statement
 static bool_t in_upsert;
@@ -1190,29 +1251,6 @@ cql_noexport bool_t is_numeric_expr(ast_node *expr) {
   return is_numeric_compat(expr->sem->sem_type);
 }
 
-cql_noexport bool_t is_select_stmt(ast_node *ast) {
-  return is_ast_select_stmt(ast) ||
-         is_ast_explain_stmt(ast) ||
-         is_ast_with_select_stmt(ast);
-}
-
-cql_noexport bool_t is_delete_stmt(ast_node *ast) {
-  return is_ast_delete_stmt(ast) ||
-         is_ast_with_delete_stmt(ast);
-}
-
-cql_noexport bool_t is_update_stmt(ast_node *ast) {
-  return is_ast_update_stmt(ast) ||
-         is_ast_with_update_stmt(ast);
-}
-
-cql_noexport bool_t is_insert_stmt(ast_node *ast) {
-  return is_ast_insert_stmt(ast) ||
-         is_ast_with_insert_stmt(ast) ||
-         is_ast_upsert_stmt(ast) ||
-         is_ast_with_upsert_stmt(ast);
-}
-
 cql_noexport bool_t is_autotest_dummy_table(CSTR name) {
   return !Strcasecmp(name, "dummy_table");
 }
@@ -1790,7 +1828,7 @@ static ast_node *find_ad_hoc_migrate(CSTR name) {
 }
 
 // Wrappers for the region table
-ast_node *find_region(CSTR name) {
+cql_noexport ast_node *find_region(CSTR name) {
   symtab_entry *entry = symtab_find(schema_regions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
@@ -5627,7 +5665,7 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
 // into `ast` if successful, or reporting and recording an error for `ast` if
 // not.
 static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(is_id(ast) || is_ast_dot(ast));
+  Contract(is_id_or_dot(ast));
   Contract(name);
 
   // We have no use for `type` and simply throw it away.
@@ -5638,7 +5676,7 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 // Like `sem_resolve_id`, but specific to expression contexts (where nullability
 // improvements are applicable).
 static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(is_id(ast) || is_ast_dot(ast));
+  Contract(is_id_or_dot(ast));
   Contract(name);
 
   // Perform resolution, as for ids and dots outside of expressions.
@@ -6468,6 +6506,61 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
 
   name_ast->sem = ast->sem = new_sem(sem_type_needed | combined_flags);
   // the new node is does not keep any of the names of the members, just the net type
+}
+
+// You can round real numbers, you may  specify a precision
+static void sem_func_round(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // round can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // if no args then fail the arg count test...
+  if (arg_count == 0) {
+    sem_validate_arg_count(ast, arg_count, 1);
+    return;
+  }
+
+  // if too many args
+  if (arg_count > 2) {
+    sem_validate_arg_count(ast, arg_count, 2);
+    return;
+  }
+
+  sem_node *sem = first_arg(arg_list)->sem;
+  sem_t sem_type = sem->sem_type;
+  sem_t core_type = core_type_of(sem_type);
+
+  if (core_type != SEM_TYPE_REAL) {
+    report_error(ast, "CQL0087: first argument must be of type real", name);
+    record_error(ast);
+    return;
+  }
+
+  sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
+
+  if (arg_count == 2) {
+    ast_node *arg2 = second_arg(arg_list);
+    if (!is_numeric_expr(arg2)) {
+      report_error(name_ast, "CQL0082: second argument must be numeric", name);
+      record_error(ast);
+      return;
+    }
+    sem_reject_real(arg2, "ROUND argument 2");
+    if (is_error(arg2)) {
+      record_error(ast);
+      return;
+    }
+    combined_flags = combine_flags(sem_type, arg2->sem->sem_type);
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | combined_flags);
 }
 
 // Min and Max are the same validation
@@ -11554,10 +11647,10 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
 
   if (is_global) {
     // Since this is a global, record it as such.
-    notnull_improvement_item *global_item = _ast_pool_new(notnull_improvement_item);
+    notnull_improvement_context_item *global_item = _ast_pool_new(notnull_improvement_context_item);
     global_item->type = type;
-    global_item->next = notnull_improved_globals;
-    notnull_improved_globals = global_item;
+    global_item->next = global_notnull_improvement_context;
+    global_notnull_improvement_context = global_item;
     // TODO: Since we do not yet have hazards in place for calls, it's not
     // safe to actually do the improvement.
     return;
@@ -11568,10 +11661,20 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
 
   // Add it to the current context so that it can be unset when the context
   // ends.
-  notnull_improvement_item *item = _ast_pool_new(notnull_improvement_item);
+  notnull_improvement_context_item *item = _ast_pool_new(notnull_improvement_context_item);
   item->type = type;
   item->next = current_notnull_improvement_context;
   current_notnull_improvement_context = item;
+
+  // Also add it to the history if a contingent context is in effect so that it
+  // can be later reverted.
+  if (contingent_notnull_improvement_context_depth > 0) {
+    notnull_improvement_history_item *history_item = _ast_pool_new(notnull_improvement_history_item);
+    history_item->type = type;
+    history_item->delta = NOTNULL_IMPROVEMENT_DELTA_WAS_SET;
+    history_item->next = current_notnull_improvement_history;
+    current_notnull_improvement_history = history_item;
+  }
 }
 
 // This needs to be called for everything that is no longer safe to consider NOT
@@ -11581,20 +11684,237 @@ static void sem_unset_notnull_improved(CSTR name, CSTR scope) {
   Contract(name);
 
   sem_t *type = find_mutable_type(name, scope);
-  if (type) {
-    *type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
-  }
+  // There is no case in which we ever attempt to unset something that doesn't
+  // have a mutable type: Such a name/scope pair would've never been improved to
+  // begin with, and no hazard (e.g., SET or OUT args) allows something for
+  // which `find_mutable_type` will return NULL (e.g., an enum case, 'rowid', or
+  // a cursor in an expression position).
+  Invariant(type);
 
-  // Unlike in `sem_set_notnull_improved`, we do not bother updating
-  // `current_notnull_improvement_context`. Since the entire purpose of keeping
-  // the list of current improvements is to be able to unset them, no harm will
-  // be done if we re-unset them later.
+  // As in `sem_unset_notnull_improvements_in_context`, it is critical that we
+  // do not unset an improvement if it is not currently set; see the comments
+  // within `sem_unset_notnull_improvements_in_context` for details.
+  if (*type & SEM_TYPE_INFERRED_NOTNULL) {
+    *type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+    // If a contingent context is active, we record this in the history so it
+    // can be later reverted.
+    if (contingent_notnull_improvement_context_depth > 0) {
+      notnull_improvement_history_item *history_item = _ast_pool_new(notnull_improvement_history_item);
+      history_item->type = type;
+      history_item->delta = NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET;
+      history_item->next = current_notnull_improvement_history;
+      current_notnull_improvement_history = history_item;
+    }
+  }
 }
 
 // Unsets nonnull improvements for all items in the list provided.
-static void sem_unset_notnull_improvement_items(notnull_improvement_item *item) {
-  for (notnull_improvement_item *head = item; head; head = head->next) {
-    *head->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+static void sem_unset_notnull_improvements_in_context(notnull_improvement_context context) {
+  Contract(!is_current_notnull_improvement_context_contingent);
+
+  for (notnull_improvement_context_item *head = context; head; head = head->next) {
+    // Is it very important that we only unset improvements that are currently
+    // set. Doing otherwise would result in an invalid history, and reverting
+    // said invalid history would result in things being re-improved
+    // inappropriately. Suppose we have this code:
+    //
+    //   IF b IS NULL RETURN;
+    //   -- 'b' is nonnull here
+    //   IF ... THEN
+    //     IF a IS NOT NULL THEN
+    //       -- 'a' is nonnull here due to the condition
+    //       SET b := NULL;
+    //     END IF;
+    //     -- 'a' is un-improved here because the THEN branch above ended
+    //     -- 'b' is nullable here because it was un-improved at the above SET
+    //   ELSE
+    //     -- 'a' is nullable here as its un-improvement was not reverted
+    //     -- 'b' is nonnull here as its un-improvement was reverted
+    //   END IF;
+    //   -- 'b' is nullable here due to the SET
+    //
+    // At the end of the outer THEN branch, both 'a' and 'b' will have been
+    // un-improved, the former at the end of the inner THEN branch, and the
+    // latter by the SET. Within the ELSE branch though, it is critical that we
+    // re-improve 'b' (because it was already improved at the start of the outer
+    // IF), yet even more critical that we not re-improve 'a' (because it was
+    // not already improved at the start of the previous branch, and so
+    // re-improving it would be unsafe).
+    //
+    // The timeline above plays out as follows:
+    //
+    //   01. 'b' is improved in initial context C0.
+    //   02. Context C1 is pushed for the outer IF.
+    //   03. Contingent context C2 is pushed for the outer THEN.
+    //   04. Context C3 is pushed for the inner IF.
+    //   05. Contingent context C4 is pushed for the inner THEN.
+    //   06. 'a' is improved due to the condition which generates a history item
+    //       in C4 and a context item in C3.
+    //   07. 'b' is un-improved due to the SET which generates a history item in
+    //       C4.
+    //   08. Contingent context C4 is reverted, un-improving 'a' and
+    //       re-improving 'b' (which generates a context item in C3).
+    //   09. Context C3 is unset, with the context item added in step 06 for 'a'
+    //       being ignored (as 'a' is already unset) and the context item added
+    //       in step 08 for 'b' resulting in 'b' being unset (which generates a
+    //       history item in C2).
+    //   10. Contingent context C2 is reverted, re-re-improving 'b' (which
+    //       generates a context item in C1) due to the history item generated
+    //       by C3 in step 09.
+    //   11. Contingent context C5 is pushed for the ELSE.
+    //   12. Contingent context C5 is reverted for the ELSE, to no effect.
+    //   13. Context C1 is popped, re-un-improving 'b' due to the context item
+    //       generated by C2 in step 10.
+    //
+    // Suppose, however, that we generated a history item in C2 by unsetting 'a'
+    // (which was already unset) in step 09. This would've caused 'a' to be
+    // re-improved in step 10 which would've caused it to be nonnull in the
+    // ELSE, which is unsafe.
+    if (*head->type & SEM_TYPE_INFERRED_NOTNULL) {
+      *head->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+      // If a contingent context is active, we record this in the history so it
+      // can be later reverted.
+      if (contingent_notnull_improvement_context_depth > 0) {
+        notnull_improvement_history_item *history_item = _ast_pool_new(notnull_improvement_history_item);
+        history_item->type = head->type;
+        history_item->delta = NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET;
+        history_item->next = current_notnull_improvement_history;
+        current_notnull_improvement_history = history_item;
+      }
+    }
+  }
+}
+
+// Given a history, play it back in reverse, performing the opposite of what
+// originally occurred at each step. The result will be the state of the world
+// before any of the improvements and un-improvements were made. For any
+// previous un-improvement that is re-improved by the reversal, that
+// re-improvement will be recorded in the current nonnull improvemnet context so
+// that it can be re-unimproved when said context is eventually popped.
+//
+// An example of a full timeline might look like this:
+//
+//   1. A nonnull improvement context is pushed while some variable x is
+//      presently improved.
+//   2. A contingent nonnull improvement context is pushed.
+//   3. Some variable x is unimproved due to it being set to null.
+//   4. The contingent nonnull improvement context is popped and x is restored
+//      to its previous improved state, bringing us back to the state of the
+//      world as it was in step 1.
+//   5. Additional contingent contexts are pushed and popped.
+//   6. The improvement context pushed in step 1 is popped, and x is again
+//      unimproved because it was unimproved in step 3 within the inner
+//      contingent context pushed in step 2.
+static void sem_revert_notnull_improvement_history(notnull_improvement_history_item *history) {
+  Contract(is_current_notnull_improvement_context_contingent);
+  Contract(contingent_notnull_improvement_context_depth > 0);
+
+  for (notnull_improvement_history_item *history_item = history; history_item; history_item = history_item->next) {
+    switch (history_item->delta) {
+      case NOTNULL_IMPROVEMENT_DELTA_WAS_SET:
+        *history_item->type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+        break;
+      case NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET:
+        *history_item->type |= SEM_TYPE_INFERRED_NOTNULL;
+        // Record this in the nearest enclosing non-contingent context so that
+        // it can be re-unset when said context is popped.
+        notnull_improvement_context_item *item = _ast_pool_new(notnull_improvement_context_item);
+        item->type = history_item->type;
+        item->next = current_notnull_improvement_context;
+        current_notnull_improvement_context = item;
+        break;
+    }
+  }
+}
+
+// Looks up the user-defined function or proc and, if it exists, returns its
+// parameters, if any.
+static ast_node *find_params(CSTR name) {
+  Contract(name);
+
+  // We check for functions first, then procs, as in `sem_expr_call`, to ensure
+  // we get the right one.
+
+  ast_node *func = find_func(name);
+  if (func) {
+    return get_func_params(func);
+  }
+
+  ast_node *proc = find_proc(name);
+  if (proc) {
+    return get_proc_params(proc);
+  }
+
+  return NULL;
+}
+
+// Given an arbitrary expression, perform a deep traveral and call
+// `sem_unset_notnull_improved` on all identifiers that are used as OUT or INOUT
+// arguments. This function is used to ensure that any identifers that would've
+// otherwise been improved by `sem_set_notnull_improvements_for_true_condition`
+// or `sem_set_notnull_improvements_for_false_condition` are not improved if
+// they're later used as an OUT or INOUT argument within the same conditional.
+// For example:
+//
+//   IF requires_out_arg_returns_bool(x) AND x IS NOT NULL THEN
+//     -- x CAN be improved here because the IS NOT NULL check occurs after
+//     -- the call to requires_out_arg_returns_bool.
+//   END IF;
+//
+//   IF x IS NOT NULL AND requires_out_arg_returns_bool(x) THEN
+//     -- x CANNOT be improved here because requires_out_arg_returns_bool may
+//     -- have set x to FALSE.
+//   END IF;
+static void sem_unset_notnull_improvements_for_out_args(ast_node *ast) {
+  Contract(ast);
+
+  if (is_ast_call(ast)) {
+    // `ast` is a call, so one or more of its arguments may be an identifier
+    // passed as an OUT argument.
+    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+    EXTRACT_STRING(name, name_ast)
+    ast_node *params = find_params(name);
+    if (!params) {
+      // We either aren't calling a user-defined function or a procedure, or we
+      // are but it has no parameters. Either way, we're not going to have any
+      // OUT parameters, so we can just continue our traveral through any
+      // arguments that might be present.
+      if (ast_has_right(ast)) {
+        sem_unset_notnull_improvements_for_out_args(ast->right);
+      }
+      return;
+    }
+    EXTRACT_NOTNULL(call_arg_list, ast->right);
+    EXTRACT(arg_list, call_arg_list->right);
+    // We loop over the arguments, comparing them to the parameters as we go to
+    // see if any identifiers are being passed as OUT arguments.
+    for (ast_node *item = arg_list; item; item = item->right, params = params->right) {
+      EXTRACT_ANY_NOTNULL(arg, item->left);
+      EXTRACT_NOTNULL(param, params->left);
+      if (is_out_parameter(param->sem->sem_type)) {
+        // Since we've already analyzed this part of the AST, we know that the
+        // argument must be an identifier if its being passed as an OUT
+        // argument.
+        Invariant(is_id(arg));
+        EXTRACT_STRING(id, arg);
+        // Unset any improvement in effect for the identifier.
+        sem_unset_notnull_improved(id, NULL);
+      } else {
+        // Continue our search within the argument itself.
+        sem_unset_notnull_improvements_for_out_args(arg);
+      }
+    }
+    // We've already searched all of the arguments at this point, so we're done.
+    return;
+  }
+
+  // Since `ast` isn't an atom and it's not a call expression, our search simply
+  // continues within.
+  if (ast_has_left(ast)) {
+    sem_unset_notnull_improvements_for_out_args(ast->left);
+  }
+  if (ast_has_right(ast)) {
+    sem_unset_notnull_improvements_for_out_args(ast->right);
   }
 }
 
@@ -11614,19 +11934,23 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node* ast, ast_n
   if (is_ast_and(ast)) {
     Invariant(ast->left);
     Invariant(ast->right);
+    // We recurse over the left branch first, then the right, in keeping with
+    // the order of evaluation of the expressions at runtime. This is critical
+    // for ensuring that calls to `sem_unset_notnull_improvements_for_out_args`
+    // occur after any improvements have already been made for identifiers that
+    // are later used as OUT arguments within the same conditional, thus
+    // allowing said improvements to be reversed.
     sem_set_notnull_improvements_for_true_condition(ast->left, select_expr_list);
     sem_set_notnull_improvements_for_true_condition(ast->right, select_expr_list);
     return;
   }
 
-  // We want exactly `s IS NOT NULL`, but if and only if `s` is nullable. Only
-  // taking the nullable expressions makes it easy to toggle nullability off and
-  // back on later.
-  if (!(is_ast_is_not(ast) && is_ast_null(ast->right))) {
-    return;
-  }
-
-  if (!is_id(ast->left) && !is_ast_dot(ast->left)) {
+  // We improve only in case of `x IS NOT NULL` where `x` is an id or dot.
+  if (!is_ast_is_not(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
+    // Since this isn't the type of expression for which an improvement can be
+    // made, we simply search it for any identifiers we may have just improved
+    // that need to be unimproved because they're later passed as OUT arguments.
+    sem_unset_notnull_improvements_for_out_args(ast);
     return;
   }
 
@@ -11680,21 +12004,32 @@ static void sem_set_notnull_improvements_for_false_condition(ast_node *ast) {
   Contract(ast);
 
   if (is_ast_or(ast)) {
+    // As in `sem_set_notnull_improvements_for_true_condition`, we make sure to
+    // recurse through the left side first in keeping with the order of
+    // evaluation at runtime.
     sem_set_notnull_improvements_for_false_condition(ast->left);
     sem_set_notnull_improvements_for_false_condition(ast->right);
     return;
   }
 
-  if (is_ast_is(ast) && is_ast_null(ast->right)) {
-    EXTRACT_ANY_NOTNULL(expr, ast->left);
-    if (is_id(expr)) {
-      EXTRACT_STRING(name, expr);
-      sem_set_notnull_improved(name, NULL);
-    } else if (is_ast_dot(expr)) {
-      EXTRACT_STRING(name, expr->right);
-      EXTRACT_STRING(scope, expr->left);
-      sem_set_notnull_improved(name, scope);
-    }
+  // We improve only in case of `x IS NULL` where `x` is an id or dot.
+  if (!is_ast_is(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
+    // Since this isn't the type of expression for which an improvement can be
+    // made, we simply search it for any identifiers we may have just improved
+    // that need to be unimproved because they're later passed as OUT arguments.
+    sem_unset_notnull_improvements_for_out_args(ast);
+    return;
+  }
+
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  if (is_id(expr)) {
+    EXTRACT_STRING(name, expr);
+    sem_set_notnull_improved(name, NULL);
+  } else {
+    Invariant(is_ast_dot(expr));
+    EXTRACT_STRING(name, expr->right);
+    EXTRACT_STRING(scope, expr->left);
+    sem_set_notnull_improved(name, scope);
   }
 }
 
@@ -11721,11 +12056,11 @@ static void sem_cond_action(ast_node *ast) {
   }
 
   if (stmt_list) {
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+    PUSH_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT();
     // Add improvements for `stmt_list` where `expr` must be true.
     sem_set_notnull_improvements_for_true_condition(expr, NULL);
     sem_stmt_list(stmt_list);
-    POP_NOTNULL_IMPROVEMENT_CONTEXT();
+    POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT();
     if (is_error(stmt_list)) {
       record_error(ast);
       return;
@@ -12434,9 +12769,10 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
     }
 
     if (enforcement.strict_insert_select && sem_select_stmt_is_mixed_results(select_stmt)) {
-      report_error(select_stmt, "CQL0370: due to a memory leak bug in old SQLite versions, "
-                                "the select part of an insert must not have a top level join or compound operator. "
-                                "Use WITH and a CTE, or a nested select to work around this.", NULL);
+      report_error(select_stmt,
+        "CQL0370: due to a memory leak bug in old SQLite versions, "
+        "the select part of an insert must not have a top level join or compound operator. "
+        "Use WITH and a CTE, or a nested select to work around this.", NULL);
       record_error(select_stmt);
       record_error(ast);
       return;
@@ -19687,6 +20023,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(cql_cursor_format);
   FUNC_INIT(char);
   FUNC_INIT(abs);
+  FUNC_INIT(round);
   FUNC_INIT(instr);
   FUNC_INIT(coalesce);
   FUNC_INIT(last_insert_rowid);
@@ -19931,6 +20268,46 @@ cql_noexport void sem_cleanup() {
   current_table_ast = NULL;
   local_types = NULL;
   is_analyzing_notnull_rewrite = false;
-  notnull_improved_globals = NULL;
+  global_notnull_improvement_context = NULL;
   current_notnull_improvement_context = NULL;
+  current_notnull_improvement_history = NULL;
+  is_current_notnull_improvement_context_contingent = false;
+  contingent_notnull_improvement_context_depth = 0;
 }
+
+#endif
+
+// When validating against the previous schema we need to make sure all these items
+// have been validated.  Any that are found in the old schema must match appropriately
+// and any that are not found must have suitable @create markers.
+cql_data_defn( list_item *all_tables_list );
+cql_data_defn( list_item *all_functions_list );
+cql_data_defn( list_item *all_views_list );
+cql_data_defn( list_item *all_indices_list );
+cql_data_defn( list_item *all_triggers_list );
+cql_data_defn( list_item *all_regions_list );
+cql_data_defn( list_item *all_ad_hoc_list );
+cql_data_defn( list_item *all_select_functions_list );
+cql_data_defn( list_item *all_enums_list );
+cql_data_defn( bool_t use_encode );
+cql_data_defn( CSTR _Nullable encode_context_column );
+cql_data_defn( symtab *encode_columns );
+
+// If creating debug/test output, we will hold errors for a given statement in this buffer.
+cql_data_defn( charbuf *error_capture );
+
+// The flags for the global proc (which has no ast node) this is what captures loose statements
+cql_data_defn( sem_t global_proc_flags );
+
+// If there is a current proc, it's root ast.
+cql_data_defn(ast_node *current_proc);
+
+cql_data_defn( symtab *schema_regions );
+
+// These are the symbol tables with the accumulated included/excluded regions
+cql_data_defn( symtab *included_regions );
+cql_data_defn( symtab *excluded_regions );
+
+// all the schema annotations
+cql_data_defn( bytebuf *schema_annotations );
+cql_data_defn( bytebuf *recreate_annotations );

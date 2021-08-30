@@ -3845,6 +3845,7 @@ CQL's hard-coded builtin list includes:
  * julianday
  * substr
  * replace
+ * round
  * trim
  * ltrim
  * rtrim
@@ -8430,7 +8431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Aug 19 10:57:53 PDT 2021
+Snapshot as of Mon Aug 30 15:00:54 PDT 2021
 
 ### Operators and Literals
 
@@ -10674,7 +10675,9 @@ The first argument of the function is the formatting string.  The other argument
 
 -----
 
-### CQL0087 available for re-use
+### CQL0087: first argument must be of type real 'function'
+
+The first argument of the function (e.g. round) should be of type 'real'.
 
 -----
 
@@ -13597,7 +13600,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Aug 19 10:57:54 PDT 2021
+Snapshot as of Mon Aug 30 15:00:55 PDT 2021
 
 ### Rules
 
@@ -13903,7 +13906,8 @@ view:  '{'
        opt_attributes
        projection
        '"select"' ':' STRING_LITERAL ','
-       '"selectArgs"' ':' '[' ']'
+       '"selectArgs"' ':' '[' ']' ','
+       dependencies
        '}'
   ;
 

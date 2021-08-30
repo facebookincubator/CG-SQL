@@ -5,10 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Perform semantic analysis of the various nodes and validate type correctness
-// the semantic nodes contain enough information that code can be generated
-// include, importantly, data about the shape of any given select statement
-// and the type of any expression.
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+
+// stubs to avoid link errors (none needed)
+
+#else
+
+// Performs evaluation of the const(...) node
+// this is logically part of the semantic analysis phase but
+// the code is hoisted out for clarity
 
 #include <stdint.h>
 #include <stdio.h>
@@ -1100,3 +1105,6 @@ cql_noexport void eval_init() {
 cql_noexport void eval_cleanup() {
   SYMTAB_CLEANUP(evals);
 }
+
+
+#endif

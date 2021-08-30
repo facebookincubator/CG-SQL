@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_UDF)
+
+// stubs to avoid link errors
+cql_noexport void cg_udf_main(struct ast_node *root) {}
+
+#else
+
 #include <stdint.h>
 #include "ast.h"
 #include "cg_udf.h"
@@ -75,3 +82,5 @@ cql_noexport void cg_udf_main(struct ast_node *root) {
   CHARBUF_CLOSE(body_file);
   CHARBUF_CLOSE(header_file);
 }
+
+#endif

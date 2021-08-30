@@ -2723,6 +2723,77 @@ set X := (select count(1,2) from foo);
 -- + {assign}: err
 set X := (select max() from foo);
 
+-- TEST: bogus number of arguments in round
+-- + Error % function got incorrect number of arguments 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round());
+
+-- TEST: round outside of normal context
+-- + Error % function may not appear in this context 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := round();
+
+-- TEST: bogus number of arguments in round
+-- + Error % function got incorrect number of arguments 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round(1,2,3));
+
+-- TEST: round second arg not numeric
+-- + Error % second argument must be numeric 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round(1.5,'x'));
+
+-- TEST: round must get a real arg in position 1
+-- + Error % first argument must be of type real 'round'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select round(1,2));
+
+-- TEST: round must get a real arg in position 1
+-- + {let_stmt}: ll: longint notnull variable
+-- - Error
+let ll := (select round(1.0,2));
+
+-- TEST: correct round double not null convered to long not null
+-- + {assign}: ll: longint notnull variable
+-- - Error
+set ll := (select round(1.0));
+
+-- TEST: round Nullability is preserved
+-- + {let_stmt}: NLL: longint variable
+-- - Error
+let NLL := (select round(nullable(1.0)));
+
+-- TEST: round Nullability is preserved
+-- + {assign}: NLL: longint variable
+-- - Error
+set NLL := (select round(1.0, nullable(1)));
+
+-- TEST: round Sensitivity is preserved
+-- + {let_stmt}: SNL: longint variable sensitive
+-- - Error
+let SNL := (select round(sensitive(nullable(1.0))));
+
+-- TEST: round Sensitivity is preserved
+-- + {assign}: SNL: longint variable sensitive
+-- - Error
+set SNL := (select round(nullable(1.0), sensitive(1)));
+
+-- TEST: The precision must be a numeric type but not real
+-- + {assign}: err
+-- + Error % operands must be an integer type, not real 'ROUND argument 2'
+-- +1 Error
+set ll := (select round(1.0, 2.0));
+
 -- TEST: bogus number of arguments in average
 -- + Error % function got incorrect number of arguments 'avg'
 -- +1 Error
@@ -5676,9 +5747,6 @@ select * from (select not 'x' X);
 -- + {delete_attr}
 -- - Error
 create view view_with_version as select * from bar @delete(2);
-
--- long int variable
-declare ll long integer not null;
 
 -- TEST: use a long literal
 -- + {longint 3147483647}: longint notnull
@@ -17415,6 +17483,337 @@ begin
   let x4 := a;
   let y4 := b;
   let z4 := c;
+end;
+
+-- Used in the following tests.
+create proc requires_out_returns_bool(out a integer, out b bool)
+begin
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same true conditional.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+-- - Error
+create proc improvements_respect_out_args_in_true_conditions()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is not null and requires_out_returns_bool(a) then
+    -- nullable because `requires_out_returns_bool` may have set `a` to false
+    let x := a;
+  end if;
+
+  if requires_out_returns_bool(b) and b is not null then
+    -- nonnull because the null check was performed after the mutation
+    let y := b;
+  end if;
+
+  if c is not null and requires_out_returns_bool(c) and c is not null then
+    -- nonnull because a second null check was performed after the mutation
+    let z := c;
+  end if;
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same false conditional.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+-- - Error
+create proc improvements_respect_out_args_in_false_conditions()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is null or requires_out_returns_bool(a) then
+    let dummy0 := 0;
+  else
+    -- nullable because `requires_out_returns_bool` may have set `a` to false
+    let x := a;
+  end if;
+
+  if requires_out_returns_bool(b) or b is null then
+    let dummy1 := 0;
+  else
+    -- nonnull because the null check was performed after the mutation
+    let y := b;
+  end if;
+
+  if c is null or requires_out_returns_bool(c) or c is null then
+    let dummy2 := 0;
+  else
+    -- nonnull because a second null check was performed after the mutation
+    let z := c;
+  end if;
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same false conditional for guards.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+-- - Error
+create proc improvements_respect_out_args_in_false_conditions_for_guards()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is null or requires_out_returns_bool(a) then
+    return;
+  end if;
+
+  -- nullable because `requires_out_returns_bool` may have set `a` to false
+  let x := a;
+
+  if requires_out_returns_bool(b) or b is null then
+    return;
+  end if;
+
+  -- nonnull because the null check was performed after the mutation
+  let y := b;
+
+  if c is null or requires_out_returns_bool(c) or c is null then
+    return;
+  end if;
+
+  -- nonnull because a second null check was performed after the mutation
+  let z := c;
+end;
+
+-- TEST: Un-improvements in one branch do not negatively affect later branches.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: x5: integer notnull variable
+-- + {let_stmt}: x6: integer variable
+-- - Error
+create proc unimprovements_do_not_negatively_affect_later_branches()
+begin
+  declare a int;
+
+  -- nullable
+  let x0 := a;
+
+  if a is null return;
+
+  -- nonnull due to the guard
+  let x1 := a;
+
+  if 0 then
+    set a := null;
+    -- nullable due to the set
+    let x2 := a;
+  else if 0 then
+    -- nonnull due to the guard despite the set in an earlier branch
+    let x3 := a;
+    set a := null;
+    -- nullable due to the set
+    let x4 := a;
+  else
+  -- nonnull due to the guard despite the sets in earlier branches
+    let x5 := a;
+  end if;
+
+  -- nullable because at least one branch had a hazard
+  let x6 := a;
+end;
+
+-- TEST: Un-improvements in one branch do not negatively affect other branches
+-- even if the un-improvements occurred within a nested branch.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: z1: integer variable
+-- + {let_stmt}: x2: integer notnull variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: z2: integer variable
+-- + {let_stmt}: x3: integer variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: z3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer notnull variable
+-- + {let_stmt}: z4: integer notnull variable
+-- + {let_stmt}: x5: integer variable
+-- + {let_stmt}: y5: integer variable
+-- + {let_stmt}: z5: integer variable
+-- + {let_stmt}: x6: integer variable
+-- + {let_stmt}: y6: integer variable
+-- + {let_stmt}: z6: integer variable
+-- + {let_stmt}: x7: integer notnull variable
+-- + {let_stmt}: y7: integer notnull variable
+-- + {let_stmt}: z7: integer notnull variable
+-- + {let_stmt}: x8: integer variable
+-- + {let_stmt}: y8: integer variable
+-- + {let_stmt}: z8: integer variable
+-- + {let_stmt}: x9: integer notnull variable
+-- + {let_stmt}: y9: integer notnull variable
+-- + {let_stmt}: z9: integer notnull variable
+-- + {let_stmt}: x10: integer variable
+-- + {let_stmt}: y10: integer variable
+-- + {let_stmt}: z10: integer variable
+-- - Error
+create proc nested_unimprovements_do_not_negatively_affect_later_branches()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if a is null or b is null or c is null return;
+
+  let x0 := a; -- nonnull due to guard
+  let y0 := b; -- nonnull due to guard
+  let z0 := c; -- nonnull due to guard
+
+  if 0 then
+    if 0 then
+      set a := null;
+      if 0 then
+        set b := null;
+      else
+        set a := 42;
+        set c := null;
+        let x1 := a; -- nonnull due to set improvement
+        let y1 := b; -- nonnull due to guard despite previous set
+        let z1 := c; -- nullable due to previous set
+        set a := null;
+        if a is null then
+          set a := null;
+        else if c is null then
+          set b := null;
+          let x2 := a; -- nonnull due to improvement from false condition
+          let y2 := b; -- nullable due to previous set
+          let z2 := c; -- nullable due to previous set
+        else if requires_out_returns_bool(a) then
+          let x3 := a; -- nullable due to use as out arg in condition
+          let y3 := b; -- nonnull due to guard despite previous set
+          let z3 := c; -- nonnull due to improvement from false condition
+          set b := null;
+          set c := null;
+        else
+          let x4 := a; -- nullable due to use as out arg in previous condition
+          let y4 := b; -- nonnull due to guard despite previous set
+          let z4 := c; -- nonnull due to improvement from false condition
+        end if;
+        let x5 := a; -- nullable due to use as out arg in condition
+        let y5 := b; -- nullable due to set in previous branch
+        let z5 := c; -- nullable due to previous set in this statement list
+        set a := 42; -- won't affect nullability below because it may not occur
+        set b := 42; -- won't affect nullability below because it may not occur
+        set c := 42; -- won't affect nullability below because it may not occur
+      end if;
+      let x6 := a; -- nullable due to previous set in this statement list
+      let y6 := b; -- nullable due to previous set in previous branch
+      let z6 := c; -- nullable due to previous set in previous branch
+    else
+      let x7 := a; -- nonnull due to guard despite previous set
+      let y7 := b; -- nonnull due to guard despite previous set
+      let z7 := c; -- nonnull due to guard despite previous set
+    end if;
+    let x8 := a; -- nullable due to previous set in previous branch
+    let y8 := b; -- nullable due to previous set in previous branch
+    let z8 := c; -- nullable due to previous set in previous branch
+  else
+    let x9 := a; -- nonnull due to guard despite previous set
+    let y9 := b; -- nonnull due to guard despite previous set
+    let z9 := c; -- nonnull due to guard despite previous set
+  end if;
+
+  let x10 := a; -- nullable due to previous set in previous branch
+  let y10 := b; -- nullable due to previous set in previous branch
+  let z10 := c; -- nullable due to previous set in previous branch
+end;
+
+-- TEST: Reverting improvements and un-improvements restores the original state.
+-- In particular, an un-improvement within a contingent nullability context is
+-- only re-improved if it was originally improved when said contingent context
+-- was entered.
+-- + {let_stmt}: x0: integer variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: z0: integer notnull variable
+-- + {let_stmt}: w0: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
+-- + {let_stmt}: z1: integer notnull variable
+-- + {let_stmt}: w1: integer variable
+-- + {let_stmt}: x2: integer notnull variable
+-- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: z2: integer variable
+-- + {let_stmt}: w2: integer notnull variable
+-- + {let_stmt}: x3: integer variable
+-- + {let_stmt}: y3: integer variable
+-- + {let_stmt}: z3: integer variable
+-- + {let_stmt}: w3: integer variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer notnull variable
+-- + {let_stmt}: z4: integer notnull variable
+-- + {let_stmt}: w4: integer variable
+-- + {let_stmt}: x5: integer variable
+-- + {let_stmt}: y5: integer variable
+-- + {let_stmt}: z5: integer variable
+-- + {let_stmt}: w5: integer variable
+-- - Error
+create proc reverting_improvements_and_unimprovements_restores_original_state()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+  declare d int;
+
+  if b is null return;
+  set c := 42;
+
+  let x0 := a; -- nullable
+  let y0 := b; -- nonnull due to guard
+  let z0 := c; -- nonnull due to set
+  let w0 := d; -- nullable
+  
+  if 0 then
+    if a is not null then
+      let x1 := a; -- nonnull due to true condition
+      let y1 := b; -- nonnull due to guard
+      let z1 := c; -- nonnull due to set
+      let w1 := d; -- nullable
+      set b := null; -- un-improve `b`
+      set c := null; -- un-improve `c`
+      if c is not null then -- re-improve c
+        let dummy := 0;
+        -- un-improve `c` at the end of the statement list
+      end if;
+      set d := 42; -- improve `d`
+      let x2 := a; -- nonnull due to true condition
+      let y2 := b; -- nullable due to set
+      let z2 := c; -- nullable due to most recent then block ending
+      let w2 := d; -- nonnull due to set
+      -- un-improve `a` at the end of the statement list
+      -- un-improve `d` at the end of the statement list
+    end if;
+    let x3 := a; -- nullable again because then branch is over
+    let y3 := b; -- nullable due to set
+    let z3 := c; -- nullable due to innermost then branch ending
+    let w3 := d; -- nullable due to previous statement list ending
+    set a := null; -- does not un-improve `a` as it is already not improved
+  else
+    let x4 := a; -- not re-improved as it began nullable for previous branch
+                 -- (before the improvement for the condition was set)
+    let y4 := b; -- re-improved as it began nonnull for previous branch
+    let z4 := c; -- re-improved as it began nonnull for previous branch
+    let w4 := d; -- not re-improved as it began nullable for previous branch
+  end if;
+
+  let x5 := a; -- nullable as then branch in which it was improved is over
+  let y5 := b; -- nullable because of set
+  let z5 := c; -- nullable because of set
+  let w5 := d; -- nullable as statement list in which it was improved is over
 end;
 
 -- TEST: Disable flow-sensitive nullability.

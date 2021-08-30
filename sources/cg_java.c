@@ -7,6 +7,13 @@
 
 // Perform codegen of the various nodes to "Java".
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_JAVA)
+
+// stubs to avoid link errors
+cql_noexport void cg_java_main(ast_node *head) {}
+
+#else
+
 #include "cg_java.h"
 #include <stdint.h>
 
@@ -587,3 +594,5 @@ cql_noexport void cg_java_main(ast_node *head) {
   symtab_delete(frag_assembly_interfaces);
   symtab_delete(frag_extension_interfaces);
 }
+
+#endif

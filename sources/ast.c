@@ -65,7 +65,7 @@ cql_noexport bool_t is_ast_str(ast_node *node) {
 cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
-
+  
 cql_noexport bool_t is_at_rc(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node*)node)->value);
 }
@@ -82,6 +82,10 @@ cql_noexport bool_t is_id(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
 }
 
+cql_noexport bool_t is_id_or_dot(ast_node *node) {
+  return is_id(node) || is_ast_dot(node);
+}
+
 cql_noexport bool_t is_primitive(ast_node *node) {
   return is_ast_num(node) || is_ast_str(node) || is_ast_blob(node) || is_ast_int(node);
 }
@@ -92,6 +96,29 @@ cql_noexport bool_t is_proc(ast_node *node) {
 
 cql_noexport bool_t is_region(ast_node *ast) {
   return is_ast_declare_schema_region_stmt(ast) || is_ast_declare_deployable_region_stmt(ast);
+}
+
+cql_noexport bool_t is_select_stmt(ast_node *ast) {
+  return is_ast_select_stmt(ast) ||
+         is_ast_explain_stmt(ast) ||
+         is_ast_with_select_stmt(ast);
+}
+
+cql_noexport bool_t is_delete_stmt(ast_node *ast) {
+  return is_ast_delete_stmt(ast) ||
+         is_ast_with_delete_stmt(ast);
+}
+
+cql_noexport bool_t is_update_stmt(ast_node *ast) {
+  return is_ast_update_stmt(ast) ||
+         is_ast_with_update_stmt(ast);
+}
+
+cql_noexport bool_t is_insert_stmt(ast_node *ast) {
+  return is_ast_insert_stmt(ast) ||
+         is_ast_with_insert_stmt(ast) ||
+         is_ast_upsert_stmt(ast) ||
+         is_ast_with_upsert_stmt(ast);
 }
 
 cql_noexport bool_t ast_has_left(ast_node *node) {
@@ -326,7 +353,7 @@ cql_noexport ast_node *get_proc_name(ast_node *ast) {
 
 // Helper function to get the parameters node out of the ast for a func.
 cql_noexport ast_node *get_func_params(ast_node *func_stmt) {
-  Contract(is_ast_declare_func_stmt(func_stmt));
+  Contract(is_ast_declare_func_stmt(func_stmt) || is_ast_declare_select_func_stmt(func_stmt));
   EXTRACT_NOTNULL(func_params_return, func_stmt->right);
   EXTRACT(params, func_params_return->left);
   return params;
@@ -613,10 +640,14 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
         gen_one_stmt_to_stdout(stmt);
         cql_output("\n");
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
+        // sem off, nothing to print here
+#else
         // print any error text
         if (stmt->sem && stmt->sem->sem_type == SEM_TYPE_ERROR && stmt->sem->error) {
           cql_output("%s\n", stmt->sem->error);
         }
+#endif
       }
     }
     print_ast_type(node);
@@ -677,3 +708,5 @@ cql_noexport ast_node *copy_ast_tree(ast_node *_Nonnull node) {
   Invariant(new_node);
   return new_node;
 }
+
+

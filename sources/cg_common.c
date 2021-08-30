@@ -5,6 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_CG_COMMON)
+
+// minimal stubs to avoid link errors
+
+cql_noexport void cg_common_cleanup() {}
+void cql_exit_on_semantic_errors(ast_node *head) {}
+
+#else
+
 #include "cg_common.h"
 #include "ast.h"
 #include "sem.h"
@@ -410,3 +419,5 @@ cql_noexport void cg_common_cleanup() {
   CLEANUP_CHARBUF_REF(cg_cleanup_output);
   CLEANUP_CHARBUF_REF(cg_fragments_output)
 }
+
+#endif

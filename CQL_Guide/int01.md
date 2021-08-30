@@ -12,7 +12,7 @@ sidebar_label: "Part 1: Lexing, Parsing, and the AST"
 ### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
-an adjuct to the Guide proper, which describes the language, and to a lesser extent
+an adjunct to the Guide proper, which describes the language, and to a lesser extent
 the code that the compiler generates.
 
 The actual code is heavily commented, so it's better to read the code to see the details
@@ -35,7 +35,7 @@ a good starting place for a modest SQL project in need of a grammar.
 
 ### Lexical Analysis
 
-Inside of `cql.l` you'll find the formal defintion of all the tokens.  These of course correspond to the
+Inside of `cql.l` you'll find the formal definition of all the tokens.  These of course correspond to the
 various tokens needed to parse the SQL language, plus a few more of the CQL control flow extensions.
 There's no need to discuss the approximately 150 such tokens, but the following points are of general interest:
 
@@ -49,7 +49,6 @@ There's no need to discuss the approximately 150 such tokens, but the following 
   * the token ends on non-identifier characters, so the text "X IS NOT FALSEY" must become the tokens { `X`, `IS_NOT`, `FALSEY` } and not { `X`, `IS_NOT_FALSE`, `Y` }
     * the second option is actually the longest token, so without the trailing qualifier it would be preferred
     * hence, where a continuation is possible, the trailing context must be specified in multi=word tokens
-    * a quick reading shows this isn't done completely consistently and that should be fixed...
 * there is special processing needed to lex `/* ... */` comments correctly
 * there are token types for each of the sorts of literals that can be encountered
   * special care is taken to keep the literals in string form so that no precision is lost
@@ -96,7 +95,7 @@ typedef struct ast_node {
 } ast_node;
 ```
 
-This node gives the tree its shape, this is is how all the expression operators and statments get encoded.  An example shows this more clearly:
+This node gives the tree its shape and is how all the expression operators and statements get encoded.  An example shows this more clearly:
 
 ```
 SET X := 1 + 3;
@@ -185,7 +184,7 @@ so that SQLite will see a literal it understands.  However, if the origin of the
 then the `cstr_literal` boolean flag will be set.  When echoing the program back as plain text, the C string will be converted back to the C form
 for display to a user. But when providing the string to Sqlite, it's in SQL format.
 
-Identifiers can be distinguised from string literals because the quotation marks (always `''`) are still in the string.
+Identifiers can be distinguished from string literals because the quotation marks (always `''`) are still in the string.
 
 This node type is always a leaf.
 
@@ -205,7 +204,7 @@ typedef struct num_ast_node {
 All numerics are stored as strings so that there is no loss of precision.  This is important because it is entirely possible that
 the CQL compiler is built with a different floating point library, than the target system, or different integer sizes.  As a result
 CQL does not evaluate anything outside of an explicit `const(...)` expression.  This policy avoids integer overflows at compile time or loss
-of floating point precesion. Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.
+of floating point precision. Constants in the text of the output are emitted byte-for-byte as they appeared in the source code.
 
 This node type is always a leaf.
 
@@ -261,7 +260,7 @@ END IF;
 ```
 Note that the string "this" was normalized to 'this' (which was trivial in this case) but rest assured that
 `cstr_literal` was set.  This is shown because the text of the statement came out with double quotes.
-The text above was not the input to the compiler, the compiler was actually given this text
+The text above was not the input to the compiler, the compiler was actually given this text:
 
 ```
 if x then let x := 1.5e7; else if y then let y := 'that'; else let z := "this"; end if;
@@ -315,7 +314,7 @@ As you can see the trees rapidly get more complex.  The `SELECT` statement has m
 so the AST actually has places in its skeleton where these could go but are absent (e.g. `GROUP BY`,
 `HAVING`, `ORDER BY`, and `OFFSET` are all missing).
 
-The shape of the AST is largely self evident from the above, but you can easily cross check it against
+The shape of the AST is largely self-evident from the above, but you can easily cross check it against
 what's in `cql.y` for details and then look at `gen_sql.c` for decoding tips (discussed below).
 
 The compiler can produce these diagrams in 'dot' format which makes pretty pictures, but the reality is that
@@ -366,7 +365,7 @@ to get something that looks reasonable some standard formatting (including inden
 This has the effect of normalizing the input and potentially beautifying it as well (especially if it was
 poorly formatted initially).
 
-To see these features you need only run cql with no arguments, by default it reads `stdin`, makes the AST, and
+To see these features, you need only run cql with no arguments. By default, it reads `stdin`, makes the AST, and
 then emits the normalized, formatted text. If there are no syntax errors, the input and the output should be
 equivalent.
 
@@ -377,12 +376,12 @@ never see these things when the DDL for SQLite is emitted.  But when echoing the
 Additionally, any local or global variables in a SQL statement should be replaced with `?` in the text
 that goes to SQLite and then followed up with binding instructions.  We'll cover the binding more in the
 section code generation, but importantly this also has to significantly alter the output.
-As a result the standard formatter includes extensive configurably to get these various results.
+As a result the standard formatter includes extensive configurability to get these various results.
 
 ### Configuring the Output with Callbacks and Flags
 
 Some of these features, like variable binding, require a callback to the formatter's client.  The client
-gets a notification, along with a few control variables, and it can then decide exactly what goes in the output
+gets a notification, along with a few control variables, and it can then decide exactly what goes in the output.
 The control structure is `struct gen_sql_callbacks`, and it is described below.  This structure includes the various
 callbacks (all of which are optional) and each callback gets a 'context' pointer of its choice.  The context pointer
 is some arbitrary `void *` value that you provide, which will be given to your function along with the AST pointer
@@ -409,7 +408,7 @@ The coarsest control is provided by the generation mode.  It is one of these val
 enum gen_sql_mode {
   gen_mode_echo,          // Prints everything in the original, with standard whitespace and parentheses
   gen_mode_sql,           // Prints the AST formatted for SQLite consumption, omits anything CQL specific
-  gen_mode_no_annotations // Equivalent to gen_mode_echo without versioning attributes or generic attribues
+  gen_mode_no_annotations // Equivalent to gen_mode_echo without versioning attributes or generic attributes
                           // * @create, @delete, @recreate, and @attribute are removed
                           // * statements like @echo are not affected, nor is the type specifier @sensitive
 };
@@ -422,7 +421,7 @@ be produced.  Otherwise the callbacks and flags alter the behavior of the echoer
 // Callbacks allow you to significantly alter the generated sql, see the particular flags below.
 typedef struct gen_sql_callbacks {
   // Each time a local/global variable is encountered in the AST, this callback is invoked
-  // this is to allow the varialbe reference to be noted and replaced with ? in the generated SQL
+  // this is to allow the variable reference to be noted and replaced with ? in the generated SQL
   gen_sql_callback _Nullable variables_callback;
   void *_Nullable variables_context;
 
@@ -432,7 +431,7 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable col_def_callback;
   void *_Nullable col_def_context;
 
-  // This callback is used to expland the * in select * or select T.*
+  // This callback is used to explain the * in select * or select T.*
   gen_sql_callback _Nullable star_callback;
   void *_Nullable star_context;
 
@@ -485,25 +484,25 @@ typedef struct gen_sql_callbacks {
   //
   // In short, if CQL is going to process the output again, use this flag
   // to control the autoincrement transform.  It might be possible to fold
-  // this flag with the mode flag but it's sufficiently wierd that this
-  // extra documention and special handling is probably worth the extra
+  // this flag with the mode flag but it's sufficiently weird that this
+  // extra documentation and special handling is probably worth the extra
   // boolean storage.
   bool_t long_to_int_conv;
 } gen_sql_callbacks;
 ```
 
 Each callback can be best understood by reading the source, so we'll avoid
-trying to precisely define it here.  But it is helpful to give the jist
+trying to precisely define it here.  But it is helpful to give the gist
 of these options.
 
 * `mode` : one of the three enum modes that control overall behavior
 * `variables_callback` : invoked when a variable appears in the SQL, the caller can record the specific variable and then use it for binding
-* `col_def_callback` : when creating the "baseline" schema you don't want column defintions from later schema to be included, this gives you a chance to suppress them
+* `col_def_callback` : when creating the "baseline" schema you don't want column definitions from later schema to be included, this gives you a chance to suppress them
 * `star_callback` : normally the `*` in `select *` or `select T.*` is expanded when emitting for SQLite, this callback does the expansion when appropriate
-* `if_not_exists_callback` : when generating DDL for schema upgrade you typically want to force `IF NOT EXISTS` to be added to the schema even if it wasn't present in the declaration, this callback lets you do that
+* `if_not_exists_callback` : when generating DDL for schema upgrade you typically want to force `IF NOT EXISTS` to be added to the schema even if it wasn't present in the declaration; this callback lets you do that
 * `convert_hex` : if true, hex constants are converted to decimal; used when emitting JSON because JSON doesn't understand hex constants
 * `minify_casts` : minification converts casts like `CAST(NULL AS TEXT)` to just `NULL` -- the former is only useful for type information, SQLite does need to see it
-* `minify_aliases` : unused column aliases as in `select foo.x as some_really_long_alias` can be removed from the output when targetting SQLite to save space
+* `minify_aliases` : unused column aliases as in `select foo.x as some_really_long_alias` can be removed from the output when targeting SQLite to save space
 
 ### Invoking the Generator
 
@@ -519,7 +518,7 @@ This has the typical signature for all these generators:
 * `ast` : the part of the tree to print
 * `_callbacks` : the optional callbacks described above
 
-To use these you'll need to these functions as well.
+To use these you'll need to these functions as well:
 
 ```C
 cql_noexport void gen_init(void);
@@ -602,13 +601,13 @@ Let's look at those two in detail.
 ```C
 static void gen_binary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
-  // We add parens if our priority is less than the parent prioirty
+  // We add parens if our priority is less than the parent priority
   // meaning something like this:
   // * we're a + node, our parent is a * node
   // * we need parens because the tree specifies that the + happens before the *
   //
   // Also, grouping of equal operators is left to right
-  // so for so if our right child is the same precendence as us
+  // so for so if our right child is the same precedence as us
   // that means there were parens there in the original expression
   // e.g.  3+(4-7);
   // effectively it's like we're one binding strength higher for our right child
@@ -628,7 +627,7 @@ The convention gives us:
 * `pri` : the binding strength of the node above us
 * `pri_new` : the binding strength of this node (the new node)
 
-So generically, if the binding strength of the current opereator `pri_new` is weaker than the context it is contained in `pri`,
+So generically, if the binding strength of the current operator `pri_new` is weaker than the context it is contained in `pri`,
 then parentheses are required to preserve order of operations. See the comment for more details.
 
 With parens taken care of, we emit the left expression, the operator, and the right expression.
@@ -678,9 +677,9 @@ static void gen_if_stmt(ast_node *ast) {
 }
 ```
 
-There is a general boiler plate sort of recursive form to all of these, they follow the same basic shape.
+There is a general boilerplate sort of recursive form to all of these; they follow the same basic shape.
 These patterns are designed to make it impossible to walk the tree incorrectly. If the tree shape changes
-because of a grammar change, you get immediate concrete failures were the tree walk has to change.  Since
+because of a grammar change, you get immediate concrete failures where the tree walk has to change.  Since
 there are test cases to cover every tree shape you can always be sure you have it exactly right if the
 macros do not force assertion failures.
 
@@ -689,10 +688,10 @@ The steps were:
 * use `Contract` to assert that the node we are given is the type we expect
 * use `EXTRACT` macros (detailed below) to get the tree parts you want starting from your root
 * use `gen_printf` to emit the constant pieces of the statement
-* use recursion to print sub fragments (like the IF condition in this case)
-* test the tree fragments where optional peices are present, emit them as needed
+* use recursion to print sub-fragments (like the IF condition in this case)
+* test the tree fragments where optional pieces are present, emit them as needed
 
-It might be instructive to include `gen_cond_action`, it is entirely unremarkable:
+It might be instructive to include `gen_cond_action`; it is entirely unremarkable:
 
 ```C
 static void gen_cond_action(ast_node *ast) {
@@ -705,7 +704,7 @@ static void gen_cond_action(ast_node *ast) {
 }
 ```
 
-A `cond_action` node has an expression on the left and a statement list on the right it can appear
+A `cond_action` node has an expression on the left and a statement list on the right; it can appear
 in the base `IF x THEN y` part of the `IF` or as `ELSE IF x THEN y`.  Either case is formatted the same.
 
 #### Extraction Macros
@@ -740,10 +739,10 @@ Other options:
   * `EXTRACT_NUM_TYPE` : extracts the num_type field from a numeric AST node
 
 The `ANY` variants are usually re-dispatched with something like `gen_expr` that uses the name table again (and that will check the type) or
-else extracted value is checked with ad hoc logic immediately after extraction if it's perhaps one of two or three variations.
+else the extracted value is checked with ad hoc logic immediately after extraction if it's perhaps one of two or three variations.
 In all cases the idea is to force a failure very quickly.  `gen_root_expr()` for instance in the `if_cond` example will fail immediately
 if the node it gets is not an expression type.
 
 Because of the clear use of `EXTRACT`, the `gen_` family of functions are often the best/fastest way to understand the shape of the AST.
-You can dump a few sample and look at the `gen_` function and quickly see exactly what the options are authoritatively.  As a result
-it's very normal to paste the extraction code from a `gen_` function into a new/needed semantic analysis or code-generation functions.
+You can dump a few samples and look at the `gen_` function and quickly see exactly what the options are authoritatively.  As a result
+it's very normal to paste the extraction code from a `gen_` function into a new/needed semantic analysis or code-generation function.

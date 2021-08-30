@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SCHEMA)
+
+// stubs to avoid link errors
+cql_noexport void cg_schema_main(ast_node *head) {}
+cql_noexport void cg_schema_upgrade_main(ast_node *head) {}
+
+#else
+
 // Creates schema migration assets
 
 #include "ast.h"
@@ -1295,3 +1303,5 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   CHARBUF_CLOSE(main);
   CHARBUF_CLOSE(preamble);
 }
+
+#endif
