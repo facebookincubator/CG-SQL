@@ -289,6 +289,7 @@
 <li><a href="#sematic-tests">Sematic Tests</a></li>
 <li><a href="#code-generation-tests">Code Generation Tests</a></li>
 <li><a href="#run-tests">Run Tests</a></li>
+<li><a href="#schema-upgrade-validation">Schema Upgrade Validation</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -4348,7 +4349,7 @@ cql_cleanup:
 <ul>
 <li>fail if this generates no errors (yes you read that right, see below)</li>
 </ul></li>
-<li>do the pattern matching on the output to ensure the patterns match (discussed below)
+<li>do the pattern matching on the output using <code>cql-verify</code> to ensure the patterns match (discussed below)
 <ul>
 <li>fail if the output is not consistent with the patterns</li>
 </ul></li>
@@ -4370,7 +4371,7 @@ cql_cleanup:
 <span id="cb217-10"><a href="#cb217-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
 <span id="cb217-11"><a href="#cb217-11" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
 <p>In short <code>sem_test.sql</code> is FULL of semantic errors, that’s part of the test. If the compiler reports success something is <em>seriously</em> wrong.</p>
-<p>In the next phase we’re doing to do some pattern matching, let’s look at a couple of examples to illustrate how this works. The program <code>tester</code> actually does all this and that program is itself written in (mostly) CQL which is cute.</p>
+<p>In the next phase we’re doing to do some pattern matching, let’s look at a couple of examples to illustrate how this works. The program <code>cql-verify</code> actually does all this and that program is itself written in (mostly) CQL which is cute. It can be found in the <code>tester</code> directory.</p>
 <p>Here’s a very simple example:</p>
 <div class="sourceCode" id="cb218"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb218-1"><a href="#cb218-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: we&#39;ll be using printf in lots of places in the tests as an external proc</span></span>
 <span id="cb218-2"><a href="#cb218-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {declare_proc_no_check_stmt}: ok</span></span>
@@ -4485,8 +4486,204 @@ CREATE TABLE with_kind(
 <p>As we’ll see this simple pattern is used in many other tests. All that is required for it work is output with lines of the form “The statement ending at line XXXX”</p>
 <p>The <code>sem_test_dev.sql</code> test file is a set of tests that are run with the <code>--dev</code> flag passed to CQL. This is the mode where certain statements that are prohibited in production code are verified. This file is very small indeed and the exact prohibitions are left as an exercise to the reader.</p>
 <h3 id="code-generation-tests">Code Generation Tests</h3>
-<p>[Examples to come but the short answer is that it’s just like the semantic tests except we’re scanning codegen instead of an AST. The same patterns work in the same way for the same reason]</p>
+<p>The test logic for the “codegen” family of tests (<code>cg_test*.sql</code>) is virtually identical to the semantic test family. The same testing utililty is used, and it works the same way, looking for the same marker. The only difference in this stage is that the test output is generated code, not an AST. The codegen tests are a great way to lock down important code fragments in the output. Note that the codegen tests do not actually execute any generated code. That’s the next category.</p>
+<p>Here’s an sample test:</p>
+<div class="sourceCode" id="cb224"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb224-1"><a href="#cb224-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: unused temp in unary not emitted</span></span>
+<span id="cb224-2"><a href="#cb224-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- - cql_int32 _tmp_int_0 = 0;</span></span>
+<span id="cb224-3"><a href="#cb224-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- - cql_int32 _tmp_int_1 = 0;</span></span>
+<span id="cb224-4"><a href="#cb224-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- + o = i.value;</span></span>
+<span id="cb224-5"><a href="#cb224-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- + o = - 1;</span></span>
+<span id="cb224-6"><a href="#cb224-6" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> proc unused_temp(i <span class="dt">integer</span>, <span class="kw">out</span> o <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>)</span>
+<span id="cb224-7"><a href="#cb224-7" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb224-8"><a href="#cb224-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> o <span class="op">:=</span> <span class="fu">coalesce</span>(i, <span class="op">-</span><span class="dv">1</span>);</span>
+<span id="cb224-9"><a href="#cb224-9" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
+<p>This test is verifying one of the optimizations that we talked about in <a href="https://cgsql.dev/cql-guide/int03#result-variables">Part 3</a>. In many cases temporary variables for results (such as function calls) can be elided.</p>
+<ul>
+<li><code>- cql_int32 _tmp_int_0 = 0;</code> : verifies that this temporary is NOT created</li>
+<li><code>- cql_int32 _tmp_int_1 = 0;</code> : likewise</li>
+<li><code>+ o = i.value;</code> : the first alternative in coalesce directly assigns to <code>o</code></li>
+<li><code>+ o = - 1;</code> : as does the second</li>
+</ul>
+<p>It might be helpful to look at the full output, which as always is in a <code>.ref</code> file. In this case <code>cg_test.c.ref</code>. Here is the full output with the line number normalized:</p>
+<div class="sourceCode" id="cb225"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb225-1"><a href="#cb225-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The statement ending at line XXXX</span></span>
+<span id="cb225-2"><a href="#cb225-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-3"><a href="#cb225-3" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb225-4"><a href="#cb225-4" aria-hidden="true" tabindex="-1"></a><span class="co">CREATE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL)</span></span>
+<span id="cb225-5"><a href="#cb225-5" aria-hidden="true" tabindex="-1"></a><span class="re">BEGIN</span></span>
+<span id="cb225-6"><a href="#cb225-6" aria-hidden="true" tabindex="-1"></a><span class="co">  SET o := coalesce(i, -1);</span></span>
+<span id="cb225-7"><a href="#cb225-7" aria-hidden="true" tabindex="-1"></a><span class="re">END</span><span class="co">;</span></span>
+<span id="cb225-8"><a href="#cb225-8" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span>
+<span id="cb225-9"><a href="#cb225-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-10"><a href="#cb225-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define _PROC_ &quot;unused_temp&quot;</span></span>
+<span id="cb225-11"><a href="#cb225-11" aria-hidden="true" tabindex="-1"></a><span class="co">// export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);</span></span>
+<span id="cb225-12"><a href="#cb225-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> unused_temp<span class="op">(</span>cql_nullable_int32 i<span class="op">,</span> cql_int32 <span class="op">*</span>_Nonnull o<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb225-13"><a href="#cb225-13" aria-hidden="true" tabindex="-1"></a>  cql_contract_argument_notnull<span class="op">((</span><span class="dt">void</span> <span class="op">*)</span>o<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb225-14"><a href="#cb225-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-15"><a href="#cb225-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">*</span>o <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="co">// set out arg to non-garbage</span></span>
+<span id="cb225-16"><a href="#cb225-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">do</span> <span class="op">{</span></span>
+<span id="cb225-17"><a href="#cb225-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>i<span class="op">.</span>is_null<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb225-18"><a href="#cb225-18" aria-hidden="true" tabindex="-1"></a>      <span class="op">*</span>o <span class="op">=</span> i<span class="op">.</span>value<span class="op">;</span></span>
+<span id="cb225-19"><a href="#cb225-19" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb225-20"><a href="#cb225-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb225-21"><a href="#cb225-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>o <span class="op">=</span> <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb225-22"><a href="#cb225-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">while</span> <span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb225-23"><a href="#cb225-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb225-24"><a href="#cb225-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb225-25"><a href="#cb225-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#undef _PROC_</span></span></code></pre></div>
+<p>As we can see, the test has picked out the bits that it wanted to verify. The <code>coalesce</code> function is verified elsewhere – in this test we’re making sure that this pattern doesn’t cause extra temporaries.</p>
+<p>Let’s take a quick look at the part of <code>test_common.sh</code> that runs this:</p>
+<div class="sourceCode" id="cb226"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb226-1"><a href="#cb226-1" aria-hidden="true" tabindex="-1"></a><span class="fu">code_gen_c_test()</span> <span class="kw">{</span></span>
+<span id="cb226-2"><a href="#cb226-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 5 -- C CODE GEN TEST&#39;</span></span>
+<span id="cb226-3"><a href="#cb226-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running codegen test</span>
+<span id="cb226-4"><a href="#cb226-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="va">${CQL}</span> <span class="at">--test</span> <span class="at">--cg</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.h&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.c&quot;</span> <span class="dt">\</span></span>
+<span id="cb226-5"><a href="#cb226-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_exports.out&quot;</span> <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/cg_test.sql&quot;</span> <span class="dt">\</span></span>
+<span id="cb226-6"><a href="#cb226-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--global_proc</span> cql_startup <span class="at">--generate_exports</span> <span class="dv">2</span><span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.err&quot;</span></span>
+<span id="cb226-7"><a href="#cb226-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb226-8"><a href="#cb226-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;ERROR:&quot;</span></span>
+<span id="cb226-9"><a href="#cb226-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.err&quot;</span></span>
+<span id="cb226-10"><a href="#cb226-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb226-11"><a href="#cb226-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb226-12"><a href="#cb226-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-13"><a href="#cb226-13" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> validating codegen</span>
+<span id="cb226-14"><a href="#cb226-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cql-verify&quot;</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/cg_test.sql&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/cg_test_c.c&quot;</span></span>
+<span id="cb226-15"><a href="#cb226-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb226-16"><a href="#cb226-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;ERROR: failed verification&quot;</span></span>
+<span id="cb226-17"><a href="#cb226-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb226-18"><a href="#cb226-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb226-19"><a href="#cb226-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-20"><a href="#cb226-20" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> testing for successful compilation of generated C</span>
+<span id="cb226-21"><a href="#cb226-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span> <span class="at">-f</span> out/cg_test_c.o</span>
+<span id="cb226-22"><a href="#cb226-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="ex">do_make</span> out/cg_test_c.o</span>
+<span id="cb226-23"><a href="#cb226-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb226-24"><a href="#cb226-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;ERROR: failed to compile the C code from the code gen test&quot;</span></span>
+<span id="cb226-25"><a href="#cb226-25" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb226-26"><a href="#cb226-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb226-27"><a href="#cb226-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-28"><a href="#cb226-28" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span></span>
+<span id="cb226-29"><a href="#cb226-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-30"><a href="#cb226-30" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;  computing diffs (empty if none)&quot;</span></span>
+<span id="cb226-31"><a href="#cb226-31" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> cg_test_c.c</span>
+<span id="cb226-32"><a href="#cb226-32" aria-hidden="true" tabindex="-1"></a>  <span class="ex">on_diff_exit</span> cg_test_c.h</span>
+<span id="cb226-33"><a href="#cb226-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb226-34"><a href="#cb226-34" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span> other tests</span>
+<span id="cb226-35"><a href="#cb226-35" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>Briefly reviewing this, we see the following important steps:</p>
+<ul>
+<li><code>{CQL} --test --cg etc.</code> : run the compiler on the test input
+<ul>
+<li>the test fails if there are any errors</li>
+</ul></li>
+<li><code>cql-verify</code> : performs the pattern matching
+<ul>
+<li>the output has the same statement markers as in the semantic case</li>
+</ul></li>
+<li><code>do_make</code> : use <code>make</code> to build the generated code ensuring it compiles cleanly
+<ul>
+<li>if the C compiler returns any failure, the test fails</li>
+</ul></li>
+<li><code>on_diff_exit</code> : compares the test output to the reference output
+<ul>
+<li>any difference fails the test</li>
+</ul></li>
+</ul>
+<p>This is all remarkably similar to the semantic tests. All the code generators are tested in the same way.</p>
 <h3 id="run-tests">Run Tests</h3>
-<p>Coming soon.</p>
+<p>The last category of tests actually does execution. The main “run test” happens at “stage 13”, because there are <em>many</em> codegen tests for the various output formats and these all pass before before we try to execute anything. This is not so bad because the tests are quite quick with a full test pass taking less than 90s on my laptop.</p>
+<div class="sourceCode" id="cb227"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb227-1"><a href="#cb227-1" aria-hidden="true" tabindex="-1"></a><span class="fu">run_test()</span> <span class="kw">{</span></span>
+<span id="cb227-2"><a href="#cb227-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&#39;--------------------------------- STAGE 13 -- RUN CODE TEST&#39;</span></span>
+<span id="cb227-3"><a href="#cb227-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> running codegen test with execution</span>
+<span id="cb227-4"><a href="#cb227-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="fu">cc</span> <span class="at">-E</span> <span class="at">-x</span> c <span class="at">-w</span> <span class="st">&quot;</span><span class="va">${TEST_DIR}</span><span class="st">/run_test.sql&quot;</span> <span class="dt">\</span></span>
+<span id="cb227-5"><a href="#cb227-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">&gt;</span><span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test_cpp.out&quot;</span></span>
+<span id="cb227-6"><a href="#cb227-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-7"><a href="#cb227-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> preprocessing failed.</span>
+<span id="cb227-8"><a href="#cb227-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-9"><a href="#cb227-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="ex">!</span> <span class="va">${CQL}</span> <span class="at">--nolines</span> <span class="dt">\</span></span>
+<span id="cb227-10"><a href="#cb227-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--cg</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test.h&quot;</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test.c&quot;</span> <span class="dt">\</span></span>
+<span id="cb227-11"><a href="#cb227-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--in</span> <span class="st">&quot;</span><span class="va">${OUT_DIR}</span><span class="st">/run_test_cpp.out&quot;</span> <span class="dt">\</span></span>
+<span id="cb227-12"><a href="#cb227-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--global_proc</span> cql_startup <span class="at">--rt</span> c</span>
+<span id="cb227-13"><a href="#cb227-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-14"><a href="#cb227-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> codegen failed.</span>
+<span id="cb227-15"><a href="#cb227-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-16"><a href="#cb227-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="ex">!</span> <span class="er">(</span><span class="bu">echo</span> <span class="st">&quot;  compiling code&quot;</span><span class="kw">;</span> <span class="ex">do_make</span> run_test <span class="kw">)</span></span>
+<span id="cb227-17"><a href="#cb227-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-18"><a href="#cb227-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> build failed</span>
+<span id="cb227-19"><a href="#cb227-19" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-20"><a href="#cb227-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> <span class="ex">!</span> <span class="er">(</span><span class="bu">echo</span> <span class="st">&quot;  executing tests&quot;</span><span class="kw">;</span> <span class="st">&quot;./</span><span class="va">${OUT_DIR}</span><span class="st">/a.out&quot;</span><span class="kw">)</span></span>
+<span id="cb227-21"><a href="#cb227-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb227-22"><a href="#cb227-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> tests failed</span>
+<span id="cb227-23"><a href="#cb227-23" aria-hidden="true" tabindex="-1"></a>    <span class="ex">failed</span></span>
+<span id="cb227-24"><a href="#cb227-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb227-25"><a href="#cb227-25" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span></span></code></pre></div>
+<p>The main structure is mostly what one would expect:</p>
+<ul>
+<li><code>cc -E -x c</code> : this is used to pre-process the run test file so that we can use C pre-processor features to define tests
+<ul>
+<li>there are quite a few helpful macros as we’ll see</li>
+<li>if pre-processing fails, the test fails</li>
+</ul></li>
+<li><code>{CQL} --nolines --cg ...</code> : this is used to create the <code>.h</code> and <code>.c</code> file for the compiland
+<ul>
+<li><code>--nolines</code> is used to suppress the <code>#</code> directives that would associate the generated code with the .sql file</li>
+<li>compilation failures cause the test to fail</li>
+</ul></li>
+<li><code>do_make</code> : as before this causes <code>make</code> to build the compiland (<code>run_test</code>)
+<ul>
+<li>this build target includes the necessary bootstrap code to open a database and start the tests</li>
+<li>any failures cause the test to fail</li>
+</ul></li>
+<li><code>a.out</code> : the tests execute
+<ul>
+<li>the tests return a failure status code if anything goes wrong</li>
+<li>any failure causes the test to fail</li>
+</ul></li>
+</ul>
+<p>The test file <code>run_test.sql</code> includes test macros from <code>cqltest.h</code> – all of these are very simple. The main ones are <code>BEGIN_SUITE</code>, <code>END_SUITE</code>, <code>BEGIN_TEST</code> and <code>END_TEST</code> for structure; and <code>EXPECT</code> to verify a boolean expression.</p>
+<p>Here’s a simple test case with several expectations:</p>
+<pre><code>BEGIN_TEST(arithmetic)
+  EXPECT_SQL_TOO((1 + 2) * 3 == 9);
+  EXPECT_SQL_TOO(1 + 2 * 3 == 7);
+  EXPECT_SQL_TOO(6 / 3 == 2);
+  EXPECT_SQL_TOO(7 - 5 == 2);
+  EXPECT_SQL_TOO(6 % 5 == 1);
+  EXPECT_SQL_TOO(5 / 2.5 == 2);
+  EXPECT_SQL_TOO(-(1+3) == -4);
+  EXPECT_SQL_TOO(-1+3 == 2);
+  EXPECT_SQL_TOO(1+-3 == -2);
+  EXPECT_SQL_TOO(longs.neg == -1);
+  EXPECT_SQL_TOO(-longs.neg == 1);
+  EXPECT_SQL_TOO(- -longs.neg == -1);
+END_TEST(arithmetic)</code></pre>
+<p>We should also reveal <code>EXPECT_SQL_TOO</code>, discussed below:</p>
+<div class="sourceCode" id="cb229"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb229-1"><a href="#cb229-1" aria-hidden="true" tabindex="-1"></a><span class="op">--</span> use this <span class="cf">for</span> both normal eval and SQLite eval</span>
+<span id="cb229-2"><a href="#cb229-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define EXPECT_SQL_TOO(x) EXPECT(x); EXPECT((select x))</span></span></code></pre></div>
+<p>Now back to the test:</p>
+<ul>
+<li><code>EXPECT(x)</code> : verifies that <code>x</code> is true (i.e. a non-zero numeric)
+<ul>
+<li>not used directly in this example</li>
+</ul></li>
+<li><code>EXPECT_SQL_TOO</code> : as the definition shows,
+<ul>
+<li><code>x</code> must be true (as above)</li>
+<li><code>(select x)</code> must also be true,
+<ul>
+<li>i.e. when SQLite is asked to evaluate the expression the result is also a “pass”</li>
+</ul></li>
+<li>this is used to verify consistency of order of operations and other evaluations that must be the same in both forms</li>
+<li>note that when <code>(select ...)</code> is used, CQL plays no part in evaluating the expression, the text of the expression goes to SQLite and any variables are bound as described in Part 3.</li>
+</ul></li>
+</ul>
+<p>The run test exercises many features, but the testing strategy is always the same:</p>
+<ul>
+<li>exercise some code pattern</li>
+<li>use <code>EXPECT</code> to validate the results are correct</li>
+<li>the expressions in the <code>EXPECT</code> are usually crafted carefully to show that a certain mistake is not being made
+<ul>
+<li>e.g. expressions where the result would be different if there are bugs in order of operations</li>
+<li>e.g. expressions that would crash with divide by zero if code that isn’t supposed to run actually ran</li>
+</ul></li>
+</ul>
+<h3 id="schema-upgrade-validation">Schema Upgrade Validation</h3>
+<p>This is a form of run test that is a bit different; discussion coming.</p>
 </body>
 </html>

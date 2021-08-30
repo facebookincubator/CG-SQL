@@ -5546,7 +5546,7 @@ There are basically 3 steps:
 
 * run the compiler over `test/sem_test.sql`
   * fail if this generates no errors (yes you read that right, see below)
-* do the pattern matching on the output to ensure the patterns match (discussed below)
+* do the pattern matching on the output using `cql-verify` to ensure the patterns match (discussed below)
   * fail if the output is not consistent with the patterns
 * compare the reference output for the AST and the errors
   * fail if there are any differences
@@ -5571,8 +5571,8 @@ In short `sem_test.sql` is FULL of semantic errors, that's part of the test.  If
 reports success something is *seriously* wrong.
 
 In the next phase we're doing to do some pattern matching, let's look at a couple of examples
-to illustrate how this works.  The program `tester` actually does all this and that program
-is itself written in (mostly) CQL which is cute.
+to illustrate how this works.  The program `cql-verify` actually does all this and that program
+is itself written in (mostly) CQL which is cute.  It can be found in the `tester` directory.
 
 Here's a very simple example:
 
@@ -5733,15 +5733,230 @@ The `sem_test_dev.sql` test file is a set of tests that are run with the `--dev`
 is the mode where certain statements that are prohibited in production code are verified.  This file is
 very small indeed and the exact prohibitions are left as an exercise to the reader.
 
-
 ### Code Generation Tests
 
-[Examples to come but the short answer is that it's just like the semantic tests except we're scanning
-codegen instead of an AST.  The same patterns work in the same way for the same reason]
+The test logic for the "codegen" family of tests (`cg_test*.sql`) is virtually identical to the semantic
+test family. The same testing utililty is used, and it works the same way, looking for the same marker.
+The only difference in this stage is that the test output is generated code, not an AST. The codegen tests
+are a great way to lock down important code fragments in the output.  Note that the codegen tests do not actually
+execute any generated code.  That's the next category.
 
+Here's an sample test:
+
+```sql
+-- TEST: unused temp in unary not emitted
+-- - cql_int32 _tmp_int_0 = 0;
+-- - cql_int32 _tmp_int_1 = 0;
+-- + o = i.value;
+-- + o = - 1;
+create proc unused_temp(i integer, out o integer not null)
+begin
+  set o := coalesce(i, -1);
+end;
+```
+
+This test is verifying one of the optimizations that we talked about in
+[Part 3](https://cgsql.dev/cql-guide/int03#result-variables).
+In many cases temporary variables for results (such as function calls) can be elided.
+
+* `- cql_int32 _tmp_int_0 = 0;` : verifies that this temporary is NOT created
+* `- cql_int32 _tmp_int_1 = 0;` : likewise
+* `+ o = i.value;` : the first alternative in coalesce directly assigns to `o`
+* `+ o = - 1;` : as does the second
+
+It might be helpful to look at the full output, which as always is in a `.ref` file.
+In this case `cg_test.c.ref`.  Here is the full output with the line number
+normalized:
+
+```C
+// The statement ending at line XXXX
+
+/*
+CREATE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL)
+BEGIN
+  SET o := coalesce(i, -1);
+END;
+*/
+
+#define _PROC_ "unused_temp"
+// export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
+void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
+  cql_contract_argument_notnull((void *)o, 2);
+
+  *o = 0; // set out arg to non-garbage
+  do {
+    if (!i.is_null) {
+      *o = i.value;
+      break;
+    }
+    *o = - 1;
+  } while (0);
+
+}
+#undef _PROC_
+```
+
+As we can see, the test has picked out the bits that it wanted to verify. The `coalesce`
+function is verified elsewhere -- in this test we're making sure that this pattern doesn't cause
+extra temporaries.
+
+Let's take a quick look at the part of `test_common.sh` that runs this:
+
+```bash
+code_gen_c_test() {
+  echo '--------------------------------- STAGE 5 -- C CODE GEN TEST'
+  echo running codegen test
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" \
+    "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" \
+    --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_c.err"
+    failed
+  fi
+
+  echo validating codegen
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c.c"
+  then
+    echo "ERROR: failed verification"
+    failed
+  fi
+
+  echo testing for successful compilation of generated C
+  rm -f out/cg_test_c.o
+  if ! do_make out/cg_test_c.o
+  then
+    echo "ERROR: failed to compile the C code from the code gen test"
+    failed
+  fi
+
+  ...
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_c.c
+  on_diff_exit cg_test_c.h
+
+  ... other tests
+}
+```
+
+Briefly reviewing this, we see the following important steps:
+
+* `{CQL} --test --cg etc.` : run the compiler on the test input
+  * the test fails if there are any errors
+* `cql-verify` : performs the pattern matching
+  * the output has the same statement markers as in the semantic case
+* `do_make` : use `make` to build the generated code ensuring it compiles cleanly
+  * if the C compiler returns any failure, the test fails
+* `on_diff_exit` : compares the test output to the reference output
+  * any difference fails the test
+
+This is all remarkably similar to the semantic tests. All the code generators
+are tested in the same way.
 
 ### Run Tests
 
-Coming soon.
+The last category of tests actually does execution.  The main "run test" happens
+at "stage 13", because there are *many* codegen tests for the various
+output formats and these all pass before before we try to execute anything.
+This is not so bad because the tests are quite quick with a full test pass taking
+less than 90s on my laptop.
+
+```bash
+run_test() {
+  echo '--------------------------------- STAGE 13 -- RUN CODE TEST'
+  echo running codegen test with execution
+  if ! cc -E -x c -w "${TEST_DIR}/run_test.sql" \
+    >"${OUT_DIR}/run_test_cpp.out"
+  then
+    echo preprocessing failed.
+    failed
+  elif ! ${CQL} --nolines \
+    --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" \
+    --in "${OUT_DIR}/run_test_cpp.out" \
+    --global_proc cql_startup --rt c
+  then
+    echo codegen failed.
+    failed
+  elif ! (echo "  compiling code"; do_make run_test )
+  then
+    echo build failed
+    failed
+  elif ! (echo "  executing tests"; "./${OUT_DIR}/a.out")
+  then
+    echo tests failed
+    failed
+  fi
+  ...
+```
+
+The main structure is mostly what one would expect:
+
+* `cc -E -x c` : this is used to pre-process the run test file so that we can use C pre-processor features to define tests
+  * there are quite a few helpful macros as we'll see
+  * if pre-processing fails, the test fails
+* `{CQL} --nolines --cg ...` : this is used to create the `.h` and `.c` file for the compiland
+  * `--nolines` is used to suppress the `#` directives that would associate the generated code with the .sql file
+  * compilation failures cause the test to fail
+* `do_make` : as before this causes `make` to build the compiland (`run_test`)
+  * this build target includes the necessary bootstrap code to open a database and start the tests
+  * any failures cause the test to fail
+* `a.out` : the tests execute
+  * the tests return a failure status code if anything goes wrong
+  * any failure causes the test to fail
+
+The test file `run_test.sql` includes test macros from `cqltest.h` -- all of these are very
+simple.  The main ones are `BEGIN_SUITE`, `END_SUITE`, `BEGIN_TEST` and `END_TEST` for
+structure; and `EXPECT` to verify a boolean expression.
+
+Here's a simple test case with several expectations:
+
+```
+BEGIN_TEST(arithmetic)
+  EXPECT_SQL_TOO((1 + 2) * 3 == 9);
+  EXPECT_SQL_TOO(1 + 2 * 3 == 7);
+  EXPECT_SQL_TOO(6 / 3 == 2);
+  EXPECT_SQL_TOO(7 - 5 == 2);
+  EXPECT_SQL_TOO(6 % 5 == 1);
+  EXPECT_SQL_TOO(5 / 2.5 == 2);
+  EXPECT_SQL_TOO(-(1+3) == -4);
+  EXPECT_SQL_TOO(-1+3 == 2);
+  EXPECT_SQL_TOO(1+-3 == -2);
+  EXPECT_SQL_TOO(longs.neg == -1);
+  EXPECT_SQL_TOO(-longs.neg == 1);
+  EXPECT_SQL_TOO(- -longs.neg == -1);
+END_TEST(arithmetic)
+```
+
+We should also reveal `EXPECT_SQL_TOO`, discussed below:
+
+```C
+-- use this for both normal eval and SQLite eval
+#define EXPECT_SQL_TOO(x) EXPECT(x); EXPECT((select x))
+```
+
+Now back to the test:
+
+* `EXPECT(x)` : verifies that `x` is true (i.e. a non-zero numeric)
+  * not used directly in this example
+* `EXPECT_SQL_TOO` : as the definition shows,
+  * `x` must be true (as above)
+  * `(select x)` must also be true,
+    * i.e. when SQLite is asked to evaluate the expression the result is also a "pass"
+  * this is used to verify consistency of order of operations and other evaluations that must be the same in both forms
+  * note that when `(select ...)` is used, CQL plays no part in evaluating the expression, the text of the expression goes to SQLite and any variables are bound as described in Part 3.
+
+The run test exercises many features, but the testing strategy is always the same:
+
+* exercise some code pattern
+* use `EXPECT` to validate the results are correct
+* the expressions in the `EXPECT` are usually crafted carefully to show that a certain mistake is not being made
+  * e.g. expressions where the result would be different if there are bugs in order of operations
+  * e.g. expressions that would crash with divide by zero if code that isn't supposed to run actually ran
+
+
+### Schema Upgrade Validation
+
+This is a form of run test that is a bit different;  discussion coming.
 
 
