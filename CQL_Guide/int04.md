@@ -164,9 +164,10 @@ sem_check() {
 In short `sem_test.sql` is FULL of semantic errors, that's part of the test.  If the compiler
 reports success something is *seriously* wrong.
 
-In the next phase we're doing to do some pattern matching, let's look at a couple of examples
-to illustrate how this works.  The program `cql-verify` actually does all this and that program
-is itself written in (mostly) CQL which is cute.  It can be found in the `tester` directory.
+In the next phase we're going to do some pattern matching, let's look at a couple of examples
+to illustrate how this works.  The program `cql-verify` actually does all this matching and
+that program is itself written in (mostly) CQL which is cute.
+It can be found in the `tester` directory.
 
 Here's a very simple example:
 
@@ -549,6 +550,224 @@ The run test exercises many features, but the testing strategy is always the sam
   * e.g. expressions that would crash with divide by zero if code that isn't supposed to run actually ran
 
 
-### Schema Upgrade Validation
+### Schema Upgrade Testing
 
-This is a form of run test that is a bit different;  discussion coming.
+The schema upgrade tester is quite a bit different than the others and relies heavily on execution
+of the upgraders.  Before we get into that there is a preliminary topic:
+
+#### "Previous Schema" Validation
+
+In order to ensure that it is possible to create an upgrader, CQL provides features to validate
+the current schema against the previous schema ensuring that nothing has been done that would
+make an upgrader impossible. This is more fully discussed in
+[Chapter 11](https://cgsql.dev/cql-guide/ch11) of the Guide.
+
+"Previous Schema" validation is a form of semantic check and so its testing happens as
+described above. Importantly, as with the other back-end passes the schema upgrader does
+not have to concern itself with error cases as they are already ruled out.  The upgrader
+itself will be the subject of Part 5.
+
+#### Packing List
+
+The test assets for upgrade tests are found in the `upgrade` directory and consist of
+* `SchemaPersistentV0.sql` : baseline version of the test schema
+* `SchemaPersistentV1.sql` : v1 of the test schema
+* `SchemaPersistentV2.sql` : v2 of the test schema
+* `SchemaPersistentV3.sql` : v3 of the test schema
+* `downgrade_test.c` : a test that simulates attemping to go backwards in schema versions
+* `upgrade_test.c` : the C harness that launches the upgraders and fires the tests
+* `upgrade_test.sh` : the shell script that makes all this happen
+* `upgrade_validate.sql` : some simple code that sanity checks the recorded schema version against tables in it
+  * used to ensure that the schema we are on is the schema we think we are on, not to validate all facets of it
+  * also renders the contents of `sqlite_master` in a canonical form
+
+We haven't yet discussed the internals of schema upgrade, so for purposes of this part we're only going
+to discuss how the testing proceeds.  The upgrade will be considered "magic" for now.
+
+In addition to these assets, we also have reference files:
+* `upgrade_schema_v0.out.ref` : expected content of v0
+* `upgrade_schema_v1.out.ref` : expected content of v1
+* `upgrade_schema_v2.out.ref` : expected content of v2
+* `upgrade_schema_v3.out.ref` : expected content of v3
+
+#### `upgrade_validate.sql`
+
+This file has a single procedure `validate_transition` which does the two jobs:
+* emits the canonicalized version of `sqlite_master` to the output
+  * this is needed because `sqlite_master` text can vary between Sqlite versions
+* checks for basic things that should be present in a given version
+
+The output of the validator looks like this:
+
+```
+reference results for version 0
+
+----- g1 -----
+
+type: table
+tbl_name: g1
+CREATE TABLE g1(
+  id INTEGER PRIMARY KEY,
+  name TEXT)
+
+----- sqlite_autoindex_test_cql_schema_facets_1 -----
+
+type: index
+tbl_name: test_cql_schema_facets
+
+----- test_cql_schema_facets -----
+
+type: table
+tbl_name: test_cql_schema_facets
+CREATE TABLE test_cql_schema_facets(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG_INT NOT NULL)
+```
+
+The formatting rules are very simple and so the output is pretty readable.
+
+The verifications are very simple.
+
+First this happens:
+
+```sql
+let version := cast(test_cql_get_facet_version("cql_schema_version") as integer);
+```
+
+The printing happens, then this simple validation:
+
+```sql
+  let recreate_sql := (
+    select sql from sqlite_master
+    where name = 'test_this_table_will_become_create'
+    if nothing null);
+
+...
+ switch version
+  when 0 then
+    if recreate_sql is null or recreate_sql not like '%xyzzy INTEGER%' then
+      call printf("ERROR! test_this_table_will_become_create should have a column named xyzzy in v%d\n", version);
+      throw;
+    end if;
+  ...
+  else
+    call printf("ERROR! expected schema version v%d\n", version);
+    throw;
+  end;
+```
+
+In short, the version number must be one of the valid versions and each version is expecting
+that particular table to be in some condition it can recognize.
+
+The real validation is done by noting any changes in the reference output plus a series of invariants.
+
+#### Prosecution of the Upgrade Test
+
+** Launch **
+
+We kick things off as follows:
+
+* `test.sh` calls `upgrade/upgrade_test.sh`
+  * this test doesn't usually run standalone (but it can)
+
+** Build Stage **
+
+This creates the various binaries we will need:
+
+* `upgrade_validate.sql` is compiled down to C
+  * this code works for all schema versions, it's generic
+* `SchemaPersistentV[0-3].sql` are compiled into C (this takes two steps)
+  * first, the CQL upgrader is generated from the schema
+  * second, the CQL upgrader is compiled to C
+* `make` is used to lower all of the C into executables `upgrade[0-3]` plus `downgrade_test`
+  * the shared validation code is linked into all 4 upgraders
+  * `downgrade_test.c` is linked with the code for `upgrade1`
+
+
+** Basic Upgrades **
+
+Here we test going from scratch to each of the 4 target versions:
+
+* `upgrade[0-3]` are each run in turn with no initial database
+  * i.e. their target database is deleted before each run
+* the validation output is compared against the reference output
+  * any differences fail the test
+
+** Previous Schema Validation **
+
+This sanity checks that the chain of schema we have built should work
+when upgrading from one version to the next:
+
+* try each schema with this predecessor:
+  * `SchemaPersistentV1.sql` with `SchemaPersistentV0.sql` as the previous
+  * `SchemaPersistentV2.sql` with `SchemaPersistentV1.sql` as the previous
+  * `SchemaPersistentV3.sql` with `SchemaPersistentV2.sql` as the previous
+* if any of these produce errors something is structurally wrong with the test or else previous schema validation is broken
+
+
+** Two-Step Upgrades **
+
+Now we verify that we can go from any version to any other version with a stop in between to persist.
+
+An example should make this clearer:
+
+* We start from scratch and go to v2
+  * this should produce the v2 reference schema output as before
+* We run the v4 upgrader on this v2 schema
+  * this should produce the v4 reference schema output as before
+  * i.e. if we go from nothing to v2 to v4 we get the same as if we just go to v4 directly
+
+There are quite a few combinations like this, the test output lists them all:
+
+```
+Upgrade from nothing to v0, then to v0 -- must match direct update to v0
+Upgrade from nothing to v0, then to v1 -- must match direct update to v1
+Upgrade from nothing to v1, then to v1 -- must match direct update to v1
+Upgrade from nothing to v0, then to v2 -- must match direct update to v2
+Upgrade from nothing to v1, then to v2 -- must match direct update to v2
+Upgrade from nothing to v2, then to v2 -- must match direct update to v2
+Upgrade from nothing to v0, then to v3 -- must match direct update to v3
+Upgrade from nothing to v1, then to v3 -- must match direct update to v3
+Upgrade from nothing to v2, then to v3 -- must match direct update to v3
+Upgrade from nothing to v3, then to v3 -- must match direct update to v3
+```
+Note that one of the combinations tested is starting on `Vn` and "upgrading"
+from there to `Vn`. This should do nothing.
+
+** Testing downgrade **
+
+Here we make sure that any attempt to "go backwards" results in an error.
+
+* the `v3` schema created by the previous test is used as input to the downgrade test
+* the downgrade test was linked with the `v2` upgrader
+* when executed the `v2` upgrader should report the error
+  * this test's verifier checks for a correct error report
+* the test test fails if the error is no correctly reported
+
+The combination of testing reference outputs plus testing these many invariants
+at various stages results in a powerful integration test.  The actual schema
+for the varios versions includes all the supported transitions such as
+creating and deleting tables and columns, and recreating views, indicies, and triggers.
+
+All of the possible transitions are more fully discussed in
+[Chapter 10](https://cgsql.dev/cql-guide/ch10) of the Guide which pairs nicely
+with the previous schema validions discussed in
+[Chapter 11](https://cgsql.dev/cql-guide/ch11).
+
+### Testing the `#line` directives produced by CQL
+
+[An additional section should be added for the code that verifies the source line number mappings
+even though this is a pretty exotic case.]
+
+### Summary
+
+While there are a few more isolated verifications that happen in `test.sh` and of course
+there is the plumbing necessary to let `cov.sh` use the test script to create coverage reports,
+the above forms make up the vast majority of the test patterns.
+
+Generally, the test files are designed to hold as many tests as can reasonably fit with
+the gating factor being cases where different flags are necessary.  There are two different
+stages were many different tiny input files are used to create trivial failures like missing
+command line arguments and such.  But those cases are all just looking for simple error
+text and a failure code, so they should be self-evident.  With so many options, many
+such baby tests are needed.

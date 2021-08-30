@@ -289,7 +289,9 @@
 <li><a href="#sematic-tests">Sematic Tests</a></li>
 <li><a href="#code-generation-tests">Code Generation Tests</a></li>
 <li><a href="#run-tests">Run Tests</a></li>
-<li><a href="#schema-upgrade-validation">Schema Upgrade Validation</a></li>
+<li><a href="#schema-upgrade-testing">Schema Upgrade Testing</a></li>
+<li><a href="#testing-the-line-directives-produced-by-cql">Testing the <code>#line</code> directives produced by CQL</a></li>
+<li><a href="#summary">Summary</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -4371,7 +4373,7 @@ cql_cleanup:
 <span id="cb217-10"><a href="#cb217-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
 <span id="cb217-11"><a href="#cb217-11" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
 <p>In short <code>sem_test.sql</code> is FULL of semantic errors, that’s part of the test. If the compiler reports success something is <em>seriously</em> wrong.</p>
-<p>In the next phase we’re doing to do some pattern matching, let’s look at a couple of examples to illustrate how this works. The program <code>cql-verify</code> actually does all this and that program is itself written in (mostly) CQL which is cute. It can be found in the <code>tester</code> directory.</p>
+<p>In the next phase we’re going to do some pattern matching, let’s look at a couple of examples to illustrate how this works. The program <code>cql-verify</code> actually does all this matching and that program is itself written in (mostly) CQL which is cute. It can be found in the <code>tester</code> directory.</p>
 <p>Here’s a very simple example:</p>
 <div class="sourceCode" id="cb218"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb218-1"><a href="#cb218-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- </span><span class="al">TEST</span><span class="co">: we&#39;ll be using printf in lots of places in the tests as an external proc</span></span>
 <span id="cb218-2"><a href="#cb218-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- + {declare_proc_no_check_stmt}: ok</span></span>
@@ -4683,7 +4685,157 @@ END_TEST(arithmetic)</code></pre>
 <li>e.g. expressions that would crash with divide by zero if code that isn’t supposed to run actually ran</li>
 </ul></li>
 </ul>
-<h3 id="schema-upgrade-validation">Schema Upgrade Validation</h3>
-<p>This is a form of run test that is a bit different; discussion coming.</p>
+<h3 id="schema-upgrade-testing">Schema Upgrade Testing</h3>
+<p>The schema upgrade tester is quite a bit different than the others and relies heavily on execution of the upgraders. Before we get into that there is a preliminary topic:</p>
+<h4 id="previous-schema-validation">“Previous Schema” Validation</h4>
+<p>In order to ensure that it is possible to create an upgrader, CQL provides features to validate the current schema against the previous schema ensuring that nothing has been done that would make an upgrader impossible. This is more fully discussed in <a href="https://cgsql.dev/cql-guide/ch11">Chapter 11</a> of the Guide.</p>
+<p>“Previous Schema” validation is a form of semantic check and so its testing happens as described above. Importantly, as with the other back-end passes the schema upgrader does not have to concern itself with error cases as they are already ruled out. The upgrader itself will be the subject of Part 5.</p>
+<h4 id="packing-list">Packing List</h4>
+<p>The test assets for upgrade tests are found in the <code>upgrade</code> directory and consist of * <code>SchemaPersistentV0.sql</code> : baseline version of the test schema * <code>SchemaPersistentV1.sql</code> : v1 of the test schema * <code>SchemaPersistentV2.sql</code> : v2 of the test schema * <code>SchemaPersistentV3.sql</code> : v3 of the test schema * <code>downgrade_test.c</code> : a test that simulates attemping to go backwards in schema versions * <code>upgrade_test.c</code> : the C harness that launches the upgraders and fires the tests * <code>upgrade_test.sh</code> : the shell script that makes all this happen * <code>upgrade_validate.sql</code> : some simple code that sanity checks the recorded schema version against tables in it * used to ensure that the schema we are on is the schema we think we are on, not to validate all facets of it * also renders the contents of <code>sqlite_master</code> in a canonical form</p>
+<p>We haven’t yet discussed the internals of schema upgrade, so for purposes of this part we’re only going to discuss how the testing proceeds. The upgrade will be considered “magic” for now.</p>
+<p>In addition to these assets, we also have reference files: * <code>upgrade_schema_v0.out.ref</code> : expected content of v0 * <code>upgrade_schema_v1.out.ref</code> : expected content of v1 * <code>upgrade_schema_v2.out.ref</code> : expected content of v2 * <code>upgrade_schema_v3.out.ref</code> : expected content of v3</p>
+<h4 id="upgrade_validate.sql"><code>upgrade_validate.sql</code></h4>
+<p>This file has a single procedure <code>validate_transition</code> which does the two jobs: * emits the canonicalized version of <code>sqlite_master</code> to the output * this is needed because <code>sqlite_master</code> text can vary between Sqlite versions * checks for basic things that should be present in a given version</p>
+<p>The output of the validator looks like this:</p>
+<pre><code>reference results for version 0
+
+----- g1 -----
+
+type: table
+tbl_name: g1
+CREATE TABLE g1(
+  id INTEGER PRIMARY KEY,
+  name TEXT)
+
+----- sqlite_autoindex_test_cql_schema_facets_1 -----
+
+type: index
+tbl_name: test_cql_schema_facets
+
+----- test_cql_schema_facets -----
+
+type: table
+tbl_name: test_cql_schema_facets
+CREATE TABLE test_cql_schema_facets(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG_INT NOT NULL)</code></pre>
+<p>The formatting rules are very simple and so the output is pretty readable.</p>
+<p>The verifications are very simple.</p>
+<p>First this happens:</p>
+<div class="sourceCode" id="cb231"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb231-1"><a href="#cb231-1" aria-hidden="true" tabindex="-1"></a>let version <span class="op">:=</span> <span class="fu">cast</span>(test_cql_get_facet_version(<span class="ot">&quot;cql_schema_version&quot;</span>) <span class="kw">as</span> <span class="dt">integer</span>);</span></code></pre></div>
+<p>The printing happens, then this simple validation:</p>
+<div class="sourceCode" id="cb232"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb232-1"><a href="#cb232-1" aria-hidden="true" tabindex="-1"></a>  let recreate_sql <span class="op">:=</span> (</span>
+<span id="cb232-2"><a href="#cb232-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">select</span> sql <span class="kw">from</span> sqlite_master</span>
+<span id="cb232-3"><a href="#cb232-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> name <span class="op">=</span> <span class="st">&#39;test_this_table_will_become_create&#39;</span></span>
+<span id="cb232-4"><a href="#cb232-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">nothing</span> <span class="kw">null</span>);</span>
+<span id="cb232-5"><a href="#cb232-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb232-6"><a href="#cb232-6" aria-hidden="true" tabindex="-1"></a><span class="op">..</span>.</span>
+<span id="cb232-7"><a href="#cb232-7" aria-hidden="true" tabindex="-1"></a> <span class="kw">switch</span> version</span>
+<span id="cb232-8"><a href="#cb232-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">when</span> <span class="dv">0</span> <span class="cf">then</span></span>
+<span id="cb232-9"><a href="#cb232-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> recreate_sql <span class="kw">is</span> <span class="kw">null</span> <span class="kw">or</span> recreate_sql <span class="kw">not</span> <span class="kw">like</span> <span class="st">&#39;%xyzzy INTEGER%&#39;</span> <span class="cf">then</span></span>
+<span id="cb232-10"><a href="#cb232-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">call</span> printf(<span class="ot">&quot;ERROR! test_this_table_will_become_create should have a column named xyzzy in v%d\n&quot;</span>, version);</span>
+<span id="cb232-11"><a href="#cb232-11" aria-hidden="true" tabindex="-1"></a>      throw;</span>
+<span id="cb232-12"><a href="#cb232-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span> <span class="cf">if</span>;</span>
+<span id="cb232-13"><a href="#cb232-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">..</span>.</span>
+<span id="cb232-14"><a href="#cb232-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span></span>
+<span id="cb232-15"><a href="#cb232-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">call</span> printf(<span class="ot">&quot;ERROR! expected schema version v%d\n&quot;</span>, version);</span>
+<span id="cb232-16"><a href="#cb232-16" aria-hidden="true" tabindex="-1"></a>    throw;</span>
+<span id="cb232-17"><a href="#cb232-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span>;</span></code></pre></div>
+<p>In short, the version number must be one of the valid versions and each version is expecting that particular table to be in some condition it can recognize.</p>
+<p>The real validation is done by noting any changes in the reference output plus a series of invariants.</p>
+<h4 id="prosecution-of-the-upgrade-test">Prosecution of the Upgrade Test</h4>
+<p>** Launch **</p>
+<p>We kick things off as follows:</p>
+<ul>
+<li><code>test.sh</code> calls <code>upgrade/upgrade_test.sh</code>
+<ul>
+<li>this test doesn’t usually run standalone (but it can)</li>
+</ul></li>
+</ul>
+<p>** Build Stage **</p>
+<p>This creates the various binaries we will need:</p>
+<ul>
+<li><code>upgrade_validate.sql</code> is compiled down to C
+<ul>
+<li>this code works for all schema versions, it’s generic</li>
+</ul></li>
+<li><code>SchemaPersistentV[0-3].sql</code> are compiled into C (this takes two steps)
+<ul>
+<li>first, the CQL upgrader is generated from the schema</li>
+<li>second, the CQL upgrader is compiled to C</li>
+</ul></li>
+<li><code>make</code> is used to lower all of the C into executables <code>upgrade[0-3]</code> plus <code>downgrade_test</code>
+<ul>
+<li>the shared validation code is linked into all 4 upgraders</li>
+<li><code>downgrade_test.c</code> is linked with the code for <code>upgrade1</code></li>
+</ul></li>
+</ul>
+<p>** Basic Upgrades **</p>
+<p>Here we test going from scratch to each of the 4 target versions:</p>
+<ul>
+<li><code>upgrade[0-3]</code> are each run in turn with no initial database
+<ul>
+<li>i.e. their target database is deleted before each run</li>
+</ul></li>
+<li>the validation output is compared against the reference output
+<ul>
+<li>any differences fail the test</li>
+</ul></li>
+</ul>
+<p>** Previous Schema Validation **</p>
+<p>This sanity checks that the chain of schema we have built should work when upgrading from one version to the next:</p>
+<ul>
+<li>try each schema with this predecessor:
+<ul>
+<li><code>SchemaPersistentV1.sql</code> with <code>SchemaPersistentV0.sql</code> as the previous</li>
+<li><code>SchemaPersistentV2.sql</code> with <code>SchemaPersistentV1.sql</code> as the previous</li>
+<li><code>SchemaPersistentV3.sql</code> with <code>SchemaPersistentV2.sql</code> as the previous</li>
+</ul></li>
+<li>if any of these produce errors something is structurally wrong with the test or else previous schema validation is broken</li>
+</ul>
+<p>** Two-Step Upgrades **</p>
+<p>Now we verify that we can go from any version to any other version with a stop in between to persist.</p>
+<p>An example should make this clearer:</p>
+<ul>
+<li>We start from scratch and go to v2
+<ul>
+<li>this should produce the v2 reference schema output as before</li>
+</ul></li>
+<li>We run the v4 upgrader on this v2 schema
+<ul>
+<li>this should produce the v4 reference schema output as before</li>
+<li>i.e. if we go from nothing to v2 to v4 we get the same as if we just go to v4 directly</li>
+</ul></li>
+</ul>
+<p>There are quite a few combinations like this, the test output lists them all:</p>
+<pre><code>Upgrade from nothing to v0, then to v0 -- must match direct update to v0
+Upgrade from nothing to v0, then to v1 -- must match direct update to v1
+Upgrade from nothing to v1, then to v1 -- must match direct update to v1
+Upgrade from nothing to v0, then to v2 -- must match direct update to v2
+Upgrade from nothing to v1, then to v2 -- must match direct update to v2
+Upgrade from nothing to v2, then to v2 -- must match direct update to v2
+Upgrade from nothing to v0, then to v3 -- must match direct update to v3
+Upgrade from nothing to v1, then to v3 -- must match direct update to v3
+Upgrade from nothing to v2, then to v3 -- must match direct update to v3
+Upgrade from nothing to v3, then to v3 -- must match direct update to v3</code></pre>
+<p>Note that one of the combinations tested is starting on <code>Vn</code> and “upgrading” from there to <code>Vn</code>. This should do nothing.</p>
+<p>** Testing downgrade **</p>
+<p>Here we make sure that any attempt to “go backwards” results in an error.</p>
+<ul>
+<li>the <code>v3</code> schema created by the previous test is used as input to the downgrade test</li>
+<li>the downgrade test was linked with the <code>v2</code> upgrader</li>
+<li>when executed the <code>v2</code> upgrader should report the error
+<ul>
+<li>this test’s verifier checks for a correct error report</li>
+</ul></li>
+<li>the test test fails if the error is no correctly reported</li>
+</ul>
+<p>The combination of testing reference outputs plus testing these many invariants at various stages results in a powerful integration test. The actual schema for the varios versions includes all the supported transitions such as creating and deleting tables and columns, and recreating views, indicies, and triggers.</p>
+<p>All of the possible transitions are more fully discussed in <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> of the Guide which pairs nicely with the previous schema validions discussed in <a href="https://cgsql.dev/cql-guide/ch11">Chapter 11</a>.</p>
+<h3 id="testing-the-line-directives-produced-by-cql">Testing the <code>#line</code> directives produced by CQL</h3>
+<p>[An additional section should be added for the code that verifies the source line number mappings even though this is a pretty exotic case.]</p>
+<h3 id="summary">Summary</h3>
+<p>While there are a few more isolated verifications that happen in <code>test.sh</code> and of course there is the plumbing necessary to let <code>cov.sh</code> use the test script to create coverage reports, the above forms make up the vast majority of the test patterns.</p>
+<p>Generally, the test files are designed to hold as many tests as can reasonably fit with the gating factor being cases where different flags are necessary. There are two different stages were many different tiny input files are used to create trivial failures like missing command line arguments and such. But those cases are all just looking for simple error text and a failure code, so they should be self-evident. With so many options, many such baby tests are needed.</p>
 </body>
 </html>
