@@ -545,7 +545,7 @@ cql_data_defn ( CSTR base_fragment_name );
 // semantic rules ensure these are consistent.  The base fragment name basically
 // let's us tie together extensions so we know which ones are part of which query
 // and then we put those together.  This function is the callback used to harvest
-// the base fragment name from whereever we found it.  Each fragment has it.
+// the base fragment name from wherever we found it.  Each fragment has it.
 static void cg_set_base_fragment_name(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
   base_fragment_name = name;
 }

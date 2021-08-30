@@ -332,7 +332,7 @@ static bool_t in_switch;
 // If we are within a proc savepoint block, then true
 static bool_t in_proc_savepoint;
 
-// The schema version can be overrided to look at previous versions for upgrade scripts
+// The schema version can be overridden to look at previous versions for upgrade scripts
 // -1 indicates that the lastest schema should be used
 static int32_t schema_upgrade_version;
 
@@ -2537,7 +2537,7 @@ static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t 
 // are previously known to be compatible, it returns the smallest type
 // that holds both.  If either is nullable the result is nullable.
 // Note: in the few cases where that isn't true the normal algorithm for
-// nullablity result must be overrided (see coalesce for instance).
+// nullablity result must be overridden (see coalesce for instance).
 static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
   sem_t combined_flags = combine_flags(sem_type_1, sem_type_2);
   sem_t core_type_1 = core_type_of(sem_type_1);
@@ -4571,7 +4571,7 @@ static void sem_unary_math(ast_node *ast, CSTR op) {
   ast->sem = new_sem(sem_type_result);
   ast->sem->kind = ast->left->sem->kind;
 
-  // note ast->sem->name is NOT propogated because SQLite doesn't let you refer to
+  // note ast->sem->name is NOT propagated because SQLite doesn't let you refer to
   // the column 'x' in 'select -x' -- the column name is actually '-x' which is useless
   // so we have no name once you apply unary math (unless you use 'as')
   // hence ast->sem->name = ast->left->sem->name is WRONG here and it is not missing on accident
@@ -5587,7 +5587,7 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
 //  AST, a mandatory name, an optional scope, and mandatory type pointer. If the
 //  identifier provided to one of these resolvers is resolved successfully, *or*
 //  if the correct resolver was found but there was an error in the program,
-//  `SEM_RESOLVE_STOP` is returned and resolution is complete, succesful or not.
+//  `SEM_RESOLVE_STOP` is returned and resolution is complete, successful or not.
 //  If a resolver is tried and it determines that it is not the correct resolver
 //  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the
 //  next resolver is tried.
@@ -11804,7 +11804,7 @@ static bool_t stmt_list_contains_control_stmt(ast_node *ast) {
 
 // The top level if node links the initial cond_action with a possible
 // series of else_if nodes and then the else node.  All that happens
-// at this point is decoding of the if peices and calling out to the helpers.
+// at this point is decoding of the if pieces and calling out to the helpers.
 // The else clause is the only thing that isn't a cond_action.  This is
 // basically just calling out and marking errors up the stack as needed.
 static void sem_if_stmt(ast_node *ast) {
@@ -13321,7 +13321,7 @@ static bool_t sem_validate_compatible_table_cols_select(ast_node *table_ast, ast
     // the name_list. This provides a better error location for the user.
     // e.g: insert into foo select 1 union all values ('x') union all values (3) ...
     // The 'x' is incorrect and the error should refer to that rather than some
-    // generic error about the select statment being badly formed.
+    // generic error about the select statement being badly formed.
     EXTRACT_NOTNULL(select_core_list, select_stmt->left);
     for (ast_node *item = select_core_list; item; item = item->right) {
       Contract(is_ast_select_core_list(item));
@@ -15029,7 +15029,7 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
   // The assembly fragment must conform to a strict pattern
   // * it must be the only assembly fragment with this base name
   // * there must be a base fragment of the provided name
-  // * this fragment must consist of a single with..select statment
+  // * this fragment must consist of a single with..select statement
   // * it must have exactly one CTE
   // * the name of that one CTE must be the same as the base fragment name
   // * the CTE column must be exactly the same as in the base fragment (name and type)
@@ -18193,7 +18193,7 @@ static void sem_misc_attr_value(ast_node *ast) {
 // This is the basic checking of misc attributes we always do.
 // The point of this is to find any constant expressions and replace
 // them with actual literals and reveal any errors in those expressions.
-// Most attributes don't need any processing because they are arbitary names
+// Most attributes don't need any processing because they are arbitrary names
 // or regular literals.
 static void sem_misc_attrs_basic(ast_node *ast) {
   Contract(is_ast_misc_attrs(ast));
@@ -18268,7 +18268,7 @@ static void sem_expr_proclit(ast_node *ast) {
 
 // @rc is like a builtin variable, it refers to the _rc_ state
 // note, use of @rc forces you to become a dml proc which isn't
-// very onerous becasue rc makes no sense if it isn't a dml proc.
+// very onerous because rc makes no sense if it isn't a dml proc.
 // We do it this way because it's possible that you're using @rc
 // in a loop or some such and you haven't run any DML yet so we don't
 // yet know that you are a DML proc.  Generating an error would be annoying.

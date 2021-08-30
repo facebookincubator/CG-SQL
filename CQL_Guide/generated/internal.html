@@ -532,7 +532,7 @@ AST(or)</code></pre>
 <p>There are several reasons why we might want to echo the SQL, but the inescapable one is this: any hunk of SQL that appears as part of a CQL program (i.e. DDL/DML rather than control flow like <code>IF</code>/<code>WHILE</code>) has to go to SQLite and SQLite expects that code to be plain text. So the AST must be reformatted as plain text that is exactly equivalent to the original input. The process of parsing removes extra white space and parentheses, so to get something that looks reasonable some standard formatting (including indenting) is applied to the output text. This has the effect of normalizing the input and potentially beautifying it as well (especially if it was poorly formatted initially).</p>
 <p>To see these features you need only run cql with no arguments, by default it reads <code>stdin</code>, makes the AST, and then emits the normalized, formatted text. If there are no syntax errors, the input and the output should be equivalent.</p>
 <p>Standard formatting is essential, but CQL also has a number of extra demands.</p>
-<p>CQL includes a lot of versioning directives like <code>@create(...)</code> <code>@delete(...)</code> and so forth. SQLite should never see these things when the DDL for SQLite is emitted. But when echoing the input they should be included. Additionally, any local or global variables in a SQL statement should be replaced with <code>?</code> in the text that goes to SQLite and then followed up with binding instructions. We’ll cover the binding more in the section code generation, but importantly this also has to significantly alter the output. As a result the standard formatter includes extensive configurably to get these various results.</p>
+<p>CQL includes a lot of versioning directives like <code>@create(...)</code> <code>@delete(...)</code> and so forth. SQLite should never see these things when the DDL for SQLite is emitted. But when echoing the input they should be included. Additionally, any local or global variables in a SQL statement should be replaced with <code>?</code> in the text that goes to SQLite and then followed up with binding instructions. We’ll cover the binding more in the section code generation, but importantly this also has to significantly alter the output. As a result the standard formatter includes extensive configurability to get these various results.</p>
 <h3 id="configuring-the-output-with-callbacks-and-flags">Configuring the Output with Callbacks and Flags</h3>
 <p>Some of these features, like variable binding, require a callback to the formatter’s client. The client gets a notification, along with a few control variables, and it can then decide exactly what goes in the output The control structure is <code>struct gen_sql_callbacks</code>, and it is described below. This structure includes the various callbacks (all of which are optional) and each callback gets a ‘context’ pointer of its choice. The context pointer is some arbitrary <code>void *</code> value that you provide, which will be given to your function along with the AST pointer relevant to the call. The callback also gets the current output buffer so it can choose to emit something (like ‘?’) into the stream.</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// signature for a callback, you get your context plus the ast</span></span>
@@ -549,7 +549,7 @@ AST(or)</code></pre>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> gen_sql_mode <span class="op">{</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  gen_mode_echo<span class="op">,</span>          <span class="co">// Prints everything in the original, with standard whitespace and parentheses</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  gen_mode_sql<span class="op">,</span>           <span class="co">// Prints the AST formatted for SQLite consumption, omits anything CQL specific</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  gen_mode_no_annotations <span class="co">// Equivalent to gen_mode_echo without versioning attributes or generic attribues</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  gen_mode_no_annotations <span class="co">// Equivalent to gen_mode_echo without versioning attributes or generic attributes</span></span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                          <span class="co">// * @create, @delete, @recreate, and @attribute are removed</span></span>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                          <span class="co">// * statements like @echo are not affected, nor is the type specifier @sensitive</span></span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
@@ -557,7 +557,7 @@ AST(or)</code></pre>
 <div class="sourceCode" id="cb17"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Callbacks allow you to significantly alter the generated sql, see the particular flags below.</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> gen_sql_callbacks <span class="op">{</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Each time a local/global variable is encountered in the AST, this callback is invoked</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// this is to allow the varialbe reference to be noted and replaced with ? in the generated SQL</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// this is to allow the variable reference to be noted and replaced with ? in the generated SQL</span></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  gen_sql_callback _Nullable variables_callback<span class="op">;</span></span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable variables_context<span class="op">;</span></span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
@@ -567,7 +567,7 @@ AST(or)</code></pre>
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  gen_sql_callback _Nullable col_def_callback<span class="op">;</span></span>
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable col_def_context<span class="op">;</span></span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This callback is used to expland the * in select * or select T.*</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This callback is used to explain the * in select * or select T.*</span></span>
 <span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  gen_sql_callback _Nullable star_callback<span class="op">;</span></span>
 <span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> <span class="op">*</span>_Nullable star_context<span class="op">;</span></span>
 <span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
@@ -620,8 +620,8 @@ AST(or)</code></pre>
 <span id="cb17-64"><a href="#cb17-64" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
 <span id="cb17-65"><a href="#cb17-65" aria-hidden="true" tabindex="-1"></a>  <span class="co">// In short, if CQL is going to process the output again, use this flag</span></span>
 <span id="cb17-66"><a href="#cb17-66" aria-hidden="true" tabindex="-1"></a>  <span class="co">// to control the autoincrement transform.  It might be possible to fold</span></span>
-<span id="cb17-67"><a href="#cb17-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">// this flag with the mode flag but it&#39;s sufficiently wierd that this</span></span>
-<span id="cb17-68"><a href="#cb17-68" aria-hidden="true" tabindex="-1"></a>  <span class="co">// extra documention and special handling is probably worth the extra</span></span>
+<span id="cb17-67"><a href="#cb17-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">// this flag with the mode flag but it&#39;s sufficiently weird that this</span></span>
+<span id="cb17-68"><a href="#cb17-68" aria-hidden="true" tabindex="-1"></a>  <span class="co">// extra documentation and special handling is probably worth the extra</span></span>
 <span id="cb17-69"><a href="#cb17-69" aria-hidden="true" tabindex="-1"></a>  <span class="co">// boolean storage.</span></span>
 <span id="cb17-70"><a href="#cb17-70" aria-hidden="true" tabindex="-1"></a>  bool_t long_to_int_conv<span class="op">;</span></span>
 <span id="cb17-71"><a href="#cb17-71" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> gen_sql_callbacks<span class="op">;</span></span></code></pre></div>
@@ -629,12 +629,12 @@ AST(or)</code></pre>
 <ul>
 <li><code>mode</code> : one of the three enum modes that control overall behavior</li>
 <li><code>variables_callback</code> : invoked when a variable appears in the SQL, the caller can record the specific variable and then use it for binding</li>
-<li><code>col_def_callback</code> : when creating the “baseline” schema you don’t want column defintions from later schema to be included, this gives you a chance to suppress them</li>
+<li><code>col_def_callback</code> : when creating the “baseline” schema you don’t want column definitions from later schema to be included, this gives you a chance to suppress them</li>
 <li><code>star_callback</code> : normally the <code>*</code> in <code>select *</code> or <code>select T.*</code> is expanded when emitting for SQLite, this callback does the expansion when appropriate</li>
 <li><code>if_not_exists_callback</code> : when generating DDL for schema upgrade you typically want to force <code>IF NOT EXISTS</code> to be added to the schema even if it wasn’t present in the declaration, this callback lets you do that</li>
 <li><code>convert_hex</code> : if true, hex constants are converted to decimal; used when emitting JSON because JSON doesn’t understand hex constants</li>
 <li><code>minify_casts</code> : minification converts casts like <code>CAST(NULL AS TEXT)</code> to just <code>NULL</code> – the former is only useful for type information, SQLite does need to see it</li>
-<li><code>minify_aliases</code> : unused column aliases as in <code>select foo.x as some_really_long_alias</code> can be removed from the output when targetting SQLite to save space</li>
+<li><code>minify_aliases</code> : unused column aliases as in <code>select foo.x as some_really_long_alias</code> can be removed from the output when targeting SQLite to save space</li>
 </ul>
 <h3 id="invoking-the-generator">Invoking the Generator</h3>
 <p>There are several generation functions but they all follow a similar pattern, the differences are essentially what fragment of the AST they expect to begin on. We’ll just cover one here.</p>
@@ -683,13 +683,13 @@ AST(or)</code></pre>
 <p>As you can see, nearly all binary operators are handled identically as are all unary operators. Let’s look at those two in detail.</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_binary<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR op<span class="op">,</span> <span class="dt">int32_t</span> pri<span class="op">,</span> <span class="dt">int32_t</span> pri_new<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// We add parens if our priority is less than the parent prioirty</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// We add parens if our priority is less than the parent priority</span></span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// meaning something like this:</span></span>
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// * we&#39;re a + node, our parent is a * node</span></span>
 <span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// * we need parens because the tree specifies that the + happens before the *</span></span>
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Also, grouping of equal operators is left to right</span></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// so for so if our right child is the same precendence as us</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// so for so if our right child is the same precedence as us</span></span>
 <span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// that means there were parens there in the original expression</span></span>
 <span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// e.g.  3+(4-7);</span></span>
 <span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// effectively it&#39;s like we&#39;re one binding strength higher for our right child</span></span>
@@ -702,7 +702,7 @@ AST(or)</code></pre>
 <span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>pri_new <span class="op">&lt;</span> pri<span class="op">)</span> gen_printf<span class="op">(</span><span class="st">&quot;)&quot;</span><span class="op">);</span></span>
 <span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>The convention gives us: * <code>ast</code> : pointer to the current AST node * <code>op</code> : the text of the operator (<code>CSTR</code> is simply <code>const char *</code>) * <code>pri</code> : the binding strength of the node above us * <code>pri_new</code> : the binding strength of this node (the new node)</p>
-<p>So generically, if the binding strength of the current opereator <code>pri_new</code> is weaker than the context it is contained in <code>pri</code>, then parentheses are required to preserve order of operations. See the comment for more details.</p>
+<p>So generically, if the binding strength of the current operator <code>pri_new</code> is weaker than the context it is contained in <code>pri</code>, then parentheses are required to preserve order of operations. See the comment for more details.</p>
 <p>With parens taken care of, we emit the left expression, the operator, and the right expression.</p>
 <p>And as you can see below, unary operators are much the same.</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_unary<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR op<span class="op">,</span> <span class="dt">int32_t</span> pri<span class="op">,</span> <span class="dt">int32_t</span> pri_new<span class="op">)</span> <span class="op">{</span></span>
@@ -744,7 +744,7 @@ AST(or)</code></pre>
 <li>use <code>EXTRACT</code> macros (detailed below) to get the tree parts you want starting from your root</li>
 <li>use <code>gen_printf</code> to emit the constant pieces of the statement</li>
 <li>use recursion to print sub fragments (like the IF condition in this case)</li>
-<li>test the tree fragments where optional peices are present, emit them as needed</li>
+<li>test the tree fragments where optional pieces are present, emit them as needed</li>
 </ul>
 <p>It might be instructive to include <code>gen_cond_action</code>, it is entirely unremarkable:</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> gen_cond_action<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
@@ -904,7 +904,7 @@ AST(or)</code></pre>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_AUTOINCREMENT         _64(0x0400) </span><span class="co">// set for table columns with autoinc</span></span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_VARIABLE              _64(0x0800) </span><span class="co">// set for variables and parameters</span></span>
 <span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_IN_PARAMETER          _64(0x1000) </span><span class="co">// set for in parameters (can mix with below)</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) </span><span class="co">// set for out paramters (can mix with above)</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) </span><span class="co">// set for out parameters (can mix with above)</span></span>
 <span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_DML_PROC              _64(0x4000) </span><span class="co">// set for stored procs that have DML/DDL</span></span>
 <span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_HAS_SHAPE_STORAGE     _64(0x8000) </span><span class="co">// set for a cursor with simplified fetch syntax</span></span>
 <span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_CREATE_FUNC          _64(0x10000) </span><span class="co">// set for a function that returns a created object +1 ref</span></span>
@@ -955,7 +955,7 @@ AST(or)</code></pre>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> create_version<span class="op">;</span>           <span class="co">// create version if any (really only for tables and columns)</span></span>
 <span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> delete_version<span class="op">;</span>           <span class="co">// create version if any (really only for tables and columns)</span></span>
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  bool_t recreate<span class="op">;</span>                  <span class="co">// for tables only, true if marked @recreate</span></span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  CSTR recreate_group_name<span class="op">;</span>         <span class="co">// for tables only, the name of the recreate gruop if they are in one</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  CSTR recreate_group_name<span class="op">;</span>         <span class="co">// for tables only, the name of the recreate group if they are in one</span></span>
 <span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  CSTR region<span class="op">;</span>                      <span class="co">// the schema region, if applicable, null means unscoped (default)</span></span>
 <span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  symtab <span class="op">*</span>used_symbols<span class="op">;</span>             <span class="co">// for select statements, we need to know which of the ids in the select list was used if any</span></span>
 <span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>  list_item <span class="op">*</span>index_list<span class="op">;</span>            <span class="co">// for tables we need the list of indices that use this table (so we can recreate them together if needed)</span></span>
@@ -963,7 +963,7 @@ AST(or)</code></pre>
 <span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> sem_node<span class="op">;</span></span></code></pre></div>
 <ul>
 <li><code>sem_type</code> : already discussed above, this tells you how to interpret everything else</li>
-<li><code>name</code> : variables, columns, etc. have a canonical name, when a name case-insenstively resolves, the canonical name is stored here
+<li><code>name</code> : variables, columns, etc. have a canonical name, when a name case-insensitivity resolves, the canonical name is stored here
 <ul>
 <li>typically later passes emit the canonical variable name everywhere</li>
 <li>e.g. <code>FoO</code> and <code>fOO</code> might both resolve to an object declared as <code>foo</code>, we always emit <code>foo</code> in codegen</li>
@@ -1007,7 +1007,7 @@ AST(or)</code></pre>
 <span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  eval_init<span class="op">();</span></span>
 <span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
 <span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>As you can see, <code>sem_main</code> begins by reseting all the global state. You can of course do this yourself after calling <code>sem_main</code> (when you’re done with the results).</p>
+<p>As you can see, <code>sem_main</code> begins by resetting all the global state. You can of course do this yourself after calling <code>sem_main</code> (when you’re done with the results).</p>
 <p><code>sem_main</code> sets a variety of useful and public global variables that describe the results of the analysis. The ones in <code>sem.h</code> are part of the contract and you should feel free to use them in a downstream code-generator. Other items are internal and should be avoided. The internal items are typically defined statically in <code>sem.c</code>. The essential outputs will be described in the last section of this part.</p>
 <p>The cleanup has this structure:</p>
 <div class="sourceCode" id="cb39"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This method frees all the global state of the semantic analyzer</span></span>
@@ -1089,7 +1089,7 @@ AST(or)</code></pre>
 <span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  FUNC_INIT<span class="op">(</span>date<span class="op">);</span></span>
 <span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  FUNC_INIT<span class="op">(</span>time<span class="op">);</span></span></code></pre></div>
 <p>Each of these is dispatched when a function call is found in the tree. By way of example <code>FUNC_INIT(changes)</code> causes the <code>changes</code> function to map to <code>sem_func_changes</code> for validation.</p>
-<p>There are a few other similar macros for more exotic cases but the general pattern should be clear now. With these in place it’s very easy to traverse arbitary statement lists and arbitary expressions with sub expressions and have the correct function invoked without having large <code>switch</code> blocks all over.</p>
+<p>There are a few other similar macros for more exotic cases but the general pattern should be clear now. With these in place it’s very easy to traverse arbitrary statement lists and arbitrary expressions with sub expressions and have the correct function invoked without having large <code>switch</code> blocks all over.</p>
 <h3 id="semantic-errors">Semantic Errors</h3>
 <p>Some of the following examples will show the handling of semantic errors more precisely but the theory is pretty simple. Each of the analyzers that has been registered is responsible for putting an appropriate <code>sem_node</code> into the AST it is invoked on. The caller will look to see if that <code>sem_node</code> is of type <code>SEM_TYPE_ERROR</code> using <code>is_error(ast)</code>. If it is, the caller will mark its own AST as errant using <code>record_error(ast)</code> and this continues all the way up the tree. The net of this is that wherever you begin semantic analysis, you can know if there were any problems by checking for an error at the top of the tree you provided.</p>
 <p>At the point of the initial error, the analyzer is expected to also call <code>report_error</code> providing a suitable message. This will be logged to <code>stderr</code>. In test mode it is also stored in the AST so that verification steps can confirm that errors were reported at exactly the right place.</p>
@@ -1129,7 +1129,7 @@ AST(or)</code></pre>
 <span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// null literal</span></span>
 <span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem <span class="op">=</span> new_sem<span class="op">(</span>SEM_TYPE_NULL<span class="op">);</span></span>
 <span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>It’s hard to get simpiler than doing semantic analysis of the <code>NULL</code> literal. Its code should be clear with no further explaination needed.</p>
+<p>It’s hard to get simpler than doing semantic analysis of the <code>NULL</code> literal. Its code should be clear with no further explanation needed.</p>
 <h3 id="unary-operators">Unary Operators</h3>
 <p>Let’s dive in to a simple case that does require some analysis – the unary operators. There are comparatively few and there isn’t much code required to handle them all.</p>
 <p>Here’s the code for the unary math operators:</p>
@@ -1155,7 +1155,7 @@ AST(or)</code></pre>
 <span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem <span class="op">=</span> new_sem<span class="op">(</span>sem_type_result<span class="op">);</span></span>
 <span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>kind <span class="op">=</span> ast<span class="op">-&gt;</span>left<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>kind<span class="op">;</span></span>
 <span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">// note ast-&gt;sem-&gt;name is NOT propogated because SQLite doesn&#39;t let you refer to</span></span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">// note ast-&gt;sem-&gt;name is NOT propagated because SQLite doesn&#39;t let you refer to</span></span>
 <span id="cb46-24"><a href="#cb46-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">// the column &#39;x&#39; in &#39;select -x&#39; -- the column name is actually &#39;-x&#39; which is useless</span></span>
 <span id="cb46-25"><a href="#cb46-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">// so we have no name once you apply unary math (unless you use &#39;as&#39;)</span></span>
 <span id="cb46-26"><a href="#cb46-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// hence ast-&gt;sem-&gt;name = ast-&gt;left-&gt;sem-&gt;name is WRONG here and it is not missing on accident</span></span>
@@ -1304,7 +1304,7 @@ AST(or)</code></pre>
 <span id="cb51-29"><a href="#cb51-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
 <li><code>sem_expr</code> : used to recursively walk the left and right nodes</li>
-<li><code>is_error</code> : checks if either side had errors, if so, simply propogate the error</li>
+<li><code>is_error</code> : checks if either side had errors, if so, simply propagate the error</li>
 <li>extract the left and right core types</li>
 <li>combine nullability and sensitivity flags</li>
 </ul>
@@ -1331,7 +1331,7 @@ AST(or)</code></pre>
 <li><code>sem_verify_compat</code> : ensures that left and right operands are type compatible (discussed later)</li>
 <li>the result is always of type <code>bool not null</code></li>
 </ul>
-<p>If either step goes wrong the error will naturally propogate.</p>
+<p>If either step goes wrong the error will naturally propagate.</p>
 <h4 id="example-binary-math">Example: Binary Math</h4>
 <p>This is the general worker for binary math operations, the most common operations like ‘+’, ‘-’, ’*’ and so forth.</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co">// For all math operations, we combine the types and yield the type that</span></span>
@@ -1403,7 +1403,7 @@ AST(or)</code></pre>
 <ul>
 <li><code>is_object</code> : checks a <code>sem_type</code> against <code>SEM_TYPE_OBJECT</code>
 <ul>
-<li>if the left or right child is an object an appropraite error is generated</li>
+<li>if the left or right child is an object an appropriate error is generated</li>
 </ul></li>
 <li>there is no strong convention about returning <code>true</code> if ok, or <code>true</code> if error, it’s pretty ad hoc
 <ul>
@@ -1462,7 +1462,7 @@ AST(or)</code></pre>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="co">// are previously known to be compatible, it returns the smallest type</span></span>
 <span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="co">// that holds both.  If either is nullable the result is nullable.</span></span>
 <span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: in the few cases where that isn&#39;t true the normal algorithm for</span></span>
-<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="co">// nullablity result must be overrided (see coalesce for instance).</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="co">// nullablity result must be overridden (see coalesce for instance).</span></span>
 <span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> sem_t sem_combine_types<span class="op">(</span>sem_t sem_type_1<span class="op">,</span> sem_t sem_type_2<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> too much code <span class="op">...</span> summary below</span>
 <span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
@@ -1475,7 +1475,7 @@ AST(or)</code></pre>
 <li>true + 2 -&gt; integer</li>
 <li>‘x’ + 1 -&gt; not compatible</li>
 </ul>
-<p>Note that <code>sem_combine_types</code> assumes the types have already been checked for compatiblitiy and will use <code>Contract</code> to enforce this. You should be using other helpers like <code>is_numeric_compat</code> and friends to ensure the types agree before computing the combined type. A list of values that must be compatible with each other (e.g. in <code>needle IN (haystack)</code>) can be checked using <code>sem_verify_compat</code> repeatedly.</p>
+<p>Note that <code>sem_combine_types</code> assumes the types have already been checked for compatability and will use <code>Contract</code> to enforce this. You should be using other helpers like <code>is_numeric_compat</code> and friends to ensure the types agree before computing the combined type. A list of values that must be compatible with each other (e.g. in <code>needle IN (haystack)</code>) can be checked using <code>sem_verify_compat</code> repeatedly.</p>
 <h4 id="example-validator-sem_verify_assignment">Example Validator : sem_verify_assignment</h4>
 <p>The <code>sem_verify_assignment</code> function is used any time there is something like a logical <code>assignment</code> going on. There are two important cases:</p>
 <ul>
@@ -1576,12 +1576,12 @@ AST(or)</code></pre>
 <span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_EXPR_CONTEXT_WINDOW         0x0400</span></span>
 <span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800</span></span>
 <span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000</span></span></code></pre></div>
-<p>The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that correponds to the current context. For instance, the expression being validated in is the <code>WHERE</code> clause, the code will provide <code>SEM_EXPR_CONTEXT_WHERE</code>. The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union of the context bits where it can be used. The validator can check those possibilities against the current context with one bitwise “and” operation. A zero result indicates that the operation is not valid in the current context.</p>
+<p>The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that corresponds to the current context. For instance, the expression being validated in is the <code>WHERE</code> clause, the code will provide <code>SEM_EXPR_CONTEXT_WHERE</code>. The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union of the context bits where it can be used. The validator can check those possibilities against the current context with one bitwise “and” operation. A zero result indicates that the operation is not valid in the current context.</p>
 <p>This bitwise “and” is performed by one of these two helper macros which makes the usage a little clearer:</p>
 <div class="sourceCode" id="cb61"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context &amp; (x)))</span></span>
 <span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context &amp; (x)))</span></span></code></pre></div>
 <h4 id="expression-context-example-concat">Expression Context Example : Concat</h4>
-<p>The concatenation operator <code>||</code> is challenging to successfully emulate because it does many different kinds of numeric to string conversions automatically. Rather than perenially getting this wrong, we simply do not support this operator in a context where SQLite isn’t going to be doing the concatenation. So typically users use “printf” instead to get formatting done outside of a SQL context. The check for invalid use of <code>||</code> is very simple and it happens of course in <code>sem_concat</code>.</p>
+<p>The concatenation operator <code>||</code> is challenging to successfully emulate because it does many different kinds of numeric to string conversions automatically. Rather than perennially getting this wrong, we simply do not support this operator in a context where SQLite isn’t going to be doing the concatenation. So typically users use “printf” instead to get formatting done outside of a SQL context. The check for invalid use of <code>||</code> is very simple and it happens of course in <code>sem_concat</code>.</p>
 <div class="sourceCode" id="cb62"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>CURRENT_EXPR_CONTEXT_IS<span class="op">(</span>SEM_EXPR_CONTEXT_NONE<span class="op">))</span> <span class="op">{</span></span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    report_error<span class="op">(</span>ast<span class="op">,</span> <span class="st">&quot;CQL0241: CONCAT may only appear in the context of a SQL statement&quot;</span><span class="op">,</span> NULL<span class="op">);</span></span>
 <span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    record_error<span class="op">(</span>ast<span class="op">);</span></span>
@@ -1641,12 +1641,12 @@ AST(or)</code></pre>
 <span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>We haven’t discussed schema regions yet but what you need to know about them for now is this: * any object can be in a region. * a region may depend on other regions</p>
 <p>If an object is in a region, then it may only use schema parts that are in the same region, or the region’s dependencies (transitively).</p>
-<p>The point of this is that you might have a rather large schema and you probably don’t want any peice of code to use any piece of schema. You can use regions to ensure that the code for feature “X” doesn’t try to use schema designed exclusively for feature “Y”. That “X” code probably has no business even knowing of the existence of “Y” schema.</p>
+<p>The point of this is that you might have a rather large schema and you probably don’t want any piece of code to use any piece of schema. You can use regions to ensure that the code for feature “X” doesn’t try to use schema designed exclusively for feature “Y”. That “X” code probably has no business even knowing of the existence of “Y” schema.</p>
 <p>So now <code>usable</code> simply means this: * <code>find_index</code> can find the name in the symbol table for indices * the found index is accessible in the current region</p>
 <p>If we had used an example that was looking up a table name, the same region considerations would apply, however, additionally tables can be deprecated with <code>@delete</code> so there would be additional checks to make sure we’re talking about a live table and not a table’s tombstone.</p>
 <p>In short, these simple cases just require looking up the entity and verifying that it’s accessible in the current context.</p>
 <h4 id="flexible-name-resolution">Flexible Name Resolution</h4>
-<p>The “hard case” for name resolution is where the name is occuring in an expression. Such a name can refer to all manner of things. It could be a global variable, a local variable, an argument, a table column, a field in a cursor, and others. The general name resolver goes through several phases looking for the name. Each phase can either report an affirmative success or error (in which case the search stops), or it may simply report that the name was not found but the search should continue.</p>
+<p>The “hard case” for name resolution is where the name is occurring in an expression. Such a name can refer to all manner of things. It could be a global variable, a local variable, an argument, a table column, a field in a cursor, and others. The general name resolver goes through several phases looking for the name. Each phase can either report an affirmative success or error (in which case the search stops), or it may simply report that the name was not found but the search should continue.</p>
 <p>We can demystify this a bit by looking at the most common way to get name resolution done.</p>
 <div class="sourceCode" id="cb66"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves a (potentially qualified) identifier, writing semantic information</span></span>
 <span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="co">// into `ast` if successful, or reporting and recording an error for `ast` if</span></span>
@@ -1685,7 +1685,7 @@ AST(or)</code></pre>
 <span id="cb67-22"><a href="#cb67-22" aria-hidden="true" tabindex="-1"></a><span class="co">//  AST, a mandatory name, an optional scope, and mandatory type pointer. If the</span></span>
 <span id="cb67-23"><a href="#cb67-23" aria-hidden="true" tabindex="-1"></a><span class="co">//  identifier provided to one of these resolvers is resolved successfully, *or*</span></span>
 <span id="cb67-24"><a href="#cb67-24" aria-hidden="true" tabindex="-1"></a><span class="co">//  if the correct resolver was found but there was an error in the program,</span></span>
-<span id="cb67-25"><a href="#cb67-25" aria-hidden="true" tabindex="-1"></a><span class="co">//  `SEM_RESOLVE_STOP` is returned and resolution is complete, succesful or not.</span></span>
+<span id="cb67-25"><a href="#cb67-25" aria-hidden="true" tabindex="-1"></a><span class="co">//  `SEM_RESOLVE_STOP` is returned and resolution is complete, successful or not.</span></span>
 <span id="cb67-26"><a href="#cb67-26" aria-hidden="true" tabindex="-1"></a><span class="co">//  If a resolver is tried and it determines that it is not the correct resolver</span></span>
 <span id="cb67-27"><a href="#cb67-27" aria-hidden="true" tabindex="-1"></a><span class="co">//  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the</span></span>
 <span id="cb67-28"><a href="#cb67-28" aria-hidden="true" tabindex="-1"></a><span class="co">//  next resolver is tried.</span></span>
@@ -2249,7 +2249,7 @@ AST(or)</code></pre>
 <span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  DDL_STMT_INIT<span class="op">(</span>drop_view_stmt<span class="op">);</span></span>
 <span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  DDL_STMT_INIT<span class="op">(</span>create_table_stmt<span class="op">);</span></span>
 <span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>  DDL_STMT_INIT<span class="op">(</span>create_view_stmt<span class="op">);</span></span></code></pre></div>
-<p>The DDL (Data Definition Lanaguage) statements all get the same handling: The text of the statement is generated from the AST. Any variables are bound and then the statement is executed. The work is done with <code>cg_bound_sql_statement</code> which will be discussed later.</p>
+<p>The DDL (Data Definition Language) statements all get the same handling: The text of the statement is generated from the AST. Any variables are bound and then the statement is executed. The work is done with <code>cg_bound_sql_statement</code> which will be discussed later.</p>
 <div class="sourceCode" id="cb90"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Straight up DDL invocation.  The ast has the statement, execute it!</span></span>
 <span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="co">// We don&#39;t minify the aliases because DDL can have views and the view column names</span></span>
 <span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a><span class="co">// can be referred to in users of the view.  Loose select statements can have</span></span>
@@ -2277,7 +2277,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>switch_stmt<span class="op">);</span></span>
 <span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>while_stmt<span class="op">);</span></span>
 <span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>assign<span class="op">);</span></span></code></pre></div>
-<p>The next group of declarations arethe expressions, with precedence and operator specified. There is a lot of code sharing between AST types as you can see from this sample:</p>
+<p>The next group of declarations are the expressions, with precedence and operator specified. There is a lot of code sharing between AST types as you can see from this sample:</p>
 <div class="sourceCode" id="cb95"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>num<span class="op">,</span> cg_expr_num<span class="op">,</span> <span class="st">&quot;num&quot;</span><span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
 <span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>str<span class="op">,</span> cg_expr_str<span class="op">,</span> <span class="st">&quot;STR&quot;</span><span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
 <span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>null<span class="op">,</span> cg_expr_null<span class="op">,</span> <span class="st">&quot;NULL&quot;</span><span class="op">,</span> C_EXPR_PRI_ROOT<span class="op">);</span></span>
@@ -2312,7 +2312,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>  FUNC_INIT<span class="op">(</span>printf<span class="op">);</span></span></code></pre></div>
 <p><code>FUNC_INIT(coalesce)</code> creates a mapping between the function name <code>coalesce</code> and the generator <code>cg_func_coalesce</code>.</p>
 <h3 id="character-buffers-and-byte-buffers">Character Buffers and Byte Buffers</h3>
-<p>The first kind of text output that CQL could produce was the AST echoing. This was originally done directly with <code>fprintf</code> but that was never going to be flexible enough – we have to be able to emitt that output into other places like comments, or the text of SQL statements. This need forces that pass to use character buffers, which we touched on in Part 1. C Code generation has a more profound dependency on character buffers – they are literally all over <code>cg_c.c</code> and we need to go over how they are used if we’re going to understand the codegen passes.</p>
+<p>The first kind of text output that CQL could produce was the AST echoing. This was originally done directly with <code>fprintf</code> but that was never going to be flexible enough – we have to be able to emit that output into other places like comments, or the text of SQL statements. This need forces that pass to use character buffers, which we touched on in Part 1. C Code generation has a more profound dependency on character buffers – they are literally all over <code>cg_c.c</code> and we need to go over how they are used if we’re going to understand the codegen passes.</p>
 <p>The public interface for <code>charbuf</code> is in <code>charbuf.h</code> and it’s really quite simple. You allocate a <code>charbuf</code> and then you can <code>bprintf</code> into it. Let’s be a bit more specific:</p>
 <div class="sourceCode" id="cb99"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CHARBUF_INTERNAL_SIZE 1024</span></span>
 <span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CHARBUF_GROWTH_SIZE 1024</span></span>
@@ -2373,7 +2373,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a>  cg_scratch_vars_output <span class="op">=</span> <span class="op">&amp;</span>proc_locals<span class="op">;</span></span>
 <span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a>  cg_cleanup_output <span class="op">=</span> <span class="op">&amp;</span>proc_cleanup<span class="op">;</span></span></code></pre></div>
 <p>And of course the code puts the original values back when it’s done and then closes what it opened.</p>
-<p>This means that while processing a procedure the codegen that declares say scratch variables, which would go to <code>cg_scratch_vars_output</code>, is going to target the <code>proc_locals</code> buffer which will be emitted before the <code>proc_body</code>. By the time <code>cg_stmt_list</code> is invoked the <code>cg_main_output</code> variable will be pointing to the procedure body, thus any statements will go into there rather than being acculated at the global level.</p>
+<p>This means that while processing a procedure the codegen that declares say scratch variables, which would go to <code>cg_scratch_vars_output</code>, is going to target the <code>proc_locals</code> buffer which will be emitted before the <code>proc_body</code>. By the time <code>cg_stmt_list</code> is invoked the <code>cg_main_output</code> variable will be pointing to the procedure body, thus any statements will go into there rather than being accumulated at the global level.</p>
 <p>Note: it’s possible to have code that is not in a procedure (see <a href="https://cgsql.dev/cql-guide/x1#--global_proc-name"><code>--global_proc</code></a>).</p>
 <p>In general, it’s very useful to have different buffers open at the same time. New local variables or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to <code>cg_cleanup_output</code> which will appear at the end of a procedure. The final steps of procedure codegen combines all of these pieces plus a little glue to make a working procedure.</p>
 <p>All codegen works like this – statements, expressions, all of it.</p>
@@ -2474,7 +2474,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li>otherwise it’s <code>_tmp_n_int_1.value + _tmp_n_int_2.value</code></li>
 </ul></li>
 </ul>
-<p>So, in general, we need to emit arbitarily many statements in the course of evaluating even simple looking expressions and we need good mechanisms to manage that. This is what we’ll talk about in the coming sections.</p>
+<p>So, in general, we need to emit arbitrarily many statements in the course of evaluating even simple looking expressions and we need good mechanisms to manage that. This is what we’ll talk about in the coming sections.</p>
 <h4 id="managing-scratch-variables">Managing Scratch Variables</h4>
 <p>The function that actually assigns scratch variables is <code>cg_scratch_var</code></p>
 <div class="sourceCode" id="cb112"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The scratch variable helper uses the given sem_type and the current</span></span>
@@ -2522,7 +2522,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <p>Additional notes:</p>
 <ul>
 <li>scratch variables can be re-used, they are on a “stack”</li>
-<li>a bitmask is used to track which scratch variables have aleady had a declaration emitted, so they are only declared once</li>
+<li>a bitmask is used to track which scratch variables have already had a declaration emitted, so they are only declared once</li>
 <li>the variable name is based on the current value of the <code>stack_level</code> variable which is increased in a push/pop fashion as temporaries come in and out of scope
 <ul>
 <li>this strategy isn’t perfect, but the C compiler can consolidate locals even if the CQL codegen is not perfect so it ends up being not so bad</li>
@@ -2589,7 +2589,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <span id="cb116-8"><a href="#cb116-8" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>is_null<span class="op">,</span> <span class="st">&quot;0&quot;</span><span class="op">);</span> <span class="co">// the result of is null is never null</span></span>
 <span id="cb116-9"><a href="#cb116-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb116-10"><a href="#cb116-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The fact that this is not constant not null for not null reference types reflects</span></span>
-<span id="cb116-11"><a href="#cb116-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// the weird state of affairs with uninitualized reference variables which</span></span>
+<span id="cb116-11"><a href="#cb116-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// the weird state of affairs with uninitialized reference variables which</span></span>
 <span id="cb116-12"><a href="#cb116-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// must be null even if they are typed not null.</span></span>
 <span id="cb116-13"><a href="#cb116-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb116-14"><a href="#cb116-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_not_nullable<span class="op">(</span>sem_type_expr<span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>is_ref_type<span class="op">(</span>sem_type_expr<span class="op">))</span> <span class="op">{</span></span>
@@ -2630,7 +2630,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 </ul></li>
 </ul>
 <p>So, none of these require further wrapping regardless of what is above the <code>IS NULL</code> node in the tree because of the high strength of the <code>.</code> and <code>!</code> operators.</p>
-<p>Other cases are usually simpler, such as “no parentheses need to be added by the child node becasue it will be used as the argument to a helper function so there will always be parens hard-coded anyway”. However these things need to be carefully tested hence the huge variety of codegen tests.</p>
+<p>Other cases are usually simpler, such as “no parentheses need to be added by the child node because it will be used as the argument to a helper function so there will always be parens hard-coded anyway”. However these things need to be carefully tested hence the huge variety of codegen tests.</p>
 <p>Note that after calling <code>cg_expr</code> the stack level was artificially increased. We’ll get to that in the next section. For now, looking at <code>POP_EVAL</code> we can see it’s very straightforward:</p>
 <div class="sourceCode" id="cb118"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Close the buffers used for the above.  Return the stack level to its original state.</span></span>
 <span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Numbered scratch variables are re-used as though they were a stack.</span></span>
@@ -2970,7 +2970,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <p>Before we move on to more complex statements we have to discuss string literals a little bit. We’ve mentioned before that the compiler is going to generate something like this:</p>
 <div class="sourceCode" id="cb139"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a>cql_string_literal<span class="op">(</span>_literal_1_test_p<span class="op">,</span> <span class="st">&quot;test&quot;</span><span class="op">);</span></span></code></pre></div>
 <p>To create a reference counted object <code>_literal_1_test_p</code> that it can use. Now we’re going to talk about how the text <code>"test"</code> was created and how that gets more complicated.</p>
-<p>The first thing to remember is that the generator creates C programs. That means no matter what kind of literal we might be processing it’s ending up encoded as a C string for the C compiler. The C compiler will be the first thing the decodes the text the generator produces and puts the byte we need into the final programs data segment or whereever. That means if we have SQL format strings that need to go to SQLite they will be twice-encoded, the SQL string is escaped as needed for SQLite and <em>that</em> is escaped again for the C compiler.</p>
+<p>The first thing to remember is that the generator creates C programs. That means no matter what kind of literal we might be processing it’s ending up encoded as a C string for the C compiler. The C compiler will be the first thing the decodes the text the generator produces and puts the byte we need into the final programs data segment or wherever. That means if we have SQL format strings that need to go to SQLite they will be twice-encoded, the SQL string is escaped as needed for SQLite and <em>that</em> is escaped again for the C compiler.</p>
 <p>An example might make this clearer consider the following SQL:</p>
 <div class="sourceCode" id="cb140"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="st">&#39;&quot;x</span><span class="ch">&#39;&#39;</span><span class="st">y&quot;&#39;</span> <span class="kw">AS</span> a, <span class="ot">&quot;&#39;y&#39;\n&quot;</span> <span class="kw">AS</span> b;</span></code></pre></div>
 <p>The generated text for this statement will be:</p>
@@ -2997,7 +2997,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li>to be completely precise the byte value 0x0a is in the string unescaped</li>
 </ul></li>
 <li>internal single quotes don’t require escaping in C, these have to be doubled in a SQL string</li>
-<li>the outer double quotes are removed and replaced by single quoates during this process</li>
+<li>the outer double quotes are removed and replaced by single quotes during this process</li>
 <li>the AST now has a valid SQL formatted string possibly with weird characters in it</li>
 <li>as before, this string has to be formatted for the C compiler so now it has to be escaped again</li>
 <li>the single quotes require no further processing, though now there are quite a few of them</li>
@@ -3087,7 +3087,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li>the “2” here refers to two arguments</li>
 </ul></li>
 <li>the usual error processing happens with <code>cql_error_trace</code> and <code>goto cql_cleanup</code></li>
-<li>the statment is executed with <code>sqlite3_step</code></li>
+<li>the statement is executed with <code>sqlite3_step</code></li>
 <li>temporary statements are finalized immediately with <code>cql_finalize_stmt</code>
 <ul>
 <li>in this case its redundant because the code is going to fall through to cleanup anyway</li>
@@ -3367,7 +3367,7 @@ static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer
 <li>also, there are fewer function calls so the code is overall smaller</li>
 <li>trivia: <code>multibind</code> and <code>multifetch</code> are totally references to <em>The Fifth Element</em>
 <ul>
-<li>hence, they should be pronouced like Leeloo saying “multipass”</li>
+<li>hence, they should be pronounced like Leeloo saying “multipass”</li>
 </ul></li>
 </ul></li>
 <li><code>multifetch</code> uses the varargs to clobber the contents of the target variables if there is no row according to <code>_rc_</code></li>
@@ -3431,7 +3431,7 @@ static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer
 <li>close the loop with <code>}</code> and we’re done</li>
 </ul>
 <h3 id="cursors-with-storage">Cursors With Storage</h3>
-<p>We now come to the big motivating reasons for having the notion of shapes in the CQL langauge. This particular case was the first such example in the language and it’s very commonly used and saves you a lot of typing. Like the other examples it’s only sugar in that it doesn’t give you any new language powers you didn’t have, but it does give clarity and maintenance advantages. And it’s just a lot less to type.</p>
+<p>We now come to the big motivating reasons for having the notion of shapes in the CQL language. This particular case was the first such example in the language and it’s very commonly used and saves you a lot of typing. Like the other examples it’s only sugar in that it doesn’t give you any new language powers you didn’t have, but it does give clarity and maintenance advantages. And it’s just a lot less to type.</p>
 <p>Let’s go back to one of the earlier examples, but write it the modern way:</p>
 <div class="sourceCode" id="cb169"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb169-1"><a href="#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PROC p ()</span>
 <span id="cb169-2"><a href="#cb169-2" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
@@ -3484,7 +3484,7 @@ static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer
 <li>references to <code>x</code> and <code>y</code> became <code>C.x</code> and <code>C.y</code></li>
 <li>references to <code>_C_has_row_</code> became <code>C._has_row_</code></li>
 </ul>
-<p>That’s pretty much it. The beauty of this is that you can’t get the declarations of your locals wrong and you don’t have to list them all no matter how big the data is. If the data shape changes the cursor change automatically changes to accomodate it. Everything is still statically typed.</p>
+<p>That’s pretty much it. The beauty of this is that you can’t get the declarations of your locals wrong and you don’t have to list them all no matter how big the data is. If the data shape changes the cursor change automatically changes to accommodate it. Everything is still statically typed.</p>
 <p>Now lets look at the loop pattern:</p>
 <div class="sourceCode" id="cb171"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb171-1"><a href="#cb171-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PROC p ()</span>
 <span id="cb171-2"><a href="#cb171-2" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>

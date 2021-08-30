@@ -46,7 +46,7 @@ typedef struct sem_node {
   int32_t create_version;           // create version if any (really only for tables and columns)
   int32_t delete_version;           // create version if any (really only for tables and columns)
   bool_t recreate;                  // for tables only, true if marked @recreate
-  CSTR recreate_group_name;         // for tables only, the name of the recreate gruop if they are in one
+  CSTR recreate_group_name;         // for tables only, the name of the recreate group if they are in one
   CSTR region;                      // the schema region, if applicable, null means unscoped (default)
   symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used if any
   list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
@@ -129,7 +129,7 @@ cql_data_decl( bytebuf *recreate_annotations );
 #define SEM_TYPE_AUTOINCREMENT         _64(0x0400) // set for table columns with autoinc
 #define SEM_TYPE_VARIABLE              _64(0x0800) // set for variables and parameters
 #define SEM_TYPE_IN_PARAMETER          _64(0x1000) // set for in parameters (can mix with below)
-#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out paramters (can mix with above)
+#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out parameters (can mix with above)
 #define SEM_TYPE_DML_PROC              _64(0x4000) // set for stored procs that have DML/DDL
 #define SEM_TYPE_HAS_SHAPE_STORAGE     _64(0x8000) // set for a cursor with simplified fetch syntax
 #define SEM_TYPE_CREATE_FUNC          _64(0x10000) // set for a function that returns a created object +1 ref

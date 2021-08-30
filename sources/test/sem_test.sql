@@ -2384,7 +2384,7 @@ end;
 -- + {in_pred}: bool notnull
 -- + {name arg2}: arg2: text variable in
 -- Here we're going to check that the parens came out right in the walk
--- This is a case where precendence is equal and left to right
+-- This is a case where precedence is equal and left to right
 -- The parents force it to be right to left, we have to honor that even though
 -- all priorities in sight are equal
 -- + DELETE FROM foo WHERE arg1 = ('x' IN (arg2));
@@ -2780,7 +2780,7 @@ begin
   select 1;
 end;
 
--- TEST: error in while block should be propogated up
+-- TEST: error in while block should be propagated up
 -- + Error % string operand not allowed in 'NOT'
 -- +1 Error
 -- + {while_stmt}: err
@@ -2822,7 +2822,7 @@ begin catch
   throw;
 end catch;
 
--- TEST: error in try block should be propogated to top of tree
+-- TEST: error in try block should be propagated to top of tree
 -- + Error % string operand not allowed in 'NOT'
 -- + {trycatch_stmt}: err
 -- + {stmt_list}: err
@@ -2834,7 +2834,7 @@ begin catch
   throw;
 end catch;
 
--- TEST: error in catch block should be propogated to top of tree
+-- TEST: error in catch block should be propagated to top of tree
 -- + Error % string operand not allowed in 'NOT'
 -- + {trycatch_stmt}: err
 -- + {stmt_list}: ok
@@ -14158,7 +14158,7 @@ declare enum real_things real (
 -- - Error
 declare rt real_things;
 
--- TEST: ok to assign a pen to a x becasue it's a real_thing
+-- TEST: ok to assign a pen to a x because it's a real_thing
 -- + {assign}: rt: real<real_things> notnull variable
 -- + {name rt}: rt: real<real_things> notnull variable
 -- + {dbl 1.000000e+00}: real<real_things> notnull

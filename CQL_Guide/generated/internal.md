@@ -374,7 +374,7 @@ never see these things when the DDL for SQLite is emitted.  But when echoing the
 Additionally, any local or global variables in a SQL statement should be replaced with `?` in the text
 that goes to SQLite and then followed up with binding instructions.  We'll cover the binding more in the
 section code generation, but importantly this also has to significantly alter the output.
-As a result the standard formatter includes extensive configurably to get these various results.
+As a result the standard formatter includes extensive configurability to get these various results.
 
 ### Configuring the Output with Callbacks and Flags
 
@@ -419,7 +419,7 @@ be produced.  Otherwise the callbacks and flags alter the behavior of the echoer
 // Callbacks allow you to significantly alter the generated sql, see the particular flags below.
 typedef struct gen_sql_callbacks {
   // Each time a local/global variable is encountered in the AST, this callback is invoked
-  // this is to allow the varialbe reference to be noted and replaced with ? in the generated SQL
+  // this is to allow the variable reference to be noted and replaced with ? in the generated SQL
   gen_sql_callback _Nullable variables_callback;
   void *_Nullable variables_context;
 
@@ -429,7 +429,7 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable col_def_callback;
   void *_Nullable col_def_context;
 
-  // This callback is used to expland the * in select * or select T.*
+  // This callback is used to explain the * in select * or select T.*
   gen_sql_callback _Nullable star_callback;
   void *_Nullable star_context;
 
@@ -495,12 +495,12 @@ of these options.
 
 * `mode` : one of the three enum modes that control overall behavior
 * `variables_callback` : invoked when a variable appears in the SQL, the caller can record the specific variable and then use it for binding
-* `col_def_callback` : when creating the "baseline" schema you don't want column defintions from later schema to be included, this gives you a chance to suppress them
+* `col_def_callback` : when creating the "baseline" schema you don't want column definitions from later schema to be included, this gives you a chance to suppress them
 * `star_callback` : normally the `*` in `select *` or `select T.*` is expanded when emitting for SQLite, this callback does the expansion when appropriate
 * `if_not_exists_callback` : when generating DDL for schema upgrade you typically want to force `IF NOT EXISTS` to be added to the schema even if it wasn't present in the declaration, this callback lets you do that
 * `convert_hex` : if true, hex constants are converted to decimal; used when emitting JSON because JSON doesn't understand hex constants
 * `minify_casts` : minification converts casts like `CAST(NULL AS TEXT)` to just `NULL` -- the former is only useful for type information, SQLite does need to see it
-* `minify_aliases` : unused column aliases as in `select foo.x as some_really_long_alias` can be removed from the output when targetting SQLite to save space
+* `minify_aliases` : unused column aliases as in `select foo.x as some_really_long_alias` can be removed from the output when targeting SQLite to save space
 
 ### Invoking the Generator
 
@@ -599,13 +599,13 @@ Let's look at those two in detail.
 ```C
 static void gen_binary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
-  // We add parens if our priority is less than the parent prioirty
+  // We add parens if our priority is less than the parent priority
   // meaning something like this:
   // * we're a + node, our parent is a * node
   // * we need parens because the tree specifies that the + happens before the *
   //
   // Also, grouping of equal operators is left to right
-  // so for so if our right child is the same precendence as us
+  // so for so if our right child is the same precedence as us
   // that means there were parens there in the original expression
   // e.g.  3+(4-7);
   // effectively it's like we're one binding strength higher for our right child
@@ -625,7 +625,7 @@ The convention gives us:
 * `pri` : the binding strength of the node above us
 * `pri_new` : the binding strength of this node (the new node)
 
-So generically, if the binding strength of the current opereator `pri_new` is weaker than the context it is contained in `pri`,
+So generically, if the binding strength of the current operator `pri_new` is weaker than the context it is contained in `pri`,
 then parentheses are required to preserve order of operations. See the comment for more details.
 
 With parens taken care of, we emit the left expression, the operator, and the right expression.
@@ -687,7 +687,7 @@ The steps were:
 * use `EXTRACT` macros (detailed below) to get the tree parts you want starting from your root
 * use `gen_printf` to emit the constant pieces of the statement
 * use recursion to print sub fragments (like the IF condition in this case)
-* test the tree fragments where optional peices are present, emit them as needed
+* test the tree fragments where optional pieces are present, emit them as needed
 
 It might be instructive to include `gen_cond_action`, it is entirely unremarkable:
 
@@ -925,7 +925,7 @@ The full list as of this writing is as follows:
 #define SEM_TYPE_AUTOINCREMENT         _64(0x0400) // set for table columns with autoinc
 #define SEM_TYPE_VARIABLE              _64(0x0800) // set for variables and parameters
 #define SEM_TYPE_IN_PARAMETER          _64(0x1000) // set for in parameters (can mix with below)
-#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out paramters (can mix with above)
+#define SEM_TYPE_OUT_PARAMETER         _64(0x2000) // set for out parameters (can mix with above)
 #define SEM_TYPE_DML_PROC              _64(0x4000) // set for stored procs that have DML/DDL
 #define SEM_TYPE_HAS_SHAPE_STORAGE     _64(0x8000) // set for a cursor with simplified fetch syntax
 #define SEM_TYPE_CREATE_FUNC          _64(0x10000) // set for a function that returns a created object +1 ref
@@ -981,7 +981,7 @@ typedef struct sem_node {
   int32_t create_version;           // create version if any (really only for tables and columns)
   int32_t delete_version;           // create version if any (really only for tables and columns)
   bool_t recreate;                  // for tables only, true if marked @recreate
-  CSTR recreate_group_name;         // for tables only, the name of the recreate gruop if they are in one
+  CSTR recreate_group_name;         // for tables only, the name of the recreate group if they are in one
   CSTR region;                      // the schema region, if applicable, null means unscoped (default)
   symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used if any
   list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
@@ -990,7 +990,7 @@ typedef struct sem_node {
 ```
 
 * `sem_type` : already discussed above, this tells you how to interpret everything else
-* `name` : variables, columns, etc. have a canonical name, when a name case-insenstively resolves, the canonical name is stored here
+* `name` : variables, columns, etc. have a canonical name, when a name case-insensitivity resolves, the canonical name is stored here
   * typically later passes emit the canonical variable name everywhere
   * e.g. `FoO` and `fOO` might both resolve to an object declared as `foo`, we always emit `foo` in codegen
 * `kind` : in CQL any type can be discriminated as in `declare foo real<meters>`, the kind here is `meters`
@@ -1046,7 +1046,7 @@ cql_noexport void sem_main(ast_node *ast) {
 }
 ```
 
-As you can see, `sem_main` begins by reseting all the global state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
+As you can see, `sem_main` begins by resetting all the global state.  You can of course do this yourself after calling `sem_main` (when you're done with the results).
 
 `sem_main` sets a variety of useful and public global variables that describe the results of the analysis.  The ones in `sem.h` are part of the contract and
 you should feel free to use them in a downstream code-generator.  Other items are internal and should be avoided.
@@ -1170,7 +1170,7 @@ Each of these is dispatched when a function call is found in the tree.  By way o
 causes the `changes` function to map to `sem_func_changes` for validation.
 
 There are a few other similar macros for more exotic cases but the general pattern should be clear now.  With these in place
-it's very easy to traverse arbitary statement lists and arbitary expressions with sub expressions and have the correct function
+it's very easy to traverse arbitrary statement lists and arbitrary expressions with sub expressions and have the correct function
 invoked without having large `switch` blocks all over.
 
 ### Semantic Errors
@@ -1234,7 +1234,7 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
 }
 ```
 
-It's hard to get simpiler than doing semantic analysis of the `NULL` literal.  Its code should be clear with no further explaination needed.
+It's hard to get simpler than doing semantic analysis of the `NULL` literal.  Its code should be clear with no further explanation needed.
 
 ### Unary Operators
 
@@ -1265,7 +1265,7 @@ static void sem_unary_math(ast_node *ast, CSTR op) {
   ast->sem = new_sem(sem_type_result);
   ast->sem->kind = ast->left->sem->kind;
 
-  // note ast->sem->name is NOT propogated because SQLite doesn't let you refer to
+  // note ast->sem->name is NOT propagated because SQLite doesn't let you refer to
   // the column 'x' in 'select -x' -- the column name is actually '-x' which is useless
   // so we have no name once you apply unary math (unless you use 'as')
   // hence ast->sem->name = ast->left->sem->name is WRONG here and it is not missing on accident
@@ -1438,7 +1438,7 @@ static bool_t sem_binary_prep(ast_node *ast, sem_t *core_type_left, sem_t *core_
 ```
 
 * `sem_expr` : used to recursively walk the left and right nodes
-* `is_error` : checks if either side had errors, if so, simply propogate the error
+* `is_error` : checks if either side had errors, if so, simply propagate the error
 * extract the left and right core types
 * combine nullability and sensitivity flags
 
@@ -1472,7 +1472,7 @@ static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
 * `sem_verify_compat` : ensures that left and right operands are type compatible (discussed later)
 * the result is always of type `bool not null`
 
-If either step goes wrong the error will naturally propogate.
+If either step goes wrong the error will naturally propagate.
 
 #### Example: Binary Math
 
@@ -1549,7 +1549,7 @@ static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_t
 ```
 
 * `is_object` : checks a `sem_type` against `SEM_TYPE_OBJECT`
-  * if the left or right child is an object an appropraite error is generated
+  * if the left or right child is an object an appropriate error is generated
 * there is no strong convention about returning `true` if ok, or `true` if error, it's pretty ad hoc
   * this doesn't seem to cause a lot of problems
 
@@ -1619,7 +1619,7 @@ the result is `NULL`.
 // are previously known to be compatible, it returns the smallest type
 // that holds both.  If either is nullable the result is nullable.
 // Note: in the few cases where that isn't true the normal algorithm for
-// nullablity result must be overrided (see coalesce for instance).
+// nullablity result must be overridden (see coalesce for instance).
 static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
   ... too much code ... summary below
 }
@@ -1644,7 +1644,7 @@ Some examples might be helpful:
 * true + 2 -> integer
 * 'x' + 1 -> not compatible
 
-Note that `sem_combine_types` assumes the types have already been checked for compatiblitiy and will use `Contract` to enforce
+Note that `sem_combine_types` assumes the types have already been checked for compatability and will use `Contract` to enforce
 this.  You should be using other helpers like `is_numeric_compat` and friends to ensure the types agree before computing
 the combined type.  A list of values that must be compatible with each other (e.g. in `needle IN (haystack)`) can be
 checked using `sem_verify_compat` repeatedly.
@@ -1773,7 +1773,7 @@ The expression contexts are as follows:
 #define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
 ```
 
-The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that correponds to the current context.
+The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that corresponds to the current context.
 For instance, the expression being validated in is the `WHERE` clause, the code will provide `SEM_EXPR_CONTEXT_WHERE`.
 The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union
 of the context bits where it can be used.  The validator can check those possibilities against the current context with one bitwise "and" operation.
@@ -1789,7 +1789,7 @@ This bitwise "and" is performed by one of these two helper macros which makes th
 #### Expression Context Example : Concat
 
 The concatenation operator `||` is challenging to successfully emulate because it does many different kinds of
-numeric to string conversions automatically.  Rather than perenially getting this wrong, we simply do not support
+numeric to string conversions automatically.  Rather than perennially getting this wrong, we simply do not support
 this operator in a context where SQLite isn't going to be doing the concatenation.  So typically users
 use "printf" instead to get formatting done outside of a SQL context.  The check for invalid use of `||` is very simple
 and it happens of course in `sem_concat`.
@@ -1886,7 +1886,7 @@ We haven't discussed schema regions yet but what you need to know about them for
 If an object is in a region, then it may only use schema parts that are in
 the same region, or the region's dependencies (transitively).
 
-The point of this is that you might have a rather large schema and you probably don't want any peice
+The point of this is that you might have a rather large schema and you probably don't want any piece
 of code to use any piece of schema.  You can use regions to ensure that the code for feature "X" doesn't
 try to use schema designed exclusively for feature "Y".  That "X" code probably has no business even
 knowing of the existence of "Y" schema.
@@ -1903,7 +1903,7 @@ In short, these simple cases just require looking up the entity and verifying th
 
 #### Flexible Name Resolution
 
-The "hard case" for name resolution is where the name is occuring in an expression.  Such a name can refer to
+The "hard case" for name resolution is where the name is occurring in an expression.  Such a name can refer to
 all manner of things. It could be a global variable, a local variable, an argument, a table column, a field in a cursor,
 and others.  The general name resolver goes through several phases looking for the name.  Each phase can either report
 an affirmative success or error (in which case the search stops), or it may simply report that the name was not found
@@ -1957,7 +1957,7 @@ So let's move on to the "real" resolver.
 //  AST, a mandatory name, an optional scope, and mandatory type pointer. If the
 //  identifier provided to one of these resolvers is resolved successfully, *or*
 //  if the correct resolver was found but there was an error in the program,
-//  `SEM_RESOLVE_STOP` is returned and resolution is complete, succesful or not.
+//  `SEM_RESOLVE_STOP` is returned and resolution is complete, successful or not.
 //  If a resolver is tried and it determines that it is not the correct resolver
 //  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the
 //  next resolver is tried.
@@ -2653,7 +2653,7 @@ are some samples from that table with the most common options:
   DDL_STMT_INIT(create_table_stmt);
   DDL_STMT_INIT(create_view_stmt);
 ```
-The DDL (Data Definition Lanaguage) statements all get the same handling:  The text of the statement
+The DDL (Data Definition Language) statements all get the same handling:  The text of the statement
 is generated from the AST. Any variables are bound and then the statement is executed.  The work
 is done with `cg_bound_sql_statement` which will be discussed later.
 
@@ -2711,7 +2711,7 @@ such as the `if_stmt` AST node mapping to `cg_if_stmt`.
   STMT_INIT(assign);
 ```
 
-The next group of declarations arethe expressions, with precedence and operator specified.
+The next group of declarations are the expressions, with precedence and operator specified.
 There is a lot of code sharing between AST types as you can see from this sample:
 
 ```C
@@ -2772,7 +2772,7 @@ Finally, many built-in functions need special codegen, such as:
 ### Character Buffers and Byte Buffers
 
 The first kind of text output that CQL could produce was the AST echoing.  This was originally done directly with `fprintf` but
-that was never going to be flexible enough -- we have to be able to emitt that output into other places like comments, or the text of
+that was never going to be flexible enough -- we have to be able to emit that output into other places like comments, or the text of
 SQL statements.  This need forces that pass to use character buffers, which we touched on in Part 1.  C Code generation
 has a more profound dependency on character buffers -- they are literally all over `cg_c.c` and we need to go over how they are used
 if we're going to understand the codegen passes.
@@ -2879,7 +2879,7 @@ This means that while processing a procedure the codegen that declares say scrat
 which would go to `cg_scratch_vars_output`, is going to target the `proc_locals` buffer
 which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is invoked the
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
-will go into there rather than being acculated at the global level.
+will go into there rather than being accumulated at the global level.
 
 Note: it's possible to have code that is not in a procedure (see [`--global_proc`](https://cgsql.dev/cql-guide/x1#--global_proc-name)).
 
@@ -3038,7 +3038,7 @@ void combine(cql_nullable_int32 x, cql_nullable_int32 y, cql_nullable_int32 *_No
 * `*result` : holds the answer, it's null if either of `_tmp_n_int_1.is_null`, `_tmp_n_int_2.is_null` is true
    * otherwise it's `_tmp_n_int_1.value + _tmp_n_int_2.value`
 
-So, in general, we need to emit arbitarily many statements in the course of evaluating even simple looking expressions
+So, in general, we need to emit arbitrarily many statements in the course of evaluating even simple looking expressions
 and we need good mechanisms to manage that.  This is what we'll talk about in the coming sections.
 
 #### Managing Scratch Variables
@@ -3100,7 +3100,7 @@ So again, we have exactly the text we need to test for null, and the test we nee
 Additional notes:
 
 * scratch variables can be re-used, they are on a "stack"
-* a bitmask is used to track which scratch variables have aleady had a declaration emitted, so they are only declared once
+* a bitmask is used to track which scratch variables have already had a declaration emitted, so they are only declared once
 * the variable name is based on the current value of the `stack_level` variable which is increased in a push/pop fashion as temporaries come in and out of scope
   * this strategy isn't perfect, but the C compiler can consolidate locals even if the CQL codegen is not perfect so it ends up being not so bad
   * importantly, there is one `stack_level` variable for all temporaries not one `stack_level` for every type of temporary, this seemed like a reasonable simplification
@@ -3204,7 +3204,7 @@ static void cg_expr_is_null(ast_node *expr, charbuf *is_null, charbuf *value) {
   bprintf(is_null, "0"); // the result of is null is never null
 
   // The fact that this is not constant not null for not null reference types reflects
-  // the weird state of affairs with uninitualized reference variables which
+  // the weird state of affairs with uninitialized reference variables which
   // must be null even if they are typed not null.
 
   if (is_not_nullable(sem_type_expr) && !is_ref_type(sem_type_expr)) {
@@ -3256,7 +3256,7 @@ How do we know that parens are not needed here? It seems like the operand of `IS
 
 So, none of these require further wrapping regardless of what is above the `IS NULL` node in the tree because of the high strength of the `.` and `!` operators.
 
-Other cases are usually simpler, such as "no parentheses need to be added by the child node becasue it will be used as the argument to a helper
+Other cases are usually simpler, such as "no parentheses need to be added by the child node because it will be used as the argument to a helper
 function so there will always be parens hard-coded anyway".  However these things need to be carefully tested hence the huge variety of codegen tests.
 
 Note that after calling `cg_expr` the stack level was artificially increased.  We'll get to that in the next section.  For now, looking at `POP_EVAL` we
@@ -3751,7 +3751,7 @@ the text `"test"` was created and how that gets more complicated.
 The first thing to remember is that the generator creates C programs.  That means
 no matter what kind of literal we might be processing it's ending up encoded as a C string for the C
 compiler.  The C compiler will be the first thing the decodes the text the generator produces and
-puts the byte we need into the final programs data segment or whereever.  That means if we have
+puts the byte we need into the final programs data segment or wherever.  That means if we have
 SQL format strings that need to go to SQLite they will be twice-encoded, the SQL string is escaped
 as needed for SQLite and *that* is escaped again for the C compiler.
 
@@ -3783,7 +3783,7 @@ Let's review that in some detail:
   * internal newlines do not require escaping in SQL, they are in the string as the newline character not '\n' or anything like that
     * to be completely precise the byte value 0x0a is in the string unescaped
   * internal single quotes don't require escaping in C, these have to be doubled in a SQL string
-  * the outer double quotes are removed and replaced by single quoates during this process
+  * the outer double quotes are removed and replaced by single quotes during this process
   * the AST now has a valid SQL formatted string possibly with weird characters in it
   * as before, this string has to be formatted for the C compiler so now it has to be escaped again
   * the single quotes require no further processing, though now there are quite a few of them
@@ -3899,7 +3899,7 @@ cql_cleanup:
   * the type of binding is encoded very economically
   * the "2" here refers to two arguments
 * the usual error processing happens with `cql_error_trace` and `goto cql_cleanup`
-* the statment is executed with `sqlite3_step`
+* the statement is executed with `sqlite3_step`
 * temporary statements are finalized immediately with `cql_finalize_stmt`
   * in this case its redundant because the code is going to fall through to cleanup anyway
   * in general there could be many statements and we want to finalize immediately
@@ -4294,7 +4294,7 @@ Do to the `FETCH` we do the following:
   * again, we do it this way so that there is less error checking needed in the generated code
   * also, there are fewer function calls so the code is overall smaller
   * trivia: `multibind` and `multifetch` are totally references to _The Fifth Element_
-    * hence, they should be pronouced like Leeloo saying "multipass"
+    * hence, they should be pronounced like Leeloo saying "multipass"
 * `multifetch` uses the varargs to clobber the contents of the target variables if there is no row according to `_rc_`
 * `multifetch` uses the `CQL_DATA_TYPE_NOT_NULL` to decide if it should ask SQLite first if the column is null
 
@@ -4377,7 +4377,7 @@ This is done by:
 
 ### Cursors With Storage
 
-We now come to the big motivating reasons for having the notion of shapes in the CQL langauge.
+We now come to the big motivating reasons for having the notion of shapes in the CQL language.
 This particular case was the first such example in the language and it's very commonly
 used and saves you a lot of typing.  Like the other examples it's only sugar in that
 it doesn't give you any new language powers you didn't have, but it does give clarity
@@ -4441,7 +4441,7 @@ Let's look at what's different here:
 
 That's pretty much it.  The beauty of this is that you can't get the declarations of your locals wrong
 and you don't have to list them all no matter how big the data is.  If the data shape changes the
-cursor change automatically changes to accomodate it.  Everything is still statically typed.
+cursor change automatically changes to accommodate it.  Everything is still statically typed.
 
 Now lets look at the loop pattern:
 

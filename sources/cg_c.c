@@ -48,13 +48,13 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_ex
 // True if we are presently emitting a stored proc
 static bool_t in_proc = 0;
 
-// True if we are in a loop (hence the statment might run again)
+// True if we are in a loop (hence the statement might run again)
 static bool_t cg_in_loop = 0;
 
 // exports file if we are outputing exports
 static charbuf *exports_output = NULL;
 
-// The stack level, which faciliates safe re-use of scratch variables.
+// The stack level, which facilitates safe re-use of scratch variables.
 static int32_t stack_level = 0;
 
 // Every string literal in a compiland gets a unique number.  This is it.
@@ -1178,7 +1178,7 @@ static void cg_expr_is_null(ast_node *expr, charbuf *is_null, charbuf *value) {
   bprintf(is_null, "0"); // the result of is null is never null
 
   // The fact that this is not constant not null for not null reference types reflects
-  // the weird state of affairs with uninitualized reference variables which
+  // the weird state of affairs with uninitialized reference variables which
   // must be null even if they are typed not null.
 
   if (is_not_nullable(sem_type_expr) && !is_ref_type(sem_type_expr)) {
@@ -5322,7 +5322,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
 static void cg_call_stmt(ast_node *ast) {
   // If the call has a result set it is stored in our result parameter
   // just like a loose select statement would be.  Note this can be
-  // overrided by a later result which is totally ok.  Same as for select
+  // overridden by a later result which is totally ok.  Same as for select
   // statements.
   return cg_call_stmt_with_cursor(ast, NULL);
 }

@@ -35,10 +35,10 @@ This changes everything.
 With virtual tables being durable they belong in the schema upgrade process.  And if they go there they also
 have to go into the JSON output.  But we can't use the vanilla syntax that SQLite uses because that syntax is:
 
-* not parseable, because the module arguments can be literally anything (or nothing), even a letter to your gramma.
+* not parseable, because the module arguments can be literally anything (or nothing), even a letter to your grandma.
 * the arguments do not necessarily say anything about the table's schema at all
 
-So in the CQL langauge I change the syntax a bit, the generalized form looks like this:
+So in the CQL language I change the syntax a bit, the generalized form looks like this:
 
 ```
 create virtual table virt_table using my_module [(module arguments)]  as (
@@ -89,7 +89,7 @@ create virtual table virt_table using my_module(foo, 'goo', (1.5, (bar, baz))) a
 CREATE VIRTUAL TABLE virt_table USING my_module(foo, "goo", (1.5, (bar, baz)));
 ```
 
-This form allows for very flexible arguments but not totally arbitary arguments, so it can still be
+This form allows for very flexible arguments but not totally arbitrary arguments, so it can still be
 parsed and validated.
 
 ### Case 3 Example

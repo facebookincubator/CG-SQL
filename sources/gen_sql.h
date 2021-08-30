@@ -47,7 +47,7 @@ typedef bool_t (*_Nullable gen_sql_callback)(struct ast_node *_Nonnull ast, void
 enum gen_sql_mode {
   gen_mode_echo,          // Prints everything in the original, with standard whitespace and parentheses
   gen_mode_sql,           // Prints the AST formatted for SQLite consumption, omits anything CQL specific
-  gen_mode_no_annotations // Equivalent to gen_mode_echo without versioning attributes or generic attribues
+  gen_mode_no_annotations // Equivalent to gen_mode_echo without versioning attributes or generic attributes
                           // * @create, @delete, @recreate, and @attribute are removed
                           // * statements like @echo are not affected, nor is the type specifier @sensitive
 };
@@ -55,7 +55,7 @@ enum gen_sql_mode {
 // Callbacks allow you to significantly alter the generated sql, see the particular flags below.
 typedef struct gen_sql_callbacks {
   // Each time a local/global variable is encountered in the AST, this callback is invoked
-  // this is to allow the varialbe reference to be noted and replaced with ? in the generated SQL
+  // this is to allow the variable reference to be noted and replaced with ? in the generated SQL
   gen_sql_callback _Nullable variables_callback;
   void *_Nullable variables_context;
 
@@ -65,7 +65,7 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable col_def_callback;
   void *_Nullable col_def_context;
 
-  // This callback is used to expland the * in select * or select T.*
+  // This callback is used to explain the * in select * or select T.*
   gen_sql_callback _Nullable star_callback;
   void *_Nullable star_context;
 
@@ -118,8 +118,8 @@ typedef struct gen_sql_callbacks {
   //
   // In short, if CQL is going to process the output again, use this flag
   // to control the autoincrement transform.  It might be possible to fold
-  // this flag with the mode flag but it's sufficiently wierd that this
-  // extra documention and special handling is probably worth the extra
+  // this flag with the mode flag but it's sufficiently weird that this
+  // extra documentation and special handling is probably worth the extra
   // boolean storage.
   bool_t long_to_int_conv;
 } gen_sql_callbacks;

@@ -684,13 +684,13 @@ static void gen_select_opts(ast_node *ast) {
 
 static void gen_binary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
-  // We add parens if our priority is less than the parent prioirty
+  // We add parens if our priority is less than the parent priority
   // meaning something like this:
   // * we're a + node, our parent is a * node
   // * we need parens because the tree specifies that the + happens before the *
   //
   // Also, grouping of equal operators is left to right
-  // so for so if our right child is the same precendence as us
+  // so for so if our right child is the same precedence as us
   // that means there were parens there in the original expression
   // e.g.  3+(4+7);
   // effectively it's like we're one binding strength higher for our right child
