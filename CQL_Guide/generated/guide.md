@@ -2564,7 +2564,7 @@ If an `out` statement runs more than once the most recent row becomes the result
 mirror having one `out` variable for each column.  This was its intent and procedures
 that return at most, or exactly, one row are very common.  However, in general, one row results
 do not suffice; you might want to produce a result set from various sources
-with maybe arbitary compution in there as well.  For that you need to be able to emit multiple
+with maybe arbitrary computation in there as well.  For that you need to be able to emit multiple
 rows from a computed source.  This is exactly what `out union` provides.
 
 Here's a (somewhat contrived) example of the kind of thing you can do with this form:
@@ -2824,13 +2824,13 @@ end;
 
 The first form is in some sense the origin of value cursor.  Value cursors were added to the language initially to have a way to capture the single row `out` statement results, much like result set cursors were added to capture procedure results from `out union`.  In the first form the cursor storage (a C struct) is provided by reference as a hidden out parameter to procedure and the procedure fills it in.  The procedure may or may not use the `out` statement in its control flow the the cursor might not hold a row.  You can use `if C then ...` as before to test for a row.
 
-The second form is more interesting as it allows the cursor to be loaded from arbitary expressions subject to some rules:
+The second form is more interesting as it allows the cursor to be loaded from arbitrary expressions subject to some rules:
  * you should think of the cursor as a logical row, it's fully loaded or not, therefore you must specify enough columns in the column list to ensure that all `NOT NULL` columns will get a value
  * if not mentioned in the list, NULL will be loaded if possible
  * if insufficient columns are named, an error is generated
  * if the value types specified are not compatible with the column types mentioned, an error is generated
 
-With this form, any possible valid cursor values could be set, but many forms of updates that are common would be awkward. So there are various forms of syntatic sugar that are automatically rewitten into the canonical form.  Several standard rewrites happen.
+With this form, any possible valid cursor values could be set, but many forms of updates that are common would be awkward. So there are various forms of syntatic sugar that are automatically rewritten into the canonical form.  Several standard rewrites happen.
 
 * `fetch C from values(x, y, z)`
   * if no columns are specified this is the same as naming all the columns, in order
@@ -4187,7 +4187,7 @@ create virtual table virt_table using my_module(foo, 'goo', (1.5, (bar, baz))) a
 CREATE VIRTUAL TABLE virt_table USING my_module(foo, "goo", (1.5, (bar, baz)));
 ```
 
-This form allows for very flexible arguments but not totally arbitary arguments, so it can still be
+This form allows for very flexible arguments but not totally arbitrary arguments, so it can still be
 parsed and validated.
 
 ##### Case 3 Example
@@ -4502,7 +4502,7 @@ which places the named enumarations into the `.h` file associated with
 the current translation unit. If no enumarations are listed, all enums
 are emitted.
 
-Note: generated enum defintions are protected by `#ifndef X ... #endif` so multiple
+Note: generated enum definitions are protected by `#ifndef X ... #endif` so multiple
 definitions are harmless and hence you can afford to use `@emit_enums`
 for the same enum in several translations units, if desired.
 
@@ -4665,7 +4665,7 @@ In a cursor statement like `declare C cursor for select * from table_or_view` th
 * In this case the number and type of the columns must match exactly with the specified variables
 * If new columns are added, deleted, or changed, the above code will not compile
 
-So consdering these cases above we can conclude that auto expanding the `*` into the exact columns present in the compile-time schema version ensures that any incompatible changes result in compile time errors. Adding columns to tables does not cause problems even if the code is not recompiled. This makes the `*` construct much safer, if not perfect, but no semantic would be safe from arbitary schema changes without recompilation.  At the very least here we can expect a meaningful runtime error rather than silently fetching the wrong columns.
+So considering these cases above we can conclude that auto expanding the `*` into the exact columns present in the compile-time schema version ensures that any incompatible changes result in compile time errors. Adding columns to tables does not cause problems even if the code is not recompiled. This makes the `*` construct much safer, if not perfect, but no semantic would be safe from arbitrary schema changes without recompilation.  At the very least here we can expect a meaningful runtime error rather than silently fetching the wrong columns.
 
 ### Special Note on the JOIN...USING form
 
@@ -5281,7 +5281,7 @@ as we will see below.
 
 To avoid selecting single rows out of the facets table repeatedly we introduce this procedure
 whose job is to harvest the facets table and store it in a dictionary.  The helpers that do this
-were declared above.  You've aleady seen usage of the facets in the
+were declared above.  You've already seen usage of the facets in the
 code above.
 
 ```sql
@@ -6804,7 +6804,7 @@ end;
 
 As you can see, we have two tables `foo` and `bar`; the `foo` table has a trigger;  both `foo` and `bar` have indices.  This schema is very simple, but of course it could be a lot more complicated, and real cases typically are.
 
-The procedure we want to test is creatively called `the_subject`.  It has lots of test attributes on it.  We've already discussed `dummy_table`, `dummy_insert`, `dummy_select`, and `dummy_result_set` above but as you can see they can be mixed in with `dummy_test`.  Now let's talk about `dummy_test`.  First you'll notice that annotation has additional sub-attributes;  The attribute grammar is sufficiently flexible that,  in principle, you could represent an arbitary LISP program, so the instructions can be very detailed.  In this case the attribute provides table and column names, as well as sample data.  We'll discuss that when we get to the population code.
+The procedure we want to test is creatively called `the_subject`.  It has lots of test attributes on it.  We've already discussed `dummy_table`, `dummy_insert`, `dummy_select`, and `dummy_result_set` above but as you can see they can be mixed in with `dummy_test`.  Now let's talk about `dummy_test`.  First you'll notice that annotation has additional sub-attributes;  The attribute grammar is sufficiently flexible that,  in principle, you could represent an arbitrary LISP program, so the instructions can be very detailed.  In this case the attribute provides table and column names, as well as sample data.  We'll discuss that when we get to the population code.
 
 First let's dispense with the attributes we already discussed -- since we had all the attributes, the output will include those helpers, too.  Here they are again:
 
@@ -8001,7 +8001,7 @@ Here are the essential aspects:
 
 * the base fragment is given a name, it can be anything, probably something that describes the purpose of the fragments
 * the procedure name can be anything at all
-* the procedure must consiste of exactly one `with...select` statement
+* the procedure must consist of exactly one `with...select` statement
 * the fragment name must be the one and only CTE in the select statement
 * you must select all the columns from the CTE
 
@@ -8051,7 +8051,7 @@ Again there are some important features to this extension and they are largely c
   * it may not have any clause other than the first `from` (e.g. no `where`, `having`, `limit` etc.)
     * if any of these were allowed they would remove or re-order rows in the base query which is not allowed
     * the `from` clause often includes nested selects which have no restrictions
-  * it must select from the base fragment name and left outer join to whereever it likes to get optional additional columns
+  * it must select from the base fragment name and left outer join to wherever it likes to get optional additional columns
     * because of this the additional column(s) will certainly be a nullable type in the projection
 * the final select must be of the form `select * from col_adder_frag` with the appropriate name
 * keeping all this in mind, the interesting bit happens here:  `left outer join added_columns on base_frag.id = added_columns.id`
@@ -8108,7 +8108,7 @@ end;
 
 Let's review the features of this second template form:
 * there is a surrogate for the core query
-* there is a manatory second CTE
+* there is a mandatory second CTE
 * the second CTE is a compound query with any number of branches, all `union all`
 * the first branch must be `select * from base_frag` (the base fragment) to ensure that the original rows remain
   * this is also why all the branches must be `union all`
@@ -8166,7 +8166,7 @@ It will always be as simple as this, all the complexity is in the fragments.
   * the code that was generated for the previous fragments anticipates this and makes reference to what will be generated here
   * this is enforced
 * the assembled query is what you run to get the result set, this has real code behind it
-  * the other fragments only produce result set readers that call into the helper meethods to get columns
+  * the other fragments only produce result set readers that call into the helper methods to get columns
 * there is a surrogate for the core fragment as usual
 * all of CTE section will ultimately be replaced with the fragments chained together
 * the final select should be of the form `select * from your_frags` but it can include ordering and/or filtering, this statement will be present in final codegen, the final order is usually defined here
@@ -8431,7 +8431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Aug 30 15:00:54 PDT 2021
+Snapshot as of Tue Aug 31 08:41:42 PDT 2021
 
 ### Operators and Literals
 
@@ -9914,8 +9914,8 @@ The complete list (as of this writing) is:
   * `FOREIGN KEY ON DELETE`: all FK's must choose some `ON DELETE` strategy
   * `PROCEDURE`: all procedures must be declared before they are called (eliminating the vanilla `C` call option)
   * `JOIN`: all joins must be ANSI style, the form `FROM A,B` is not allowed (replace with `A INNER JOIN B`
-  * `WINDOW FUNC`: window functions are disallowed (useful if targetting old versions of SQLite)
-  * `UPSERT STATEMENT`: the upsert form is disallowed (useful if targetting old versions of SQLite)
+  * `WINDOW FUNC`: window functions are disallowed (useful if targeting old versions of SQLite)
+  * `UPSERT STATEMENT`: the upsert form is disallowed (useful if targeting old versions of SQLite)
 
 `@SENSITIVE`
  * marks a column or variable as 'sensitive' for privacy purposes, this behaves somewhat like nullability (See Chapter 3) in that it is radioactive, contaminating anything it touches
@@ -9965,7 +9965,7 @@ The complete list (as of this writing) is:
 
 `@ATTRIBUTE`
   * the main purpose of `@attribute` is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate
-  * the nested nature of attribute values is sufficiently flexible than you could encode an arbitary LISP program in an attribute, so really anything you might need to express is possible
+  * the nested nature of attribute values is sufficiently flexible than you could encode an arbitrary LISP program in an attribute, so really anything you might need to express is possible
   * there are a number of attributes known to the compiler which I list below (complete as of this writing)
 
   * `cql:autodrop=(table1, table2, ...)` when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset
@@ -11482,7 +11482,7 @@ In a `DECLARE` statement that declares a `CURSOR LIKE` another cursor, the indic
 
 ### CQL0201: expanding FROM ARGUMENTS, there is no argument matching 'required_arg'
 
-In an `INSERT` or `FETCH` statment using the form `FROM ARGUMENTS(LIKE [name])`
+In an `INSERT` or `FETCH` statement using the form `FROM ARGUMENTS(LIKE [name])`
 The shape `[name]` had columns that did not appear in as arguments to the current procedure.
 Maybe arguments are missing or maybe the name in the `like` part is the wrong name.
 
@@ -13600,7 +13600,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Aug 30 15:00:55 PDT 2021
+Snapshot as of Tue Aug 31 08:41:43 PDT 2021
 
 ### Rules
 
@@ -15457,7 +15457,7 @@ In any case this directive should not appear in normal code.  It should be part 
 * `ROLLBACK TRANSACTION`
 
 Transactions do not nest and most procedures do not know the context in which they will be called, so the vast majority of
-procedures will not and should not actaully start transactions.  You can only do this if you know, somehow, for sure, that
+procedures will not and should not actually start transactions.  You can only do this if you know, somehow, for sure, that
 the procedure in question is somehow a "top level" procedure.  So generally, don't use these statements.
 
 
@@ -15495,7 +15495,7 @@ abandon the work in progress.
 
 CQL allows you to specify a number of useful options such as "do not allow Window Functions" or "all foreign keys must choose some update or delete strategy".
 These additional enforcements are designed to prevent errors.  Because of this they should be established once, somewhere central and they should be rarely
-if ever overrided.  For instance `@ENFORCE_NORMAL WINDOW FUNCTION` would allow you to use window functions again, but this is probably a bad idea. If
+if ever overridden.  For instance `@ENFORCE_NORMAL WINDOW FUNCTION` would allow you to use window functions again, but this is probably a bad idea. If
 strict mode is on, disallowing them, that probably means your project is expected to target versions of SQLite that do not have window functions.  Overriding
 that setting is likely to lead to runtime errors.
 
@@ -15506,7 +15506,7 @@ In general you don't want to see these options in most code.
 * `@PREVIOUS_SCHEMA`
 
 CQL can ensure that the current schema is compatible with the previous schema, meaning that an upgrade script could reasonably be generated to go from the
-previous to the current.  This directive demarks the start of the previous schema section when that validatio happens.  This direcive is useless except
+previous to the current.  This directive demarks the start of the previous schema section when that validation happens.  This directive is useless except
 for creating that schema validation so it should never appear in normal procedures.
 
 ### Schema Regions
@@ -15538,7 +15538,7 @@ avoided so hopefully this directive is rarely if ever used.
 
 This directive emits plain text directly into the compiler's output stream.  It can be invaluable for adding new runtime features and for ensuring that
 (e.g.) additional `#include` or `#define` directives are present in the output but you can really break things by over-using this feature.  Most parts
-of the CQL output are subject to change so any use of this should be super clean.  The indended use was, as mentioned, to allow an extra `#include` in your code
+of the CQL output are subject to change so any use of this should be super clean.  The intended use was, as mentioned, to allow an extra `#include` in your code
 so that CQL could call into some library.  Most uses of this combine with `DECLARE FUNCTION` or `DECLARE PROCEDURE` to declare an external entity.
 
 ### Enumerations
@@ -15556,7 +15556,7 @@ purpose if nothing else is serviceable.
 * `CLOSE`
 * `OPEN`
 
-The `OPEN` statement is a no-op, SQLite has no such notion.  It was included becasue it is present in `MYSQL` and other variants and its inclusion can
+The `OPEN` statement is a no-op, SQLite has no such notion.  It was included because it is present in `MYSQL` and other variants and its inclusion can
 easy readability sometimes.  But it does nothing.   The `CLOSE` statement is normally not necessary because all cursors are closed at the end of the
 procedure they are declared in (unless they are boxed, see below).  You only need `CLOSE` if you want to close a global cursor (which has no scope)
 or if you want to close a local cursor "sooner" because waiting to the end of the procedure might be a very long time.  Using close more than once

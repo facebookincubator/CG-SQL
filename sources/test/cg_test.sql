@@ -2668,7 +2668,7 @@ create proc empty_proc()
 begin
 end;
 
--- TEST: empty body parts, all statment list types
+-- TEST: empty body parts, all statement list types
 -- nothing really to validate here; if any of the empty cases
 -- are not handled it will crash.  If the blocks are badly shaped
 -- it won't compile. Can't think of anything that isn't redundant here

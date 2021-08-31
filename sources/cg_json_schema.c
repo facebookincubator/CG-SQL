@@ -73,7 +73,7 @@ typedef struct json_context {
 // magic string to sanity check the context cuz we're paranoid
 static char cookie_str[] = "cookie";
 
-// compute the CRC for an arbitary statement
+// compute the CRC for an arbitrary statement
 static llint_t crc_stmt(ast_node *stmt) {
   CHARBUF_OPEN(temp);
 
@@ -1276,7 +1276,7 @@ static void cg_json_projection(charbuf *output, ast_node *ast) {
 // The set of views look rather like the query section in as much as
 // they are in fact nothing more than named select statements.  However
 // the output here is somewhat simplified.  We only emit the whole select
-// statement and any binding args, we don't also emit all the peices of the select.
+// statement and any binding args, we don't also emit all the pieces of the select.
 static void cg_json_views(charbuf *output) {
   bprintf(output, "\"views\" : [\n");
   BEGIN_INDENT(views, 2);

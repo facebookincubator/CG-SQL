@@ -462,7 +462,7 @@ cql_noexport void find_misc_attrs(
 
 #ifdef CQL_AMALGAM
 
-  // In the amalgam build we see this file only once, we emit the defintions as statics
+  // In the amalgam build we see this file only once, we emit the definitions as statics
   // AST_EMIT_DEFS is irrelevant in this mode.  This is the easy case.
 
   #define AST_VIS static

@@ -42,7 +42,7 @@ typedef struct cg_java_context {
   // Table that maps a fragment name to the base interface that the extension will extend.
   symtab *frag_extension_interfaces;
 
-  // In the Java codegen pipeline, we support only one SP per codegen run. This is to accomodate
+  // In the Java codegen pipeline, we support only one SP per codegen run. This is to acccomodate
   // the fact that in Java we can only generate one top level public class per file
   uint32_t generated_proc_count;
 } cg_java_context;

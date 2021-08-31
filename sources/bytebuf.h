@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// This is a simple growable memory buffer, it may have arbitary
+// This is a simple growable memory buffer, it may have arbitrary
 // binary in it.  It's the peer to charbuf for bytes.
 
 #pragma once

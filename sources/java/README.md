@@ -29,7 +29,7 @@ sample.  See Sample.sql below.  The native code has to
 
 The general purpose classes and the compiler output concern themselves with
 allowing result sets to be accessed from Java.  There is no general way to
-invoke stored procedures with arbitary signatures at this time. Though you could
+invoke stored procedures with arbitrary signatures at this time. Though you could
 imagine using the JSON output to codegen JNI wrappers as well as result set
 readers.  This area is ripe for future development to make Java access easier.
 

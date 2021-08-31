@@ -2074,7 +2074,7 @@ cql_error:
 // As soon as a new result_set is created. The result_set's field needs
 // to be encoded if they're sensitive and has the bit CQL_DATA_TYPE_ENCODED.
 // We only encode result_set's field when creating the result_set for:
-//  - [OUT C] statment: @see cql_one_row_result(...)
+//  - [OUT C] statement: @see cql_one_row_result(...)
 //  - [OUT UNION C] statement: @see cql_results_from_data(...)
 // We also decode when reading fields from a result set (see cql_copyoutrow(...))
 // If applicable this helper encode the result_set rows of the newly created result_set.
