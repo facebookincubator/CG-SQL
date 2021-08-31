@@ -19,6 +19,8 @@
 @echo c, "//\n";
 @echo c, "\n";
 
+declare procedure printf no check;
+
 -- setup the table and the index
 create procedure linetest_setup()
 begin
