@@ -9,20 +9,20 @@
 #include "cqlrt.h"
 
 
-// Generated from linetest.sql:37
+// Generated from linetest.sql:39
 extern CQL_WARN_UNUSED cql_code linetest_setup(sqlite3 *_Nonnull _db_);
 
-// Generated from linetest.sql:44
+// Generated from linetest.sql:46
 extern CQL_WARN_UNUSED cql_code linetest_add(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull source_, cql_string_ref _Nonnull procname_, cql_int32 line_, cql_string_ref _Nonnull data_, cql_int32 physical_line_);
 
-// Generated from linetest.sql:53
+// Generated from linetest.sql:55
 extern CQL_WARN_UNUSED cql_code linetest_dump(sqlite3 *_Nonnull _db_);
 
-// Generated from linetest.sql:62
+// Generated from linetest.sql:64
 extern CQL_WARN_UNUSED cql_code dump_proc_records(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull source_, cql_string_ref _Nonnull procname_);
 
-// Generated from linetest.sql:71
+// Generated from linetest.sql:73
 extern CQL_WARN_UNUSED cql_code dump(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull procname);
 
-// Generated from linetest.sql:132
+// Generated from linetest.sql:134
 extern CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull procs, cql_int32 *_Nonnull compares, cql_int32 *_Nonnull errors);

@@ -7,11 +7,14 @@
 
 #include "linetest.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
 #pragma clang diagnostic ignored "-Wshift-op-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-not-parentheses"
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
 cql_string_literal(_literal_1_exp_dump, "exp");
 cql_string_literal(_literal_2_act_dump, "act");
 
@@ -24,7 +27,7 @@ cql_string_literal(_literal_2_act_dump, "act");
 //
 
 
-// Generated from linetest.sql:37
+// Generated from linetest.sql:39
 
 /*
 CREATE PROC linetest_setup ()
@@ -70,7 +73,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:44
+// Generated from linetest.sql:46
 
 /*
 CREATE PROC linetest_add (source_ TEXT NOT NULL, procname_ TEXT NOT NULL, line_ INTEGER NOT NULL, data_ TEXT NOT NULL, physical_line_ INTEGER NOT NULL)
@@ -82,6 +85,10 @@ END;
 
 #define _PROC_ "linetest_add"
 CQL_WARN_UNUSED cql_code linetest_add(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull source_, cql_string_ref _Nonnull procname_, cql_int32 line_, cql_string_ref _Nonnull data_, cql_int32 physical_line_) {
+  cql_contract_argument_notnull((void *)source_, 1);
+  cql_contract_argument_notnull((void *)procname_, 2);
+  cql_contract_argument_notnull((void *)data_, 4);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -113,7 +120,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:53
+// Generated from linetest.sql:55
 
 /*
 CREATE PROC linetest_dump ()
@@ -178,7 +185,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:62
+// Generated from linetest.sql:64
 
 /*
 CREATE PROC dump_proc_records (source_ TEXT NOT NULL, procname_ TEXT NOT NULL)
@@ -208,6 +215,9 @@ typedef struct dump_proc_records_C_row {
 
 #define dump_proc_records_C_refs_offset cql_offsetof(dump_proc_records_C_row, source) // count = 3
 CQL_WARN_UNUSED cql_code dump_proc_records(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull source_, cql_string_ref _Nonnull procname_) {
+  cql_contract_argument_notnull((void *)source_, 1);
+  cql_contract_argument_notnull((void *)procname_, 2);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
   dump_proc_records_C_row C = { ._refs_count_ = 3, ._refs_offset_ = dump_proc_records_C_refs_offset };
@@ -244,7 +254,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:71
+// Generated from linetest.sql:73
 
 /*
 CREATE PROC dump (procname TEXT NOT NULL)
@@ -259,6 +269,8 @@ END;
 
 #define _PROC_ "dump"
 CQL_WARN_UNUSED cql_code dump(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull procname) {
+  cql_contract_argument_notnull((void *)procname, 1);
+
   cql_code _rc_ = SQLITE_OK;
   cql_alloc_cstr(_cstr_5, procname);
   printf("%s: difference encountered\n", _cstr_5);
@@ -276,7 +288,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from linetest.sql:132
+// Generated from linetest.sql:134
 
 /*
 CREATE PROC compare_lines (OUT procs INTEGER NOT NULL, OUT compares INTEGER NOT NULL, OUT errors INTEGER NOT NULL)
@@ -367,6 +379,10 @@ typedef struct compare_lines_expected_row {
 
 #define compare_lines_expected_refs_offset cql_offsetof(compare_lines_expected_row, source) // count = 3
 CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull procs, cql_int32 *_Nonnull compares, cql_int32 *_Nonnull errors) {
+  cql_contract_argument_notnull((void *)procs, 1);
+  cql_contract_argument_notnull((void *)compares, 2);
+  cql_contract_argument_notnull((void *)errors, 3);
+
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *p_stmt = NULL;
   compare_lines_p_row p = { ._refs_count_ = 1, ._refs_offset_ = compare_lines_p_refs_offset };
@@ -492,3 +508,4 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+#pragma clang diagnostic pop
