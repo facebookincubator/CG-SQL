@@ -8990,18 +8990,18 @@ Error at test/sem_test.sql:XXXX : in call : CQL0087: first argument must be of t
 
 The statement ending at line XXXX
 
-LET ll := ( SELECT round(1.0, 2) );
+LET rr := ( SELECT round(1.0, 2) );
 
-  {let_stmt}: ll: longint notnull variable
-  | {name ll}: ll: longint notnull variable
-  | {select_stmt}: _anon: longint notnull
-    | {select_core_list}: select: { _anon: longint notnull }
-    | | {select_core}: select: { _anon: longint notnull }
-    |   | {select_expr_list_con}: select: { _anon: longint notnull }
-    |     | {select_expr_list}: select: { _anon: longint notnull }
-    |     | | {select_expr}: longint notnull
-    |     |   | {call}: longint notnull
-    |     |     | {name round}: longint notnull
+  {let_stmt}: rr: real notnull variable
+  | {name rr}: rr: real notnull variable
+  | {select_stmt}: _anon: real notnull
+    | {select_core_list}: select: { _anon: real notnull }
+    | | {select_core}: select: { _anon: real notnull }
+    |   | {select_expr_list_con}: select: { _anon: real notnull }
+    |     | {select_expr_list}: select: { _anon: real notnull }
+    |     | | {select_expr}: real notnull
+    |     |   | {call}: real notnull
+    |     |     | {name round}: real notnull
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -9018,9 +9018,9 @@ LET ll := ( SELECT round(1.0, 2) );
 
 The statement ending at line XXXX
 
-SET ll := ( SELECT round(1.0) );
+LET ll := ( SELECT round(1.0) );
 
-  {assign}: ll: longint notnull variable
+  {let_stmt}: ll: longint notnull variable
   | {name ll}: ll: longint notnull variable
   | {select_stmt}: _anon: longint notnull
     | {select_core_list}: select: { _anon: longint notnull }
@@ -9075,18 +9075,18 @@ LET NLL := ( SELECT round(nullable(1.0)) );
 
 The statement ending at line XXXX
 
-SET NLL := ( SELECT round(1.0, nullable(1)) );
+LET NRR := ( SELECT round(1.0, nullable(1)) );
 
-  {assign}: NLL: longint variable
-  | {name NLL}: NLL: longint variable
-  | {select_stmt}: _anon: longint
-    | {select_core_list}: select: { _anon: longint }
-    | | {select_core}: select: { _anon: longint }
-    |   | {select_expr_list_con}: select: { _anon: longint }
-    |     | {select_expr_list}: select: { _anon: longint }
-    |     | | {select_expr}: longint
-    |     |   | {call}: longint
-    |     |     | {name round}: longint
+  {let_stmt}: NRR: real variable
+  | {name NRR}: NRR: real variable
+  | {select_stmt}: _anon: real
+    | {select_core_list}: select: { _anon: real }
+    | | {select_core}: select: { _anon: real }
+    |   | {select_expr_list_con}: select: { _anon: real }
+    |     | {select_expr_list}: select: { _anon: real }
+    |     | | {select_expr}: real
+    |     |   | {call}: real
+    |     |     | {name round}: real
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -9144,18 +9144,18 @@ LET SNL := ( SELECT round(sensitive(nullable(1.0))) );
 
 The statement ending at line XXXX
 
-SET SNL := ( SELECT round(nullable(1.0), sensitive(1)) );
+LET SNR := ( SELECT round(nullable(1.0), sensitive(1)) );
 
-  {assign}: SNL: longint variable sensitive
-  | {name SNL}: SNL: longint variable sensitive
-  | {select_stmt}: _anon: longint sensitive
-    | {select_core_list}: select: { _anon: longint sensitive }
-    | | {select_core}: select: { _anon: longint sensitive }
-    |   | {select_expr_list_con}: select: { _anon: longint sensitive }
-    |     | {select_expr_list}: select: { _anon: longint sensitive }
-    |     | | {select_expr}: longint sensitive
-    |     |   | {call}: longint sensitive
-    |     |     | {name round}: longint sensitive
+  {let_stmt}: SNR: real variable sensitive
+  | {name SNR}: SNR: real variable sensitive
+  | {select_stmt}: _anon: real sensitive
+    | {select_core_list}: select: { _anon: real sensitive }
+    | | {select_core}: select: { _anon: real sensitive }
+    |   | {select_expr_list_con}: select: { _anon: real sensitive }
+    |     | {select_expr_list}: select: { _anon: real sensitive }
+    |     | | {select_expr}: real sensitive
+    |     |   | {call}: real sensitive
+    |     |     | {name round}: real sensitive
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok

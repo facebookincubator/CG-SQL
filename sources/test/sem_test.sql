@@ -2759,14 +2759,14 @@ set X := (select round(1.5,'x'));
 set X := (select round(1,2));
 
 -- TEST: round must get a real arg in position 1
--- + {let_stmt}: ll: longint notnull variable
+-- + {let_stmt}: rr: real notnull variable
 -- - Error
-let ll := (select round(1.0,2));
+let rr := (select round(1.0,2));
 
 -- TEST: correct round double not null convered to long not null
--- + {assign}: ll: longint notnull variable
+-- + {let_stmt}: ll: longint notnull variable
 -- - Error
-set ll := (select round(1.0));
+let ll := (select round(1.0));
 
 -- TEST: round Nullability is preserved
 -- + {let_stmt}: NLL: longint variable
@@ -2774,9 +2774,9 @@ set ll := (select round(1.0));
 let NLL := (select round(nullable(1.0)));
 
 -- TEST: round Nullability is preserved
--- + {assign}: NLL: longint variable
+-- + {let_stmt}: NRR: real variable
 -- - Error
-set NLL := (select round(1.0, nullable(1)));
+let NRR := (select round(1.0, nullable(1)));
 
 -- TEST: round Sensitivity is preserved
 -- + {let_stmt}: SNL: longint variable sensitive
@@ -2784,9 +2784,9 @@ set NLL := (select round(1.0, nullable(1)));
 let SNL := (select round(sensitive(nullable(1.0))));
 
 -- TEST: round Sensitivity is preserved
--- + {assign}: SNL: longint variable sensitive
+-- + {let_stmt}: SNR: real variable sensitive
 -- - Error
-set SNL := (select round(nullable(1.0), sensitive(1)));
+let SNR := (select round(nullable(1.0), sensitive(1)));
 
 -- TEST: The precision must be a numeric type but not real
 -- + {assign}: err
