@@ -16712,6 +16712,21 @@ begin
     end;
 end;
 
+-- TEST: Improvements do not work in CASE expressions that match on an
+-- expression.
+-- + {let_stmt}: x: integer variable
+-- - Error
+create proc improvements_do_not_work_in_case_expressions_with_matching()
+begin
+  declare a int;
+  let x :=
+    case false                      -- match the first false expression
+      when a is not null then a + a -- actually used when `a` IS null
+      else 42
+    end;
+end;
+
+
 -- TEST: Used in the following test.
 -- - Error
 create proc sets_out(out a int, out b int)

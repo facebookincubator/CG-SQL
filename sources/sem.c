@@ -5764,18 +5764,33 @@ static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
   return sem_combine_kinds_general(ast, kleft, kright);
 }
 
-// Here we validate the contents of the case list of a case expression.
-// there are two parts to this, the "when" expression and the "then" expression.
-// We compute the aggregate type of the when expressions as we go, promoting it
-// up to a larger type if needed (e.g. if one when is an int and the other is
-// a real then the result is a real).   Likewise nullability is computed as
-// the aggregate.  Note that if nothing matches the result is null, so we always
-// get a nullable result unless there is an "else" expression.
-// If we started with case expr then each when expression must be comparable
-// to the case expression.  If we started with case when xx then yy;  then
-// each case expression must be numeric (typically boolean).
-static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR kind_required_for_when) {
+// Validate the contents of the case list of a case expression.
+//
+// There are two parts to each element the list: the "when" expression and the
+// "then" expression. We compute the aggregate type of the when expressions as
+// we go, promoting it up to a larger type if needed (e.g., if one when is an
+// int and the other is a real, then the result is a real). Likewise,
+// nullability is computed as the aggregate. Note that if nothing matches, the
+// result is null; we always get a nullable result unless there is an "else"
+// expression.
+//
+// If we started with "case expr" (indicated by `has_expression_to_match`), then
+// each when expression must be comparable to the case expression. If we started
+// with "case when xx then yy", then each case expression must be numeric
+// (typically boolean).
+//
+// As with IF, CASE can improve nullability. This is only possible when
+// `has_expression_to_match` is false though. This is because something like
+// "CASE 0 WHEN x IS NOT NULL THEN x ELSE y" will only ever take the first
+// branch when "x" IS null despite the "IS NOT NULL" check.
+static void sem_case_list(
+  ast_node *head,
+  bool_t has_expression_to_match,
+  sem_t sem_type_required_for_when,
+  CSTR kind_required_for_when)
+{
   Contract(is_ast_case_list(head));
+  Contract(has_expression_to_match || sem_type_required_for_when == SEM_TYPE_BOOL);
   sem_t sem_type_result = SEM_TYPE_PENDING;
   CSTR then_kind = NULL;
 
@@ -5808,7 +5823,9 @@ static void sem_case_list(ast_node *head, sem_t sem_type_required_for_when, CSTR
     }
 
     PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
-    sem_set_notnull_improvements_for_true_condition(case_expr, NULL);
+    if (!has_expression_to_match) {
+      sem_set_notnull_improvements_for_true_condition(case_expr, NULL);
+    }
     sem_expr(then_expr);
     POP_NOTNULL_IMPROVEMENT_CONTEXT();
 
@@ -5882,7 +5899,7 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
     sem_sensitive |= sensitive_flag(expr->sem->sem_type);
   }
 
-  sem_case_list(case_list, sem_type_required_for_when, kind_required_for_when);
+  sem_case_list(case_list, !!expr, sem_type_required_for_when, kind_required_for_when);
 
   ast->sem = case_list->sem;
   sem_sensitive |= sensitive_flag(case_list->sem->sem_type);

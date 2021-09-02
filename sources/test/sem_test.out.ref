@@ -65537,6 +65537,39 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC improvements_do_not_work_in_case_expressions_with_matching ()
+BEGIN
+  DECLARE a INTEGER;
+  LET x := CASE 0 WHEN a IS NOT NULL THEN a + a
+  ELSE 42
+  END;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_do_not_work_in_case_expressions_with_matching}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x: integer variable
+        | {name x}: x: integer variable
+        | {case_expr}: integer
+          | : bool notnull
+          | {connector}: integer
+            | {case_list}: integer
+            | | {when}: integer
+            |   | {is_not}: bool notnull
+            |   | | {name a}: a: integer variable
+            |   | | {null}: null
+            |   | {add}: integer
+            |     | {name a}: a: integer variable
+            |     | {name a}: a: integer variable
+            | {int 42}: integer notnull
+
+The statement ending at line XXXX
+
 CREATE PROC sets_out (OUT a INTEGER, OUT b INTEGER)
 BEGIN
 END;
