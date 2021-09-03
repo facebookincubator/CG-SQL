@@ -6525,7 +6525,7 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
   // the new node is does not keep any of the names of the members, just the net type
 }
 
-// You can round real numbers, you may  specify a precision
+// You can round real numbers, you may specify a precision
 static void sem_func_round(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -6575,9 +6575,11 @@ static void sem_func_round(ast_node *ast, uint32_t arg_count) {
       return;
     }
     combined_flags = combine_flags(sem_type, arg2->sem->sem_type);
+    name_ast->sem = ast->sem = new_sem(SEM_TYPE_REAL | combined_flags);
   }
-
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | combined_flags);
+  else {
+    name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | combined_flags);
+  }
 }
 
 // Min and Max are the same validation
