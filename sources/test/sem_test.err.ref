@@ -1007,8 +1007,8 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
-Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'iif'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'iif'
+Error at test/sem_test.sql:XXXX : in blb : CQL0012: incompatible types in expression 'iif'
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement should be in a procedure and at the top level
 Error at test/sem_test.sql:XXXX : in proc_savepoint_stmt : CQL0351: statement should be in a procedure and at the top level

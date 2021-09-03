@@ -56660,7 +56660,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
-SELECT iif(not_found, 2, 3);
+SELECT CASE WHEN not_found THEN 2
+ELSE 3
+END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 
@@ -56670,16 +56672,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
-  |     |   | {call}: err
-  |     |     | {name iif}
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {name not_found}: err
-  |     |         | {arg_list}
-  |     |           | {int 2}
-  |     |           | {arg_list}
-  |     |             | {int 3}
+  |     |   | {case_expr}: err
+  |     |     | {connector}
+  |     |       | {case_list}: err
+  |     |       | | {when}
+  |     |       |   | {name not_found}: err
+  |     |       |   | {int 2}
+  |     |       | {int 3}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -56690,37 +56689,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 
 The statement ending at line XXXX
 
-SELECT iif(1, not_found, 3);
-
-Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
-
-  {select_stmt}: err
-  | {select_core_list}: err
-  | | {select_core}: err
-  |   | {select_expr_list_con}: err
-  |     | {select_expr_list}: err
-  |     | | {select_expr}
-  |     |   | {call}
-  |     |     | {name iif}
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
-  |     |         | {arg_list}
-  |     |           | {name not_found}: err
-  |     |           | {arg_list}
-  |     |             | {int 3}
-  |     | {select_from_etc}: ok
-  |       | {select_where}
-  |         | {select_groupby}
-  |           | {select_having}
-  | {select_orderby}
-    | {select_limit}
-      | {select_offset}
-
-The statement ending at line XXXX
-
-SELECT iif(1, 2, not_found);
+SELECT CASE WHEN 1 THEN not_found
+ELSE 3
+END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 
@@ -56730,16 +56701,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
-  |     |   | {call}: err
-  |     |     | {name iif}
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
-  |     |         | {arg_list}
-  |     |           | {int 2}: integer notnull
-  |     |           | {arg_list}
-  |     |             | {name not_found}: err
+  |     |   | {case_expr}: err
+  |     |     | {connector}
+  |     |       | {case_list}: err
+  |     |       | | {when}
+  |     |       |   | {int 1}: integer notnull
+  |     |       |   | {name not_found}: err
+  |     |       | {int 3}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -56750,9 +56718,11 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 
 The statement ending at line XXXX
 
-SELECT iif('x', 2, 3);
+SELECT CASE WHEN 1 THEN 2
+ELSE not_found
+END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'iif'
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'not_found'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -56760,16 +56730,13 @@ Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'ii
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
-  |     |   | {call}: err
-  |     |     | {name iif}
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {strlit 'x'}: text notnull
-  |     |         | {arg_list}
-  |     |           | {int 2}
-  |     |           | {arg_list}
-  |     |             | {int 3}
+  |     |   | {case_expr}: err
+  |     |     | {connector}
+  |     |       | {case_list}: integer notnull
+  |     |       | | {when}: integer notnull
+  |     |       |   | {int 1}: integer notnull
+  |     |       |   | {int 2}: integer notnull
+  |     |       | {name not_found}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -56780,7 +56747,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'ii
 
 The statement ending at line XXXX
 
-SELECT iif(an_int IS NULL, 2, x'23');
+SELECT CASE WHEN 'x' THEN 2
+ELSE 3
+END;
 
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'iif'
 
@@ -56790,18 +56759,44 @@ Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expres
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
-  |     |   | {call}: err
-  |     |     | {name iif}: err
-  |     |     | {call_arg_list}
-  |     |       | {call_filter_clause}
-  |     |       | {arg_list}: ok
-  |     |         | {is}: bool notnull
-  |     |         | | {name an_int}: an_int: integer variable
-  |     |         | | {null}: null
-  |     |         | {arg_list}
-  |     |           | {int 2}: integer notnull
-  |     |           | {arg_list}
-  |     |             | {blob x'23'}: blob notnull
+  |     |   | {case_expr}: err
+  |     |     | {connector}
+  |     |       | {case_list}: err
+  |     |       | | {when}
+  |     |       |   | {strlit 'x'}: err
+  |     |       |   | {int 2}
+  |     |       | {int 3}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CASE WHEN an_int IS NULL THEN 2
+ELSE x'23'
+END;
+
+Error at test/sem_test.sql:XXXX : in blb : CQL0012: incompatible types in expression 'iif'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {case_expr}: err
+  |     |     | {connector}
+  |     |       | {case_list}: integer notnull
+  |     |       | | {when}: integer notnull
+  |     |       |   | {is}: bool notnull
+  |     |       |   | | {name an_int}: an_int: integer variable
+  |     |       |   | | {null}: null
+  |     |       |   | {int 2}: integer notnull
+  |     |       | {blob x'23'}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}

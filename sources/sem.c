@@ -43,7 +43,10 @@ cql_noexport void print_sem_type(struct sem_node *sem) {}
 #define PROC_AS_FUNC 1  // treating a proc like a function with the out-arg trick
 
 #define IS_NOT_COUNT 0  // analyzing the arguments of a normal function
-#define IS_COUNT     1  // analyzing the arguments of `count`
+#define IS_COUNT     1  // analyzing the arguments of the count function
+
+#define IS_CASE 0  // analyzing the arguments of a case expression
+#define IS_IIF  1  // analyzing the arguments of an iif expression
 
 #define CQL_FROM_RECREATE "cql:from_recreate"
 #define CQL_MODULE_WARN "cql:module_must_not_be_deleted_see_docs_for_CQL0392"
@@ -5787,7 +5790,8 @@ static void sem_case_list(
   ast_node *head,
   bool_t has_expression_to_match,
   sem_t sem_type_required_for_when,
-  CSTR kind_required_for_when)
+  CSTR kind_required_for_when,
+  bool_t is_iif)
 {
   Contract(is_ast_case_list(head));
   Contract(has_expression_to_match || sem_type_required_for_when == SEM_TYPE_BOOL);
@@ -5809,7 +5813,7 @@ static void sem_case_list(
       return;
     }
 
-    if (!sem_verify_compat(case_expr, sem_type_required_for_when, case_expr->sem->sem_type, "when")) {
+    if (!sem_verify_compat(case_expr, sem_type_required_for_when, case_expr->sem->sem_type, is_iif ? "iif" : "when")) {
       record_error(ast);
       record_error(head);
       return;
@@ -5870,11 +5874,12 @@ static void sem_case_list(
   head->sem->kind = then_kind;
 }
 
-// Here we handle the case expression, the case list is handled above
-// in this part we find the type of the expr in case [expr] if there is one
-// and we do the else handling.  Note that the absence of an else forces
-// the case to have a possibly null result.
-static void sem_expr_case(ast_node *ast, CSTR cstr) {
+// Performs analysis of case expressions, including those rewritten from an IIF.
+// The case list is handled in the above function; in this part, we find the
+// type of the expr in "case [expr]" if there is one, then we do the else
+// handling. Note that the absence of an else forces the case to have a possibly
+// null result.
+cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
   Contract(is_ast_case_expr(ast));
   EXTRACT_ANY(expr, ast->left);
   EXTRACT_NOTNULL(connector, ast->right);
@@ -5899,7 +5904,7 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
     sem_sensitive |= sensitive_flag(expr->sem->sem_type);
   }
 
-  sem_case_list(case_list, !!expr, sem_type_required_for_when, kind_required_for_when);
+  sem_case_list(case_list, !!expr, sem_type_required_for_when, kind_required_for_when, is_iif);
 
   ast->sem = case_list->sem;
   sem_sensitive |= sensitive_flag(case_list->sem->sem_type);
@@ -5920,7 +5925,7 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
 
     sem_sensitive |= sensitive_flag(sem_type_else);
 
-    if (!sem_verify_compat(else_expr, sem_type_result, sem_type_else, "else")) {
+    if (!sem_verify_compat(else_expr, sem_type_result, sem_type_else, is_iif ? "iif" : "else")) {
       record_error(ast);
       return;
     }
@@ -5944,6 +5949,12 @@ static void sem_expr_case(ast_node *ast, CSTR cstr) {
     sem_replace_flags(ast, new_flags);
   }
   connector->sem = ast->sem;
+}
+
+static void sem_expr_case(ast_node *ast, CSTR cstr) {
+  Contract(is_ast_case_expr(ast));
+
+  sem_case(ast, IS_CASE);
 }
 
 // if we get here we are re-evaluating a subtree, this rewritten bit
@@ -7062,63 +7073,19 @@ static void sem_func_cql_cursor_diff_val(ast_node *ast, uint32_t arg_count) {
   rewrite_cql_cursor_diff(ast, false);
 }
 
-// This is a special function so we can take nonnull improvements into account.
-// If we were to treat this as a normal function, the second argument would be
-// initially checked without nonnull improvements and possibly fail erroneously
-// as a result.
+// This is a special function because we do not want to analyze the arguments
+// until after the rewrite to a CASE expression.
 static void sem_special_func_iif(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
 
   if (!sem_validate_arg_count(ast, arg_count, 3)) {
     return;
   }
 
-  // Even though we're going to rewrite to a CASE expression and then perform
-  // type checking afterwards, we check types beforehand too so we can produce
-  // error messages that do not refer to the underlying rewrite.
-
-  ast_node *arg1 = first_arg(arg_list);
-  sem_expr(arg1);
-  if (is_error(arg1)) {
-    record_error(ast);
-    return;
-  }
-
-  if (!is_numeric(arg1->sem->sem_type)) {
-    report_error(name_ast, "CQL0082: argument must be numeric", name);
-    record_error(ast);
-    return;
-  }
-
-  // `arg1` can improve the type of `arg2`.
-  PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
-  sem_set_notnull_improvements_for_true_condition(arg1, NULL);
-  ast_node *arg2 = second_arg(arg_list);
-  sem_expr(arg2);
-  POP_NOTNULL_IMPROVEMENT_CONTEXT();
-  if (is_error(arg2)) {
-    record_error(arg2);
-    return;
-  }
-
-  ast_node *arg3 = third_arg(arg_list);
-  sem_expr(arg3);
-  if (is_error(arg3)) {
-    record_error(ast);
-    return;
-  }
-
-  if (!sem_verify_compat(name_ast, arg2->sem->sem_type, arg3->sem->sem_type, name)) {
-    record_error(ast);
-    return;
-  }
-
-  // We have a iif function call, we rewrite the node to a case_expr node.
+  // We have the right number of arguments, so we proceed to rewrite the AST to
+  // a (possibly semantically invalid) case_expr node, then analyze it.
   rewrite_iif(ast);
+  sem_case(ast, IS_IIF);
 }
 
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {

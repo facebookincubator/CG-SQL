@@ -811,8 +811,16 @@ cql_noexport void rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_na
   Invariant(!is_error(ast));
 }
 
-// This helper function rewrite iif ast to case_expr ast.
-// e.g: iif(X, Y, Z) => CASE WHEN X THEN Y ELSE Z END;
+// This helper function rewrites an iif ast to a case_expr ast, e.g.:
+//
+//   iif(X, Y, Z) => CASE WHEN X THEN Y ELSE Z END;
+//
+// The caller is responsible for validating that we have the three arguments
+// required. In fact, we don't do any form of semantic analysis here at all:
+// Unlike in other rewrite functions that call `sem_expr` to validate the
+// rewrite, it's very much the case that the rewritten expression may not be
+// semantically valid due to an error in the input program, so we simply let the
+// caller deal with it.
 cql_noexport void rewrite_iif(ast_node *ast) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -830,17 +838,10 @@ cql_noexport void rewrite_iif(ast_node *ast) {
 
   AST_REWRITE_INFO_RESET();
 
-  // Reset the cql_cursor_diff_col function call node to a case_expr
-  // node.
+  // Reset the call node to a case_expr node.
   ast->type = case_expr->type;
   ast_set_left(ast, case_expr->left);
   ast_set_right(ast, case_expr->right);
-
-  // do semantic analysis of the rewrite AST to validate the rewrite
-  sem_expr(ast);
-
-  // the rewrite is not expected to have any semantic error
-  Invariant(!is_error(ast));
 }
 
 // The form we're trying to rewrite here is
@@ -1365,7 +1366,11 @@ cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast) {
 
   AST_REWRITE_INFO_RESET();
 
+  // Analyze the AST to validate the rewrite.
   sem_expr(ast);
+
+  // The rewrite is not expected to have any semantic error.
+  Invariant(!is_error(ast));
 }
 
 // Rewrites a guard statement of the form `IF expr stmt` to a regular if

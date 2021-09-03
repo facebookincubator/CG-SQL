@@ -299,4 +299,3 @@ cql_data_decl( symtab *encode_columns );
 cql_data_decl( symtab *included_regions );
 cql_data_decl( symtab *excluded_regions );
 cql_data_decl( sem_t global_proc_flags );
-

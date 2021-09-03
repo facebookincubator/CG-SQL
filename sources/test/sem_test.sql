@@ -14044,7 +14044,7 @@ select iif(1, 2, not_found);
 
 -- TEST: test rewrite for IIF func with non-numeric first argument
 -- + {select_stmt}: err
--- + Error % argument must be numeric 'iif'
+-- + Error % incompatible types in expression 'iif'
 -- +1 Error
 select iif('x', 2, 3);
 
