@@ -17831,6 +17831,74 @@ begin
   let w5 := d; -- nullable as statement list in which it was improved is over
 end;
 
+-- Used in the following tests.
+create proc requires_out_returns_int_not_null(out a int, out b int not null)
+begin
+end;
+
+-- TEST: Un-improvements in one branch do not negatively affect later branches
+-- for CASE.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc unimprovements_do_not_negatively_affect_later_branches_for_case()
+begin
+  declare a int;
+
+  if a is null return;
+
+  let x0 := case
+    when 0 then
+      case
+        when 0 then requires_out_returns_int_not_null(a)
+        when 0 then a -- nonnull despite use as out arg
+        else
+          case
+            when 0 then requires_out_returns_int_not_null(a)
+            when 0 then a -- nonnull despite use as out arg
+            else a -- nonnull despite use as out arg
+          end
+      end
+    when 0 then
+      case
+        when 0 then requires_out_returns_int_not_null(a)
+        when 0 then a -- nonnull despite use as out arg
+        else
+          case
+            when 0 then requires_out_returns_int_not_null(a)
+            when 0 then a -- nonnull despite use as out arg
+            else a -- nonnull despite use as out arg
+          end
+      end
+    else a -- nonnull despite use as out arg
+  end;
+
+  -- nullable due to use as out arg
+  let x1 := a;
+end;
+
+-- TEST: Un-improvements in one branch do not negatively affect later branches
+-- for IIF.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- - Error
+create proc unimprovements_do_not_negatively_affect_later_branches_for_iif()
+begin
+  declare a int;
+
+  if a is null return;
+
+  -- `a` is nonnull at all non-OUT positions despite use as OUT arg
+  let x0 := iif(
+    0, 
+    iif(0, iif(0, requires_out_returns_int_not_null(a), a), a),
+    iif(0, iif(0, requires_out_returns_int_not_null(a), a), a)
+  );
+
+  -- nullable due to use as out arg
+  let x1 := a;
+end;
+
 -- TEST: Disable flow-sensitive nullability.
 -- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
 -- + {enforce_normal_stmt}: ok

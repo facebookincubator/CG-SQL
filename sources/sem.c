@@ -5826,12 +5826,12 @@ static void sem_case_list(
       return;
     }
 
-    PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+    PUSH_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT();
     if (!has_expression_to_match) {
       sem_set_notnull_improvements_for_true_condition(case_expr, NULL);
     }
     sem_expr(then_expr);
-    POP_NOTNULL_IMPROVEMENT_CONTEXT();
+    POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT();
 
     if (is_error(then_expr)) {
       record_error(ast);
@@ -5904,20 +5904,31 @@ cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
     sem_sensitive |= sensitive_flag(expr->sem->sem_type);
   }
 
+  // Each WHEN expression may improve its corresponding THEN expression when we
+  // are not using the matching form of CASE (i.e, when we're not using the
+  // "CASE expr case_list ..." form). We create a new context here to contain
+  // all of the contingent contexts created within `sem_case_list`.
+  //
+  // The reason we create this context here instead of within `sem_case_list` is
+  // that we do not want to pop it until after we've analyzed `else_expr`. Doing
+  // so would allow un-improvements within the case list to negatively affect
+  // `else_expr`; that would be incorrect, because if `else_expr` ends up being
+  // evaluated, none of the THEN expressions within `case_list` could have been
+  // evaluated.
+  PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
+
   sem_case_list(case_list, !!expr, sem_type_required_for_when, kind_required_for_when, is_iif);
+  if (is_error(case_list)) {
+    goto error;
+  }
 
   ast->sem = case_list->sem;
   sem_sensitive |= sensitive_flag(case_list->sem->sem_type);
 
-  if (is_error(ast)) {
-    return;
-  }
-
   if (else_expr) {
     sem_expr(else_expr);
     if (is_error(else_expr)) {
-      record_error(ast);
-      return;
+      goto error;
     }
 
     sem_t sem_type_else = else_expr->sem->sem_type;
@@ -5926,14 +5937,12 @@ cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
     sem_sensitive |= sensitive_flag(sem_type_else);
 
     if (!sem_verify_compat(else_expr, sem_type_result, sem_type_else, is_iif ? "iif" : "else")) {
-      record_error(ast);
-      return;
+      goto error;
     }
 
     CSTR else_kind = sem_combine_kinds(else_expr, ast->sem->kind);
     if (is_error(else_expr)) {
-      record_error(ast);
-      return;
+      goto error;
     }
 
     sem_type_result = sem_combine_types(sem_type_result, sem_type_else);
@@ -5948,7 +5957,16 @@ cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
     new_flags |= sem_sensitive;
     sem_replace_flags(ast, new_flags);
   }
+
   connector->sem = ast->sem;
+
+cleanup:
+  POP_NOTNULL_IMPROVEMENT_CONTEXT();
+  return;
+
+error:
+  record_error(ast);
+  goto cleanup;
 }
 
 static void sem_expr_case(ast_node *ast, CSTR cstr) {
