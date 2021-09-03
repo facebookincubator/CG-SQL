@@ -16699,17 +16699,34 @@ begin
 end;
 
 -- TEST: Improvements work in CASE expressions.
--- + {let_stmt}: x: integer notnull variable
--- +2 {name cql_inferred_notnull}: a: integer notnull variable
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
 -- - Error
 create proc improvements_work_in_case_expressions()
 begin
   declare a int;
-  let x :=
+  declare b int;
+
+  -- `a` is nonnull when the condition is true
+  let x0 :=
     case
       when a is not null then a + a
       else 42
     end;
+
+  -- `b` is nonnull in the last two branches when previous conditions are false
+  let y0 :=
+    case
+      when b is null then 42
+      when 0 then b + b
+      else b + b
+    end;
+  
+  -- nullable as the improvements are no longer in effect
+  let x1 := a;
+  let y1 := b;
 end;
 
 -- TEST: Improvements do not work in CASE expressions that match on an
@@ -16726,6 +16743,27 @@ begin
     end;
 end;
 
+-- TEST: Improvements work in IIF expressions.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: y0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: y1: integer variable
+-- - Error
+create proc improvements_work_in_iif_expressions()
+begin
+  declare a int;
+  declare b int;
+
+  -- `a` is nonnull when the condition is true
+  let x0 := iif(a is not null, a + a, 42);
+
+  -- `b` is nonnull when the condition is false
+  let y0 := iif(b is null, 42, b + b);
+  
+  -- nullable as the improvements are no longer in effect
+  let x1 := a;
+  let y1 := b;
+end;
 
 -- TEST: Used in the following test.
 -- - Error
@@ -17599,6 +17637,57 @@ begin
 
   -- nonnull because a second null check was performed after the mutation
   let z := c;
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same false conditional for CASE.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+create proc improvements_respect_out_args_in_false_conditions_for_case()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  -- nullable because `requires_out_returns_bool` may have set `a` to false
+  let x := case
+    when a is null or requires_out_returns_bool(a) then 42
+    else a
+  end;
+
+  -- nonnull because the null check was performed after the mutation
+  let y := case
+    when requires_out_returns_bool(b) or b is null then 42
+    else b
+  end;
+
+  -- nonnull because a second null check was performed after the mutation
+  let z := case
+    when c is null or requires_out_returns_bool(c) or c is null then 42
+    else c
+  end;
+end;
+
+-- TEST: Improvements are not made for identifiers that are later used as OUT
+-- (or INOUT) arguments within the same false conditional for IIF.
+-- + {let_stmt}: x: integer variable
+-- + {let_stmt}: y: integer notnull variable
+-- + {let_stmt}: z: integer notnull variable
+create proc improvements_respect_out_args_in_false_conditions_for_iif()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  -- nullable because `requires_out_returns_bool` may have set `a` to false
+  let x := iif(a is null or requires_out_returns_bool(a), 42, a);
+
+  -- nonnull because the null check was performed after the mutation
+  let y := iif(requires_out_returns_bool(b) or b is null, 42, b);
+
+  -- nonnull because a second null check was performed after the mutation
+  let z := iif(c is null or requires_out_returns_bool(c) or c is null, 42, c);
 end;
 
 -- TEST: Un-improvements in one branch do not negatively affect later branches.

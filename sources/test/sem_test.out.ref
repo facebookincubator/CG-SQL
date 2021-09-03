@@ -65493,9 +65493,16 @@ The statement ending at line XXXX
 CREATE PROC improvements_work_in_case_expressions ()
 BEGIN
   DECLARE a INTEGER;
-  LET x := CASE WHEN a IS NOT NULL THEN a + a
+  DECLARE b INTEGER;
+  LET x0 := CASE WHEN a IS NOT NULL THEN a + a
   ELSE 42
   END;
+  LET y0 := CASE WHEN b IS NULL THEN 42
+  WHEN 0 THEN b + b
+  ELSE b + b
+  END;
+  LET x1 := a;
+  LET y1 := b;
 END;
 
   {create_proc_stmt}: ok
@@ -65506,29 +65513,78 @@ END;
       | | {name_list}: a: integer variable
       | | | {name a}: a: integer variable
       | | {type_int}: integer
-      | {let_stmt}: x: integer notnull variable
-        | {name x}: x: integer notnull variable
-        | {case_expr}: integer notnull
-          | {connector}: integer notnull
-            | {case_list}: integer notnull
-            | | {when}: integer notnull
-            |   | {is_not}: bool notnull
-            |   | | {name a}: a: integer variable
-            |   | | {null}: null
-            |   | {add}: integer notnull
-            |     | {call}: a: integer notnull variable
-            |     | | {name cql_inferred_notnull}: a: integer notnull variable
-            |     | | {call_arg_list}
-            |     |   | {call_filter_clause}
-            |     |   | {arg_list}: ok
-            |     |     | {name a}: a: integer inferred_notnull variable
-            |     | {call}: a: integer notnull variable
-            |       | {name cql_inferred_notnull}: a: integer notnull variable
-            |       | {call_arg_list}
-            |         | {call_filter_clause}
-            |         | {arg_list}: ok
-            |           | {name a}: a: integer inferred_notnull variable
-            | {int 42}: integer notnull
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x0: integer notnull variable
+      | | {name x0}: x0: integer notnull variable
+      | | {case_expr}: integer notnull
+      |   | {connector}: integer notnull
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     |   | {is_not}: bool notnull
+      |     |   | | {name a}: a: integer variable
+      |     |   | | {null}: null
+      |     |   | {add}: integer notnull
+      |     |     | {call}: a: integer notnull variable
+      |     |     | | {name cql_inferred_notnull}: a: integer notnull variable
+      |     |     | | {call_arg_list}
+      |     |     |   | {call_filter_clause}
+      |     |     |   | {arg_list}: ok
+      |     |     |     | {name a}: a: integer inferred_notnull variable
+      |     |     | {call}: a: integer notnull variable
+      |     |       | {name cql_inferred_notnull}: a: integer notnull variable
+      |     |       | {call_arg_list}
+      |     |         | {call_filter_clause}
+      |     |         | {arg_list}: ok
+      |     |           | {name a}: a: integer inferred_notnull variable
+      |     | {int 42}: integer notnull
+      | {let_stmt}: y0: integer notnull variable
+      | | {name y0}: y0: integer notnull variable
+      | | {case_expr}: integer notnull
+      |   | {connector}: integer notnull
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     | | | {is}: bool notnull
+      |     | | | | {name b}: b: integer variable
+      |     | | | | {null}: null
+      |     | | | {int 42}: integer notnull
+      |     | | {case_list}: integer notnull
+      |     |   | {when}: integer notnull
+      |     |     | {int 0}: integer notnull
+      |     |     | {add}: integer notnull
+      |     |       | {call}: b: integer notnull variable
+      |     |       | | {name cql_inferred_notnull}: b: integer notnull variable
+      |     |       | | {call_arg_list}
+      |     |       |   | {call_filter_clause}
+      |     |       |   | {arg_list}: ok
+      |     |       |     | {name b}: b: integer inferred_notnull variable
+      |     |       | {call}: b: integer notnull variable
+      |     |         | {name cql_inferred_notnull}: b: integer notnull variable
+      |     |         | {call_arg_list}
+      |     |           | {call_filter_clause}
+      |     |           | {arg_list}: ok
+      |     |             | {name b}: b: integer inferred_notnull variable
+      |     | {add}: integer notnull
+      |       | {call}: b: integer notnull variable
+      |       | | {name cql_inferred_notnull}: b: integer notnull variable
+      |       | | {call_arg_list}
+      |       |   | {call_filter_clause}
+      |       |   | {arg_list}: ok
+      |       |     | {name b}: b: integer inferred_notnull variable
+      |       | {call}: b: integer notnull variable
+      |         | {name cql_inferred_notnull}: b: integer notnull variable
+      |         | {call_arg_list}
+      |           | {call_filter_clause}
+      |           | {arg_list}: ok
+      |             | {name b}: b: integer inferred_notnull variable
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y1: integer variable
+        | {name y1}: y1: integer variable
+        | {name b}: b: integer variable
 
 The statement ending at line XXXX
 
@@ -65562,6 +65618,87 @@ END;
             |     | {name a}: a: integer variable
             |     | {name a}: a: integer variable
             | {int 42}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_in_iif_expressions ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  LET x0 := CASE WHEN a IS NOT NULL THEN a + a
+  ELSE 42
+  END;
+  LET y0 := CASE WHEN b IS NULL THEN 42
+  ELSE b + b
+  END;
+  LET x1 := a;
+  LET y1 := b;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_work_in_iif_expressions}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x0: integer notnull variable
+      | | {name x0}: x0: integer notnull variable
+      | | {case_expr}: integer notnull
+      |   | {connector}: integer notnull
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     |   | {is_not}: bool notnull
+      |     |   | | {name a}: a: integer variable
+      |     |   | | {null}: null
+      |     |   | {add}: integer notnull
+      |     |     | {call}: a: integer notnull variable
+      |     |     | | {name cql_inferred_notnull}: a: integer notnull variable
+      |     |     | | {call_arg_list}
+      |     |     |   | {call_filter_clause}
+      |     |     |   | {arg_list}: ok
+      |     |     |     | {name a}: a: integer inferred_notnull variable
+      |     |     | {call}: a: integer notnull variable
+      |     |       | {name cql_inferred_notnull}: a: integer notnull variable
+      |     |       | {call_arg_list}
+      |     |         | {call_filter_clause}
+      |     |         | {arg_list}: ok
+      |     |           | {name a}: a: integer inferred_notnull variable
+      |     | {int 42}: integer notnull
+      | {let_stmt}: y0: integer notnull variable
+      | | {name y0}: y0: integer notnull variable
+      | | {case_expr}: integer notnull
+      |   | {connector}: integer notnull
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     |   | {is}: bool notnull
+      |     |   | | {name b}: b: integer variable
+      |     |   | | {null}: null
+      |     |   | {int 42}: integer notnull
+      |     | {add}: integer notnull
+      |       | {call}: b: integer notnull variable
+      |       | | {name cql_inferred_notnull}: b: integer notnull variable
+      |       | | {call_arg_list}
+      |       |   | {call_filter_clause}
+      |       |   | {arg_list}: ok
+      |       |     | {name b}: b: integer inferred_notnull variable
+      |       | {call}: b: integer notnull variable
+      |         | {name cql_inferred_notnull}: b: integer notnull variable
+      |         | {call_arg_list}
+      |           | {call_filter_clause}
+      |           | {arg_list}: ok
+      |             | {name b}: b: integer inferred_notnull variable
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable
+      | {let_stmt}: y1: integer variable
+        | {name y1}: y1: integer variable
+        | {name b}: b: integer variable
 
 The statement ending at line XXXX
 
@@ -68880,6 +69017,212 @@ END;
             | {call_filter_clause}
             | {arg_list}: ok
               | {name c}: c: integer inferred_notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_respect_out_args_in_false_conditions_for_case ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  LET x := CASE WHEN a IS NULL OR requires_out_returns_bool(a) THEN 42
+  ELSE a
+  END;
+  LET y := CASE WHEN requires_out_returns_bool(b) OR b IS NULL THEN 42
+  ELSE b
+  END;
+  LET z := CASE WHEN c IS NULL OR requires_out_returns_bool(c) OR c IS NULL THEN 42
+  ELSE c
+  END;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_respect_out_args_in_false_conditions_for_case}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x: integer variable
+      | | {name x}: x: integer variable
+      | | {case_expr}: integer
+      |   | {connector}: integer
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     |   | {or}: bool
+      |     |   | | {is}: bool notnull
+      |     |   | | | {name a}: a: integer variable
+      |     |   | | | {null}: null
+      |     |   | | {call}: bool
+      |     |   |   | {name requires_out_returns_bool}
+      |     |   |   | {call_arg_list}
+      |     |   |     | {call_filter_clause}
+      |     |   |     | {arg_list}: ok
+      |     |   |       | {name a}: a: integer variable
+      |     |   | {int 42}: integer notnull
+      |     | {name a}: a: integer variable
+      | {let_stmt}: y: integer notnull variable
+      | | {name y}: y: integer notnull variable
+      | | {case_expr}: integer notnull
+      |   | {connector}: integer notnull
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     |   | {or}: bool
+      |     |   | | {call}: bool
+      |     |   | | | {name requires_out_returns_bool}
+      |     |   | | | {call_arg_list}
+      |     |   | |   | {call_filter_clause}
+      |     |   | |   | {arg_list}: ok
+      |     |   | |     | {name b}: b: integer variable
+      |     |   | | {is}: bool notnull
+      |     |   |   | {name b}: b: integer variable
+      |     |   |   | {null}: null
+      |     |   | {int 42}: integer notnull
+      |     | {call}: b: integer notnull variable
+      |       | {name cql_inferred_notnull}: b: integer notnull variable
+      |       | {call_arg_list}
+      |         | {call_filter_clause}
+      |         | {arg_list}: ok
+      |           | {name b}: b: integer inferred_notnull variable
+      | {let_stmt}: z: integer notnull variable
+        | {name z}: z: integer notnull variable
+        | {case_expr}: integer notnull
+          | {connector}: integer notnull
+            | {case_list}: integer notnull
+            | | {when}: integer notnull
+            |   | {or}: bool
+            |   | | {or}: bool
+            |   | | | {is}: bool notnull
+            |   | | | | {name c}: c: integer variable
+            |   | | | | {null}: null
+            |   | | | {call}: bool
+            |   | |   | {name requires_out_returns_bool}
+            |   | |   | {call_arg_list}
+            |   | |     | {call_filter_clause}
+            |   | |     | {arg_list}: ok
+            |   | |       | {name c}: c: integer variable
+            |   | | {is}: bool notnull
+            |   |   | {name c}: c: integer variable
+            |   |   | {null}: null
+            |   | {int 42}: integer notnull
+            | {call}: c: integer notnull variable
+              | {name cql_inferred_notnull}: c: integer notnull variable
+              | {call_arg_list}
+                | {call_filter_clause}
+                | {arg_list}: ok
+                  | {name c}: c: integer inferred_notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_respect_out_args_in_false_conditions_for_iif ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  LET x := CASE WHEN a IS NULL OR requires_out_returns_bool(a) THEN 42
+  ELSE a
+  END;
+  LET y := CASE WHEN requires_out_returns_bool(b) OR b IS NULL THEN 42
+  ELSE b
+  END;
+  LET z := CASE WHEN c IS NULL OR requires_out_returns_bool(c) OR c IS NULL THEN 42
+  ELSE c
+  END;
+END;
+
+  {create_proc_stmt}: ok
+  | {name improvements_respect_out_args_in_false_conditions_for_iif}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {let_stmt}: x: integer variable
+      | | {name x}: x: integer variable
+      | | {case_expr}: integer
+      |   | {connector}: integer
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     |   | {or}: bool
+      |     |   | | {is}: bool notnull
+      |     |   | | | {name a}: a: integer variable
+      |     |   | | | {null}: null
+      |     |   | | {call}: bool
+      |     |   |   | {name requires_out_returns_bool}
+      |     |   |   | {call_arg_list}
+      |     |   |     | {call_filter_clause}
+      |     |   |     | {arg_list}: ok
+      |     |   |       | {name a}: a: integer variable
+      |     |   | {int 42}: integer notnull
+      |     | {name a}: a: integer variable
+      | {let_stmt}: y: integer notnull variable
+      | | {name y}: y: integer notnull variable
+      | | {case_expr}: integer notnull
+      |   | {connector}: integer notnull
+      |     | {case_list}: integer notnull
+      |     | | {when}: integer notnull
+      |     |   | {or}: bool
+      |     |   | | {call}: bool
+      |     |   | | | {name requires_out_returns_bool}
+      |     |   | | | {call_arg_list}
+      |     |   | |   | {call_filter_clause}
+      |     |   | |   | {arg_list}: ok
+      |     |   | |     | {name b}: b: integer variable
+      |     |   | | {is}: bool notnull
+      |     |   |   | {name b}: b: integer variable
+      |     |   |   | {null}: null
+      |     |   | {int 42}: integer notnull
+      |     | {call}: b: integer notnull variable
+      |       | {name cql_inferred_notnull}: b: integer notnull variable
+      |       | {call_arg_list}
+      |         | {call_filter_clause}
+      |         | {arg_list}: ok
+      |           | {name b}: b: integer inferred_notnull variable
+      | {let_stmt}: z: integer notnull variable
+        | {name z}: z: integer notnull variable
+        | {case_expr}: integer notnull
+          | {connector}: integer notnull
+            | {case_list}: integer notnull
+            | | {when}: integer notnull
+            |   | {or}: bool
+            |   | | {or}: bool
+            |   | | | {is}: bool notnull
+            |   | | | | {name c}: c: integer variable
+            |   | | | | {null}: null
+            |   | | | {call}: bool
+            |   | |   | {name requires_out_returns_bool}
+            |   | |   | {call_arg_list}
+            |   | |     | {call_filter_clause}
+            |   | |     | {arg_list}: ok
+            |   | |       | {name c}: c: integer variable
+            |   | | {is}: bool notnull
+            |   |   | {name c}: c: integer variable
+            |   |   | {null}: null
+            |   | {int 42}: integer notnull
+            | {call}: c: integer notnull variable
+              | {name cql_inferred_notnull}: c: integer notnull variable
+              | {call_arg_list}
+                | {call_filter_clause}
+                | {arg_list}: ok
+                  | {name c}: c: integer inferred_notnull variable
 
 The statement ending at line XXXX
 

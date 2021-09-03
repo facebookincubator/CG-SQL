@@ -5839,6 +5839,8 @@ static void sem_case_list(
       return;
     }
 
+    sem_set_notnull_improvements_for_false_condition(case_expr);
+
     sem_sensitive |= sensitive_flag(case_expr->sem->sem_type);
     sem_sensitive |= sensitive_flag(then_expr->sem->sem_type);
 
