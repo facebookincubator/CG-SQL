@@ -954,7 +954,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   int32_t max_schema_version = 0;
   if (schema_items_count) {
      qsort(base, schema_items_count, schema_items_size, annotation_comparator);
-     notes =(schema_annotation *)base;
+     notes = (schema_annotation *)base;
      max_schema_version = notes[schema_items_count - 1].version;
   }
 
@@ -965,7 +965,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   if (recreate_items_count) {
     qsort(base, recreate_items_count, recreate_items_size, recreate_comparator);
   }
-  recreate_annotation *recreates =(recreate_annotation *)base;
+  recreate_annotation *recreates = (recreate_annotation *)base;
 
   CHARBUF_OPEN(all_schema);
   // emit canonicalized schema for everything we will upgrade
