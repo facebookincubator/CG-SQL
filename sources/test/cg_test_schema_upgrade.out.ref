@@ -328,6 +328,24 @@ BEGIN
   END;
 END;
 
+-- declared upgrade procedures if any
+DECLARE proc CreateName1Proc() USING TRANSACTION;
+DECLARE proc CreateName2Proc() USING TRANSACTION;
+DECLARE proc DeadViewMigration() USING TRANSACTION;
+DECLARE proc CreateId2Proc() USING TRANSACTION;
+DECLARE proc DeleteRate2Proc() USING TRANSACTION;
+DECLARE proc MyAdHocMigrationScript() USING TRANSACTION;
+@attribute(cql:private)
+CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
+BEGIN
+  LET facet := printf('1_time_drop_%s', name);
+  IF cql_facet_find(test_facets, facet) != version THEN
+    call cql_exec_internal(printf('DROP TABLE IF EXISTS %s;', name));
+    call test_cql_set_facet_version(facet, version);
+  END IF;
+END;
+
+
 CREATE PROCEDURE test_cql_install_baseline_schema()
 BEGIN
   CREATE TABLE IF NOT EXISTS foo(
@@ -374,24 +392,6 @@ BEGIN
   );
 
 END;
--- declared upgrade procedures if any
-DECLARE proc CreateName1Proc() USING TRANSACTION;
-DECLARE proc CreateName2Proc() USING TRANSACTION;
-DECLARE proc DeadViewMigration() USING TRANSACTION;
-DECLARE proc CreateId2Proc() USING TRANSACTION;
-DECLARE proc DeleteRate2Proc() USING TRANSACTION;
-DECLARE proc MyAdHocMigrationScript() USING TRANSACTION;
-@attribute(cql:private)
-CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
-BEGIN
-  LET facet := printf('1_time_drop_%s', name);
-  IF cql_facet_find(test_facets, facet) != version THEN
-    call cql_exec_internal(printf('DROP TABLE IF EXISTS %s;', name));
-    call test_cql_set_facet_version(facet, version);
-  END IF;
-END;
-
-
 -- drop all the views we know
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_views()
@@ -572,7 +572,6 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps()
 BEGIN
-  DECLARE column_exists BOOL NOT NULL;
   DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -594,32 +593,28 @@ BEGIN
     ---- upgrade to schema version 2 ----
 
     CALL test_cql_get_version_crc(2, schema_version);
-    IF schema_version != -8206802029265210093 THEN
+    IF schema_version != -6038299962764700177 THEN
       -- altering table table2 to add column name1 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name1 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name1 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name1 TEXT;
       END IF;
 
       -- altering table table2 to add column name2 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name2 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name2 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name2 TEXT;
       END IF;
 
       -- altering table table2 to add column name3 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name3 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name3 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name3 TEXT;
       END IF;
 
       -- altering table table2 to add column name4 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name4 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name4 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name4 TEXT;
       END IF;
 
@@ -639,7 +634,7 @@ BEGIN
         CALL test_cql_set_facet_version('DeadViewMigration', 2);
       END IF;
 
-      CALL test_cql_set_version_crc(2, -8206802029265210093);
+      CALL test_cql_set_version_crc(2, -6038299962764700177);
     END IF;
 
     ---- upgrade to schema version 3 ----
@@ -659,7 +654,7 @@ BEGIN
     ---- upgrade to schema version 4 ----
 
     CALL test_cql_get_version_crc(4, schema_version);
-    IF schema_version != 8252122123803320687 THEN
+    IF schema_version != 7224256824307254702 THEN
       -- one time drop migrated_from_recreate
 
       CALL test_cql_one_time_drop('migrated_from_recreate', 4);
@@ -673,15 +668,13 @@ BEGIN
 
       -- altering table added_table to add column name2 TEXT;
 
-      CALL test_check_column_exists('added_table', '*[( ]name2 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('added_table', '*[( ]name2 TEXT*') THEN 
         ALTER TABLE added_table ADD COLUMN name2 TEXT;
       END IF;
 
       -- altering table foo to add column id2 INTEGER;
 
-      CALL test_check_column_exists('foo', '*[( ]id2 INTEGER*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('foo', '*[( ]id2 INTEGER*') THEN 
         ALTER TABLE foo ADD COLUMN id2 INTEGER DEFAULT 12345;
       END IF;
 
@@ -701,17 +694,16 @@ BEGIN
         CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
       END IF;
 
-      CALL test_cql_set_version_crc(4, 8252122123803320687);
+      CALL test_cql_set_version_crc(4, 7224256824307254702);
     END IF;
 
     ---- upgrade to schema version 5 ----
 
     CALL test_cql_get_version_crc(5, schema_version);
-    IF schema_version != 7448981524046949017 THEN
+    IF schema_version != -7300976012444483048 THEN
       -- altering table foo to add column name TEXT;
 
-      CALL test_check_column_exists('foo', '*[( ]name TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('foo', '*[( ]name TEXT*') THEN 
         ALTER TABLE foo ADD COLUMN name TEXT;
       END IF;
 
@@ -729,21 +721,20 @@ BEGIN
         CALL test_cql_set_facet_version('MyAdHocMigrationScript', 5);
       END IF;
 
-      CALL test_cql_set_version_crc(5, 7448981524046949017);
+      CALL test_cql_set_version_crc(5, -7300976012444483048);
     END IF;
 
     ---- upgrade to schema version 6 ----
 
     CALL test_cql_get_version_crc(6, schema_version);
-    IF schema_version != 3572608284749506390 THEN
+    IF schema_version != -6908867606816505101 THEN
       -- altering table foo to add column name_2 TEXT;
 
-      CALL test_check_column_exists('foo', '*[( ]name_2 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('foo', '*[( ]name_2 TEXT*') THEN 
         ALTER TABLE foo ADD COLUMN name_2 TEXT;
       END IF;
 
-      CALL test_cql_set_version_crc(6, 3572608284749506390);
+      CALL test_cql_set_version_crc(6, -6908867606816505101);
     END IF;
 
     CALL test_cql_recreate_tables();
