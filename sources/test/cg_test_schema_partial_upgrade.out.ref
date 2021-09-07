@@ -318,6 +318,22 @@ CREATE PROCEDURE test_cql_recreate_tables()
 BEGIN
 END;
 
+@attribute(cql:private)
+CREATE PROCEDURE test_setup_facets()
+BEGIN
+  BEGIN TRY
+    SET test_facets := cql_facets_new();
+    DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
+    LOOP FETCH C
+    BEGIN
+      LET added := cql_facet_add(test_facets, C.facet, C.version);
+    END;
+  END TRY;
+  BEGIN CATCH
+   -- if table doesn't exist we just have empty facets, that's ok
+  END CATCH;
+END;
+
 
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps()
@@ -387,22 +403,6 @@ BEGIN
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
     CALL test_cql_set_facet_version('cql_schema_crc', 4537885047772706106);
-END;
-
-@attribute(cql:private)
-CREATE PROCEDURE test_setup_facets()
-BEGIN
-  BEGIN TRY
-    SET test_facets := cql_facets_new();
-    DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
-    LOOP FETCH C
-    BEGIN
-      LET added := cql_facet_add(test_facets, C.facet, C.version);
-    END;
-  END TRY;
-  BEGIN CATCH
-   -- if table doesn't exist we just have empty facets, that's ok
-  END CATCH;
 END;
 
 @attribute(cql:private)

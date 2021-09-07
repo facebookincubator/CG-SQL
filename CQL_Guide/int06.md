@@ -366,7 +366,46 @@ These are the last of the worker methods:
   * temp tables are always created in full at the latest version
   * this code is run regardless of whether the global CRC matches or not
 
+All of these functions semantic outputs like `all_indices_list`, `all_views_list`, etc. to do their job (except 
+`cg_schema_manage_recreate_tables` as noted). Generally they have all the data they need handed to them
+on a silver platter by the semantic pass. This is not an accident.
+
+#### Reading the Facets into Memory
+
+The `setup_facets` procedure simply selects out the entire `facets` table with a cursor
+and uses `cql_facet_add` to get them into a hash table.  This is the primary source of
+facets information during the run.  This is a good example of what the codegen looks like
+so we'll include this one in full.
+
+```C
+  // code to read the facets into the hash table
+
+  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
+  bprintf(&preamble, "BEGIN\n");
+  bprintf(&preamble, "  BEGIN TRY\n");
+  bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
+  bprintf(&preamble, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
+  bprintf(&preamble, "    LOOP FETCH C\n");
+  bprintf(&preamble, "    BEGIN\n");
+  bprintf(&preamble, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
+  bprintf(&preamble, "    END;\n");
+  bprintf(&preamble, "  END TRY;\n");
+  bprintf(&preamble, "  BEGIN CATCH\n");
+  bprintf(&preamble, "   -- if table doesn't exist we just have empty facets, that's ok\n");
+  bprintf(&preamble, "  END CATCH;\n");
+  bprintf(&preamble, "END;\n\n");
+
 ### The Main Upgrader
+
+And now we come to the main upgrading procedure `perform_upgrade_steps`.  
+
+We'll go over this section by section.
+
+#### Standard Steps
+
+```C
+  // the main upgrade worker
 
   bprintf(&main, "\n@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
@@ -397,7 +436,30 @@ These are the last of the worker methods:
     bprintf(&main, "      CALL %s_cql_set_version_crc(0, %lld);\n", global_proc_name, baseline_crc);
     bprintf(&main, "    END IF;\n\n");
   }
+```
 
+First we deal with the preliminaries:
+
+* drop the views if there are any
+* drop the indices that need dropping
+* drop the triggers if there are any
+* install the baseline schema if there is any
+
+
+#### Process Standard Annotations
+
+In this phase we walk the annotations from `schema_annotations` which are now stored in `notes`.
+
+They have been sorted in exactly the right order to process them (by version, then type, then target).  
+We'll create one set of instructions per version number as we simply accumulate instructions for any
+version while we're still on the same version then spit them all out.  Adding `target` to the sort
+order ensures that the results have a total ordering (there are no ties that might yield an ambiguous order).
+
+We set up a loop to walk over the annotations and we flush if we ever encounter an annotation for
+a different version number.  We'll have to force a flush at the end as well.  `cg_schema_end_version`
+does the flush.
+
+```C
   int32_t prev_version = 0;
 
   for (int32_t i = 0; i < schema_items_count; i++) {
@@ -418,7 +480,11 @@ These are the last of the worker methods:
       cg_schema_end_version(&main, &upgrade, &pending, prev_version);
       prev_version = vers;
     }
+```
 
+If we find any item that is in a region we are not upgrading, we skip it.
+
+```C
     CSTR target_name = note->target_name;
 
     Invariant(type >= SCHEMA_ANNOTATION_FIRST && type <= SCHEMA_ANNOTATION_LAST);
@@ -426,131 +492,71 @@ These are the last of the worker methods:
     if (!include_from_region(note->target_ast->sem->region, SCHEMA_TO_UPGRADE)) {
       continue;
     }
+```
 
+There are several annotation types.  Each one requires appropriate commands
+
+```C
     switch (type) {
       case SCHEMA_ANNOTATION_CREATE_COLUMN: {
-        ast_node *def = note->column_ast;
-        Contract(is_ast_col_def(def));
-        EXTRACT_NOTNULL(col_def_type_attrs, def->left);
-        EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-        EXTRACT_STRING(col_name, col_def_name_type->left);
-
-        CSTR col_type = coretype_string(def->sem->sem_type);
-        gen_sql_callbacks callbacks;
-        init_gen_sql_callbacks(&callbacks);
-        callbacks.mode = gen_mode_no_annotations;
-
-        CHARBUF_OPEN(sql_out);
-        gen_set_output_buffer(&sql_out);
-        // no-op callbacks still suppress @create/@delete which is not legal in alter table
-        gen_col_def_with_callbacks(def, &callbacks);
-
-        bprintf(&upgrade, "      -- altering table %s to add column %s %s;\n\n",
-          target_name,
-          col_name,
-          col_type);
-        bprintf(&upgrade, "      IF NOT %s_check_column_exists('%s', '*[( ]%s %s*') THEN \n",
-          global_proc_name,
-          target_name,
-          col_name,
-          col_type);
-        bprintf(&upgrade, "        ALTER TABLE %s ADD COLUMN %s;\n",
-          target_name,
-          sql_out.ptr);
-        bprintf(&upgrade, "      END IF;\n\n");
-
-        CHARBUF_CLOSE(sql_out);
+        ... emit ALTER TABLE ADD COLUMN if the column does not already exist
         break;
       }
 
       case SCHEMA_ANNOTATION_DELETE_COLUMN: {
-        ast_node *def = note->column_ast;
-        Contract(is_ast_col_def(def));
-        EXTRACT_NOTNULL(col_def_type_attrs, def->left);
-        EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-        EXTRACT_STRING(col_name, col_def_name_type->left);
-
-        bprintf(&upgrade, "      -- logical delete of column %s from %s; -- no ddl\n\n", col_name, target_name);
+        ... it's not possible to delete columns in SQLite (this is changing)
+        ... we simply emit a comment and move on
         break;
       }
 
       case SCHEMA_ANNOTATION_CREATE_TABLE: {
-        // check for one time drop
-
-        EXTRACT_ANY(dot, version_annotation->right);
-        if (dot && is_ast_dot(dot)) {
-          EXTRACT_STRING(lhs, dot->left);
-          EXTRACT_STRING(rhs, dot->right);
-
-          if (!Strcasecmp(lhs, "cql") && !Strcasecmp(rhs, "from_recreate")) {
-            bprintf(&upgrade, "      -- one time drop %s\n\n", target_name);
-            bprintf(&upgrade, "      CALL %s_cql_one_time_drop('%s', %d);\n\n", global_proc_name, target_name, vers);
-            one_time_drop_needed = true;
-          }
-        }
-
-        bprintf(&upgrade, "      -- creating table %s\n\n", target_name);
-
-
-        gen_sql_callbacks callbacks;
-        init_gen_sql_callbacks(&callbacks);
-        callbacks.col_def_callback = cg_suppress_new_col_def;
-        callbacks.if_not_exists_callback = cg_schema_force_if_not_exists;
-        callbacks.mode = gen_mode_no_annotations;
-
-        CHARBUF_OPEN(sql_out);
-        gen_set_output_buffer(&sql_out);
-        gen_statement_with_callbacks(note->target_ast, &callbacks);  // only the original columns
-
-        bindent(&upgrade, &sql_out, 6);
-        bprintf(&upgrade, ";\n\n");
-
-        CHARBUF_CLOSE(sql_out);
+        ... if the table is moving from @recreate to @create we have to drop any stale version
+        ... of it one time.  We emit a call to `cql_one_time_drop` and record that we need
+        ... to generate that procedure in `one_time_drop_needed`.
+        ...in all cases emit a CREATE TABLE IF NOT EXISTS
         break;
       }
 
       case SCHEMA_ANNOTATION_DELETE_TABLE: {
-        // this is all that's left
-        Contract(note->annotation_type == SCHEMA_ANNOTATION_DELETE_TABLE);
-
-        bprintf(&upgrade, "      -- dropping table %s\n\n", target_name);
-        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n\n", target_name);
+        ... emit DROP TABLE IF EXISTS for the target
         break;
       }
 
-      // Note: @create is invalid for INDEX/VIEW/TRIGGER so there can be no such annotation
-
       case SCHEMA_ANNOTATION_DELETE_INDEX:
       case SCHEMA_ANNOTATION_DELETE_VIEW:
-      case SCHEMA_ANNOTATION_DELETE_TRIGGER:
-        // no annotation based actions other than migration proc (handled below
-        Contract(version_annotation->right);
-        bprintf(&upgrade, "      -- delete migration proc for %s will run\n\n", target_name);
+      case SCHEMA_ANNOTATION_DELETE_TRIGGER: 
+        ... this annotation indicates there is a tombstone on the item
+        ... this was handled in the appropriate `manage` worker above, nothing needs
+        ... to be done here except run any migration procs (see below)
         break;
 
       case SCHEMA_ANNOTATION_AD_HOC:
+        ... ad hoc migration procs allow for code to be run one time when we hit
+        ... a particular schema version, this just allows the migration proc to run
         // no annotation based actions other than migration proc (handled below)
         Contract(version_annotation->right);
         bprintf(&upgrade, "      -- ad hoc migration proc %s will run\n\n", target_name);
         break;
     }
+```
 
-    // handle any migration proc for any annotation
-    if (version_annotation->right) {
-      // call any non-builtin migrations the generic way, builtins get whatever special handling they need
-      if (!is_ast_dot(version_annotation->right)) {
-        EXTRACT_STRING(proc, version_annotation->right);
-        bprintf(&pending, "      IF cql_facet_find(%s_facets, '%s') = -1 THEN\n", global_proc_name, proc);
-        bprintf(&pending, "        CALL %s();\n", proc);
-        bprintf(&pending, "        CALL %s_cql_set_facet_version('%s', %d);\n", global_proc_name, proc, vers);
-        bprintf(&pending, "      END IF;\n");
-        bprintf(&decls, "DECLARE proc %s() USING TRANSACTION;\n", proc);
-      }
-    }
-  }
+The above consitutes the bulk of the upgrading logic.  Which, as you can see, isn't that complicated
 
-  cg_schema_end_version(&main, &upgrade, &pending, prev_version);
+Any of the above might have a migration proc.  If there is one in the node, then generate:
+ * emit a call to `cql_facet_find` to see if the migration proc has already run
+ * emit a declaration for the migration proc into the `decls` section
+ * emit a call to the procedure (it accept no arguments)
+ * emit a call to `cql_set_facet_version` to record that the migrator ran
 
+When the loop is done, any pending migration code is flushed using `cg_schema_end_version` again.
+
+At this point we can move on to the finalization steps.
+
+#### Finalization Steps
+
+With the standard upgrade finished, there is just some house keeping left:
+
+```C
   if (recreate_items_count) {
     bprintf(&main, "    CALL %s_cql_recreate_tables();\n", global_proc_name);
   }
@@ -570,78 +576,55 @@ These are the last of the worker methods:
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, schema_crc);
   bprintf(&main, "END;\n\n");
+```
 
-  bprintf(&main, "@attribute(cql:private)\n");
-  bprintf(&main, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
-  bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  BEGIN TRY\n");
-  bprintf(&main, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
-  bprintf(&main, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
-  bprintf(&main, "    LOOP FETCH C\n");
-  bprintf(&main, "    BEGIN\n");
-  bprintf(&main, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
-  bprintf(&main, "    END;\n");
-  bprintf(&main, "  END TRY;\n");
-  bprintf(&main, "  BEGIN CATCH\n");
-  bprintf(&main, "   -- if table doesn't exist we just have empty facets, that's ok\n");
-  bprintf(&main, "  END CATCH;\n");
-  bprintf(&main, "END;\n\n");
+* `cql_recreate_tables` : must run if there are any tables marked recreate
+  * this procedure will have code to drop and recreate any changed tables
+  * this procedure was created by `cg_schema_manage_recreate_tables` and that process is described above
+     * basically, it uses `recreate_annotations` to do the job
+  * any that were condemned by marking with `@delete` will not be created again here
+* `cql_create_all_views` : must run if there are any views, they need to be put back
+  * any that were condemned by marking with `@delete` are not created again here
+* `cql_create_all_indices` : must run if there are any indices, this will create any that are missing
+  * any that were changing were previously deleted, this is where they come back
+  * any that were condemned by marking with `@delete` are not created again here
+* `cql_create_all_triggers` : must run if there are any triggers, they need to be put back
+  * any that were condemned by marking with `@delete` are not created again here
+  * triggers might cause weird side-effects during upgrade hence they are always dropped
+  * stale triggers especially could be problematic
+  * any triggers that refer to views couldn't possibly run as the views are gone
+  * hence, triggers are always dropped and recreated
 
-  bprintf(&main, "@attribute(cql:private)\n");
-  bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
-  bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  -- check for downgrade --\n");
-  bprintf(&main, "  IF cql_facet_find(%s_facets, 'cql_schema_version') > %d THEN\n", global_proc_name, max_schema_version);
-  bprintf(&main, "    SELECT 'downgrade detected' facet;\n");
-  bprintf(&main, "  ELSE\n");
-  bprintf(&main, "    -- save the current facets so we can diff them later --\n");
-  bprintf(&main, "    CALL %s_save_cql_schema_facets();\n", global_proc_name);
-  bprintf(&main, "    CALL %s_perform_upgrade_steps();\n\n", global_proc_name);
-  bprintf(&main, "    -- finally produce the list of differences\n");
-  bprintf(&main, "    SELECT T1.facet FROM\n");
-  bprintf(&main, "      %s_cql_schema_facets T1\n", global_proc_name);
-  bprintf(&main, "      LEFT OUTER JOIN %s_cql_schema_facets_saved T2\n", global_proc_name);
-  bprintf(&main, "        ON T1.facet = T2.facet\n", global_proc_name);
-  bprintf(&main, "      WHERE T1.version is not T2.version;\n");
-  bprintf(&main, "  END IF;\n");
-  bprintf(&main, "END;\n\n");
+#### The "Main" Steps
 
-  bprintf(&main, "CREATE PROCEDURE %s()\n", global_proc_name);
-  bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  DECLARE schema_crc LONG INTEGER NOT NULL;\n");
-  bprintf(&main, "\n");
-  bprintf(&main, "  -- create schema facets information table --\n");
-  bprintf(&main, "  CALL %s_create_cql_schema_facets_if_needed();\n\n", global_proc_name);
-  bprintf(&main, "  -- fetch the last known schema crc, if it's different do the upgrade --\n");
-  bprintf(&main, "  CALL %s_cql_get_facet_version('cql_schema_crc', schema_crc);\n\n", global_proc_name);
-  bprintf(&main, "  IF schema_crc <> %lld THEN\n", (llint_t)schema_crc);
-  bprintf(&main, "    BEGIN TRY\n");
-  bprintf(&main, "      CALL %s_setup_facets();\n", global_proc_name);
-  bprintf(&main, "      CALL %s_perform_needed_upgrades();\n", global_proc_name);
-  bprintf(&main, "    END TRY;\n");
-  bprintf(&main, "    BEGIN CATCH\n");
-  bprintf(&main, "      CALL cql_facets_delete(%s_facets);\n", global_proc_name);
-  bprintf(&main, "      SET %s_facets := 0;\n", global_proc_name);
-  bprintf(&main, "      THROW;\n");
-  bprintf(&main, "    END CATCH;\n");
-  bprintf(&main, "    CALL cql_facets_delete(%s_facets);\n", global_proc_name);
-  bprintf(&main, "    SET %s_facets := 0;\n", global_proc_name);
-  bprintf(&main, "  ELSE\n");
-  bprintf(&main, "    -- some canonical result for no differences --\n");
-  bprintf(&main, "    SELECT 'no differences' facet;\n");
-  bprintf(&main, "  END IF;\n");
+We're getting very close to the top level now
 
-  if (has_temp_schema) {
-    bprintf(&main, "  ---- install temp schema after upgrade is complete ----\n");
-    bprintf(&main, "  CALL %s_cql_install_temp_schema();\n\n", global_proc_name);
-  }
+* `perform_needed_upgrades` : this orchestrates the upgrade, if it is called there is one
+  * `cql_facet_find` : is used to check for a schema "downgrade"
+    * abort with an error if that happens
+  * `save_cql_schema_facets` : saves the facets as they exist so we can diff them
+  * `perform_upgrade_steps` : does the upgrade
+  * a `LEFT OUTER JOIN` between `cql_schema_facets` and `cql_schema_facets_saved` reports differences
+  * any errors will cause the normal CQL error flow
 
-  bprintf(&main, "END;\n\n");
+ * the main entry point is named by `global_proc_name`
+   * `create_cql_schema_facets_if_needed` is used to create the `facets` table if it doesn't already exist
+   * the special facet `cql_schema_crc` is read from the `facets` table
+   * if the CRC stored there matches our target then we return "no differences", otherwise
+   * `setup_facets` : loads the in-memory version of the facets table
+   * `perform_needed_upgrades` : does the work and creates the diff
+   * `cql_facets_delete` is used to free the in-memory storage, even if there were errors in `perform_needed_upgrades`
 
-  if (one_time_drop_needed) {
-    cg_schema_emit_one_time_drop(&decls);
-  }
+ * `cql_install_temp_schema` : installs temporary schema if there is any, regardless of the CRC
 
+ * the `one_time_drop` code is emitted if it was needed
+
+#### Writing the Buffer
+
+At this point the main buffers `decls`, `preamble`, and `main` are ready to go.  We're back to where we started
+but we can quickly recap the overall flow.
+
+```C
   CHARBUF_OPEN(output_file);
   bprintf(&output_file, "%s\n", decls.ptr);
   bprintf(&output_file, "%s", preamble.ptr);
@@ -650,11 +633,27 @@ These are the last of the worker methods:
   cql_write_file(options.file_names[0], output_file.ptr);
 
   CHARBUF_CLOSE(output_file);
+```
 
-  CHARBUF_CLOSE(baseline);
-  CHARBUF_CLOSE(upgrade);
-  CHARBUF_CLOSE(pending);
-  CHARBUF_CLOSE(decls);
-  CHARBUF_CLOSE(main);
-  CHARBUF_CLOSE(preamble);
-}
+There is nothing left but to `CHARBUF_CLOSE` the interim buffers we created.
+
+### Recap
+
+At present `cg_schema.c` accomplishes a lot and is fairly light at only 1313 lines (at present).
+It is able to do so because it can leverage heavy lifting done in the semantic analysis phase
+and schema generation that can be done like all other SQL generation by the echoing code
+discussed in [Part 1](https://cgsql.dev/cql-guide/int01).
+
+Topics covered included:
+
+* the essential sources of schema information from the semantic pass
+* the state tables used in the database and helpers for read/write of the same
+* the interaction with schema regions
+* the prosecution steps for tables, columns, views, triggers, indices
+* the key annotation types and what code they create
+* the handling of recreate tables, temp tables, and the base schema
+* how all of these are wired together starting from the upgrader's "main"
+
+As with the other parts, no attempt was made to cover every function in detail.  That is
+best done by reading the source code. But there is overall structure here and an understanding
+of the basic principles is helpful before diving into the source code.

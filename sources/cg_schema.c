@@ -1015,6 +1015,26 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bool_t has_temp_schema = cg_schema_emit_temp_schema_proc(&preamble);
   bool_t one_time_drop_needed = false;
 
+  // code to read the facets into the hash table
+
+  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
+  bprintf(&preamble, "BEGIN\n");
+  bprintf(&preamble, "  BEGIN TRY\n");
+  bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
+  bprintf(&preamble, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
+  bprintf(&preamble, "    LOOP FETCH C\n");
+  bprintf(&preamble, "    BEGIN\n");
+  bprintf(&preamble, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
+  bprintf(&preamble, "    END;\n");
+  bprintf(&preamble, "  END TRY;\n");
+  bprintf(&preamble, "  BEGIN CATCH\n");
+  bprintf(&preamble, "   -- if table doesn't exist we just have empty facets, that's ok\n");
+  bprintf(&preamble, "  END CATCH;\n");
+  bprintf(&preamble, "END;\n\n");
+
+  // the main upgrade worker
+
   bprintf(&main, "\n@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
@@ -1216,22 +1236,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, schema_crc);
-  bprintf(&main, "END;\n\n");
-
-  bprintf(&main, "@attribute(cql:private)\n");
-  bprintf(&main, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
-  bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  BEGIN TRY\n");
-  bprintf(&main, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
-  bprintf(&main, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
-  bprintf(&main, "    LOOP FETCH C\n");
-  bprintf(&main, "    BEGIN\n");
-  bprintf(&main, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
-  bprintf(&main, "    END;\n");
-  bprintf(&main, "  END TRY;\n");
-  bprintf(&main, "  BEGIN CATCH\n");
-  bprintf(&main, "   -- if table doesn't exist we just have empty facets, that's ok\n");
-  bprintf(&main, "  END CATCH;\n");
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "@attribute(cql:private)\n");
