@@ -4755,7 +4755,7 @@ cql_fetch_info forward_out_union_info = {
 void forward_out_union_fetch_results(forward_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
   *_result_set_ = NULL;
 
-  cql_object_release(_result_set_);
+  cql_object_release(*_result_set_);
   out_union_helper_fetch_results((out_union_helper_result_set_ref *)_result_set_);
 
   if (!*_result_set_) *_result_set_ = (forward_out_union_result_set_ref)cql_no_rows_result_set();
@@ -4811,7 +4811,7 @@ cql_fetch_info forward_out_union_extern_info = {
 void forward_out_union_extern_fetch_results(forward_out_union_extern_result_set_ref _Nullable *_Nonnull _result_set_) {
   *_result_set_ = NULL;
 
-  cql_object_release(_result_set_);
+  cql_object_release(*_result_set_);
   extern_out_union_helper_fetch_results((extern_out_union_helper_result_set_ref *)_result_set_);
 
   if (!*_result_set_) *_result_set_ = (forward_out_union_extern_result_set_ref)cql_no_rows_result_set();
@@ -4862,7 +4862,7 @@ CQL_WARN_UNUSED cql_code forward_out_union_dml_fetch_results(sqlite3 *_Nonnull _
   cql_code _rc_ = SQLITE_OK;
   *_result_set_ = NULL;
 
-  cql_object_release(_result_set_);
+  cql_object_release(*_result_set_);
   _rc_ = out_union_dml_helper_fetch_results(_db_, (out_union_dml_helper_result_set_ref *)_result_set_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;

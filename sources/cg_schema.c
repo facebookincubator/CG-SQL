@@ -173,12 +173,6 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  version LONG INTEGER NOT NULL\n");
   bprintf(decls, ");\n\n");
 
-  bprintf(decls, "-- saved facets table declaration --\n");
-  bprintf(decls, "CREATE TEMP TABLE %s_cql_schema_facets_saved(\n", global_proc_name);
-  bprintf(decls, "  facet TEXT NOT NULL PRIMARY KEY,\n");
-  bprintf(decls, "  version LONG INTEGER NOT NULL\n");
-  bprintf(decls, ");\n\n");
-
   bprintf(decls, "-- helper proc for testing for the presence of a column/type\n");
   bprintf(decls, "@attribute(cql:private)\n");
   bprintf(decls, "CREATE PROCEDURE %s_check_column_exists(table_name TEXT NOT NULL, decl TEXT NOT NULL, OUT present BOOL NOT NULL)\n", global_proc_name);
@@ -194,19 +188,6 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "    facet TEXT NOT NULL PRIMARY KEY,\n");
   bprintf(decls, "    version LONG INTEGER NOT NULL\n");
   bprintf(decls, "  );\n");
-  bprintf(decls, "END;\n\n");
-
-  bprintf(decls, "-- helper proc for saving the schema version table\n");
-  bprintf(decls, "@attribute(cql:private)\n");
-  bprintf(decls, "CREATE PROCEDURE %s_save_cql_schema_facets()\n", global_proc_name);
-  bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  DROP TABLE IF EXISTS %s_cql_schema_facets_saved;\n", global_proc_name);
-  bprintf(decls, "  CREATE TEMP TABLE %s_cql_schema_facets_saved(\n", global_proc_name);
-  bprintf(decls, "    facet TEXT NOT NULL PRIMARY KEY,\n");
-  bprintf(decls, "    version LONG INTEGER NOT NULL\n");
-  bprintf(decls, "  );\n");
-  bprintf(decls, "  INSERT INTO %s_cql_schema_facets_saved\n",  global_proc_name);
-  bprintf(decls, "    SELECT * FROM %s_cql_schema_facets;\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for setting the schema version of a facet\n");
@@ -1241,20 +1222,33 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
+  bprintf(&main, "  DECLARE D CURSOR LIKE SELECT 'facet' facet;\n");
   bprintf(&main, "  -- check for downgrade --\n");
   bprintf(&main, "  IF cql_facet_find(%s_facets, 'cql_schema_version') > %d THEN\n", global_proc_name, max_schema_version);
-  bprintf(&main, "    SELECT 'downgrade detected' facet;\n");
+  bprintf(&main, "    FETCH D USING 'downgrade detected' facet;\n");
+  bprintf(&main, "    OUT UNION D;\n");
   bprintf(&main, "  ELSE\n");
   bprintf(&main, "    -- save the current facets so we can diff them later --\n");
-  bprintf(&main, "    CALL %s_save_cql_schema_facets();\n", global_proc_name);
   bprintf(&main, "    CALL %s_perform_upgrade_steps();\n\n", global_proc_name);
   bprintf(&main, "    -- finally produce the list of differences\n");
-  bprintf(&main, "    SELECT T1.facet FROM\n");
-  bprintf(&main, "      %s_cql_schema_facets T1\n", global_proc_name);
-  bprintf(&main, "      LEFT OUTER JOIN %s_cql_schema_facets_saved T2\n", global_proc_name);
-  bprintf(&main, "        ON T1.facet = T2.facet\n", global_proc_name);
-  bprintf(&main, "      WHERE T1.version is not T2.version;\n");
+  bprintf(&main, "    DECLARE C CURSOR FOR SELECT facet, version FROM\n");
+  bprintf(&main, "      %s_cql_schema_facets;\n", global_proc_name);
+  bprintf(&main, "    LOOP FETCH C\n");
+  bprintf(&main, "    BEGIN\n");
+  bprintf(&main, "      IF cql_facet_find(%s_facets, C.facet) != C.version THEN\n", global_proc_name);
+  bprintf(&main, "        FETCH D USING C.facet facet;\n");
+  bprintf(&main, "        OUT UNION D;\n");
+  bprintf(&main, "      END IF;\n");
+  bprintf(&main, "    END;\n");
   bprintf(&main, "  END IF;\n");
+  bprintf(&main, "END;\n\n");
+
+  bprintf(&main, "-- some canonical result for no differences --\n");
+  bprintf(&main, "CREATE PROCEDURE %s_cql_emit_no_differences()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "  DECLARE D CURSOR LIKE SELECT 'facet' facet;\n");
+  bprintf(&main, "  FETCH D USING 'no differences detected' facet;\n");
+  bprintf(&main, "  OUT UNION D;\n");
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "CREATE PROCEDURE %s()\n", global_proc_name);
@@ -1278,8 +1272,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "    CALL cql_facets_delete(%s_facets);\n", global_proc_name);
   bprintf(&main, "    SET %s_facets := 0;\n", global_proc_name);
   bprintf(&main, "  ELSE\n");
-  bprintf(&main, "    -- some canonical result for no differences --\n");
-  bprintf(&main, "    SELECT 'no differences' facet;\n");
+  bprintf(&main, "    CALL %s_cql_emit_no_differences();\n", global_proc_name);
   bprintf(&main, "  END IF;\n");
 
   if (has_temp_schema) {

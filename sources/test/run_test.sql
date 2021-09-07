@@ -3769,6 +3769,33 @@ BEGIN_TEST(facet_helpers)
 
 END_TEST(facet_helpers)
 
+-- a simple proc that creates a result set with out union
+-- this reference must be correctly managed
+create proc get_row()
+begin
+  declare D cursor like select 'x' facet;
+  fetch D using 'x' facet;
+  out union D;
+end;
+
+-- the test here is to ensure that when we call get_row we correctly 
+-- release the previous result set
+create proc use_row()
+begin
+  call get_row();
+  call get_row();
+  call get_row();
+end;
+
+BEGIN_TEST(out_union_refcounts)
+  DECLARE C CURSOR FOR CALL get_row();
+  FETCH C;
+  EXPECT(C);
+  EXPECT(C.facet = 'x');
+  FETCH C;
+  EXPECT(NOT C);
+END_TEST(out_union_refcounts)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

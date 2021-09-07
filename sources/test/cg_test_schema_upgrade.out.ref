@@ -248,12 +248,6 @@ CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
   version LONG INTEGER NOT NULL
 );
 
--- saved facets table declaration --
-CREATE TEMP TABLE test_cql_schema_facets_saved(
-  facet TEXT NOT NULL PRIMARY KEY,
-  version LONG INTEGER NOT NULL
-);
-
 -- helper proc for testing for the presence of a column/type
 @attribute(cql:private)
 CREATE PROCEDURE test_check_column_exists(table_name TEXT NOT NULL, decl TEXT NOT NULL, OUT present BOOL NOT NULL)
@@ -269,19 +263,6 @@ BEGIN
     facet TEXT NOT NULL PRIMARY KEY,
     version LONG INTEGER NOT NULL
   );
-END;
-
--- helper proc for saving the schema version table
-@attribute(cql:private)
-CREATE PROCEDURE test_save_cql_schema_facets()
-BEGIN
-  DROP TABLE IF EXISTS test_cql_schema_facets_saved;
-  CREATE TEMP TABLE test_cql_schema_facets_saved(
-    facet TEXT NOT NULL PRIMARY KEY,
-    version LONG INTEGER NOT NULL
-  );
-  INSERT INTO test_cql_schema_facets_saved
-    SELECT * FROM test_cql_schema_facets;
 END;
 
 -- helper proc for setting the schema version of a facet
@@ -764,21 +745,34 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_needed_upgrades()
 BEGIN
+  DECLARE D CURSOR LIKE SELECT 'facet' facet;
   -- check for downgrade --
   IF cql_facet_find(test_facets, 'cql_schema_version') > 6 THEN
-    SELECT 'downgrade detected' facet;
+    FETCH D USING 'downgrade detected' facet;
+    OUT UNION D;
   ELSE
     -- save the current facets so we can diff them later --
-    CALL test_save_cql_schema_facets();
     CALL test_perform_upgrade_steps();
 
     -- finally produce the list of differences
-    SELECT T1.facet FROM
-      test_cql_schema_facets T1
-      LEFT OUTER JOIN test_cql_schema_facets_saved T2
-        ON T1.facet = T2.facet
-      WHERE T1.version is not T2.version;
+    DECLARE C CURSOR FOR SELECT facet, version FROM
+      test_cql_schema_facets;
+    LOOP FETCH C
+    BEGIN
+      IF cql_facet_find(test_facets, C.facet) != C.version THEN
+        FETCH D USING C.facet facet;
+        OUT UNION D;
+      END IF;
+    END;
   END IF;
+END;
+
+-- some canonical result for no differences --
+CREATE PROCEDURE test_cql_emit_no_differences()
+BEGIN
+  DECLARE D CURSOR LIKE SELECT 'facet' facet;
+  FETCH D USING 'no differences detected' facet;
+  OUT UNION D;
 END;
 
 CREATE PROCEDURE test()
@@ -804,8 +798,7 @@ BEGIN
     CALL cql_facets_delete(test_facets);
     SET test_facets := 0;
   ELSE
-    -- some canonical result for no differences --
-    SELECT 'no differences' facet;
+    CALL test_cql_emit_no_differences();
   END IF;
   ---- install temp schema after upgrade is complete ----
   CALL test_cql_install_temp_schema();
