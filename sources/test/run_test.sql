@@ -3780,8 +3780,10 @@ end;
 
 -- the test here is to ensure that when we call get_row we correctly 
 -- release the previous result set
-create proc use_row()
+create proc get_row_thrice()
 begin
+  -- these are redundant but they force the previous pending result to be freed
+  -- this still returns a single row
   call get_row();
   call get_row();
   call get_row();
@@ -3794,6 +3796,13 @@ BEGIN_TEST(out_union_refcounts)
   EXPECT(C.facet = 'x');
   FETCH C;
   EXPECT(NOT C);
+
+  DECLARE D CURSOR FOR CALL get_row_thrice();
+  FETCH D;
+  EXPECT(D);
+  EXPECT(D.facet = 'x');
+  FETCH D;
+  EXPECT(NOT D);
 END_TEST(out_union_refcounts)
 
 END_SUITE()
