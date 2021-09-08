@@ -246,6 +246,10 @@ BEGIN
   END;
 END;
 
+-- declared upgrade procedures if any
+DECLARE proc CreateName1Proc() USING TRANSACTION;
+DECLARE proc CreateName2Proc() USING TRANSACTION;
+
 CREATE PROCEDURE test_cql_install_baseline_schema()
 BEGIN
   CREATE TABLE IF NOT EXISTS table2(
@@ -253,10 +257,6 @@ BEGIN
   );
 
 END;
--- declared upgrade procedures if any
-DECLARE proc CreateName1Proc() USING TRANSACTION;
-DECLARE proc CreateName2Proc() USING TRANSACTION;
-
 -- drop all the views we know
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_views()
@@ -318,11 +318,26 @@ CREATE PROCEDURE test_cql_recreate_tables()
 BEGIN
 END;
 
+@attribute(cql:private)
+CREATE PROCEDURE test_setup_facets()
+BEGIN
+  BEGIN TRY
+    SET test_facets := cql_facets_new();
+    DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
+    LOOP FETCH C
+    BEGIN
+      LET added := cql_facet_add(test_facets, C.facet, C.version);
+    END;
+  END TRY;
+  BEGIN CATCH
+   -- if table doesn't exist we just have empty facets, that's ok
+  END CATCH;
+END;
+
 
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps()
 BEGIN
-  DECLARE column_exists BOOL NOT NULL;
   DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -344,32 +359,28 @@ BEGIN
     ---- upgrade to schema version 2 ----
 
     CALL test_cql_get_version_crc(2, schema_version);
-    IF schema_version != -6840158498294659234 THEN
+    IF schema_version != 7484982046592072857 THEN
       -- altering table table2 to add column name1 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name1 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name1 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name1 TEXT;
       END IF;
 
       -- altering table table2 to add column name2 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name2 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name2 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name2 TEXT;
       END IF;
 
       -- altering table table2 to add column name3 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name3 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name3 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name3 TEXT;
       END IF;
 
       -- altering table table2 to add column name4 TEXT;
 
-      CALL test_check_column_exists('table2', '*[( ]name4 TEXT*', column_exists);
-      IF NOT column_exists THEN
+      IF NOT test_check_column_exists('table2', '*[( ]name4 TEXT*') THEN 
         ALTER TABLE table2 ADD COLUMN name4 TEXT;
       END IF;
 
@@ -383,7 +394,7 @@ BEGIN
         CALL test_cql_set_facet_version('CreateName2Proc', 2);
       END IF;
 
-      CALL test_cql_set_version_crc(2, -6840158498294659234);
+      CALL test_cql_set_version_crc(2, 7484982046592072857);
     END IF;
 
     CALL test_cql_recreate_tables();
@@ -392,22 +403,6 @@ BEGIN
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
     CALL test_cql_set_facet_version('cql_schema_crc', 4537885047772706106);
-END;
-
-@attribute(cql:private)
-CREATE PROCEDURE test_setup_facets()
-BEGIN
-  BEGIN TRY
-    SET test_facets := cql_facets_new();
-    DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
-    LOOP FETCH C
-    BEGIN
-      LET added := cql_facet_add(test_facets, C.facet, C.version);
-    END;
-  END TRY;
-  BEGIN CATCH
-   -- if table doesn't exist we just have empty facets, that's ok
-  END CATCH;
 END;
 
 @attribute(cql:private)

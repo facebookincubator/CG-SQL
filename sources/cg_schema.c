@@ -946,15 +946,14 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   // first sort the schema annotations according to version, type etc.
   // we want to process these in an orderly fashion and the upgrade rules
-  // are not quite the same as the declared order.
+  // are nothing like the declared order.
   void *base = schema_annotations->ptr;
   size_t schema_items_size = sizeof(schema_annotation);
   size_t schema_items_count = schema_annotations->used / schema_items_size;
-  schema_annotation *notes =(schema_annotation*)base;
+  schema_annotation *notes = (schema_annotation*)base;
   int32_t max_schema_version = 0;
   if (schema_items_count) {
      qsort(base, schema_items_count, schema_items_size, annotation_comparator);
-     notes =(schema_annotation *)base;
      max_schema_version = notes[schema_items_count - 1].version;
   }
 
@@ -965,7 +964,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   if (recreate_items_count) {
     qsort(base, recreate_items_count, recreate_items_size, recreate_comparator);
   }
-  recreate_annotation *recreates =(recreate_annotation *)base;
+  recreate_annotation *recreates = (recreate_annotation *)base;
 
   CHARBUF_OPEN(all_schema);
   // emit canonicalized schema for everything we will upgrade
@@ -995,7 +994,10 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&decls, "-- declare full schema of tables and views to be upgraded and their dependencies -- \n");
   cg_generate_schema_by_mode(&decls, SCHEMA_TO_DECLARE);
   cg_schema_helpers(&decls);
-  cg_schema_emit_baseline_tables_proc(&decls, &baseline);
+
+  bprintf(&decls, "-- declared upgrade procedures if any\n");
+
+  cg_schema_emit_baseline_tables_proc(&preamble, &baseline);
 
   int32_t view_creates = 0, view_drops = 0;
   cg_schema_manage_views(&preamble, &view_drops, &view_creates);
@@ -1011,14 +1013,31 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   bool_t has_temp_schema = cg_schema_emit_temp_schema_proc(&preamble);
-  bool_t column_exists_out = false;
   bool_t one_time_drop_needed = false;
 
-  bprintf(&decls, "-- declared upgrade procedures if any\n");
+  // code to read the facets into the hash table
 
-  bprintf(&preamble, "\n@attribute(cql:private)\n");
-  bprintf(&preamble, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
+  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
+  bprintf(&preamble, "  BEGIN TRY\n");
+  bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
+  bprintf(&preamble, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
+  bprintf(&preamble, "    LOOP FETCH C\n");
+  bprintf(&preamble, "    BEGIN\n");
+  bprintf(&preamble, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
+  bprintf(&preamble, "    END;\n");
+  bprintf(&preamble, "  END TRY;\n");
+  bprintf(&preamble, "  BEGIN CATCH\n");
+  bprintf(&preamble, "   -- if table doesn't exist we just have empty facets, that's ok\n");
+  bprintf(&preamble, "  END CATCH;\n");
+  bprintf(&preamble, "END;\n\n");
+
+  // the main upgrade worker
+
+  bprintf(&main, "\n@attribute(cql:private)\n");
+  bprintf(&main, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
   bprintf(&main, "  DECLARE schema_version LONG INTEGER NOT NULL;\n");
 
   if (view_drops) {
@@ -1093,15 +1112,18 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         // no-op callbacks still suppress @create/@delete which is not legal in alter table
         gen_col_def_with_callbacks(def, &callbacks);
 
-        if (!column_exists_out) {
-          bprintf(&preamble, "  DECLARE column_exists BOOL NOT NULL;\n");
-          column_exists_out = true;
-        }
-
-        bprintf(&upgrade, "      -- altering table %s to add column %s %s;\n\n", target_name, col_name, col_type);
-        bprintf(&upgrade, "      CALL %s_check_column_exists('%s', '*[( ]%s %s*', column_exists);\n", global_proc_name, target_name, col_name, col_type);
-        bprintf(&upgrade, "      IF NOT column_exists THEN\n");
-        bprintf(&upgrade, "        ALTER TABLE %s ADD COLUMN %s;\n", target_name, sql_out.ptr);
+        bprintf(&upgrade, "      -- altering table %s to add column %s %s;\n\n",
+          target_name,
+          col_name,
+          col_type);
+        bprintf(&upgrade, "      IF NOT %s_check_column_exists('%s', '*[( ]%s %s*') THEN \n",
+          global_proc_name,
+          target_name,
+          col_name,
+          col_type);
+        bprintf(&upgrade, "        ALTER TABLE %s ADD COLUMN %s;\n",
+          target_name,
+          sql_out.ptr);
         bprintf(&upgrade, "      END IF;\n\n");
 
         CHARBUF_CLOSE(sql_out);
@@ -1214,22 +1236,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, schema_crc);
-  bprintf(&main, "END;\n\n");
-
-  bprintf(&main, "@attribute(cql:private)\n");
-  bprintf(&main, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
-  bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  BEGIN TRY\n");
-  bprintf(&main, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
-  bprintf(&main, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
-  bprintf(&main, "    LOOP FETCH C\n");
-  bprintf(&main, "    BEGIN\n");
-  bprintf(&main, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
-  bprintf(&main, "    END;\n");
-  bprintf(&main, "  END TRY;\n");
-  bprintf(&main, "  BEGIN CATCH\n");
-  bprintf(&main, "   -- if table doesn't exist we just have empty facets, that's ok\n");
-  bprintf(&main, "  END CATCH;\n");
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "@attribute(cql:private)\n");
