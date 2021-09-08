@@ -5528,7 +5528,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
       // the out arg as it might be junk from the callee's perspective so
       // we have to release it in case this call is in a loop or if this
       // call is repeated in some other way
-      bprintf(cg_main_output, "cql_object_release(_result_set_);\n");
+      bprintf(cg_main_output, "cql_object_release(*_result_set_);\n");
       bprintf(&invocation, ", (%s *)_result_set_", result_set_ref.ptr);
     }
     else if (out_union_proc) {
@@ -5553,7 +5553,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     if (out_union_proc && !cursor_name) {
       // this is 3b again, but with no database arg. As with case
       // 3b above we have to pre-release _result_stmt_ because of repetition.
-      bprintf(cg_main_output, "cql_object_release(_result_set_);\n");
+      bprintf(cg_main_output, "cql_object_release(*_result_set_);\n");
       bprintf(&invocation, "(%s *)_result_set_", result_set_ref.ptr);
     }
     else if (out_union_proc) {
