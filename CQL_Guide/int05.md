@@ -20,22 +20,25 @@ interesting cases.
 
 ## CQL Runtime
 
-The parts of the runtime that you can change are in `cqlrt.h`, it invariably ends by including
-`cqlrt_common.h` which are the parts you shouldn't change.  Of course this is open source
-so you can change anything.  But the idea is that `cqlrt.h` should provide you with everything
-you need to target new environments.  The compiler itself can be customized see `rt.c` to
-emit different strings to work with your runtime.  This is pretty easy to do without creating
-a merge hell for yourself. Facebook has its own CQL runtime customized for use on phones
-that is not open source (and really I don't think anyone would want it).  But you can make
-your own. In fact I know of two just within Facebook.
+The parts of the runtime that you can change are in `cqlrt.h`, that file invariably ends by including
+`cqlrt_common.h` which are the runtime parts that you shouldn't change.  Of course this is open source
+so you can change anything, but the common things usually don't need to change -- `cqlrt.h` should
+provide you with everything you need to target new environments.
+
+The compiler itself can be customized see `rt.c` to emit different strings to work with your runtime.
+This is pretty easy to do without creating a merge hell for yourself. Facebook, for instance,  has its
+own CQL runtime customized for use on phones that is not open source (and really I don't think anyone
+would want it anyway).  But the point is that you can make your own. In fact I know of two just within
+Facebook.
 
 We'll go over `cqlrt.h` bit by bit.  Keeping in mind it might change but this is
-essentially what's going on.  And it doesn't change very often.
+essentially what's going on.  And the essentials don't change very often.
 
 ### Standard headers
 
 The rest of the system will use these, `cqlrt.h` is responsible for bringing in what you need
-later (or what `cqlrt_common.h` needs)
+later, or what `cqlrt_common.h` needs on your system.
+
 ```C
 #pragma once
 

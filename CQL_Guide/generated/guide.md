@@ -8431,7 +8431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Aug 31 08:41:42 PDT 2021
+Snapshot as of Tue Sep  7 21:41:03 PDT 2021
 
 ### Operators and Literals
 
@@ -9927,7 +9927,7 @@ The complete list (as of this writing) is:
 `@BEGIN_SCHEMA_REGION`
 `@END_SCHEMA_REGION`
 
- * These directives controlt he declaration of schema regions and allow you to place things into those regions (See Chapter 10)
+ * These directives control the declaration of schema regions and allow you to place things into those regions -- see [Chapter 10](https://cgsql.dev/cql-guide/ch10)
 
 `@SCHEMA_AD_HOC_MIGRATION`
  * Allows for the creation of a ad hoc migration step at a given schema version, (See Chapter 10)
@@ -13600,7 +13600,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Aug 31 08:41:43 PDT 2021
+Snapshot as of Tue Sep  7 21:41:03 PDT 2021
 
 ### Rules
 
