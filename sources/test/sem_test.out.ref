@@ -50167,21 +50167,6 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
-SET an_int := abs(1);
-
-Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'abs'
-
-  {assign}: err
-  | {name an_int}: an_int: integer variable
-  | {call}: err
-    | {name abs}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {int 1}: integer notnull
-
-The statement ending at line XXXX
-
 SELECT abs('Horty');
 
 Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'abs'

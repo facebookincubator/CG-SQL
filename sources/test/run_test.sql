@@ -279,6 +279,23 @@ BEGIN_TEST(numeric_comparisons)
   EXPECT_SQL_TOO(one <= 1);
 END_TEST(numeric_comparisons)
 
+BEGIN_TEST(simple_funcs)
+  EXPECT_SQL_TOO(abs(-2) == 2);
+  EXPECT_SQL_TOO(abs(2) == 2);
+  EXPECT_SQL_TOO(abs(-2.0) == 2);
+  EXPECT_SQL_TOO(abs(2.0) == 2);
+  LET t := 3L;
+  EXPECT_SQL_TOO(abs(t) == t);
+  EXPECT_SQL_TOO(abs(-t) == t);
+  SET t := -4;
+  EXPECT_SQL_TOO(abs(t) == -t);
+  EXPECT_SQL_TOO(abs(-t) == -t);
+
+  EXPECT_SQL_TOO(abs(true) == true);
+  EXPECT_SQL_TOO(abs(false) == false);
+  EXPECT_SQL_TOO(abs(null) is null);
+END_TEST(simple_funcs)
+
 -- verify that out parameter is set in proc call
 create procedure echo ( in arg1 integer not null, out arg2 integer not null)
 begin

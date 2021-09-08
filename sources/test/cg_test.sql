@@ -4508,6 +4508,35 @@ BEGIN
   END;
 END;
 
+-- TEST: codegen for absolute value
+-- + _tmp_int_2 = - 2;
+-- + abs_val_int = abs(_tmp_int_2);
+LET abs_val_int := abs(-2);
+
+-- TEST: codegen for absolute value: nullable arg
+-- + cql_set_notnull(_tmp_n_int_2, (-2));
+-- + cql_set_nullable(abs_val_nullable, _tmp_n_int_2.is_null, abs(_tmp_n_int_2.value));
+LET abs_val_nullable := abs(nullable(-2));
+
+-- TEST: codegen for absolute value long
+-- +  _tmp_int64_2 = - _64(2);
+-- +  abs_val_long = labs(_tmp_int64_2);
+LET abs_val_long := abs(-2L);
+
+-- TEST: codegen for absolute value real
+-- + _tmp_double_2 = - 2.0;
+-- + abs_val_real = fabs(_tmp_double_2);
+LET abs_val_real := abs(-2.0);
+
+-- TEST: codegen for absolute value bool
+-- + _tmp_bool_2 = 1;
+-- + abs_val_bool = !!_tmp_bool_2;
+LET abs_val_bool := abs(true);
+
+-- TEST: codegen for absolute value of null
+-- + cql_set_null(abs_val_nullable);
+SET abs_val_nullable := abs(null);
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

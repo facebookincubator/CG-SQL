@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <math.h>
 #include <sqlite3.h>
 
 #ifndef __clang__

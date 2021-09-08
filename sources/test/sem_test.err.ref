@@ -905,7 +905,6 @@ Error at test/sem_test.sql:XXXX : in call : CQL0317: char function arguments mus
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'char'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'char'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'abs'
-Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'abs'
 Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'abs'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'instr'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'instr'

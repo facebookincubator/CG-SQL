@@ -12401,12 +12401,6 @@ set price_d := (select abs(price_d));
 -- +1 Error
 select abs() from bar;
 
--- TEST: abs may not appear outside of a SQL statement
--- + {assign}: err
--- + {call}: err
--- +1 Error % function may not appear in this context 'abs'
-set an_int := abs(1);
-
 -- TEST: test abs with non numeric param
 -- + {select_stmt}: err
 -- + {call}: err

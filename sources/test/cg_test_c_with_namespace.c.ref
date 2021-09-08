@@ -14705,6 +14705,11 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+cql_int32 abs_val_int = 0;
+cql_nullable_int32 abs_val_nullable;
+cql_int64 abs_val_long = 0;
+cql_double abs_val_real = 0;
+cql_bool abs_val_bool = 0;
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX
@@ -14756,6 +14761,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_blob_ref _tmp_n_blob_1 = NULL;
   cql_blob_ref _tmp_blob_0 = NULL;
   cql_string_ref _tmp_n_text_1 = NULL;
+  cql_int64 _tmp_int64_2 = 0;
+  cql_double _tmp_double_2 = 0;
+  cql_bool _tmp_bool_2 = 0;
 
   // The statement ending at line XXXX
 
@@ -17036,6 +17044,53 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET false_test := i0_nullable IS NOT FALSE;
   */
   false_test = !cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
+
+  // The statement ending at line XXXX
+
+  /*
+  LET abs_val_int := abs(-2);
+  */
+  _tmp_int_2 = - 2;
+  abs_val_int = abs(_tmp_int_2);
+
+  // The statement ending at line XXXX
+
+  /*
+  LET abs_val_nullable := abs(nullable(-2));
+  */
+  cql_set_notnull(_tmp_n_int_2, (-2));
+  cql_set_nullable(abs_val_nullable, _tmp_n_int_2.is_null, abs(_tmp_n_int_2.value));
+
+  // The statement ending at line XXXX
+
+  /*
+  LET abs_val_long := abs(-2L);
+  */
+  _tmp_int64_2 = - _64(2);
+  abs_val_long = labs(_tmp_int64_2);
+
+  // The statement ending at line XXXX
+
+  /*
+  LET abs_val_real := abs(-2.0);
+  */
+  _tmp_double_2 = - 2.0;
+  abs_val_real = fabs(_tmp_double_2);
+
+  // The statement ending at line XXXX
+
+  /*
+  LET abs_val_bool := abs(1);
+  */
+  _tmp_bool_2 = 1;
+  abs_val_bool = !!_tmp_bool_2;
+
+  // The statement ending at line XXXX
+
+  /*
+  SET abs_val_nullable := abs(NULL);
+  */
+  cql_set_null(abs_val_nullable);
 
   // The statement ending at line XXXX
 

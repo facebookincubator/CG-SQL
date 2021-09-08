@@ -1669,6 +1669,66 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   CHARBUF_CLOSE(result);
 }
 
+// To do `abs` we have to evaluate the argument and store it somewhere
+// we use the result variable for this.  We don't want to evaluate that
+// expression more than once, hence the temporary storage.  Once we have
+// the value in a result variable, we can test it against zero safely
+// and alter it as needed.
+static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left); // first arg
+
+  // abs ( expr )
+
+  sem_t sem_type_result = call_ast->sem->sem_type;
+  sem_t core_type_result = core_type_of(sem_type_result);
+
+  if (core_type_result == SEM_TYPE_NULL) {
+    bprintf(value, "0");
+    bprintf(is_null, "1");
+    return;
+  }
+
+  CHARBUF_OPEN(abs_value);
+  CG_SETUP_RESULT_VAR(call_ast, sem_type_result);
+
+  // Evaluate the expression and stow it in a temporary.
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+  CG_PUSH_TEMP(temp, sem_type_result);
+
+  // Copy the expression, we can't evaluate it more than once, so stow it.
+  cg_store_same_type(cg_main_output, temp.ptr, sem_type_result, expr_is_null.ptr, expr_value.ptr);
+
+  switch (core_type_result) {
+    case SEM_TYPE_INTEGER:
+      bprintf(&abs_value, "abs(%s)", temp_value.ptr);
+      break;
+
+    case SEM_TYPE_LONG_INTEGER:
+      bprintf(&abs_value, "labs(%s)", temp_value.ptr);
+      break;
+
+    case SEM_TYPE_REAL:
+      bprintf(&abs_value, "fabs(%s)", temp_value.ptr);
+      break;
+
+    case SEM_TYPE_BOOL:
+      bprintf(&abs_value, "!!%s", temp_value.ptr);
+      break;
+  }
+
+  cg_store_same_type(cg_main_output, result_var.ptr, sem_type_result, temp_is_null.ptr, abs_value.ptr);
+
+  CG_POP_TEMP(temp);
+  CG_POP_EVAL(expr);
+  CG_CLEANUP_RESULT_VAR();
+  CHARBUF_CLOSE(abs_value);
+}
+
 // This helper generates the tests for each entry in the IN list.
 // we generate the appropriate equality test -- one for strings
 // one for nullables and one for not nullables.  Note expr is already known
@@ -7293,6 +7353,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(out_union_stmt);
   STMT_INIT(echo_stmt);
 
+  FUNC_INIT(abs);
   FUNC_INIT(sensitive);
   FUNC_INIT(nullable);
   FUNC_INIT(ifnull_throw);

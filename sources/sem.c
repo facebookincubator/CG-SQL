@@ -6860,11 +6860,6 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // abs can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
-
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
   }
