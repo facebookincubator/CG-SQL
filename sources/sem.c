@@ -389,9 +389,9 @@ static CSTR annotation_target;
 static bool_t is_analyzing_notnull_rewrite;
 
 // This keeps track of all global variables that may currently be improved to be
-// NOT NULL. We need this because we must un-improve all such variables before
-// every CALL (because we don't do interprocedural analysis and cannot know
-// which globals may have been set to NULL).
+// NOT NULL. We need this because we must un-improve all such variables after
+// every procedure call (because we don't do interprocedural analysis and cannot
+// know which globals may have been set to NULL).
 static notnull_improvement_context global_notnull_improvement_context;
 
 // This is the context into which any nonnull improvements made will be
@@ -8111,6 +8111,11 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
   sem_validate_args_vs_formals(ast, name, arg_list, params, PROC_AS_FUNC);
   Invariant(ast->sem);  // either an error or a result
 
+  // The call may have mutated any or all of the currently improved globals, so
+  // we simply invalidate all of them.
+  sem_unset_notnull_improvements_in_context(global_notnull_improvement_context);
+  global_notnull_improvement_context = NULL;
+
   has_dml |= is_dml_proc(proc->sem->sem_type);
 }
 
@@ -11633,9 +11638,9 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
     return;
   }
 
-  // We keep track of globals so that we can unset them before procedure calls
-  // so they are not inappropriately considered nonnull in the callee (or after
-  // the call returns).
+  // We keep track of globals as we need to un-improve all of them after every
+  // procedure call. We need to do this due to the assumption that the procedure
+  // could have set any number of globals to null.
   bool_t is_global;
   if (scope) {
     // There is nothing else mutable at a global scope with a qualified
@@ -11652,9 +11657,6 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
     global_item->type = type;
     global_item->next = global_notnull_improvement_context;
     global_notnull_improvement_context = global_item;
-    // TODO: Since we do not yet have hazards in place for calls, it's not
-    // safe to actually do the improvement.
-    return;
   }
 
   // Improve the type.
@@ -11711,8 +11713,6 @@ static void sem_unset_notnull_improved(CSTR name, CSTR scope) {
 
 // Unsets nonnull improvements for all items in the list provided.
 static void sem_unset_notnull_improvements_in_context(notnull_improvement_context context) {
-  Contract(!is_current_notnull_improvement_context_contingent);
-
   for (notnull_improvement_context_item *head = context; head; head = head->next) {
     // Is it very important that we only unset improvements that are currently
     // set. Doing otherwise would result in an invalid history, and reverting
@@ -17681,6 +17681,14 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     has_dml |= is_dml_proc(proc_stmt->sem->sem_type);
 
     sem_validate_args_vs_formals(ast, name, expr_list, params, NORMAL_CALL);
+
+    // The call may have mutated any or all of the currently improved globals,
+    // so we simply invalidate all of them. We do this before returning in the
+    // case of an error so that subsequently checked statements have a slightly
+    // more accurate view of what can no longer be considered improved.
+    sem_unset_notnull_improvements_in_context(global_notnull_improvement_context);
+    global_notnull_improvement_context = NULL;
+
     if (is_error(ast)) {
       return;
     }

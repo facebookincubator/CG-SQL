@@ -16923,25 +16923,39 @@ begin
   end if;
 end;
 
--- TEST: Improvements do not (yet) work for global auto cursors.
+-- TEST: Improvements work for global auto cursors.
 -- + {let_stmt}: x0: integer variable
 -- + {let_stmt}: y0: integer variable
--- + {let_stmt}: x1: integer variable
--- + {let_stmt}: y1: integer variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: y1: integer notnull variable
 -- + {let_stmt}: x2: integer variable
 -- + {let_stmt}: y2: integer variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: y3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: y4: integer variable
 -- - Error
-create proc improvements_do_not_work_for_global_auto_cursors()
+create proc improvements_work_for_global_auto_cursors()
 begin
   fetch c_global from values (0, 0);
   let x0 := c_global.xn;
   let y0 := c_global.yn;
   if c_global.xn is not null and c_global.yn is not null then
+    -- improved due to true condition
     let x1 := c_global.xn;
     let y1 := c_global.yn;
     fetch c_global from values (0, 0);
+    -- un-improved due to fetch
     let x2 := c_global.xn;
     let y2 := c_global.yn;
+    if c_global.xn is null or c_global.yn is null return;
+    -- improved due to false condition
+    let x3 := c_global.xn;
+    let y3 := c_global.yn;
+    call proc1();
+    -- un-improved due to procedure call
+    let x4 := c_global.xn;
+    let y4 := c_global.yn;
   end if;
 end;
 
@@ -17025,14 +17039,86 @@ begin
   end if;
 end;
 
--- TEST: Improvements do not work for globals (yet).
--- + {let_stmt}: x: integer variable
+-- Used in the following test.
 -- - Error
-create proc improvements_do_not_work_for_globals()
+declare some_global int;
+
+-- Used in the following test.
+-- - Error
+create proc requires_not_nulls(a int not null, b int not null, c int not null)
 begin
-  if Y is not null then
-    let x := Y;
+end;
+
+-- Used in the following test.
+-- - Error
+create proc returns_int_not_null(out a int not null)
+begin
+end;
+
+-- TEST: Improvements work for globals.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer notnull variable
+-- + {let_stmt}: x3: integer notnull variable
+-- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: x5: integer notnull variable
+-- + {let_stmt}: x6: integer variable
+-- + {let_stmt}: x7: integer notnull variable
+-- + {let_stmt}: x8: integer variable
+-- + {let_stmt}: x9: integer notnull variable
+-- + {let_stmt}: x10: integer notnull variable
+-- + {let_stmt}: x11: integer variable
+-- + {let_stmt}: x12: integer notnull variable
+-- + {let_stmt}: x13: integer variable
+-- - Error
+create proc improvements_work_for_globals()
+begin
+  if some_global is not null then
+    -- `some_global` is improved here.
+    let x0 := some_global;
+    -- Both uses are improved here because we have yet to encounter a call to a
+    -- stored procedure.
+    let x1 := iif(0, some_global, some_global);
+    -- It's still improved after calling an external function (which cannot
+    -- mutate a global).
+    call some_external_thing();
+    let x2 := some_global;
+    -- The same is true for built-in functions.
+    select round(4.2) as a;
+    let x3 := some_global;
+    -- After calling a stored procedure, it's no longer improved.
+    call proc1();
+    let x4 := some_global;
+    -- Re-improve the global.
+    if some_global is null return;
+    let x5 := some_global;
+    -- This type checks because it remains improved until after the call.
+    call requires_not_nulls(some_global, some_global, some_global);
+    -- Now, however, it is un-improved due to the call.
+    let x6 := some_global;
+    -- Re-improve the global.
+    if some_global is null return;
+    let x7 := some_global;
+    -- Here, the result is nullable because calls in previous subexpressions
+    -- un-improve, as well.
+    let x8 := returns_int_not_null() + some_global;
+    -- Re-improve the global.
+    if some_global is null return;
+    let x9 := some_global;
+    -- In contrast, here the result is nonnull despite the call in a previous
+    -- subexpression due to branch-independent analysis.
+    let x10 := iif(0, returns_int_not_null(), some_global);
+    -- Fetching from a procedure will also invalidate the improvement.
+    declare c cursor fetch from call out_cursor_proc();
+    let x11 := some_global;
+    -- Re-improve the global.
+    if some_global is null return;
+    let x12 := some_global;
   end if;
+
+  -- Finally, `some_global` is nullable as the scope in which it was improved
+  -- has ended.
+  let x13 := some_global;
 end;
 
 -- TEST: Improvements work on columns resulting from a select *.

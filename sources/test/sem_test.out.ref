@@ -66382,7 +66382,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_global_auto_cursors ()
+CREATE PROC improvements_work_for_global_auto_cursors ()
 BEGIN
   FETCH c_global(xn, yn) FROM VALUES(0, 0);
   LET x0 := c_global.xn;
@@ -66393,11 +66393,19 @@ BEGIN
     FETCH c_global(xn, yn) FROM VALUES(0, 0);
     LET x2 := c_global.xn;
     LET y2 := c_global.yn;
+    IF c_global.xn IS NULL OR c_global.yn IS NULL THEN
+      RETURN;
+    END IF;
+    LET x3 := c_global.xn;
+    LET y3 := c_global.yn;
+    CALL proc1();
+    LET x4 := c_global.xn;
+    LET y4 := c_global.yn;
   END IF;
 END;
 
-  {create_proc_stmt}: ok
-  | {name improvements_do_not_work_for_global_auto_cursors}: ok
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_global_auto_cursors}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {fetch_values_stmt}: ok
@@ -66437,16 +66445,26 @@ END;
         | |   | | {name yn}
         | |   | {null}: null
         | | {stmt_list}: ok
-        |   | {let_stmt}: x1: integer variable
-        |   | | {name x1}: x1: integer variable
-        |   | | {dot}: c_global.xn: integer variable
-        |   |   | {name c_global}
-        |   |   | {name xn}
-        |   | {let_stmt}: y1: integer variable
-        |   | | {name y1}: y1: integer variable
-        |   | | {dot}: c_global.yn: integer variable
-        |   |   | {name c_global}
-        |   |   | {name yn}
+        |   | {let_stmt}: x1: integer notnull variable
+        |   | | {name x1}: x1: integer notnull variable
+        |   | | {call}: c_global.xn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_global.xn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_global.xn: integer inferred_notnull variable
+        |   |         | {name c_global}
+        |   |         | {name xn}
+        |   | {let_stmt}: y1: integer notnull variable
+        |   | | {name y1}: y1: integer notnull variable
+        |   | | {call}: c_global.yn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_global.yn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_global.yn: integer inferred_notnull variable
+        |   |         | {name c_global}
+        |   |         | {name yn}
         |   | {fetch_values_stmt}: ok
         |   | | {name_columns_values}
         |   |   | {name c_global}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
@@ -66466,7 +66484,55 @@ END;
         |   |   | {name c_global}
         |   |   | {name xn}
         |   | {let_stmt}: y2: integer variable
-        |     | {name y2}: y2: integer variable
+        |   | | {name y2}: y2: integer variable
+        |   | | {dot}: c_global.yn: integer variable
+        |   |   | {name c_global}
+        |   |   | {name yn}
+        |   | {if_stmt}: bool notnull
+        |   | | {cond_action}: bool notnull
+        |   | | | {or}: bool notnull
+        |   | | | | {is}: bool notnull
+        |   | | | | | {dot}: c_global.xn: integer variable
+        |   | | | | | | {name c_global}
+        |   | | | | | | {name xn}
+        |   | | | | | {null}: null
+        |   | | | | {is}: bool notnull
+        |   | | |   | {dot}: c_global.yn: integer variable
+        |   | | |   | | {name c_global}
+        |   | | |   | | {name yn}
+        |   | | |   | {null}: null
+        |   | | | {stmt_list}: ok
+        |   | |   | {return_stmt}: ok
+        |   | | {if_alt}: ok
+        |   | {let_stmt}: x3: integer notnull variable
+        |   | | {name x3}: x3: integer notnull variable
+        |   | | {call}: c_global.xn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_global.xn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_global.xn: integer inferred_notnull variable
+        |   |         | {name c_global}
+        |   |         | {name xn}
+        |   | {let_stmt}: y3: integer notnull variable
+        |   | | {name y3}: y3: integer notnull variable
+        |   | | {call}: c_global.yn: integer notnull variable
+        |   |   | {name cql_inferred_notnull}: c_global.yn: integer notnull variable
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: c_global.yn: integer inferred_notnull variable
+        |   |         | {name c_global}
+        |   |         | {name yn}
+        |   | {call_stmt}: ok dml_proc
+        |   | | {name proc1}: ok dml_proc
+        |   | {let_stmt}: x4: integer variable
+        |   | | {name x4}: x4: integer variable
+        |   | | {dot}: c_global.xn: integer variable
+        |   |   | {name c_global}
+        |   |   | {name xn}
+        |   | {let_stmt}: y4: integer variable
+        |     | {name y4}: y4: integer variable
         |     | {dot}: c_global.yn: integer variable
         |       | {name c_global}
         |       | {name yn}
@@ -66714,27 +66780,308 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_globals ()
+DECLARE some_global INTEGER;
+
+  {declare_vars_type}: integer
+  | {name_list}: some_global: integer variable
+  | | {name some_global}: some_global: integer variable
+  | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC requires_not_nulls (a INTEGER NOT NULL, b INTEGER NOT NULL, c INTEGER NOT NULL)
 BEGIN
-  IF Y IS NOT NULL THEN
-    LET x := Y;
-  END IF;
 END;
 
   {create_proc_stmt}: ok
-  | {name improvements_do_not_work_for_globals}: ok
+  | {name requires_not_nulls}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer notnull variable in
+      | | {param_detail}: a: integer notnull variable in
+      |   | {name a}: a: integer notnull variable in
+      |   | {notnull}: integer notnull
+      |     | {type_int}: integer
+      | {params}
+        | {param}: b: integer notnull variable in
+        | | {param_detail}: b: integer notnull variable in
+        |   | {name b}: b: integer notnull variable in
+        |   | {notnull}: integer notnull
+        |     | {type_int}: integer
+        | {params}
+          | {param}: c: integer notnull variable in
+            | {param_detail}: c: integer notnull variable in
+              | {name c}: c: integer notnull variable in
+              | {notnull}: integer notnull
+                | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC returns_int_not_null (OUT a INTEGER NOT NULL)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name returns_int_not_null}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: integer notnull variable out
+        | {out}
+        | {param_detail}: a: integer notnull variable out
+          | {name a}: a: integer notnull variable out
+          | {notnull}: integer notnull
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_globals ()
+BEGIN
+  IF some_global IS NOT NULL THEN
+    LET x0 := some_global;
+    LET x1 := CASE WHEN 0 THEN some_global
+    ELSE some_global
+    END;
+    CALL some_external_thing();
+    LET x2 := some_global;
+    SELECT round(4.2) AS a;
+    LET x3 := some_global;
+    CALL proc1();
+    LET x4 := some_global;
+    IF some_global IS NULL THEN
+      RETURN;
+    END IF;
+    LET x5 := some_global;
+    CALL requires_not_nulls(some_global, some_global, some_global);
+    LET x6 := some_global;
+    IF some_global IS NULL THEN
+      RETURN;
+    END IF;
+    LET x7 := some_global;
+    LET x8 := returns_int_not_null() + some_global;
+    IF some_global IS NULL THEN
+      RETURN;
+    END IF;
+    LET x9 := some_global;
+    LET x10 := CASE WHEN 0 THEN returns_int_not_null()
+    ELSE some_global
+    END;
+    DECLARE c CURSOR FETCH FROM CALL out_cursor_proc();
+    LET x11 := some_global;
+    IF some_global IS NULL THEN
+      RETURN;
+    END IF;
+    LET x12 := some_global;
+  END IF;
+  LET x13 := some_global;
+END;
+
+  {create_proc_stmt}: select: { a: longint notnull } dml_proc
+  | {name improvements_work_for_globals}: select: { a: longint notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {if_stmt}: bool notnull
-        | {cond_action}: bool notnull
-        | | {is_not}: bool notnull
-        | | | {name Y}: Y: integer variable
-        | | | {null}: null
-        | | {stmt_list}: ok
-        |   | {let_stmt}: x: integer variable
-        |     | {name x}: x: integer variable
-        |     | {name Y}: Y: integer variable
-        | {if_alt}: ok
+      | | {cond_action}: bool notnull
+      | | | {is_not}: bool notnull
+      | | | | {name some_global}: some_global: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x0: integer notnull variable
+      | |   | | {name x0}: x0: integer notnull variable
+      | |   | | {call}: some_global: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {let_stmt}: x1: integer notnull variable
+      | |   | | {name x1}: x1: integer notnull variable
+      | |   | | {case_expr}: integer notnull
+      | |   |   | {connector}: integer notnull
+      | |   |     | {case_list}: integer notnull variable
+      | |   |     | | {when}: some_global: integer notnull variable
+      | |   |     |   | {int 0}: integer notnull
+      | |   |     |   | {call}: some_global: integer notnull variable
+      | |   |     |     | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |     |     | {call_arg_list}
+      | |   |     |       | {call_filter_clause}
+      | |   |     |       | {arg_list}: ok
+      | |   |     |         | {name some_global}: some_global: integer inferred_notnull variable
+      | |   |     | {call}: some_global: integer notnull variable
+      | |   |       | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |       | {call_arg_list}
+      | |   |         | {call_filter_clause}
+      | |   |         | {arg_list}: ok
+      | |   |           | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {call_stmt}: ok
+      | |   | | {name some_external_thing}: ok
+      | |   | {let_stmt}: x2: integer notnull variable
+      | |   | | {name x2}: x2: integer notnull variable
+      | |   | | {call}: some_global: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {select_stmt}: select: { a: longint notnull }
+      | |   | | {select_core_list}: select: { a: longint notnull }
+      | |   | | | {select_core}: select: { a: longint notnull }
+      | |   | |   | {select_expr_list_con}: select: { a: longint notnull }
+      | |   | |     | {select_expr_list}: select: { a: longint notnull }
+      | |   | |     | | {select_expr}: a: longint notnull
+      | |   | |     |   | {call}: longint notnull
+      | |   | |     |   | | {name round}: longint notnull
+      | |   | |     |   | | {call_arg_list}
+      | |   | |     |   |   | {call_filter_clause}
+      | |   | |     |   |   | {arg_list}: ok
+      | |   | |     |   |     | {dbl 4.2}: real notnull
+      | |   | |     |   | {opt_as_alias}
+      | |   | |     |     | {name a}
+      | |   | |     | {select_from_etc}: ok
+      | |   | |       | {select_where}
+      | |   | |         | {select_groupby}
+      | |   | |           | {select_having}
+      | |   | | {select_orderby}
+      | |   |   | {select_limit}
+      | |   |     | {select_offset}
+      | |   | {let_stmt}: x3: integer notnull variable
+      | |   | | {name x3}: x3: integer notnull variable
+      | |   | | {call}: some_global: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {call_stmt}: ok dml_proc
+      | |   | | {name proc1}: ok dml_proc
+      | |   | {let_stmt}: x4: integer variable
+      | |   | | {name x4}: x4: integer variable
+      | |   | | {name some_global}: some_global: integer variable
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name some_global}: some_global: integer variable
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x5: integer notnull variable
+      | |   | | {name x5}: x5: integer notnull variable
+      | |   | | {call}: some_global: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {call_stmt}: ok
+      | |   | | {name requires_not_nulls}: ok
+      | |   | | {expr_list}: ok
+      | |   |   | {call}: some_global: integer notnull variable
+      | |   |   | | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |   | | {call_arg_list}
+      | |   |   |   | {call_filter_clause}
+      | |   |   |   | {arg_list}: ok
+      | |   |   |     | {name some_global}: some_global: integer inferred_notnull variable
+      | |   |   | {expr_list}
+      | |   |     | {call}: some_global: integer notnull variable
+      | |   |     | | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |     | | {call_arg_list}
+      | |   |     |   | {call_filter_clause}
+      | |   |     |   | {arg_list}: ok
+      | |   |     |     | {name some_global}: some_global: integer inferred_notnull variable
+      | |   |     | {expr_list}
+      | |   |       | {call}: some_global: integer notnull variable
+      | |   |         | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |         | {call_arg_list}
+      | |   |           | {call_filter_clause}
+      | |   |           | {arg_list}: ok
+      | |   |             | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {let_stmt}: x6: integer variable
+      | |   | | {name x6}: x6: integer variable
+      | |   | | {name some_global}: some_global: integer variable
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name some_global}: some_global: integer variable
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x7: integer notnull variable
+      | |   | | {name x7}: x7: integer notnull variable
+      | |   | | {call}: some_global: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {let_stmt}: x8: integer variable
+      | |   | | {name x8}: x8: integer variable
+      | |   | | {add}: integer
+      | |   |   | {call}: integer notnull
+      | |   |   | | {name returns_int_not_null}
+      | |   |   | | {call_arg_list}
+      | |   |   |   | {call_filter_clause}
+      | |   |   | {name some_global}: some_global: integer variable
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name some_global}: some_global: integer variable
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x9: integer notnull variable
+      | |   | | {name x9}: x9: integer notnull variable
+      | |   | | {call}: some_global: integer notnull variable
+      | |   |   | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |   | {call_arg_list}
+      | |   |     | {call_filter_clause}
+      | |   |     | {arg_list}: ok
+      | |   |       | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {let_stmt}: x10: integer notnull variable
+      | |   | | {name x10}: x10: integer notnull variable
+      | |   | | {case_expr}: integer notnull
+      | |   |   | {connector}: integer notnull
+      | |   |     | {case_list}: integer notnull
+      | |   |     | | {when}: integer notnull
+      | |   |     |   | {int 0}: integer notnull
+      | |   |     |   | {call}: integer notnull
+      | |   |     |     | {name returns_int_not_null}
+      | |   |     |     | {call_arg_list}
+      | |   |     |       | {call_filter_clause}
+      | |   |     | {call}: some_global: integer notnull variable
+      | |   |       | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |   |       | {call_arg_list}
+      | |   |         | {call_filter_clause}
+      | |   |         | {arg_list}: ok
+      | |   |           | {name some_global}: some_global: integer inferred_notnull variable
+      | |   | {declare_value_cursor}: c: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | |   | | {name c}: c: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | |   | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | |   |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | |   | {let_stmt}: x11: integer variable
+      | |   | | {name x11}: x11: integer variable
+      | |   | | {name some_global}: some_global: integer variable
+      | |   | {if_stmt}: bool notnull
+      | |   | | {cond_action}: bool notnull
+      | |   | | | {is}: bool notnull
+      | |   | | | | {name some_global}: some_global: integer variable
+      | |   | | | | {null}: null
+      | |   | | | {stmt_list}: ok
+      | |   | |   | {return_stmt}: ok
+      | |   | | {if_alt}: ok
+      | |   | {let_stmt}: x12: integer notnull variable
+      | |     | {name x12}: x12: integer notnull variable
+      | |     | {call}: some_global: integer notnull variable
+      | |       | {name cql_inferred_notnull}: some_global: integer notnull variable
+      | |       | {call_arg_list}
+      | |         | {call_filter_clause}
+      | |         | {arg_list}: ok
+      | |           | {name some_global}: some_global: integer inferred_notnull variable
+      | | {if_alt}: ok
+      | {let_stmt}: x13: integer variable
+        | {name x13}: x13: integer variable
+        | {name some_global}: some_global: integer variable
 
 The statement ending at line XXXX
 
