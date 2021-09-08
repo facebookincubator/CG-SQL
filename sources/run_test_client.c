@@ -450,6 +450,7 @@ static void set_finalize(cql_type_ref _Nonnull ref)
 cql_object_ref _Nonnull set_create()
 {
   cql_object_ref obj = (cql_object_ref)calloc(sizeof(cql_object), 1);
+  obj->base.type = CQL_C_TYPE_OBJECT;
   obj->base.ref_count = 1;
   obj->base.finalize = set_finalize;
   obj->ptr = calloc(sizeof(set_payload), 1);

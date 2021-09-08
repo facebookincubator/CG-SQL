@@ -37,6 +37,7 @@ typedef unsigned char cql_bool;
 #define CQL_C_TYPE_BLOB 1
 #define CQL_C_TYPE_RESULTS 2
 #define CQL_C_TYPE_BOXED_STMT 3
+#define CQL_C_TYPE_OBJECT 4
 
 typedef unsigned long cql_hash_code;
 typedef int32_t cql_int32;
@@ -53,8 +54,11 @@ typedef struct cql_type {
   int ref_count;
   void (*_Nullable finalize)(cql_type_ref _Nonnull ref);
 } cql_type;
+
 void cql_retain(cql_type_ref _Nullable ref);
 void cql_release(cql_type_ref _Nullable ref);
+cql_hash_code cql_ref_hash(cql_type_ref _Nonnull typeref);
+cql_bool cql_ref_equal(cql_type_ref _Nullable typeref1, cql_type_ref _Nullable typeref2);
 
 // builtin object
 typedef struct cql_object *cql_object_ref;
@@ -84,6 +88,8 @@ typedef struct cql_blob {
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);
 #define cql_get_blob_bytes(data) (data->ptr)
 #define cql_get_blob_size(data) (data->size)
+cql_hash_code cql_blob_hash(cql_blob_ref _Nullable str);
+cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2);
 
 // builtin string
 typedef struct cql_string *cql_string_ref;
@@ -108,15 +114,10 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 
 int cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
-cql_hash_code cql_blob_hash(cql_blob_ref _Nullable str);
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 #define cql_alloc_cstr(cstr, str) const char *_Nonnull cstr = (str)->ptr
 #define cql_free_cstr(cstr, str) 0
-
-cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2);
-cql_hash_code cql_ref_hash(cql_type_ref _Nonnull typeref);
-cql_bool cql_ref_equal(cql_type_ref _Nullable typeref1, cql_type_ref _Nullable typeref2);
 
 // builtin result set
 typedef struct cql_result_set *cql_result_set_ref;
@@ -126,28 +127,35 @@ typedef struct cql_result_set_meta {
   void (*_Nonnull teardown)(cql_result_set_ref _Nonnull result_set);
 
   // copy a slice of a result set starting at from of length count
-  void (*_Nullable copy)(cql_result_set_ref _Nonnull result_set,
-                         cql_result_set_ref _Nullable *_Nonnull to_result_set,
-                         cql_int32 from,
-                         cql_int32 count);
+  void (*_Nullable copy)(
+    cql_result_set_ref _Nonnull result_set,
+    cql_result_set_ref _Nullable *_Nonnull to_result_set,
+    cql_int32 from,
+    cql_int32 count);
 
  // hash a row in a row set using the metadata
-  cql_hash_code (*_Nullable rowHash)(cql_result_set_ref _Nonnull result_set, cql_int32 row);
+  cql_hash_code (*_Nullable rowHash)(
+    cql_result_set_ref _Nonnull result_set,
+    cql_int32 row);
 
  // compare two rows for equality
-  cql_bool (*_Nullable rowsEqual)(cql_result_set_ref _Nonnull rs1,
-                                  cql_int32 row1,
-                                  cql_result_set_ref _Nonnull rs2,
-                                  cql_int32 row2);
+  cql_bool (*_Nullable rowsEqual)(
+    cql_result_set_ref _Nonnull rs1,
+    cql_int32 row1,
+    cql_result_set_ref _Nonnull rs2,
+    cql_int32 row2);
 
   // compare two rows for the same identity column value(s)
-  cql_bool (*_Nullable rowsSame)(cql_result_set_ref _Nonnull rs1,
-                                 cql_int32 row1,
-                                 cql_result_set_ref _Nonnull rs2,
-                                 cql_int32 row2);
+  cql_bool (*_Nullable rowsSame)(
+    cql_result_set_ref _Nonnull rs1,
+    cql_int32 row1,
+    cql_result_set_ref _Nonnull rs2,
+    cql_int32 row2);
 
   // check whether the column value is encoded
-  cql_bool(*_Nullable getIsEncoded)(cql_result_set_ref _Nonnull result_set, cql_int32 col);
+  cql_bool(*_Nullable getIsEncoded)(
+   cql_result_set_ref _Nonnull result_set,
+   cql_int32 col);
 
   // count of references and offset to the first
   uint16_t refsCount;
@@ -179,10 +187,13 @@ typedef struct cql_result_set {
   void *_Nonnull data;
 } cql_result_set;
 
-#define cql_result_set_type_decl(result_set_type, result_set_ref) typedef struct _##result_set_type *result_set_ref;
-cql_result_set_ref _Nonnull cql_result_set_create(void *_Nonnull data,
-                                                  cql_int32 count,
-                                                  cql_result_set_meta meta);
+#define cql_result_set_type_decl(result_set_type, result_set_ref) \
+  typedef struct _##result_set_type *result_set_ref;
+
+cql_result_set_ref _Nonnull cql_result_set_create(
+  void *_Nonnull data,
+  cql_int32 count,
+  cql_result_set_meta meta);
 
 #define cql_result_set_retain(result_set) cql_retain((cql_type_ref)result_set);
 #define cql_result_set_release(result_set) cql_release((cql_type_ref)result_set);
@@ -211,55 +222,78 @@ SQLITE_API cql_code mockable_sqlite3_step(sqlite3_stmt *_Nonnull);
 // be encoded at the source. CQL never decode encoded sensitive string unless the
 // user call explicitly decode function from code.
 cql_object_ref _Nullable cql_copy_encoder(sqlite3 *_Nonnull db);
-cql_bool cql_encode_bool(cql_object_ref _Nullable encoder,
-                         cql_bool value,
-                         cql_int32 context_type,
-                         void *_Nullable context);
-cql_int32 cql_encode_int32(cql_object_ref _Nullable encoder,
-                           cql_int32 value,
-                           cql_int32 context_type,
-                           void *_Nullable context);
-cql_int64 cql_encode_int64(cql_object_ref _Nullable encoder,
-                           cql_int64 value,
-                           cql_int32 context_type,
-                           void *_Nullable context);
-cql_double cql_encode_double(cql_object_ref _Nullable encoder,
-                             cql_double value,
-                             cql_int32 context_type,
-                             void *_Nullable context);
-cql_string_ref _Nonnull cql_encode_string_ref_new(cql_object_ref _Nullable encoder,
-                                                  cql_string_ref _Nonnull value,
-                                                  cql_int32 context_type,
-                                                  void *_Nullable context);
-cql_blob_ref _Nonnull cql_encode_blob_ref_new(cql_object_ref _Nullable encoder,
-                                              cql_blob_ref _Nonnull value,
-                                              cql_int32 context_type,
-                                              void *_Nullable context);
 
-cql_bool cql_decode_bool(cql_object_ref _Nullable encoder,
-                         cql_bool value,
-                         cql_int32 context_type,
-                         void *_Nullable context);
-cql_int32 cql_decode_int32(cql_object_ref _Nullable encoder,
-                           cql_int32 value,
-                           cql_int32 context_type,
-                           void *_Nullable context);
-cql_int64 cql_decode_int64(cql_object_ref _Nullable encoder,
-                           cql_int64 value,
-                           cql_int32 context_type,
-                           void *_Nullable context);
-cql_double cql_decode_double(cql_object_ref _Nullable encoder,
-                             cql_double value,
-                             cql_int32 context_type,
-                             void *_Nullable context);
-cql_string_ref _Nonnull cql_decode_string_ref_new(cql_object_ref _Nullable encoder,
-                                                  cql_string_ref _Nonnull value,
-                                                  cql_int32 context_type,
-                                                  void *_Nullable context);
-cql_blob_ref _Nonnull cql_decode_blob_ref_new(cql_object_ref _Nullable encoder,
-                                              cql_blob_ref _Nonnull value,
-                                              cql_int32 context_type,
-                                              void *_Nullable context);
+cql_bool cql_encode_bool(
+  cql_object_ref _Nullable encoder,
+  cql_bool value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_int32 cql_encode_int32(
+  cql_object_ref _Nullable encoder,
+  cql_int32 value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_int64 cql_encode_int64(
+  cql_object_ref _Nullable encoder,
+  cql_int64 value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_double cql_encode_double(
+  cql_object_ref _Nullable encoder,
+  cql_double value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_string_ref _Nonnull cql_encode_string_ref_new(
+  cql_object_ref _Nullable encoder,
+  cql_string_ref _Nonnull value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_blob_ref _Nonnull cql_encode_blob_ref_new(
+  cql_object_ref _Nullable encoder,
+  cql_blob_ref _Nonnull value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_bool cql_decode_bool(
+  cql_object_ref _Nullable encoder,
+  cql_bool value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_int32 cql_decode_int32(
+  cql_object_ref _Nullable encoder,
+  cql_int32 value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_int64 cql_decode_int64(
+  cql_object_ref _Nullable encoder,
+  cql_int64 value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_double cql_decode_double(
+  cql_object_ref _Nullable encoder,
+  cql_double value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_string_ref _Nonnull cql_decode_string_ref_new(
+  cql_object_ref _Nullable encoder,
+  cql_string_ref _Nonnull value,
+  cql_int32 context_type,
+  void *_Nullable context);
+
+cql_blob_ref _Nonnull cql_decode_blob_ref_new(
+  cql_object_ref _Nullable encoder,
+  cql_blob_ref _Nonnull value,
+  cql_int32 context_type,
+  void *_Nullable context);
 
 cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
 sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
