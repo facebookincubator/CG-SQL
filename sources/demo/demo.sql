@@ -7,6 +7,8 @@
 
 -- demo stored procs
 
+declare procedure printf no check;
+
 create procedure make_mixed()
 begin
   create table mixed(
