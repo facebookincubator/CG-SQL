@@ -16,7 +16,8 @@ begin
     age integer @sensitive,
     thing real,
     bytes blob,
-    key text @sensitive);
+    key1 text,
+    key2 text @sensitive);
 
   /* insert some data */
   declare i integer not null;
@@ -28,7 +29,13 @@ begin
      * your sqlite is very old you won't have that and we don't want the
      * JNI test to fail just because of a printf
      */
-    insert into my_data values("name_"||i, i, i, cast("blob_"||i as blob), "code");
+    insert into my_data using 
+      "name_"||i AS name,
+      i AS age, 
+      i AS thing, 
+      cast("blob_"||i as blob) AS bytes,
+      "code_1"||i AS key1,
+      "code_2"||i AS key2;
     set i := i + 1;
   end;
 
