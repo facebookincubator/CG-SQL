@@ -4,10 +4,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# exit when any command fails
+set -e
+
 if [ "${JAVA_HOME}" == "" ] ;
 then
   echo "JAVA_HOME must be set to your JDK dir"
   echo  "e.g. JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-10.0.1.jdk/Contents/Home"
+  echo  "e.g. JAVA_HOME=/lib/jvm/java-16-openjdk-amd64/"
   exit 1
 fi
 
