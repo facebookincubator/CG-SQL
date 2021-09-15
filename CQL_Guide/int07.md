@@ -15,8 +15,7 @@ Part 7 continues with a discussion of the JSON generation code.
 As in the previous sections, the goal here is not to go over every detail but rather to give
 a sense of how JSON creation works in general -- the core strategies and implementation choices --
 so that when reading the source you will have an idea how it all hangs together. To accomplish
-this, we'll illustrate the key pieces that can be customized and we'll discuss some
-interesting cases.
+this, we'll illustrate the key strategies used to extract the data and format the JSON.
 
 ## JSON Schema
 
@@ -26,11 +25,13 @@ discussing all the details of the output.  Instead we're going to go over the th
 JSON generator works. It is structured very much like the other code generators but it happens
 to produce a JSON file.  It's call the "JSON Schema" because most of the content is a description
 of the database schema in JSON form.  As such it's almost entirely just a simple walk of the AST
-in the right order.  The only really tricky bit is the extra dependency analysis that happens
-and is in the output for downstream tools to use as needed.  So we're going to cover these topics:
+in the correct order.  The only really tricky bit is the extra dependency analysis on the AST.
+This allows us to emit usage information in the output for downstream tools to use as needed.  
 
-* walking the AST bits
-* formatting particulars
+We'll cover these topics:
+
+* walking the AST
+* formatting
 * computing the dependencies
 
 This should be a short chapter compared to the others, this output really is much simpler to
@@ -38,7 +39,7 @@ create than the C or the schema upgrader.
 
 ### Walking the AST
 
-If you run this command
+If you run this command:
 
 ```bash
 $ cql --in x --rt json_schema --cg x.json
@@ -118,13 +119,15 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
 }
 ```
 
-This is the main function and you can see that it mirrors the JSON output exactly.  There is some additional test output possible,
-this output is simply a reverse index that lets you go from a table to the procedures that use that table.  The mapping can
-easily be created by processing the JSON for procedures, each includes its dependency information as we will see.
+`cg_json_schema_main` is the main function and you can see that it mirrors that skeletal
+JSON output nearly exactly with some additional test output options.  We'll cover
+the test output in a later section when we've had a chance to discuss the dependency
+analysis.
 
 #### Example JSON Writer: Views
 
-These are sufficiently easy that we can just walk through one of the procedures front to back.  Let's look at the "views" section.
+These are sufficiently easy that we can just walk through one of the procedures front to back.
+Let's look at the "views" section.
 
 ```C
 // The set of views look rather like the query section in as much as
@@ -200,19 +203,16 @@ Already we can see the structure emerging, and of course its nothing
 more than a bunch of `bprintf`.  Let's do it section by section:
 
 ```C
-
 bprintf(output, "\"views\" : [\n");
 BEGIN_INDENT(views, 2);
 
 for (list_item *item = all_views_list; item; item = item->next) {
-   ...
+  ..
 }
 
 END_INDENT(views);
 bprintf(output, "]");
 ```
-
-#### View Extraction
 
 Unsurprisingly, this code will iterate the `all_views_list` which was
 created precisely for this kind of output.  The semantic pass populates
@@ -222,10 +222,12 @@ We'll deal with `BEGIN_INDENT` a bit later, but it should be clear what
 it does by the name for now.  So we've made the "views" section and
 we'll put 0 or more views in it.
 
-The next section extracts the necessary information and emits
-the test output
+#### View Extraction
 
-```
+The next section extracts the necessary information and emits
+the test output:
+
+```C
     ast_node *ast = item->ast;
     Invariant(is_ast_create_view_stmt(ast));
 
@@ -278,14 +280,14 @@ This means that the normal validator will be able to find comments in the test f
 and associate them with json parts.  The testing strategies are discussed in
 [Part 4]((https://cgsql.dev/cql-guide/int04).
 
-In addition, while in test mode, we also emit the original statement that caused
+In addition, while in test mode, we also emit the original statement that caused 
 this JSON fragment to be created. This allows the test patterns to cross check
 the input and output and also makes the test output more readable for humans.
 
 Note that in test mode the JSON is effectively corrupted by the test output as it
 is not well-formed JSON in any way.  So use of --test is strictly for validation only.
 
-#### Fixed View Things
+#### View Basics
 
 All of the things that go into the JSON have some attributes that are universally present
 and generally come directly from the AST.
@@ -297,7 +299,7 @@ and generally come directly from the AST.
   bprintf(output, "{\n");
 
   bool_t is_deleted = ast->sem->delete_version > 0;
-
+  
   BEGIN_INDENT(view, 2);
   bprintf(output, "\"name\" : \"%s\"", name);
   bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
@@ -313,7 +315,7 @@ and generally come directly from the AST.
   END_INDENT(view);
   bprintf(output, "\n}\n");
   i++;
-}
+}  
 ```
 
 This part of the output is the simplest
@@ -326,13 +328,11 @@ This part of the output is the simplest
   * `crc_stmt` computes the CRC by echoing the statement into a scratch buffer and then running the CRC algorithm on that buffer
 * note the ",\n" pattern, this pattern is used because sometimes there are optional parts and using a leading ",\n" makes it clear which part is supposed to emit the comma
   * it turns out getting the commas right is one of the greater annoyances of JSON output
-* emit "isTemp"
-* emit "isDeleted"
-* if deleted, emit "deletedVersion"
-* if there is a migration procedure emit that as well
-  * `cg_json_deleted_migration_proc` scans the attribute list for deleted attribute and emits the procedure name on that attribute if there is one
-
-Hopefully this all looks very straighforward.
+* emit "isTemp" 
+* emit "isDeleted" 
+* if the view is deleted, emit "deletedVersion"
+* if there is a migration procedure on the `@delete` attribute emit that as well
+  * `cg_json_deleted_migration_proc` scans the attribute list for `@delete` attribute and emits the procedure name on that attribute if there is one
 
 #### Optional Info
 
@@ -354,7 +354,7 @@ The next fragment emits two optional pieces that are present in many types of ob
     * the view's region
     * the "deployment region" of that region if any (regions are contained in deployable groups)
     * see [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) for more info on regions and deployment regions
-
+    
 * if there are any miscellaneous attributes they are emitted
   * we'll use `cg_json_misc_attrs` as our general formatting example when we get to that
 
@@ -368,26 +368,26 @@ There is very little left in the view emitting code:
   cg_json_dependencies(output, ast);
 ```
 
-* `cg_json_projection` emits the name and type of each column in the view
+* `cg_json_projection` emits the name and type of each column in the view select list
 * `cg_fragment_with_params` emits the statement that creates the view in an attribute named "select"
-  * the normal echoing code does this
-  * in other statement forms inside of procedures there can be variables bound in the statement
-  * the variable names are replace with "?" in the statement
-  * the names of the variable appear in "selectArgs" (there can't be any for views)
+  * the normal echoing code emits the statement
+  * views have no variables to bind but other statement forms inside of procedures can have variables in the statement
+  * the variable names are replace with "?" in the text of the statement
+  * the names of the variable appear in "selectArgs" (always empty for views)
 * `cg_json_dependencies` emits the tables and views that were used by this view, it gets its own section
 
 
-Those few things proceduce all JSON for a view and all the other schema elements do basically the same things.  Most of the
+Those few things produce all JSON for a view. All the other schema elements do basically the same things.  Most of the
 helpers are shared so, for instance, regions, misc attributes, and dependencies appear in nearly every kind of object
 in the JSON.
 
 ### Formatting the JSON
 
-To make the JSON look nice we want to indent it appropriately and put commas in the right
+To make the JSON pretty we want to indent it appropriately and put commas in the right
 places.  There are some useful macros for this, and they all rely on the fact that
-the emitted text goes to a variable creatively called `output`.
+the emitted text goes to a `charbuf` variable creatively called `output`.
 
-Here's a sample procedure that came up before that does the usual tricks:
+Here's a sample procedure that was mentioned earlier, it does the usual things:
 
 ```C
 // Emit a list of attributes for the current entity, it could be any kind of entity.
@@ -408,9 +408,11 @@ static void cg_json_misc_attrs(charbuf *output, ast_node *_Nonnull list) {
 }
 ```
 
-So this is going to recursively walk a list of attributes, noting that attributes can contain attributes.
-
-Let's look at the helpers.
+The miscellaneous attributes are going to be emitted in a list, and since any
+one attribute can actually be a list of attributes, this ends up being recursive
+(`cg_json_misc_attr` can end up calling back to `cg_json_misc_attrs`).  Attributes
+are actually quite flexible.  Let's look at the helpers that will be used
+to do this formatting.
 
 From `charbuf.h`:
 
@@ -442,8 +444,7 @@ From `charbuf.h`:
   * close the temporrary buffer
 * `bindent` : a `charbuf` helper that reads the input line by line and writes it with indenting spaces to the output
 
-
-The rest is to manage the commas in the lists:
+The rest of the helpers  manage the commas in the (nested) lists:
 
 ```C
 // These little helpers are for handling comma seperated lists where you may or may
@@ -462,7 +463,7 @@ The rest is to manage the commas in the lists:
 * `END_LIST` : emits a blank line if anything went into the list
   * this puts us in the write place to put an end marker such as ']' or '}'
 
-So reviewing this bit of code,
+So reviewing this bit of code, 
  * emit the attribute name and start the array "["
  * we start indenting
  * we start a list
@@ -478,36 +479,41 @@ So reviewing this bit of code,
 
 #### Quoted Text
 
-Most quoted text in the JSON output is either hard-coded and hence known,
-or else is a CQL identifier and therefore has no special characters.  However
-there are cases where general text might need to be emitted.  When that
-happens a call like this is used:
+Most quoted text in the JSON output is either hard-coded constants,
+or else is a CQL identifier and therefore has no special characters.
+Those two cases are very simple and no escaping or special formatting
+is needed.  We just emit the text with quotes around it. However,
+there are cases where general text that might have special characters
+in it needs to be emitted.  When that happens a call like this is used:
 
 ```C
 cg_pretty_quote_plaintext(
-    sql.ptr,
-    output,
+    sql.ptr, 
+    output, 
     PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
 ```
 
 `cg_pretty_quote_plaintext` has been discussed before when it was used to
-create SQL strings before for the C output. This usage is similar.
+create SQL strings for the C output. This usage is similar.
 Here we're using `PRETTY_QUOTE_JSON` to indicate that only
-escape sequences supported by JSON should appear.  The format for
-hex is different than C and some of the C short escapes are not supported
+escape sequences supported by JSON should appear in the output. The format for
+hexadecimal escape sequences for non-printable characters is different than C
+and some of the C short escapes are not supported
 (e.g. "\a" is not legal JSON).  We always use `PRETTY_QUOTE_SINGLE_LINE`
-in the JSON output, so that multi-line SQL is rendered as one line.
-Remember here we are are JSON escaping the SQL so the embedded newlines
+in the JSON output so that multi-line SQL is rendered as one line.
+Remember here we are are JSON-escaping the SQL so the embedded newlines
 in the original SQL were already converted to '\' 'n' (two characters)
-and so any newlines still in the string are those placed there by the
+and therefore any newlines still in the string are those placed there by the
 line breaking of the SQL not by newlines in string literals.  Hence
-they are optional.
+those newlines are optional, any whitespace will do.
 
-In any case, `cg_pretty_quote_plaintext` is just the function to do what we need.
+In any case, `cg_pretty_quote_plaintext` is just the function to do what we need
+and this output is only slightly different than what would be emitted for
+the C codegen.
 
 ### Dependency Analysis
 
-There are a number of places where dependencies have to be computed.  To do this job,
+There are a number of places where dependencies have to be computed. To do this job,
 this function is used universally:
 
 ```C
@@ -522,17 +528,18 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
 }
 ```
 
-In general this code walks any statement AST looking for a variety of patterns in the AST.
-Actually more accurately it uses `find_table_refs` to do the job, and it does so by:
+In general this code walks any AST looking for a variety of patterns in the AST
+that correspond to use of tables, directly or indirectly. Actually more accurately,
+`cg_json_dependencies` uses `find_table_refs` to do the job, and it does so by:
 
-* create an output buffer for each kind of thing `find_table_refs` might find
-* set up a simple callback to fill in the buffer
-* invoke `find_table_refs`
-* format the buffers that have any data and emit them as dependencies
+* creating an output buffer for each kind of thing `find_table_refs` might find
+* setting up a simple callback to fill in the buffer
+* invoking `find_table_refs`
+* formatting the buffers that have any resulting dependency data and emitting them as dependencies
 
 This works for any kind of AST really, though typically you do this for procedures
-and for triggers because they have a body.  It also makes sense for views because
-views can refer to other views and to tables.
+or triggers because they have an interesting body.  But the analysis also makes sense for views
+because views can refer to other views and to tables.
 
 The primary code looks like this:
 
@@ -559,9 +566,9 @@ And an example callback:
 // a character buffer.  We look it up, create it if not present, and write into it.
 // We also write into the buffer for the current proc which came in with the context.
 static void cg_found_view(
-  CSTR view_name,
-  ast_node* table_ast,
-  void* pvContext)
+  CSTR view_name, 
+  ast_node* table_ast, 
+  void* pvContext) 
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
@@ -589,8 +596,7 @@ static void add_name_to_output(charbuf* output, CSTR table_name) {
 * add the name
 * done :D
 
-Note: The added name of course doesn't have to be a table name but once upon a time only
-tables were added and the formal has never been changed.
+Note: The added name of course doesn't have to be a table name, but it usually is.
 
 So we can see that `find_table_refs` will tell us the kind of thing it found and the name of the thing.
 
@@ -649,25 +655,42 @@ The code afterward will do these steps:
  * call the general callback for any table seen (but only once for this table)
  * call the alternate callback that this is a table being deleted (but only once)
 
-Except for procedure calls, all the other operations work similarly,
+Almost all the other operations work similarly:
  * `table_or_view_name_ast` is set
  * `alt_callback` is called but only if
  * `alt_visited` doesn't already have the symbol
 
-If a procedure call is found then `callbacks->callback_proc` is used and
-`callbacks->visited_proc` verifies that there are no duplicates.
+The exception to the above is the processing that's done for procedure calls. 
+We've actually only talked about table dependencies so far but, additionally,
+any procedure includes dependencies on the procedures it calls.
+
+If a procedure call is found then `callbacks->callback_proc` is used and 
+`callbacks->visited_proc` verifies that there are no duplicates.  So much
+the same except the names are procedure names.
 
 Note that the code does not do transitive closure of procedure calls because
 in general the called procedure is likely in a different translation unit.
 However with the direct calls in place it is easy enough to do transitive closure
-from the JSON if you do have all the procedures in one unit.
+from the JSON if you do have all the procedures in one unit or if you have
+several JSON results from different compilations.
 
-In contrast, when a view usage is encountered, the code follows into the view
-and reports what the view uses. This means that the reported tables include
-any tables that were used indirectly in views.
+However, when a view is encountered, the code does follow into the view body
+and recursively reports what the view uses. This means that the reported tables
+do include any tables that were used indirectly via views.
 
-Note: any CTEs that are used will not be reported because
-`find_table_or_view_even_deleted` will fail for a CTE.
+Finally, any CTEs that are used will not be reported because 
+`find_table_or_view_even_deleted` will fail for a CTE.  However the body
+of the CTE is processed so while the CTE name does not appear, what the
+CTE uses does appear, just like any other table usage.
+
+### Additional Test Output
+
+The extra test output is simply a reverse index:  a mapping that goes
+from any table to the procedures that depend on that table.
+
+The mapping can easily be created by processing the JSON for procedures, 
+each such procedure includes its dependency information.  As a result it's only
+used for additional validation.
 
 ### Recap
 
