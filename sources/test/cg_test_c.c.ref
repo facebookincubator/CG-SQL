@@ -4413,10 +4413,63 @@ CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 i;
   cql_set_null(i);
+  sqlite3_stmt *C_stmt = NULL;
+  call_in_loop_C_row C = { 0 };
+
+  cql_set_notnull(i, 0);
+  for (;;) {
+  if (!(i.value < 5)) break;
+    cql_set_notnull(i, i.value + 1);
+    cql_finalize_stmt(&C_stmt);
+    _rc_ = simple_select(_db_, &C_stmt);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC call_in_loop_with_nullable_condition ()
+BEGIN
+  DECLARE i INTEGER;
+  SET i := nullable(0);
+  WHILE i < 5
+  BEGIN
+    SET i := i + 1;
+    DECLARE C CURSOR FOR CALL simple_select();
+    FETCH C;
+  END;
+END;
+*/
+
+#define _PROC_ "call_in_loop_with_nullable_condition"
+// export: DECLARE PROC call_in_loop_with_nullable_condition () USING TRANSACTION;
+
+typedef struct call_in_loop_with_nullable_condition_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} call_in_loop_with_nullable_condition_C_row;
+CQL_WARN_UNUSED cql_code call_in_loop_with_nullable_condition(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_nullable_int32 i;
+  cql_set_null(i);
   cql_nullable_bool _tmp_n_bool_0;
   cql_set_null(_tmp_n_bool_0);
   sqlite3_stmt *C_stmt = NULL;
-  call_in_loop_C_row C = { 0 };
+  call_in_loop_with_nullable_condition_C_row C = { 0 };
 
   cql_set_notnull(i, 0);
   for (;;) {
@@ -4472,8 +4525,6 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 i;
   cql_set_null(i);
-  cql_nullable_bool _tmp_n_bool_0;
-  cql_set_null(_tmp_n_bool_0);
   sqlite3_stmt *C_stmt = NULL;
   cql_object_ref C_object_ = NULL;
   cql_bool _C_has_row_ = 0;
@@ -4484,9 +4535,8 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
-  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
-    cql_set_nullable(i, i.is_null, i.value + 1);
+  if (!(i.value < 5)) break;
+    cql_set_notnull(i, i.value + 1);
     C_stmt = NULL;
     _rc_ = simple_select(_db_, &C_stmt);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -4684,8 +4734,6 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 i;
   cql_set_null(i);
-  cql_nullable_bool _tmp_n_bool_0;
-  cql_set_null(_tmp_n_bool_0);
   out_union_helper_result_set_ref C_result_set_ = NULL;
   cql_int32 C_row_num_ = 0;
   cql_int32 C_row_count_ = 0;
@@ -4693,9 +4741,8 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
-  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
-    cql_set_nullable(i, i.is_null, i.value + 1);
+  if (!(i.value < 5)) break;
+    cql_set_notnull(i, i.value + 1);
     cql_object_release(C_result_set_);
     out_union_helper_fetch_results(&C_result_set_);
     C_row_num_ = C_row_count_ = -1;
@@ -4920,10 +4967,8 @@ BEGIN
   SET b := 'x' IS 'x';
   SET b := 'x' IS 'y';
   SET b := 1 + (3 IS 4);
-  DECLARE i INTEGER;
-  DECLARE j INTEGER;
-  SET i := 1;
-  SET j := 2;
+  LET i := nullable(1);
+  LET j := nullable(2);
   SET b := i IS j;
 END;
 */
@@ -4986,10 +5031,8 @@ BEGIN
   SET b := 'x' IS NOT 'x';
   SET b := 'x' IS NOT 'y';
   SET b := 1 + (3 IS NOT 4);
-  DECLARE i INTEGER;
-  DECLARE j INTEGER;
-  SET i := 1;
-  SET j := 2;
+  LET i := nullable(1);
+  LET j := nullable(2);
   SET b := i IS NOT j;
 END;
 */
@@ -9168,7 +9211,7 @@ CREATE PROC local_cast_int ()
 BEGIN
   DECLARE x INTEGER;
   DECLARE r REAL;
-  SET r := 3.2;
+  SET r := nullable(3.2);
   SET x := CAST(r AS INTEGER);
 END;
 */
@@ -9214,7 +9257,7 @@ CREATE PROC local_cast_long ()
 BEGIN
   DECLARE x LONG_INT;
   DECLARE r REAL;
-  SET r := 3.2;
+  SET r := nullable(3.2);
   SET x := CAST(r AS LONG_INT);
 END;
 */
@@ -9260,7 +9303,7 @@ CREATE PROC local_cast_real ()
 BEGIN
   DECLARE x REAL;
   DECLARE r INTEGER;
-  SET r := 3;
+  SET r := nullable(3);
   SET x := CAST(r AS REAL);
 END;
 */
@@ -9306,7 +9349,7 @@ CREATE PROC local_cast_bool ()
 BEGIN
   DECLARE x BOOL;
   DECLARE r REAL;
-  SET r := 3.2;
+  SET r := nullable(3.2);
   SET x := CAST(r AS BOOL);
 END;
 */
@@ -9355,7 +9398,7 @@ void local_cast_from_bool_notnull(void) {
 CREATE PROC local_cast_from_bool ()
 BEGIN
   DECLARE b BOOL;
-  SET b := 1;
+  SET b := nullable(1);
   DECLARE x REAL;
   SET x := CAST(b AS REAL);
 END;
@@ -9405,7 +9448,7 @@ void local_cast_from_bool_no_op_notnull(void) {
 CREATE PROC local_cast_from_bool_no_op ()
 BEGIN
   DECLARE b BOOL;
-  SET b := 1;
+  SET b := nullable(1);
   DECLARE x BOOL;
   SET x := CAST(b AS BOOL);
 END;
@@ -14782,6 +14825,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
+  SET i1_nullable := NULL;
+  */
+  cql_set_null(i1_nullable);
+
+  // The statement ending at line XXXX
+
+  /*
   SET i0_nullable := i1_nullable;
   */
   cql_set_nullable(i0_nullable, i1_nullable.is_null, i1_nullable.value);
@@ -14799,6 +14849,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET t0_nullable := t2;
   */
   cql_set_string_ref(&t0_nullable, t2);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET t0_nullable := NULL;
+  */
+  cql_set_string_ref(&t0_nullable, NULL);
 
   // The statement ending at line XXXX
 
@@ -14834,6 +14891,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET r0_nullable := 2.2;
   */
   cql_set_notnull(r0_nullable, 2.2);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET r0_nullable := NULL;
+  */
+  cql_set_null(r0_nullable);
 
   // The statement ending at line XXXX
 
@@ -15804,6 +15868,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
+  SET obj_var := NULL;
+  */
+  cql_set_object_ref(&obj_var, NULL);
+
+  // The statement ending at line XXXX
+
+  /*
   SET b0_nullable := obj_var = obj_var;
   */
   cql_combine_nullables(b0_nullable, !obj_var, !obj_var, obj_var == obj_var);
@@ -16070,6 +16141,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET blob_var := blob_var2;
   */
   cql_set_blob_ref(&blob_var, blob_var2);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET blob_var := NULL;
+  */
+  cql_set_blob_ref(&blob_var, NULL);
 
   // The statement ending at line XXXX
 

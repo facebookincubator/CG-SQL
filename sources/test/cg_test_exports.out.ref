@@ -69,6 +69,7 @@ DECLARE PROC loop_statement_cursor () USING TRANSACTION;
 DECLARE PROC loop_statement_not_auto_cursor () USING TRANSACTION;
 DECLARE PROC simple_select () (x INTEGER NOT NULL);
 DECLARE PROC call_in_loop () USING TRANSACTION;
+DECLARE PROC call_in_loop_with_nullable_condition () USING TRANSACTION;
 DECLARE PROC call_in_loop_boxed () USING TRANSACTION;
 DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
 DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;

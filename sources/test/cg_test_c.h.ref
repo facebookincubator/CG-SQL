@@ -8,6 +8,8 @@
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_nullable_int32 i0_nullable;
 
 // The statement ending at line XXXX
@@ -42,6 +44,12 @@ extern cql_bool b2;
 
 // The statement ending at line XXXX
 extern cql_string_ref _Nonnull t2;
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 
@@ -635,6 +643,8 @@ extern cql_object_ref _Nonnull obj_var2;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern void obj_proc(cql_object_ref _Nullable *_Nonnull an_object);
 
 // The statement ending at line XXXX
@@ -775,6 +785,8 @@ extern cql_blob_ref _Nullable blob_var;
 
 // The statement ending at line XXXX
 extern cql_blob_ref _Nonnull blob_var2;
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 
@@ -1128,6 +1140,9 @@ extern CQL_WARN_UNUSED cql_code loop_statement_not_auto_cursor(sqlite3 *_Nonnull
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code call_in_loop_with_nullable_condition(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_);
@@ -3159,8 +3174,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   0)
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
 #define CRC_nullability_improvements_are_erased_for_sql -6535467785075335629L
 
 extern cql_string_ref _Nonnull nullability_improvements_are_erased_for_sql_stored_procedure_name;
@@ -3184,8 +3197,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 
 // The statement ending at line XXXX
 extern void nullability_improvements_do_not_change_access(void);
-
-// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern cql_bool true_test;

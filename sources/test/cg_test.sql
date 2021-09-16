@@ -5,6 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+-- This is here temporarily so that we can prepare "cg_test.sql" for a world in
+-- which this is no longer optional.
+@enforce_strict not null after check;
+
 declare proc printf no check;
 declare proc puts no check;
 
@@ -53,6 +57,10 @@ set i2 := 1;
 -- + cql_set_notnull(i1_nullable, 88);
 set i1_nullable := 88;
 
+-- remove the nullability improvement
+-- + cql_set_null(i1_nullable);
+set i1_nullable := null;
+
 -- TEST: assign everything nullable
 -- + cql_set_nullable(i0_nullable, i1_nullable.is_null, i1_nullable.value);
 set i0_nullable := i1_nullable;
@@ -63,6 +71,10 @@ set t0_nullable := null;
 
 -- + cql_set_string_ref(&t0_nullable, t2);
 set t0_nullable := t2;
+
+-- remove the nullability improvement
+-- + cql_set_string_ref(&t0_nullable, NULL);
+set t0_nullable := null;
 
 -- TEST: simple unary operators
 -- + SET i2 := - -1;
@@ -80,6 +92,10 @@ set i1_nullable := -i0_nullable;
 
 -- + cql_set_notnull(r0_nullable, 2.2%);
 set r0_nullable := 2.2;
+
+-- remove the nullability improvement
+-- + cql_set_null(r0_nullable);
+set r0_nullable := null;
 
 -- + r2 = 3.5%;
 set r2 := 3.5;
@@ -1058,6 +1074,10 @@ declare obj_var2 object not null;
 -- + cql_set_object_ref(&obj_var, obj_var2);
 set obj_var := obj_var2;
 
+-- remove the nullability improvement
+-- + cql_set_object_ref(&obj_var, NULL);
+set obj_var := null;
+
 -- TEST: object comparison
 -- +  cql_combine_nullables(b0_nullable, !obj_var, !obj_var, obj_var == obj_var);
 set b0_nullable := obj_var == obj_var;
@@ -1347,6 +1367,10 @@ set blob_var := null;
 -- TEST: assign var to blob variable
 -- + cql_set_blob_ref(&blob_var, blob_var2);
 set blob_var := blob_var2;
+
+-- remove the nullability improvement
+-- + cql_set_blob_ref(&blob_var, NULL);
+set blob_var := null;
 
 -- TEST: blob comparison "=="
 -- + cql_combine_nullables(b0_nullable, !blob_var, !blob_var, cql_blob_equal(blob_var, blob_var));
@@ -1890,6 +1914,7 @@ end;
 
 -- TEST: call for cursor in loop
 -- one release in cleanup; one in the loop
+-- + if (!(i.value < 5)) break;
 -- +2 cql_finalize_stmt(&C_stmt);
 -- + _rc_ = simple_select(_db_, &C_stmt);
 create proc call_in_loop()
@@ -1901,6 +1926,22 @@ begin
      set i := i + 1;
      declare C cursor for call simple_select();
      fetch C;
+  end;
+end;
+
+-- TEST: same, but with a nullable condition
+-- + if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
+-- +2 cql_finalize_stmt(&C_stmt);
+-- + _rc_ = simple_select(_db_, &C_stmt);
+create proc call_in_loop_with_nullable_condition()
+begin
+  declare i int;
+  set i := nullable(0);
+  while i < 5
+  begin
+    set i := i + 1;
+    declare C cursor for call simple_select();
+    fetch C;
   end;
 end;
 
@@ -2105,10 +2146,8 @@ begin
   set b := 'x' is 'y';
   set b := 1 + (3 is 4);
 
-  declare i integer;
-  declare j integer;
-  set i := 1;
-  set j := 2;
+  let i := nullable(1);
+  let j := nullable(2);
 
   set b := i is j;
 end;
@@ -2141,10 +2180,8 @@ begin
   set b := 'x' is not 'y';
   set b := 1 + (3 is not 4);
 
-  declare i integer;
-  declare j integer;
-  set i := 1;
-  set j := 2;
+  let i := nullable(1);
+  let j := nullable(2);
 
   set b := i is not j;
 end;
@@ -3133,7 +3170,7 @@ create proc local_cast_int()
 begin
   declare x integer;
   declare r real;
-  set r := 3.2;
+  set r := nullable(3.2);
   set x := cast(r as integer);
 end;
 
@@ -3151,7 +3188,7 @@ create proc local_cast_long()
 begin
   declare x long;
   declare r real;
-  set r := 3.2;
+  set r := nullable(3.2);
   set x := cast(r as long);
 end;
 
@@ -3169,7 +3206,7 @@ create proc local_cast_real()
 begin
   declare x real;
   declare r int;
-  set r := 3;
+  set r := nullable(3);
   set x := cast(r as real);
 end;
 
@@ -3187,7 +3224,7 @@ create proc local_cast_bool()
 begin
   declare x bool;
   declare r real;
-  set r := 3.2;
+  set r := nullable(3.2);
   set x := cast(r as bool);
 end;
 
@@ -3206,7 +3243,7 @@ end;
 create proc local_cast_from_bool()
 begin
   declare b bool;
-  set b := 1;
+  set b := nullable(1);
   declare x real;
   set x := cast(b as real);
 end;
@@ -3226,7 +3263,7 @@ end;
 create proc local_cast_from_bool_no_op()
 begin
   declare b bool;
-  set b := 1;
+  set b := nullable(1);
   declare x bool;
   set x := cast(b as bool);
 end;
@@ -4274,9 +4311,6 @@ begin
   out C;
 end;
 
--- TEST: The following tests do not compile without this enabled.
-@enforce_strict not null after check;
-
 -- TEST: The improving of nullable variables compiles to nothing in SQL.
 -- + "SELECT ? + 1"
 create proc nullability_improvements_are_erased_for_sql()
@@ -4302,9 +4336,6 @@ begin
     set a := 0;
   end if;
 end;
-
--- TEST: We can turn this back off.
-@enforce_normal not null after check;
 
 -- TEST: a loose select statement generates no code (and will produce no errors)
 -- the errors are checked when this code is compiled in C.  If the code
