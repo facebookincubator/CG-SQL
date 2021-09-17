@@ -708,5 +708,3 @@ cql_noexport ast_node *copy_ast_tree(ast_node *_Nonnull node) {
   Invariant(new_node);
   return new_node;
 }
-
-

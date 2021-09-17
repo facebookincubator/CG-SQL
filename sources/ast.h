@@ -392,6 +392,20 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   Contract(is_ast_int(node)); \
   int32_t name = (int32_t)((int_ast_node *)(node))->value;
 
+#define EXTRACT_NAMED_NAME_AND_SCOPE(name, scope, node) \
+  Contract(is_id_or_dot(node)); \
+  CSTR name, scope; \
+  if (is_id(node)) { \
+    name = ((str_ast_node *)(node))->value; \
+    scope = NULL; \
+  } else { \
+    name = ((str_ast_node *)(node->right))->value; \
+    scope = ((str_ast_node *)(node->left))->value; \
+  }
+
+#define EXTRACT_NAME_AND_SCOPE(node) \
+  EXTRACT_NAMED_NAME_AND_SCOPE(name, scope, node)
+
 // For searching proc dependencies/attributes
 typedef void (*find_ast_str_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
 

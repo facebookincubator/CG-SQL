@@ -8457,6 +8457,79 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC cursors_cannot_be_used_as_out_args ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT 0 AS x;
+  CALL test_proc3(c);
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0207: expected a variable name for out argument 'arg1'
+
+  {create_proc_stmt}: err
+  | {name cursors_cannot_be_used_as_out_args}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c: select: { x: integer notnull } variable dml_proc
+      | | {name c}: c: select: { x: integer notnull } variable dml_proc
+      | | {select_stmt}: select: { x: integer notnull }
+      |   | {select_core_list}: select: { x: integer notnull }
+      |   | | {select_core}: select: { x: integer notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     |   | {int 0}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name x}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {call_stmt}: err
+        | {name test_proc3}: ok
+        | {expr_list}: ok
+          | {name c}: err
+
+The statement ending at line XXXX
+
+CREATE PROC enum_cases_cannot_be_used_as_out_args ()
+BEGIN
+  CALL test_proc3(-1);
+END;
+
+Error at test/sem_test.sql:XXXX : in dot : CQL0207: expected a variable name for out argument 'arg1'
+
+  {create_proc_stmt}: err
+  | {name enum_cases_cannot_be_used_as_out_args}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name test_proc3}: ok
+        | {expr_list}: ok
+          | {int -1}: integer<ints> notnull
+
+The statement ending at line XXXX
+
+CREATE PROC unbound_variables_cannot_be_used_as_out_args ()
+BEGIN
+  CALL test_proc3(unbound);
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'unbound'
+
+  {create_proc_stmt}: err
+  | {name unbound_variables_cannot_be_used_as_out_args}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name test_proc3}: ok
+        | {expr_list}: ok
+          | {name unbound}: err
+
+The statement ending at line XXXX
+
 SELECT count(*)
   FROM foo;
 

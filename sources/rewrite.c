@@ -1352,8 +1352,7 @@ cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast) {
     id_or_dot = new_ast_str(name);
   } else {
     Invariant(is_ast_dot(ast));
-    EXTRACT_STRING(name, ast->right);
-    EXTRACT_STRING(scope, ast->left);
+    EXTRACT_NAME_AND_SCOPE(ast);
     id_or_dot = new_ast_dot(new_ast_str(scope), new_ast_str(name));
   }
   ast_node *cql_inferred_notnull = new_ast_str("cql_inferred_notnull");

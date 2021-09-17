@@ -11682,17 +11682,21 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
 
 // This needs to be called for everything that is no longer safe to consider NOT
 // NULL due to a mutation. It is fine to call this for something not currently
-// subject to improvement.
+// subject to improvement, but it must only be called with a name/scope pair
+// referring to something has a mutable type (e.g., it must not be an unbound
+// variable, a cursor used an expression, an enum case, et cetera).
 static void sem_unset_notnull_improved(CSTR name, CSTR scope) {
   Contract(name);
 
   sem_t *type = find_mutable_type(name, scope);
-  // There is no case in which we ever attempt to unset something that doesn't
-  // have a mutable type: Such a name/scope pair would've never been improved to
-  // begin with, and no hazard (e.g., SET or OUT args) allows something for
-  // which `find_mutable_type` will return NULL (e.g., an enum case, 'rowid', or
-  // a cursor in an expression position).
-  Invariant(type);
+  // There is no case in which we should ever attempt to unset something that
+  // doesn't have a mutable type: Such a name/scope pair would've never been
+  // improved to begin with (e.g., because our input program had an error in
+  // which the name/scope pair was used without being defined), and no hazard
+  // (e.g., SET or OUT args) allows something for which `find_mutable_type` will
+  // return NULL (e.g., an enum case, 'rowid', or a cursor in an expression
+  // position).
+  Contract(type);
 
   // As in `sem_unset_notnull_improvements_in_context`, it is critical that we
   // do not unset an improvement if it is not currently set; see the comments
@@ -11978,13 +11982,10 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node* ast, ast_n
         }
       }
     }
-    sem_set_notnull_improved(name, NULL);
-  } else {
-    Invariant(is_ast_dot(id_or_dot));
-    EXTRACT_STRING(name, id_or_dot->right);
-    EXTRACT_STRING(scope, id_or_dot->left);
-    sem_set_notnull_improved(name, scope);
   }
+
+  EXTRACT_NAME_AND_SCOPE(id_or_dot);
+  sem_set_notnull_improved(name, scope);
 }
 
 // Improvements for known-false conditions are dual to improvements for
@@ -12022,16 +12023,9 @@ static void sem_set_notnull_improvements_for_false_condition(ast_node *ast) {
     return;
   }
 
-  EXTRACT_ANY_NOTNULL(expr, ast->left);
-  if (is_id(expr)) {
-    EXTRACT_STRING(name, expr);
-    sem_set_notnull_improved(name, NULL);
-  } else {
-    Invariant(is_ast_dot(expr));
-    EXTRACT_STRING(name, expr->right);
-    EXTRACT_STRING(scope, expr->left);
-    sem_set_notnull_improved(name, scope);
-  }
+  EXTRACT_ANY_NOTNULL(id_or_dot, ast->left);
+  EXTRACT_NAME_AND_SCOPE(id_or_dot);
+  sem_set_notnull_improved(name, scope);
 }
 
 // This is the [expression] then [statements] part of an IF or ELSE IF
@@ -17446,23 +17440,39 @@ static bool_t sem_verify_no_duplicate_regions(ast_node *region_list) {
 // variable. If it is not, report an error indicating for what parameter such a
 // variable was expected.
 static void sem_arg_out(ast_node *arg, CSTR param_name) {
-  bool_t success = false;
-  if (is_id(arg)) {
-    EXTRACT_STRING(name, arg);
-    sem_resolve_id(arg, name, NULL);
-    sem_unset_notnull_improved(name, NULL);
-    success = !is_error(arg);
-  } else if (is_ast_dot(arg)) {
-    EXTRACT_STRING(scope, arg->left);
-    EXTRACT_STRING(name, arg->right);
-    sem_resolve_id(arg, name, scope);
-    sem_unset_notnull_improved(name, scope);
-    success = !is_error(arg);
+  if (!is_id_or_dot(arg)) {
+    goto error;
   }
-  if (!success || !is_variable(arg->sem->sem_type)) {
-    report_error(arg, "CQL0207: expected a variable name for out argument", param_name);
-    record_error(arg);
+
+  EXTRACT_NAME_AND_SCOPE(arg);
+  sem_t *type = NULL;
+  sem_resolve_id_with_type(arg, name, scope, &type);
+  if (is_error(arg)) {
+    return;
   }
+
+  if (!is_variable(arg->sem->sem_type)) {
+    goto error;
+  }
+
+  // Check that our variable is not a cursor used as a boolean expression. We
+  // must check the original binding `*type`, not `arg->sem->sem_type`, because
+  // `SEM_TYPE_STRUCT` is only set on the original binding.
+  if (!type || is_struct(*type)) {
+    goto error;
+  }
+
+  // If `arg` is being passed for an OUT parameter of a nullable type, it could
+  // be set to NULL. Even if `arg` is being passed for an OUT parameter of a NOT
+  // NULL type, however, there's no guarantee that the callee will actually set
+  // it. We, therefore, need to un-improve it unconditionally.
+  sem_unset_notnull_improved(name, scope);
+
+  return;
+
+error:
+  report_error(arg, "CQL0207: expected a variable name for out argument", param_name);
+  record_error(arg);
 }
 
 // Given an argument that (typically) has not yet been checked and a formal
@@ -18694,8 +18704,7 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
 // Expression type for scoped name.
 static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   Contract(is_ast_dot(ast));
-  EXTRACT_STRING(scope, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_NAME_AND_SCOPE(ast);
   sem_resolve_id_expr(ast, name, scope);
 }
 

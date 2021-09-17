@@ -2629,6 +2629,31 @@ begin
   call proc_with_output(1, X, arg1);
 end;
 
+-- TEST: Cursors cannot be passed as OUT arguments.
+-- + Error % expected a variable name for out argument 'arg1'
+-- +1 Error
+create procedure cursors_cannot_be_used_as_out_args()
+begin
+  declare c cursor for select 0 as x;
+  call test_proc3(c);
+end;
+
+-- TEST: Enum cases cannot be passed as OUT arguments.
+-- + Error % expected a variable name for out argument 'arg1'
+-- +1 Error
+create procedure enum_cases_cannot_be_used_as_out_args()
+begin
+  call test_proc3(ints.negative_one);
+end;
+
+-- TEST: Unbound variables cannot be passed as OUT arguments.
+-- + Error % name not found 'unbound'
+-- +1 Error
+create procedure unbound_variables_cannot_be_used_as_out_args()
+begin
+  call test_proc3(unbound);
+end;
+
 -- TEST: try count function
 -- - Error
 -- + {select_stmt}: select: { _anon: integer notnull }
