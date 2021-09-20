@@ -72,6 +72,7 @@ static void gen_conflict_clause(ast_node *ast);
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
 cql_noexport void gen_to_stdout(ast_node *ast, gen_func fn) {
+  gen_callbacks = NULL;
   charbuf *gen_saved = output;
   CHARBUF_OPEN(sql_out);
   gen_set_output_buffer(&sql_out);
@@ -872,6 +873,7 @@ static void gen_case_list(ast_node *ast) {
 static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_num(ast));
   EXTRACT_NUM_VALUE(val, ast);
+  EXTRACT_NUM_TYPE(num_type, ast);
   Contract(val);
 
   if (has_hex_prefix(val) && gen_callbacks && gen_callbacks->convert_hex) {
@@ -879,14 +881,23 @@ static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     gen_printf("%lld", (llint_t)v);
   }
   else {
-    gen_printf("%s", val);
+    if (for_sqlite() || num_type != NUM_BOOL) {
+      gen_printf("%s", val);
+    }
+    else {
+      if (!strcmp(val, "0")) {
+        gen_printf("FALSE", val);
+      }
+      else {
+        gen_printf("TRUE", val);
+      }
+    }
   }
 
   if (for_sqlite()) {
     return;
   }
 
-  EXTRACT_NUM_TYPE(num_type, ast);
   if (num_type == NUM_LONG) {
     gen_printf("L");
   }

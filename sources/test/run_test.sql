@@ -2552,8 +2552,8 @@ begin
   );
 
   insert into all_types_encoded_table values (
-    cast(0 as bool), 0, 0, 0.0, "0", cast("0" as blob),
-    cast(1 as bool), 1, 1, 1.1, "1", cast("1" as blob)
+    FALSE, 0, 0, 0.0, "0", cast("0" as blob),
+    TRUE, 1, 1, 1.1, "1", cast("1" as blob)
   );
 
   select * from all_types_encoded_table;
@@ -2581,8 +2581,8 @@ begin
   );
 
   insert into all_types_encoded_with_context_table values (
-    cast(0 as bool), 0, 0, 0.0, "0", cast("0" as blob),
-    cast(1 as bool), 1, 1, 1.1, "1", cast("1" as blob), "cxt"
+    FALSE, 0, 0, 0.0, "0", cast("0" as blob),
+    TRUE, 1, 1, 1.1, "1", cast("1" as blob), "cxt"
   );
 
   select * from all_types_encoded_with_context_table;
@@ -3795,7 +3795,7 @@ begin
   out union D;
 end;
 
--- the test here is to ensure that when we call get_row we correctly 
+-- the test here is to ensure that when we call get_row we correctly
 -- release the previous result set
 create proc get_row_thrice()
 begin

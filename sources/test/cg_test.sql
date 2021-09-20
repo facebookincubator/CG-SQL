@@ -916,7 +916,7 @@ declare proc plugh(id integer);
 --       in a select
 create proc complex_return()
 begin
-  select cast(1 as bool) as _bool,
+  select TRUE as _bool,
    2 as _integer,
    cast(3 as long integer) as _longint,
    3.0 as _real,

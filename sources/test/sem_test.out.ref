@@ -5629,11 +5629,11 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
-LET bool_x := 1;
+LET bool_x := TRUE;
 
   {let_stmt}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 1}: bool notnull
 
 The statement ending at line XXXX
 
@@ -5695,19 +5695,19 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-SET bool_x := 1;
+SET bool_x := TRUE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 1}: bool notnull
 
 The statement ending at line XXXX
 
-SET bool_x := 0;
+SET bool_x := FALSE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 0}: bool notnull
 
 The statement ending at line XXXX
 
@@ -5725,51 +5725,51 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
-SET bool_x := 0;
+SET bool_x := FALSE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 0}: bool notnull
 
 The statement ending at line XXXX
 
-SET bool_x := 0;
+SET bool_x := FALSE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 0}: bool notnull
 
 The statement ending at line XXXX
 
-SET bool_x := 1;
+SET bool_x := TRUE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 1}: bool notnull
 
 The statement ending at line XXXX
 
-SET bool_x := 1;
+SET bool_x := TRUE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 1}: bool notnull
 
 The statement ending at line XXXX
 
-SET bool_x := 0;
+SET bool_x := FALSE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 0}: bool notnull
 
 The statement ending at line XXXX
 
-SET bool_x := 1;
+SET bool_x := TRUE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 1}: bool notnull
 
 The statement ending at line XXXX
 
@@ -5801,11 +5801,11 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
-SET bool_x := 0;
+SET bool_x := FALSE;
 
   {assign}: bool_x: bool notnull variable
   | {name bool_x}: bool_x: bool notnull variable
-  | : bool notnull
+  | {bool 0}: bool notnull
 
 The statement ending at line XXXX
 
@@ -5823,11 +5823,11 @@ Error at test/sem_test.sql:XXXX : in const : CQL0353: evaluation of constant fai
 
 The statement ending at line XXXX
 
-LET bool_x2 := 1;
+LET bool_x2 := TRUE;
 
   {let_stmt}: bool_x2: bool notnull variable
   | {name bool_x2}: bool_x2: bool notnull variable
-  | : bool notnull
+  | {bool 1}: bool notnull
 
 The statement ending at line XXXX
 
@@ -5950,27 +5950,27 @@ CREATE TABLE good_conversions(
 
 The statement ending at line XXXX
 
-LET tru := 1;
+LET tru := TRUE;
 
   {let_stmt}: tru: bool notnull variable
   | {name tru}: tru: bool notnull variable
-  | : bool notnull
+  | {bool 1}: bool notnull
 
 The statement ending at line XXXX
 
-LET fal := 0;
+LET fal := FALSE;
 
   {let_stmt}: fal: bool notnull variable
   | {name fal}: fal: bool notnull variable
-  | : bool notnull
+  | {bool 0}: bool notnull
 
 The statement ending at line XXXX
 
-SET fal := 0;
+SET fal := FALSE;
 
   {assign}: fal: bool notnull variable
   | {name fal}: fal: bool notnull variable
-  | : bool notnull
+  | {bool 0}: bool notnull
 
 The statement ending at line XXXX
 
@@ -15159,7 +15159,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 1;
+SELECT TRUE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15167,7 +15167,7 @@ SELECT 1;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 1}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -15264,7 +15264,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 1;
+SELECT TRUE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15272,7 +15272,7 @@ SELECT 1;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 1}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -15369,7 +15369,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15377,7 +15377,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -15474,7 +15474,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15482,7 +15482,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -15579,7 +15579,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15587,7 +15587,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -15703,7 +15703,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15711,7 +15711,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -15808,7 +15808,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 1;
+SELECT TRUE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15816,7 +15816,7 @@ SELECT 1;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 1}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -15913,7 +15913,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 1;
+SELECT TRUE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -15921,7 +15921,7 @@ SELECT 1;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 1}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16018,7 +16018,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -16026,7 +16026,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16123,7 +16123,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -16131,7 +16131,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16228,7 +16228,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 1;
+SELECT TRUE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -16236,7 +16236,7 @@ SELECT 1;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 1}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16333,7 +16333,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -16341,7 +16341,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16438,7 +16438,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -16446,7 +16446,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16543,7 +16543,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 1;
+SELECT TRUE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -16551,7 +16551,7 @@ SELECT 1;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 1}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -16648,7 +16648,7 @@ SELECT NULL;
 
 The statement ending at line XXXX
 
-SELECT 0;
+SELECT FALSE;
 
   {select_stmt}: select: { _anon: bool notnull }
   | {select_core_list}: select: { _anon: bool notnull }
@@ -16656,7 +16656,7 @@ SELECT 0;
   |   | {select_expr_list_con}: select: { _anon: bool notnull }
   |     | {select_expr_list}: select: { _anon: bool notnull }
   |     | | {select_expr}: bool notnull
-  |     |   | : bool notnull
+  |     |   | {bool 0}: bool notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -26321,7 +26321,7 @@ END;
 The statement ending at line XXXX
 
 CREATE VIEW ViewShape AS
-SELECT CAST(1 AS BOOL) AS a, 2.5 AS b, 'xyz' AS c;
+SELECT TRUE AS a, 2.5 AS b, 'xyz' AS c;
 
   {create_view_stmt}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
   | {int 0}
@@ -26334,9 +26334,7 @@ SELECT CAST(1 AS BOOL) AS a, 2.5 AS b, 'xyz' AS c;
         |   | {select_expr_list_con}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
         |     | {select_expr_list}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
         |     | | {select_expr}: a: bool notnull
-        |     | | | {cast_expr}: bool notnull
-        |     | | | | {int 1}: integer notnull
-        |     | | | | {type_bool}: bool
+        |     | | | {bool 1}: bool notnull
         |     | | | {opt_as_alias}
         |     | |   | {name a}
         |     | | {select_expr_list}
@@ -30532,7 +30530,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive
 The statement ending at line XXXX
 
 UPDATE foo
-SET id = CAST(1 AS INTEGER);
+SET id = CAST('1' AS INTEGER);
 
   {update_stmt}: foo: { id: integer notnull primary_key autoinc }
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -30541,7 +30539,7 @@ SET id = CAST(1 AS INTEGER);
     | | {update_entry}: id: integer notnull
     |   | {name id}: id: integer notnull
     |   | {cast_expr}: integer notnull
-    |     | {int 1}: integer notnull
+    |     | {strlit '1'}: text notnull
     |     | {type_int}: integer
     | {update_where}
       | {update_orderby}
@@ -55117,7 +55115,7 @@ The statement ending at line XXXX
 
 CREATE PROC print_call_cql_cursor_format ()
 BEGIN
-  DECLARE c1 CURSOR FOR SELECT CAST(1 AS BOOL) AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
+  DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
   FETCH c1;
   SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN c1.a IS NULL THEN 'null'
   ELSE printf('%d', c1.a)
@@ -55146,9 +55144,7 @@ END;
       |   |   | {select_expr_list_con}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
       |   |     | {select_expr_list}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
       |   |     | | {select_expr}: a: bool notnull
-      |   |     | | | {cast_expr}: bool notnull
-      |   |     | | | | {int 1}: integer notnull
-      |   |     | | | | {type_bool}: bool
+      |   |     | | | {bool 1}: bool notnull
       |   |     | | | {opt_as_alias}
       |   |     | |   | {name a}
       |   |     | | {select_expr_list}
@@ -65649,7 +65645,7 @@ The statement ending at line XXXX
 CREATE PROC improvements_do_not_work_in_case_expressions_with_matching ()
 BEGIN
   DECLARE a INTEGER;
-  LET x := CASE 0 WHEN a IS NOT NULL THEN a + a
+  LET x := CASE FALSE WHEN a IS NOT NULL THEN a + a
   ELSE 42
   END;
 END;
@@ -65665,7 +65661,7 @@ END;
       | {let_stmt}: x: integer variable
         | {name x}: x: integer variable
         | {case_expr}: integer
-          | : bool notnull
+          | {bool 0}: bool notnull
           | {connector}: integer
             | {case_list}: integer
             | | {when}: integer

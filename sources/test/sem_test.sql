@@ -1478,9 +1478,9 @@ create table bad_constants_table(
 );
 
 -- TEST: this should be of type bool not type int
--- rewritten as "1"
+-- rewritten as "TRUE"
 -- this proves that we can correctly produce the semantic type bool from the bool literal
--- + LET bool_x := 1;
+-- + LET bool_x := TRUE;
 -- + {let_stmt}: bool_x: bool notnull variable
 -- - Error
 let bool_x := const(1==1);
@@ -1514,14 +1514,14 @@ set bool_x := 1 is not false;
 @enforce_normal is true;
 
 -- TEST: 2 is true
--- rewritten as "1"
--- + SET bool_x := 1;
+-- rewritten as "TRUE"
+-- + SET bool_x := TRUE;
 -- - Error
 set bool_x := const(2 is true);
 
 -- TEST: 2 is true
--- rewritten as "0"
--- + SET bool_x := 0;
+-- rewritten as "FALSE"
+-- + SET bool_x := FALSE;
 -- - Error
 set bool_x := const(2 is not true);
 
@@ -1532,38 +1532,38 @@ set bool_x := const(2 is not true);
 set bool_x := const(1/0 is true);
 
 -- TEST: true is not 2 --> this is true is an operator
--- rewritten as "0"
--- + SET bool_x := 0;
+-- rewritten as "FALSE"
+-- + SET bool_x := FALSE;
 -- - Error
 set bool_x := const(true is 2);
 
 -- TEST: null is not true
--- rewritten as "0"
--- + SET bool_x := 0;
+-- rewritten as "FALSE"
+-- + SET bool_x := FALSE;
 -- - Error
 set bool_x := const(null is true);
 
 -- TEST: null is not true
--- rewritten as "1"
--- + SET bool_x := 1;
+-- rewritten as "TRUE"
+-- + SET bool_x := TRUE;
 -- - Error
 set bool_x := const(null is not true);
 
 -- TEST: 0 is false
--- rewritten as "1"
--- + SET bool_x := 1;
+-- rewritten as "TRUE"
+-- + SET bool_x := TRUE;
 -- - Error
 set bool_x := const(0 is false);
 
 -- TEST: 0 is not false
--- rewritten as "0"
--- + SET bool_x := 0;
+-- rewritten as "FALSE"
+-- + SET bool_x := FALSE;
 -- - Error
 set bool_x := const(0 is not false);
 
 -- TEST: null is not false
--- rewritten as "1"
--- + SET bool_x := 1;
+-- rewritten as "TRUE"
+-- + SET bool_x := TRUE;
 -- - Error
 set bool_x := const(null is not false);
 
@@ -1583,7 +1583,7 @@ set bool_x := const(1/0 is not true);
 
 -- TEST: null is not false
 -- rewritten as "0"
--- + SET bool_x := 0;
+-- + SET bool_x := FALSE;
 -- - Error
 set bool_x := const(null is false);
 
@@ -1597,7 +1597,7 @@ set bool_x := const(1/0 is false);
 -- the internal const(1==1) is evaluated to a literal which then is used by the outer const
 -- the result must still be bool, this proves that we can correctly eval the type of
 -- an internal bool literal
--- + LET bool_x2 := 1;
+-- + LET bool_x2 := TRUE;
 -- + {let_stmt}: bool_x2: bool notnull variable
 -- - Error
 let bool_x2 := const(const(1==1));
@@ -4164,7 +4164,7 @@ select const(0 + null);
 
 -- TEST: bool handling for +
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 1;
+-- + SELECT TRUE;
 -- - Error
 select const(true + false);
 
@@ -4194,7 +4194,7 @@ select const(0 - null);
 
 -- TEST: bool handling for -
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 1;
+-- + SELECT TRUE;
 -- - Error
 select const(true - false);
 
@@ -4224,7 +4224,7 @@ select const(0 * null);
 
 -- TEST: bool handling for *
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(true * false);
 
@@ -4254,7 +4254,7 @@ select const(1 / null);
 
 -- TEST: bool handling for /
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false / true);
 
@@ -4284,7 +4284,7 @@ select const(1 % null);
 
 -- TEST: bool handling for %
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false % true);
 
@@ -4320,7 +4320,7 @@ select const(0 + null);
 
 -- TEST: bool handling for ==
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false == true);
 
@@ -4350,7 +4350,7 @@ select const(0 != not null);
 
 -- TEST: bool handling for !=
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 1;
+-- + SELECT TRUE;
 -- - Error
 select const(false != true);
 
@@ -4380,7 +4380,7 @@ select const(0 <= not null);
 
 -- TEST: bool handling for <=
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 1;
+-- + SELECT TRUE;
 -- - Error
 select const(false <= true);
 
@@ -4410,7 +4410,7 @@ select const(0 >= not null);
 
 -- TEST: bool handling for >=
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false >= true);
 
@@ -4440,7 +4440,7 @@ select const(1 > null);
 
 -- TEST: bool handling for >
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false > true);
 
@@ -4470,7 +4470,7 @@ select const(1 < null);
 
 -- TEST: bool handling for <
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 1;
+-- + SELECT TRUE;
 -- - Error
 select const(false < true);
 
@@ -4500,7 +4500,7 @@ select const(0 << null);
 
 -- TEST: bool handling for <<
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false << true);
 
@@ -4530,7 +4530,7 @@ select const(0 >> null);
 
 -- TEST: bool handling for >>
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false >> true);
 
@@ -4560,7 +4560,7 @@ select const(0 | null);
 
 -- TEST: bool handling for |
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 1;
+-- + SELECT TRUE;
 -- - Error
 select const(false | true);
 
@@ -4590,7 +4590,7 @@ select const(0 & null);
 
 -- TEST: bool handling for &
 -- + {select_stmt}: select: { _anon: bool notnull }
--- + SELECT 0;
+-- + SELECT FALSE;
 -- - Error
 select const(false & true);
 
@@ -7310,7 +7310,7 @@ create proc two_arg_sources_fully_redundant(like args1, like args1, like args1)
 begin
 end;
 
-create view ViewShape as select cast(1 as bool) a, 2.5 b, 'xyz' c;
+create view ViewShape as select TRUE a, 2.5 b, 'xyz' c;
 
 -- + CREATE PROC like_a_view (a_ BOOL NOT NULL, b_ REAL NOT NULL, c_ TEXT NOT NULL)
 -- +   SELECT *
@@ -8357,7 +8357,7 @@ set sens_text := sens_func(1, sens_text);
 -- + {update_stmt}: foo: { id: integer notnull primary_key autoinc }
 -- + {cast_expr}: integer notnull
 -- - Error
-update foo set id = cast(1 as integer);
+update foo set id = cast('1' as integer);
 
 -- TEST: basic delete stmt with CTE form
 -- + {with_delete_stmt}: ok
@@ -13609,7 +13609,7 @@ set sens_text := (select trim("xyz", name) result from with_sensitive);
 
 -- TEST: call cql_cursor_format on a auto cursor
 -- + {create_proc_stmt}: ok dml_proc
--- + DECLARE c1 CURSOR FOR SELECT CAST(1 AS BOOL) AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
+-- + DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
 -- + FETCH c1;
 -- + SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN c1.a IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.a)
@@ -13627,7 +13627,7 @@ set sens_text := (select trim("xyz", name) result from with_sensitive);
 -- - Error
 create proc print_call_cql_cursor_format()
 begin
-  declare c1 cursor for select cast(1 as bool) a, 1 b, 99L c, 'x' d, 1.1 e, cast('y' as blob) f;
+  declare c1 cursor for select TRUE a, 1 b, 99L c, 'x' d, 1.1 e, cast('y' as blob) f;
   fetch c1;
   set a_string := cql_cursor_format(c1);
 end;
@@ -16742,7 +16742,7 @@ begin
       when 0 then b + b
       else b + b
     end;
-  
+
   -- nullable as the improvements are no longer in effect
   let x1 := a;
   let y1 := b;
@@ -16778,7 +16778,7 @@ begin
 
   -- `b` is nonnull when the condition is false
   let y0 := iif(b is null, 42, b + b);
-  
+
   -- nullable as the improvements are no longer in effect
   let x1 := a;
   let y1 := b;
@@ -17491,7 +17491,7 @@ begin
   declare a int;
   declare b int;
   declare c int;
-  if 1 then  
+  if 1 then
     if a is null or b is null or c is null then
       return;
     end if;
@@ -17518,7 +17518,7 @@ begin
   declare a int;
   declare b int;
   declare c int;
-  if 1 then  
+  if 1 then
     if a is null or b is null or c is null then
       call printf("Hello, world!\n");
       return;
@@ -17540,7 +17540,7 @@ end;
 create proc improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null()
 begin
   declare a int;
-  if 1 then  
+  if 1 then
     if a is null then
       set a := null;
       return;
@@ -17985,7 +17985,7 @@ begin
   let y0 := b; -- nonnull due to guard
   let z0 := c; -- nonnull due to set
   let w0 := d; -- nullable
-  
+
   if 0 then
     if a is not null then
       let x1 := a; -- nonnull due to true condition
@@ -18084,7 +18084,7 @@ begin
 
   -- `a` is nonnull at all non-OUT positions despite use as OUT arg
   let x0 := iif(
-    0, 
+    0,
     iif(0, iif(0, requires_out_returns_int_not_null(a), a), a),
     iif(0, iif(0, requires_out_returns_int_not_null(a), a), a)
   );

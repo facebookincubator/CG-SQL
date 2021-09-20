@@ -285,7 +285,10 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     EXTRACT_NUM_TYPE(num_type, node);
     EXTRACT_NUM_VALUE(val, node);
 
-    if (num_type == NUM_INT) {
+    if (num_type == NUM_BOOL) {
+      cql_output("{bool %s}", val);
+    }
+    else if (num_type == NUM_INT) {
       cql_output("{int %s}", val);
     }
     else if (num_type == NUM_LONG) {
