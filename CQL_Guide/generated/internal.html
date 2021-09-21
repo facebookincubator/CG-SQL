@@ -325,6 +325,18 @@
 <li><a href="#the-upgrading-workers">The Upgrading Workers</a></li>
 <li><a href="#recap-2">Recap</a></li>
 </ul></li>
+<li><a href="#part-7-json-generation">Part 7: JSON Generation</a>
+<ul>
+<li><a href="#preface-6">Preface</a></li>
+</ul></li>
+<li><a href="#json-schema">JSON Schema</a>
+<ul>
+<li><a href="#walking-the-ast">Walking the AST</a></li>
+<li><a href="#formatting-the-json">Formatting the JSON</a></li>
+<li><a href="#dependency-analysis">Dependency Analysis</a></li>
+<li><a href="#additional-test-output">Additional Test Output</a></li>
+<li><a href="#recap-3">Recap</a></li>
+</ul></li>
 </ul>
 </nav>
 <!--- @generated -->
@@ -5568,6 +5580,504 @@ typedef struct cql_boxed_stmt {
 <li>the key annotation types and what code they create</li>
 <li>the handling of recreate tables, temp tables, and the base schema</li>
 <li>how all of these are wired together starting from the upgrader’s “main”</li>
+</ul>
+<p>As with the other parts, no attempt was made to cover every function in detail. That is best done by reading the source code. But there is overall structure here and an understanding of the basic principles is helpful before diving into the source code.</p>
+<h2 id="part-7-json-generation">Part 7: JSON Generation</h2>
+<!---
+-- Copyright (c) Facebook, Inc. and its affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+<h3 id="preface-6">Preface</h3>
+<p>Part 7 continues with a discussion of the JSON generation code. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how JSON creation works in general – the core strategies and implementation choices – so that when reading the source you will have an idea how it all hangs together. To accomplish this, we’ll illustrate the key strategies used to extract the data and format the JSON.</p>
+<h2 id="json-schema">JSON Schema</h2>
+<p>The JSON schema is described in <a href="https://cgsql.dev/cql-guide/ch13">Chapter 13</a> of the Guide and there is a nice diagram of its <a href="https://cgsql.dev/json-diagram">grammar</a> for reference. So, we won’t be discussing all the details of the output. Instead we’re going to go over the theory of how the JSON generator works. It is structured very much like the other code generators but it happens to produce a JSON file. It’s call the “JSON Schema” because most of the content is a description of the database schema in JSON form. As such it’s almost entirely just a simple walk of the AST in the correct order. The only really tricky bit is the extra dependency analysis on the AST. This allows us to emit usage information in the output for downstream tools to use as needed.</p>
+<p>We’ll cover these topics:</p>
+<ul>
+<li>walking the AST</li>
+<li>formatting</li>
+<li>computing the dependencies</li>
+</ul>
+<p>This should be a short chapter compared to the others, this output really is much simpler to create than the C or the schema upgrader.</p>
+<h3 id="walking-the-ast">Walking the AST</h3>
+<p>If you run this command:</p>
+<div class="sourceCode" id="cb276"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb276-1"><a href="#cb276-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cql <span class="at">--in</span> x <span class="at">--rt</span> json_schema <span class="at">--cg</span> x.json</span></code></pre></div>
+<p>Where <code>x</code> is an empty file, you’ll get the following skeletal JSON, lightly reformatted for brevity:</p>
+<div class="sourceCode" id="cb277"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb277-1"><a href="#cb277-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb277-2"><a href="#cb277-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tables&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-3"><a href="#cb277-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;virtualTables&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-4"><a href="#cb277-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;views&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-5"><a href="#cb277-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;indices&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-6"><a href="#cb277-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;triggers&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-7"><a href="#cb277-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;attributes&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-8"><a href="#cb277-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;queries&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-9"><a href="#cb277-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;inserts&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-10"><a href="#cb277-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;generalInserts&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-11"><a href="#cb277-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;updates&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-12"><a href="#cb277-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;deletes&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-13"><a href="#cb277-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;general&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-14"><a href="#cb277-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;regions&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-15"><a href="#cb277-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;adHocMigrationProcs&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb277-16"><a href="#cb277-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;enums&quot;</span> <span class="fu">:</span> <span class="ot">[</span>  <span class="ot">]</span></span>
+<span id="cb277-17"><a href="#cb277-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>From this we can deduce a great deal of the structure of the code:</p>
+<div class="sourceCode" id="cb278"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb278-1"><a href="#cb278-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Main entry point for json schema format</span></span>
+<span id="cb278-2"><a href="#cb278-2" aria-hidden="true" tabindex="-1"></a>cql_noexport <span class="dt">void</span> cg_json_schema_main<span class="op">(</span>ast_node <span class="op">*</span>head<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb278-3"><a href="#cb278-3" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>options<span class="op">.</span>file_names_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb278-4"><a href="#cb278-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-5"><a href="#cb278-5" aria-hidden="true" tabindex="-1"></a>  cql_exit_on_semantic_errors<span class="op">(</span>head<span class="op">);</span></span>
+<span id="cb278-6"><a href="#cb278-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-7"><a href="#cb278-7" aria-hidden="true" tabindex="-1"></a>  tables_to_procs <span class="op">=</span> symtab_new<span class="op">();</span></span>
+<span id="cb278-8"><a href="#cb278-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-9"><a href="#cb278-9" aria-hidden="true" tabindex="-1"></a>  CHARBUF_OPEN<span class="op">(</span>main<span class="op">);</span></span>
+<span id="cb278-10"><a href="#cb278-10" aria-hidden="true" tabindex="-1"></a>  charbuf <span class="op">*</span>output <span class="op">=</span> <span class="op">&amp;</span>main<span class="op">;</span></span>
+<span id="cb278-11"><a href="#cb278-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-12"><a href="#cb278-12" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> rt<span class="op">-&gt;</span>source_prefix<span class="op">);</span></span>
+<span id="cb278-13"><a href="#cb278-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-14"><a href="#cb278-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// master dictionary begins</span></span>
+<span id="cb278-15"><a href="#cb278-15" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">{</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-16"><a href="#cb278-16" aria-hidden="true" tabindex="-1"></a>  BEGIN_INDENT<span class="op">(</span>defs<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb278-17"><a href="#cb278-17" aria-hidden="true" tabindex="-1"></a>  cg_json_tables<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-18"><a href="#cb278-18" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-19"><a href="#cb278-19" aria-hidden="true" tabindex="-1"></a>  cg_json_virtual_tables<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-20"><a href="#cb278-20" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-21"><a href="#cb278-21" aria-hidden="true" tabindex="-1"></a>  cg_json_views<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-22"><a href="#cb278-22" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-23"><a href="#cb278-23" aria-hidden="true" tabindex="-1"></a>  cg_json_indices<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-24"><a href="#cb278-24" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-25"><a href="#cb278-25" aria-hidden="true" tabindex="-1"></a>  cg_json_triggers<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-26"><a href="#cb278-26" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-27"><a href="#cb278-27" aria-hidden="true" tabindex="-1"></a>  cg_json_stmt_list<span class="op">(</span>output<span class="op">,</span> head<span class="op">);</span></span>
+<span id="cb278-28"><a href="#cb278-28" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-29"><a href="#cb278-29" aria-hidden="true" tabindex="-1"></a>  cg_json_regions<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-30"><a href="#cb278-30" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-31"><a href="#cb278-31" aria-hidden="true" tabindex="-1"></a>  cg_json_ad_hoc_migration_procs<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-32"><a href="#cb278-32" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-33"><a href="#cb278-33" aria-hidden="true" tabindex="-1"></a>  cg_json_enums<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-34"><a href="#cb278-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-35"><a href="#cb278-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>options<span class="op">.</span>test<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb278-36"><a href="#cb278-36" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-37"><a href="#cb278-37" aria-hidden="true" tabindex="-1"></a>    cg_json_table_users<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb278-38"><a href="#cb278-38" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb278-39"><a href="#cb278-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-40"><a href="#cb278-40" aria-hidden="true" tabindex="-1"></a>  END_INDENT<span class="op">(</span>defs<span class="op">);</span></span>
+<span id="cb278-41"><a href="#cb278-41" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">}</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb278-42"><a href="#cb278-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-43"><a href="#cb278-43" aria-hidden="true" tabindex="-1"></a>  cql_write_file<span class="op">(</span>options<span class="op">.</span>file_names<span class="op">[</span><span class="dv">0</span><span class="op">],</span> output<span class="op">-&gt;</span>ptr<span class="op">);</span></span>
+<span id="cb278-44"><a href="#cb278-44" aria-hidden="true" tabindex="-1"></a>  CHARBUF_CLOSE<span class="op">(</span>main<span class="op">);</span></span>
+<span id="cb278-45"><a href="#cb278-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb278-46"><a href="#cb278-46" aria-hidden="true" tabindex="-1"></a>  SYMTAB_CLEANUP<span class="op">(</span>tables_to_procs<span class="op">);</span></span>
+<span id="cb278-47"><a href="#cb278-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>cg_json_schema_main</code> is the main function and you can see that it mirrors that skeletal JSON output nearly exactly with some additional test output options. We’ll cover the test output in a later section when we’ve had a chance to discuss the dependency analysis.</p>
+<h4 id="example-json-writer-views">Example JSON Writer: Views</h4>
+<p>These are sufficiently easy that we can just walk through one of the procedures front to back. Let’s look at the “views” section.</p>
+<div class="sourceCode" id="cb279"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb279-1"><a href="#cb279-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The set of views look rather like the query section in as much as</span></span>
+<span id="cb279-2"><a href="#cb279-2" aria-hidden="true" tabindex="-1"></a><span class="co">// they are in fact nothing more than named select statements.  However</span></span>
+<span id="cb279-3"><a href="#cb279-3" aria-hidden="true" tabindex="-1"></a><span class="co">// the output here is somewhat simplified.  We only emit the whole select</span></span>
+<span id="cb279-4"><a href="#cb279-4" aria-hidden="true" tabindex="-1"></a><span class="co">// statement and any binding args, we don&#39;t also emit all the pieces of the select.</span></span>
+<span id="cb279-5"><a href="#cb279-5" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_json_views<span class="op">(</span>charbuf <span class="op">*</span>output<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb279-6"><a href="#cb279-6" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">views</span><span class="sc">\&quot;</span><span class="st"> : [</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb279-7"><a href="#cb279-7" aria-hidden="true" tabindex="-1"></a>  BEGIN_INDENT<span class="op">(</span>views<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb279-8"><a href="#cb279-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-9"><a href="#cb279-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb279-10"><a href="#cb279-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>list_item <span class="op">*</span>item <span class="op">=</span> all_views_list<span class="op">;</span> item<span class="op">;</span> item <span class="op">=</span> item<span class="op">-&gt;</span>next<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb279-11"><a href="#cb279-11" aria-hidden="true" tabindex="-1"></a>    ast_node <span class="op">*</span>ast <span class="op">=</span> item<span class="op">-&gt;</span>ast<span class="op">;</span></span>
+<span id="cb279-12"><a href="#cb279-12" aria-hidden="true" tabindex="-1"></a>    Invariant<span class="op">(</span>is_ast_create_view_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb279-13"><a href="#cb279-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-14"><a href="#cb279-14" aria-hidden="true" tabindex="-1"></a>    ast_node <span class="op">*</span>misc_attrs <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb279-15"><a href="#cb279-15" aria-hidden="true" tabindex="-1"></a>    ast_node <span class="op">*</span>attr_target <span class="op">=</span> ast<span class="op">-&gt;</span>parent<span class="op">;</span></span>
+<span id="cb279-16"><a href="#cb279-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>is_ast_stmt_and_attr<span class="op">(</span>attr_target<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb279-17"><a href="#cb279-17" aria-hidden="true" tabindex="-1"></a>      EXTRACT_STMT_AND_MISC_ATTRS<span class="op">(</span>stmt<span class="op">,</span> misc<span class="op">,</span> attr_target<span class="op">-&gt;</span>parent<span class="op">);</span></span>
+<span id="cb279-18"><a href="#cb279-18" aria-hidden="true" tabindex="-1"></a>      misc_attrs <span class="op">=</span> misc<span class="op">;</span></span>
+<span id="cb279-19"><a href="#cb279-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb279-20"><a href="#cb279-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-21"><a href="#cb279-21" aria-hidden="true" tabindex="-1"></a>    cg_json_test_details<span class="op">(</span>output<span class="op">,</span> ast<span class="op">,</span> misc_attrs<span class="op">);</span></span>
+<span id="cb279-22"><a href="#cb279-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-23"><a href="#cb279-23" aria-hidden="true" tabindex="-1"></a>    EXTRACT_OPTION<span class="op">(</span>flags<span class="op">,</span> ast<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb279-24"><a href="#cb279-24" aria-hidden="true" tabindex="-1"></a>    EXTRACT<span class="op">(</span>view_and_attrs<span class="op">,</span> ast<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb279-25"><a href="#cb279-25" aria-hidden="true" tabindex="-1"></a>    EXTRACT<span class="op">(</span>name_and_select<span class="op">,</span> view_and_attrs<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb279-26"><a href="#cb279-26" aria-hidden="true" tabindex="-1"></a>    EXTRACT_ANY_NOTNULL<span class="op">(</span>select_stmt<span class="op">,</span> name_and_select<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb279-27"><a href="#cb279-27" aria-hidden="true" tabindex="-1"></a>    EXTRACT_ANY_NOTNULL<span class="op">(</span>name_ast<span class="op">,</span> name_and_select<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb279-28"><a href="#cb279-28" aria-hidden="true" tabindex="-1"></a>    EXTRACT_STRING<span class="op">(</span>name<span class="op">,</span> name_ast<span class="op">);</span></span>
+<span id="cb279-29"><a href="#cb279-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-30"><a href="#cb279-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb279-31"><a href="#cb279-31" aria-hidden="true" tabindex="-1"></a>      bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb279-32"><a href="#cb279-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb279-33"><a href="#cb279-33" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;{</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb279-34"><a href="#cb279-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-35"><a href="#cb279-35" aria-hidden="true" tabindex="-1"></a>    bool_t is_deleted <span class="op">=</span> ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>delete_version <span class="op">&gt;</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb279-36"><a href="#cb279-36" aria-hidden="true" tabindex="-1"></a>    BEGIN_INDENT<span class="op">(</span>view<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb279-37"><a href="#cb279-37" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">name</span><span class="sc">\&quot;</span><span class="st"> : </span><span class="sc">\&quot;</span><span class="st">%s</span><span class="sc">\&quot;</span><span class="st">&quot;</span><span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb279-38"><a href="#cb279-38" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">CRC</span><span class="sc">\&quot;</span><span class="st"> : </span><span class="sc">\&quot;</span><span class="st">%lld</span><span class="sc">\&quot;</span><span class="st">&quot;</span><span class="op">,</span> crc_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb279-39"><a href="#cb279-39" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">isTemp</span><span class="sc">\&quot;</span><span class="st"> : %d&quot;</span><span class="op">,</span> <span class="op">!!(</span>flags <span class="op">&amp;</span> VIEW_IS_TEMP<span class="op">));</span></span>
+<span id="cb279-40"><a href="#cb279-40" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">isDeleted</span><span class="sc">\&quot;</span><span class="st"> : %d&quot;</span><span class="op">,</span> is_deleted<span class="op">);</span></span>
+<span id="cb279-41"><a href="#cb279-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>is_deleted<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb279-42"><a href="#cb279-42" aria-hidden="true" tabindex="-1"></a>      bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">deletedVersion</span><span class="sc">\&quot;</span><span class="st"> : %d&quot;</span><span class="op">,</span> ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>delete_version<span class="op">);</span></span>
+<span id="cb279-43"><a href="#cb279-43" aria-hidden="true" tabindex="-1"></a>      cg_json_deleted_migration_proc<span class="op">(</span>output<span class="op">,</span> view_and_attrs<span class="op">);</span></span>
+<span id="cb279-44"><a href="#cb279-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb279-45"><a href="#cb279-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-46"><a href="#cb279-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>region<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb279-47"><a href="#cb279-47" aria-hidden="true" tabindex="-1"></a>      cg_json_emit_region_info<span class="op">(</span>output<span class="op">,</span> ast<span class="op">);</span></span>
+<span id="cb279-48"><a href="#cb279-48" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb279-49"><a href="#cb279-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-50"><a href="#cb279-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>misc_attrs<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb279-51"><a href="#cb279-51" aria-hidden="true" tabindex="-1"></a>      bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb279-52"><a href="#cb279-52" aria-hidden="true" tabindex="-1"></a>      cg_json_misc_attrs<span class="op">(</span>output<span class="op">,</span> misc_attrs<span class="op">);</span></span>
+<span id="cb279-53"><a href="#cb279-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb279-54"><a href="#cb279-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-55"><a href="#cb279-55" aria-hidden="true" tabindex="-1"></a>    cg_json_projection<span class="op">(</span>output<span class="op">,</span> select_stmt<span class="op">);</span></span>
+<span id="cb279-56"><a href="#cb279-56" aria-hidden="true" tabindex="-1"></a>    cg_fragment_with_params<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;select&quot;</span><span class="op">,</span> select_stmt<span class="op">,</span> gen_one_stmt<span class="op">);</span></span>
+<span id="cb279-57"><a href="#cb279-57" aria-hidden="true" tabindex="-1"></a>    cg_json_dependencies<span class="op">(</span>output<span class="op">,</span> ast<span class="op">);</span></span>
+<span id="cb279-58"><a href="#cb279-58" aria-hidden="true" tabindex="-1"></a>    END_INDENT<span class="op">(</span>view<span class="op">);</span></span>
+<span id="cb279-59"><a href="#cb279-59" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">}</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb279-60"><a href="#cb279-60" aria-hidden="true" tabindex="-1"></a>    i<span class="op">++;</span></span>
+<span id="cb279-61"><a href="#cb279-61" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb279-62"><a href="#cb279-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb279-63"><a href="#cb279-63" aria-hidden="true" tabindex="-1"></a>  END_INDENT<span class="op">(</span>views<span class="op">);</span></span>
+<span id="cb279-64"><a href="#cb279-64" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;]&quot;</span><span class="op">);</span></span>
+<span id="cb279-65"><a href="#cb279-65" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="view-loop">View Loop</h4>
+<p>Already we can see the structure emerging, and of course its nothing more than a bunch of <code>bprintf</code>. Let’s do it section by section:</p>
+<div class="sourceCode" id="cb280"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb280-1"><a href="#cb280-1" aria-hidden="true" tabindex="-1"></a>bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">views</span><span class="sc">\&quot;</span><span class="st"> : [</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb280-2"><a href="#cb280-2" aria-hidden="true" tabindex="-1"></a>BEGIN_INDENT<span class="op">(</span>views<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb280-3"><a href="#cb280-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb280-4"><a href="#cb280-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span>list_item <span class="op">*</span>item <span class="op">=</span> all_views_list<span class="op">;</span> item<span class="op">;</span> item <span class="op">=</span> item<span class="op">-&gt;</span>next<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb280-5"><a href="#cb280-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">..</span></span>
+<span id="cb280-6"><a href="#cb280-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb280-7"><a href="#cb280-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb280-8"><a href="#cb280-8" aria-hidden="true" tabindex="-1"></a>END_INDENT<span class="op">(</span>views<span class="op">);</span></span>
+<span id="cb280-9"><a href="#cb280-9" aria-hidden="true" tabindex="-1"></a>bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;]&quot;</span><span class="op">);</span></span></code></pre></div>
+<p>Unsurprisingly, this code will iterate the <code>all_views_list</code> which was created precisely for this kind of output. The semantic pass populates this list for use downstream.</p>
+<p>We’ll deal with <code>BEGIN_INDENT</code> a bit later, but it should be clear what it does by the name for now. So we’ve made the “views” section and we’ll put 0 or more views in it.</p>
+<h4 id="view-extraction">View Extraction</h4>
+<p>The next section extracts the necessary information and emits the test output:</p>
+<div class="sourceCode" id="cb281"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb281-1"><a href="#cb281-1" aria-hidden="true" tabindex="-1"></a>    ast_node <span class="op">*</span>ast <span class="op">=</span> item<span class="op">-&gt;</span>ast<span class="op">;</span></span>
+<span id="cb281-2"><a href="#cb281-2" aria-hidden="true" tabindex="-1"></a>    Invariant<span class="op">(</span>is_ast_create_view_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb281-3"><a href="#cb281-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb281-4"><a href="#cb281-4" aria-hidden="true" tabindex="-1"></a>    ast_node <span class="op">*</span>misc_attrs <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb281-5"><a href="#cb281-5" aria-hidden="true" tabindex="-1"></a>    ast_node <span class="op">*</span>attr_target <span class="op">=</span> ast<span class="op">-&gt;</span>parent<span class="op">;</span></span>
+<span id="cb281-6"><a href="#cb281-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>is_ast_stmt_and_attr<span class="op">(</span>attr_target<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb281-7"><a href="#cb281-7" aria-hidden="true" tabindex="-1"></a>      EXTRACT_STMT_AND_MISC_ATTRS<span class="op">(</span>stmt<span class="op">,</span> misc<span class="op">,</span> attr_target<span class="op">-&gt;</span>parent<span class="op">);</span></span>
+<span id="cb281-8"><a href="#cb281-8" aria-hidden="true" tabindex="-1"></a>      misc_attrs <span class="op">=</span> misc<span class="op">;</span></span>
+<span id="cb281-9"><a href="#cb281-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb281-10"><a href="#cb281-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb281-11"><a href="#cb281-11" aria-hidden="true" tabindex="-1"></a>    cg_json_test_details<span class="op">(</span>output<span class="op">,</span> ast<span class="op">,</span> misc_attrs<span class="op">);</span></span>
+<span id="cb281-12"><a href="#cb281-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb281-13"><a href="#cb281-13" aria-hidden="true" tabindex="-1"></a>    EXTRACT_OPTION<span class="op">(</span>flags<span class="op">,</span> ast<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb281-14"><a href="#cb281-14" aria-hidden="true" tabindex="-1"></a>    EXTRACT<span class="op">(</span>view_and_attrs<span class="op">,</span> ast<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb281-15"><a href="#cb281-15" aria-hidden="true" tabindex="-1"></a>    EXTRACT<span class="op">(</span>name_and_select<span class="op">,</span> view_and_attrs<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb281-16"><a href="#cb281-16" aria-hidden="true" tabindex="-1"></a>    EXTRACT_ANY_NOTNULL<span class="op">(</span>select_stmt<span class="op">,</span> name_and_select<span class="op">-&gt;</span>right<span class="op">);</span></span>
+<span id="cb281-17"><a href="#cb281-17" aria-hidden="true" tabindex="-1"></a>    EXTRACT_ANY_NOTNULL<span class="op">(</span>name_ast<span class="op">,</span> name_and_select<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb281-18"><a href="#cb281-18" aria-hidden="true" tabindex="-1"></a>    EXTRACT_STRING<span class="op">(</span>name<span class="op">,</span> name_ast<span class="op">);</span></span></code></pre></div>
+<p>The <code>is_ast_stmt_and_attr</code> node tell us if there were any misc attributes on the statement. Those attributes can be extracted and printed. We have to look up the tree a little bit from where we are because this is the “all views” list, if there were attributes on this view they were attached two levels up. In any case <code>misc_attrs</code> ends with attributes if there are any.</p>
+<p>After the test output, the necessary view attributes are extracted the usual way with <code>EXTRACT</code> macros for the view shape.</p>
+<h4 id="test-output">Test Output</h4>
+<div class="sourceCode" id="cb282"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb282-1"><a href="#cb282-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_json_test_details<span class="op">(</span>charbuf <span class="op">*</span>output<span class="op">,</span> ast_node <span class="op">*</span>ast<span class="op">,</span> ast_node <span class="op">*</span>misc_attrs<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb282-2"><a href="#cb282-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>options<span class="op">.</span>test<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb282-3"><a href="#cb282-3" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">The statement ending at line %d</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> ast<span class="op">-&gt;</span>lineno<span class="op">);</span></span>
+<span id="cb282-4"><a href="#cb282-4" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb282-5"><a href="#cb282-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb282-6"><a href="#cb282-6" aria-hidden="true" tabindex="-1"></a>    gen_set_output_buffer<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb282-7"><a href="#cb282-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>misc_attrs<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb282-8"><a href="#cb282-8" aria-hidden="true" tabindex="-1"></a>      gen_with_callbacks<span class="op">(</span>misc_attrs<span class="op">,</span> gen_misc_attrs<span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb282-9"><a href="#cb282-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb282-10"><a href="#cb282-10" aria-hidden="true" tabindex="-1"></a>    gen_with_callbacks<span class="op">(</span>ast<span class="op">,</span> gen_one_stmt<span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb282-11"><a href="#cb282-11" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb282-12"><a href="#cb282-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb282-13"><a href="#cb282-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>All of the JSON fragments have the usual test pattern “The statement ending at line nnn”. This means that the normal validator will be able to find comments in the test file and associate them with json parts. The testing strategies are discussed in [Part 4]((https://cgsql.dev/cql-guide/int04).</p>
+<p>In addition, while in test mode, we also emit the original statement that caused this JSON fragment to be created. This allows the test patterns to cross check the input and output and also makes the test output more readable for humans.</p>
+<p>Note that in test mode the JSON is effectively corrupted by the test output as it is not well-formed JSON in any way. So use of –test is strictly for validation only.</p>
+<h4 id="view-basics">View Basics</h4>
+<p>All of the things that go into the JSON have some attributes that are universally present and generally come directly from the AST.</p>
+<div class="sourceCode" id="cb283"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb283-1"><a href="#cb283-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb283-2"><a href="#cb283-2" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb283-3"><a href="#cb283-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb283-4"><a href="#cb283-4" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;{</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb283-5"><a href="#cb283-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb283-6"><a href="#cb283-6" aria-hidden="true" tabindex="-1"></a>  bool_t is_deleted <span class="op">=</span> ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>delete_version <span class="op">&gt;</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb283-7"><a href="#cb283-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb283-8"><a href="#cb283-8" aria-hidden="true" tabindex="-1"></a>  BEGIN_INDENT<span class="op">(</span>view<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb283-9"><a href="#cb283-9" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">name</span><span class="sc">\&quot;</span><span class="st"> : </span><span class="sc">\&quot;</span><span class="st">%s</span><span class="sc">\&quot;</span><span class="st">&quot;</span><span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb283-10"><a href="#cb283-10" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">CRC</span><span class="sc">\&quot;</span><span class="st"> : </span><span class="sc">\&quot;</span><span class="st">%lld</span><span class="sc">\&quot;</span><span class="st">&quot;</span><span class="op">,</span> crc_stmt<span class="op">(</span>ast<span class="op">));</span></span>
+<span id="cb283-11"><a href="#cb283-11" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">isTemp</span><span class="sc">\&quot;</span><span class="st"> : %d&quot;</span><span class="op">,</span> <span class="op">!!(</span>flags <span class="op">&amp;</span> VIEW_IS_TEMP<span class="op">));</span></span>
+<span id="cb283-12"><a href="#cb283-12" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">isDeleted</span><span class="sc">\&quot;</span><span class="st"> : %d&quot;</span><span class="op">,</span> is_deleted<span class="op">);</span></span>
+<span id="cb283-13"><a href="#cb283-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_deleted<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb283-14"><a href="#cb283-14" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">deletedVersion</span><span class="sc">\&quot;</span><span class="st"> : %d&quot;</span><span class="op">,</span> ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>delete_version<span class="op">);</span></span>
+<span id="cb283-15"><a href="#cb283-15" aria-hidden="true" tabindex="-1"></a>    cg_json_deleted_migration_proc<span class="op">(</span>output<span class="op">,</span> view_and_attrs<span class="op">);</span></span>
+<span id="cb283-16"><a href="#cb283-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb283-17"><a href="#cb283-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb283-18"><a href="#cb283-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
+<span id="cb283-19"><a href="#cb283-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb283-20"><a href="#cb283-20" aria-hidden="true" tabindex="-1"></a>  END_INDENT<span class="op">(</span>view<span class="op">);</span></span>
+<span id="cb283-21"><a href="#cb283-21" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">}</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb283-22"><a href="#cb283-22" aria-hidden="true" tabindex="-1"></a>  i<span class="op">++;</span></span>
+<span id="cb283-23"><a href="#cb283-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>  </span></code></pre></div>
+<p>This part of the output is the simplest</p>
+<ul>
+<li>we emit a comma if we need one (only the first entry doesn’t)</li>
+<li>we start the view object ‘{’</li>
+<li>more indenting for the interior of the view</li>
+<li>emit the view name</li>
+<li>emit the CRC of the view (this makes it easy to see if the view changed)
+<ul>
+<li><code>crc_stmt</code> computes the CRC by echoing the statement into a scratch buffer and then running the CRC algorithm on that buffer</li>
+</ul></li>
+<li>note the “,” pattern, this pattern is used because sometimes there are optional parts and using a leading “,” makes it clear which part is supposed to emit the comma
+<ul>
+<li>it turns out getting the commas right is one of the greater annoyances of JSON output</li>
+</ul></li>
+<li>emit “isTemp”</li>
+<li>emit “isDeleted”</li>
+<li>if the view is deleted, emit “deletedVersion”</li>
+<li>if there is a migration procedure on the <code>@delete</code> attribute emit that as well
+<ul>
+<li><code>cg_json_deleted_migration_proc</code> scans the attribute list for <code>@delete</code> attribute and emits the procedure name on that attribute if there is one</li>
+</ul></li>
+</ul>
+<h4 id="optional-info">Optional Info</h4>
+<p>The next fragment emits two optional pieces that are present in many types of objects:</p>
+<div class="sourceCode" id="cb284"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb284-1"><a href="#cb284-1" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>region<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb284-2"><a href="#cb284-2" aria-hidden="true" tabindex="-1"></a>      cg_json_emit_region_info<span class="op">(</span>output<span class="op">,</span> ast<span class="op">);</span></span>
+<span id="cb284-3"><a href="#cb284-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb284-4"><a href="#cb284-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb284-5"><a href="#cb284-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>misc_attrs<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb284-6"><a href="#cb284-6" aria-hidden="true" tabindex="-1"></a>      bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb284-7"><a href="#cb284-7" aria-hidden="true" tabindex="-1"></a>      cg_json_misc_attrs<span class="op">(</span>output<span class="op">,</span> misc_attrs<span class="op">);</span></span>
+<span id="cb284-8"><a href="#cb284-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code></pre></div>
+<ul>
+<li>if there is a region assocatied with this view, we emit it here
+<ul>
+<li><code>cg_json_emit_region_info</code> emits two things:
+<ul>
+<li>the view’s region</li>
+<li>the “deployment region” of that region if any (regions are contained in deployable groups)</li>
+<li>see <a href="https://cgsql.dev/cql-guide/ch10#schema-regions">Chapter 10</a> for more info on regions and deployment regions</li>
+</ul></li>
+</ul></li>
+<li>if there are any miscellaneous attributes they are emitted
+<ul>
+<li>we’ll use <code>cg_json_misc_attrs</code> as our general formatting example when we get to that</li>
+</ul></li>
+</ul>
+<h4 id="the-view-details">The View Details</h4>
+<p>There is very little left in the view emitting code:</p>
+<div class="sourceCode" id="cb285"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb285-1"><a href="#cb285-1" aria-hidden="true" tabindex="-1"></a>  cg_json_projection<span class="op">(</span>output<span class="op">,</span> select_stmt<span class="op">);</span></span>
+<span id="cb285-2"><a href="#cb285-2" aria-hidden="true" tabindex="-1"></a>  cg_fragment_with_params<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;select&quot;</span><span class="op">,</span> select_stmt<span class="op">,</span> gen_one_stmt<span class="op">);</span></span>
+<span id="cb285-3"><a href="#cb285-3" aria-hidden="true" tabindex="-1"></a>  cg_json_dependencies<span class="op">(</span>output<span class="op">,</span> ast<span class="op">);</span></span></code></pre></div>
+<ul>
+<li><code>cg_json_projection</code> emits the name and type of each column in the view select list</li>
+<li><code>cg_fragment_with_params</code> emits the statement that creates the view in an attribute named “select”
+<ul>
+<li>the normal echoing code emits the statement</li>
+<li>views have no variables to bind but other statement forms inside of procedures can have variables in the statement</li>
+<li>the variable names are replace with “?” in the text of the statement</li>
+<li>the names of the variable appear in “selectArgs” (always empty for views)</li>
+</ul></li>
+<li><code>cg_json_dependencies</code> emits the tables and views that were used by this view, it gets its own section</li>
+</ul>
+<p>Those few things produce all JSON for a view. All the other schema elements do basically the same things. Most of the helpers are shared so, for instance, regions, misc attributes, and dependencies appear in nearly every kind of object in the JSON.</p>
+<h3 id="formatting-the-json">Formatting the JSON</h3>
+<p>To make the JSON pretty we want to indent it appropriately and put commas in the right places. There are some useful macros for this, and they all rely on the fact that the emitted text goes to a <code>charbuf</code> variable creatively called <code>output</code>.</p>
+<p>Here’s a sample procedure that was mentioned earlier, it does the usual things:</p>
+<div class="sourceCode" id="cb286"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb286-1"><a href="#cb286-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Emit a list of attributes for the current entity, it could be any kind of entity.</span></span>
+<span id="cb286-2"><a href="#cb286-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Whatever it is we spit out the attributes here in array format.</span></span>
+<span id="cb286-3"><a href="#cb286-3" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_json_misc_attrs<span class="op">(</span>charbuf <span class="op">*</span>output<span class="op">,</span> ast_node <span class="op">*</span>_Nonnull list<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb286-4"><a href="#cb286-4" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>is_ast_misc_attrs<span class="op">(</span>list<span class="op">));</span></span>
+<span id="cb286-5"><a href="#cb286-5" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">attributes</span><span class="sc">\&quot;</span><span class="st"> : [</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb286-6"><a href="#cb286-6" aria-hidden="true" tabindex="-1"></a>  BEGIN_INDENT<span class="op">(</span>attr<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb286-7"><a href="#cb286-7" aria-hidden="true" tabindex="-1"></a>  BEGIN_LIST<span class="op">;</span></span>
+<span id="cb286-8"><a href="#cb286-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb286-9"><a href="#cb286-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span>ast_node <span class="op">*</span>item <span class="op">=</span> list<span class="op">;</span> item<span class="op">;</span> item <span class="op">=</span> item<span class="op">-&gt;</span>right<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb286-10"><a href="#cb286-10" aria-hidden="true" tabindex="-1"></a>    COMMA<span class="op">;</span></span>
+<span id="cb286-11"><a href="#cb286-11" aria-hidden="true" tabindex="-1"></a>    cg_json_misc_attr<span class="op">(</span>output<span class="op">,</span> item<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb286-12"><a href="#cb286-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb286-13"><a href="#cb286-13" aria-hidden="true" tabindex="-1"></a>  END_LIST<span class="op">;</span></span>
+<span id="cb286-14"><a href="#cb286-14" aria-hidden="true" tabindex="-1"></a>  END_INDENT<span class="op">(</span>attr<span class="op">);</span></span>
+<span id="cb286-15"><a href="#cb286-15" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;]&quot;</span><span class="op">);</span></span>
+<span id="cb286-16"><a href="#cb286-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The miscellaneous attributes are going to be emitted in a list, and since any one attribute can actually be a list of attributes, this ends up being recursive (<code>cg_json_misc_attr</code> can end up calling back to <code>cg_json_misc_attrs</code>). Attributes are actually quite flexible. Let’s look at the helpers that will be used to do this formatting.</p>
+<p>From <code>charbuf.h</code>:</p>
+<div class="sourceCode" id="cb287"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb287-1"><a href="#cb287-1" aria-hidden="true" tabindex="-1"></a><span class="co">// These helpers push a buffer and use it for the output temporarily.</span></span>
+<span id="cb287-2"><a href="#cb287-2" aria-hidden="true" tabindex="-1"></a><span class="co">// When the buffer is finished (at END_INDENT) bindent is used to</span></span>
+<span id="cb287-3"><a href="#cb287-3" aria-hidden="true" tabindex="-1"></a><span class="co">// indent it by the indicated amount.  They assume the output buffer is called</span></span>
+<span id="cb287-4"><a href="#cb287-4" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;output&quot;.</span></span>
+<span id="cb287-5"><a href="#cb287-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BEGIN_INDENT(name, level) \</span></span>
+<span id="cb287-6"><a href="#cb287-6" aria-hidden="true" tabindex="-1"></a><span class="pp">  charbuf *name##_saved = output; \</span></span>
+<span id="cb287-7"><a href="#cb287-7" aria-hidden="true" tabindex="-1"></a><span class="pp">  int32_t name##_level = level; \</span></span>
+<span id="cb287-8"><a href="#cb287-8" aria-hidden="true" tabindex="-1"></a><span class="pp">  CHARBUF_OPEN(name); \</span></span>
+<span id="cb287-9"><a href="#cb287-9" aria-hidden="true" tabindex="-1"></a><span class="pp">  output = &amp;name;</span></span>
+<span id="cb287-10"><a href="#cb287-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb287-11"><a href="#cb287-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define END_INDENT(name) \</span></span>
+<span id="cb287-12"><a href="#cb287-12" aria-hidden="true" tabindex="-1"></a><span class="pp">  output = name##_saved; \</span></span>
+<span id="cb287-13"><a href="#cb287-13" aria-hidden="true" tabindex="-1"></a><span class="pp">  bindent(output, &amp;name, name##_level); \</span></span>
+<span id="cb287-14"><a href="#cb287-14" aria-hidden="true" tabindex="-1"></a><span class="pp">  CHARBUF_CLOSE(name); \</span></span></code></pre></div>
+<ul>
+<li><code>BEGIN_INDENT</code> : sets up the indenting
+<ul>
+<li>save the current output buffer</li>
+<li>stash the desired indent level in a named local</li>
+<li>make a new scratch buffer using the given name</li>
+<li>set the output to be the scratch buffer</li>
+</ul></li>
+<li><code>END_INDENT</code> : flushes the indented stuff
+<ul>
+<li>restores the output buffer to what it was</li>
+<li>writes the temporary buffer into the output buffer, indenting it by the desired abount</li>
+<li>close the temporrary buffer</li>
+</ul></li>
+<li><code>bindent</code> : a <code>charbuf</code> helper that reads the input line by line and writes it with indenting spaces to the output</li>
+</ul>
+<p>The rest of the helpers manage the commas in the (nested) lists:</p>
+<div class="sourceCode" id="cb288"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb288-1"><a href="#cb288-1" aria-hidden="true" tabindex="-1"></a><span class="co">// These little helpers are for handling comma seperated lists where you may or may</span></span>
+<span id="cb288-2"><a href="#cb288-2" aria-hidden="true" tabindex="-1"></a><span class="co">// not need a comma in various places.  The local tracks if there is an item already</span></span>
+<span id="cb288-3"><a href="#cb288-3" aria-hidden="true" tabindex="-1"></a><span class="co">// present and you either get &quot;,\n&quot;  or just &quot;\n&quot; as needed.</span></span>
+<span id="cb288-4"><a href="#cb288-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BEGIN_LIST bool_t list_start = 1</span></span>
+<span id="cb288-5"><a href="#cb288-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CONTINUE_LIST bool_t list_start = 0</span></span>
+<span id="cb288-6"><a href="#cb288-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define COMMA if (!list_start) bprintf(output, &quot;,\n&quot;); else list_start = 0</span></span>
+<span id="cb288-7"><a href="#cb288-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define END_LIST if (!list_start) bprintf(output, &quot;\n&quot;)</span></span></code></pre></div>
+<ul>
+<li><code>BEGIN_LIST</code> : starts a list, records that we are at the beginning of the list</li>
+<li><code>CONTINUE_LIST</code> : starts a list, but assumes things have already been put into it</li>
+<li><code>COMMA</code> : a new item is about to be emitted, add a comma if one is needed
+<ul>
+<li>i.e. add a comma if we are not on the first item</li>
+</ul></li>
+<li><code>END_LIST</code> : emits a blank line if anything went into the list
+<ul>
+<li>this puts us in the write place to put an end marker such as ‘]’ or ‘}’</li>
+</ul></li>
+</ul>
+<p>So reviewing this bit of code, * emit the attribute name and start the array “[" * we start indenting * we start a list * we emit a comma if needed * we emit the new misc attribute * this will crack the AST, and get the attribute name and value * this can recurse * <code>cg_json_misc_attr</code> is pretty simple and a good exercise for the reader * repeat for all attributes * end the list * end the indenting * emit the attribute end "]”</p>
+<h4 id="quoted-text">Quoted Text</h4>
+<p>Most quoted text in the JSON output is either hard-coded constants, or else is a CQL identifier and therefore has no special characters. Those two cases are very simple and no escaping or special formatting is needed. We just emit the text with quotes around it. However, there are cases where general text that might have special characters in it needs to be emitted. When that happens a call like this is used:</p>
+<div class="sourceCode" id="cb289"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb289-1"><a href="#cb289-1" aria-hidden="true" tabindex="-1"></a>cg_pretty_quote_plaintext<span class="op">(</span></span>
+<span id="cb289-2"><a href="#cb289-2" aria-hidden="true" tabindex="-1"></a>    sql<span class="op">.</span>ptr<span class="op">,</span> </span>
+<span id="cb289-3"><a href="#cb289-3" aria-hidden="true" tabindex="-1"></a>    output<span class="op">,</span> </span>
+<span id="cb289-4"><a href="#cb289-4" aria-hidden="true" tabindex="-1"></a>    PRETTY_QUOTE_JSON <span class="op">|</span> PRETTY_QUOTE_SINGLE_LINE<span class="op">);</span></span></code></pre></div>
+<p><code>cg_pretty_quote_plaintext</code> has been discussed before when it was used to create SQL strings for the C output. This usage is similar. Here we’re using <code>PRETTY_QUOTE_JSON</code> to indicate that only escape sequences supported by JSON should appear in the output. The format for hexadecimal escape sequences for non-printable characters is different than C and some of the C short escapes are not supported (e.g. “” is not legal JSON). We always use <code>PRETTY_QUOTE_SINGLE_LINE</code> in the JSON output so that multi-line SQL is rendered as one line. Remember here we are are JSON-escaping the SQL so the embedded newlines in the original SQL were already converted to ‘' ’n’ (two characters) and therefore any newlines still in the string are those placed there by the line breaking of the SQL not by newlines in string literals. Hence those newlines are optional, any whitespace will do.</p>
+<p>In any case, <code>cg_pretty_quote_plaintext</code> is just the function to do what we need and this output is only slightly different than what would be emitted for the C codegen.</p>
+<h3 id="dependency-analysis">Dependency Analysis</h3>
+<p>There are a number of places where dependencies have to be computed. To do this job, this function is used universally:</p>
+<div class="sourceCode" id="cb290"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb290-1"><a href="#cb290-1" aria-hidden="true" tabindex="-1"></a><span class="co">// For procedures and triggers we want to walk the statement list and emit a set</span></span>
+<span id="cb290-2"><a href="#cb290-2" aria-hidden="true" tabindex="-1"></a><span class="co">// of dependency entries that show what the code in question is using and how.</span></span>
+<span id="cb290-3"><a href="#cb290-3" aria-hidden="true" tabindex="-1"></a><span class="co">// We track tables that are used and if they appear in say the FROM clause</span></span>
+<span id="cb290-4"><a href="#cb290-4" aria-hidden="true" tabindex="-1"></a><span class="co">// (or some other read-context) or if they are the subject of an insert, update,</span></span>
+<span id="cb290-5"><a href="#cb290-5" aria-hidden="true" tabindex="-1"></a><span class="co">// or delete.  We also track the use of nested procedures and produce a list of</span></span>
+<span id="cb290-6"><a href="#cb290-6" aria-hidden="true" tabindex="-1"></a><span class="co">// procs the subject might call.  Of course no proc calls ever appear in triggers.</span></span>
+<span id="cb290-7"><a href="#cb290-7" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_json_dependencies<span class="op">(</span>charbuf <span class="op">*</span>output<span class="op">,</span> ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb290-8"><a href="#cb290-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span>
+<span id="cb290-9"><a href="#cb290-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>In general this code walks any AST looking for a variety of patterns in the AST that correspond to use of tables, directly or indirectly. Actually more accurately, <code>cg_json_dependencies</code> uses <code>find_table_refs</code> to do the job, and it does so by:</p>
+<ul>
+<li>creating an output buffer for each kind of thing <code>find_table_refs</code> might find</li>
+<li>setting up a simple callback to fill in the buffer</li>
+<li>invoking <code>find_table_refs</code></li>
+<li>formatting the buffers that have any resulting dependency data and emitting them as dependencies</li>
+</ul>
+<p>This works for any kind of AST really, though typically you do this for procedures or triggers because they have an interesting body. But the analysis also makes sense for views because views can refer to other views and to tables.</p>
+<p>The primary code looks like this:</p>
+<div class="sourceCode" id="cb291"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb291-1"><a href="#cb291-1" aria-hidden="true" tabindex="-1"></a>  table_callbacks callbacks <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb291-2"><a href="#cb291-2" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_any_table <span class="op">=</span> cg_found_table<span class="op">,</span></span>
+<span id="cb291-3"><a href="#cb291-3" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_any_view <span class="op">=</span> cg_found_view<span class="op">,</span></span>
+<span id="cb291-4"><a href="#cb291-4" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_inserts <span class="op">=</span> cg_found_insert<span class="op">,</span></span>
+<span id="cb291-5"><a href="#cb291-5" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_updates <span class="op">=</span> cg_found_update<span class="op">,</span></span>
+<span id="cb291-6"><a href="#cb291-6" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_deletes <span class="op">=</span> cg_found_delete<span class="op">,</span></span>
+<span id="cb291-7"><a href="#cb291-7" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_from <span class="op">=</span> cg_found_from<span class="op">,</span></span>
+<span id="cb291-8"><a href="#cb291-8" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_proc <span class="op">=</span> cg_found_proc<span class="op">,</span></span>
+<span id="cb291-9"><a href="#cb291-9" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>callback_context <span class="op">=</span> <span class="op">&amp;</span>context<span class="op">,</span></span>
+<span id="cb291-10"><a href="#cb291-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb291-11"><a href="#cb291-11" aria-hidden="true" tabindex="-1"></a>  find_table_refs<span class="op">(&amp;</span>callbacks<span class="op">,</span> ast<span class="op">);</span></span></code></pre></div>
+<p>And an example callback:</p>
+<div class="sourceCode" id="cb292"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb292-1"><a href="#cb292-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This is the callback function that tells us a view name was found in the body</span></span>
+<span id="cb292-2"><a href="#cb292-2" aria-hidden="true" tabindex="-1"></a><span class="co">// of the stored proc we are currently examining.  The void context information</span></span>
+<span id="cb292-3"><a href="#cb292-3" aria-hidden="true" tabindex="-1"></a><span class="co">// is how we remember which proc we were processing.   For each table we have</span></span>
+<span id="cb292-4"><a href="#cb292-4" aria-hidden="true" tabindex="-1"></a><span class="co">// a character buffer.  We look it up, create it if not present, and write into it.</span></span>
+<span id="cb292-5"><a href="#cb292-5" aria-hidden="true" tabindex="-1"></a><span class="co">// We also write into the buffer for the current proc which came in with the context.</span></span>
+<span id="cb292-6"><a href="#cb292-6" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> cg_found_view<span class="op">(</span></span>
+<span id="cb292-7"><a href="#cb292-7" aria-hidden="true" tabindex="-1"></a>  CSTR view_name<span class="op">,</span> </span>
+<span id="cb292-8"><a href="#cb292-8" aria-hidden="true" tabindex="-1"></a>  ast_node<span class="op">*</span> table_ast<span class="op">,</span> </span>
+<span id="cb292-9"><a href="#cb292-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span><span class="op">*</span> pvContext<span class="op">)</span> </span>
+<span id="cb292-10"><a href="#cb292-10" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb292-11"><a href="#cb292-11" aria-hidden="true" tabindex="-1"></a>  json_context <span class="op">*</span>context <span class="op">=</span> <span class="op">(</span>json_context <span class="op">*)</span>pvContext<span class="op">;</span></span>
+<span id="cb292-12"><a href="#cb292-12" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>context<span class="op">-&gt;</span>cookie <span class="op">==</span> cookie_str<span class="op">);</span>  <span class="co">// sanity check</span></span>
+<span id="cb292-13"><a href="#cb292-13" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>context<span class="op">-&gt;</span>used_views<span class="op">);</span></span>
+<span id="cb292-14"><a href="#cb292-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb292-15"><a href="#cb292-15" aria-hidden="true" tabindex="-1"></a>  add_name_to_output<span class="op">(</span>context<span class="op">-&gt;</span>used_views<span class="op">,</span> view_name<span class="op">);</span></span>
+<span id="cb292-16"><a href="#cb292-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The callback gets the <code>pvContext</code> back, which is the <code>context</code> local variable from <code>cg_json_dependencies</code>. This has all the buffers in it. All we have to do is add the name to the buffer, which is done as follows:</p>
+<div class="sourceCode" id="cb293"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb293-1"><a href="#cb293-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> add_name_to_output<span class="op">(</span>charbuf<span class="op">*</span> output<span class="op">,</span> CSTR table_name<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb293-2"><a href="#cb293-2" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>output<span class="op">);</span></span>
+<span id="cb293-3"><a href="#cb293-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>output<span class="op">-&gt;</span>used <span class="op">&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb293-4"><a href="#cb293-4" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;, &quot;</span><span class="op">);</span></span>
+<span id="cb293-5"><a href="#cb293-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb293-6"><a href="#cb293-6" aria-hidden="true" tabindex="-1"></a>  bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;</span><span class="sc">\&quot;</span><span class="st">%s</span><span class="sc">\&quot;</span><span class="st">&quot;</span><span class="op">,</span> table_name<span class="op">);</span></span>
+<span id="cb293-7"><a href="#cb293-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>add a comma if needed</li>
+<li>add the name</li>
+<li>done :D</li>
+</ul>
+<p>Note: The added name of course doesn’t have to be a table name, but it usually is.</p>
+<p>So we can see that <code>find_table_refs</code> will tell us the kind of thing it found and the name of the thing.</p>
+<p>When all this is done each kind of dependency is emitted if it exists, like so:</p>
+<div class="sourceCode" id="cb294"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb294-1"><a href="#cb294-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>used_views<span class="op">.</span>used <span class="op">&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb294-2"><a href="#cb294-2" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>output<span class="op">,</span> <span class="st">&quot;,</span><span class="sc">\n\&quot;</span><span class="st">usesViews</span><span class="sc">\&quot;</span><span class="st"> : [ %s ]&quot;</span><span class="op">,</span> used_views<span class="op">.</span>ptr<span class="op">);</span></span>
+<span id="cb294-3"><a href="#cb294-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
+<p>This gives us a quoted list of the dependencies. Now, how do we find these?</p>
+<h4 id="walking-the-ast-for-dependencies">Walking the AST for Dependencies</h4>
+<p><code>find_table_refs</code> is a fairly simple tree walk that looks for certain key patterns actually the tree walk happens in <code>find_table_node</code> which looks for tables and procedure calls in the nested AST.</p>
+<p><code>find_table_refs</code> records the callbacks that were specified, and it makes some symbol tables so that the same table/view/procedure is not reported twice. After that it starts walking the AST recursively looking for the patterns. Here’s an example:</p>
+<div class="sourceCode" id="cb295"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb295-1"><a href="#cb295-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb295-2"><a href="#cb295-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Recursively finds table nodes, executing the callback for each that is found.  The</span></span>
+<span id="cb295-3"><a href="#cb295-3" aria-hidden="true" tabindex="-1"></a><span class="co">// callback will not be executed more than once for the same table name.</span></span>
+<span id="cb295-4"><a href="#cb295-4" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> find_table_node<span class="op">(</span>table_callbacks <span class="op">*</span>callbacks<span class="op">,</span> ast_node <span class="op">*</span>node<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb295-5"><a href="#cb295-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Check the type of node so that we can find the direct references to tables. We</span></span>
+<span id="cb295-6"><a href="#cb295-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// can&#39;t know the difference between a table or view in the ast, so we will need to</span></span>
+<span id="cb295-7"><a href="#cb295-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// later find the definition to see if it points to a create_table_stmt to distinguish</span></span>
+<span id="cb295-8"><a href="#cb295-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// from views.</span></span>
+<span id="cb295-9"><a href="#cb295-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb295-10"><a href="#cb295-10" aria-hidden="true" tabindex="-1"></a>  find_ast_str_node_callback alt_callback <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb295-11"><a href="#cb295-11" aria-hidden="true" tabindex="-1"></a>  symtab <span class="op">*</span>alt_visited <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb295-12"><a href="#cb295-12" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>table_or_view_name_ast <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb295-13"><a href="#cb295-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb295-14"><a href="#cb295-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
+<span id="cb295-15"><a href="#cb295-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>is_ast_delete_stmt<span class="op">(</span>node<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb295-16"><a href="#cb295-16" aria-hidden="true" tabindex="-1"></a>    EXTRACT_ANY_NOTNULL<span class="op">(</span>name_ast<span class="op">,</span> node<span class="op">-&gt;</span>left<span class="op">);</span></span>
+<span id="cb295-17"><a href="#cb295-17" aria-hidden="true" tabindex="-1"></a>    table_or_view_name_ast <span class="op">=</span> name_ast<span class="op">;</span></span>
+<span id="cb295-18"><a href="#cb295-18" aria-hidden="true" tabindex="-1"></a>    alt_callback <span class="op">=</span> callbacks<span class="op">-&gt;</span>callback_deletes<span class="op">;</span></span>
+<span id="cb295-19"><a href="#cb295-19" aria-hidden="true" tabindex="-1"></a>    alt_visited <span class="op">=</span> callbacks<span class="op">-&gt;</span>visited_delete<span class="op">;</span></span>
+<span id="cb295-20"><a href="#cb295-20" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb295-21"><a href="#cb295-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb295-22"><a href="#cb295-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
+<span id="cb295-23"><a href="#cb295-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb295-24"><a href="#cb295-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The code afterward will do these steps:</p>
+<ul>
+<li>notice that <code>table_or_view_name_ast</code> was set, hence something was found</li>
+<li>determine that it is in fact a table</li>
+<li>call the general callback for any table seen (but only once for this table)</li>
+<li>call the alternate callback that this is a table being deleted (but only once)</li>
+</ul>
+<p>Almost all the other operations work similarly: * <code>table_or_view_name_ast</code> is set * <code>alt_callback</code> is called but only if * <code>alt_visited</code> doesn’t already have the symbol</p>
+<p>The exception to the above is the processing that’s done for procedure calls. We’ve actually only talked about table dependencies so far but, additionally, any procedure includes dependencies on the procedures it calls.</p>
+<p>If a procedure call is found then <code>callbacks-&gt;callback_proc</code> is used and <code>callbacks-&gt;visited_proc</code> verifies that there are no duplicates. So much the same except the names are procedure names.</p>
+<p>Note that the code does not do transitive closure of procedure calls because in general the called procedure is likely in a different translation unit. However with the direct calls in place it is easy enough to do transitive closure from the JSON if you do have all the procedures in one unit or if you have several JSON results from different compilations.</p>
+<p>However, when a view is encountered, the code does follow into the view body and recursively reports what the view uses. This means that the reported tables do include any tables that were used indirectly via views.</p>
+<p>Finally, any CTEs that are used will not be reported because <code>find_table_or_view_even_deleted</code> will fail for a CTE. However the body of the CTE is processed so while the CTE name does not appear, what the CTE uses does appear, just like any other table usage.</p>
+<h3 id="additional-test-output">Additional Test Output</h3>
+<p>The extra test output is simply a reverse index: a mapping that goes from any table to the procedures that depend on that table.</p>
+<p>The mapping can easily be created by processing the JSON for procedures, each such procedure includes its dependency information. As a result it’s only used for additional validation.</p>
+<h3 id="recap-3">Recap</h3>
+<p>The JSON output produced by <code>cg_json_schema.c</code> is similar to other codegen output but lacks most of the complexities. It deals largely with the declared schema and the declared procedures and their parameters. Most of the output it needs to produce is well supported by the normal text emission features in the compiler and so we end up with a very straightforward walk of the AST, visiting each of the relevant kinds of nodes in order.</p>
+<p>Topics covered included:</p>
+<ul>
+<li>the types of output that will be produced</li>
+<li>the general structure of the main JSON emitter</li>
+<li>an example emitter</li>
+<li>typical formatting features necessary to produce good quality JSON</li>
+<li>a tour of the dependency emitter</li>
 </ul>
 <p>As with the other parts, no attempt was made to cover every function in detail. That is best done by reading the source code. But there is overall structure here and an understanding of the basic principles is helpful before diving into the source code.</p>
 </body>

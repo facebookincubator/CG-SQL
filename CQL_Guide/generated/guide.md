@@ -687,7 +687,9 @@ However, before going any further it's important to note that CQL is inherently 
 
 CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different ways.
 
-### Order of Evaluation
+### Operator Precedence
+
+The operator precedence rules in CQL are as follows; the top-most rule binds the most loosely and the bottom-most rule binds the most tightly:
 
 ```
 ASSIGNMENT:     :=
@@ -705,7 +707,18 @@ COLLATE:        COLLATE
 UNARY:          ~  -
 ```
 
-NOTE: the above is NOT the C binding order (!!!)  The Sqlite binding order is used in the language and parens are added in the C output as needed to force that order.   CQL's rewriting emits minimal parens in all outputs.  Different parens are often needed for SQL output.
+The above rules are **not** the same as C's operator precedence rules! Instead,
+CQL follows SQLite's rules. Parentheses are emitted in the C output as needed to
+force that order.
+
+**NOTE:** CQL emits minimal parentheses in all outputs. Different parentheses
+are often needed for SQL output as opposed to C output.
+
+### Order of Evaluation
+
+In contrast to C, CQL guarantees a left-to-right order of evaluation for
+arguments. This applies both to arguments provided to the operators mentioned in
+the previous section as well as arguments provided to procedures.
 
 ### Variables, Columns, Basic Types and Nullability
 
@@ -1134,164 +1147,259 @@ it becomes the default in a future version of CQL, you will need to use
 `@enforce_strict not null after check;` to gain access to this functionality.
 
 CQL is able to "improve" the type of some expressions from a nullable type to a
-`NOT NULL` type via occurrence typing, also known as flow typing. As in other
-languages (e.g., Racket, where occurrence typing originated, and more recently
-Kotlin, TypeScript, et cetera), it is possible to use a conditional to refine a
-type.
+`NOT NULL` type via occurrence typing, also known as flow typing. There are
+three kinds of improvements that are possible:
 
-##### Improvements in `IF` and `CASE`
+* Positive improvements, i.e., improvements resulting from the knowledge that
+  some condition containing one or more `AND-`linked `IS NOT NULL` checks must
+  have been _true_:
 
-One way to improve a type to be `NOT NULL` is by using an `IS NOT NULL` check
-within an `IF … THEN … END IF`:
+  * `IF` statements:
 
-```sql
-DECLARE x INT;
-CALL some_proc_with_an_out_arg(x);
-IF x IS NOT NULL THEN
-  -- `x` has type `INT NOT NULL` here
-END IF;
--- `x` reverts to type `INT` here
-```
+    ```sql
+    IF a IS NOT NULL AND c.x IS NOT NULL THEN
+      -- `a` and `c.x` are not null here
+    ELSE IF b IS NOT NULL THEN
+      -- `b` is not null here
+    END IF;
+    ```
 
-Above, you can see how the check in `IF x IS NOT NULL` allows `x` to be of type
-`INT NOT NULL` within the body of the `THEN`.
+  * `CASE` expressions:
 
-The same applies to `WHEN` clauses within a `CASE` expression:
+    ```sql
+    CASE
+      WHEN a IS NOT NULL AND c.x IS NOT NULL THEN
+        -- `a` and `c.x` are not null here
+      WHEN b IS NOT NULL THEN
+        -- `b` is not null here
+      ELSE
+        ...
+    END;
+    ```
 
-```sql
-DECLARE x INT;
-CALL some_proc_with_an_out_arg(x);
-LET y := CASE
-            WHEN x IS NOT NULL THEN x + x
-            ELSE 100
-          END;
-END IF;
--- `y` has type `INT NOT NULL` here
-```
+  * `IIF` expressions:
 
-Cursor fields are also eligible identifiers for improvement:
+    ```sql
+    IIF(a IS NOT NULL AND c.x IS NOT NULL,
+      ..., -- `a` and `c.x` are not null here
+      ...
+    )
+    ```
 
-```sql
-CREATE TABLE t (x int);
-DECLARE c CURSOR FOR SELECT x FROM t;
-IF c.x IS NOT NULL THEN
-  -- `c.x` has type `INT NOT NULL` here
-END IF;
-```
+  * `SELECT` expressions:
 
-For some identifier `x` to be improved via some conditional expression, it must
-be along the outermost spine of `AND`-separated expressions, and it must be
-exactly of the form `x IS NOT NULL`. For example, this will work for both `x1`
-and `x2`:
+    ```sql
+    SELECT
+      -- `t.x` and `t.y` are not null here
+    FROM t
+    WHERE x IS NOT NULL AND y IS NOT NULL
+    ```
 
-```sql
-IF x1 IS NOT NULL and (y > 20 AND x2 IS NOT NULL) THEN
-  -- `x1` and `x2` are nonnull here
-END IF;
-```
+* Negative improvements, i.e., improvements resulting from the knowledge that
+  some condition containing one or more `OR`-linked `IS NULL` checks must have
+  been _false_:
 
-Neither, however, will be improved here:
+  * `IF` statements:
 
-```sql
-IF x1 IS NOT NULL OR (x2 IS NOT NULL AND x1 > 100) THEN
-  -- `x1` and `x2` are nullable here because the checks
-  -- involving `IS NOT NULL` appear within an `OR`
-END IF;
-```
+    ```sql
+    IF a IS NULL THEN
+      ...
+    ELSE IF c.x IS NULL THEN
+      -- `a` is not null here
+    ELSE
+      -- `a` and `c.x` are not null here
+    END IF;
+    ```
 
-**NOTE:** CQL currently only improves some identifier `x` if the check is
-*exactly* of the form `x IS NOT NULL`: Other expressions that are only true if
-`x` is not `NULL`, such as `x > 100`, cause no such improvement to occur.
-Additionally, no improvement will occur if `x` is a global: Only local variables
-are eligible. Both of these restrictions may be lifted in a future version of
-CQL.
+  * `IF` statements, guard pattern:
 
-The nullability improvement for a given identifier persists up until a `SET`,
-`FETCH`, or use in an `OUT` position that involves the improved variable. For
-example:
+    ```sql
+    IF a IS NULL OR c.x IS NULL RETURN;
+    -- `a` and `c.x` are not null here
+    ```
 
-```sql
-DECLARE x INT;
-IF x IS NOT NULL THEN
-   -- `x` is nonnull here
-   SET x := null;
-   -- `x` is nullable here
-  IF x IS NOT NULL THEN
-    -- `x` is once again NOT NULL
-    FETCH c INTO x;
-    -- `x` is again nullable
+  * `CASE` expressions:
+
+    ```sql
+    CASE
+      WHEN a IS NULL THEN
+        ...
+      WHEN c.x IS NULL THEN
+        -- `a` is not null here
+      ELSE
+        -- `a` and `c.x` are not null here
+    END;
+    ```
+
+  * `IIF` expressions:
+
+    ```sql
+    IIF(a IS NULL OR c.x IS NULL,
+      ...,
+      ... -- `a` and `c.x` are not null here
+    )
+    ```
+
+* Assignment improvements, i.e., improvements resulting from the knowledge that
+  the right side of a statement (or a portion therein) cannot be `NULL`:
+
+  * `SET` statements:
+
+    ```sql
+    SET a := 42;
+    -- `a` is not null here
+    ```
+
+  **NOTE:** Assignment improvements from `FETCH` statements are not currently
+  supported. This may change in a future version of CQL.
+
+There are several ways in which improvements can cease to be in effect:
+
+* The scope of the improved variable or cursor field has ended:
+
+  ```sql
+  IF a IS NOT NULL AND c.x IS NOT NULL THEN
+    -- `a` and `c.x` are not null here
   END IF;
-  IF x IS NOT NULL THEN
-    -- `x` is nonnull here
-    CALL some_proc_with_an_out_arg(x);
-    -- `x` is nullable
+  -- `a` and `c.x` are nullable here
+  ```
+
+* An improved variable was `SET` to a nullable value:
+
+  ```sql
+  IF a IS NOT NULL THEN
+    -- `a` is not null here
+    SET a := some_nullable;
+    -- `a` is nullable here
   END IF;
-END IF;
-```
+  ```
 
-As a special case, `SET` does not remove an improvement for a given identifier
-if the right side of the `SET` is of a `NOT NULL` type. On the contrary, `SET`
-will *improve* the type of the identifier on the left-hand side in such
-situations. For example:
+* An improved variable was used as an `OUT` (or `INOUT`) argument:
 
-```sql
-DECLARE a INT;
-set a := 42;   -- `a` now has type `INT NOT NULL`
-set a := null; -- `a` reverts to type `INT`
-```
+  ```sql
+  IF a IS NOT NULL THEN
+    -- `a` is not null here
+    CALL some_procedure_that_requires_an_out_argument(a);
+    -- `a` is nullable here
+  END IF;
+  ```
 
-Improvements via `SET`—and, indeed, all nullability improvements—respect the
-control flow of the program. If an improvement is made via `SET` within the body
-of a `THEN`, for example, it will not be present in the `ELSE`, nor will it be
-present after the end of the `IF … THEN … ELSE … END IF` block.
+* An improved variable was used as a target for a `FETCH` statement:
 
-##### Improvements in Select Expressions
+  ```sql
+  IF a IS NOT NULL THEN
+    -- `a` is not null here
+    FETCH c INTO a;
+    -- `a` is nullable here
+  END IF;
+  ```
 
-CQL can also improve the type of an identifier in a `SELECT` expression via `IS
-NOT NULL` checks in a `WHERE` clause. These improvements apply both in the
-select expressions themselves and in the resulting columns. Let's look at the
-following example:
+* An improved cursor field was re-fetched:
 
-```sql
-CREATE TABLE t (x INT, y INT);
-DECLARE c CURSOR FOR
-  SELECT x + x AS a, y + y AS b
-  FROM t
-  WHERE x IS NOT NULL
-    AND b IS NOT NULL;
-FETCH c;
--- both `c.a` and `c.b` have type `INT NOT NULL` here
-```
+  ```sql
+  IF c.x IS NOT NULL THEN
+    -- `c.x` is not null here
+    FETCH c;
+    -- `c.x` is nullable here
+  END IF;
+  ```
 
-Above, `c.a` has type `INT NOT NULL` because `x` was established to be nonnull,
-thus so too was `x + x`. In addition, `c.b` has type `INT NOT NULL` because the
-resulting column `b` was established to be `NOT NULL` directly.
+* A procedure call was made (which removes improvements from _all globals_
+  because the procedure may have mutated any of them; locals are unaffected):
 
-**NOTE:** CQL is currently unable to improve a type via an `IS NOT NULL`
-expression appearing in an `ON` or `HAVING` clause. This restriction may be
-lifted in a future version of CQL.
+  ```sql
+  IF a IS NOT NULL AND some_global IS NOT NULL THEN
+    -- `a` and `some_global` are not null here
+    CALL some_procedure();
+    -- `a` is still not null here
+    -- `some_global` is nullable here
+  END IF;
+  ```
 
-**NOTE:** CQL is not yet able to take details of JOINs into account. For example:
+CQL is generally smart enough to understand the control flow of your program and
+infer nullability appropriately:
 
-```sql
-CREATE PROC both_results_columns_are_again_nonnull()
-begin
-  CREATE TABLE t (x INT, y INT);
-  CREATE TABLE u (x INT, INT);
-  SELECT t.x AS a, t.y AS b
-  FROM t
-  INNER JOIN u
-  ON t.x = u.x
-  WHERE t.x IS NOT NULL AND b IS NOT NULL;
-end;
-```
+  ```sql
+  IF a IS NULL RETURN;
+  -- `a` is not null here
+  IF some_condition THEN
+    SET a := NULL;
+    -- `a` is nullable here
+  ELSE
+    -- `a` is not null here despite the `SET` above
+  END IF;
+  -- `a` is nullable here due to the `SET` above
+  ```
 
-Both resulting columns in the above example have type `INT NOT NULL`: `a`,
-because `t.x IS NOT NULL`, and `b`, because `b IS NOT NULL`. However, if one
-were to have specified `u.x IS NOT NULL` instead of `t.x IS NOT NULL`, `a` would
-*not* have been given a nonnull type even though it arguably should have been.
-This can be worked around easily, yet it remains a minor deficiency of CQL for
-the time being.
+Nullability inference also takes CQL's left-to-right order of evaluation into
+account:
+
+  ```sql
+  IF a IS NULL RETURN;
+  -- `a` is not null here
+  CALL some_procedure(
+    a,-- `a` is still not null here
+    some_procedure_that_requires_an_out_argument(a),
+    a -- `a` is nullable here
+  );
+  ```
+
+Here are some additional details to note regarding conditions:
+
+* For positive improvements, the check must be exactly of the form `IS NOT
+  NULL`; other checks that imply a variable or cursor field must not be null
+  when true have no effect:
+
+  ```sql
+  IF a > 42 THEN
+    -- `a` is nullable here
+  END IF;
+  ```
+
+  **NOTE:** This may change in a future version of CQL.
+
+* For multiple positive improvements to be applied from a single condition, they
+  must be linked by `AND` expressions along the outer spine of the condition;
+  uses of `IS NOT NULL` checks that occur as subexpressions within anything
+  other than `AND` have no effect:
+
+  ```sql
+  IF
+    (a IS NOT NULL AND b IS NOT NULL)
+    OR c IS NOT NULL
+  THEN
+    -- `a`, `b`, and `c` are all nullable here
+  END IF;
+  ```
+
+* For negative improvements, the check must be exactly of the form `IS NULL`;
+  other checks that imply a variable or cursor field must not be null when false
+  have no effect:
+
+  ```sql
+  DECLARE equal_to_null INT;
+  IF a IS equal_to_null THEN
+    ...
+  ELSE
+    -- `a` is nullable here
+  END IF;
+  ```
+
+* For multiple negative improvements to be applied from a single condition, they
+  must be linked by `OR` expressions along the outer spine of the condition;
+  uses of `IS NULL` checks that occur as subexpressions within anything other
+  than `OR` have no effect:
+
+  ```sql
+  IF
+    (a IS NULL OR b IS NULL)
+    AND c IS NULL
+  THEN
+    ...
+  ELSE
+    -- `a`, `b`, and `c` are all nullable here
+  END IF;
+  ```
 
 #### Forcing Nonnull Types
 
@@ -2476,7 +2584,7 @@ Value cursors are always 'automatic' -- they have their own storage.
 Value cursors also may or may not be holding a row.
 
 ```sql
-declare C like xy_table;
+declare C cursor like xy_table;
 if not C then
   call printf("this will always be true because it starts empty\n");
 end if;
@@ -2500,7 +2608,7 @@ create proc get_a_row(id_ integer not null,
                       out y text not null,
                       out z real)
 begin
-  declare C for select w, x, y, z from somewhere where id = id_;
+  declare C cursor for select w, x, y, z from somewhere where id = id_;
   fetch C into w, x, y, z;
   set got_row := C;
 end;
@@ -2525,7 +2633,7 @@ Using the `out` statement we get the equivalent functionality with a much simpli
 ```sql
 create proc get_a_row(id_ integer not null)
 begin
-   declare C for select a, b, c, d from somewhere where id = id_;
+   declare C cursor for select a, b, c, d from somewhere where id = id_;
    fetch C;
    out C;
 end;
@@ -2533,7 +2641,7 @@ end;
 
 To use it you simply do this:
 ```sql
-declare C like get_a_row;
+declare C cursor like get_a_row;
 fetch C from call get_a_row(id);
 ```
 
@@ -3165,11 +3273,11 @@ Boxing isn’t the usual pattern at all and returning cursors in a box, while po
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-CQL generally doesn't see the whole world in one compilation.
+CQL generally doesn't see the whole world in one compilation.  
 In this way it's a lot more like say the C compiler than it is like say Java
 or C# or something like that.  This means several things:
 
-* You don't have to tell CQL about all your schema in all your files,
+* You don't have to tell CQL about all your schema in all your files, 
 so particular stored procs can be more encapsulated
 * You can have different databases mounted in different places and CQL
 won't care; you provide the database connection to the stored procedures when you call them, and that database is assumed to have the tables declared in this translation unit
@@ -3190,7 +3298,7 @@ the sections below.
 DECLARE PROCEDURE foo(id integer, out name text not null);
 ```
 
-This introduces the symbol name without providing the body.
+This introduces the symbol name without providing the body.  
 This has important variations.
 
 ### Procedures that use the database
@@ -3199,7 +3307,7 @@ This has important variations.
 DECLARE PROCEDURE foo(id integer, out name text not null) USING TRANSACTION;
 ```
 
-Most procedures you write will use SQLite in some fashion,
+Most procedures you write will use SQLite in some fashion, 
 maybe a `select` or something.  The `USING TRANSACTION` annotation indicates that
 the proc in question uses the database and therefore the generated code
 will need a database connection in-argument and it will return a SQLite error code.
@@ -3210,16 +3318,16 @@ If the procedure in question is going to use `select` or `call` to create a resu
 the type of that result set has to be declared.  An example might look like this:
 
 ```sql
-DECLARE PROC with_result_set () (id INTEGER NOT NULL,
-                                 name TEXT,
-                                 rate LONG INTEGER,
-                                 type INTEGER,
+DECLARE PROC with_result_set () (id INTEGER NOT NULL, 
+                                 name TEXT, 
+                                 rate LONG INTEGER, 
+                                 type INTEGER, 
                                  size REAL);
 ```
 
-This says that the procedure takes no arguments (other than the implicit database
+This says that the procedure takes no arguments (other than the implicit database 
 connection) and it has an implicit out-argument that can be read to get a result
-set with the indicated columns: id, name, rate, type, and size.
+set with the indicated columns: id, name, rate, type, and size.  
 This form implies `USING TRANSACTION`.
 
 ### Procedures that return a single row with a value cursor
@@ -3228,25 +3336,25 @@ If the procedure emits a cursor with the `OUT` statement to produce a single
 row then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL,
-                                     name TEXT,
-                                     rate LONG INTEGER,
-                                     type INTEGER,
+DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL, 
+                                     name TEXT, 
+                                     rate LONG INTEGER, 
+                                     type INTEGER, 
                                      size REAL);
 ```
 
 This form can have `USING TRANSACTION`  or not, since it is possible to emit a row with a value cursor and never use the database.  See the previous chapter for details on the `OUT` statement.
 
-### Procedures that return a full result set
+### Procedures that return a full result set 
 
 If the procedure emits many rows with the `OUT UNION` statement to produce a full result set
 then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL,
-                                     name TEXT,
-                                     rate LONG INTEGER,
-                                     type INTEGER,
+DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL, 
+                                     name TEXT, 
+                                     rate LONG INTEGER, 
+                                     type INTEGER, 
                                      size REAL);
 ```
 
@@ -3260,11 +3368,11 @@ by adding something like `--generate_exports` to the command line. This will req
 That file can then be used with `#include` when you combine the C pre-processor
 with CQL as is normally done.
 
-Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export
+Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export 
 the stored procedure declarations from the translation units.  Of course those
 exported symbols are what you then import in some other module.  Sometimes this
 output file is called `foo_imports.sql` because those exports are of course exactly
-what you need to import `foo`.  You can use whatever convention you like of course,
+what you need to import `foo`.  You can use whatever convention you like of course, 
 CQL doesn't care.  The full command line might look something like this:
 
 ```
@@ -3296,21 +3404,21 @@ DECLARE PROC make_view () USING TRANSACTION;
 
 DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 
-DECLARE PROC complex_return ()
-  (_bool BOOL NOT NULL,
-   _integer INTEGER NOT NULL,
-   _longint LONG INTEGER NOT NULL,
-   _real REAL NOT NULL,
-   _text TEXT NOT NULL,
+DECLARE PROC complex_return () 
+  (_bool BOOL NOT NULL, 
+   _integer INTEGER NOT NULL, 
+   _longint LONG INTEGER NOT NULL, 
+   _real REAL NOT NULL, 
+   _text TEXT NOT NULL, 
    _nullable_bool BOOL);
 
 DECLARE PROC outint_nullable (
-  OUT output INTEGER,
+  OUT output INTEGER, 
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
 DECLARE PROC outint_notnull (
-  OUT output INTEGER NOT NULL,
+  OUT output INTEGER NOT NULL, 
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
@@ -3330,15 +3438,15 @@ generated C to demystify all this.  There is a very straightforward conversion.
 void test(cql_int32 i);
 
 void out_test(
-  cql_int32 *_Nonnull i,
+  cql_int32 *_Nonnull i, 
   cql_nullable_int32 *_Nonnull ii);
 
 cql_code outparm_test(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   cql_int32 *_Nonnull foo);
 
 cql_code select_from_view_fetch_results(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   select_from_view_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code make_view(sqlite3 *_Nonnull _db_);
@@ -3346,25 +3454,25 @@ cql_code make_view(sqlite3 *_Nonnull _db_);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b);
 
 cql_code complex_return_fetch_results(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   complex_return_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code outint_nullable(
-  sqlite3 *_Nonnull _db_,
-  cql_nullable_int32 *_Nonnull output,
+  sqlite3 *_Nonnull _db_, 
+  cql_nullable_int32 *_Nonnull output, 
   cql_bool *_Nonnull result);
 
 cql_code outint_notnull(
-  sqlite3 *_Nonnull _db_,
-  cql_int32 *_Nonnull output,
+  sqlite3 *_Nonnull _db_, 
+  cql_int32 *_Nonnull output, 
   cql_bool *_Nonnull result);
 
 void obj_proc(
   cql_object_ref _Nullable *_Nonnull an_object);
 
 cql_code insert_values(
-  sqlite3 *_Nonnull _db_,
-  cql_int32 id_,
+  sqlite3 *_Nonnull _db_, 
+  cql_int32 id_, 
   cql_nullable_int32 type_);
 ```
 
@@ -3436,8 +3544,8 @@ as long as they are not recombined with SQLite statements.
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the
-result set features of CQL is to create a C interface to SQLite data.  Because of this
+Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the 
+result set features of CQL is to create a C interface to SQLite data.  Because of this 
 there are a lot of essential details that require looking carefully at the generated C code.  Appendix 2
 covers this code in even more detail but here it makes sense to at least talk about the interface.
 
@@ -3453,7 +3561,7 @@ end;
 ```
 
 We've created a simple data reader, this CQL code will cause the compiler to
-generated helper functions to read the data and materialize a result set.
+generated helper functions to read the data and materialize a result set.  
 
 Let's look at the public interface of that result set now considering the most essential pieces.
 
@@ -3466,17 +3574,17 @@ cql_result_set_type_decl(
 
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set,
+   read_foo_result_set_ref  _Nonnull result_set, 
    cql_int32 row);
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
   _Nonnull result_set);
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
-  read_foo_result_set_ref _Nullable *_Nonnull result_set,
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
+  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
   cql_int32 id_);
 #define read_foo_row_hash(result_set, row) \
   cql_result_set_get_meta((cql_result_set_ref)(result_set))->\
@@ -3491,16 +3599,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1)) \
 Let's consider some of these individually now
 ```C
 cql_result_set_type_decl(
-  read_foo_result_set,
+  read_foo_result_set, 
   read_foo_result_set_ref);
 ```
-This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.
+This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.  
 As it turns out the underlying data type for all result sets is the same, only the shape of the data varies.
 
 
 ```C
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
-  read_foo_result_set_ref _Nullable *_Nonnull result_set,
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
+  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
   cql_int32 id_);
 ```
 The result set fetcher method gives you a `read_foo_result_set_ref` if it succeeds.  It accepts the `id_` argument which it
@@ -3510,27 +3618,27 @@ This method is the main public entry point for result sets.
 Once you have a result set, you can read values out of it.
 
 ```C
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
   _Nonnull result_set);
 ```
-That function tells you how many rows are in the result set.
+That function tells you how many rows are in the result set.  
 
 For each row you can use any of the row readers:
 
 ```C
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set,
+   read_foo_result_set_ref  _Nonnull result_set, 
    cql_int32 row);
 ```
 
 These let you read the `id` of a particular row, and get a `cql_int32` or you can read the nullable boolean,
-using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value`
+using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value` 
 to get the value.  Finally the string can be accessed with `read_foo_get_t`.  As you can see there is a
 simple naming convention for each of the field readers.
 
@@ -3539,14 +3647,14 @@ Note:  The compiler has runtime arrays that control naming conventions as well a
 Finally, also part of the public interface, are these macros:
 
 ```C
-#define read_foo_row_hash(result_set, row)
+#define read_foo_row_hash(result_set, row) 
 #define read_foo_row_equal(rs1, row1, rs2, row2)
 ```
 
-These use the CQL runtime to hash a row or compare two rows from identical result
-set types.  Metadata included in the result set allows general purpose code to work for
+These use the CQL runtime to hash a row or compare two rows from identical result 
+set types.  Metadata included in the result set allows general purpose code to work for 
 every result set.  Based on configuration, result set copying methods can also
-be generated.   When you're done with a result set you can use the `cql_release(...)`
+be generated.   When you're done with a result set you can use the `cql_release(...)` 
 method to free the memory.
 
 Importantly, all of the rows from the query in the stored procedure are materialized
@@ -3557,7 +3665,7 @@ The code that actually creates the result set starting from the prepared stateme
 The essential parts are:
 
 
-First, a constant array that holds the data types for each column.
+First, a constant array that holds the data types for each column. 
 
 ```
 uint8_t read_foo_data_types[read_foo_data_types_count] = {
@@ -3586,18 +3694,18 @@ static cql_uint16 read_foo_col_offsets[] = { 3,
 
 Using the above we can now write this fetcher
 ```
-CQL_WARN_UNUSED cql_code
+CQL_WARN_UNUSED cql_code 
 read_foo_fetch_results(
-  sqlite3 *_Nonnull _db_,
-  read_foo_result_set_ref _Nullable *_Nonnull result_set,
-  cql_int32 id_)
+  sqlite3 *_Nonnull _db_, 
+  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
+  cql_int32 id_) 
 {
   sqlite3_stmt *stmt = NULL;
   cql_profile_start(CRC_read_foo, &read_foo_perf_index);
-
+  
   // we call the original procedure, it gives us a prepared statement
   cql_code rc = read_foo(_db_, &stmt, id_);
-
+  
   // this is everything you need to know to fetch the result
   cql_fetch_info info = {
     .rc = rc,
@@ -3611,7 +3719,7 @@ read_foo_fetch_results(
     .crc = CRC_read_foo,
     .perf_index = &read_foo_perf_index,
   };
-
+  
   // this function does all the work, it cleans up if .rc is an error code.
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
@@ -3641,7 +3749,7 @@ begin
 end;
 ```
 
-In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.
+In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.  
 
 Virtually all the code pieces to do this already exist for normal result sets.  The important parts of the output code look like this in your generated C.
 
@@ -3658,20 +3766,20 @@ We need to be able to copy the cursor into the buffer and retain any internal re
 
 ```
 // This bit is what you get when you "out union" a cursor "C"
-// first we +1 any references in the cursor then we copy its bits
+// first we +1 any references in the cursor then we copy its bits 
 cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
 ```
 
-Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set.
+Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set. 
 ```
-cql_results_from_data(_rc_,
-                      &_rows_,
-                      &some_integers_info,
+cql_results_from_data(_rc_, 
+                      &_rows_, 
+                      &some_integers_info, 
                       (cql_result_set_ref *)_result_set_);
 ```
-The operations here are basically the same ones that will happen inside of the standard helper
-`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have
+The operations here are basically the same ones that will happen inside of the standard helper 
+`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have 
 full control of the rows as they go in to the result set.
 
 In short, the overhead is pretty low.  What you’re left with is pretty much the base cost of your algorithm.  The cost here is very similar to what it would be for any other thing that make rows.
@@ -5971,7 +6079,7 @@ the declared schema.  Which means the `--rt schema` result type will not see it.
 operation like so:
 
 ```bash
-cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema
+cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema 
 ```
 
 The above command will generate the schema in new_previous_schema and, if this command succeeds, it's safe to replace the existing
@@ -5980,7 +6088,7 @@ The above command will generate the schema in new_previous_schema and, if this c
 NOTE: you can bootstrap the above by leaving off the `@previous_schema` and what follows to get your first previous schema from the command above.
 
 Now as, you can imagine, comparing against the previous schema allows many more kinds of errors to be discovered.
-What follows is a large chuck of the CQL tests for this area taken from the test files themselves.
+What follows is a large chuck of the CQL tests for this area taken from the test files themselves.  
 For easy visibility I have brought each fragment of current and previous schema close to each other
 and I show the errors that are reported.  We start with a valid fragment and go from there.
 
@@ -6230,7 +6338,7 @@ Table became a TEMP table, there is no way to generate an alter statement for th
 ```sql
 create table t_new_table_ok(a int not null, b int) @create(6);
 -------
--- no previous version
+-- no previous version 
 ```
 No errors here, properly created new table.
 
@@ -6238,7 +6346,7 @@ No errors here, properly created new table.
 ```sql
 create table t_new_table_no_annotation(a int not null, b int);
 -------
--- no previous version
+-- no previous version 
 
 Error at sem_test_prev.sql:85 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_no_annotation'
@@ -6249,7 +6357,7 @@ This table was added with no annotation.  It has to have an @create and be at le
 ```sql
 create table t_new_table_stale_annotation(a int not null, b int) @create(2);
 -------
--- no previous version
+-- no previous version 
 
 Error at sem_test_prev.sql:91 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_stale_annotation'
@@ -6462,7 +6570,7 @@ CQL includes a number of features to make it easier to create what you might cal
 
 ### Dummy Data
 
-Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.
+Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.  
 In many cases the actual data values are completely uninteresting to the test -- any values would do.  There are several strategies you can use to get good dummy data into your database in a more maintainable way.
 
 #### Simple Inserts With Dummy Data
@@ -6472,7 +6580,7 @@ The simplest form uses a variant of the insert statement that fills in any missi
 ```sql
 create proc dummy_user()
 begin
-  insert into users () values () @dummy_seed(123)
+  insert into users () values () @dummy_seed(123) 
      @dummy_nullables @dummy_defaults;
 end;
 ```
@@ -6481,7 +6589,7 @@ This statement causes all values including columns that are nullable or have a d
 
 If you omit the `@dummy_nullables` then any nullable fields will be null as usual.  And likewise if you omit `@dummy_defaults` then any fields with a default value will use thatt value as usual.  You might want any combination of those for your tests (null values are handy in your tests and default behavior is also handy).
 
-The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of
+The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of 
 rows with the seed value being computed from the `while` loop variable.
 
 The form above is sort of like `insert * into table` in that it is giving dummy values for all columns but you can also specify some of the columns while using the seed value for others.  Importantly, you can specify values you particularly want to control either for purposes of creating a more tailored test or because you need them
@@ -6519,7 +6627,7 @@ begin
   FROM dummy;
 end;
 ```
-The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.
+The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.  
 Any result shape can be generated in this fashion.
 
 You get data like this from the above:
@@ -6536,8 +6644,8 @@ You get data like this from the above:
 10|name_10|0|13.0|10|10
 ```
 
-The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with
-`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways
+The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with 
+`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways 
 combined with cursors or any other strategy to `select` out pieces and `insert` them into various tables.
 
 #### Using Temporary Tables
@@ -6553,8 +6661,8 @@ emulating the results of `my_proc`.
 create proc begin_dummy()
 begin
    drop table if exists my_dummy_data;
-
-   -- the shape of my_dummy_data matches the columns
+   
+   -- the shape of my_dummy_data matches the columns 
    -- returned by proc_I_want_to_emulate
    create temp table my_dummy_data(
      like proc_I_want_to_emulate;
@@ -6563,7 +6671,7 @@ end;
 ```
 
 Next, you will need a procedure that accepts and writes a single row to your temp table.  You can of course write this all explicitly but the testing
-support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating,
+support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating, 
 one argument for each column the proc returns. The `insert` statement gets its values from the arguments.
 
 ```sql
@@ -6657,7 +6765,7 @@ The attributes dummy_table, dummy_insert, and dummy_select can be used together 
 
 Example:
 
-To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values.
+To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values. 
 
 ```sql
 create table foo(
@@ -6711,23 +6819,23 @@ When compiled, the above will create C methods that can create, drop, insert, an
 ```
 CQL_WARN_UNUSED cql_code open_sample_proc(
   sqlite3 *_Nonnull _db_);
-
+  
 CQL_WARN_UNUSED cql_code close_sample_proc(
   sqlite3 *_Nonnull _db_);
-
+  
 CQL_WARN_UNUSED cql_code insert_sample_proc(
-  sqlite3 *_Nonnull _db_,
-  cql_int32 id_,
+  sqlite3 *_Nonnull _db_, 
+  cql_int32 id_, 
   cql_string_ref _Nonnull name_);
 
 CQL_WARN_UNUSED cql_code select_sample_proc_fetch_results(
-  sqlite3 *_Nonnull _db_,
+  sqlite3 *_Nonnull _db_, 
   select_sample_proc_result_set_ref _Nullable *_Nonnull result_set);
 ```
 
 #### Single Row ResultSet
 
-In some cases, using four APIs to generate fake data can be verbose.
+In some cases, using four APIs to generate fake data can be verbose. 
 In the case that only a single row of data needs to be faked, the dummy_result_set attribute can be more convenient.
 
 Example:
@@ -6755,8 +6863,8 @@ Which generates this C API:
 
 ```C
 void generate_sample_proc_row_fetch_results(
-    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set,
-    string_ref _Nonnull foo_,
+    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set, 
+    string_ref _Nonnull foo_, 
     int64_t bar_);
 ```
 
@@ -6927,12 +7035,12 @@ Finally, the most complicated helper is the one that used that large annotation.
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(id) VALUES(1) @dummy_seed(123);
-
-  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124)
+  
+  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124) 
       @dummy_nullables @dummy_defaults;
-
+  
 INSERT OR IGNORE INTO bar(data, id) VALUES('plugh', 1) @dummy_seed(125);
-
+  
   INSERT OR IGNORE INTO bar(id) VALUES(2) @dummy_seed(126)
      @dummy_nullables @dummy_defaults;
 END;
@@ -6951,7 +7059,7 @@ NOTE: if you include primary key and/or foreign key columns among the explicit v
 Generalizing the example a little bit, we could use the following:
 
 ```
-(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')),
+(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')), 
                         (bar, (id, data), (1, 'dino'), (2, 'hopparoo'))))
 ```
 
@@ -6961,17 +7069,17 @@ to generate this population:
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(name, id) VALUES('fred', 1) @dummy_seed(123);
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES('barney', 2) @dummy_seed(124)
     @dummy_nullables @dummy_defaults;
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES('wilma', 3) @dummy_seed(125);
-
+  
   INSERT OR IGNORE INTO foo(name, id) VALUES('betty', 4) @dummy_seed(126)
     @dummy_nullables @dummy_defaults;
-
+    
   INSERT OR IGNORE INTO bar(id, data) VALUES(1, 'dino') @dummy_seed(127);
-
+  
   INSERT OR IGNORE INTO bar(id, data) VALUES(2, 'hopparoo') @dummy_seed(128)
     @dummy_nullables @dummy_defaults;
 END;
@@ -8431,7 +8539,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep  7 21:41:03 PDT 2021
+Snapshot as of Tue Sep 21 13:36:59 PDT 2021
 
 ### Operators and Literals
 
@@ -13600,7 +13708,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep  7 21:41:03 PDT 2021
+Snapshot as of Tue Sep 21 13:37:00 PDT 2021
 
 ### Rules
 
@@ -15224,40 +15332,8 @@ UNION ALL
 
 #### Booleans
 
-There are no boolean literals in the language, but it's very easily to create one
+TRUE and FALSE can be used as boolean literals.
 
-Poor:
-
-```sql
-  SELECT
-    foo.id,
-    foo.name,
-    NULL_REAL as rate,
-    TRUE as has_name,  -- this is a bit artificial but you get the idea
-    FALSE as has_rate
-  FROM foo
-UNION ALL
-  SELECT
-    bar.id,
-    NULL_TEXT as name,
-    bar.rate,
-    FALSE as has_name,
-    TRUE as has_rate
-  FROM bar
-```
-
-Actually `FALSE` is a pretty verbose way to make a bool constant.  Much easier would be `0==1`
-but even that leaves an expression in the generated code.  We can do better still with `const(0==1)`
-which forces the expression to be evaluated at compile time.  This leads us to the usual definitions
-which are preferred.
-
-```sql
--- somewhere common
-#define TRUE const(1==1)
-#define FALSE const(1==0)
-```
-
-This gives you the most economy, the code gen will be just 0/1.
 SQLite doesn't care about the type but CQL will get the type information it needs to make the columns of type BOOL
 
 ```sql
@@ -15888,7 +15964,7 @@ however you deem appropriate.
 // "#define cql_emit_output your_method" and then your method will
 // get the data instead. This will be whatever output the
 // compiler would have emitted to to stdout.  This is usually
-// reformated CQL or semantic trees and such -- not the normal
+// reformated CQL or semantic trees and such -- not the normal 
 // compiler output.
 //
 // You must copy the memory if you intend to keep it. "data" will
@@ -15960,12 +16036,12 @@ for the data to be written.  You can then store those compilation results howeve
 // You must copy the memory if you intend to keep it. "data" will
 // be freed.
 
-// Note: you *may* use cql_cleanup_and_exit to force a failure
+// Note: you *may* use cql_cleanup_and_exit to force a failure 
 // from within this API.  That's a normal failure mode that is
 // well-tested.
 
 void cql_write_file(
-  const char *_Nonnull file_name,
+  const char *_Nonnull file_name, 
   const char *_Nonnull data)
 {
   FILE *file = cql_open_file_for_write(file_name);
@@ -15992,3 +16068,6 @@ should be cleaned up.
 The compiler can be called repeatedly with no troubles, it re-initializes on each use. The compiler is
  not multi-threaded so if there is threading you should use some mutex arrangement to keep it safe.
 A thread-safe version would require extensive modifications.
+
+
+
