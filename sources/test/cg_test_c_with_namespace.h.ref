@@ -3237,6 +3237,33 @@ extern cql_bool abs_val_bool;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+extern void ltor_proc_int_not_null(cql_int32 a, cql_int32 b, cql_int32 *_Nonnull c);
+
+// The statement ending at line XXXX
+extern void ltor_proc_int(cql_nullable_int32 a, cql_nullable_int32 b, cql_nullable_int32 *_Nonnull c);
+
+// The statement ending at line XXXX
+extern void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull b, cql_string_ref _Nullable *_Nonnull c);
+
+// The statement ending at line XXXX
+extern void ltor_proc_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b, cql_string_ref _Nullable *_Nonnull c);
+
+// The statement ending at line XXXX
+extern cql_int32 ltor_func_int_not_null(cql_int32 a, cql_int32 b);
+
+// The statement ending at line XXXX
+extern cql_nullable_int32 ltor_func_int(cql_nullable_int32 a, cql_nullable_int32 b);
+
+// The statement ending at line XXXX
+extern cql_string_ref _Nonnull ltor_func_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull b);
+
+// The statement ending at line XXXX
+extern cql_string_ref _Nullable ltor_func_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b);
+
+// The statement ending at line XXXX
+extern void arguments_are_evaluated_left_to_right(void);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

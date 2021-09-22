@@ -4568,6 +4568,54 @@ LET abs_val_bool := abs(true);
 -- + cql_set_null(abs_val_nullable);
 SET abs_val_nullable := abs(null);
 
+-- Used in the following test.
+create proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) begin end;
+create proc ltor_proc_int(a int, b int, out c int) begin end;
+create proc ltor_proc_text_not_null(a text not null, b text not null, out c text not null) begin end;
+create proc ltor_proc_text(a text, b text, out c text) begin end;
+declare function ltor_func_int_not_null(a int not null, b int not null) int not null;
+declare function ltor_func_int(a int, b int) int;
+declare function ltor_func_text_not_null(a text not null, b text not null) text not null;
+declare function ltor_func_text(a text, b text) text;
+
+-- TEST: Arguments are always evaluated left-to-right (which is ensured by
+-- generating temps).
+-- + ltor_proc_int_not_null(1, 2, &_tmp_int_%);
+-- + ltor_proc_int_not_null(3, 4, &_tmp_int_%);
+-- + ltor_proc_int_not_null(_tmp_int_%, _tmp_int_%, &a);
+-- + ltor_proc_int(_tmp_n_int_%, _tmp_n_int_%, &_tmp_n_int_%);
+-- + ltor_proc_int(_tmp_n_int_%, _tmp_n_int_%, &_tmp_n_int_%);
+-- + ltor_proc_int(_tmp_n_int_%, _tmp_n_int_%, &b);
+-- + ltor_proc_text_not_null(_literal_%_arg%, _literal_%_arg%, &_tmp_text_%);
+-- + ltor_proc_text_not_null(_literal_%_arg%, _literal_%_arg%, &_tmp_text_%);
+-- + ltor_proc_text_not_null(_tmp_text_%, _tmp_text_%, &c);
+-- + ltor_proc_text(_literal_%_arg%, _literal_%_arg%, &_tmp_n_text_%);
+-- + ltor_proc_text(_literal_%_arg%, _literal_%_arg%, &_tmp_n_text_%);
+-- + ltor_proc_text(_tmp_n_text_%, _tmp_n_text_%, &d);
+-- + _tmp_int_% = ltor_func_int_not_null(1, 2);
+-- + _tmp_int_% = ltor_func_int_not_null(3, 4);
+-- + e = ltor_func_int_not_null(_tmp_int_%, _tmp_int_%);
+-- + _tmp_n_int_% = ltor_func_int(_tmp_n_int_%, _tmp_n_int_%);
+-- + _tmp_n_int_% = ltor_func_int(_tmp_n_int_%, _tmp_n_int_%);
+-- + f = ltor_func_int(_tmp_n_int_%, _tmp_n_int_%);
+-- + cql_set_string_ref(&_tmp_text_%, ltor_func_text_not_null(_literal_%_arg%, _literal_%_arg%));
+-- + cql_set_string_ref(&_tmp_text_%, ltor_func_text_not_null(_literal_%_arg%, _literal_%_arg%));
+-- + cql_set_string_ref(&g, ltor_func_text_not_null(_tmp_text_%, _tmp_text_%));
+-- + cql_set_string_ref(&_tmp_n_text_%, ltor_func_text(_literal_%_arg%, _literal_%_arg%));
+-- + cql_set_string_ref(&_tmp_n_text_%, ltor_func_text(_literal_%_arg%, _literal_%_arg%));
+-- + cql_set_string_ref(&h, ltor_func_text(_tmp_n_text_%, _tmp_n_text_%));
+create proc arguments_are_evaluated_left_to_right()
+begin
+  let a := ltor_proc_int_not_null(ltor_proc_int_not_null(1, 2), ltor_proc_int_not_null(3, 4));
+  let b := ltor_proc_int(ltor_proc_int(1, 2), ltor_proc_int(3, 4));
+  let c := ltor_proc_text_not_null(ltor_proc_text_not_null("1", "2"), ltor_proc_text_not_null("3", "4"));
+  let d := ltor_proc_text(ltor_proc_text("1", "2"), ltor_proc_text("3", "4")); 
+  let e := ltor_func_int_not_null(ltor_func_int_not_null(1, 2), ltor_func_int_not_null(3, 4));
+  let f := ltor_func_int(ltor_func_int(1, 2), ltor_func_int(3, 4));
+  let g := ltor_func_text_not_null(ltor_func_text_not_null("1", "2"), ltor_func_text_not_null("3", "4"));
+  let h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4")); 
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

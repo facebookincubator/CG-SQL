@@ -398,6 +398,10 @@ cql_string_literal(_literal_14_NT_various_lets, "NT");
 cql_string_literal(_literal_15_ST_various_lets, "ST");
 cql_string_literal(_literal_16_foo_binary_ops_with_null, "foo");
 cql_string_literal(_literal_17_null_BigFormat, "null");
+cql_string_literal(_literal_18_arguments_are_evaluated_left_to_right, "1");
+cql_string_literal(_literal_19_arguments_are_evaluated_left_to_right, "2");
+cql_string_literal(_literal_20_arguments_are_evaluated_left_to_right, "3");
+cql_string_literal(_literal_21_arguments_are_evaluated_left_to_right, "4");
 
 // The statement ending at line XXXX
 
@@ -14753,6 +14757,178 @@ cql_nullable_int32 abs_val_nullable;
 cql_int64 abs_val_long = 0;
 cql_double abs_val_real = 0;
 cql_bool abs_val_bool = 0;
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ltor_proc_int_not_null (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT c INTEGER NOT NULL)
+BEGIN
+END;
+*/
+
+#define _PROC_ "ltor_proc_int_not_null"
+// export: DECLARE PROC ltor_proc_int_not_null (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT c INTEGER NOT NULL);
+void ltor_proc_int_not_null(cql_int32 a, cql_int32 b, cql_int32 *_Nonnull c) {
+  cql_contract_argument_notnull((void *)c, 3);
+
+  *c = 0; // set out arg to non-garbage
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER)
+BEGIN
+END;
+*/
+
+#define _PROC_ "ltor_proc_int"
+// export: DECLARE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER);
+void ltor_proc_int(cql_nullable_int32 a, cql_nullable_int32 b, cql_nullable_int32 *_Nonnull c) {
+  cql_contract_argument_notnull((void *)c, 3);
+
+  cql_set_null(*c); // set out arg to non-garbage
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL)
+BEGIN
+END;
+*/
+
+#define _PROC_ "ltor_proc_text_not_null"
+// export: DECLARE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL);
+void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull b, cql_string_ref _Nullable *_Nonnull c) {
+  cql_contract_argument_notnull((void *)a, 1);
+  cql_contract_argument_notnull((void *)b, 2);
+  cql_contract_argument_notnull((void *)c, 3);
+
+  *(void **)c = NULL; // set out arg to non-garbage
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT)
+BEGIN
+END;
+*/
+
+#define _PROC_ "ltor_proc_text"
+// export: DECLARE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT);
+void ltor_proc_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b, cql_string_ref _Nullable *_Nonnull c) {
+  cql_contract_argument_notnull((void *)c, 3);
+
+  *(void **)c = NULL; // set out arg to non-garbage
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC arguments_are_evaluated_left_to_right ()
+BEGIN
+  LET a := ltor_proc_int_not_null(ltor_proc_int_not_null(1, 2), ltor_proc_int_not_null(3, 4));
+  LET b := ltor_proc_int(ltor_proc_int(1, 2), ltor_proc_int(3, 4));
+  LET c := ltor_proc_text_not_null(ltor_proc_text_not_null("1", "2"), ltor_proc_text_not_null("3", "4"));
+  LET d := ltor_proc_text(ltor_proc_text("1", "2"), ltor_proc_text("3", "4"));
+  LET e := ltor_func_int_not_null(ltor_func_int_not_null(1, 2), ltor_func_int_not_null(3, 4));
+  LET f := ltor_func_int(ltor_func_int(1, 2), ltor_func_int(3, 4));
+  LET g := ltor_func_text_not_null(ltor_func_text_not_null("1", "2"), ltor_func_text_not_null("3", "4"));
+  LET h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4"));
+END;
+*/
+
+#define _PROC_ "arguments_are_evaluated_left_to_right"
+// export: DECLARE PROC arguments_are_evaluated_left_to_right ();
+void arguments_are_evaluated_left_to_right(void) {
+  cql_int32 _tmp_int_1 = 0;
+  cql_int32 _tmp_int_2 = 0;
+  cql_int32 a = 0;
+  cql_nullable_int32 _tmp_n_int_1;
+  cql_set_null(_tmp_n_int_1);
+  cql_nullable_int32 _tmp_n_int_3;
+  cql_set_null(_tmp_n_int_3);
+  cql_nullable_int32 _tmp_n_int_5;
+  cql_set_null(_tmp_n_int_5);
+  cql_nullable_int32 _tmp_n_int_2;
+  cql_set_null(_tmp_n_int_2);
+  cql_nullable_int32 _tmp_n_int_4;
+  cql_set_null(_tmp_n_int_4);
+  cql_nullable_int32 _tmp_n_int_6;
+  cql_set_null(_tmp_n_int_6);
+  cql_nullable_int32 b;
+  cql_set_null(b);
+  cql_string_ref _tmp_text_1 = NULL;
+  cql_string_ref _tmp_text_2 = NULL;
+  cql_string_ref c = NULL;
+  cql_string_ref _tmp_n_text_1 = NULL;
+  cql_string_ref _tmp_n_text_2 = NULL;
+  cql_string_ref d = NULL;
+  cql_int32 e = 0;
+  cql_nullable_int32 f;
+  cql_set_null(f);
+  cql_string_ref g = NULL;
+  cql_string_ref h = NULL;
+
+  ltor_proc_int_not_null(1, 2, &_tmp_int_1);
+  ltor_proc_int_not_null(3, 4, &_tmp_int_2);
+  ltor_proc_int_not_null(_tmp_int_1, _tmp_int_2, &a);
+  cql_set_notnull(_tmp_n_int_3, 1);
+  cql_set_notnull(_tmp_n_int_5, 2);
+  ltor_proc_int(_tmp_n_int_3, _tmp_n_int_5, &_tmp_n_int_1);
+  cql_set_notnull(_tmp_n_int_4, 3);
+  cql_set_notnull(_tmp_n_int_6, 4);
+  ltor_proc_int(_tmp_n_int_4, _tmp_n_int_6, &_tmp_n_int_2);
+  ltor_proc_int(_tmp_n_int_1, _tmp_n_int_2, &b);
+  cql_set_string_ref(&_tmp_text_1, NULL);
+  ltor_proc_text_not_null(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right, &_tmp_text_1);
+  cql_set_string_ref(&_tmp_text_2, NULL);
+  ltor_proc_text_not_null(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right, &_tmp_text_2);
+  cql_set_string_ref(&c, NULL);
+  ltor_proc_text_not_null(_tmp_text_1, _tmp_text_2, &c);
+  cql_set_string_ref(&_tmp_n_text_1, NULL);
+  ltor_proc_text(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right, &_tmp_n_text_1);
+  cql_set_string_ref(&_tmp_n_text_2, NULL);
+  ltor_proc_text(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right, &_tmp_n_text_2);
+  cql_set_string_ref(&d, NULL);
+  ltor_proc_text(_tmp_n_text_1, _tmp_n_text_2, &d);
+  _tmp_int_1 = ltor_func_int_not_null(1, 2);
+  _tmp_int_2 = ltor_func_int_not_null(3, 4);
+  e = ltor_func_int_not_null(_tmp_int_1, _tmp_int_2);
+  cql_set_notnull(_tmp_n_int_3, 1);
+  cql_set_notnull(_tmp_n_int_5, 2);
+  _tmp_n_int_1 = ltor_func_int(_tmp_n_int_3, _tmp_n_int_5);
+  cql_set_notnull(_tmp_n_int_4, 3);
+  cql_set_notnull(_tmp_n_int_6, 4);
+  _tmp_n_int_2 = ltor_func_int(_tmp_n_int_4, _tmp_n_int_6);
+  f = ltor_func_int(_tmp_n_int_1, _tmp_n_int_2);
+  cql_set_string_ref(&_tmp_text_1, ltor_func_text_not_null(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&_tmp_text_2, ltor_func_text_not_null(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&g, ltor_func_text_not_null(_tmp_text_1, _tmp_text_2));
+  cql_set_string_ref(&_tmp_n_text_1, ltor_func_text(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&_tmp_n_text_2, ltor_func_text(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&h, ltor_func_text(_tmp_n_text_1, _tmp_n_text_2));
+
+  cql_string_release(c);
+  cql_string_release(_tmp_text_1);
+  cql_string_release(_tmp_text_2);
+  cql_string_release(d);
+  cql_string_release(_tmp_n_text_1);
+  cql_string_release(_tmp_n_text_2);
+  cql_string_release(g);
+  cql_string_release(h);
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

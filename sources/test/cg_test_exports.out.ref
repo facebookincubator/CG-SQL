@@ -202,4 +202,9 @@ DECLARE PROC out_proc_with_contract_in_fetch_results (t TEXT NOT NULL) OUT (id I
 DECLARE PROC nullability_improvements_are_erased_for_sql () (b INTEGER NOT NULL);
 DECLARE PROC nullability_improvements_do_not_change_access ();
 DECLARE PROC BigFormat () USING TRANSACTION;
+DECLARE PROC ltor_proc_int_not_null (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT c INTEGER NOT NULL);
+DECLARE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER);
+DECLARE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL);
+DECLARE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT);
+DECLARE PROC arguments_are_evaluated_left_to_right ();
 DECLARE PROC end_proc ();
