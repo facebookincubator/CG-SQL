@@ -18,7 +18,9 @@
 
 void yyerror(const char *s, ...);
 void line_directive(const char *);
+#ifndef _WIN32
 int isatty(int);
+#endif
 char *Strdup(const char *);
 int fileno(FILE *);
 
@@ -277,6 +279,7 @@ X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
 .                            { yyerror("Unexpected %s\n", yytext); }
 
 ^#\ {d}+\ \"[^"]*\".*        { line_directive(yytext); }
+^\ *#line\ {d}+\ \"[^"]*\".* { line_directive(yytext); }
 
 "/*"                         { // sqlite supports C style comments... ignore those
                                int c1 = 0, c2 = input();

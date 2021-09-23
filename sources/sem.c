@@ -7,7 +7,7 @@
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
 
-// stubs to avoid link errors, 
+// stubs to avoid link errors,
 
 cql_noexport void sem_main(ast_node *head) {}
 cql_noexport void sem_cleanup() {}
@@ -997,7 +997,7 @@ static bool_t is_num_int_in_range(ast_node *ast, int64_t lower, int64_t upper) {
     return false;
   }
 
-  eval_node result = {};
+  eval_node result = EVAL_NIL;
   eval(ast, &result);
 
   if (result.sem_type == SEM_TYPE_ERROR) {
@@ -4529,7 +4529,7 @@ static void sem_expr_const(ast_node *ast, CSTR op) {
     return;
   }
 
-  eval_node result = {};
+  eval_node result = EVAL_NIL;
   eval(ast->left, &result);
 
   if (result.sem_type == SEM_TYPE_ERROR) {
@@ -7995,8 +7995,8 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
     record_error(ast);
     return;
   }
-  
-  // Verify that the arguments are appropriate for the format string provided. 
+
+  // Verify that the arguments are appropriate for the format string provided.
   ast_node *args_for_format = arg_list->right;
   if (!sem_validate_args_for_format(args_for_format, format_strlit, name)) {
     record_error(ast);
@@ -12292,7 +12292,7 @@ static void sem_if_stmt(ast_node *ast) {
 
   ast->sem = cond_action->sem;
   // END IF
-  
+
   POP_NOTNULL_IMPROVEMENT_CONTEXT();
 
   // Check for use of the guard pattern, i.e., an IF with only a THEN block that
@@ -14298,8 +14298,8 @@ static bool_t sem_autotest_dummy_test(
     return false;
   }
 
-  bytebuf column_types = {};
-  bytebuf column_names = {};
+  bytebuf column_types = {NULL, 0, 0};
+  bytebuf column_names = {NULL, 0, 0};
 
   int32_t *error = (int32_t *)context;
 
@@ -16360,7 +16360,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   symtab *names = symtab_new();
   sem_t sem_type_enum = typed_name->sem->sem_type;
 
-  eval_node result = {};
+  eval_node result = EVAL_NIL;
   result.int32_value = 0;
   result.sem_type = SEM_TYPE_INTEGER;
 
@@ -17131,7 +17131,7 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bytebuf *case_d
       return;
     }
 
-    eval_node result = {};
+    eval_node result = EVAL_NIL;
     eval(expr, &result);
 
     if (result.sem_type == SEM_TYPE_ERROR) {

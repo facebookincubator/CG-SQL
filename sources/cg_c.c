@@ -179,7 +179,7 @@ static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
 
   CHARBUF_OPEN(tmp);
   cg_encode_c_string_literal(filename, &tmp);
-  bprintf(output, "# %d %s\n", lineno, tmp.ptr);
+  bprintf(output, "#line %d %s\n", lineno, tmp.ptr);
   CHARBUF_CLOSE(tmp);
 }
 
@@ -251,6 +251,9 @@ static void cg_insert_line_directives(CSTR input, charbuf *output)
    CSTR start_proc = "#define _PROC_ "; // this marks the start of a proc
    size_t start_proc_len = strlen(start_proc);
 
+   CSTR line_directive = "\x23line ";  // this marks the end of a proc
+   size_t line_directive_len = strlen(line_directive);
+
    CSTR end_proc = "#undef _PROC_";  // this marks the end of a proc
    size_t end_proc_len = strlen(end_proc);
 
@@ -276,27 +279,31 @@ static void cg_insert_line_directives(CSTR input, charbuf *output)
         now_in_proc = false;
         continue;
       }
-      else  if (trim[0] == '#' && trim[1] == ' ') {
+      else if ((trim[0] == '#' && trim[1] == ' ') || !strncmp(trim, line_directive, line_directive_len)) {
         bclear(&last_line_directive);
         bprintf(&last_line_directive, "%s", trim);
-        bprintf(output, "%s\n", last_line_directive.ptr);
-        char *next_space = strchr(last_line_directive.ptr + 2, ' ');
+        char* directive_start = strchr(last_line_directive.ptr, '#');
+        Invariant(directive_start != NULL);
+        bprintf(output, "%s\n", directive_start);
+        char* line_start = strchr(directive_start, ' ');
+        char* next_space = strchr(line_start + 1, ' ');
         if (next_space) *next_space = '\0';
 
         // this prevents us from emitting the sequence
-        // # 32 "foo.sql"
-        // # 32
+        // #line 32 "foo.sql"
+        // #line 32
         // the second # 32 would be a waste...
         suppress_because_new_directive = true;
         continue;
       }
 
-      if (last_line_directive.ptr[0] && !suppress_because_new_directive && now_in_proc) {
+      char* directive_start = strchr(last_line_directive.ptr, '#');
+      if (directive_start != NULL && !suppress_because_new_directive && now_in_proc) {
         // this forces us to stay on the current line until we explicitly switch lines
         // every line becomes
-        // # 32
+        // #line 32
         // [whatever]
-        bprintf(output, "%s\n", last_line_directive.ptr);
+        bprintf(output, "%s\n", directive_start);
       }
 
       suppress_because_new_directive = false;
@@ -4731,7 +4738,7 @@ static void cg_switch_expr_list(ast_node *ast, sem_t sem_type_switch_expr) {
     Contract(is_ast_expr_list(ast));
     EXTRACT_ANY_NOTNULL(expr, ast->left);
 
-    eval_node result = {};
+    eval_node result = EVAL_NIL;
     eval(expr, &result);
     Invariant(result.sem_type != SEM_TYPE_ERROR); // already checked
 
@@ -6128,7 +6135,7 @@ static void cg_proc_result_set_getter(function_info *info) {
 
     // extension fragment row getter should always delegate to corresponding getter from its base fragment
     bprintf(d, "  return %s%s_get_%s%s(result_set, row);\n", symbol_prefix.ptr, base_fragment_name,
-      info->col, info->sym_suffix ?: "");
+      info->col, info->sym_suffix ? info->sym_suffix : "");
     CHARBUF_CLOSE(base_col_getter_sym);
   }
   else {
@@ -6141,10 +6148,10 @@ static void cg_proc_result_set_getter(function_info *info) {
     // Single row result set is always data[0]
     // And data->field looks nicer than data[0].field
     if (info->uses_out) {
-      bprintf(d, "  return data->%s%s;\n", info->col, info->value_suffix ?: "");
+      bprintf(d, "  return data->%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
     }
     else {
-      bprintf(d, "  return data[row].%s%s;\n", info->col, info->value_suffix ?: "");
+      bprintf(d, "  return data[row].%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
     }
   }
   bprintf(d, "}\n");

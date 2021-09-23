@@ -1387,7 +1387,7 @@ line_number_test() {
     failed
   fi
 
-  if ! grep "^# " "${OUT_DIR}/cg_test_generated_from.c" >/dev/null
+  if ! grep "^#line " "${OUT_DIR}/cg_test_generated_from.c" >/dev/null
   then
     echo "# line directives not emitted. See" "${OUT_DIR}/cg_test_generated_from.c"
     failed
@@ -1407,7 +1407,7 @@ line_number_test() {
     failed
   fi
 
-  if grep "^# " "${OUT_DIR}/cg_test_generated_from.c" >/dev/null
+  if grep "^#line " "${OUT_DIR}/cg_test_generated_from.c" >/dev/null
   then
     echo "# line directives were not correctly suppresed. See" "${OUT_DIR}/cg_test_generated_from.c" 2>"${OUT_DIR}/cg_test_generated_from.err"
     failed

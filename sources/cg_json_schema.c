@@ -1976,7 +1976,11 @@ static void cg_json_create_proc(ast_node *ast, ast_node *misc_attrs) {
   CHARBUF_OPEN(tmp);
     // quote the file as a json style literaj
     CSTR filename = name_ast->filename;
+    #ifdef _WIN32
+    CSTR slash = strrchr(filename, '\\');
+    #else
     CSTR slash = strrchr(filename, '/');
+    #endif
     if (slash) {
       filename = slash + 1;
     }

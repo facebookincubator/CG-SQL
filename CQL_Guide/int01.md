@@ -55,7 +55,7 @@ There's no need to discuss the approximately 150 such tokens, but the following 
   * integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marked with the trailing `L` as in `1L`
   * string literals include the quotation marks in the token text which distinguishes them from identifiers, they are otherwise encoded similarly
 * the character class `[-+&~|^/%*(),.;!<>:=]` produces single character tokens for operators, other non-matching single characters (e.g. `'$'` produce an error)
-* line directives `^#\ [0-9]+\ \"[^"]*\".*` get special processing so that pre-processed input does not lose file and line number fidelity
+* line directives `^#line\ [0-9]+\ \"[^"]*\".*` or `^#\ [0-9]+\ \"[^"]*\".*` get special processing so that pre-processed input does not lose file and line number fidelity
 
 ### Parsing and the Abstract Syntax Tree
 

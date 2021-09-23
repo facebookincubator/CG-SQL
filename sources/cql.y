@@ -2258,11 +2258,15 @@ static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out
 extern int yylineno;
 
 void line_directive(const char *directive) {
-  Invariant(directive[0] == '#');
-  int line = atoi(directive + 1);
+  char *directive_start = strchr(directive, '#');
+  Invariant(directive_start != NULL);
+  char *line_start = strchr(directive_start + 1, ' ');
+  Invariant(line_start != NULL);
+  int line = atoi(line_start + 1);
+  Invariant(line != 0);
   yyset_lineno(line -1);  // we are about to process the linefeed
 
-  char *q1 = strchr(directive +1, '"');
+  char *q1 = strchr(directive_start +1, '"');
   if (!q1) return;
   char *q2 = strchr(q1+1, '"');
   if (!q2) return;

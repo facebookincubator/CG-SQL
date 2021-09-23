@@ -275,8 +275,8 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 //       for bitwise operators, see the _NO_REAL version of this macro
 //       for comparisons likewise see below for a slightly different version.
 #define BINARY_OP(op) \
-  eval_node left = {}; \
-  eval_node right = {}; \
+  eval_node left = EVAL_NIL; \
+  eval_node right = EVAL_NIL; \
   eval(expr->left, &left); \
   eval(expr->right, &right); \
   \
@@ -333,8 +333,8 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 // the operators that are not allowed to apply to real numbers.  e.g.
 // bitwise and/or and left/right shift.
 #define BINARY_OP_NO_REAL(op) \
-  eval_node left = {}; \
-  eval_node right = {}; \
+  eval_node left = EVAL_NIL; \
+  eval_node right = EVAL_NIL; \
   eval(expr->left, &left); \
   eval(expr->right, &right); \
   \
@@ -395,8 +395,8 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 // NOTE:  is and is_not cannot be on this plan because of their
 //        null semantics, they are similar, see below.
 #define COMPARE_BINARY_OP(op) \
-  eval_node left = {}; \
-  eval_node right = {}; \
+  eval_node left = EVAL_NIL; \
+  eval_node right = EVAL_NIL; \
   eval(expr->left, &left); \
   eval(expr->right, &right); \
   \
@@ -551,12 +551,12 @@ static void eval_bin_or(ast_node *expr, eval_node *result) {
 //   * convert to that type
 //   * return true if and only if the values are equal as that type
 static void eval_is(ast_node *expr, eval_node *result) {
-  eval_node left = {};
-  eval_node right = {};
+  eval_node left = EVAL_NIL;
+  eval_node right = EVAL_NIL;
   eval(expr->left, &left);
   eval(expr->right, &right);
 
-  if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { 
+  if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
     return;
   }
@@ -758,7 +758,7 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
 //   * if either are null the answer is null
 //   * otherwise the answer is true.
 static void eval_and(ast_node *expr, eval_node *result) {
-  eval_node left = {};
+  eval_node left = EVAL_NIL;
   eval(expr->left, &left);
 
   if (left.sem_type == SEM_TYPE_ERROR) {
@@ -772,7 +772,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
     return;
   }
 
-  eval_node right = {};
+  eval_node right = EVAL_NIL;
   eval(expr->right, &right);
   if (right.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
@@ -804,7 +804,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
 //   * if either are null the answer is null
 //   * otherwise the answer is false.
 static void eval_or(ast_node *expr, eval_node *result) {
-  eval_node left = {};
+  eval_node left = EVAL_NIL;
   eval(expr->left, &left);
 
   if (left.sem_type == SEM_TYPE_ERROR) {
@@ -818,7 +818,7 @@ static void eval_or(ast_node *expr, eval_node *result) {
     return;
   }
 
-  eval_node right = {};
+  eval_node right = EVAL_NIL;
   eval(expr->right, &right);
   if (right.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
@@ -925,7 +925,7 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
   // Case can have expression or just when clauses
   if (expr) {
     // This branch has a test expression, save its value
-    eval_node test_result = {};
+    eval_node test_result = EVAL_NIL;
     eval(expr, &test_result);
     if (test_result.sem_type == SEM_TYPE_ERROR) {
       result->sem_type = SEM_TYPE_ERROR;
@@ -939,7 +939,7 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
       EXTRACT_ANY_NOTNULL(case_expr, when->left);
       EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
-      eval_node case_result = {};
+      eval_node case_result = EVAL_NIL;
       eval(case_expr, &case_result);
       if (case_result.sem_type == SEM_TYPE_ERROR) {
         result->sem_type = SEM_TYPE_ERROR;
@@ -962,7 +962,7 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
       EXTRACT_ANY_NOTNULL(case_expr, when->left);
       EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
-      eval_node case_result = {};
+      eval_node case_result = EVAL_NIL;
       eval(case_expr, &case_result);
       if (case_result.sem_type == SEM_TYPE_ERROR) {
         result->sem_type = SEM_TYPE_ERROR;

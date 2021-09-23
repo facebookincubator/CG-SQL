@@ -20,6 +20,8 @@
 #include "list.h"
 #include "sem.h"
 
+#define EVAL_NIL {0, 0, 0, 0, false}
+
 typedef struct eval_node {
   sem_t sem_type;
   int64_t int64_value;

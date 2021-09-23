@@ -21,6 +21,8 @@ if (SQLITE_OK != (x)) { \
 
 const char *prefix1 = "#define _PROC_ \"";
 const char *prefix2 = "#undef _PROC_";
+const char *prefix3 = "#line ";
+const char *prefix4 = "# ";
 
 int32_t tests = 0;
 int32_t errors = 0;
@@ -53,7 +55,7 @@ void read_file(FILE *input, const char *source) {
       size_t plen = strlen(proc->ptr);
       ((char*)proc->ptr)[plen-1] = 0;
     }
-    
+
     const char *p2 = strstr(buffer, prefix2);
     if (p2 == buffer) {
       cql_string_release(proc);
@@ -62,8 +64,17 @@ void read_file(FILE *input, const char *source) {
       line_base = 0;
     }
 
-    if (buffer[0] == '#' && buffer[1] == ' ') {
-      line = atoi(buffer + 2);
+    const char *line_start = NULL;
+    const char *p3 = strstr(buffer, prefix3);
+    if (p3 != NULL) {
+      line_start = p3 + strlen(prefix3);
+    }
+    const char *p4 = strstr(buffer, prefix4);
+    if (p4 != NULL) {
+      line_start = p4 + strlen(prefix4);
+    }
+    if (line_start != NULL) {
+      line = atoi(line_start);
       if (base_at_next_line) {
         line_base = line - 1;
         base_at_next_line = false;
