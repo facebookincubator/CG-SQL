@@ -2263,7 +2263,6 @@ void line_directive(const char *directive) {
   char *line_start = strchr(directive_start + 1, ' ');
   Invariant(line_start != NULL);
   int line = atoi(line_start + 1);
-  Invariant(line != 0);
   yyset_lineno(line -1);  // we are about to process the linefeed
 
   char *q1 = strchr(directive_start +1, '"');
