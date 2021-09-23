@@ -11719,10 +11719,6 @@ static bool_t sem_is_notnull_improved(CSTR name, CSTR scope) {
 static void sem_set_notnull_improved(CSTR name, CSTR scope) {
   Contract(name);
 
-  if (!enforcement.strict_not_null_after) {
-    return;
-  }
-
   sem_t *type = find_mutable_type(name, scope);
   if (!type) {
     // We can end up here when `sem_select_expr_list_with_opt_where` tries to
