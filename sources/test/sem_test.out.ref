@@ -67250,15 +67250,15 @@ BEGIN
     WHERE xn IS NOT NULL AND yn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull } dml_proc
-  | {name improvements_correctly_handle_nested_selects}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull } dml_proc
+  {create_proc_stmt}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
+  | {name improvements_correctly_handle_nested_selects}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {select_stmt}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
-        | {select_core_list}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
-        | | {select_core}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
-        |   | {select_expr_list_con}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
-        |     | {select_expr_list}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull }
+      | {select_stmt}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull }
+        | {select_core_list}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull }
+        | | {select_core}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull }
+        |   | {select_expr_list_con}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull }
+        |     | {select_expr_list}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull }
         |     | | {select_expr}: xn: integer notnull
         |     | | | {select_stmt}: xn: integer notnull
         |     | |   | {select_core_list}: select: { xn: integer notnull }
@@ -67372,50 +67372,6 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_are_not_done_in_select_exprs_if_shadowed_by_an_alias ()
-BEGIN
-  SELECT xn AS c, 1 + NULL AS xn
-    FROM tnull
-    WHERE xn IS NOT NULL;
-END;
-
-  {create_proc_stmt}: select: { c: integer, xn: integer notnull } dml_proc
-  | {name improvements_are_not_done_in_select_exprs_if_shadowed_by_an_alias}: select: { c: integer, xn: integer notnull } dml_proc
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {select_stmt}: select: { c: integer, xn: integer notnull }
-        | {select_core_list}: select: { c: integer, xn: integer notnull }
-        | | {select_core}: select: { c: integer, xn: integer notnull }
-        |   | {select_expr_list_con}: select: { c: integer, xn: integer notnull }
-        |     | {select_expr_list}: select: { c: integer, xn: integer notnull }
-        |     | | {select_expr}: c: integer
-        |     | | | {name xn}: xn: integer
-        |     | | | {opt_as_alias}
-        |     | |   | {name c}
-        |     | | {select_expr_list}
-        |     |   | {select_expr}: xn: integer
-        |     |     | {add}: integer
-        |     |     | | {int 1}: integer notnull
-        |     |     | | {null}: null
-        |     |     | {opt_as_alias}
-        |     |       | {name xn}
-        |     | {select_from_etc}: TABLE { tnull: tnull }
-        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
-        |       | | {table_or_subquery}: TABLE { tnull: tnull }
-        |       |   | {name tnull}: TABLE { tnull: tnull }
-        |       | {select_where}
-        |         | {opt_where}: bool notnull
-        |         | | {is_not}: bool notnull
-        |         |   | {name xn}: xn: integer
-        |         |   | {null}: null
-        |         | {select_groupby}
-        |           | {select_having}
-        | {select_orderby}
-          | {select_limit}
-            | {select_offset}
-
-The statement ending at line XXXX
-
 CREATE PROC improvements_apply_in_select_exprs ()
 BEGIN
   SELECT xn + xn AS yn, yn AS yn0
@@ -67470,44 +67426,125 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_to_aliases_apply_in_the_result_but_not_in_the_exprs ()
+CREATE PROC aliases_are_improved_if_not_shadowed_by_a_column_in_from ()
 BEGIN
-  SELECT xn + xn AS yn, xn, yn AS yn0
+  SELECT xn AS yn, xn AS zn
     FROM tnull
-    WHERE yn IS NOT NULL;
+    WHERE yn IS NOT NULL AND zn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { yn: integer notnull, xn: integer, yn0: integer } dml_proc
-  | {name improvements_to_aliases_apply_in_the_result_but_not_in_the_exprs}: select: { yn: integer notnull, xn: integer, yn0: integer } dml_proc
+  {create_proc_stmt}: select: { yn: integer, zn: integer notnull } dml_proc
+  | {name aliases_are_improved_if_not_shadowed_by_a_column_in_from}: select: { yn: integer, zn: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {select_stmt}: select: { yn: integer notnull, xn: integer, yn0: integer }
-        | {select_core_list}: select: { yn: integer notnull, xn: integer, yn0: integer }
-        | | {select_core}: select: { yn: integer notnull, xn: integer, yn0: integer }
-        |   | {select_expr_list_con}: select: { yn: integer notnull, xn: integer, yn0: integer }
-        |     | {select_expr_list}: select: { yn: integer notnull, xn: integer, yn0: integer }
+      | {select_stmt}: select: { yn: integer, zn: integer notnull }
+        | {select_core_list}: select: { yn: integer, zn: integer notnull }
+        | | {select_core}: select: { yn: integer, zn: integer notnull }
+        |   | {select_expr_list_con}: select: { yn: integer, zn: integer notnull }
+        |     | {select_expr_list}: select: { yn: integer, zn: integer notnull }
         |     | | {select_expr}: yn: integer
-        |     | | | {add}: integer
-        |     | | | | {name xn}: xn: integer
-        |     | | | | {name xn}: xn: integer
+        |     | | | {name xn}: xn: integer
         |     | | | {opt_as_alias}
         |     | |   | {name yn}
         |     | | {select_expr_list}
-        |     |   | {select_expr}: xn: integer
-        |     |   | | {name xn}: xn: integer
-        |     |   | {select_expr_list}
-        |     |     | {select_expr}: yn0: integer
-        |     |       | {name yn}: yn: integer
-        |     |       | {opt_as_alias}
-        |     |         | {name yn0}
+        |     |   | {select_expr}: zn: integer
+        |     |     | {name xn}: xn: integer
+        |     |     | {opt_as_alias}
+        |     |       | {name zn}
         |     | {select_from_etc}: TABLE { tnull: tnull }
         |       | {table_or_subquery_list}: TABLE { tnull: tnull }
         |       | | {table_or_subquery}: TABLE { tnull: tnull }
         |       |   | {name tnull}: TABLE { tnull: tnull }
         |       | {select_where}
         |         | {opt_where}: bool notnull
-        |         | | {is_not}: bool notnull
-        |         |   | {name yn}: yn: integer
+        |         | | {and}: bool notnull
+        |         |   | {is_not}: bool notnull
+        |         |   | | {name yn}: yn: integer
+        |         |   | | {null}: null
+        |         |   | {is_not}: bool notnull
+        |         |     | {name zn}: zn: integer
+        |         |     | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC local_variable_improvements_do_not_affect_result_columns ()
+BEGIN
+  DECLARE xn INTEGER;
+  IF xn IS NULL THEN
+    RETURN;
+  END IF;
+  SELECT *
+    FROM tnull;
+END;
+
+  {create_proc_stmt}: select: { xn: integer, yn: integer } dml_proc
+  | {name local_variable_improvements_do_not_affect_result_columns}: select: { xn: integer, yn: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: xn: integer variable
+      | | | {name xn}: xn: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {is}: bool notnull
+      | | | | {name xn}: xn: integer variable
+      | | | | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {select_stmt}: select: { xn: integer, yn: integer }
+        | {select_core_list}: select: { xn: integer, yn: integer }
+        | | {select_core}: select: { xn: integer, yn: integer }
+        |   | {select_expr_list_con}: select: { xn: integer, yn: integer }
+        |     | {select_expr_list}: select: { xn: integer, yn: integer }
+        |     | | {star}: select: { xn: integer, yn: integer }
+        |     | {select_from_etc}: TABLE { tnull: tnull }
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC where_clauses_with_unbound_identifiers_do_not_crash ()
+BEGIN
+  SELECT xn
+    FROM tnull
+    WHERE zn IS NOT NULL;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'zn'
+
+  {create_proc_stmt}: err
+  | {name where_clauses_with_unbound_identifiers_do_not_crash}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: xn: integer
+        |     |   | {name xn}: xn: integer
+        |     | {select_from_etc}: err
+        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       |   | {name tnull}: TABLE { tnull: tnull }
+        |       | {select_where}
+        |         | {opt_where}: err
+        |         | | {is_not}: err
+        |         |   | {name zn}: err
         |         |   | {null}: null
         |         | {select_groupby}
         |           | {select_having}

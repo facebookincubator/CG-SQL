@@ -17163,7 +17163,7 @@ begin
 end;
 
 -- TEST: Improvements correctly handle nested selects.
--- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, yn0: integer, yn1: integer notnull } dml_proc
+-- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
 -- - Error
 create proc improvements_correctly_handle_nested_selects()
 begin
@@ -17174,18 +17174,6 @@ begin
     (select yn) as yn1
   from tnull
   where xn is not null and yn is not null;
-end;
-
--- TEST: We have to be careful with aliases. Here, the result column `c` should
--- NOT be improved despite it being an alias for `xn` when `xn is not null`
--- because the `xn` in the where clause actually refers to `1 + null`. The
--- result column `xn`, however, is not null depsite `1 + null` because of the
--- same where clause.
--- + {create_proc_stmt}: select: { c: integer, xn: integer notnull } dml_proc
--- - Error
-create proc improvements_are_not_done_in_select_exprs_if_shadowed_by_an_alias()
-begin
-  select xn as c, 1 + null as xn from tnull where xn is not null;
 end;
 
 -- TEST: We actually want `yn` to be improved in the result even though `xn is
@@ -17199,15 +17187,43 @@ begin
   select xn + xn as yn, yn as yn0 from tnull where xn is not null;
 end;
 
--- TEST: Here, we improve the resulting `yn` due to `yn is not null` because it
--- refers to the result column, not `tnull.yn`. Whereas the previous test
--- improved a select expresion which lead to an improved result, here we improve
--- the result directly, not the select expression.
--- + {create_proc_stmt}: select: { yn: integer notnull, xn: integer, yn0: integer } dml_proc
+-- TEST: WHERE clauses only see aliases if not shadowed by a column in the FROM
+-- clause. We must only improve an alias, therefore, if it is not shadowed.
+-- + {create_proc_stmt}: select: { yn: integer, zn: integer notnull } dml_proc
 -- - Error
-create proc improvements_to_aliases_apply_in_the_result_but_not_in_the_exprs()
+create proc aliases_are_improved_if_not_shadowed_by_a_column_in_from()
 begin
-  select xn + xn as yn, xn, yn as yn0 from tnull where yn is not null;
+  select
+    xn as yn, -- shadowed; don't improve it
+    xn as zn  -- not shadowed; improve it
+  from tnull
+  where yn is not null and zn is not null;
+end;
+
+-- TEST: We do not improve a result column merely because a variable with the
+-- same name is improved in an enclosing scope.
+-- + {create_proc_stmt}: select: { xn: integer, yn: integer } dml_proc
+-- - Error
+create proc local_variable_improvements_do_not_affect_result_columns()
+begin
+  declare xn int;
+  if xn is null return;
+  select * from tnull;
+end;
+
+-- TEST: Due to the circularity in SELECT that SQLite allows between a WHERE
+-- clause and an expression list, we have to analyze expression lists with
+-- improvements from WHEREs clauses before analyzing the WHEREs clauses
+-- themselves. In doing so, we may attempt to improve an identifier in a WHERE
+-- clause that is unbound. This test exists to make sure we don't crash and do
+-- eventually flag the error after analyzing the expression list.
+-- + {select_expr}: xn: integer
+-- + {opt_where}: err
+-- + Error % name not found 'zn'
+-- +1 Error
+create proc where_clauses_with_unbound_identifiers_do_not_crash()
+begin
+  select xn from tnull where zn is not null;
 end;
 
 -- Used in the following tests.

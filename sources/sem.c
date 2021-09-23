@@ -9339,6 +9339,52 @@ static void sem_select_expr_list_con(ast_node *ast) {
   error = is_error(select_from_etc);
 
   if (!error) {
+    // Most databases (e.g., PostgreSQL and SQL Server) do not allow a WHERE
+    // clause to reference aliases that appear in the expression list. In such
+    // databases, we could easily handle nullability improvements by analyzing
+    // the WHERE clause, calling
+    // `sem_set_notnull_improvements_for_true_condition` on it, and then
+    // analyzing the expression list. It would be essentially the same thing we
+    // do for IF, CASE, et cetera.
+    //
+    // Unfortunately, SQLite complicates things considerably: Unlike other
+    // databases, it *does* allow WHERE clauses to reference aliases in the
+    // expression list if and only if they are not also columns in the FROM
+    // clause.
+    //
+    // As a result, we cannot analyze the WHERE clause before analyzing the
+    // expression list because we may need the result of analyzing the
+    // expression list to be able to analyze the WHERE clause. To analyze the
+    // expression list first, however, we need the nullability improvements from
+    // the WHERE clause!
+    //
+    // To work around this, we analyze the expression list first with the
+    // improvements from the WHERE clause while making the assumption that, even
+    // though we haven't checked the WHERE clause yet, we can check it later and
+    // simply assume it's correct for now. Since the WHERE clause doesn't bind
+    // anything and analyzing it cannot unset any improvements, this is safe to
+    // do.
+    //
+    // To clarify, both the expression list and the WHERE clause are only ever
+    // analyzed once. The exact steps for the entire analyses of the expression
+    // list, WHERE clause, and resulting columns are as follows:
+    //
+    // 1. Analyze the expression list with improvements from the *un-analyzed*
+    //    WHERE clause. `sem_set_notnull_improvements_for_true_condition` may
+    //    attempt to make bogus improvements because we're calling it with an
+    //    un-analyzed expression (e.g., it may attempt to improve an unbound
+    //    variable), but that's okay as we handle that in
+    //    `sem_set_notnull_improved`.
+    //
+    // 2. Analyze the WHERE clause (which we do later in this function). If it's
+    //    okay, then any improvements made in step 1 were valid for the
+    //    expression list. If not, then that's fine too: The whole SELECT simply
+    //    errors out.
+    //
+    // 3. Fix up the types of the resulting columns of the SELECT (which we also
+    //    do later in this function). Since we'll know that both the expression
+    //    list and the WHERE clause are okay by that point, there will be
+    //    nothing left that can have an error.
     if (query_parts) {
       // SELECT [select_expr_list] [query_parts] [select_where]
 
@@ -9368,50 +9414,105 @@ static void sem_select_expr_list_con(ast_node *ast) {
     // evaluate the rest using the select list as the outer (2nd choice) scope
     // plus the from clause as the inner (1st choice) scope
     PUSH_JOIN(list_scope, sem_join_from_sem_struct(select_expr_list->sem->sptr));
+    PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
     {
       PUSH_MONITOR_SYMTAB();
+
+      ast_node *where_cond = opt_where ? opt_where->left : NULL;
 
       if (jptr) {
         PUSH_JOIN(from_scope, jptr);
         sem_sensitive = sem_select_where_etc(select_from_etc);
         error = is_error(select_from_etc);
+        if (!error && where_cond) {
+          // We already handled improvements for the expression list above,
+          // including for the `select *` case (in `sem_select_star`). Since the
+          // WHERE clause can refer to aliases in the expression list, however,
+          // we also want to improve columns in the result of the SELECT if the
+          // WHERE clause indicated that any of those aliases cannot be NULL. To
+          // make this concrete, let's look at all of the following examples
+          // (assuming x and y are columns in t and z is not a column in t):
+          //
+          //   select x as y from t where x is not null
+          //     - x was previously improved in the expression list so the
+          //       resulting column y is nonnull
+          //     - there's nothing else to do here since the WHERE clause does
+          //       not refer to an alias
+          //
+          //   select x as y from t where y is not null
+          //     - y in the WHERE refers to t.y, not the alias y of x
+          //     - the resulting column y is not improved
+          //
+          //   select x as z from t where z is not null
+          //     - z in the WHERE refers to the alias z of x
+          //     - the resulting column z is improved
+          //
+          // To improve the result columns, we first set improvements here with
+          // the same `current_joinscope` we had when we just analyzed the WHERE
+          // expression. Doing so ensures that improvements will be set for
+          // aliases (in `list_scope`) if and only if they are not shadowed by a
+          // column of the FROM clause (in `from_scope`).
+          //
+          // Calling `sem_set_notnull_improvements_for_true_condition` will only
+          // set `SEM_TYPE_NOTNULL_INFERRED` for aliases in `list_scope`
+          // though; we'll lock these in as proper `SEM_TYPE_NOTNULL` flags on
+          // the `sem_struct` for the whole SELECT in a bit.
+          sem_set_notnull_improvements_for_true_condition(where_cond, NULL);
+        }
         POP_JOIN();
       }
       else {
         sem_sensitive = sem_select_where_etc(select_from_etc);
         error = is_error(select_from_etc);
+        if (!error && where_cond) {
+          // There's no `from_scope` here. As such, any identifier in the WHERE
+          // clause must refer either to an alias or something in an enclosing
+          // scope; no shadowing concerns exist.
+          sem_set_notnull_improvements_for_true_condition(where_cond, NULL);
+        }
       }
 
       POP_MONITOR_SYMTAB();
+    }
 
-      if (!error) {
-        ast->sem = select_expr_list->sem;
-        ast->sem->used_symbols = used_symbols;
-
-        PUSH_NOTNULL_IMPROVEMENT_CONTEXT();
-
-        ast_node *where_cond = opt_where ? opt_where->left : NULL;
-        if (where_cond) {
-          // Set improvements for the resulting columns. We don't pass
-          // `select_expr_list` here because we want to include the aliases when
-          // improving, unlike in `sem_select_expr_list_with_opt_where` where
-          // the aliases were not in scope for the select expressions.
-          sem_set_notnull_improvements_for_true_condition(where_cond, NULL);
+    if (!error) {
+      ast->sem = select_expr_list->sem;
+      ast->sem->used_symbols = used_symbols;
+      sem_struct *sptr = ast->sem->sptr;
+      for (uint32_t i = 0; i < sptr->count; i++) {
+        // Here is where we finally set `SEM_TYPE_NOTNULL` on the resulting
+        // columns.
+        //
+        // Note that we cannot use `sem_is_notnull_improved` here to look up
+        // whether or not a column should be improved! The reason is that
+        // `sem_is_notnull_improved(sptr->names[i], NULL)` would return true if
+        // anything with the name `sptr->names[i]` was improved in an enclosing
+        // scope -- even a local variable. We need to know that it's *exactly*
+        // the alias that was improved. As such, we search the single table in
+        // `list_scope` for improvements.
+        //
+        // NOTE: Since `sem_join_from_sem_struct` creates a new `sem_struct`,
+        // `list_scope.jptr->tables[0]` is not an alias of `sptr`. As a result,
+        // we need to search the join to see if an alias was improved instead of
+        // simply checking `sptr->semtypes[i]`.
+        Invariant(list_scope.jptr->count == 1);
+        sem_struct *list_scope_sptr = list_scope.jptr->tables[0];
+        for (uint32_t j = 0; j < list_scope_sptr->count; j++) {
+          if (!strcmp(sptr->names[i], list_scope_sptr->names[j])) {
+            if (list_scope_sptr->semtypes[j] & SEM_TYPE_INFERRED_NOTNULL) {
+              sptr->semtypes[i] |= SEM_TYPE_NOTNULL;
+            }
+            break;
+          }
         }
 
-        sem_struct *sptr = ast->sem->sptr;
-        for (int32_t i = 0; i < sptr->count; i++) {
-          if (sem_sensitive) {
-            sptr->semtypes[i] |= sem_sensitive;
-          }
-          if (sem_is_notnull_improved(sptr->names[i], NULL)) {
-            sptr->semtypes[i] |= SEM_TYPE_NOTNULL;
-          }
+        // Propagate sensitivity, if necessary.
+        if (sem_sensitive) {
+          sptr->semtypes[i] |= sem_sensitive;
         }
-
-        POP_NOTNULL_IMPROVEMENT_CONTEXT();
       }
     }
+    POP_NOTNULL_IMPROVEMENT_CONTEXT();
     POP_JOIN();
   }
 
@@ -11624,6 +11725,9 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
 
   sem_t *type = find_mutable_type(name, scope);
   if (!type) {
+    // We can end up here when `sem_select_expr_list_with_opt_where` tries to
+    // set improvements because it'll be doing so with a WHERE clause that has
+    // not yet been analyzed and, therefore, may contain unbound identifiers.
     return;
   }
 
@@ -13414,9 +13518,9 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   destroy_name_check(&check);
 
   if (valid) {
-    // It's possible to do better here by unimproving those being set to a value of a
-    // nullable type and actually improving those being set to a notnull type. For now
-    // though, we just unimprove all of them.
+    // TODO: It's possible to do better here by un-improving those being set to
+    // a value of a nullable type and actually improving those being set to a
+    // notnull type. For now though, we just unimprove all of them.
     sem_struct *sptr = cursor->sem->sptr;
     for (uint32_t i = 0; i < sptr->count; i++) {
       sem_unset_notnull_improved(sptr->names[i], cursor->sem->name);
