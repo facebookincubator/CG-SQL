@@ -6053,15 +6053,15 @@ Error at test/sem_test.sql:XXXX : in str : CQL0198: global variable hides table/
 
 The statement ending at line XXXX
 
-SELECT X;
+SELECT Y;
 
-  {select_stmt}: select: { X: integer variable }
-  | {select_core_list}: select: { X: integer variable }
-  | | {select_core}: select: { X: integer variable }
-  |   | {select_expr_list_con}: select: { X: integer variable }
-  |     | {select_expr_list}: select: { X: integer variable }
-  |     | | {select_expr}: X: integer variable
-  |     |   | {name X}: X: integer variable
+  {select_stmt}: select: { Y: integer variable }
+  | {select_core_list}: select: { Y: integer variable }
+  | | {select_core}: select: { Y: integer variable }
+  |   | {select_expr_list_con}: select: { Y: integer variable }
+  |     | {select_expr_list}: select: { Y: integer variable }
+  |     | | {select_expr}: Y: integer variable
+  |     |   | {name Y}: Y: integer variable
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -28878,88 +28878,113 @@ SET _sens := ( SELECT 1 IN (SELECT info
 
 The statement ending at line XXXX
 
-SET _sens := CASE 0 WHEN 1 THEN 2
+SET _sens := nullable(CASE 0 WHEN 1 THEN 2
 ELSE 3
-END;
+END);
 
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
-  | {case_expr}: integer notnull
-    | {int 0}: integer notnull
-    | {connector}: integer notnull
-      | {case_list}: integer notnull
-      | | {when}: integer notnull
-      |   | {int 1}: integer notnull
-      |   | {int 2}: integer notnull
-      | {int 3}: integer notnull
+  | {call}: integer
+    | {name nullable}: integer
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {case_expr}: integer notnull
+          | {int 0}: integer notnull
+          | {connector}: integer notnull
+            | {case_list}: integer notnull
+            | | {when}: integer notnull
+            |   | {int 1}: integer notnull
+            |   | {int 2}: integer notnull
+            | {int 3}: integer notnull
 
 The statement ending at line XXXX
 
-SET _sens := CASE _sens WHEN 1 THEN 2
+SET _sens := nullable(CASE _sens WHEN 1 THEN 2
 ELSE 3
-END;
+END);
 
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
-  | {case_expr}: integer notnull sensitive
-    | {name _sens}: _sens: integer variable sensitive
-    | {connector}: integer notnull sensitive
-      | {case_list}: integer notnull
-      | | {when}: integer notnull
-      |   | {int 1}: integer notnull
-      |   | {int 2}: integer notnull
-      | {int 3}: integer notnull
+  | {call}: integer sensitive
+    | {name nullable}: integer sensitive
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {case_expr}: integer notnull sensitive
+          | {name _sens}: _sens: integer variable sensitive
+          | {connector}: integer notnull sensitive
+            | {case_list}: integer notnull
+            | | {when}: integer notnull
+            |   | {int 1}: integer notnull
+            |   | {int 2}: integer notnull
+            | {int 3}: integer notnull
 
 The statement ending at line XXXX
 
-SET _sens := CASE 0 WHEN _sens THEN 2
+SET _sens := nullable(CASE 0 WHEN _sens THEN 2
 ELSE 3
-END;
+END);
 
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
-  | {case_expr}: integer notnull sensitive
-    | {int 0}: integer notnull
-    | {connector}: integer notnull sensitive
-      | {case_list}: integer notnull sensitive
-      | | {when}: integer notnull
-      |   | {name _sens}: _sens: integer variable sensitive
-      |   | {int 2}: integer notnull
-      | {int 3}: integer notnull
+  | {call}: integer sensitive
+    | {name nullable}: integer sensitive
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {case_expr}: integer notnull sensitive
+          | {int 0}: integer notnull
+          | {connector}: integer notnull sensitive
+            | {case_list}: integer notnull sensitive
+            | | {when}: integer notnull
+            |   | {name _sens}: _sens: integer variable sensitive
+            |   | {int 2}: integer notnull
+            | {int 3}: integer notnull
 
 The statement ending at line XXXX
 
-SET _sens := CASE 0 WHEN 1 THEN _sens
+SET _sens := nullable(CASE 0 WHEN 1 THEN _sens
 ELSE 3
-END;
+END);
 
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
-  | {case_expr}: integer sensitive
-    | {int 0}: integer notnull
-    | {connector}: integer sensitive
-      | {case_list}: integer variable sensitive
-      | | {when}: _sens: integer variable sensitive
-      |   | {int 1}: integer notnull
-      |   | {name _sens}: _sens: integer variable sensitive
-      | {int 3}: integer notnull
+  | {call}: integer sensitive
+    | {name nullable}: integer sensitive
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {case_expr}: integer sensitive
+          | {int 0}: integer notnull
+          | {connector}: integer sensitive
+            | {case_list}: integer variable sensitive
+            | | {when}: _sens: integer variable sensitive
+            |   | {int 1}: integer notnull
+            |   | {name _sens}: _sens: integer variable sensitive
+            | {int 3}: integer notnull
 
 The statement ending at line XXXX
 
-SET _sens := CASE 0 WHEN 1 THEN 2
+SET _sens := nullable(CASE 0 WHEN 1 THEN 2
 ELSE _sens
-END;
+END);
 
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
-  | {case_expr}: integer sensitive
-    | {int 0}: integer notnull
-    | {connector}: integer sensitive
-      | {case_list}: integer notnull
-      | | {when}: integer notnull
-      |   | {int 1}: integer notnull
-      |   | {int 2}: integer notnull
-      | {name _sens}: _sens: integer variable sensitive
+  | {call}: integer sensitive
+    | {name nullable}: integer sensitive
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {case_expr}: integer sensitive
+          | {int 0}: integer notnull
+          | {connector}: integer sensitive
+            | {case_list}: integer notnull
+            | | {when}: integer notnull
+            |   | {int 1}: integer notnull
+            |   | {int 2}: integer notnull
+            | {name _sens}: _sens: integer variable sensitive
 
 The statement ending at line XXXX
 
@@ -29314,7 +29339,12 @@ SET _sens := 0 IS _sens;
   | {name _sens}: _sens: integer variable sensitive
   | {is}: bool notnull sensitive
     | {int 0}: integer notnull
-    | {name _sens}: _sens: integer variable sensitive
+    | {call}: _sens: integer notnull variable sensitive
+      | {name cql_inferred_notnull}: _sens: integer notnull variable sensitive
+      | {call_arg_list}
+        | {call_filter_clause}
+        | {arg_list}: ok
+          | {name _sens}: _sens: integer inferred_notnull variable sensitive
 
 The statement ending at line XXXX
 
@@ -29323,7 +29353,12 @@ SET _sens := _sens IS 0;
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
   | {is}: bool notnull sensitive
-    | {name _sens}: _sens: integer variable sensitive
+    | {call}: _sens: integer notnull variable sensitive
+    | | {name cql_inferred_notnull}: _sens: integer notnull variable sensitive
+    | | {call_arg_list}
+    |   | {call_filter_clause}
+    |   | {arg_list}: ok
+    |     | {name _sens}: _sens: integer inferred_notnull variable sensitive
     | {int 0}: integer notnull
 
 The statement ending at line XXXX
@@ -29344,7 +29379,12 @@ SET _sens := 0 IS NOT _sens;
   | {name _sens}: _sens: integer variable sensitive
   | {is_not}: bool notnull sensitive
     | {int 0}: integer notnull
-    | {name _sens}: _sens: integer variable sensitive
+    | {call}: _sens: integer notnull variable sensitive
+      | {name cql_inferred_notnull}: _sens: integer notnull variable sensitive
+      | {call_arg_list}
+        | {call_filter_clause}
+        | {arg_list}: ok
+          | {name _sens}: _sens: integer inferred_notnull variable sensitive
 
 The statement ending at line XXXX
 
@@ -29353,7 +29393,12 @@ SET _sens := _sens IS NOT 0;
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
   | {is_not}: bool notnull sensitive
-    | {name _sens}: _sens: integer variable sensitive
+    | {call}: _sens: integer notnull variable sensitive
+    | | {name cql_inferred_notnull}: _sens: integer notnull variable sensitive
+    | | {call_arg_list}
+    |   | {call_filter_clause}
+    |   | {arg_list}: ok
+    |     | {name _sens}: _sens: integer inferred_notnull variable sensitive
     | {int 0}: integer notnull
 
 The statement ending at line XXXX
@@ -56002,7 +56047,12 @@ Error at test/sem_test.sql:XXXX : in call : CQL0345: the argument must be of typ
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
-        | {name an_int}: an_int: integer variable
+        | {call}: an_int: integer notnull variable
+          | {name cql_inferred_notnull}: an_int: integer notnull variable
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name an_int}: an_int: integer inferred_notnull variable
 
 The statement ending at line XXXX
 
@@ -56023,7 +56073,12 @@ Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in 
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {name an_int}: an_int: integer variable
+    |     |         | {call}: an_int: integer notnull variable
+    |     |           | {name cql_inferred_notnull}: an_int: integer notnull variable
+    |     |           | {call_arg_list}
+    |     |             | {call_filter_clause}
+    |     |             | {arg_list}: ok
+    |     |               | {name an_int}: an_int: integer inferred_notnull variable
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -64982,13 +65037,6 @@ Error at test/sem_test.sql:XXXX : in str : CQL0103: duplicate table/view name 'f
 
 The statement ending at line XXXX
 
-@ENFORCE_STRICT NOT NULL AFTER CHECK;
-
-  {enforce_strict_stmt}: ok
-  | {int 12}
-
-The statement ending at line XXXX
-
 CREATE PROC conditionals_improve_nullable_variables ()
 BEGIN
   DECLARE a INTEGER;
@@ -70639,39 +70687,17 @@ END;
 
 The statement ending at line XXXX
 
-@ENFORCE_NORMAL NOT NULL AFTER CHECK;
+@ENFORCE_STRICT NOT NULL AFTER CHECK;
 
-  {enforce_normal_stmt}: ok
+  {enforce_strict_stmt}: ok
   | {int 12}
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_when_disabled ()
-BEGIN
-  DECLARE a INTEGER;
-  IF a IS NOT NULL THEN
-    LET x := a;
-  END IF;
-END;
+@ENFORCE_NORMAL NOT NULL AFTER CHECK;
 
-  {create_proc_stmt}: ok
-  | {name improvements_do_not_work_when_disabled}: ok
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
-      | | {type_int}: integer
-      | {if_stmt}: bool notnull
-        | {cond_action}: bool notnull
-        | | {is_not}: bool notnull
-        | | | {name a}: a: integer variable
-        | | | {null}: null
-        | | {stmt_list}: ok
-        |   | {let_stmt}: x: integer variable
-        |     | {name x}: x: integer variable
-        |     | {name a}: a: integer variable
-        | {if_alt}: ok
+  {enforce_normal_stmt}: ok
+  | {int 12}
 
 The statement ending at line XXXX
 

@@ -1218,7 +1218,7 @@ BEGIN_TEST(coalesce)
   EXPECT_SQL_TOO(coalesce(i, i, 2) == 2); -- grab the not null last value
   EXPECT_SQL_TOO(ifnull(i, 2) == 2); -- grab the not null last value
 
-  set i:= 3;
+  set i := nullable(3);
   EXPECT_SQL_TOO(coalesce(i, i, 2) == 3); -- grab the not null first value
   EXPECT_SQL_TOO(ifnull(i, 2) == 3); -- grab the not null first value
 END_TEST(coalesce)
@@ -1397,7 +1397,7 @@ END_TEST(external_set)
 BEGIN_TEST(object_notnull)
   declare _setNN object not null;
   declare _set object;
-  set _set := set_create();
+  set _set := nullable(set_create());
   set _setNN := ifnull_crash(_set);
   EXPECT(_set == _setNN); // should be the same pointer
 END_TEST(object_notnull)
@@ -1719,12 +1719,12 @@ BEGIN_TEST(fetch_all_types_cursor_nullable)
   declare s text;
   declare bl blob;
 
-  set i := 10;
-  set l := 1234567890156789L;
-  set r := 1234.45;
-  set b := 1;
-  set s := "string";
-  set bl := blob_from_string("blob text");
+  set i := nullable(10);
+  set l := nullable(1234567890156789L);
+  set r := nullable(1234.45);
+  set b := nullable(1);
+  set s := nullable("string");
+  set bl := nullable(blob_from_string("blob text"));
 
   declare C cursor for select i*13 i, l*13 l, r*13 r, not b b, printf("foo %s",s) s, bl bl;
   fetch C;

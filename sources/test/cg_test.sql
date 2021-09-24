@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
--- This is here temporarily so that we can prepare "cg_test.sql" for a world in
--- which this is no longer optional.
-@enforce_strict not null after check;
-
 declare proc printf no check;
 declare proc puts no check;
 

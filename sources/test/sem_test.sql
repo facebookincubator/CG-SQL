@@ -1699,9 +1699,9 @@ declare foo integer;
 
 -- TEST: try to access a variable
 -- - Error
--- + {select_stmt}: select: { X: integer variable }
--- + {name X}: X: integer variable
-select X;
+-- + {select_stmt}: select: { Y: integer variable }
+-- + {name Y}: Y: integer variable
+select Y;
 
 -- TEST: create a cursor with select statement
 -- - Error
@@ -7995,7 +7995,7 @@ set _sens := (select 1 in (select info from with_sensitive));
 -- + {int 2}: integer notnull
 -- + {int 3}: integer notnull
 -- - Error
-set _sens := case 0 when 1 then 2 else 3 end;
+set _sens := nullable(case 0 when 1 then 2 else 3 end);
 
 -- TEST: in a CASE statement (sensitive in the main expression)
 -- + {case_expr}: integer notnull sensitive
@@ -8005,7 +8005,7 @@ set _sens := case 0 when 1 then 2 else 3 end;
 -- + {int 2}: integer notnull
 -- + {int 3}: integer notnull
 -- - Error
-set _sens := case _sens when 1 then 2 else 3 end;
+set _sens := nullable(case _sens when 1 then 2 else 3 end);
 
 -- TEST: in a CASE statement (sensitive in the when part)
 -- + {case_expr}: integer notnull sensitive
@@ -8015,7 +8015,7 @@ set _sens := case _sens when 1 then 2 else 3 end;
 -- + {int 2}: integer notnull
 -- + {int 3}: integer notnull
 -- - Error
-set _sens := case 0 when _sens then 2 else 3 end;
+set _sens := nullable(case 0 when _sens then 2 else 3 end);
 
 -- TEST: in a CASE statement (sensitive in the then part)
 -- + {case_expr}: integer sensitive
@@ -8025,7 +8025,7 @@ set _sens := case 0 when _sens then 2 else 3 end;
 -- + {int 1}: integer notnull
 -- + {int 3}: integer notnull
 -- - Error
-set _sens := case 0 when 1 then _sens else 3 end;
+set _sens := nullable(case 0 when 1 then _sens else 3 end);
 
 -- TEST: in a CASE statement (sensitive in the else part)
 -- + {case_expr}: integer sensitive
@@ -8035,7 +8035,7 @@ set _sens := case 0 when 1 then _sens else 3 end;
 -- + {int 1}: integer notnull
 -- + {int 2}: integer notnull
 -- - Error
-set _sens := case 0 when 1 then 2 else _sens end;
+set _sens := nullable(case 0 when 1 then 2 else _sens end);
 
 -- TEST: make sure that cast preserves
 -- + {select_stmt}: _anon: integer sensitive
@@ -16572,11 +16572,6 @@ begin
 end;
 create table foo(id integer);
 
--- TEST: Enable flow-sensitive nullability.
--- + @ENFORCE_STRICT NOT NULL AFTER CHECK
--- + {enforce_strict_stmt}: ok
-@enforce_strict not null after check;
-
 -- TEST: Variables can be improved to NOT NULL via a conditional, but only
 -- within the body of the THEN.
 -- + {let_stmt}: x0: integer variable
@@ -18109,21 +18104,13 @@ begin
   let x1 := a;
 end;
 
--- TEST: Disable flow-sensitive nullability.
--- + @ENFORCE_NORMAL NOT NULL AFTER CHECK
--- + {enforce_normal_stmt}: ok
-@enforce_normal not null after check;
+ -- TEST: Exercise no-op statement.
+ -- - Error
+@enforce_strict not null after check;
 
--- TEST: Improvements do not work when disabled.
--- + {let_stmt}: x: integer variable
--- - Error
-create proc improvements_do_not_work_when_disabled()
-begin
- declare a int;
-  if a is not null then
-    let x := a;
-  end if;
-end;
+ -- TEST: Exercise no-op statement.
+ -- - Error
+ @enforce_normal not null after check;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- NOT is weaker than +, parens stay even though this is a special case
