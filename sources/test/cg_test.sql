@@ -4612,6 +4612,17 @@ begin
   let h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4")); 
 end;
 
+-- TEST: The `sensitive` function is a no-op and never appears in the C output.
+-- + cql_string_ref x = NULL;
+-- + cql_set_string_ref(&x, _literal_22_hello_sensitive_function_is_a_no_op);
+-- + _rc_ = cql_prepare(_db_, _result_stmt,
+-- + "SELECT 'hello'");
+create proc sensitive_function_is_a_no_op()
+begin
+  let x := sensitive("hello");
+  select sensitive("hello") as y;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

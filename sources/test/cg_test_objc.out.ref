@@ -3518,6 +3518,39 @@ static inline BOOL CGBNullabilityImprovementsAreErasedForSqlRowEqual(CGBNullabil
   return CGCNullabilityImprovementsAreErasedForSqlRowEqual(CGCNullabilityImprovementsAreErasedForSqlFromCGBNullabilityImprovementsAreErasedForSql(resultSet1), row1, CGCNullabilityImprovementsAreErasedForSqlFromCGBNullabilityImprovementsAreErasedForSql(resultSet2), row2);
 }
 
+@class CGBSensitiveFunctionIsANoOp;
+
+static inline CGBSensitiveFunctionIsANoOp *CGBSensitiveFunctionIsANoOpFromCGCSensitiveFunctionIsANoOp(CGCSensitiveFunctionIsANoOpResultSetRef resultSet)
+{
+  return (__bridge CGBSensitiveFunctionIsANoOp *)resultSet;
+}
+
+static inline CGCSensitiveFunctionIsANoOpResultSetRef CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(CGBSensitiveFunctionIsANoOp *resultSet)
+{
+  return (__bridge CGCSensitiveFunctionIsANoOpResultSetRef)resultSet;
+}
+
+static inline NSString *CGBSensitiveFunctionIsANoOpGetY(CGBSensitiveFunctionIsANoOp *resultSet, int32_t row)
+{
+  CGCSensitiveFunctionIsANoOpResultSetRef cResultSet = CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(resultSet);
+  return (__bridge NSString *)CGCSensitiveFunctionIsANoOpGetY(cResultSet, row);
+}
+
+static inline int32_t CGBSensitiveFunctionIsANoOpResultCount(CGBSensitiveFunctionIsANoOp *resultSet)
+{
+  return CGCSensitiveFunctionIsANoOpResultCount(CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(resultSet));
+}
+
+static inline NSUInteger CGBSensitiveFunctionIsANoOpRowHash(CGBSensitiveFunctionIsANoOp *resultSet, int32_t row)
+{
+  return CGCSensitiveFunctionIsANoOpRowHash(CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(resultSet), row);
+}
+
+static inline BOOL CGBSensitiveFunctionIsANoOpRowEqual(CGBSensitiveFunctionIsANoOp *resultSet1, int32_t row1, CGBSensitiveFunctionIsANoOp *resultSet2, int32_t row2)
+{
+  return CGCSensitiveFunctionIsANoOpRowEqual(CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(resultSet1), row1, CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(resultSet2), row2);
+}
+
 @class CGBFragTest;
 
 static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)

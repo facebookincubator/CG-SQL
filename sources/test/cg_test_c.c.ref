@@ -381,6 +381,7 @@ typedef struct out_proc_with_contract_in_fetch_results_row {
 } out_proc_with_contract_in_fetch_results_row;
 extern void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc_with_contract_in_fetch_results_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_c_, "c");
@@ -402,6 +403,7 @@ cql_string_literal(_literal_18_arguments_are_evaluated_left_to_right, "1");
 cql_string_literal(_literal_19_arguments_are_evaluated_left_to_right, "2");
 cql_string_literal(_literal_20_arguments_are_evaluated_left_to_right, "3");
 cql_string_literal(_literal_21_arguments_are_evaluated_left_to_right, "4");
+cql_string_literal(_literal_22_hello_sensitive_function_is_a_no_op, "hello");
 
 // The statement ending at line XXXX
 
@@ -14927,6 +14929,83 @@ void arguments_are_evaluated_left_to_right(void) {
   cql_string_release(_tmp_n_text_2);
   cql_string_release(g);
   cql_string_release(h);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC sensitive_function_is_a_no_op ()
+BEGIN
+  LET x := sensitive("hello");
+  SELECT sensitive("hello") AS y;
+END;
+*/
+
+#define _PROC_ "sensitive_function_is_a_no_op"
+static int32_t sensitive_function_is_a_no_op_perf_index;
+
+cql_string_literal(sensitive_function_is_a_no_op_stored_procedure_name, "sensitive_function_is_a_no_op");
+
+typedef struct sensitive_function_is_a_no_op_row {
+  cql_string_ref _Nonnull y;
+} sensitive_function_is_a_no_op_row;
+
+cql_string_ref _Nonnull sensitive_function_is_a_no_op_get_y(sensitive_function_is_a_no_op_result_set_ref _Nonnull result_set, cql_int32 row) {
+  sensitive_function_is_a_no_op_row *data = (sensitive_function_is_a_no_op_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].y;
+}
+
+uint8_t sensitive_function_is_a_no_op_data_types[sensitive_function_is_a_no_op_data_types_count] = {
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // y
+};
+
+#define sensitive_function_is_a_no_op_refs_offset cql_offsetof(sensitive_function_is_a_no_op_row, y) // count = 1
+
+static cql_uint16 sensitive_function_is_a_no_op_col_offsets[] = { 1,
+  cql_offsetof(sensitive_function_is_a_no_op_row, y)
+};
+
+cql_int32 sensitive_function_is_a_no_op_result_count(sensitive_function_is_a_no_op_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op_fetch_results(sqlite3 *_Nonnull _db_, sensitive_function_is_a_no_op_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_sensitive_function_is_a_no_op, &sensitive_function_is_a_no_op_perf_index);
+  cql_code rc = sensitive_function_is_a_no_op(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = sensitive_function_is_a_no_op_data_types,
+    .col_offsets = sensitive_function_is_a_no_op_col_offsets,
+    .refs_count = 1,
+    .refs_offset = sensitive_function_is_a_no_op_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(sensitive_function_is_a_no_op_row),
+    .crc = CRC_sensitive_function_is_a_no_op,
+    .perf_index = &sensitive_function_is_a_no_op_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC sensitive_function_is_a_no_op () (y TEXT NOT NULL @SENSITIVE);
+CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_string_ref x = NULL;
+
+  cql_set_string_ref(&x, _literal_22_hello_sensitive_function_is_a_no_op);
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT 'hello'");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_string_release(x);
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

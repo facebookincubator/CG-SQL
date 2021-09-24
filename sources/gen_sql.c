@@ -1028,16 +1028,21 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   }
 
   if (for_sqlite()) {
-    // The nullable function has no actual sql for it, it's just type info
-    // don't echo nullable if we're doing codegen (callback present)
+    // These functions are all no-ops in SQL and must not be emitted if we're
+    // doing codegen: They're only present within queries in source programs for
+    // the purpose of manipulating types.
+
     if (!Strcasecmp("nullable", name)) {
       gen_arg_list(arg_list);
       return;
     }
 
-    // the ptr function has no actual sql for it, it's just type info
-    // don't echo ptr if we're doing codegen (callback present)
     if (!Strcasecmp("ptr", name)) {
+      gen_arg_list(arg_list);
+      return;
+    }
+
+    if (!Strcasecmp("sensitive", name)) {
       gen_arg_list(arg_list);
       return;
     }

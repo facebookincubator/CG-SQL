@@ -207,4 +207,5 @@ DECLARE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER);
 DECLARE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL);
 DECLARE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT);
 DECLARE PROC arguments_are_evaluated_left_to_right ();
+DECLARE PROC sensitive_function_is_a_no_op () (y TEXT NOT NULL @SENSITIVE);
 DECLARE PROC end_proc ();
