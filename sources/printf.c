@@ -159,7 +159,7 @@ static void printf_iterator_add_flag_char(printf_iterator *iterator, char c) {
 
   if (iterator->flags & flag) {
     CSTR_OF_CHAR(flag_string, c);
-    printf_iterator_error(iterator, "CQL9000: duplicate flag in substitution", flag_string);
+    printf_iterator_error(iterator, "CQL0411: duplicate flag in substitution", flag_string);
     return;
   }
 
@@ -168,7 +168,7 @@ static void printf_iterator_add_flag_char(printf_iterator *iterator, char c) {
     // We already had a plus or space, and we just got a plus or space, and we
     // know the one we just got is not a duplicate of what we already had
     // because we just checked, so now we have both.
-    printf_iterator_error(iterator, "CQL9001: cannot combine '+' flag with space flag", NULL);
+    printf_iterator_error(iterator, "CQL0412: cannot combine '+' flag with space flag", NULL);
     return;
   }
 
@@ -188,7 +188,7 @@ static void printf_set_width(printf_iterator *iterator, printf_width width) {
     case PRINTF_WIDTH_NONE:
       if ((iterator->flags & (PRINTF_FLAGS_MINUS | PRINTF_FLAGS_ZERO))) {
         CSTR flag_string = (iterator->flags & PRINTF_FLAGS_MINUS) ? "-" : "0";
-        printf_iterator_error(iterator, "CQL9002: width required when using flag in substitution", flag_string);
+        printf_iterator_error(iterator, "CQL0413: width required when using flag in substitution", flag_string);
         return;
       }
       break;
@@ -214,11 +214,11 @@ static void printf_set_length(printf_iterator *iterator, printf_length length) {
     case PRINTF_LENGTH_DEFAULT:
       break;
     case PRINTF_LENGTH_LONG:
-      printf_iterator_error(iterator, "CQL9003: 'l' length specifier has no effect; consider 'll' instead", NULL);
+      printf_iterator_error(iterator, "CQL0414: 'l' length specifier has no effect; consider 'll' instead", NULL);
       return;
     case PRINTF_LENGTH_LONG_LONG:
       if ((iterator->flags & PRINTF_FLAGS_BANG)) {
-        printf_iterator_error(iterator, "CQL9004: length specifier cannot be combined with '!' flag", NULL);
+        printf_iterator_error(iterator, "CQL0415: length specifier cannot be combined with '!' flag", NULL);
         return;
       }
       break;
@@ -294,21 +294,21 @@ static void printf_iterator_set_type_char(printf_iterator *iterator, char c) {
       // context, yet it requires an integer argument when used via
       // `sqlite3_mprintf`. The code generator currently cannot handle the
       // latter case correctly.
-      printf_iterator_error(iterator, "CQL9005: type specifier not allowed in CQL", type_string);
+      printf_iterator_error(iterator, "CQL0416: type specifier not allowed in CQL", type_string);
       return;
     }
     default:
-      printf_iterator_error(iterator, "CQL9006: unrecognized type specifier", type_string);
+      printf_iterator_error(iterator, "CQL0417: unrecognized type specifier", type_string);
       return;
   }
 
   if ((iterator->flags | valid_flags) != valid_flags) {
-    printf_iterator_error(iterator, "CQL9007: type specifier combined with inappropriate flags", type_string);
+    printf_iterator_error(iterator, "CQL0418: type specifier combined with inappropriate flags", type_string);
     return;
   }
 
   if (iterator->length != PRINTF_LENGTH_DEFAULT && !allows_length_specifier) {
-    printf_iterator_error(iterator, "CQL9008: type specifier cannot be combined with length specifier", type_string);
+    printf_iterator_error(iterator, "CQL0419: type specifier cannot be combined with length specifier", type_string);
     return;
   }
 }
@@ -385,7 +385,7 @@ cql_noexport sem_t printf_iterator_next(printf_iterator *iterator) {
       } else {
         // We hit the end in the middle of a substitution, so the substitution
         // is incomplete and the format string is invalid.
-        printf_iterator_error(iterator, "CQL9009: incomplete substitution in format string", NULL);
+        printf_iterator_error(iterator, "CQL0420: incomplete substitution in format string", NULL);
       }
       return iterator->sem_type;
     }

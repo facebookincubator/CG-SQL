@@ -72110,7 +72110,7 @@ The statement ending at line XXXX
 
 SELECT printf(a_string);
 
-Error at test/sem_test.sql:XXXX : in call : CQL9010: first argument must be a string literal 'printf'
+Error at test/sem_test.sql:XXXX : in call : CQL0421: first argument must be a string literal 'printf'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72136,7 +72136,7 @@ The statement ending at line XXXX
 
 SELECT printf("%d %f", 0, 0.0, "str");
 
-Error at test/sem_test.sql:XXXX : in arg_list : CQL9011: more arguments provided than expected by format string 'printf'
+Error at test/sem_test.sql:XXXX : in arg_list : CQL0422: more arguments provided than expected by format string 'printf'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72168,7 +72168,7 @@ The statement ending at line XXXX
 
 SELECT printf("%d %f %s", 0, 0.0);
 
-Error at test/sem_test.sql:XXXX : in arg_list : CQL9012: fewer arguments provided than expected by format string 'printf'
+Error at test/sem_test.sql:XXXX : in arg_list : CQL0423: fewer arguments provided than expected by format string 'printf'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72381,7 +72381,7 @@ The statement ending at line XXXX
 
 SELECT printf("%c", "x");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'c'
+Error at test/sem_test.sql:XXXX : in str : CQL0416: type specifier not allowed in CQL 'c'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72409,7 +72409,7 @@ The statement ending at line XXXX
 
 SELECT printf("%p", 0x123456789L);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'p'
+Error at test/sem_test.sql:XXXX : in str : CQL0416: type specifier not allowed in CQL 'p'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72437,7 +72437,7 @@ The statement ending at line XXXX
 
 SELECT printf("%n", 0x123456789L);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'n'
+Error at test/sem_test.sql:XXXX : in str : CQL0416: type specifier not allowed in CQL 'n'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72465,7 +72465,7 @@ The statement ending at line XXXX
 
 SELECT printf("%q", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'q'
+Error at test/sem_test.sql:XXXX : in str : CQL0416: type specifier not allowed in CQL 'q'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72493,7 +72493,7 @@ The statement ending at line XXXX
 
 SELECT printf("%Q", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'Q'
+Error at test/sem_test.sql:XXXX : in str : CQL0416: type specifier not allowed in CQL 'Q'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72521,7 +72521,7 @@ The statement ending at line XXXX
 
 SELECT printf("%w", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9005: type specifier not allowed in CQL 'w'
+Error at test/sem_test.sql:XXXX : in str : CQL0416: type specifier not allowed in CQL 'w'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72585,7 +72585,7 @@ The statement ending at line XXXX
 
 SELECT printf("%ld", 0L);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9003: 'l' length specifier has no effect; consider 'll' instead
+Error at test/sem_test.sql:XXXX : in str : CQL0414: 'l' length specifier has no effect; consider 'll' instead
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72613,7 +72613,7 @@ The statement ending at line XXXX
 
 SELECT printf("%lls", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9008: type specifier cannot be combined with length specifier 's'
+Error at test/sem_test.sql:XXXX : in str : CQL0419: type specifier cannot be combined with length specifier 's'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72721,7 +72721,7 @@ The statement ending at line XXXX
 
 SELECT printf("%10*s", 10, "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9006: unrecognized type specifier '*'
+Error at test/sem_test.sql:XXXX : in str : CQL0417: unrecognized type specifier '*'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72751,7 +72751,7 @@ The statement ending at line XXXX
 
 SELECT printf("%*10s", 10, "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9006: unrecognized type specifier '1'
+Error at test/sem_test.sql:XXXX : in str : CQL0417: unrecognized type specifier '1'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72781,7 +72781,7 @@ The statement ending at line XXXX
 
 SELECT printf("%*", 10);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9009: incomplete substitution in format string
+Error at test/sem_test.sql:XXXX : in str : CQL0420: incomplete substitution in format string
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72953,7 +72953,7 @@ The statement ending at line XXXX
 
 SELECT printf("%-s", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9002: width required when using flag in substitution '-'
+Error at test/sem_test.sql:XXXX : in str : CQL0413: width required when using flag in substitution '-'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -72981,7 +72981,7 @@ The statement ending at line XXXX
 
 SELECT printf("%--10s", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9000: duplicate flag in substitution '-'
+Error at test/sem_test.sql:XXXX : in str : CQL0411: duplicate flag in substitution '-'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73038,7 +73038,7 @@ The statement ending at line XXXX
 
 SELECT printf("%+u", 42);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'u'
+Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 'u'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73095,7 +73095,7 @@ The statement ending at line XXXX
 
 SELECT printf("% u", 42);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'u'
+Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 'u'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73123,7 +73123,7 @@ The statement ending at line XXXX
 
 SELECT printf("%+ u", 42);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9001: cannot combine '+' flag with space flag
+Error at test/sem_test.sql:XXXX : in str : CQL0412: cannot combine '+' flag with space flag
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73151,7 +73151,7 @@ The statement ending at line XXXX
 
 SELECT printf("%!lld", 0);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9004: length specifier cannot be combined with '!' flag
+Error at test/sem_test.sql:XXXX : in str : CQL0415: length specifier cannot be combined with '!' flag
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73205,7 +73205,7 @@ The statement ending at line XXXX
 
 SELECT printf("%09s", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 's'
+Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 's'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73233,7 +73233,7 @@ The statement ending at line XXXX
 
 SELECT printf("%0d", 42);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9002: width required when using flag in substitution '0'
+Error at test/sem_test.sql:XXXX : in str : CQL0413: width required when using flag in substitution '0'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73295,7 +73295,7 @@ The statement ending at line XXXX
 
 SELECT printf("%#s", "hello");
 
-Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 's'
+Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 's'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73351,7 +73351,7 @@ The statement ending at line XXXX
 
 SELECT printf("%,u", 0);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'u'
+Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 'u'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73415,7 +73415,7 @@ The statement ending at line XXXX
 
 SELECT printf("%!d", 0);
 
-Error at test/sem_test.sql:XXXX : in str : CQL9007: type specifier combined with inappropriate flags 'd'
+Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 'd'
 
   {select_stmt}: err
   | {select_core_list}: err

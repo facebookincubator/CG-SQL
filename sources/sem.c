@@ -7928,7 +7928,7 @@ static bool_t sem_validate_args_for_format(ast_node *arg_list, ast_node *format_
       goto cleanup;
     }
     if (sem_type == SEM_TYPE_OK) {
-      report_error(arg_list, "CQL9011: more arguments provided than expected by format string", context);
+      report_error(arg_list, "CQL0422: more arguments provided than expected by format string", context);
       success = false;
       goto cleanup;
     }
@@ -7947,7 +7947,7 @@ static bool_t sem_validate_args_for_format(ast_node *arg_list, ast_node *format_
     goto cleanup;
   }
   if (sem_type != SEM_TYPE_OK) {
-    report_error(arg_list, "CQL9012: fewer arguments provided than expected by format string", context);
+    report_error(arg_list, "CQL0423: fewer arguments provided than expected by format string", context);
     success = false;
     goto cleanup;
   }
@@ -7991,7 +7991,7 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
   // Verify that the first argument is a string literal.
   ast_node *format_strlit = first_arg(arg_list);
   if (!is_strlit(format_strlit)) {
-    report_error(ast, "CQL9010: first argument must be a string literal", name);
+    report_error(ast, "CQL0421: first argument must be a string literal", name);
     record_error(ast);
     return;
   }
