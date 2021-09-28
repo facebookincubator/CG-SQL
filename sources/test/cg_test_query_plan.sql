@@ -53,6 +53,7 @@ create table t2(id int primary key, name text);
 create table t3(id int primary key, name text);
 create table t4(id long int primary key autoincrement, data blob);
 create table t5(id long int, foreign key (id) references t4(id) on update cascade on delete cascade);
+create table t6(id int primary key, name text) @delete(1);
 @attribute(cql:no_table_scan)
 create table scan_ok(id int);
 @attribute(cql:no_table_scan)
@@ -61,6 +62,7 @@ create table _foo(id int);
 create table foo_(id int);
 create index it1 ON t1(name, id);
 create index it4 ON t4(data, id);
+create index it5 ON t4(data) @delete(1);
 create view my_view as select * from t1 inner join t2 using(id);
 declare function any_func() bool not null;
 declare select function is_declare_func_enabled() bool not null;
@@ -78,6 +80,12 @@ create trigger my_trigger
 begin
   delete from t2 where id > new.id;
 end;
+
+create trigger my_trigger_deleted
+  after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
+begin
+  delete from t2 where id > new.id;
+end @delete(1);
 
 -- Proc with SELECT stmt
 create proc sample()

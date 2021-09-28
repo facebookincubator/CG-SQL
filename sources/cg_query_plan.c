@@ -120,9 +120,11 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
 }
 
 static void cg_qp_sql_stmt(ast_node *ast) {
-  gen_set_output_buffer(schema_stmts);
-  gen_statement_with_callbacks(ast, cg_qp_callbacks);
-  bprintf(schema_stmts, ";\n");
+  if (ast->sem->delete_version <= 0) {
+    gen_set_output_buffer(schema_stmts);
+    gen_statement_with_callbacks(ast, cg_qp_callbacks);
+    bprintf(schema_stmts, ";\n");
+  }
 }
 
 static void cg_qp_ok_table_scan_callback(
