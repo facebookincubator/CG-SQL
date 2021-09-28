@@ -1954,7 +1954,6 @@ enforcement_options:
   | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
   | INSERT SELECT { $enforcement_options = new_ast_opt(ENFORCE_INSERT_SELECT); }
   | TABLE FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_TABLE_FUNCTION); }
-  | NOT NULL_ AFTER CHECK { $enforcement_options = new_ast_opt(ENFORCE_NOT_NULL_AFTER_CHECK); }
   | ENCODE CONTEXT_COLUMN { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_COLUMN); }
   | ENCODE CONTEXT_TYPE INTEGER { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER); }
   | ENCODE CONTEXT_TYPE LONG_INTEGER { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER); }

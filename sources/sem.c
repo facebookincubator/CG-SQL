@@ -235,7 +235,6 @@ struct enforcement_options {
   bool_t strict_if_nothing;           // (select ..) expressions must include the if nothing form
   bool_t strict_insert_select;        // insert with select may not include joins
   bool_t strict_table_function;       // table valued functions cannot be used on left/right joins (avoiding SQLite bug)
-  bool_t strict_not_null_after;       // variables should be treated as NOT NULL after an IS NOT NULL check
   bool_t strict_encode_context;       // encode context must be specified in @vault_sensitive
   bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
@@ -19289,10 +19288,6 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_TABLE_FUNCTION:
       enforcement.strict_table_function = strict;
-      break;
-
-    case ENFORCE_NOT_NULL_AFTER_CHECK:
-      enforcement.strict_not_null_after = strict;
       break;
 
     case ENFORCE_ENCODE_CONTEXT_COLUMN:

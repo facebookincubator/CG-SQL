@@ -3306,10 +3306,6 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("TABLE FUNCTION");
       break;
 
-    case ENFORCE_NOT_NULL_AFTER_CHECK:
-      gen_printf("NOT NULL AFTER CHECK");
-      break;
-
     case ENFORCE_ENCODE_CONTEXT_COLUMN:
       gen_printf("ENCODE CONTEXT COLUMN");
       break;

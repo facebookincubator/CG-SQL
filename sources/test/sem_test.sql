@@ -18104,14 +18104,6 @@ begin
   let x1 := a;
 end;
 
- -- TEST: Exercise no-op statement.
- -- - Error
-@enforce_strict not null after check;
-
- -- TEST: Exercise no-op statement.
- -- - Error
- @enforce_normal not null after check;
-
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- NOT is weaker than +, parens stay even though this is a special case
 -- the parens could be elided becuse it's on the right of the +

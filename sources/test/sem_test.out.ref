@@ -70687,20 +70687,6 @@ END;
 
 The statement ending at line XXXX
 
-@ENFORCE_STRICT NOT NULL AFTER CHECK;
-
-  {enforce_strict_stmt}: ok
-  | {int 12}
-
-The statement ending at line XXXX
-
-@ENFORCE_NORMAL NOT NULL AFTER CHECK;
-
-  {enforce_normal_stmt}: ok
-  | {int 12}
-
-The statement ending at line XXXX
-
 SELECT 1 + (NOT 2 IS NULL);
 
   {select_stmt}: select: { _anon: integer notnull }
