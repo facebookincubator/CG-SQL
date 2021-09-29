@@ -4740,6 +4740,19 @@ cql_noexport ast_node *third_arg(ast_node *arg_list) {
   return arg;
 }
 
+// Given `type`, return a new `sem_t` where `SEM_TYPE_NOTNULL_INFERRED` has been
+// replaced with `SEM_TYPE_NOTNULL` if the former was present.
+static sem_t type_with_finalized_nullability_improvement(sem_t type) {
+  if (type & SEM_TYPE_INFERRED_NOTNULL) {
+    // Upgrade the inferred nonnull type so it has a proper NOT NULL type.
+    type |= SEM_TYPE_NOTNULL;
+    // Prevent this from propagating needlessly to keep --print clean.
+    type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+  }
+
+  return type;
+}
+
 // Select * is special in that it creates its own struct type by assembling
 // all the columns of all the tables in the selects join result.  This does
 // the work of assembling that struct.  Note the result of a select is a struct type.
@@ -4770,15 +4783,10 @@ static void sem_select_star(ast_node *ast) {
   for (int32_t i = 0; i < jptr->count; i++) {
     sem_struct *table = jptr->tables[i];
     for (int32_t j = 0; j < table->count; j++, field++) {
-      sem_t type = table->semtypes[j];
-      if (type & SEM_TYPE_INFERRED_NOTNULL) {
-        // Upgrade the inferred nonnull column so it has a proper NOT NULL type.
-        type |= SEM_TYPE_NOTNULL;
-        // Prevent this from propagating needlessly to keep --print clean.
-        type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
-      }
       sptr->names[field] = table->names[j];
-      sptr->semtypes[field] = type;
+      // If we inferred a column in `table` to be nonnull, make it a proper
+      // nonnull type in the result.
+      sptr->semtypes[field] = type_with_finalized_nullability_improvement(table->semtypes[j]);
       sptr->kinds[field] = table->kinds[j];
     }
   }
@@ -4858,7 +4866,9 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
   sem_struct *table = jptr->tables[i];
   for (int32_t j = 0; j < table->count; j++) {
     sptr->names[index] = table->names[j];
-    sptr->semtypes[index] = table->semtypes[j];
+    // If we inferred a column in `table` to be nonnull, make it a proper
+    // nonnull type in the result.
+    sptr->semtypes[index] = type_with_finalized_nullability_improvement(table->semtypes[j]);
     sptr->kinds[index] = table->kinds[j];
     index++;
   }
@@ -12074,13 +12084,12 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node* ast, ast_n
     // will be shadowed by said alias when we sem the expression list.
     for (ast_node *item = select_expr_list; item; item = item->right) {
       Invariant(is_ast_select_expr_list(item));
-      EXTRACT_ANY_NOTNULL(select_expr_or_star, item->left);
-      if (is_ast_star(select_expr_or_star)) {
-        Invariant(!item->right);
-        break;
+      EXTRACT_ANY_NOTNULL(select_expr_list_item, item->left);
+      if (is_ast_star(select_expr_list_item) || is_ast_table_star(select_expr_list_item)) {
+        continue;
       }
-      Invariant(is_ast_select_expr(select_expr_or_star));
-      EXTRACT(opt_as_alias, select_expr_or_star->right);
+      Invariant(is_ast_select_expr(select_expr_list_item));
+      EXTRACT(opt_as_alias, select_expr_list_item->right);
       if (opt_as_alias) {
         EXTRACT_STRING(alias_name, opt_as_alias->left);
         if (!strcmp(name, alias_name)) {

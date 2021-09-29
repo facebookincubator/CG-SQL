@@ -67258,6 +67258,109 @@ END;
 
 The statement ending at line XXXX
 
+CREATE TABLE another_table_with_nullables(
+  xn INTEGER,
+  zn INTEGER
+);
+
+  {create_table_stmt}: another_table_with_nullables: { xn: integer, zn: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name another_table_with_nullables}
+  | {col_key_list}
+    | {col_def}: xn: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name xn}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: zn: integer
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name zn}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC improvements_work_for_select_table_star ()
+BEGIN
+  SELECT tnull.*, another_table_with_nullables.xn AS xn0, another_table_with_nullables.zn
+    FROM tnull
+    INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn
+    WHERE tnull.xn IS NOT NULL AND yn IS NOT NULL AND zn IS NOT NULL;
+END;
+
+  {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
+  | {name improvements_work_for_select_table_star}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull }
+        | {select_core_list}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull }
+        | | {select_core}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull }
+        |   | {select_expr_list_con}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull }
+        |     | {select_expr_list}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull }
+        |     | | {table_star}: tnull: tnull: { xn: integer, yn: integer }
+        |     | | | {name tnull}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: xn0: integer
+        |     |   | | {dot}: xn: integer
+        |     |   | | | {name another_table_with_nullables}
+        |     |   | | | {name xn}
+        |     |   | | {opt_as_alias}
+        |     |   |   | {name xn0}
+        |     |   | {select_expr_list}
+        |     |     | {select_expr}: zn: integer notnull
+        |     |       | {call}: zn: integer notnull
+        |     |         | {name cql_inferred_notnull}: zn: integer notnull
+        |     |         | {call_arg_list}
+        |     |           | {call_filter_clause}
+        |     |           | {arg_list}: ok
+        |     |             | {dot}: zn: integer inferred_notnull
+        |     |               | {name another_table_with_nullables}
+        |     |               | {name zn}
+        |     | {select_from_etc}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       | {join_clause}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       | | {table_or_subquery}: TABLE { tnull: tnull }
+        |       | | | {name tnull}: TABLE { tnull: tnull }
+        |       | | {join_target_list}
+        |       |   | {join_target}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       |     | {int 1}
+        |       |     | {table_join}
+        |       |       | {table_or_subquery}: TABLE { another_table_with_nullables: another_table_with_nullables }
+        |       |       | | {name another_table_with_nullables}: TABLE { another_table_with_nullables: another_table_with_nullables }
+        |       |       | {join_cond}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
+        |       |         | {on}: bool
+        |       |         | {eq}: bool
+        |       |           | {dot}: xn: integer
+        |       |           | | {name tnull}
+        |       |           | | {name xn}
+        |       |           | {dot}: xn: integer
+        |       |             | {name another_table_with_nullables}
+        |       |             | {name xn}
+        |       | {select_where}
+        |         | {opt_where}: bool notnull
+        |         | | {and}: bool notnull
+        |         |   | {and}: bool notnull
+        |         |   | | {is_not}: bool notnull
+        |         |   | | | {dot}: xn: integer
+        |         |   | | | | {name tnull}
+        |         |   | | | | {name xn}
+        |         |   | | | {null}: null
+        |         |   | | {is_not}: bool notnull
+        |         |   |   | {name yn}: yn: integer
+        |         |   |   | {null}: null
+        |         |   | {is_not}: bool notnull
+        |         |     | {name zn}: zn: integer
+        |         |     | {null}: null
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
 CREATE PROC improvements_work_for_select_expressions ()
 BEGIN
   SELECT xn, yn
@@ -67624,24 +67727,6 @@ Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'zn'
 
 The statement ending at line XXXX
 
-CREATE TABLE another_table_with_nullables(
-  xn INTEGER
-);
-
-  {create_table_stmt}: another_table_with_nullables: { xn: integer }
-  | {create_table_name_flags}
-  | | {table_flags_attrs}
-  | | | {int 0}
-  | | {name another_table_with_nullables}
-  | {col_key_list}
-    | {col_def}: xn: integer
-      | {col_def_type_attrs}: ok
-        | {col_def_name_type}
-          | {name xn}
-          | {type_int}: integer
-
-The statement ending at line XXXX
-
 CREATE PROC improvements_work_on_join_results ()
 BEGIN
   SELECT tnull.xn AS xn0
@@ -67699,9 +67784,6 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_do_not_work_for_on_clauses ()
 BEGIN
-  CREATE TABLE another_table_with_nullables(
-    xn INTEGER
-  );
   SELECT tnull.xn AS xn0
     FROM tnull
     INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn AND tnull.xn IS NOT NULL;
@@ -67711,17 +67793,6 @@ END;
   | {name improvements_do_not_work_for_on_clauses}: select: { xn0: integer } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {create_table_stmt}: another_table_with_nullables: { xn: integer }
-      | | {create_table_name_flags}
-      | | | {table_flags_attrs}
-      | | | | {int 0}
-      | | | {name another_table_with_nullables}
-      | | {col_key_list}
-      |   | {col_def}: xn: integer
-      |     | {col_def_type_attrs}: ok
-      |       | {col_def_name_type}
-      |         | {name xn}
-      |         | {type_int}: integer
       | {select_stmt}: select: { xn0: integer }
         | {select_core_list}: select: { xn0: integer }
         | | {select_core}: select: { xn0: integer }

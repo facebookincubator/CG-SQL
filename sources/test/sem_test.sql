@@ -17155,6 +17155,25 @@ begin
   select * from tnull where yn is not null;
 end;
 
+-- Used in the following tests.
+-- - Error
+create table another_table_with_nullables (xn integer, zn integer);
+
+-- TEST: Improvements work on columns resulting from a SELECT table.*.
+-- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
+-- - Error
+create proc improvements_work_for_select_table_star()
+begin
+  select
+    tnull.*,
+    another_table_with_nullables.xn as xn0,
+    another_table_with_nullables.zn
+  from tnull
+  inner join another_table_with_nullables
+  on tnull.xn = another_table_with_nullables.xn
+  where tnull.xn is not null and yn is not null and zn is not null;
+end;
+
 -- TEST: Improvements work for select expressions.
 -- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull } dml_proc
 -- - Error
@@ -17227,10 +17246,6 @@ begin
   select xn from tnull where zn is not null;
 end;
 
--- Used in the following tests.
--- - Error
-create table another_table_with_nullables (xn integer);
-
 -- TEST: Improvements work on the result of joins.
 -- + {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
 -- - Error
@@ -17248,7 +17263,6 @@ end;
 -- - Error
 create proc improvements_do_not_work_for_on_clauses()
 begin
-  create table another_table_with_nullables (xn int);
   select tnull.xn as xn0
   from tnull
   inner join another_table_with_nullables
