@@ -11402,7 +11402,7 @@ The statement ending at line XXXX
 
 SELECT coalesce(X, 5, 1.5);
 
-Error at test/sem_test.sql:XXXX : in num : CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless.
+Error at test/sem_test.sql:XXXX : in num : CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless. '5'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -29318,7 +29318,7 @@ SET _sens := coalesce(_sens, 0);
 
 The statement ending at line XXXX
 
-SET _sens := coalesce(1, 0);
+SET _sens := coalesce(nullable(1), 0);
 
   {assign}: _sens: integer variable sensitive
   | {name _sens}: _sens: integer variable sensitive
@@ -29327,7 +29327,29 @@ SET _sens := coalesce(1, 0);
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
-        | {int 1}: integer notnull
+        | {call}: integer
+        | | {name nullable}: integer
+        | | {call_arg_list}
+        |   | {call_filter_clause}
+        |   | {arg_list}: ok
+        |     | {int 1}: integer notnull
+        | {arg_list}
+          | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+SET _sens := coalesce(7, 0);
+
+Error at test/sem_test.sql:XXXX : in num : CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless. '7'
+
+  {assign}: err
+  | {name _sens}: _sens: integer variable sensitive
+  | {call}: err
+    | {name coalesce}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 7}: integer notnull
         | {arg_list}
           | {int 0}: integer notnull
 

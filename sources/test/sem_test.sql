@@ -8096,10 +8096,16 @@ select COUNT(T1.id) c from with_sensitive T1;
 -- - Error
 set _sens := coalesce(_sens, 0);
 
--- TEST: coalesce  control
+-- TEST: coalesce control case ok
 -- - {call}: % sensitive
 -- - Error
-set _sens := coalesce(1, 0);
+set _sens := coalesce(nullable(1), 0);
+
+-- TEST: coalesce control not null
+-- - {call}: % sensitive
+-- + Error % encountered arg known to be not null before the end of the list, rendering the rest useless. '7'
+-- +1 Error
+set _sens := coalesce(7, 0);
 
 -- TEST: sensitive with IS right
 -- + {is}: bool notnull sensitive

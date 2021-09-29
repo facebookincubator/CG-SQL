@@ -264,7 +264,7 @@ Error at test/sem_test.sql:XXXX : in name_list : CQL0096: join using column not 
 Error at test/sem_test.sql:XXXX : in name_list : CQL0097: join using column not found on the right side of the join 'name'
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in null : CQL0076: Null literal is useless in function 'coalesce'
-Error at test/sem_test.sql:XXXX : in num : CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless.
+Error at test/sem_test.sql:XXXX : in num : CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless. '5'
 Error at test/sem_test.sql:XXXX : in str : CQL0075: Incorrect number of arguments 'ifnull'
 Error at test/sem_test.sql:XXXX : in str : CQL0074: Too few arguments provided 'ifnull'
 Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'ifnull'
@@ -662,6 +662,7 @@ Error at test/sem_test.sql:XXXX : in select_core : CQL0057: if multiple selects,
 Error at test/sem_test.sql:XXXX : in select_core : CQL0012: incompatible types in expression 'A'
 Error at test/sem_test.sql:XXXX : in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result 'n'
 Error at test/sem_test.sql:XXXX : in str : CQL0056: NULL expression has no type to imply the type of the select result 'n'
+Error at test/sem_test.sql:XXXX : in num : CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless. '7'
 Error at test/sem_test.sql:XXXX : in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'name'
 Error at test/sem_test.sql:XXXX : in add : CQL0398: A compound select cannot be ordered by the result of an expression
 Error at test/sem_test.sql:XXXX : in str : CQL0069: name not found 'a_key_'

@@ -6213,6 +6213,10 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
         return;
       }
 
+      // Note that if we are still here the result is not yet nullable
+      // the combined result will therefore not be nullable, this is ok
+      // because the next thing we do is improve the type.
+      Invariant(!is_not_nullable(sem_type_result));
       sem_type_result = sem_combine_types(sem_type_result, sem_type_current);
 
       // This is the magic right here: upgrade the result type to not null
@@ -6220,14 +6224,17 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
       // that is known to be not null.
       if (is_not_nullable(sem_type_current)) {
         sem_type_result |= SEM_TYPE_NOTNULL;
-
-        if (ast->right) {
-          report_error(expr, "CQL0077: encountered arg known to be not null"
-                             " before the end of the list, rendering the rest useless.", NULL);
-          record_error(call_ast);
-          return;
-        }
       }
+    }
+
+
+    // Even the first arg might be not-nullable so we check every time through
+    if (is_not_nullable(sem_type_result) && ast->right) {
+      CSTR err_msg = dup_expr_text(expr);
+      report_error(expr, "CQL0077: encountered arg known to be not null"
+                          " before the end of the list, rendering the rest useless.", err_msg);
+      record_error(call_ast);
+      return;
     }
 
     kind_result = sem_combine_kinds(expr, kind_result);
