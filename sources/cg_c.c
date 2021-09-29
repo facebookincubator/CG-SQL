@@ -6640,7 +6640,7 @@ static void cg_proc_result_set(ast_node *ast) {
             rt->symbol_visibility,
             rt->cql_string_ref,
             stored_proc_name_sym.ptr);
-    bprintf(d, "\n%s(%s, \"%s\");\n", rt->cql_string_literal, stored_proc_name_sym.ptr, name);
+    bprintf(d, "\n%s(%s, \"%s\");\n", rt->cql_string_proc_name, stored_proc_name_sym.ptr, name);
 
     if (result_set_proc) {
       // First build the struct we need

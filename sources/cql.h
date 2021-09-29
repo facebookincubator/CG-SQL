@@ -271,12 +271,23 @@ typedef struct rtdata {
   // The include library for the encode type for a string object.
   const char *cql_string_ref_encode_include;
 
-  // Declare a const string literal object.  This must be a global object and will be executed in the global context.
-  // NOTE: This MUST be implemented as a macro, as it both declares and assigns the value.
+  // Declare a static const string literal object. This must be a global object
+  // and will be executed in the global context.
+  // NOTE: This MUST be implemented as a macro as it both declares and assigns
+  // the value.
   // @param name The name of the object.
   // @param text The text to be stored in the object.
   // cql_string_literal(cql_string_ref name, const char *text);
   const char *cql_string_literal;
+
+  // Declare a const string that holds the name of a stored procedure. This must
+  // be a global object and will be executed in the global context.
+  // NOTE: This MUST be implemented as a macro as it both declares and assigns
+  // the value.
+  // @param name The name of the object.
+  // @param proc_name The procedure name to be stored in the object.
+  // cql_string_literal(cql_string_ref name, const char *proc_name);
+  const char *cql_string_proc_name;
 
   // Adds a reference count to the string object.
   // @param str The string object to be retained.

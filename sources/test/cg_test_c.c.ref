@@ -707,7 +707,7 @@ END;
 #define _PROC_ "with_result_set"
 static int32_t with_result_set_perf_index;
 
-cql_string_literal(with_result_set_stored_procedure_name, "with_result_set");
+cql_string_proc_name(with_result_set_stored_procedure_name, "with_result_set");
 
 typedef struct with_result_set_row {
   cql_int32 id;
@@ -828,7 +828,7 @@ END;
 #define _PROC_ "select_from_view"
 static int32_t select_from_view_perf_index;
 
-cql_string_literal(select_from_view_stored_procedure_name, "select_from_view");
+cql_string_proc_name(select_from_view_stored_procedure_name, "select_from_view");
 
 typedef struct select_from_view_row {
   cql_int32 id;
@@ -960,7 +960,7 @@ END;
 #define _PROC_ "get_data"
 static int32_t get_data_perf_index;
 
-cql_string_literal(get_data_stored_procedure_name, "get_data");
+cql_string_proc_name(get_data_stored_procedure_name, "get_data");
 
 typedef struct get_data_row {
   cql_int32 id;
@@ -1274,7 +1274,7 @@ END;
 #define _PROC_ "complex_return"
 static int32_t complex_return_perf_index;
 
-cql_string_literal(complex_return_stored_procedure_name, "complex_return");
+cql_string_proc_name(complex_return_stored_procedure_name, "complex_return");
 
 typedef struct complex_return_row {
   cql_bool _bool;
@@ -1399,7 +1399,7 @@ END;
 #define _PROC_ "hierarchical_query"
 static int32_t hierarchical_query_perf_index;
 
-cql_string_literal(hierarchical_query_stored_procedure_name, "hierarchical_query");
+cql_string_proc_name(hierarchical_query_stored_procedure_name, "hierarchical_query");
 
 typedef struct hierarchical_query_row {
   cql_int32 id;
@@ -1487,7 +1487,7 @@ END;
 #define _PROC_ "hierarchical_unmatched_query"
 static int32_t hierarchical_unmatched_query_perf_index;
 
-cql_string_literal(hierarchical_unmatched_query_stored_procedure_name, "hierarchical_unmatched_query");
+cql_string_proc_name(hierarchical_unmatched_query_stored_procedure_name, "hierarchical_unmatched_query");
 
 typedef struct hierarchical_unmatched_query_row {
   cql_int32 id;
@@ -1569,7 +1569,7 @@ END;
 #define _PROC_ "union_select"
 static int32_t union_select_perf_index;
 
-cql_string_literal(union_select_stored_procedure_name, "union_select");
+cql_string_proc_name(union_select_stored_procedure_name, "union_select");
 
 typedef struct union_select_row {
   cql_int32 A;
@@ -1641,7 +1641,7 @@ END;
 #define _PROC_ "union_all_select"
 static int32_t union_all_select_perf_index;
 
-cql_string_literal(union_all_select_stored_procedure_name, "union_all_select");
+cql_string_proc_name(union_all_select_stored_procedure_name, "union_all_select");
 
 typedef struct union_all_select_row {
   cql_int32 A;
@@ -1714,7 +1714,7 @@ END;
 #define _PROC_ "union_all_with_nullable"
 static int32_t union_all_with_nullable_perf_index;
 
-cql_string_literal(union_all_with_nullable_stored_procedure_name, "union_all_with_nullable");
+cql_string_proc_name(union_all_with_nullable_stored_procedure_name, "union_all_with_nullable");
 
 typedef struct union_all_with_nullable_row {
   cql_string_ref _Nullable name;
@@ -1842,7 +1842,7 @@ END;
 #define _PROC_ "with_stmt"
 static int32_t with_stmt_perf_index;
 
-cql_string_literal(with_stmt_stored_procedure_name, "with_stmt");
+cql_string_proc_name(with_stmt_stored_procedure_name, "with_stmt");
 
 typedef struct with_stmt_row {
   cql_int32 a;
@@ -1934,7 +1934,7 @@ END;
 #define _PROC_ "with_recursive_stmt"
 static int32_t with_recursive_stmt_perf_index;
 
-cql_string_literal(with_recursive_stmt_stored_procedure_name, "with_recursive_stmt");
+cql_string_proc_name(with_recursive_stmt_stored_procedure_name, "with_recursive_stmt");
 
 typedef struct with_recursive_stmt_row {
   cql_int32 a;
@@ -2023,7 +2023,7 @@ END;
 #define _PROC_ "parent_proc"
 static int32_t parent_proc_perf_index;
 
-cql_string_literal(parent_proc_stored_procedure_name, "parent_proc");
+cql_string_proc_name(parent_proc_stored_procedure_name, "parent_proc");
 
 typedef struct parent_proc_row {
   cql_int32 one;
@@ -2107,7 +2107,7 @@ END;
 #define _PROC_ "parent_proc_child"
 static int32_t parent_proc_child_perf_index;
 
-cql_string_literal(parent_proc_child_stored_procedure_name, "parent_proc_child");
+cql_string_proc_name(parent_proc_child_stored_procedure_name, "parent_proc_child");
 
 typedef struct parent_proc_child_row {
   cql_int32 four;
@@ -2317,7 +2317,7 @@ END;
 #define cursor_with_object_refs_offset cql_offsetof(cursor_with_object_row, object_) // count = 1
 static int32_t cursor_with_object_perf_index;
 
-cql_string_literal(cursor_with_object_stored_procedure_name, "cursor_with_object");
+cql_string_proc_name(cursor_with_object_stored_procedure_name, "cursor_with_object");
 
 cql_object_ref _Nullable cursor_with_object_get_object_(cursor_with_object_result_set_ref _Nonnull result_set) {
   cursor_with_object_row *data = (cursor_with_object_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -2535,7 +2535,7 @@ END;
 #define _PROC_ "uses_proc_for_result"
 static int32_t uses_proc_for_result_perf_index;
 
-cql_string_literal(uses_proc_for_result_stored_procedure_name, "uses_proc_for_result");
+cql_string_proc_name(uses_proc_for_result_stored_procedure_name, "uses_proc_for_result");
 
 typedef struct uses_proc_for_result_row {
   cql_int32 id;
@@ -2849,7 +2849,7 @@ END;
 #define _PROC_ "blob_returner"
 static int32_t blob_returner_perf_index;
 
-cql_string_literal(blob_returner_stored_procedure_name, "blob_returner");
+cql_string_proc_name(blob_returner_stored_procedure_name, "blob_returner");
 
 typedef struct blob_returner_row {
   cql_int32 blob_id;
@@ -2962,7 +2962,7 @@ END;
 #define out_cursor_proc_refs_offset cql_offsetof(out_cursor_proc_row, name) // count = 3
 static int32_t out_cursor_proc_perf_index;
 
-cql_string_literal(out_cursor_proc_stored_procedure_name, "out_cursor_proc");
+cql_string_proc_name(out_cursor_proc_stored_procedure_name, "out_cursor_proc");
 
 cql_int32 out_cursor_proc_get_id(out_cursor_proc_result_set_ref _Nonnull result_set) {
   out_cursor_proc_row *data = (out_cursor_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -3260,7 +3260,7 @@ END;
 #define _PROC_ "thread_theme_info_list"
 static int32_t thread_theme_info_list_perf_index;
 
-cql_string_literal(thread_theme_info_list_stored_procedure_name, "thread_theme_info_list");
+cql_string_proc_name(thread_theme_info_list_stored_procedure_name, "thread_theme_info_list");
 
 typedef struct thread_theme_info_list_row {
   cql_int64 thread_key;
@@ -3493,7 +3493,7 @@ END;
 #define _PROC_ "out_no_db"
 static int32_t out_no_db_perf_index;
 
-cql_string_literal(out_no_db_stored_procedure_name, "out_no_db");
+cql_string_proc_name(out_no_db_stored_procedure_name, "out_no_db");
 
 cql_int32 out_no_db_get_A(out_no_db_result_set_ref _Nonnull result_set) {
   out_no_db_row *data = (out_no_db_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -3574,7 +3574,7 @@ END;
 #define _PROC_ "declare_cursor_like_cursor"
 static int32_t declare_cursor_like_cursor_perf_index;
 
-cql_string_literal(declare_cursor_like_cursor_stored_procedure_name, "declare_cursor_like_cursor");
+cql_string_proc_name(declare_cursor_like_cursor_stored_procedure_name, "declare_cursor_like_cursor");
 
 cql_int32 declare_cursor_like_cursor_get_A(declare_cursor_like_cursor_result_set_ref _Nonnull result_set) {
   declare_cursor_like_cursor_row *data = (declare_cursor_like_cursor_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -3664,7 +3664,7 @@ END;
 #define declare_cursor_like_proc_refs_offset cql_offsetof(declare_cursor_like_proc_row, b) // count = 1
 static int32_t declare_cursor_like_proc_perf_index;
 
-cql_string_literal(declare_cursor_like_proc_stored_procedure_name, "declare_cursor_like_proc");
+cql_string_proc_name(declare_cursor_like_proc_stored_procedure_name, "declare_cursor_like_proc");
 
 cql_bool declare_cursor_like_proc_get_a_is_null(declare_cursor_like_proc_result_set_ref _Nonnull result_set) {
   declare_cursor_like_proc_row *data = (declare_cursor_like_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -3754,7 +3754,7 @@ END;
 #define declare_cursor_like_table_refs_offset cql_offsetof(declare_cursor_like_table_row, name) // count = 1
 static int32_t declare_cursor_like_table_perf_index;
 
-cql_string_literal(declare_cursor_like_table_stored_procedure_name, "declare_cursor_like_table");
+cql_string_proc_name(declare_cursor_like_table_stored_procedure_name, "declare_cursor_like_table");
 
 cql_int32 declare_cursor_like_table_get_id(declare_cursor_like_table_result_set_ref _Nonnull result_set) {
   declare_cursor_like_table_row *data = (declare_cursor_like_table_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -3879,7 +3879,7 @@ END;
 #define _PROC_ "declare_cursor_like_view"
 static int32_t declare_cursor_like_view_perf_index;
 
-cql_string_literal(declare_cursor_like_view_stored_procedure_name, "declare_cursor_like_view");
+cql_string_proc_name(declare_cursor_like_view_stored_procedure_name, "declare_cursor_like_view");
 
 cql_int32 declare_cursor_like_view_get_f1(declare_cursor_like_view_result_set_ref _Nonnull result_set) {
   declare_cursor_like_view_row *data = (declare_cursor_like_view_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -4187,7 +4187,7 @@ END;
 #define fetch_to_cursor_from_cursor_refs_offset cql_offsetof(fetch_to_cursor_from_cursor_row, B) // count = 1
 static int32_t fetch_to_cursor_from_cursor_perf_index;
 
-cql_string_literal(fetch_to_cursor_from_cursor_stored_procedure_name, "fetch_to_cursor_from_cursor");
+cql_string_proc_name(fetch_to_cursor_from_cursor_stored_procedure_name, "fetch_to_cursor_from_cursor");
 
 cql_int32 fetch_to_cursor_from_cursor_get_A(fetch_to_cursor_from_cursor_result_set_ref _Nonnull result_set) {
   fetch_to_cursor_from_cursor_row *data = (fetch_to_cursor_from_cursor_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -4581,7 +4581,7 @@ END;
 #define _PROC_ "out_union_helper_fetch_results"
 static int32_t out_union_helper_perf_index;
 
-cql_string_literal(out_union_helper_stored_procedure_name, "out_union_helper");
+cql_string_proc_name(out_union_helper_stored_procedure_name, "out_union_helper");
 
 cql_int32 out_union_helper_get_x(out_union_helper_result_set_ref _Nonnull result_set, cql_int32 row) {
   out_union_helper_row *data = (out_union_helper_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -4646,7 +4646,7 @@ END;
 #define _PROC_ "out_union_dml_helper_fetch_results"
 static int32_t out_union_dml_helper_perf_index;
 
-cql_string_literal(out_union_dml_helper_stored_procedure_name, "out_union_dml_helper");
+cql_string_proc_name(out_union_dml_helper_stored_procedure_name, "out_union_dml_helper");
 
 cql_int32 out_union_dml_helper_get_x(out_union_dml_helper_result_set_ref _Nonnull result_set, cql_int32 row) {
   out_union_dml_helper_row *data = (out_union_dml_helper_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -4777,7 +4777,7 @@ END;
 #define _PROC_ "forward_out_union_fetch_results"
 static int32_t forward_out_union_perf_index;
 
-cql_string_literal(forward_out_union_stored_procedure_name, "forward_out_union");
+cql_string_proc_name(forward_out_union_stored_procedure_name, "forward_out_union");
 
 cql_int32 forward_out_union_get_x(forward_out_union_result_set_ref _Nonnull result_set, cql_int32 row) {
   forward_out_union_row *data = (forward_out_union_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -4833,7 +4833,7 @@ END;
 #define _PROC_ "forward_out_union_extern_fetch_results"
 static int32_t forward_out_union_extern_perf_index;
 
-cql_string_literal(forward_out_union_extern_stored_procedure_name, "forward_out_union_extern");
+cql_string_proc_name(forward_out_union_extern_stored_procedure_name, "forward_out_union_extern");
 
 cql_int32 forward_out_union_extern_get_x(forward_out_union_extern_result_set_ref _Nonnull result_set, cql_int32 row) {
   forward_out_union_extern_row *data = (forward_out_union_extern_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -4883,7 +4883,7 @@ END;
 #define _PROC_ "forward_out_union_dml_fetch_results"
 static int32_t forward_out_union_dml_perf_index;
 
-cql_string_literal(forward_out_union_dml_stored_procedure_name, "forward_out_union_dml");
+cql_string_proc_name(forward_out_union_dml_stored_procedure_name, "forward_out_union_dml");
 
 cql_int32 forward_out_union_dml_get_x(forward_out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row) {
   forward_out_union_dml_row *data = (forward_out_union_dml_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -5143,7 +5143,7 @@ END;
 #define _PROC_ "simple_identity"
 static int32_t simple_identity_perf_index;
 
-cql_string_literal(simple_identity_stored_procedure_name, "simple_identity");
+cql_string_proc_name(simple_identity_stored_procedure_name, "simple_identity");
 
 typedef struct simple_identity_row {
   cql_int32 id;
@@ -5225,7 +5225,7 @@ END;
 #define _PROC_ "complex_identity"
 static int32_t complex_identity_perf_index;
 
-cql_string_literal(complex_identity_stored_procedure_name, "complex_identity");
+cql_string_proc_name(complex_identity_stored_procedure_name, "complex_identity");
 
 typedef struct complex_identity_row {
   cql_int32 col1;
@@ -5318,7 +5318,7 @@ END;
 #define _PROC_ "out_cursor_identity"
 static int32_t out_cursor_identity_perf_index;
 
-cql_string_literal(out_cursor_identity_stored_procedure_name, "out_cursor_identity");
+cql_string_proc_name(out_cursor_identity_stored_procedure_name, "out_cursor_identity");
 
 cql_int32 out_cursor_identity_get_id(out_cursor_identity_result_set_ref _Nonnull result_set) {
   out_cursor_identity_row *data = (out_cursor_identity_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -5416,7 +5416,7 @@ END;
 #define _PROC_ "radioactive_proc"
 static int32_t radioactive_proc_perf_index;
 
-cql_string_literal(radioactive_proc_stored_procedure_name, "radioactive_proc");
+cql_string_proc_name(radioactive_proc_stored_procedure_name, "radioactive_proc");
 
 typedef struct radioactive_proc_row {
   cql_int32 id;
@@ -5564,7 +5564,7 @@ END;
 #define _PROC_ "autodropper"
 static int32_t autodropper_perf_index;
 
-cql_string_literal(autodropper_stored_procedure_name, "autodropper");
+cql_string_proc_name(autodropper_stored_procedure_name, "autodropper");
 
 typedef struct autodropper_row {
   cql_int32 a;
@@ -5658,7 +5658,7 @@ END;
 #define _PROC_ "simple_cursor_proc"
 static int32_t simple_cursor_proc_perf_index;
 
-cql_string_literal(simple_cursor_proc_stored_procedure_name, "simple_cursor_proc");
+cql_string_proc_name(simple_cursor_proc_stored_procedure_name, "simple_cursor_proc");
 
 cql_int32 simple_cursor_proc_get_id(simple_cursor_proc_result_set_ref _Nonnull result_set) {
   simple_cursor_proc_row *data = (simple_cursor_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -5727,7 +5727,7 @@ END;
 #define _PROC_ "redundant_cast"
 static int32_t redundant_cast_perf_index;
 
-cql_string_literal(redundant_cast_stored_procedure_name, "redundant_cast");
+cql_string_proc_name(redundant_cast_stored_procedure_name, "redundant_cast");
 
 typedef struct redundant_cast_row {
   cql_int32 plugh;
@@ -6171,7 +6171,7 @@ END;
 #define out_union_two_refs_offset cql_offsetof(out_union_two_row, y) // count = 1
 static int32_t out_union_two_perf_index;
 
-cql_string_literal(out_union_two_stored_procedure_name, "out_union_two");
+cql_string_proc_name(out_union_two_stored_procedure_name, "out_union_two");
 
 cql_int32 out_union_two_get_x(out_union_two_result_set_ref _Nonnull result_set, cql_int32 row) {
   out_union_two_row *data = (out_union_two_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -6311,7 +6311,7 @@ END;
 #define out_union_from_select_refs_offset cql_offsetof(out_union_from_select_row, y) // count = 1
 static int32_t out_union_from_select_perf_index;
 
-cql_string_literal(out_union_from_select_stored_procedure_name, "out_union_from_select");
+cql_string_proc_name(out_union_from_select_stored_procedure_name, "out_union_from_select");
 
 cql_int32 out_union_from_select_get_x(out_union_from_select_result_set_ref _Nonnull result_set, cql_int32 row) {
   out_union_from_select_row *data = (out_union_from_select_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -6464,7 +6464,7 @@ END;
 #define _PROC_ "out_union_values_fetch_results"
 static int32_t out_union_values_perf_index;
 
-cql_string_literal(out_union_values_stored_procedure_name, "out_union_values");
+cql_string_proc_name(out_union_values_stored_procedure_name, "out_union_values");
 
 cql_int32 out_union_values_get_x(out_union_values_result_set_ref _Nonnull result_set, cql_int32 row) {
   out_union_values_row *data = (out_union_values_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -6584,7 +6584,7 @@ END;
 #define out_union_dml_refs_offset cql_offsetof(out_union_dml_row, data) // count = 1
 static int32_t out_union_dml_perf_index;
 
-cql_string_literal(out_union_dml_stored_procedure_name, "out_union_dml");
+cql_string_proc_name(out_union_dml_stored_procedure_name, "out_union_dml");
 
 cql_int32 out_union_dml_get_id(out_union_dml_result_set_ref _Nonnull result_set, cql_int32 row) {
   out_union_dml_row *data = (out_union_dml_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -6775,7 +6775,7 @@ END;
 #define _PROC_ "window_function_invocation"
 static int32_t window_function_invocation_perf_index;
 
-cql_string_literal(window_function_invocation_stored_procedure_name, "window_function_invocation");
+cql_string_proc_name(window_function_invocation_stored_procedure_name, "window_function_invocation");
 
 typedef struct window_function_invocation_row {
   cql_int32 id;
@@ -6903,7 +6903,7 @@ END;
 #define _PROC_ "use_return"
 static int32_t use_return_perf_index;
 
-cql_string_literal(use_return_stored_procedure_name, "use_return");
+cql_string_proc_name(use_return_stored_procedure_name, "use_return");
 
 typedef struct use_return_row {
   cql_int32 x;
@@ -7191,7 +7191,7 @@ END;
 #define _PROC_ "lotsa_columns_no_getters"
 static int32_t lotsa_columns_no_getters_perf_index;
 
-cql_string_literal(lotsa_columns_no_getters_stored_procedure_name, "lotsa_columns_no_getters");
+cql_string_proc_name(lotsa_columns_no_getters_stored_procedure_name, "lotsa_columns_no_getters");
 
 typedef struct lotsa_columns_no_getters_row {
   cql_int32 id;
@@ -7273,7 +7273,7 @@ END;
 #define _PROC_ "sproc_with_copy"
 static int32_t sproc_with_copy_perf_index;
 
-cql_string_literal(sproc_with_copy_stored_procedure_name, "sproc_with_copy");
+cql_string_proc_name(sproc_with_copy_stored_procedure_name, "sproc_with_copy");
 
 typedef struct sproc_with_copy_row {
   cql_int32 id;
@@ -7398,7 +7398,7 @@ END;
 #define emit_object_with_setters_refs_offset cql_offsetof(emit_object_with_setters_row, o) // count = 4
 static int32_t emit_object_with_setters_perf_index;
 
-cql_string_literal(emit_object_with_setters_stored_procedure_name, "emit_object_with_setters");
+cql_string_proc_name(emit_object_with_setters_stored_procedure_name, "emit_object_with_setters");
 
 cql_object_ref _Nonnull emit_object_with_setters_get_o(emit_object_with_setters_result_set_ref _Nonnull result_set) {
   emit_object_with_setters_row *data = (emit_object_with_setters_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -7597,7 +7597,7 @@ END;
 #define emit_setters_with_nullables_refs_offset cql_offsetof(emit_setters_with_nullables_row, o) // count = 4
 static int32_t emit_setters_with_nullables_perf_index;
 
-cql_string_literal(emit_setters_with_nullables_stored_procedure_name, "emit_setters_with_nullables");
+cql_string_proc_name(emit_setters_with_nullables_stored_procedure_name, "emit_setters_with_nullables");
 
 cql_object_ref _Nullable emit_setters_with_nullables_get_o(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
   emit_setters_with_nullables_row *data = (emit_setters_with_nullables_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -7828,7 +7828,7 @@ END;
 #define _PROC_ "no_out_with_setters"
 static int32_t no_out_with_setters_perf_index;
 
-cql_string_literal(no_out_with_setters_stored_procedure_name, "no_out_with_setters");
+cql_string_proc_name(no_out_with_setters_stored_procedure_name, "no_out_with_setters");
 
 typedef struct no_out_with_setters_row {
   cql_int32 id;
@@ -8075,7 +8075,7 @@ END;
 #define _PROC_ "vault_sensitive_with_values_proc"
 static int32_t vault_sensitive_with_values_proc_perf_index;
 
-cql_string_literal(vault_sensitive_with_values_proc_stored_procedure_name, "vault_sensitive_with_values_proc");
+cql_string_proc_name(vault_sensitive_with_values_proc_stored_procedure_name, "vault_sensitive_with_values_proc");
 
 typedef struct vault_sensitive_with_values_proc_row {
   cql_int32 id;
@@ -8184,7 +8184,7 @@ END;
 #define _PROC_ "vault_not_nullable_sensitive_with_values_proc"
 static int32_t vault_not_nullable_sensitive_with_values_proc_perf_index;
 
-cql_string_literal(vault_not_nullable_sensitive_with_values_proc_stored_procedure_name, "vault_not_nullable_sensitive_with_values_proc");
+cql_string_proc_name(vault_not_nullable_sensitive_with_values_proc_stored_procedure_name, "vault_not_nullable_sensitive_with_values_proc");
 
 typedef struct vault_not_nullable_sensitive_with_values_proc_row {
   cql_int32 id;
@@ -8287,7 +8287,7 @@ END;
 #define _PROC_ "vault_sensitive_with_no_values_proc"
 static int32_t vault_sensitive_with_no_values_proc_perf_index;
 
-cql_string_literal(vault_sensitive_with_no_values_proc_stored_procedure_name, "vault_sensitive_with_no_values_proc");
+cql_string_proc_name(vault_sensitive_with_no_values_proc_stored_procedure_name, "vault_sensitive_with_no_values_proc");
 
 typedef struct vault_sensitive_with_no_values_proc_row {
   cql_int32 id;
@@ -8398,7 +8398,7 @@ END;
 #define _PROC_ "vault_union_all_table_proc"
 static int32_t vault_union_all_table_proc_perf_index;
 
-cql_string_literal(vault_union_all_table_proc_stored_procedure_name, "vault_union_all_table_proc");
+cql_string_proc_name(vault_union_all_table_proc_stored_procedure_name, "vault_union_all_table_proc");
 
 typedef struct vault_union_all_table_proc_row {
   cql_int32 id;
@@ -8509,7 +8509,7 @@ END;
 #define _PROC_ "vault_alias_column_proc"
 static int32_t vault_alias_column_proc_perf_index;
 
-cql_string_literal(vault_alias_column_proc_stored_procedure_name, "vault_alias_column_proc");
+cql_string_proc_name(vault_alias_column_proc_stored_procedure_name, "vault_alias_column_proc");
 
 typedef struct vault_alias_column_proc_row {
   cql_string_ref _Nullable alias_name;
@@ -8588,7 +8588,7 @@ END;
 #define _PROC_ "vault_alias_column_name_proc"
 static int32_t vault_alias_column_name_proc_perf_index;
 
-cql_string_literal(vault_alias_column_name_proc_stored_procedure_name, "vault_alias_column_name_proc");
+cql_string_proc_name(vault_alias_column_name_proc_stored_procedure_name, "vault_alias_column_name_proc");
 
 typedef struct vault_alias_column_name_proc_row {
   cql_string_ref _Nullable alias_name;
@@ -8713,7 +8713,7 @@ END;
 #define _PROC_ "vault_sensitive_with_context_and_sensitive_columns_proc"
 static int32_t vault_sensitive_with_context_and_sensitive_columns_proc_perf_index;
 
-cql_string_literal(vault_sensitive_with_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_sensitive_columns_proc");
+cql_string_proc_name(vault_sensitive_with_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_sensitive_columns_proc");
 
 typedef struct vault_sensitive_with_context_and_sensitive_columns_proc_row {
   cql_int32 id;
@@ -8821,7 +8821,7 @@ END;
 #define _PROC_ "vault_sensitive_with_no_context_and_sensitive_columns_proc"
 static int32_t vault_sensitive_with_no_context_and_sensitive_columns_proc_perf_index;
 
-cql_string_literal(vault_sensitive_with_no_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_no_context_and_sensitive_columns_proc");
+cql_string_proc_name(vault_sensitive_with_no_context_and_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_no_context_and_sensitive_columns_proc");
 
 typedef struct vault_sensitive_with_no_context_and_sensitive_columns_proc_row {
   cql_int32 id;
@@ -8929,7 +8929,7 @@ END;
 #define _PROC_ "vault_sensitive_with_context_and_no_sensitive_columns_proc"
 static int32_t vault_sensitive_with_context_and_no_sensitive_columns_proc_perf_index;
 
-cql_string_literal(vault_sensitive_with_context_and_no_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_no_sensitive_columns_proc");
+cql_string_proc_name(vault_sensitive_with_context_and_no_sensitive_columns_proc_stored_procedure_name, "vault_sensitive_with_context_and_no_sensitive_columns_proc");
 
 typedef struct vault_sensitive_with_context_and_no_sensitive_columns_proc_row {
   cql_int32 id;
@@ -9654,7 +9654,7 @@ END;
 #define _PROC_ "window1"
 static int32_t window1_perf_index;
 
-cql_string_literal(window1_stored_procedure_name, "window1");
+cql_string_proc_name(window1_stored_procedure_name, "window1");
 
 typedef struct window1_row {
   cql_nullable_int32 month;
@@ -9757,7 +9757,7 @@ END;
 #define _PROC_ "window2"
 static int32_t window2_perf_index;
 
-cql_string_literal(window2_stored_procedure_name, "window2");
+cql_string_proc_name(window2_stored_procedure_name, "window2");
 
 typedef struct window2_row {
   cql_nullable_int32 month;
@@ -9860,7 +9860,7 @@ END;
 #define _PROC_ "window3"
 static int32_t window3_perf_index;
 
-cql_string_literal(window3_stored_procedure_name, "window3");
+cql_string_proc_name(window3_stored_procedure_name, "window3");
 
 typedef struct window3_row {
   cql_nullable_int32 month;
@@ -9963,7 +9963,7 @@ END;
 #define _PROC_ "window4"
 static int32_t window4_perf_index;
 
-cql_string_literal(window4_stored_procedure_name, "window4");
+cql_string_proc_name(window4_stored_procedure_name, "window4");
 
 typedef struct window4_row {
   cql_nullable_int32 month;
@@ -10066,7 +10066,7 @@ END;
 #define _PROC_ "window5"
 static int32_t window5_perf_index;
 
-cql_string_literal(window5_stored_procedure_name, "window5");
+cql_string_proc_name(window5_stored_procedure_name, "window5");
 
 typedef struct window5_row {
   cql_nullable_int32 month;
@@ -10169,7 +10169,7 @@ END;
 #define _PROC_ "window6"
 static int32_t window6_perf_index;
 
-cql_string_literal(window6_stored_procedure_name, "window6");
+cql_string_proc_name(window6_stored_procedure_name, "window6");
 
 typedef struct window6_row {
   cql_nullable_int32 month;
@@ -10272,7 +10272,7 @@ END;
 #define _PROC_ "window7"
 static int32_t window7_perf_index;
 
-cql_string_literal(window7_stored_procedure_name, "window7");
+cql_string_proc_name(window7_stored_procedure_name, "window7");
 
 typedef struct window7_row {
   cql_nullable_int32 month;
@@ -10375,7 +10375,7 @@ END;
 #define _PROC_ "window8"
 static int32_t window8_perf_index;
 
-cql_string_literal(window8_stored_procedure_name, "window8");
+cql_string_proc_name(window8_stored_procedure_name, "window8");
 
 typedef struct window8_row {
   cql_nullable_int32 month;
@@ -10478,7 +10478,7 @@ END;
 #define _PROC_ "window9"
 static int32_t window9_perf_index;
 
-cql_string_literal(window9_stored_procedure_name, "window9");
+cql_string_proc_name(window9_stored_procedure_name, "window9");
 
 typedef struct window9_row {
   cql_nullable_int32 month;
@@ -10581,7 +10581,7 @@ END;
 #define _PROC_ "window10"
 static int32_t window10_perf_index;
 
-cql_string_literal(window10_stored_procedure_name, "window10");
+cql_string_proc_name(window10_stored_procedure_name, "window10");
 
 typedef struct window10_row {
   cql_nullable_int32 month;
@@ -10684,7 +10684,7 @@ END;
 #define _PROC_ "window11"
 static int32_t window11_perf_index;
 
-cql_string_literal(window11_stored_procedure_name, "window11");
+cql_string_proc_name(window11_stored_procedure_name, "window11");
 
 typedef struct window11_row {
   cql_nullable_int32 month;
@@ -10787,7 +10787,7 @@ END;
 #define _PROC_ "window12"
 static int32_t window12_perf_index;
 
-cql_string_literal(window12_stored_procedure_name, "window12");
+cql_string_proc_name(window12_stored_procedure_name, "window12");
 
 typedef struct window12_row {
   cql_nullable_int32 month;
@@ -10890,7 +10890,7 @@ END;
 #define _PROC_ "window13"
 static int32_t window13_perf_index;
 
-cql_string_literal(window13_stored_procedure_name, "window13");
+cql_string_proc_name(window13_stored_procedure_name, "window13");
 
 typedef struct window13_row {
   cql_nullable_int32 month;
@@ -10993,7 +10993,7 @@ END;
 #define _PROC_ "window14"
 static int32_t window14_perf_index;
 
-cql_string_literal(window14_stored_procedure_name, "window14");
+cql_string_proc_name(window14_stored_procedure_name, "window14");
 
 typedef struct window14_row {
   cql_nullable_int32 month;
@@ -11096,7 +11096,7 @@ END;
 #define _PROC_ "window15"
 static int32_t window15_perf_index;
 
-cql_string_literal(window15_stored_procedure_name, "window15");
+cql_string_proc_name(window15_stored_procedure_name, "window15");
 
 typedef struct window15_row {
   cql_nullable_int32 month;
@@ -11199,7 +11199,7 @@ END;
 #define _PROC_ "window16"
 static int32_t window16_perf_index;
 
-cql_string_literal(window16_stored_procedure_name, "window16");
+cql_string_proc_name(window16_stored_procedure_name, "window16");
 
 typedef struct window16_row {
   cql_nullable_int32 month;
@@ -11651,7 +11651,7 @@ END;
 #define _PROC_ "virtual1"
 static int32_t virtual1_perf_index;
 
-cql_string_literal(virtual1_stored_procedure_name, "virtual1");
+cql_string_proc_name(virtual1_stored_procedure_name, "virtual1");
 
 typedef struct virtual1_row {
   cql_int32 vx;
@@ -11735,7 +11735,7 @@ END;
 #define _PROC_ "virtual2"
 static int32_t virtual2_perf_index;
 
-cql_string_literal(virtual2_stored_procedure_name, "virtual2");
+cql_string_proc_name(virtual2_stored_procedure_name, "virtual2");
 
 typedef struct virtual2_row {
   cql_int32 vx;
@@ -11840,7 +11840,7 @@ END;
 #define _PROC_ "private_out_union_fetch_results"
 static int32_t private_out_union_perf_index;
 
-cql_string_literal(private_out_union_stored_procedure_name, "private_out_union");
+cql_string_proc_name(private_out_union_stored_procedure_name, "private_out_union");
 
 uint8_t private_out_union_data_types[private_out_union_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
@@ -11948,7 +11948,7 @@ END;
 #define _PROC_ "no_getters_out_union_fetch_results"
 static int32_t no_getters_out_union_perf_index;
 
-cql_string_literal(no_getters_out_union_stored_procedure_name, "no_getters_out_union");
+cql_string_proc_name(no_getters_out_union_stored_procedure_name, "no_getters_out_union");
 
 uint8_t no_getters_out_union_data_types[no_getters_out_union_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
@@ -12056,7 +12056,7 @@ END;
 #define _PROC_ "suppress_results_out_union_fetch_results"
 static int32_t suppress_results_out_union_perf_index;
 
-cql_string_literal(suppress_results_out_union_stored_procedure_name, "suppress_results_out_union");
+cql_string_proc_name(suppress_results_out_union_stored_procedure_name, "suppress_results_out_union");
 
 uint8_t suppress_results_out_union_data_types[suppress_results_out_union_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
@@ -12605,7 +12605,7 @@ END;
 #define out_object_refs_offset cql_offsetof(out_object_row, o) // count = 1
 static int32_t out_object_perf_index;
 
-cql_string_literal(out_object_stored_procedure_name, "out_object");
+cql_string_proc_name(out_object_stored_procedure_name, "out_object");
 
 cql_object_ref _Nonnull out_object_get_o(out_object_result_set_ref _Nonnull result_set) {
   out_object_row *data = (out_object_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -12747,7 +12747,7 @@ END;
 #define _PROC_ "result_set_proc_with_contract_in_fetch_results"
 static int32_t result_set_proc_with_contract_in_fetch_results_perf_index;
 
-cql_string_literal(result_set_proc_with_contract_in_fetch_results_stored_procedure_name, "result_set_proc_with_contract_in_fetch_results");
+cql_string_proc_name(result_set_proc_with_contract_in_fetch_results_stored_procedure_name, "result_set_proc_with_contract_in_fetch_results");
 
 typedef struct result_set_proc_with_contract_in_fetch_results_row {
   cql_int32 id;
@@ -12872,7 +12872,7 @@ END;
 #define out_proc_with_contract_in_fetch_results_refs_offset cql_offsetof(out_proc_with_contract_in_fetch_results_row, name) // count = 1
 static int32_t out_proc_with_contract_in_fetch_results_perf_index;
 
-cql_string_literal(out_proc_with_contract_in_fetch_results_stored_procedure_name, "out_proc_with_contract_in_fetch_results");
+cql_string_proc_name(out_proc_with_contract_in_fetch_results_stored_procedure_name, "out_proc_with_contract_in_fetch_results");
 
 cql_int32 out_proc_with_contract_in_fetch_results_get_id(out_proc_with_contract_in_fetch_results_result_set_ref _Nonnull result_set) {
   out_proc_with_contract_in_fetch_results_row *data = (out_proc_with_contract_in_fetch_results_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
@@ -13001,7 +13001,7 @@ END;
 #define _PROC_ "nullability_improvements_are_erased_for_sql"
 static int32_t nullability_improvements_are_erased_for_sql_perf_index;
 
-cql_string_literal(nullability_improvements_are_erased_for_sql_stored_procedure_name, "nullability_improvements_are_erased_for_sql");
+cql_string_proc_name(nullability_improvements_are_erased_for_sql_stored_procedure_name, "nullability_improvements_are_erased_for_sql");
 
 typedef struct nullability_improvements_are_erased_for_sql_row {
   cql_int32 b;
@@ -14945,7 +14945,7 @@ END;
 #define _PROC_ "sensitive_function_is_a_no_op"
 static int32_t sensitive_function_is_a_no_op_perf_index;
 
-cql_string_literal(sensitive_function_is_a_no_op_stored_procedure_name, "sensitive_function_is_a_no_op");
+cql_string_proc_name(sensitive_function_is_a_no_op_stored_procedure_name, "sensitive_function_is_a_no_op");
 
 typedef struct sensitive_function_is_a_no_op_row {
   cql_string_ref _Nonnull y;

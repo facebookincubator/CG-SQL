@@ -51,7 +51,7 @@ END;
 #define _PROC_ "assembly_core"
 static int32_t assembly_core_perf_index;
 
-cql_string_literal(assembly_core_stored_procedure_name, "assembly_core");
+cql_string_proc_name(assembly_core_stored_procedure_name, "assembly_core");
 
 typedef struct assembly_core_row {
   cql_int32 x;

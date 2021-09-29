@@ -40,7 +40,7 @@ END;
 #define _PROC_ "selector"
 static int32_t selector_perf_index;
 
-cql_string_literal(selector_stored_procedure_name, "selector");
+cql_string_proc_name(selector_stored_procedure_name, "selector");
 
 typedef struct selector_row {
   cql_int32 f1;
@@ -190,7 +190,7 @@ END;
 #define emit_object_result_set_refs_offset cql_offsetof(emit_object_result_set_row, o) // count = 1
 static int32_t emit_object_result_set_perf_index;
 
-cql_string_literal(emit_object_result_set_stored_procedure_name, "emit_object_result_set");
+cql_string_proc_name(emit_object_result_set_stored_procedure_name, "emit_object_result_set");
 
 uint8_t emit_object_result_set_data_types[emit_object_result_set_data_types_count] = {
   CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL, // o
@@ -259,7 +259,7 @@ END;
 #define _PROC_ "sproc_copy_func"
 static int32_t sproc_copy_func_perf_index;
 
-cql_string_literal(sproc_copy_func_stored_procedure_name, "sproc_copy_func");
+cql_string_proc_name(sproc_copy_func_stored_procedure_name, "sproc_copy_func");
 
 typedef struct sproc_copy_func_row {
   cql_int32 f1;
@@ -365,7 +365,7 @@ END;
 #define emit_object_with_setters_refs_offset cql_offsetof(emit_object_with_setters_row, o) // count = 1
 static int32_t emit_object_with_setters_perf_index;
 
-cql_string_literal(emit_object_with_setters_stored_procedure_name, "emit_object_with_setters");
+cql_string_proc_name(emit_object_with_setters_stored_procedure_name, "emit_object_with_setters");
 
 uint8_t emit_object_with_setters_data_types[emit_object_with_setters_data_types_count] = {
   CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL, // o

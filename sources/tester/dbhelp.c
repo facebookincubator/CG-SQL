@@ -378,7 +378,7 @@ END;
 #define _PROC_ "dbhelp_source"
 static int32_t dbhelp_source_perf_index;
 
-cql_string_literal(dbhelp_source_stored_procedure_name, "dbhelp_source");
+cql_string_proc_name(dbhelp_source_stored_procedure_name, "dbhelp_source");
 
 typedef struct dbhelp_source_row {
   cql_int32 line;

@@ -102,13 +102,24 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 #define cql_string_release(string) cql_release((cql_type_ref)string);
 
 #define cql_string_literal(name, text) \
-  cql_string name##_ = { \
+  static cql_string name##_ = { \
     .base = { \
       .type = CQL_C_TYPE_STRING, \
       .ref_count = 1, \
       .finalize = NULL, \
     }, \
     .ptr = text, \
+  }; \
+  static cql_string_ref name = &name##_
+
+#define cql_string_proc_name(name, proc_name) \
+  cql_string name##_ = { \
+    .base = { \
+      .type = CQL_C_TYPE_STRING, \
+      .ref_count = 1, \
+      .finalize = NULL, \
+    }, \
+    .ptr = proc_name, \
   }; \
   cql_string_ref name = &name##_
 

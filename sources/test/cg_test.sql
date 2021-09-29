@@ -747,7 +747,7 @@ set b0_nullable := 'b' not between t0_nullable and 'c';
 set b0_nullable := 'b' not between null and 'c';
 
 -- TEST: this procedure will have a structured semantic type
--- + cql_string_literal(with_result_set_stored_procedure_name, "with_result_set");
+-- + cql_string_proc_name(with_result_set_stored_procedure_name, "with_result_set");
 -- + cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
 -- + #define with_result_set_refs_offset cql_offsetof(with_result_set_row, name) // count = 1
 -- + cql_int32 with_result_set_get_id(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
