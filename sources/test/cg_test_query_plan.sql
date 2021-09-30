@@ -45,6 +45,7 @@
 -- + CREATE PROC populate_no_table_scan()
 -- +1  INSERT OR IGNORE INTO no_table_scan(table_name)
 -- +1  INSERT OR IGNORE INTO table_scan_alert
+-- + SELECT ifnull(nullable(1), 42) AS nullable_result;
 -- - Error
 @attribute(cql:no_table_scan)
 create table t1(id int primary key, name text);
@@ -173,4 +174,11 @@ end;
 create proc table_name_like_t1()
 begin
   select 1 as n from foo_, _foo;
+end;
+
+create proc nullable_variables_remain_nullable(a int)
+begin
+  -- analysis of this would fail if `a` were replaced with a value of a nonnull
+  -- type when generating the query plan
+  select ifnull(a, 42) as nullable_result;
 end;

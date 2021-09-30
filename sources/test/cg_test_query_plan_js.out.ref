@@ -30,7 +30,7 @@
         "Graph"
       ],
       [
-        "SELECT *\n  FROM t1\n  WHERE name = 'Nelly' AND id IN (SELECT id\n  FROM t2\n  WHERE id = 1\nUNION\nSELECT id\n  FROM t3)\nORDER BY name ASC",
+        "SELECT *\n  FROM t1\n  WHERE name = 'Nelly' AND id IN (SELECT id\n  FROM t2\n  WHERE id = nullable(1)\nUNION\nSELECT id\n  FROM t3)\nORDER BY name ASC",
         [
           [],
           [
@@ -82,7 +82,7 @@
         "\n?\n|...SEARCH TABLE t1 USING COVERING INDEX it1 (name=? AND id=? AND rowid=?)\n|...LIST SUBQUERY 2\n    |...COMPOUND QUERY\n        |...LEFT-MOST SUBQUERY\n            |...SEARCH TABLE t2 USING INTEGER PRIMARY KEY (rowid=?)\n        |...UNION USING TEMP B-TREE\n            |...SCAN TABLE t3"
       ],
       [
-        "SELECT is_declare_func_wall(id)\n  FROM t4\n  WHERE data = cast('1' as blob)",
+        "SELECT is_declare_func_wall(id)\n  FROM t4\n  WHERE data = nullable(cast('1' as blob))",
         [
           [],
           [
@@ -94,7 +94,7 @@
         "\n?\n|...SEARCH TABLE t4 USING COVERING INDEX it4 (data=?)"
       ],
       [
-        "UPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT NAME\n  FROM t3)",
+        "UPDATE t1\nSET id = 1,\nname = nullable('1')\n  WHERE name IN (SELECT NAME\n  FROM t3)",
         [
           [],
           [
@@ -394,6 +394,32 @@
           []
         ],
         "\n?\n|...SCAN TABLE foo_\n|...SCAN TABLE _foo"
+      ],
+      [
+        "SELECT ifnull(nullable(1), 42) AS nullable_result",
+        [
+          [],
+          [
+            {
+              "value": "SCAN",
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "value": 1,
+              "style": {
+                "fontSize": 14,
+                "color": "red",
+                "fontWeight": "bold"
+              }
+            }
+          ],
+          []
+        ],
+        "\n?\n|...SCAN CONSTANT ROW"
       ],
       []
     ]

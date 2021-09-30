@@ -50,6 +50,11 @@ static bool_t variables_callback(
   charbuf *_Nonnull output)
 {
   sem_t sem_type = ast->sem->sem_type;
+
+  if (is_nullable(sem_type)) {
+    bprintf(output, "nullable(");
+  }
+
   if (is_numeric(sem_type) || is_object(sem_type)) {
     bprintf(output, "1");
   }
@@ -59,6 +64,10 @@ static bool_t variables_callback(
   else {
     Contract(is_blob(sem_type));
     bprintf(output, "cast('1' as blob)");
+  }
+
+  if (is_nullable(sem_type)) {
+    bprintf(output, ")");
   }
 
   return true;
