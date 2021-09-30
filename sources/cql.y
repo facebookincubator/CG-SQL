@@ -1962,6 +1962,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
   | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
   | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
+  | CAST { $enforcement_options = new_ast_opt(ENFORCE_CAST); }
   ;
 
 enforce_strict_stmt:

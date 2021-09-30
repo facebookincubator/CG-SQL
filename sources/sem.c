@@ -238,6 +238,7 @@ struct enforcement_options {
   bool_t strict_encode_context;       // encode context must be specified in @vault_sensitive
   bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
+  bool_t strict_cast;                 // NO-OP casts result in errors
 };
 
 static struct enforcement_options  enforcement;
@@ -6153,6 +6154,24 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
       report_error(ast, "CQL0073: CAST may only appear in the context of SQL statement", NULL);
       record_error(ast);
       return;
+    }
+  }
+
+  if (enforcement.strict_cast) {
+    if (core_type_of(data_type->sem->sem_type) == core_type_of(expr->sem->sem_type)) {
+      // if the core type is the same and the kind is the same then the cast did nothing
+      CSTR k1 = data_type->sem->kind;
+      CSTR k2 = expr->sem->kind;
+  
+      // either both are null, or both are not null and they match
+      bool_t same = (!k1 && !k2) || (k1 && k2 && !Strcasecmp(k1, k2));
+  
+      if (same) {
+        CSTR err_msg = dup_expr_text(ast);
+        report_error(expr, "CQL0170: cast is redundant, remove to reduce code size", err_msg);
+        record_error(ast);
+        return;
+      }
     }
   }
 
@@ -18353,12 +18372,13 @@ static void sem_previous_schema_stmt(ast_node *ast) {
     return;
   }
 
-  validating_previous_schema = 1;
-  enforcement.strict_fk_update = 0;
-  enforcement.strict_fk_delete = 0;
-  enforcement.strict_join = 0;
-  enforcement.strict_upsert_stmt = 0;
-  enforcement.strict_window_func = 0;
+  validating_previous_schema = true;
+  enforcement.strict_fk_update = false;
+  enforcement.strict_fk_delete = false;
+  enforcement.strict_join = false;
+  enforcement.strict_cast = false;
+  enforcement.strict_upsert_stmt = false;
+  enforcement.strict_window_func = false;
 
   // we're entering the previous schema section, the regions will be redeclared.
   // later we'll want to validate against these;  we have to save the current regions
@@ -19284,6 +19304,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_WINDOW_FUNC:
       enforcement.strict_window_func = strict;
+      break;
+
+    case ENFORCE_CAST:
+      enforcement.strict_cast = strict;
       break;
 
     case ENFORCE_WITHOUT_ROWID:

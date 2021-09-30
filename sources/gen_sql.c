@@ -3270,6 +3270,10 @@ static void gen_enforcement_options(ast_node *ast) {
   EXTRACT_OPTION(option, ast);
 
   switch (option) {
+    case ENFORCE_CAST:
+      gen_printf("CAST");
+      break;
+
     case ENFORCE_STRICT_JOIN:
       gen_printf("JOIN");
       break;

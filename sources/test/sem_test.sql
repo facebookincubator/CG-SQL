@@ -3774,6 +3774,41 @@ select cast(1 as text);
 -- + {cast_expr}: err
 set X := cast(5.0 as text);
 
+-- enforce strict cast and verify
+@enforce_strict cast;
+
+-- TEST 1 is already an int
+-- + {let_stmt}: err
+-- + {cast_expr}: err
+-- + Error % cast is redundant, remove to reduce code size 'CAST(1 AS INTEGER)'
+-- +1 Error
+let idx := cast(1 as integer);
+
+-- TEST 1.5 is not an integer, the type doesn't match, ok cast
+-- + {let_stmt}: idr: integer notnull variable
+-- - Error
+let idr := cast(1.5 as integer);
+
+-- TEST integer conversion but adding a kind, this is ok
+-- + {let_stmt}: idx: integer<x> notnull variable
+-- - Error
+let idx := cast(1 as integer<x>);
+
+-- TEST: changing kind, this is ok
+-- + {let_stmt}: idy: integer<y> notnull variable
+-- - Error
+let idy := cast(idx as integer<y>);
+
+-- TEST: type and kind match, this is a no-op therefore an error
+-- + {assign}: err
+-- + {cast_expr}: err
+-- + Error % cast is redundant, remove to reduce code size 'CAST(idy AS INTEGER<y>
+-- +1 Error
+set idy := cast(idy as integer<y>);
+
+-- restore to normalcy
+@enforce_normal cast;
+
 -- TEST: cast expression with expression error
 -- + Error % string operand not allowed in 'NOT'
 -- +1 Error

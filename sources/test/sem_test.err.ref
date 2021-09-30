@@ -307,6 +307,8 @@ Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strin
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'julianday'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'julianday'
 Error at test/sem_test.sql:XXXX : in cast_expr : CQL0073: CAST may only appear in the context of SQL statement
+Error at test/sem_test.sql:XXXX : in num : CQL0170: cast is redundant, remove to reduce code size 'CAST(1 AS INTEGER)'
+Error at test/sem_test.sql:XXXX : in str : CQL0170: cast is redundant, remove to reduce code size 'CAST(idy AS INTEGER<y>)'
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
 Error at test/sem_test.sql:XXXX : in declare_proc_no_check_stmt : CQL0404: procedure cannot be both a normal procedure and an unchecked procedure 'decl1'
 Error at test/sem_test.sql:XXXX : in str : CQL0194: declared procedures must be top level 'yy'

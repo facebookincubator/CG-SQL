@@ -13402,6 +13402,77 @@ Error at test/sem_test.sql:XXXX : in cast_expr : CQL0073: CAST may only appear i
 
 The statement ending at line XXXX
 
+@ENFORCE_STRICT CAST;
+
+  {enforce_strict_stmt}: ok
+  | {int 6}
+
+The statement ending at line XXXX
+
+LET idx := CAST(1 AS INTEGER);
+
+Error at test/sem_test.sql:XXXX : in num : CQL0170: cast is redundant, remove to reduce code size 'CAST(1 AS INTEGER)'
+
+  {let_stmt}: err
+  | {name idx}
+  | {cast_expr}: err
+    | {int 1}: integer notnull
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET idr := CAST(1.5 AS INTEGER);
+
+  {let_stmt}: idr: integer notnull variable
+  | {name idr}: idr: integer notnull variable
+  | {cast_expr}: integer notnull
+    | {dbl 1.5}: real notnull
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET idx := CAST(1 AS INTEGER<x>);
+
+  {let_stmt}: idx: integer<x> notnull variable
+  | {name idx}: idx: integer<x> notnull variable
+  | {cast_expr}: integer<x> notnull
+    | {int 1}: integer notnull
+    | {type_int}: integer<x>
+      | {name x}
+
+The statement ending at line XXXX
+
+LET idy := CAST(idx AS INTEGER<y>);
+
+  {let_stmt}: idy: integer<y> notnull variable
+  | {name idy}: idy: integer<y> notnull variable
+  | {cast_expr}: integer<y> notnull
+    | {name idx}: idx: integer<x> notnull variable
+    | {type_int}: integer<y>
+      | {name y}
+
+The statement ending at line XXXX
+
+SET idy := CAST(idy AS INTEGER<y>);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0170: cast is redundant, remove to reduce code size 'CAST(idy AS INTEGER<y>)'
+
+  {assign}: err
+  | {name idy}: idy: integer<y> notnull variable
+  | {cast_expr}: err
+    | {name idy}: idy: integer<y> notnull variable
+    | {type_int}: integer<y>
+      | {name y}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL CAST;
+
+  {enforce_normal_stmt}: ok
+  | {int 6}
+
+The statement ending at line XXXX
+
 SELECT CAST(NOT 'x' AS INTEGER);
 
 Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'

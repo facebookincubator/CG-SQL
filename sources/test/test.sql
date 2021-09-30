@@ -1045,6 +1045,10 @@ update foo set xyzzy = 7 where foo.id in (select * from x);
 
 @enforce_normal join;
 
+@enforce_strict cast;
+
+@enforce_normal cast;
+
 @enforce_strict upsert statement;
 
 @enforce_normal upsert statement;
