@@ -55,11 +55,14 @@ static bool_t variables_callback(
     bprintf(output, "nullable(");
   }
 
-  if (is_numeric(sem_type) || is_object(sem_type)) {
+  if (is_numeric(sem_type)) {
     bprintf(output, "1");
   }
   else if (is_text(sem_type)) {
     bprintf(output, "'1'");
+  }
+  else if (is_object(sem_type)) {
+    bprintf(output, "cast('1' as object)");
   }
   else {
     Contract(is_blob(sem_type));
@@ -536,6 +539,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
 
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
+  callbacks.mode = gen_mode_no_annotations;
   callbacks.variables_callback = &variables_callback;
   cg_qp_callbacks = &callbacks;
 

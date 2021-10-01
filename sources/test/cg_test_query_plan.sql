@@ -158,6 +158,7 @@ with
   select * from t4;
 
 -- Object type in stmt
+-- + SELECT array_num_at(ptr(cast('1' as object)), id) AS idx
 create proc read_object(sync_group_ids_ object not null)
 begin
   select array_num_at(ptr(sync_group_ids_), id) as idx from t1;

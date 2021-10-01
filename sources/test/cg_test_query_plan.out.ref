@@ -223,12 +223,12 @@ END;
 CREATE PROC populate_query_plan_9()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "INSERT INTO t1(id, name) VALUES(1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' • ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || 'it''s' || name";
+  SET stmt := "INSERT INTO t1(id, name) VALUES(1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' • ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(9, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   INSERT INTO t1(id, name) VALUES(1, 'Irene')
   ON CONFLICT (id) DO UPDATE
-  SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || 'it''s' || name;
+  SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(9, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -308,10 +308,10 @@ END;
 CREATE PROC populate_query_plan_15()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT array_num_at(1, id) AS idx\\n  FROM t1";
+  SET stmt := "SELECT array_num_at(ptr(cast('1' as object)), id) AS idx\\n  FROM t1";
   INSERT INTO sql_temp(id, sql) VALUES(15, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT array_num_at(1, id) AS idx
+  SELECT array_num_at(ptr(cast('1' as object)), id) AS idx
     FROM t1;
   LOOP FETCH C
   BEGIN

@@ -248,7 +248,7 @@
         "\n?"
       ],
       [
-        "INSERT INTO t1(id, name) VALUES(1, 'Irene')\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u2022 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || 'it''s' || name",
+        "INSERT INTO t1(id, name) VALUES(1, 'Irene')\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u2022 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || \"it's\" || name",
         [
           [],
           []
@@ -318,7 +318,7 @@
         "\n?\n|...SCAN TABLE t2\n|...SEARCH TABLE t3 USING INTEGER PRIMARY KEY (rowid=?)"
       ],
       [
-        "SELECT array_num_at(1, id) AS idx\n  FROM t1",
+        "SELECT array_num_at(ptr(cast('1' as object)), id) AS idx\n  FROM t1",
         [
           [],
           [
