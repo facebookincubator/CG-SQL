@@ -66,6 +66,8 @@ copy_ref cg_test_schema_partial_upgrade.out
 copy_ref cg_test_schema_partial_upgrade.err
 copy_ref cg_test_schema_prev.out
 copy_ref cg_test_schema_prev.err
+copy_ref cg_test_schema_sqlite.out
+copy_ref cg_test_schema_sqlite.err
 copy_ref cg_test_schema_upgrade.out
 copy_ref cg_test_schema_upgrade.err
 copy_ref cg_test_test_helpers.out

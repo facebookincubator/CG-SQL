@@ -208,6 +208,16 @@ static rtdata rt_schema_upgrade = {
   .symbol_case = cg_symbol_case_camel,
 };
 
+static rtdata rt_schema_sqlite = {
+  .name = "schema_sqlite",
+  .code_generator = &cg_schema_sqlite_main,
+  .required_file_names_count = 1,
+  .source_prefix =
+    RT_IP_NOTICE("--")
+    RT_SIGNSRC("--") "\n",
+  .symbol_case = cg_symbol_case_camel,
+};
+
 static rtdata rt_schema = {
   .name = "schema",
   .code_generator = &cg_schema_main,
@@ -264,6 +274,7 @@ static rtdata *(rt_all[]) = {
   &rt_objc,
   &rt_java,
   &rt_schema_upgrade,
+  &rt_schema_sqlite,
   &rt_schema,
   &rt_json_schema,
   &rt_test_helpers,

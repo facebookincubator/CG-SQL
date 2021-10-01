@@ -874,8 +874,17 @@ schema_migration_test() {
     failed
   fi
 
+  echo '---------------------------------'
+  echo running code gen to produce raw sqlite schema
 
-  echo combining geneated previous schema with itself to ensure it self validates
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_sqlite.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --rt schema_sqlite 2>"${OUT_DIR}/cg_test_schema_sqlite.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_sqlite.err"
+    failed
+  fi
+
+  echo combining generated previous schema with itself to ensure it self validates
 
   cat "${OUT_DIR}/cg_test_schema_prev.out" > "${OUT_DIR}/prev_loop.out"
   echo "@previous_schema;" >> "${OUT_DIR}/prev_loop.out"
@@ -904,6 +913,10 @@ schema_migration_test() {
   echo "  computing previous schema diffs from reference (empty if none)"
   on_diff_exit cg_test_schema_prev.out
   on_diff_exit cg_test_schema_prev.err
+
+  echo "  computing sqlite schema diffs from reference (empty if none)"
+  on_diff_exit cg_test_schema_sqlite.out
+  on_diff_exit cg_test_schema_sqlite.err
 
   echo "  running schema migration with include/exclude args"
   if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions shared 2>"${OUT_DIR}/cg_test_schema_partial_upgrade.err"

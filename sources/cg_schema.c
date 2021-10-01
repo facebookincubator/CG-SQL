@@ -10,6 +10,7 @@
 // stubs to avoid link errors
 cql_noexport void cg_schema_main(ast_node *head) {}
 cql_noexport void cg_schema_upgrade_main(ast_node *head) {}
+cql_noexport void cg_schema_sqlite_main(ast_node *head) {}
 
 #else
 
@@ -44,6 +45,9 @@ static void cg_schema_manage_recreate_tables(charbuf *output, recreate_annotatio
 
 // We get TEMP items IF and ONLY IF this bit is set
 #define SCHEMA_TEMP_ITEMS 4
+
+// We emit for SQLite in this mode
+#define SCHEMA_FOR_SQLITE 8
 
 // If the mode is SCHEMA_TO_DECLARE then we include all the regions we are upgrading
 // and all their dependencies.
@@ -402,9 +406,21 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   bool_t temp_required = !!(mode & SCHEMA_TEMP_ITEMS);
   bool_t schema_declare = !!(mode & SCHEMA_TO_DECLARE);
   bool_t schema_upgrade = !!(mode & SCHEMA_TO_UPGRADE);
+  bool_t schema_sqlite = !!(mode & SCHEMA_FOR_SQLITE);
+
+  gen_sql_callbacks *use_callbacks = NULL;
 
   // full annotations for declarations, no annotations for temp items upgrade
-  gen_sql_callbacks *use_callbacks = (temp_required && schema_upgrade) ? &callbacks : NULL;
+  if (temp_required && schema_upgrade) {
+    use_callbacks = &callbacks;
+  }
+
+  // sqlite form gets sqlite safe output
+  if (schema_sqlite) {
+    use_callbacks = &callbacks;
+    callbacks.mode = gen_mode_sql;
+    callbacks.long_to_int_conv = true;
+  }
 
   // emit all the delare select function statements (they may appear in the SQL)
   if (!temp_required && schema_declare) {
@@ -558,7 +574,8 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   }
 
   // there are no "temp" migrations, so don't emit these at all if "temp required" is set
-  if (!temp_required) {
+  // likewise if the output is for sqlite these are not processed by sqlite so they should be ignored
+  if (!temp_required && !schema_sqlite) {
     for (list_item *item = all_ad_hoc_list; item; item = item->next) {
       ast_node *ast = item->ast;
       Invariant(is_ast_schema_ad_hoc_migration_stmt(ast));
@@ -595,6 +612,21 @@ cql_noexport void cg_schema_main(ast_node *head) {
   CHARBUF_OPEN(output_file);
   bprintf(&output_file, "%s", rt->source_prefix);
   cg_generate_schema_by_mode(&output_file, SCHEMA_TO_DECLARE);
+  cql_write_file(options.file_names[0], output_file.ptr);
+  CHARBUF_CLOSE(output_file);
+}
+
+// This entry point is for generating a full image of the declared schema with no CQL business
+// this is used to create a schema declaration for SQLite
+cql_noexport void cg_schema_sqlite_main(ast_node *head) {
+  Invariant(options.file_names_count == 1);
+  cql_exit_on_semantic_errors(head);
+
+  // Here we're going to output all the necessary declarations for all the schema in the indicated regions.
+  CHARBUF_OPEN(output_file);
+  bprintf(&output_file, "%s", rt->source_prefix);
+  cg_generate_schema_by_mode(&output_file, SCHEMA_TO_UPGRADE | SCHEMA_FOR_SQLITE);
+  cg_generate_schema_by_mode(&output_file, SCHEMA_TO_UPGRADE | SCHEMA_FOR_SQLITE | SCHEMA_TEMP_ITEMS);
   cql_write_file(options.file_names[0], output_file.ptr);
   CHARBUF_CLOSE(output_file);
 }

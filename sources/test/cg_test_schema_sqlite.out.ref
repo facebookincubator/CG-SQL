@@ -1,0 +1,179 @@
+
+CREATE TABLE foo(
+  id INTEGER PRIMARY KEY,
+  rate LONG_INT,
+  rate_2 LONG_INT,
+  id2 INTEGER DEFAULT 12345,
+  name TEXT,
+  name_2 TEXT
+);
+
+CREATE TABLE added_table(
+  id INTEGER NOT NULL,
+  name1 TEXT,
+  name2 TEXT
+);
+
+CREATE TABLE g1(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+);
+
+CREATE TABLE use_g1(
+  id INTEGER PRIMARY KEY REFERENCES g1 (id),
+  name2 TEXT
+);
+
+CREATE TABLE table2(
+  id INTEGER NOT NULL REFERENCES foo (id),
+  name1 TEXT,
+  name2 TEXT,
+  name3 TEXT,
+  name4 TEXT
+);
+
+CREATE TABLE other_table(
+  id INTEGER
+);
+
+CREATE TABLE table_to_recreate(
+  id INTEGER NOT NULL,
+  name TEXT
+);
+
+CREATE TABLE grouped_table_1(
+  id INTEGER NOT NULL,
+  name TEXT
+);
+
+CREATE TABLE grouped_table_2(
+  id INTEGER NOT NULL,
+  name TEXT
+);
+
+CREATE TABLE grouped_table_3(
+  id INTEGER NOT NULL,
+  name TEXT
+);
+
+CREATE TABLE t5(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  data TEXT
+);
+
+CREATE TABLE t6(
+  id LONG_INT PRIMARY KEY,
+  FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other);
+
+CREATE VIRTUAL TABLE complex_virtual_table USING a_module (
+  id INTEGER,
+  t TEXT);
+
+CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (
+  id INTEGER,
+  t TEXT);
+
+CREATE TABLE migrated_from_recreate(
+  id INTEGER,
+  t TEXT
+);
+
+CREATE TABLE conflict_clause_t(
+  id INTEGER NOT NULL ON CONFLICT FAIL
+);
+
+CREATE TABLE conflict_clause_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+);
+
+CREATE TABLE expression_pk(
+  id INTEGER NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+);
+
+CREATE TABLE expression_uk(
+  id INTEGER NOT NULL,
+  CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
+);
+
+CREATE VIEW shared_view AS
+SELECT *
+  FROM foo;
+
+CREATE VIEW live_view AS
+SELECT *
+  FROM foo;
+
+CREATE VIEW dead_view AS
+SELECT *
+  FROM foo;
+
+CREATE VIEW another_live_view AS
+SELECT *
+  FROM table2;
+
+CREATE INDEX shared_index ON foo (name, name_2);
+
+CREATE INDEX gr1_index ON g1 (name);
+
+CREATE INDEX gr1_index2 ON g1 (name, id);
+
+CREATE INDEX gr1_index3 ON g1 (name, id);
+
+CREATE INDEX not_shared_present_index ON table2 (name1, name2);
+
+CREATE INDEX index_going_away ON table2 (name3);
+
+CREATE TRIGGER shared_trigger
+  BEFORE INSERT ON foo
+BEGIN
+SELECT 1;
+END;
+
+CREATE TRIGGER not_shared_trigger
+  BEFORE INSERT ON foo
+BEGIN
+SELECT new.id;
+END;
+
+CREATE TRIGGER insert_trigger
+  BEFORE INSERT ON foo
+  FOR EACH ROW
+  WHEN new.id > 7
+BEGIN
+SELECT new.id;
+END;
+
+CREATE TRIGGER old_trigger_was_deleted
+  BEFORE INSERT ON foo
+BEGIN
+SELECT new.id;
+END;
+
+CREATE TRIGGER trig_with_filter
+  BEFORE INSERT ON foo
+  WHEN filter_(new.id) = 3
+BEGIN
+DELETE FROM foo WHERE id = 77;
+END;
+
+CREATE TEMP TABLE this_table_appears_in_temp_section(
+  temp_section_integer INTEGER
+);
+
+CREATE TEMP VIEW temp_view_in_temp_section AS
+SELECT *
+  FROM foo;
+
+CREATE TEMP TRIGGER temp_trigger_in_temp_section
+  BEFORE DELETE ON foo
+  FOR EACH ROW
+  WHEN old.id > 7
+BEGIN
+SELECT old.id;
+END;
+
