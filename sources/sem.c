@@ -212,6 +212,7 @@ static void sem_unset_notnull_improvements_in_context(notnull_improvement_contex
 static void sem_revert_notnull_improvement_history(notnull_improvement_history history);
 static void sem_set_notnull_improvements_for_true_condition(ast_node *expr, ast_node *select_expr_list);
 static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
+static void reset_enforcements();
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -241,7 +242,7 @@ struct enforcement_options {
   bool_t strict_cast;                 // NO-OP casts result in errors
 };
 
-static struct enforcement_options  enforcement;
+static struct enforcement_options enforcement;
 
 static sem_t encode_context_type;
 
@@ -18373,12 +18374,8 @@ static void sem_previous_schema_stmt(ast_node *ast) {
   }
 
   validating_previous_schema = true;
-  enforcement.strict_fk_update = false;
-  enforcement.strict_fk_delete = false;
-  enforcement.strict_join = false;
-  enforcement.strict_cast = false;
-  enforcement.strict_upsert_stmt = false;
-  enforcement.strict_window_func = false;
+  reset_enforcements();
+  enforcement.strict_cast = false;  // this is normally on by default, we want no strict in previous schema
 
   // we're entering the previous schema section, the regions will be redeclared.
   // later we'll want to validate against these;  we have to save the current regions
@@ -19414,10 +19411,15 @@ static void sem_enforce_normal_stmt(ast_node * ast) {
   record_ok(ast);
 }
 
+static void reset_enforcements() {
+  memset(&enforcement, 0, sizeof(enforcement));
+  enforcement.strict_cast = true;
+}
+
 // reset all to normal mode
 static void sem_enforce_reset_stmt(ast_node * ast) {
   Contract(is_ast_enforce_reset_stmt(ast));
-  memset(&enforcement, 0, sizeof(enforcement));
+  reset_enforcements();
   record_ok(ast);
 }
 
@@ -20405,7 +20407,7 @@ cql_noexport void sem_cleanup() {
   loop_depth = 0;
   in_proc_savepoint = false;
   max_previous_schema_version = -1;
-  memset(&enforcement, 0, sizeof(enforcement));
+  reset_enforcements();
   enforcement_stack = NULL; // all the stack entries are in the ast pool, nothing to free
   monitor_jptr = NULL;
   recreates = 0;
