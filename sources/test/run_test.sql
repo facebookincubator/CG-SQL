@@ -3145,6 +3145,8 @@ BEGIN_TEST(boxing_from_call)
   end;
 END_TEST(boxing_from_call)
 
+@enforce_normal cast;
+
 BEGIN_TEST(numeric_casts)
   declare b bool not null;
   declare i int not null;
@@ -3190,6 +3192,8 @@ BEGIN_TEST(numeric_casts)
   EXPECT(r0 == 12.0);
 
 END_TEST(numeric_casts)
+
+@enforce_strict cast;
 
 create proc dummy(seed integer not null, i integer not null, r real not null, b bool not null)
 begin

@@ -2332,6 +2332,10 @@ end;
 @begin_schema_region root_region;
 @end_schema_region;
 
+-- this section has trivial casts, we still need to test codegen for this
+-- because normal mode is still legal
+@enforce_normal cast;
+
 -- TEST: select with redundant cast and alias
 -- + "SELECT (5), T.xyzzy "
 -- + "FROM (SELECT 1 AS xyzzy) AS T");
@@ -2349,6 +2353,8 @@ begin
   create view alias_preserved as
     select CAST(5 as integer) plugh, T.xyzzy five from (select 1 xyzzy) as T;
 end;
+
+@enforce_strict cast;
 
 create table switch_account_badges(badge_count integer);
 create table unread_pending_threads(unread_pending_thread_count integer);
@@ -3244,6 +3250,10 @@ begin
   set x := cast(b as real);
 end;
 
+-- this section has trivial casts, we still need to test codegen for this
+-- because normal mode is still legal
+@enforce_normal cast;
+
 -- TEST: numeric cast operation from bool not nullable (no-op version)
 -- + x = b;
 create proc local_cast_from_bool_no_op_notnull()
@@ -3263,6 +3273,8 @@ begin
   declare x bool;
   set x := cast(b as bool);
 end;
+
+@enforce_strict cast;
 
 -- TEST: test cql_get_blob_size codegen
 -- + cql_set_nullable(l0_nullable, !_tmp_n_blob_1, cql_get_blob_size(_tmp_n_blob_1));

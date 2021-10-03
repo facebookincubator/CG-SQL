@@ -1509,6 +1509,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 #define CRC_redundant_cast 3726092864985662652L
 
 extern cql_string_ref _Nonnull redundant_cast_stored_procedure_name;
@@ -1533,6 +1535,8 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_);
@@ -2298,10 +2302,14 @@ extern void local_cast_from_bool_notnull(void);
 extern void local_cast_from_bool(void);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern void local_cast_from_bool_no_op_notnull(void);
 
 // The statement ending at line XXXX
 extern void local_cast_from_bool_no_op(void);
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 
