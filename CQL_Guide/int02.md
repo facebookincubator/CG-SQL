@@ -1291,6 +1291,526 @@ All the mini-resolvers are similarly structured, generically:
 Some of the mini-resolvers have quite a few steps, but any one mini-resolver is only about a screenful of code
 and it does one job.
 
+### Nullability Improvements
+
+Via a form of occurrence typing, CQL has the ability to determine that, due to a
+prior conditional check, a nullable variable or cursor field cannot be null
+within a particular context, and CQL will improve its type therein accordingly.
+
+Unlike most forms of semantic analysis performed by CQL, the analysis for
+nullability improvements makes heavy use of the `find_mutable_type` function:
+
+```c
+// Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
+// identifier if one exists in the environment. See the documentation for
+// `sem_resolve_id_with_type` for limitations.
+static sem_t *find_mutable_type(CSTR name, CSTR scope);
+```
+
+This function allows us to look up the type of the original binding referred to
+by a particular name/scope pair. In essence, it provides access to the current
+type environment for whichever part of the program we are analyzing. It also
+allows us to mutate that environment by virtue of the fact that it returns a
+pointer to the type of the binding, not merely the type itself.
+
+By using `find_mutable_type` to get a type pointer and toggling the
+`SEM_TYPE_INFERRED_NOTNULL` flag, the procedures `sem_set_notnull_improved` and
+`sem_unset_notnull_improved` are able to record that a nullable identifier or
+cursor field is either temporarily nonnull or no longer nonnull respectively:
+
+```c
+// Enables a nonnull improvement, if possible.
+static void sem_set_notnull_improved(CSTR name, CSTR scope);
+
+// This needs to be called for everything that is no longer safe to consider NOT
+// NULL due to a mutation. It is fine to call this for something not currently
+// subject to improvement, but it must only be called with a name/scope pair
+// referring to something has a mutable type (e.g., it must not be an unbound
+// variable, a cursor used an expression, an enum case, et cetera).
+static void sem_unset_notnull_improved(CSTR name, CSTR scope);
+```
+
+Similarly, `sem_is_notnull_improved` uses `find_mutable_type` to check whether
+or not something is currently improved:
+
+```c
+// Returns true if currently improved to be nonnull, else false.
+static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
+```
+
+Why does nullability inference use this approach? The reason is that the
+alternative would be maintaining some sort of set of currently improved
+identifiers and cursor fields and checking it whenever resolving an identifier
+or cursor field. The problem would be that merely knowing that some identifier
+"x" is improved would not be sufficient, however: We'd have to know _which_ "x".
+Is it the local variable "x"? Is it the column "x" of the table from which we're
+currently selecting?  In essence, correctly maintaining an independent set of
+all currently active improvements would involve re-implementing all of the
+scoping rules of the language. By using `find_mutable_type`, we can simply
+piggyback on the existing name resolution logic and avoid all of these issues.
+
+A nullability improvement is always created within a particular context. When an
+improvement is added via `sem_set_notnull_improved`, a record of that
+improvement is recorded in the current context. When that context ends, that
+record is used to allow `sem_unset_notnull_improved` to remove the improvement.
+It is also the case that `sem_unset_notnull_improved` may remove an improvement
+before a context has ended due to a SET, FETCH, or call to a procedure or
+function with an OUT argument resulting in the improvement no longer being safe.
+The common type of context is defined as follows:
+
+```c
+// A list node holding the `sem_t *` for a nullability improvement. These are
+// used both for un-setting improvements when the scope of an improvement ends
+// and for keeping track of improvements that require special treatment (i.e.,
+// improvements of globals must be unset at every CALL).
+typedef struct notnull_improvement_context_item {
+  sem_t *type;
+  struct notnull_improvement_context_item *next;
+} notnull_improvement_context_item;
+
+// A `notnull_improvement_context` is simply a list of context items.
+typedef notnull_improvement_context_item *notnull_improvement_context;
+```
+
+Contexts are not always quite so simple as a collection of improvements to unset
+when they end, however. That is because there are two types of contexts: the
+"normal", non-contingent contexts of which we just spoke, and contingent
+contexts. Whereas non-contingent contexts are merely a simple collection of
+improvements to later unset, contingent contexts record both improvements made
+via `sem_set_notnull_improved` _and_ improvements removed via
+`sem_unset_notnull_improved`. When a contingent context ends, it plays back all
+of the improvements and un-improvements made in reverse, performing the opposite
+of what originally occurred at each step. The result of this is to restore the
+state of the world to what it was before the context was entered. This reversal
+is essential for allowing us to analyze each branch of an IF or CASE
+independently such that any SET, FETCH, or OUT arguments in one branch do not
+negatively affect all later branches. Contingent contexts (also known as
+histories) hold the same data as non-contingent contexts, but they also have an
+extra piece of information that indicates which type of action was performed:
+
+```c
+// Indicates whether an improvement was set or unset within a
+// `notnull_improvement_history_item`.
+typedef enum {
+  NOTNULL_IMPROVEMENT_DELTA_WAS_SET,
+  NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET,
+} notnull_improvement_delta;
+
+// A list node used to record a nullability improvement or un-improvement. These
+// can be later replayed in the order opposite of that in which they originally
+// occurred with the converse action being taken at each step, thus restoring
+// the original state of the world before any improvements or un-improvements
+// were made. In essence, they are nothing more than a
+// `notnull_improvement_context_item` with a `notnull_improvement_delta`.
+typedef struct notnull_improvement_history_item {
+  sem_t *type;
+  notnull_improvement_delta delta;
+  struct notnull_improvement_history_item *next;
+} notnull_improvement_history_item;
+
+// A `notnull_improvement_history` is simply a list of history items.
+typedef notnull_improvement_history_item *notnull_improvement_history;
+```
+
+Both non-contingent and contingent contexts are pushed and popped via pairs of
+macros:
+
+```c
+// Pushes a new context for nullability improvements. All improvements set while
+// the context is active will be unset at the corresponding
+// `POP_NOTNULL_IMPROVEMENT_CONTEXT`.
+#define PUSH_NOTNULL_IMPROVEMENT_CONTEXT() ...
+
+// Un-sets all improvements made within the current context and reverts to the
+// previous context.
+#define POP_NOTNULL_IMPROVEMENT_CONTEXT() ...
+
+// Similar to `PUSH_NOTNULL_IMPROVEMENT_CONTEXT`, but used for contexts that
+// will only be entered at runtime if some condition is true. This is used for
+// each branch in an IF (and soon CASE and IIF) to allow any improvements and
+// un-improvements made within to be reverted, and the original state of the
+// world restored, before checking the next branch. This must only be used when
+// the current context is not contingent; see
+// `is_current_notnull_improvement_context_contingent`.
+#define PUSH_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() ...
+
+// Pops the current contingent improvement context, reverting all improvements
+// and un-improvements made within, and reverts to the previous context. Should
+// no contingent contexts remain after the pop, an invariant enforces that
+// `current_notnull_improvement_history` is NULL (which must be the case because
+// we never record history when a contingent context is not in effect).
+#define POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() ...
+```
+
+In the case of `POP_NOTNULL_IMPROVEMENT_CONTEXT`, it calls
+`sem_unset_notnull_improvements_in_context` to unset all improvements within the
+context that is ending; in the case of
+`POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT`, it calls
+`sem_revert_notnull_improvement_history` to revert them:
+
+```c
+// Unsets nonnull improvements for all items in the list provided.
+static void sem_unset_notnull_improvements_in_context(notnull_improvement_context context);
+
+// Given a history, play it back in reverse, performing the opposite of what
+// originally occurred at each step. The result will be the state of the world
+// before any of the improvements and un-improvements were made. For any
+// previous un-improvement that is re-improved by the reversal, that
+// re-improvement will be recorded in the current nonnull improvement context so
+// that it can be re-unimproved when said context is eventually popped.
+//
+// An example of a full timeline might look like this:
+//
+//   1. A nonnull improvement context is pushed while some variable x is
+//      presently improved.
+//   2. A contingent nonnull improvement context is pushed.
+//   3. Some variable x is unimproved due to it being set to null.
+//   4. The contingent nonnull improvement context is popped and x is restored
+//      to its previous improved state, bringing us back to the state of the
+//      world as it was in step 1.
+//   5. Additional contingent contexts are pushed and popped.
+//   6. The improvement context pushed in step 1 is popped, and x is again
+//      unimproved because it was unimproved in step 3 within the inner
+//      contingent context pushed in step 2.
+static void sem_revert_notnull_improvement_history(notnull_improvement_history history);
+```
+
+As can be seen in the comments for the macros, a contingent context must only
+ever be created within a non-contingent context. The reason for this restriction
+is mainly that doing otherwise would not serve any purpose. The comment for
+`is_current_notnull_improvement_context_contingent` explains:
+
+```c
+// Tracks whether or not the current nonnull improvement context, if any, is
+// contingent (i.e., may or may not be entered depending upon the truth of some
+// condition). The sole reason for tracking this is to be able to assert that a
+// contingent context is not pushed when the current context is already
+// contingent. The reason for asserting this is that contingent contexts are
+// meant to be used for branches within a conditional (e.g., the 'x', 'y', and
+// 'z' statement lists in 'IF cond THEN x ELSE IF y ELSE z END IF') and should
+// always be within a non-contingent context that encapsulates the entire set of
+// branches (as that context gathers all of the un-improvements that result
+// within any of the branches so that re-improvements resulting from history
+// reverts can be un-set appropriately when the non-contingent context is
+// eventually popped).
+static bool_t is_current_notnull_improvement_context_contingent = false;
+```
+
+As with other PUSH- and POP-style macros in "sem.c", global variables keep track
+of the current contexts and the pushing and popping happens via temporarily
+saving a current context on the stack and later restoring it. The two types of
+contexts are held in the following globals:
+
+```c
+// This is the context into which any nonnull improvements made will be
+// recorded. Each context holds all of the improvements that were made while it
+// was the current context, not just those that are still in effect. For
+// example, if a particular improvement is unset due to a SET or FETCH, it will
+// remain in whichever context was the current context when it was first set.
+// This is okay because the goal of maintaining contexts is merely to be able to
+// unset all improvements within a given context when it ends.
+static notnull_improvement_context current_notnull_improvement_context;
+
+// This is the history into which all nonnull improvements *and* un-improvements
+// made will be recorded when `contingent_notnull_improvement_context_depth` is
+// greater than zero (i.e., whenever a contingent improvement context is in
+// effect). It is used to restore the state of the world to what it was at the
+// moment the current contingent improvement context was pushed.
+static notnull_improvement_history_item *current_notnull_improvement_history;
+```
+
+As an optimization, we avoid recording improvements and un-improvements in
+`current_notnull_improvement_history` when there is no contingent context
+currently in effect:
+
+```c
+// Tracks how many contingent notnull improvement contexts are currently in
+// effect. This allows us the optimization of not recording items into the
+// history when `contingent_notnull_improvement_context_depth` is 0 as they
+// would not be of any future use.
+static uint32_t contingent_notnull_improvement_context_depth = 0;
+```
+
+Maintaining accurate histories is critical for
+`sem_revert_notnull_improvement_history` to work correctly. It all ultimately
+boils down to always using `sem_set_notnull_improved` and
+`sem_unset_notnull_improved` to set and unset improvements, but it's essential
+to understand how things actually play out in practice as the comment within
+`sem_unset_notnull_improvements_in_context` explains; feel free to skip over
+this for now if it's overwhelming:
+
+```c
+// Is it very important that we only unset improvements that are currently
+// set. Doing otherwise would result in an invalid history, and reverting
+// said invalid history would result in things being re-improved
+// inappropriately. Suppose we have this code:
+//
+//   IF b IS NULL RETURN;
+//   -- 'b' is nonnull here
+//   IF ... THEN
+//     IF a IS NOT NULL THEN
+//       -- 'a' is nonnull here due to the condition
+//       SET b := NULL;
+//     END IF;
+//     -- 'a' is un-improved here because the THEN branch above ended
+//     -- 'b' is nullable here because it was un-improved at the above SET
+//   ELSE
+//     -- 'a' is nullable here as its un-improvement was not reverted
+//     -- 'b' is nonnull here as its un-improvement was reverted
+//   END IF;
+//   -- 'b' is nullable here due to the SET
+//
+// At the end of the outer THEN branch, both 'a' and 'b' will have been
+// un-improved, the former at the end of the inner THEN branch, and the
+// latter by the SET. Within the ELSE branch though, it is critical that we
+// re-improve 'b' (because it was already improved at the start of the outer
+// IF), yet even more critical that we not re-improve 'a' (because it was
+// not already improved at the start of the previous branch, and so
+// re-improving it would be unsafe).
+//
+// The timeline above plays out as follows:
+//
+//   01. 'b' is improved in initial context C0.
+//   02. Context C1 is pushed for the outer IF.
+//   03. Contingent context C2 is pushed for the outer THEN.
+//   04. Context C3 is pushed for the inner IF.
+//   05. Contingent context C4 is pushed for the inner THEN.
+//   06. 'a' is improved due to the condition which generates a history item
+//       in C4 and a context item in C3.
+//   07. 'b' is un-improved due to the SET which generates a history item in
+//       C4.
+//   08. Contingent context C4 is reverted, un-improving 'a' and
+//       re-improving 'b' (which generates a context item in C3).
+//   09. Context C3 is unset, with the context item added in step 06 for 'a'
+//       being ignored (as 'a' is already unset) and the context item added
+//       in step 08 for 'b' resulting in 'b' being unset (which generates a
+//       history item in C2).
+//   10. Contingent context C2 is reverted, re-re-improving 'b' (which
+//       generates a context item in C1) due to the history item generated
+//       by C3 in step 09.
+//   11. Contingent context C5 is pushed for the ELSE.
+//   12. Contingent context C5 is reverted for the ELSE, to no effect.
+//   13. Context C1 is popped, re-un-improving 'b' due to the context item
+//       generated by C2 in step 10.
+//
+// Suppose, however, that we generated a history item in C2 by unsetting 'a'
+// (which was already unset) in step 09. This would've caused 'a' to be
+// re-improved in step 10 which would've caused it to be nonnull in the
+// ELSE, which is unsafe.
+```
+
+Improvements can introduced into the current context via
+`sem_set_notnull_improved` directly (when a variable is SET to a value of a
+nonnull type), but more commonly they are introduced via one of the following
+two functions:
+
+```c
+// Given a conditional expression `ast` containing possibly AND-linked IS NOT
+// NULL subexpressions, set all of the applicable improvements within the
+// current nullability context.
+static void sem_set_notnull_improvements_for_true_condition(ast_node *expr);
+
+// Improvements for known-false conditions are dual to improvements for
+// known-true conditions: Known-false conditions improve ids and dots verified
+// to be NULL via `IS NULL` along the outermost spine of `OR` expressions,
+// whereas known-true conditions improve ids and dots verified to be nonnull via
+// `IS NOT NULL` along the outermost spine of `AND` expressions. For example,
+// the following two statements introduce the same improvements:
+//
+//   IF a IS NOT NULL AND b IS NOT NULL THEN
+//     -- `a` and `b` are improved here because we know the condition is true
+//   END IF;
+//
+//   IF a IS NULL OR b IS NULL RETURN;
+//   -- `a` and `b` are improved here because we know the condition is false
+//   -- since we must not have returned if we got this far
+static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
+```
+
+These functions introduce improvements by gathering up all of the `IS NOT NULL`
+checks (in the true case) or `IS NULL` checks (in the false case) and
+introducing improvements appropriately. The true version is used when we enter a
+context that will only be evaluated at runtime when some particular condition is
+true; the false version, conversely, is used when we enter a context that will
+only be evaluated at runtime when some particular condition is false:
+
+```sql
+IF some_condition THEN
+  -- "true" improvements from `some_condition` are in
+  -- effect here
+ELSE IF another_condition THEN
+  -- "false" improvements from `some_condition` and true
+  -- improvements from `another_condition` are in effect
+  -- here
+ELSE
+   -- "false" improvements from both `some_condition` and
+   -- `another_condition` are in effect here
+END IF;
+```
+
+When gathering up improvements from a conditional, it is critical that we take
+OUT arguments into account. For example, in the case of a condition like
+`requires_out_returns_bool(x) AND x IS NOT NULL`, it is safe to improve `x`; the
+converse expression `x IS NOT NULL AND requires_out_returns_bool(x)`, however,
+presents no such opportunity as `requires_out_returns_bool` may have mutated `x`
+after it was verified to not be NULL. Both
+`sem_set_notnull_improvements_for_true_condition` and
+`sem_set_notnull_improvements_for_false_condition` handle this by calling the
+`sem_unset_notnull_improvements_for_out_args` function while performing analysis
+in a left-to-right manner (which matches the order of evaluation at runtime) for
+all subexpressions that do not fit the `name IS NOT NULL` pattern (in the true
+case) or `name IS NULL` pattern (in the false case):
+
+```c
+// Given an arbitrary expression, perform a deep traversal and call
+// `sem_unset_notnull_improved` on all identifiers that are used as OUT or INOUT
+// arguments. This function is used to ensure that any identifers that would've
+// otherwise been improved by `sem_set_notnull_improvements_for_true_condition`
+// or `sem_set_notnull_improvements_for_false_condition` are not improved if
+// they're later used as an OUT or INOUT argument within the same conditional.
+// For example:
+//
+//   IF requires_out_arg_returns_bool(x) AND x IS NOT NULL THEN
+//     -- x CAN be improved here because the IS NOT NULL check occurs after
+//     -- the call to requires_out_arg_returns_bool.
+//   END IF;
+//
+//   IF x IS NOT NULL AND requires_out_arg_returns_bool(x) THEN
+//     -- x CANNOT be improved here because requires_out_arg_returns_bool may
+//     -- have set x to FALSE.
+//   END IF;
+static void sem_unset_notnull_improvements_for_out_args(ast_node *ast);
+```
+
+Global variables in CQL require special treatment when it comes to nullability
+improvements. This is because any procedure call could potentially mutate any
+number of global variables, and so all currently improved globals must be
+un-improved at every such call. The following context keeps track of which
+global variables are currently improved:
+
+```c
+// This keeps track of all global variables that may currently be improved to be
+// NOT NULL. We need this because we must un-improve all such variables after
+// every procedure call (because we don't do interprocedural analysis and cannot
+// know which globals may have been set to NULL).
+static notnull_improvement_context global_notnull_improvement_context;
+```
+
+The fact that we don't do interprocedural analysis (as the comment above
+indicates) is not a deficiency. Programmers should be able to reason locally
+about nullability improvements, and an analysis that depended upon the details
+of how other procedures were implemented would make that impossible.
+
+So far, we have talked a lot about how improvements are set and unset, but we
+haven't talked about how the improvement actually happens in terms of code
+generation. Since CQL represents values of nullable and nonnull types
+differently (at least in the case of non-reference types), we cannot simply
+treat a value of a nullable type as though it were of a nonnull type: We need to
+actually change its representation.
+
+The way this works is that, whenever we resolve a name/scope pair via
+`sem_resolve_id_expr`, we check whether the pair is currently improved via
+`sem_is_notnull_improved`. If it is, we call `rewrite_nullable_to_notnull` to
+wrap the id or dot we're resolving with a call to the function
+`cql_inferred_notnull` (for which we generate code in
+`cg_func_cql_inferred_notnull`):
+
+```c
+// Wraps an id or dot in a call to cql_inferred_notnull.
+cql_noexport void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast);
+
+// The `cql_inferred_notnull` function is not used by the programmer directly,
+// but rather inserted via a rewrite during semantic analysis to coerce a value
+// of a nullable type to be nonnull. The reason for this approach, as opposed to
+// just changing the type directly, is that there are also representational
+// differences between values of nullable and nonnull types; some conversion is
+// required.
+static void cg_func_cql_inferred_notnull(ast_node *call_ast, charbuf *is_null, charbuf *value);
+```
+
+As the comment for `cg_func_cql_inferred_notnull` indicates, programmers do not
+use `cql_inferred_notnull` directly: It is only inserted as a product of the
+above-mentioned rewrite. In fact, we explicitly disallow its use by programmers
+in the parser:
+
+```c
+// We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
+// to see it during semantic analysis, but it cannot be allowed to appear in a
+// program. It would be unsafe if it could: It coerces a value from a nullable
+// type to a nonnull type without any runtime check.
+#define YY_ERROR_ON_CQL_INFERRED_NOTNULL(x) \
+  EXTRACT_STRING(proc_name, x); \
+  if (!strcmp(proc_name, "cql_inferred_notnull")) { \
+    yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
+  }
+```
+
+One subtle aspect of the rewrite is that the rewrite itself performs analysis to
+validate the product of the rewrite (as do other many other rewrites). To avoid
+going into a loop of rewriting, analyzing the result (which ultimately happens
+in `sem_special_func_cql_inferred_notnull`), rewriting again because the result
+contains a name that is improved, et cetera, we keep track of whether or not
+we're currently analyzing a subexpression under a call to `cql_inferred_notnull`
+and avoid re-rewriting appropriately:
+
+```c
+// This is true if we are analyzing a call to `cql_inferred_notnull`. This can
+// happen for three reasons:
+//
+// * We just did a rewrite that produced a `cql_inferred_notnull` call and now
+//   we're computing its type.
+// * We're analyzing an expression that was already analyzed (e.g., in a CTE).
+// * We're analyzing the output of a previous CQL run within which calls to
+//   `cql_inferrred_notnull` may occur.
+//
+// Regardless of the cause, if `is_analyzing_notnull_rewrite` is true, we do not
+// want to rewrite again.
+static bool_t is_analyzing_notnull_rewrite;
+
+static void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+  ...
+  // Since we're checking a call to `cql_inferred_notnull`, its arguments have
+  // already been rewritten and we don't want to do it again. Setting
+  // `is_analyzing_notnull_rewrite` prevents that.
+  is_analyzing_notnull_rewrite = true;
+  sem_arg_list(arg_list, IS_NOT_COUNT);
+  is_analyzing_notnull_rewrite = false;
+  ...
+}
+
+// Like `sem_resolve_id`, but specific to expression contexts (where nullability
+// improvements are applicable).
+static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
+  ...
+  if (is_analyzing_notnull_rewrite) {
+    // If we're analyzing the product of a rewrite and we're already inside of a
+    // call to `cql_inferred_notnull`, do not expand again.
+    // forever.
+    return;
+  }
+  ...
+}
+```
+
+At this point, you should have a decent understanding how how nullability
+improvements function, both in terms of semantic analysis and in terms of code
+generation. The implementation is heavily commented, so reading the code and
+searching for calls to the core functions listed below should be sufficient to
+fill in any gaps:
+
+```c
+bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
+void sem_set_notnull_improved(CSTR name, CSTR scope);
+void sem_unset_notnull_improved(CSTR name, CSTR scope);
+void sem_unset_notnull_improvements_in_context(notnull_improvement_context context);
+void sem_revert_notnull_improvement_history(notnull_improvement_history history);
+void sem_set_notnull_improvements_for_true_condition(ast_node *expr);
+void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
+void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate)
+void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast);
+```
+
+
 ### Structure types and the notion of Shapes
 
 Earlier we discussed `SEM_TYPE_STRUCT` briefly. Recall the basic notion of the `structure` type:
