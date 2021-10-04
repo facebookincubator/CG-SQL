@@ -89,7 +89,6 @@ void yyrestart(FILE *);
 // a shift reduce conflict.  We can't avoid the conflict case without a lot
 // of very ugly grammar duplication. So this is the lesser of two evils
 // and definitely more maintainable.
-
 #define YY_ERROR_ON_COLUMNS(x) \
   if (x) yyerror("Cursor columns not allowed in this form.")
 
@@ -97,7 +96,6 @@ void yyrestart(FILE *);
 // to see it during semantic analysis, but it cannot be allowed to appear in a
 // program. It would be unsafe if it could: It coerces a value from a nullable
 // type to a nonnull type without any runtime check.
-
 #define YY_ERROR_ON_CQL_INFERRED_NOTNULL(x) \
   EXTRACT_STRING(proc_name, x); \
   if (!strcmp(proc_name, "cql_inferred_notnull")) { \
