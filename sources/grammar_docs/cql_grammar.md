@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep 21 13:36:59 PDT 2021
+Snapshot as of Mon Oct  4 16:32:59 PDT 2021
 
 ### Operators and Literals
 
@@ -1442,7 +1442,6 @@ enforcement_options:
   | "SELECT" "IF" "NOTHING"
   | "INSERT" "SELECT"
   | "TABLE" "FUNCTION"
-  | "NOT" "NULL" "AFTER" "CHECK"
   | "ENCODE" "CONTEXT COLUMN"
   | "ENCODE" "CONTEXT TYPE" "INTEGER"
   | "ENCODE" "CONTEXT TYPE" "LONG_INTEGER"
@@ -1451,6 +1450,7 @@ enforcement_options:
   | "ENCODE" "CONTEXT TYPE" "TEXT"
   | "ENCODE" "CONTEXT TYPE" "BLOB"
   | "IS TRUE"
+  | "CAST"
   ;
 
 enforce_strict_stmt:

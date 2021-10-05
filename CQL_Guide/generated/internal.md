@@ -52,7 +52,7 @@ There's no need to discuss the approximately 150 such tokens, but the following 
   * integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marked with the trailing `L` as in `1L`
   * string literals include the quotation marks in the token text which distinguishes them from identifiers, they are otherwise encoded similarly
 * the character class `[-+&~|^/%*(),.;!<>:=]` produces single character tokens for operators, other non-matching single characters (e.g. `'$'` produce an error)
-* line directives `^#line\ [0-9]+\ \"[^"]*\".*` get special processing so that pre-processed input does not lose file and line number fidelity
+* line directives `^#line\ [0-9]+\ \"[^"]*\".*` or `^#\ [0-9]+\ \"[^"]*\".*` get special processing so that pre-processed input does not lose file and line number fidelity
 
 ### Parsing and the Abstract Syntax Tree
 
@@ -4966,7 +4966,7 @@ cql_cleanup:
 }
 ```
 
-We've seen this before, it creates the SQLite statement.  But that isn't all the code that was generated,
+We've seen this before, it creates the SQLite statement.  But that isn't all the code that was generated, 
 let's have a look at what else we got in our outputs:
 
 ```C
@@ -7249,7 +7249,7 @@ JSON generator works. It is structured very much like the other code generators 
 to produce a JSON file.  It's call the "JSON Schema" because most of the content is a description
 of the database schema in JSON form.  As such it's almost entirely just a simple walk of the AST
 in the correct order.  The only really tricky bit is the extra dependency analysis on the AST.
-This allows us to emit usage information in the output for downstream tools to use as needed.
+This allows us to emit usage information in the output for downstream tools to use as needed.  
 
 We'll cover these topics:
 
@@ -7503,7 +7503,7 @@ This means that the normal validator will be able to find comments in the test f
 and associate them with json parts.  The testing strategies are discussed in
 [Part 4]((https://cgsql.dev/cql-guide/int04).
 
-In addition, while in test mode, we also emit the original statement that caused
+In addition, while in test mode, we also emit the original statement that caused 
 this JSON fragment to be created. This allows the test patterns to cross check
 the input and output and also makes the test output more readable for humans.
 
@@ -7522,7 +7522,7 @@ and generally come directly from the AST.
   bprintf(output, "{\n");
 
   bool_t is_deleted = ast->sem->delete_version > 0;
-
+  
   BEGIN_INDENT(view, 2);
   bprintf(output, "\"name\" : \"%s\"", name);
   bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
@@ -7538,7 +7538,7 @@ and generally come directly from the AST.
   END_INDENT(view);
   bprintf(output, "\n}\n");
   i++;
-}
+}  
 ```
 
 This part of the output is the simplest
@@ -7551,8 +7551,8 @@ This part of the output is the simplest
   * `crc_stmt` computes the CRC by echoing the statement into a scratch buffer and then running the CRC algorithm on that buffer
 * note the ",\n" pattern, this pattern is used because sometimes there are optional parts and using a leading ",\n" makes it clear which part is supposed to emit the comma
   * it turns out getting the commas right is one of the greater annoyances of JSON output
-* emit "isTemp"
-* emit "isDeleted"
+* emit "isTemp" 
+* emit "isDeleted" 
 * if the view is deleted, emit "deletedVersion"
 * if there is a migration procedure on the `@delete` attribute emit that as well
   * `cg_json_deleted_migration_proc` scans the attribute list for `@delete` attribute and emits the procedure name on that attribute if there is one
@@ -7577,7 +7577,7 @@ The next fragment emits two optional pieces that are present in many types of ob
     * the view's region
     * the "deployment region" of that region if any (regions are contained in deployable groups)
     * see [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) for more info on regions and deployment regions
-
+    
 * if there are any miscellaneous attributes they are emitted
   * we'll use `cg_json_misc_attrs` as our general formatting example when we get to that
 
@@ -7686,7 +7686,7 @@ The rest of the helpers  manage the commas in the (nested) lists:
 * `END_LIST` : emits a blank line if anything went into the list
   * this puts us in the write place to put an end marker such as ']' or '}'
 
-So reviewing this bit of code,
+So reviewing this bit of code, 
  * emit the attribute name and start the array "["
  * we start indenting
  * we start a list
@@ -7711,8 +7711,8 @@ in it needs to be emitted.  When that happens a call like this is used:
 
 ```C
 cg_pretty_quote_plaintext(
-    sql.ptr,
-    output,
+    sql.ptr, 
+    output, 
     PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
 ```
 
@@ -7789,9 +7789,9 @@ And an example callback:
 // a character buffer.  We look it up, create it if not present, and write into it.
 // We also write into the buffer for the current proc which came in with the context.
 static void cg_found_view(
-  CSTR view_name,
-  ast_node* table_ast,
-  void* pvContext)
+  CSTR view_name, 
+  ast_node* table_ast, 
+  void* pvContext) 
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
@@ -7883,11 +7883,11 @@ Almost all the other operations work similarly:
  * `alt_callback` is called but only if
  * `alt_visited` doesn't already have the symbol
 
-The exception to the above is the processing that's done for procedure calls.
+The exception to the above is the processing that's done for procedure calls. 
 We've actually only talked about table dependencies so far but, additionally,
 any procedure includes dependencies on the procedures it calls.
 
-If a procedure call is found then `callbacks->callback_proc` is used and
+If a procedure call is found then `callbacks->callback_proc` is used and 
 `callbacks->visited_proc` verifies that there are no duplicates.  So much
 the same except the names are procedure names.
 
@@ -7901,7 +7901,7 @@ However, when a view is encountered, the code does follow into the view body
 and recursively reports what the view uses. This means that the reported tables
 do include any tables that were used indirectly via views.
 
-Finally, any CTEs that are used will not be reported because
+Finally, any CTEs that are used will not be reported because 
 `find_table_or_view_even_deleted` will fail for a CTE.  However the body
 of the CTE is processed so while the CTE name does not appear, what the
 CTE uses does appear, just like any other table usage.
@@ -7911,7 +7911,7 @@ CTE uses does appear, just like any other table usage.
 The extra test output is simply a reverse index:  a mapping that goes
 from any table to the procedures that depend on that table.
 
-The mapping can easily be created by processing the JSON for procedures,
+The mapping can easily be created by processing the JSON for procedures, 
 each such procedure includes its dependency information.  As a result it's only
 used for additional validation.
 
@@ -7935,3 +7935,5 @@ Topics covered included:
 As with the other parts, no attempt was made to cover every function in detail.  That is
 best done by reading the source code. But there is overall structure here and an understanding
 of the basic principles is helpful before diving into the source code.
+
+

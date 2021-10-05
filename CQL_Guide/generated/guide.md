@@ -1142,10 +1142,6 @@ will hopefully be intuitive if you are familiar with SQL:
 
 #### Nullability Improvements
 
-**NOTE:** This is a new feature of CQL that currently **disabled by default**. Until
-it becomes the default in a future version of CQL, you will need to use
-`@enforce_strict not null after check;` to gain access to this functionality.
-
 CQL is able to "improve" the type of some expressions from a nullable type to a
 `NOT NULL` type via occurrence typing, also known as flow typing. There are
 three kinds of improvements that are possible:
@@ -8539,7 +8535,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep 21 13:36:59 PDT 2021
+Snapshot as of Mon Oct  4 16:32:59 PDT 2021
 
 ### Operators and Literals
 
@@ -9968,7 +9964,6 @@ enforcement_options:
   | "SELECT" "IF" "NOTHING"
   | "INSERT" "SELECT"
   | "TABLE" "FUNCTION"
-  | "NOT" "NULL" "AFTER" "CHECK"
   | "ENCODE" "CONTEXT COLUMN"
   | "ENCODE" "CONTEXT TYPE" "INTEGER"
   | "ENCODE" "CONTEXT TYPE" "LONG_INTEGER"
@@ -9977,6 +9972,7 @@ enforcement_options:
   | "ENCODE" "CONTEXT TYPE" "TEXT"
   | "ENCODE" "CONTEXT TYPE" "BLOB"
   | "IS TRUE"
+  | "CAST"
   ;
 
 enforce_strict_stmt:
@@ -10717,9 +10713,11 @@ Adding a NULL literal to `IFNULL` or `COALESCE` is a no-op.  It's most likely an
 
 -----
 
-### CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless.
+### CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless 'expression'
 
-In an `IFNULL` or `COALESCE` call, only the last argument should be known to be not null.  If the not null argument comes earlier in the list, then none of the others could ever be used.  That is almost certainly an error.
+In an `IFNULL` or `COALESCE` call, only the last argument may be known to be not null.  If a not null argument comes earlier in the list, then none of the others could ever be used.  That is almost certainly an error.  The
+most egregious form of this error is if the first argument is known to be not null in which case the entire
+`IFNULL` or `COALESCE` can be removed.
 
 -----
 
@@ -11402,7 +11400,10 @@ Perhaps the enum was not included (missing a #include) or else there is a typo.
 
 -----
 
-### CQL0170 available for re-use
+### CQL0170: cast is redundant, remove to reduce code size 'expression'
+
+The operand of the `CAST` expression is already the type that it is being cast to.  The cast will
+do nothing but waste space in the binary and make the code less clear.  Remove it.
 
 -----
 
@@ -13597,14 +13598,14 @@ CQL 0410 : unused, this was added to prevent merge conflicts at the end on liter
 
 ----
 
-### CQL9000: duplicate flag in substitution 'flag'
+### CQL0411: duplicate flag in substitution 'flag'
 
 The same flag cannot be used more than once per substitution within a format
 string.
 
 ----
 
-### CQL9001: cannot combine '+' flag with space flag
+### CQL0412: cannot combine '+' flag with space flag
 
 It is not sensible to use both the `+` flag and the space flag within the same
 substitution (e.g., `%+ d`) as it is equivalent to just using the `+` flag
@@ -13613,14 +13614,14 @@ substitution (e.g., `%+ d`) as it is equivalent to just using the `+` flag
 
 ----
 
-### CQL9002: width required when using flag in substitution 'flag'
+### CQL0413: width required when using flag in substitution 'flag'
 
 The flag used (`-` or `0`) for a substitution within a format string does not
 make sense unless accompanied by a width (e.g., `%-10d`).
 
 ----
 
-### CQL9003: 'l' length specifier has no effect; consider 'll' instead
+### CQL0414: 'l' length specifier has no effect; consider 'll' instead
 
 The use of the `l` length specifier within a format string, e.g. `%ld`, has no
 effect in SQLite. If the argument is to be a `LONG`, use `ll` instead (e.g.,
@@ -13629,7 +13630,7 @@ entirely (e.g., `%d`).
 
 ----
 
-### CQL9004: length specifier cannot be combined with '!' flag
+### CQL0415: length specifier cannot be combined with '!' flag
 
 Length specifiers are only for use with integer type specifiers (e.g. `%lld`)
 and the `!` flag is only for use with non-integer type specifiers (e.g. `%!10s`
@@ -13638,20 +13639,20 @@ substitution.
 
 ----
 
-### CQL9005: type specifier not allowed in CQL 'type_specifier'
+### CQL0416: type specifier not allowed in CQL 'type_specifier'
 
 The type specifier used is accepted by SQLite, but it would be either useless or
 unsafe if used within the context of CQL.
 
 ----
 
-### CQL9006: unrecognized type specifier 'type_specifier'
+### CQL0417: unrecognized type specifier 'type_specifier'
 
 The type specifier used within the format string is not known to SQLite.
 
 ----
 
-### CQL9007: type specifier combined with inappropriate flags 'type_specifier'
+### CQL0418: type specifier combined with inappropriate flags 'type_specifier'
 
 The type specifier provided does not make sense given one or more flags that
 appear within the same substitution. For example, it makes no sense to have a
@@ -13660,7 +13661,7 @@ while the `u` indicates the number will be shown as an unsigned integer.
 
 ----
 
-### CQL9008: type specifier cannot be combined with length specifier 'type_specifier'
+### CQL0419: type specifier cannot be combined with length specifier 'type_specifier'
 
 The type specifier provided cannot be used with a length specifier. For example,
 `%lls` makes no sense because `ll` only makes sense with integer types and `s`
@@ -13668,7 +13669,7 @@ is a type specifier for strings.
 
 ----
 
-### CQL9009: incomplete substitution in format string
+### CQL0420: incomplete substitution in format string
 
 The format string ends with a substitution that is incomplete. This can be the
 case if a format string ends with a `%` (e.g., `"%d %s %"`). If the intent is to
@@ -13676,13 +13677,13 @@ have a literal `%` printed, use `%%` instead (e.g., "%d %s %%"`).
 
 ----
 
-### CQL9010: first argument must be a string literal 'function'
+### CQL0421: first argument must be a string literal 'function'
 
 The first argument to the function must be a string literal.
 
 ----
 
-### CQL9011: more arguments provided than expected by format string 'function'
+### CQL0422: more arguments provided than expected by format string 'function'
 
 More arguments were provided to the function than its format string indicates
 are necessary. The most likely cause for this problem is that the format string
@@ -13690,7 +13691,7 @@ is missing a substitution.
 
 ----
 
-### CQL9012: fewer arguments provided than expected by format string 'function'
+### CQL0423: fewer arguments provided than expected by format string 'function'
 
 Fewer arguments were provided to the function than its format string indicates
 are necessary. The most likely cause for this problem is that an argument was
@@ -13708,7 +13709,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep 21 13:37:00 PDT 2021
+Snapshot as of Mon Oct  4 16:33:00 PDT 2021
 
 ### Rules
 

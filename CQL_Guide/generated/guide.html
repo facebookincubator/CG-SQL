@@ -432,7 +432,7 @@
 <li><a href="#cql0074-too-few-arguments-provided-coalesce">CQL0074: Too few arguments provided ‘coalesce’</a></li>
 <li><a href="#cql0075-incorrect-number-of-arguments-ifnull">CQL0075: Incorrect number of arguments ‘ifnull’</a></li>
 <li><a href="#cql0076-null-literal-is-useless-in-function-ifnullcoalesce">CQL0076: Null literal is useless in function ‘ifnull/coalesce’</a></li>
-<li><a href="#cql0077-encountered-arg-known-to-be-not-null-before-the-end-of-the-list-rendering-the-rest-useless.">CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless.</a></li>
+<li><a href="#cql0077-encountered-arg-known-to-be-not-null-before-the-end-of-the-list-rendering-the-rest-useless-expression">CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless ‘expression’</a></li>
 <li><a href="#cql0078-not-in-select-is-only-allowed-inside-of-select-lists-where-on-and-having-clauses">CQL0078: [not] in (select …) is only allowed inside of select lists, where, on, and having clauses</a></li>
 <li><a href="#cql0079-function-got-incorrect-number-of-arguments-name">CQL0079: function got incorrect number of arguments ‘name’</a></li>
 <li><a href="#cql0080-function-may-not-appear-in-this-context-name">CQL0080: function may not appear in this context ‘name’</a></li>
@@ -526,7 +526,7 @@
 <li><a href="#cql0167-required-column-missing-in-fetch-statement-column_name">CQL0167: required column missing in FETCH statement ‘column_name’</a></li>
 <li><a href="#cql0168-theres-no-good-way-to-generate-dummy-blobs-not-supported-for-now">CQL0168: there’s no good way to generate dummy blobs; not supported for now</a></li>
 <li><a href="#cql0169-enum-not-found-enum_name">CQL0169: enum not found ‘enum_name’</a></li>
-<li><a href="#cql0170-available-for-re-use">CQL0170 available for re-use</a></li>
+<li><a href="#cql0170-cast-is-redundant-remove-to-reduce-code-size-expression">CQL0170: cast is redundant, remove to reduce code size ‘expression’</a></li>
 <li><a href="#cql0171-name-not-found-name">CQL0171: name not found ‘name’</a></li>
 <li><a href="#cql0172-name-list-has-duplicate-name-name">CQL0172: name list has duplicate name ‘name’</a></li>
 <li><a href="#cql0173-variable-not-found-variable_name">CQL0173: variable not found ‘variable_name’</a></li>
@@ -760,19 +760,19 @@
 <li><a href="#cql0404-procedure-cannot-be-both-a-normal-procedure-and-an-unchecked-procedure-procedure_name">CQL0404: procedure cannot be both a normal procedure and an unchecked procedure, ‘procedure_name’</a></li>
 <li><a href="#cql0405-procedure-of-an-unknown-type-used-in-an-expression-procedure_name">CQL0405: procedure of an unknown type used in an expression ‘procedure_name’</a></li>
 <li><a href="#cql0408-encode-context-column-can-be-only-specified-once">CQL0408: encode context column can be only specified once</a></li>
-<li><a href="#cql9000-duplicate-flag-in-substitution-flag">CQL9000: duplicate flag in substitution ‘flag’</a></li>
-<li><a href="#cql9001-cannot-combine-flag-with-space-flag">CQL9001: cannot combine ‘+’ flag with space flag</a></li>
-<li><a href="#cql9002-width-required-when-using-flag-in-substitution-flag">CQL9002: width required when using flag in substitution ‘flag’</a></li>
-<li><a href="#cql9003-l-length-specifier-has-no-effect-consider-ll-instead">CQL9003: ‘l’ length specifier has no effect; consider ‘ll’ instead</a></li>
-<li><a href="#cql9004-length-specifier-cannot-be-combined-with-flag">CQL9004: length specifier cannot be combined with ‘!’ flag</a></li>
-<li><a href="#cql9005-type-specifier-not-allowed-in-cql-type_specifier">CQL9005: type specifier not allowed in CQL ‘type_specifier’</a></li>
-<li><a href="#cql9006-unrecognized-type-specifier-type_specifier">CQL9006: unrecognized type specifier ‘type_specifier’</a></li>
-<li><a href="#cql9007-type-specifier-combined-with-inappropriate-flags-type_specifier">CQL9007: type specifier combined with inappropriate flags ‘type_specifier’</a></li>
-<li><a href="#cql9008-type-specifier-cannot-be-combined-with-length-specifier-type_specifier">CQL9008: type specifier cannot be combined with length specifier ‘type_specifier’</a></li>
-<li><a href="#cql9009-incomplete-substitution-in-format-string">CQL9009: incomplete substitution in format string</a></li>
-<li><a href="#cql9010-first-argument-must-be-a-string-literal-function">CQL9010: first argument must be a string literal ‘function’</a></li>
-<li><a href="#cql9011-more-arguments-provided-than-expected-by-format-string-function">CQL9011: more arguments provided than expected by format string ‘function’</a></li>
-<li><a href="#cql9012-fewer-arguments-provided-than-expected-by-format-string-function">CQL9012: fewer arguments provided than expected by format string ‘function’</a></li>
+<li><a href="#cql0411-duplicate-flag-in-substitution-flag">CQL0411: duplicate flag in substitution ‘flag’</a></li>
+<li><a href="#cql0412-cannot-combine-flag-with-space-flag">CQL0412: cannot combine ‘+’ flag with space flag</a></li>
+<li><a href="#cql0413-width-required-when-using-flag-in-substitution-flag">CQL0413: width required when using flag in substitution ‘flag’</a></li>
+<li><a href="#cql0414-l-length-specifier-has-no-effect-consider-ll-instead">CQL0414: ‘l’ length specifier has no effect; consider ‘ll’ instead</a></li>
+<li><a href="#cql0415-length-specifier-cannot-be-combined-with-flag">CQL0415: length specifier cannot be combined with ‘!’ flag</a></li>
+<li><a href="#cql0416-type-specifier-not-allowed-in-cql-type_specifier">CQL0416: type specifier not allowed in CQL ‘type_specifier’</a></li>
+<li><a href="#cql0417-unrecognized-type-specifier-type_specifier">CQL0417: unrecognized type specifier ‘type_specifier’</a></li>
+<li><a href="#cql0418-type-specifier-combined-with-inappropriate-flags-type_specifier">CQL0418: type specifier combined with inappropriate flags ‘type_specifier’</a></li>
+<li><a href="#cql0419-type-specifier-cannot-be-combined-with-length-specifier-type_specifier">CQL0419: type specifier cannot be combined with length specifier ‘type_specifier’</a></li>
+<li><a href="#cql0420-incomplete-substitution-in-format-string">CQL0420: incomplete substitution in format string</a></li>
+<li><a href="#cql0421-first-argument-must-be-a-string-literal-function">CQL0421: first argument must be a string literal ‘function’</a></li>
+<li><a href="#cql0422-more-arguments-provided-than-expected-by-format-string-function">CQL0422: more arguments provided than expected by format string ‘function’</a></li>
+<li><a href="#cql0423-fewer-arguments-provided-than-expected-by-format-string-function">CQL0423: fewer arguments provided than expected by format string ‘function’</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -1488,7 +1488,6 @@ declare thing_type type thing;</code></pre>
 <li><p>As in most other languages, CQL does not perform evaluation of value-level expressions during type checking. There is one exception to this rule: An expression within a <code>const</code> is evaluated at compilation time, and if its result is then known to be nonnull, it will be given a <code>NOT NULL</code> type. For example, <code>const(NULL or 1)</code> is given the type <code>BOOL NOT NULL</code>, whereas merely <code>NULL or 1</code> has the type <code>BOOL</code>.</p></li>
 </ul>
 <h4 id="nullability-improvements">Nullability Improvements</h4>
-<p><strong>NOTE:</strong> This is a new feature of CQL that currently <strong>disabled by default</strong>. Until it becomes the default in a future version of CQL, you will need to use <code>@enforce_strict not null after check;</code> to gain access to this functionality.</p>
 <p>CQL is able to “improve” the type of some expressions from a nullable type to a <code>NOT NULL</code> type via occurrence typing, also known as flow typing. There are three kinds of improvements that are possible:</p>
 <ul>
 <li><p>Positive improvements, i.e., improvements resulting from the knowledge that some condition containing one or more <code>AND-</code>linked <code>IS NOT NULL</code> checks must have been <em>true</em>:</p>
@@ -6645,7 +6644,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Sep 21 13:36:59 PDT 2021</p>
+<p>Snapshot as of Mon Oct 4 16:32:59 PDT 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8062,7 +8061,6 @@ enforcement_options:
   | &quot;SELECT&quot; &quot;IF&quot; &quot;NOTHING&quot;
   | &quot;INSERT&quot; &quot;SELECT&quot;
   | &quot;TABLE&quot; &quot;FUNCTION&quot;
-  | &quot;NOT&quot; &quot;NULL&quot; &quot;AFTER&quot; &quot;CHECK&quot;
   | &quot;ENCODE&quot; &quot;CONTEXT COLUMN&quot;
   | &quot;ENCODE&quot; &quot;CONTEXT TYPE&quot; &quot;INTEGER&quot;
   | &quot;ENCODE&quot; &quot;CONTEXT TYPE&quot; &quot;LONG_INTEGER&quot;
@@ -8071,6 +8069,7 @@ enforcement_options:
   | &quot;ENCODE&quot; &quot;CONTEXT TYPE&quot; &quot;TEXT&quot;
   | &quot;ENCODE&quot; &quot;CONTEXT TYPE&quot; &quot;BLOB&quot;
   | &quot;IS TRUE&quot;
+  | &quot;CAST&quot;
   ;
 
 enforce_strict_stmt:
@@ -8457,8 +8456,8 @@ enforce_pop_stmt:
 <h3 id="cql0076-null-literal-is-useless-in-function-ifnullcoalesce">CQL0076: Null literal is useless in function ‘ifnull/coalesce’</h3>
 <p>Adding a NULL literal to <code>IFNULL</code> or <code>COALESCE</code> is a no-op. It’s most likely an error.</p>
 <hr />
-<h3 id="cql0077-encountered-arg-known-to-be-not-null-before-the-end-of-the-list-rendering-the-rest-useless.">CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless.</h3>
-<p>In an <code>IFNULL</code> or <code>COALESCE</code> call, only the last argument should be known to be not null. If the not null argument comes earlier in the list, then none of the others could ever be used. That is almost certainly an error.</p>
+<h3 id="cql0077-encountered-arg-known-to-be-not-null-before-the-end-of-the-list-rendering-the-rest-useless-expression">CQL0077: encountered arg known to be not null before the end of the list, rendering the rest useless ‘expression’</h3>
+<p>In an <code>IFNULL</code> or <code>COALESCE</code> call, only the last argument may be known to be not null. If a not null argument comes earlier in the list, then none of the others could ever be used. That is almost certainly an error. The most egregious form of this error is if the first argument is known to be not null in which case the entire <code>IFNULL</code> or <code>COALESCE</code> can be removed.</p>
 <hr />
 <h3 id="cql0078-not-in-select-is-only-allowed-inside-of-select-lists-where-on-and-having-clauses">CQL0078: [not] in (select …) is only allowed inside of select lists, where, on, and having clauses</h3>
 <p>The (select…) option for <code>IN</code> or <code>NOT IN</code> only makes sense in certain expression contexts. Other uses are most likely errors. It cannot appear in a loose expression because it fundamentally requires sqlite to process it.</p>
@@ -8806,7 +8805,8 @@ enforce_pop_stmt:
 <p>The indicated name was used in a context where an enumerated type name was expected but there is no such type.</p>
 <p>Perhaps the enum was not included (missing a #include) or else there is a typo.</p>
 <hr />
-<h3 id="cql0170-available-for-re-use">CQL0170 available for re-use</h3>
+<h3 id="cql0170-cast-is-redundant-remove-to-reduce-code-size-expression">CQL0170: cast is redundant, remove to reduce code size ‘expression’</h3>
+<p>The operand of the <code>CAST</code> expression is already the type that it is being cast to. The cast will do nothing but waste space in the binary and make the code less clear. Remove it.</p>
 <hr />
 <h3 id="cql0171-name-not-found-name">CQL0171: name not found ‘name’</h3>
 <p>In a scoped name list, like the columns of a cursor (for a fetch), or the columns of a particular table (for an index) a name appeared that did not belong to the universe of legal names. Trying to make a table index using a column that is not in the table would produce this error. There are many instances where a list of names belongs to some limited scope.</p>
@@ -9881,43 +9881,43 @@ enforce_pop_stmt:
 <hr />
 <p>CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin</p>
 <hr />
-<h3 id="cql9000-duplicate-flag-in-substitution-flag">CQL9000: duplicate flag in substitution ‘flag’</h3>
+<h3 id="cql0411-duplicate-flag-in-substitution-flag">CQL0411: duplicate flag in substitution ‘flag’</h3>
 <p>The same flag cannot be used more than once per substitution within a format string.</p>
 <hr />
-<h3 id="cql9001-cannot-combine-flag-with-space-flag">CQL9001: cannot combine ‘+’ flag with space flag</h3>
+<h3 id="cql0412-cannot-combine-flag-with-space-flag">CQL0412: cannot combine ‘+’ flag with space flag</h3>
 <p>It is not sensible to use both the <code>+</code> flag and the space flag within the same substitution (e.g., <code>%+ d</code>) as it is equivalent to just using the <code>+</code> flag (e.g., <code>%+d</code>).</p>
 <hr />
-<h3 id="cql9002-width-required-when-using-flag-in-substitution-flag">CQL9002: width required when using flag in substitution ‘flag’</h3>
+<h3 id="cql0413-width-required-when-using-flag-in-substitution-flag">CQL0413: width required when using flag in substitution ‘flag’</h3>
 <p>The flag used (<code>-</code> or <code>0</code>) for a substitution within a format string does not make sense unless accompanied by a width (e.g., <code>%-10d</code>).</p>
 <hr />
-<h3 id="cql9003-l-length-specifier-has-no-effect-consider-ll-instead">CQL9003: ‘l’ length specifier has no effect; consider ‘ll’ instead</h3>
+<h3 id="cql0414-l-length-specifier-has-no-effect-consider-ll-instead">CQL0414: ‘l’ length specifier has no effect; consider ‘ll’ instead</h3>
 <p>The use of the <code>l</code> length specifier within a format string, e.g. <code>%ld</code>, has no effect in SQLite. If the argument is to be a <code>LONG</code>, use <code>ll</code> instead (e.g., <code>%lld</code>). If the argument is to be an <code>INTEGER</code>, simply omit the length specifier entirely (e.g., <code>%d</code>).</p>
 <hr />
-<h3 id="cql9004-length-specifier-cannot-be-combined-with-flag">CQL9004: length specifier cannot be combined with ‘!’ flag</h3>
+<h3 id="cql0415-length-specifier-cannot-be-combined-with-flag">CQL0415: length specifier cannot be combined with ‘!’ flag</h3>
 <p>Length specifiers are only for use with integer type specifiers (e.g. <code>%lld</code>) and the <code>!</code> flag is only for use with non-integer type specifiers (e.g. <code>%!10s</code> and <code>%!f</code>). It therefore makes no sense to use both within the same substitution.</p>
 <hr />
-<h3 id="cql9005-type-specifier-not-allowed-in-cql-type_specifier">CQL9005: type specifier not allowed in CQL ‘type_specifier’</h3>
+<h3 id="cql0416-type-specifier-not-allowed-in-cql-type_specifier">CQL0416: type specifier not allowed in CQL ‘type_specifier’</h3>
 <p>The type specifier used is accepted by SQLite, but it would be either useless or unsafe if used within the context of CQL.</p>
 <hr />
-<h3 id="cql9006-unrecognized-type-specifier-type_specifier">CQL9006: unrecognized type specifier ‘type_specifier’</h3>
+<h3 id="cql0417-unrecognized-type-specifier-type_specifier">CQL0417: unrecognized type specifier ‘type_specifier’</h3>
 <p>The type specifier used within the format string is not known to SQLite.</p>
 <hr />
-<h3 id="cql9007-type-specifier-combined-with-inappropriate-flags-type_specifier">CQL9007: type specifier combined with inappropriate flags ‘type_specifier’</h3>
+<h3 id="cql0418-type-specifier-combined-with-inappropriate-flags-type_specifier">CQL0418: type specifier combined with inappropriate flags ‘type_specifier’</h3>
 <p>The type specifier provided does not make sense given one or more flags that appear within the same substitution. For example, it makes no sense to have a substitution like <code>%+u</code>: the <code>+</code> indicates the sign of the number will be shown, while the <code>u</code> indicates the number will be shown as an unsigned integer.</p>
 <hr />
-<h3 id="cql9008-type-specifier-cannot-be-combined-with-length-specifier-type_specifier">CQL9008: type specifier cannot be combined with length specifier ‘type_specifier’</h3>
+<h3 id="cql0419-type-specifier-cannot-be-combined-with-length-specifier-type_specifier">CQL0419: type specifier cannot be combined with length specifier ‘type_specifier’</h3>
 <p>The type specifier provided cannot be used with a length specifier. For example, <code>%lls</code> makes no sense because <code>ll</code> only makes sense with integer types and <code>s</code> is a type specifier for strings.</p>
 <hr />
-<h3 id="cql9009-incomplete-substitution-in-format-string">CQL9009: incomplete substitution in format string</h3>
+<h3 id="cql0420-incomplete-substitution-in-format-string">CQL0420: incomplete substitution in format string</h3>
 <p>The format string ends with a substitution that is incomplete. This can be the case if a format string ends with a <code>%</code> (e.g., <code>"%d %s %"</code>). If the intent is to have a literal <code>%</code> printed, use <code>%%</code> instead (e.g., “%d %s %%”`).</p>
 <hr />
-<h3 id="cql9010-first-argument-must-be-a-string-literal-function">CQL9010: first argument must be a string literal ‘function’</h3>
+<h3 id="cql0421-first-argument-must-be-a-string-literal-function">CQL0421: first argument must be a string literal ‘function’</h3>
 <p>The first argument to the function must be a string literal.</p>
 <hr />
-<h3 id="cql9011-more-arguments-provided-than-expected-by-format-string-function">CQL9011: more arguments provided than expected by format string ‘function’</h3>
+<h3 id="cql0422-more-arguments-provided-than-expected-by-format-string-function">CQL0422: more arguments provided than expected by format string ‘function’</h3>
 <p>More arguments were provided to the function than its format string indicates are necessary. The most likely cause for this problem is that the format string is missing a substitution.</p>
 <hr />
-<h3 id="cql9012-fewer-arguments-provided-than-expected-by-format-string-function">CQL9012: fewer arguments provided than expected by format string ‘function’</h3>
+<h3 id="cql0423-fewer-arguments-provided-than-expected-by-format-string-function">CQL0423: fewer arguments provided than expected by format string ‘function’</h3>
 <p>Fewer arguments were provided to the function than its format string indicates are necessary. The most likely cause for this problem is that an argument was accidentally omitted.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
@@ -9927,7 +9927,7 @@ enforce_pop_stmt:
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Sep 21 13:37:00 PDT 2021</p>
+<p>Snapshot as of Mon Oct 4 16:33:00 PDT 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
