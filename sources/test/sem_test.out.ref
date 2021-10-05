@@ -32236,7 +32236,7 @@ BEGIN
     FROM bar;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format 'found nested attributes that don't start with dummy_test'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -32279,7 +32279,7 @@ BEGIN
     FROM bar;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format 'found nested attributes that don't start with dummy_test'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -32328,7 +32328,7 @@ BEGIN
     FROM bar;
 END;
 
-Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format 'no test types specified'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err

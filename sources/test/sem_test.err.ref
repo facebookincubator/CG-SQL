@@ -702,9 +702,9 @@ Error at test/sem_test.sql:XXXX : in str : CQL0273: autotest attribute has incor
 Error at test/sem_test.sql:XXXX : in str : CQL0275: autotest attribute 'dummy_test' has non existent column 'bogus_col'
 Error at test/sem_test.sql:XXXX : in str : CQL0274: autotest attribute 'dummy_test' has non existent table 'bogus_table'
 Error at test/sem_test.sql:XXXX : in str : CQL0278: autotest attribute name is not valid 'dummy_bogus'
-Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
-Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
-Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format 'found nested attributes that don't start with dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format 'found nested attributes that don't start with dummy_test'
+Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect format 'no test types specified'
 Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0181: autodrop temp table does not exist 'not_an_object'
 Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0182: autodrop target is not a table 'ViewShape'
 Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0183: autodrop target must be a temporary table 'not_a_temp_table'

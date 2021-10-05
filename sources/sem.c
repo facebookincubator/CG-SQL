@@ -6163,10 +6163,10 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
       // if the core type is the same and the kind is the same then the cast did nothing
       CSTR k1 = data_type->sem->kind;
       CSTR k2 = expr->sem->kind;
-  
+
       // either both are null, or both are not null and they match
       bool_t same = (!k1 && !k2) || (k1 && k2 && !Strcasecmp(k1, k2));
-  
+
       if (same) {
         CSTR err_msg = dup_expr_text(ast);
         report_error(expr, "CQL0170: cast is redundant, remove to reduce code size", err_msg);
@@ -14541,7 +14541,7 @@ static void sem_find_ast_misc_attr_callback(
       report_dummy_test_error(
         ast_misc_attr_value_list,
         "CQL0277: autotest has incorrect format",
-        NULL,
+        "no test types specified",
         error);
       return;
     }
@@ -14559,7 +14559,7 @@ static void sem_find_ast_misc_attr_callback(
           report_dummy_test_error(
             misc_attr_value->left,
             "CQL0277: autotest has incorrect format",
-            NULL,
+            "found nested attributes that don't start with dummy_test",
             error);
         }
       }
