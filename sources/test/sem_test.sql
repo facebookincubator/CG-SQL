@@ -2748,6 +2748,49 @@ set X := (select count(1,2) from foo);
 -- + {assign}: err
 set X := (select max() from foo);
 
+-- TEST: bogus number of arguments in sign
+-- + Error % function got incorrect number of arguments 'sign'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select sign());
+
+-- TEST: bogus number of arguments in sign
+-- + Error % function got incorrect number of arguments 'sign'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select sign(1,2));
+
+-- TEST: sign outside of normal context
+-- + Error % function may not appear in this context 'sign'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := sign();
+
+-- TEST: argument in sign is not numeric
+-- + Error % argument must be numeric 'sign'
+-- +1 Error
+-- + {call}: err
+-- + {assign}: err
+set X := (select sign('x'));
+
+-- TEST: sign may accept a real arg 
+-- + {let_stmt}: rs: integer notnull variable
+-- - Error
+let rs := (select sign(1.0));
+
+-- TEST: sign Nullability is preserved
+-- + {let_stmt}: nl: integer variable
+-- - Error
+let nl := (select sign(nullable(-1.0)));
+
+-- TEST: sign Sensitivity is preserved
+-- + {let_stmt}: ssnl: integer variable sensitive
+-- - Error
+let ssnl := (select sign(sensitive(nullable(1))));
+
 -- TEST: bogus number of arguments in round
 -- + Error % function got incorrect number of arguments 'round'
 -- +1 Error

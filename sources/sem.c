@@ -6918,7 +6918,7 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
 
   sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
 
-    name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | combined_flags);
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | combined_flags);
 }
 
 static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
@@ -20209,6 +20209,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(cql_cursor_diff_val);
   FUNC_INIT(cql_cursor_format);
   FUNC_INIT(char);
+  FUNC_INIT(sign);
   FUNC_INIT(abs);
   FUNC_INIT(round);
   FUNC_INIT(instr);
