@@ -8932,6 +8932,197 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
+SET X := ( SELECT sign() );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'sign'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name sign}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT sign(1, 2) );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'sign'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name sign}: err
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     |         | {arg_list}
+    |     |           | {int 2}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET X := sign();
+
+Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sign'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {call}: err
+    | {name sign}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+SET X := ( SELECT sign('x') );
+
+Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'sign'
+
+  {assign}: err
+  | {name X}: X: integer variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name sign}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET rs := ( SELECT sign(1.0) );
+
+  {let_stmt}: rs: integer notnull variable
+  | {name rs}: rs: integer notnull variable
+  | {select_stmt}: _anon: integer notnull
+    | {select_core_list}: select: { _anon: integer notnull }
+    | | {select_core}: select: { _anon: integer notnull }
+    |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    |     | {select_expr_list}: select: { _anon: integer notnull }
+    |     | | {select_expr}: integer notnull
+    |     |   | {call}: integer notnull
+    |     |     | {name sign}: integer notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET nl := ( SELECT sign(nullable(-1.0)) );
+
+  {let_stmt}: nl: integer variable
+  | {name nl}: nl: integer variable
+  | {select_stmt}: _anon: integer
+    | {select_core_list}: select: { _anon: integer }
+    | | {select_core}: select: { _anon: integer }
+    |   | {select_expr_list_con}: select: { _anon: integer }
+    |     | {select_expr_list}: select: { _anon: integer }
+    |     | | {select_expr}: integer
+    |     |   | {call}: integer
+    |     |     | {name sign}: integer
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: real
+    |     |           | {name nullable}: real
+    |     |           | {call_arg_list}
+    |     |             | {call_filter_clause}
+    |     |             | {arg_list}: ok
+    |     |               | {uminus}: real notnull
+    |     |                 | {dbl 1.0}: real notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET ssnl := ( SELECT sign(sensitive(nullable(1))) );
+
+  {let_stmt}: ssnl: integer variable sensitive
+  | {name ssnl}: ssnl: integer variable sensitive
+  | {select_stmt}: _anon: integer sensitive
+    | {select_core_list}: select: { _anon: integer sensitive }
+    | | {select_core}: select: { _anon: integer sensitive }
+    |   | {select_expr_list_con}: select: { _anon: integer sensitive }
+    |     | {select_expr_list}: select: { _anon: integer sensitive }
+    |     | | {select_expr}: integer sensitive
+    |     |   | {call}: integer sensitive
+    |     |     | {name sign}: integer sensitive
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {call}: integer sensitive
+    |     |           | {name sensitive}: integer sensitive
+    |     |           | {call_arg_list}
+    |     |             | {call_filter_clause}
+    |     |             | {arg_list}: ok
+    |     |               | {call}: integer
+    |     |                 | {name nullable}: integer
+    |     |                 | {call_arg_list}
+    |     |                   | {call_filter_clause}
+    |     |                   | {arg_list}: ok
+    |     |                     | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 SET X := ( SELECT round() );
 
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'round'

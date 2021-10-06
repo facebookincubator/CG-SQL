@@ -6889,6 +6889,37 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
   // the kind of instr is generic, the integer returned has no kind even if the strings do
 }
 
+static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // sign can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg = first_arg(arg_list);
+  
+  if (!is_numeric_expr(arg)) {
+    report_error(name_ast, "CQL0082: argument must be numeric", name);
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type = arg->sem->sem_type;
+
+  sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | combined_flags);
+}
+
 static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -20177,6 +20208,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(cql_cursor_diff_val);
   FUNC_INIT(cql_cursor_format);
   FUNC_INIT(char);
+  FUNC_INIT(sign);
   FUNC_INIT(abs);
   FUNC_INIT(round);
   FUNC_INIT(instr);
