@@ -197,6 +197,6 @@ sed -e "s/ );//" -e "s/.* //" -e "s/\*//" -e "s/^/  /" -e "s/$/ = 0;/"  -e "s/op
 echo "}" >>out/pass1
 
 #strip the #include directives, we've already done the equivalant work
-grep -v "^ *#include" out/pass1 | grep -v "^ *#pragma once" | grep -v "#line" >>out/cql_amalgam.c
+grep -v "^ *#include" out/pass1 | grep -v "^ *#pragma once" | grep -v "^ *#line" >>out/cql_amalgam.c
 rm out/pass1
 }
