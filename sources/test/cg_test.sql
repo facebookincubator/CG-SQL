@@ -4552,6 +4552,11 @@ END;
 -- + sign_val_int = ((_tmp_int_2 > 0) - (_tmp_int_2 > 0));
 LET sign_val_int := sign(-2);
 
+-- TEST: codegen for sign: nullable arg
+-- + cql_set_notnull(_tmp_n_int_2, (-2));
+-- + cql_set_nullable(sign_val_nullable, _tmp_n_int_2.is_null, ((_tmp_n_int_2.value > 0) - (_tmp_n_int_2.value > 0)));
+LET sign_val_nullable := sign(nullable(-2));
+
 -- TEST: codegen for absolute value
 -- + _tmp_int_2 = - 2;
 -- + abs_val_int = abs(_tmp_int_2);

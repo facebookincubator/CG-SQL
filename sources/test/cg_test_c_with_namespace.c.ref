@@ -14754,6 +14754,8 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+cql_int32 sign_val_int = 0;
+cql_nullable_int32 sign_val_nullable;
 cql_int32 abs_val_int = 0;
 cql_nullable_int32 abs_val_nullable;
 cql_int64 abs_val_long = 0;
@@ -17377,6 +17379,22 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET false_test := i0_nullable IS NOT FALSE;
   */
   false_test = !cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
+
+  // The statement ending at line XXXX
+
+  /*
+  LET sign_val_int := sign(-2);
+  */
+  _tmp_int_2 = - 2;
+  sign_val_int = ((_tmp_int_2 > 0) - (_tmp_int_2 > 0));
+
+  // The statement ending at line XXXX
+
+  /*
+  LET sign_val_nullable := sign(nullable(-2));
+  */
+  cql_set_notnull(_tmp_n_int_2, (-2));
+  cql_set_nullable(sign_val_nullable, _tmp_n_int_2.is_null, ((_tmp_n_int_2.value > 0) - (_tmp_n_int_2.value > 0)));
 
   // The statement ending at line XXXX
 

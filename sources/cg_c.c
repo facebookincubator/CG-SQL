@@ -1694,7 +1694,7 @@ static void cg_func_sign(ast_node *call_ast, charbuf *is_null, charbuf *value) {
 
   cg_store_same_type(cg_main_output, temp.ptr, sem_type_result, expr_is_null.ptr, expr_value.ptr);
 
-  bprintf(&sign_value, "sign(%s)", temp_value.ptr);
+  bprintf(&sign_value, "((%s > 0) - (%s > 0))", temp_value.ptr, temp_value.ptr);
 
   cg_store_same_type(cg_main_output, result_var.ptr, sem_type_result, temp_is_null.ptr, sign_value.ptr);
 
