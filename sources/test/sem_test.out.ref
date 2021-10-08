@@ -8988,19 +8988,6 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 
 The statement ending at line XXXX
 
-SET X := sign();
-
-Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sign'
-
-  {assign}: err
-  | {name X}: X: integer variable
-  | {call}: err
-    | {name sign}
-    | {call_arg_list}
-      | {call_filter_clause}
-
-The statement ending at line XXXX
-
 SET X := ( SELECT sign('x') );
 
 Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'sign'

@@ -14754,6 +14754,8 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+cql_int32 sign_val_int = 1;
+
 cql_int32 abs_val_int = 0;
 cql_nullable_int32 abs_val_nullable;
 cql_int64 abs_val_long = 0;
