@@ -58,9 +58,6 @@ static symtab *all_tables_with_indexes;
 // will be code gen to write to the output file
 static int32_t helper_flags = 0;
 
-// Indicate whether we should write to the output file
-static int32_t write_to_file = 0;
-
 // hold all the table name, column name and column values provided by dummy_test node
 static symtab *dummy_test_infos = NULL;
 
@@ -1118,7 +1115,7 @@ static void test_helpers_find_ast_misc_attr_callback(
           cg_test_helpers_dummy_test(stmt);
         }
 
-        // these options  are only for procs that return a result set
+        // these options are only for procs that return a result set
         if (has_result_set(stmt) || has_out_stmt_result(stmt) || has_out_union_stmt_result(stmt)) {
           if (is_autotest_dummy_table(autotest_attr_name)) {
             helper_flags |= DUMMY_TABLE;
@@ -1189,7 +1186,6 @@ static void cg_test_helpers_create_proc_stmt(ast_node *stmt, ast_node *misc_attr
 
     find_misc_attrs(misc_attrs, test_helpers_find_ast_misc_attr_callback, stmt);
 
-    write_to_file |= helper_flags;
     symtab_delete(dummy_test_infos);
     dummy_test_infos = NULL;
   }
@@ -1226,28 +1222,10 @@ static void cg_test_helpers_stmt_list(ast_node *head) {
   all_tables_with_indexes = NULL;
 }
 
-// Main entry point for test_helpers
-cql_noexport void cg_test_helpers_main(ast_node *head) {
-  Contract(options.file_names_count == 1);
-  cql_exit_on_semantic_errors(head);
-  exit_on_validating_schema();
-
-  CHARBUF_OPEN(output_buf);
-
-  cg_th_output = &output_buf;
-  write_to_file = 0;
-  helper_flags = 0;
-
-  bprintf(cg_th_output, "%s", rt->source_prefix);
-  cg_test_helpers_stmt_list(head);
-  cql_write_file(options.file_names[0], cg_th_output->ptr);
-
-  CHARBUF_CLOSE(output_buf);
-
-  // Force the globals to null state so that they do not look like roots to LeakSanitizer
-  // all of these should have been freed already.  This is the final safety net to prevent
-  // non-reporting of leaks.
-
+// Force the globals to null state so that they do not look like roots to LeakSanitizer
+// all of these should have been freed already.  This is the final safety net to prevent
+// non-reporting of leaks.
+static void cg_test_helpers_reset_globals() {
   gen_create_triggers = NULL;
   gen_drop_triggers = NULL;
   all_tables_with_triggers = NULL;
@@ -1257,7 +1235,25 @@ cql_noexport void cg_test_helpers_main(ast_node *head) {
   cg_th_decls = NULL;
   cg_th_procs = NULL;
   helper_flags = 0;
-  write_to_file = 0;
+}
+
+// Main entry point for test_helpers
+cql_noexport void cg_test_helpers_main(ast_node *head) {
+  Contract(options.file_names_count == 1);
+  cql_exit_on_semantic_errors(head);
+  exit_on_validating_schema();
+  cg_test_helpers_reset_globals();
+
+  CHARBUF_OPEN(output_buf);
+
+  cg_th_output = &output_buf;
+
+  bprintf(cg_th_output, "%s", rt->source_prefix);
+  cg_test_helpers_stmt_list(head);
+  cql_write_file(options.file_names[0], cg_th_output->ptr);
+
+  CHARBUF_CLOSE(output_buf);
+  cg_test_helpers_reset_globals();
 }
 
 #endif

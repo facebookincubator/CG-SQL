@@ -20,7 +20,7 @@ module.exports = {
     ],
     'CQL Internals': [
        'int01', 'int02', 'int03', 'int04', 'int05',
-       'int06', 'int07'
+       'int06', 'int07', 'int08'
     ],
   },
 };
