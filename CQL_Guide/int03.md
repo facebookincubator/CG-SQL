@@ -651,14 +651,13 @@ Note: the code reveals one of the big CQL secrets -- that not null reference var
 Now let's look at those helper macros, they are pretty simple:
 
 ```C
-// Make a temporary buffer for the evaluation results using the canonical naming convention
-// burn the stack slot so that any type and numbered temporary that was needed
-// won't be re-used until this scope is over.
+// Make a temporary buffer for the evaluation results using the canonical
+// naming convention.  This might exit having burned some stack slots
+// for its result variables, that's normal.
 #define CG_PUSH_EVAL(expr, pri) \
-  CHARBUF_OPEN(expr##_is_null); \
-  CHARBUF_OPEN(expr##_value); \
-  cg_expr(expr, &expr##_is_null, &expr##_value, pri); \
-  stack_level++;
+CHARBUF_OPEN(expr##_is_null); \
+CHARBUF_OPEN(expr##_value); \
+cg_expr(expr, &expr##_is_null, &expr##_value, pri);
 ```
 
 The push macro simply creates buffers to hold the `is_null` and `value` results, then it calls `cg_expr` to dispatch the indicated expression.
@@ -679,19 +678,21 @@ So, none of these require further wrapping regardless of what is above the `IS N
 Other cases are usually simpler, such as "no parentheses need to be added by the child node because it will be used as the argument to a helper
 function so there will always be parens hard-coded anyway".  However these things need to be carefully tested hence the huge variety of codegen tests.
 
-Note that after calling `cg_expr` the stack level was artificially increased.  We'll get to that in the next section.  For now, looking at `POP_EVAL` we
+Note that after calling `cg_expr` the temporary stack level might be increased.  We'll get to that in the next section.  For now, looking at `POP_EVAL` we
 can see it's very straightforward:
 
 ```C
-// Close the buffers used for the above.  Return the stack level to its original state.
-// Numbered scratch variables are re-used as though they were a stack.
+// Close the buffers used for the above.
+// The scratch stack is not restored so that any temporaries used in
+// the evaluation of expr will not be re-used prematurely.  They
+// can't be used again until either the expression is finished,
+// or they have been captured in a less-nested result variable.
 #define CG_POP_EVAL(expr) \
 CHARBUF_CLOSE(expr##_value); \
-CHARBUF_CLOSE(expr##_is_null); \
-stack_level--;
+CHARBUF_CLOSE(expr##_is_null);
 ```
 
-`CG_POP_EVAL` simply closes the buffers and restores the stack level.
+`CG_POP_EVAL` simply closes the buffers, leaving the stack level unchanged.  More on this in the coming section.
 
 #### Result Variables
 
@@ -706,14 +707,16 @@ There are three macros that make this pretty simple.  The first is `CG_RESERVE_R
 // Make a scratch variable to hold the final result of an evaluation.
 // It may or may not be used.  It should be the first thing you put
 // so that it is on the top of your stack.  This only saves the slot.
+// If you use this variable you can reclaim other temporaries that come
+// from deeper in the tree since they will no longer be needed.
 #define CG_RESERVE_RESULT_VAR(ast, sem_type) \
-  int32_t stack_level_reserved = stack_level; \
-  sem_t sem_type_reserved = sem_type; \
-  ast_node *ast_reserved = ast; \
-  CHARBUF_OPEN(result_var); \
-  CHARBUF_OPEN(result_var_is_null); \
-  CHARBUF_OPEN(result_var_value); \
-  stack_level++;
+int32_t stack_level_reserved = stack_level; \
+sem_t sem_type_reserved = sem_type; \
+ast_node *ast_reserved = ast; \
+CHARBUF_OPEN(result_var); \
+CHARBUF_OPEN(result_var_is_null); \
+CHARBUF_OPEN(result_var_value); \
+stack_level++;
 ```
 
 If this looks a lot like `PUSH_TEMP` that shouldn't be surprising.  The name of the variable
@@ -723,7 +726,8 @@ allocated.
 
 The name of the macro provides a clue: this macro reserves a slot for the result variable, it's used if the codegen might
 need a result variable, but it might not.  If/when the result variable is needed, it we can artificially move the stack level
-back to the reserved spot, allocate the scratch variable, and then put the stack level back.
+back to the reserved spot, allocate the scratch variable, and then put the stack level back.  When the name is set we know
+that the scratch variable was actually used.
 
 The `CG_USE_RESULT_VAR` macro does exactly this operation.
 
@@ -731,13 +735,13 @@ The `CG_USE_RESULT_VAR` macro does exactly this operation.
 // If the result variable is going to be used, this writes its name
 // and .value and .is_null into the is_null and value fields.
 #define CG_USE_RESULT_VAR() \
-  int32_t stack_level_now = stack_level; \
-  stack_level = stack_level_reserved; \
-  cg_scratch_var(ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value); \
-  stack_level = stack_level_now; \
-  Invariant(result_var.used > 1); \
-  bprintf(is_null, "%s", result_var_is_null.ptr); \
-  bprintf(value, "%s", result_var_value.ptr)
+int32_t stack_level_now = stack_level; \
+stack_level = stack_level_reserved; \
+cg_scratch_var(ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value); \
+stack_level = stack_level_now; \
+Invariant(result_var.used > 1); \
+bprintf(is_null, "%s", result_var_is_null.ptr); \
+bprintf(value, "%s", result_var_value.ptr)
 ```
 
 Once the code generator decides that it will in fact be using a result variable to represent the answer, then
@@ -756,26 +760,33 @@ that don't.
   CG_USE_RESULT_VAR();
 ```
 
-And now armed with this knowledge we can go back to a previous mystery, let's look at `CG_PUSH_EVAL` again:
+And now armed with this knowledge we can look at the rest of the scratch stack management.
 
 ```C
-// Make a temporary buffer for the evaluation results using the canonical naming convention
-// burn the stack slot so that any type and numbered temporary that was needed
-// won't be re-used until this scope is over.
-#define CG_PUSH_EVAL(expr, pri) \
-  CHARBUF_OPEN(expr##_is_null); \
-  CHARBUF_OPEN(expr##_value); \
-  cg_expr(expr, &expr##_is_null, &expr##_value, pri); \
-  stack_level++;
+// Release the buffer holding the name of the variable.
+// If the result variable was used, we can re-use any temporaries
+// with a bigger number.  They're no longer needed since they
+// are captured in this result.  We know it was used if it
+// has .used > 1 (there is always a trailing null so empty is 1).
+#define CG_CLEANUP_RESULT_VAR() \
+if (result_var.used > 1) stack_level = stack_level_reserved + 1; \
+CHARBUF_CLOSE(result_var_value); \
+CHARBUF_CLOSE(result_var_is_null); \
+CHARBUF_CLOSE(result_var);
 ```
 
-The reason that `CG_PUSH_EVAL` includes `stack_level++` is that it is entirely possible, even likely,
+As it happens when you use `CG_PUSH_EVAL` it is entirely possible, even likely,
 that the result of `cg_expr` is in a result variable.  The convention is that if the codegen
 requires a result variable it is allocated *first*, before any other temporaries.  This is why
-there is a way to reserve a variable that you *might* need.  When the codegen is complete,
-and before anything else happens, `stack_level` is increased so that if a temporary is
-holding the result, it will not be re-used!  Any other temporaries are available, but the result
-is still live.  The macros make it easy to get this stack convention consistently correct.
+there is a way to reserve a variable that you *might* need.
+
+Now if it turns out that you used the result variable at your level it means that any
+temporary result variables from deeper levels have been used and their values plus
+whatever math was needed is now in your result variable.  This means that the `stack_level`
+variable can be decreased to one more than the level of the present result.  This is
+in the fact the only time it is safe to start re-using result variables because
+you otherwise never know how many references to result variables that were "deep in the tree"
+are left in the contents of `expr_value` or `expr_is_null`.
 
 Now, armed with the knowledge that there are result variables and temporary variables and both
 come from the scratch variables we can resolve the last mystery we left hanging.  Why does
@@ -2387,7 +2398,7 @@ cql_cleanup:
 }
 ```
 
-We've seen this before, it creates the SQLite statement.  But that isn't all the code that was generated, 
+We've seen this before, it creates the SQLite statement.  But that isn't all the code that was generated,
 let's have a look at what else we got in our outputs:
 
 ```C

@@ -75,21 +75,22 @@ cg_main_output = tag##_main_saved; \
 bindent(cg_main_output, &tag##_buf, tag##_indent); \
 CHARBUF_CLOSE(tag##_buf);
 
-// Make a temporary buffer for the evaluation results using the canonical naming convention
-// burn the stack slot so that any type and numbered temporary that was needed
-// won't be re-used until this scope is over.
+// Make a temporary buffer for the evaluation results using the canonical
+// naming convention.  This might exit having burned some stack slots
+// for its result variables, that's normal.
 #define CG_PUSH_EVAL(expr, pri) \
 CHARBUF_OPEN(expr##_is_null); \
 CHARBUF_OPEN(expr##_value); \
-cg_expr(expr, &expr##_is_null, &expr##_value, pri); \
-stack_level++;
+cg_expr(expr, &expr##_is_null, &expr##_value, pri);
 
-// Close the buffers used for the above.  Return the stack level to its original state.
-// Numbered scratch variables are re-used as though they were a stack.
+// Close the buffers used for the above.
+// The scratch stack is not restored so that any temporaries used in
+// the evaluation of expr will not be re-used prematurely.  They
+// can't be used again until either the expression is finished,
+// or they have been captured in a less-nested result variable.
 #define CG_POP_EVAL(expr) \
 CHARBUF_CLOSE(expr##_value); \
-CHARBUF_CLOSE(expr##_is_null); \
-stack_level--;
+CHARBUF_CLOSE(expr##_is_null);
 
 // Create buffers for a temporary variable.  Use cg_scratch_var to fill in the buffers
 // with the text needed to refer to the variable.  cg_scratch_var picks the name
@@ -111,6 +112,8 @@ stack_level--;
 // Make a scratch variable to hold the final result of an evaluation.
 // It may or may not be used.  It should be the first thing you put
 // so that it is on the top of your stack.  This only saves the slot.
+// If you use this variable you can reclaim other temporaries that come
+// from deeper in the tree since they will no longer be needed.
 #define CG_RESERVE_RESULT_VAR(ast, sem_type) \
 int32_t stack_level_reserved = stack_level; \
 sem_t sem_type_reserved = sem_type; \
@@ -131,6 +134,17 @@ Invariant(result_var.used > 1); \
 bprintf(is_null, "%s", result_var_is_null.ptr); \
 bprintf(value, "%s", result_var_value.ptr)
 
+// Release the buffer holding the name of the variable.
+// If the result variable was used, we can re-use any temporaries
+// with a bigger number.  They're no longer needed since they
+// are captured in this result.  We know it was used if it
+// has .used > 1 (there is always a trailing null so empty is 1).
+#define CG_CLEANUP_RESULT_VAR() \
+if (result_var.used > 1) stack_level = stack_level_reserved + 1; \
+CHARBUF_CLOSE(result_var_value); \
+CHARBUF_CLOSE(result_var_is_null); \
+CHARBUF_CLOSE(result_var);
+
 // This does reserve and use in one step
 #define CG_SETUP_RESULT_VAR(ast, sem_type) \
 CG_RESERVE_RESULT_VAR(ast, sem_type); \
@@ -146,13 +160,6 @@ if (is_out_parameter(sem_type_var)) { \
 
 #define CG_END_ADJUST_FOR_OUTARG() \
 CHARBUF_CLOSE(adjusted_target);
-
-// Release the buffer holding the name of the variable.  Restore the stack.
-#define CG_CLEANUP_RESULT_VAR() \
-CHARBUF_CLOSE(result_var_value); \
-CHARBUF_CLOSE(result_var_is_null); \
-CHARBUF_CLOSE(result_var); \
-stack_level--;
 
 #define CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, symbol_prefix, ...) \
 CHARBUF_OPEN(name); \

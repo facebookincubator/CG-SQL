@@ -3790,6 +3790,39 @@ BEGIN_TEST(facet_helpers)
 
 END_TEST(facet_helpers)
 
+-- not null result
+create proc f(x integer not null, out y integer not null)
+begin
+  set y := x;
+end;
+
+-- nullable version (not null arg)
+create proc fn(x integer not null, out y integer)
+begin
+  set y := x;
+end;
+
+-- nullable arg and result version (forces boxing)
+create proc fnn(x integer, out y integer)
+begin
+  set y := x;
+end;
+
+-- the point of this is to force the temporaries from previous calls to
+-- survive into the next expression, the final expression should be
+-- something like t1+t2+t3+t4+t5+t6 with no sharing
+BEGIN_TEST(verify_temp_non_reuse)
+  EXPECT(f(1)+f(2)+f(4)+f(8)+f(16)+f(32)==63);
+  EXPECT(fn(1)+fn(2)+fn(4)+fn(8)+fn(16)+fn(32)==63);
+  EXPECT(f(1)+fn(2)+f(4)+fn(8)+f(16)+fn(32)==63);
+  EXPECT(fn(1)+f(2)+fn(4)+f(8)+fn(16)+f(32)==63);
+
+  EXPECT(fnn(1)+fnn(2)+fnn(4)+fnn(8)+fnn(16)+fnn(32)==63);
+  EXPECT(fn(1)+fnn(2)+fn(4)+fnn(8)+fn(16)+fnn(32)==63);
+  EXPECT(f(1)+fn(2)+fnn(4)+fn(8)+fnn(16)+fn(32)==63);
+  EXPECT(fn(1)+fnn(2)+fn(4)+f(8)+fnn(16)+f(32)==63);
+END_TEST(verify_temp_non_reuse)
+
 -- a simple proc that creates a result set with out union
 -- this reference must be correctly managed
 create proc get_row()

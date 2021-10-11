@@ -1439,7 +1439,7 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
   sem_t sem_type_right = r->sem->sem_type;
 
   CG_RESERVE_RESULT_VAR(ast, sem_type_result);
-
+  CG_PUSH_EVAL(l, pri_new);
   CHARBUF_OPEN(right_eval);
 
   charbuf *saved_main = cg_main_output;
@@ -1456,12 +1456,8 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
       bprintf(value, "(");
     }
 
-    CG_PUSH_EVAL(l, pri_new);
-
     bprintf(is_null, "0");
     bprintf(value, "%s || %s", l_value.ptr, r_value.ptr);
-
-    CG_POP_EVAL(l);
 
     if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, ")");
@@ -1476,7 +1472,6 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
       bprintf(cg_main_output, "cql_set_null(%s);\n", result_var.ptr);
     }
     else {
-      CG_PUSH_EVAL(l, C_EXPR_PRI_ROOT);
       cg_if_true(cg_main_output, l_is_null.ptr, l_value.ptr); // if (left...) {
       // if left is true the result is true and don't evaluate the right
       bprintf(cg_main_output, "  ");
@@ -1508,7 +1503,6 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
       }
 
       CG_POP_MAIN_INDENT(r);
-      CG_POP_EVAL(l);
 
       bprintf(cg_main_output, "}\n");
     }
@@ -1516,6 +1510,7 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
 
   CG_POP_EVAL(r);
   CHARBUF_CLOSE(right_eval);
+  CG_POP_EVAL(l);
   CG_CLEANUP_RESULT_VAR();
 }
 
@@ -1556,6 +1551,7 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
   sem_t sem_type_right = r->sem->sem_type;
 
   CG_RESERVE_RESULT_VAR(ast, sem_type_result);
+  CG_PUSH_EVAL(l, pri_new);
 
   CHARBUF_OPEN(right_eval);
 
@@ -1573,12 +1569,8 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
       bprintf(value, "(");
     }
 
-    CG_PUSH_EVAL(l, pri_new);
-
     bprintf(is_null, "0");
     bprintf(value, "%s && %s", l_value.ptr, r_value.ptr);
-
-    CG_POP_EVAL(l);
 
     if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, ")");
@@ -1593,7 +1585,6 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
       bprintf(cg_main_output, "cql_set_null(%s);\n", result_var.ptr);
     }
     else {
-      CG_PUSH_EVAL(l, C_EXPR_PRI_ROOT);
       cg_if_false(cg_main_output, l_is_null.ptr, l_value.ptr); // if (!left...) {
       bprintf(cg_main_output, "  ");
       cg_store_same_type(cg_main_output, result_var.ptr, sem_type_result, "0", "0");
@@ -1624,7 +1615,6 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
       }
 
       CG_POP_MAIN_INDENT(r);
-      CG_POP_EVAL(l);
 
       bprintf(cg_main_output, "}\n");
     }
@@ -1632,6 +1622,7 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
 
   CG_POP_EVAL(r);
   CHARBUF_CLOSE(right_eval);
+  CG_POP_EVAL(l);
   CG_CLEANUP_RESULT_VAR();
 }
 
@@ -1758,6 +1749,7 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
 
     cg_line_directive_min(in_expr, cg_main_output);
 
+    int32_t stack_level_saved = stack_level;
     CG_PUSH_EVAL(in_expr, C_EXPR_PRI_EQ_NE);
     sem_t sem_type_in_expr = in_expr->sem->sem_type;
 
@@ -1780,6 +1772,11 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
 
     bprintf(cg_main_output, " break;\n");
     CG_POP_EVAL(in_expr);
+
+    // This comparison clause fully used any temporaries associated with expr
+    // this is kind of like the result variable case, except we didn't store the result
+    // we used it in the "if" test, but we're done with it.
+    stack_level = stack_level_saved;
   }
 
   cg_store_same_type(cg_main_output, result, sem_type_result, "0", not_found_value);
@@ -1901,6 +1898,7 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
 
     cg_line_directive_min(case_expr, cg_main_output);
 
+    int32_t stack_level_saved = stack_level;
     CG_PUSH_EVAL(case_expr, C_EXPR_PRI_EQ_NE);
 
     if (expr) {
@@ -1933,6 +1931,10 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
       }
     }
     cg_line_directive_min(then_expr, cg_main_output);
+    CG_POP_EVAL(case_expr);
+
+    // The comparison above clause fully used any temporaries associated with expr
+    stack_level = stack_level_saved;
 
     CG_PUSH_MAIN_INDENT(then, 2);
     CG_PUSH_EVAL(then_expr, C_EXPR_PRI_ROOT);
@@ -1942,8 +1944,11 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
 
     CG_POP_EVAL(then_expr);
     CG_POP_MAIN_INDENT(then);
-    CG_POP_EVAL(case_expr);
     bprintf(cg_main_output, "}\n");
+
+    // This 'then' clause stored its result, temporaries no longer needed
+    // This is just like the result variable case
+    stack_level = stack_level_saved;
   }
 }
 
@@ -2008,12 +2013,18 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
     sem_t sem_type_expr = expr->sem->sem_type;
     CG_PUSH_TEMP(temp, sem_type_expr);
 
+    int32_t stack_level_saved = stack_level;
+
     // Compute the value of the expression.
     CG_PUSH_EVAL(expr, C_EXPR_PRI_EQ_NE);
 
     // Store it in the temporary we just made, which has the exact correct type (we just made it)
     bprintf(cg_main_output, "  ");
     cg_store_same_type(cg_main_output, temp.ptr, sem_type_expr, expr_is_null.ptr, expr_value.ptr);
+
+    // here "temp" is like a mini-result variable... anything from expr can be released
+    // we only need temp now, so restore to that level.
+    stack_level = stack_level_saved;
 
     // If the expression is null, then we go to the else logic.  Note: there is always else logic
     // either the user provides it or we do (to use null as the default).
@@ -2601,16 +2612,12 @@ static void cg_expr(ast_node *expr, charbuf *is_null, charbuf *value, int32_t pr
   Contract(value->used == 1);  // just the null (i.e. empty buffer)
   Contract(is_null->used == 1); // just the null (i.e. empty buffer)
 
-  int32_t stack_level_saved = stack_level;
-
   // These are all the expressions there are, we have to find it in this table
   // or else someone added a new expression type and it isn't supported yet.
   symtab_entry *entry = symtab_find(cg_exprs, expr->type);
   Invariant(entry);
   cg_expr_dispatch *disp = (cg_expr_dispatch*)entry->val;
   disp->func(expr, disp->str, is_null, value, pri, disp->pri_new);
-
-  Invariant(stack_level == stack_level_saved);
 }
 
 // This is a nested select expression.  To evaluate we will
@@ -2622,7 +2629,6 @@ static void cg_expr(ast_node *expr, charbuf *is_null, charbuf *value, int32_t pr
 // The helper methods take care of sqlite error management.
 static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_select_stmt(ast));
-  int32_t stack_level_saved = stack_level;
 
   // SELECT [select_opts] [select_expr_list_con]
 
@@ -2639,8 +2645,6 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
 
   CG_CLEANUP_RESULT_VAR();
-
-  Invariant(stack_level == stack_level_saved);
 }
 
 // select if nothing is exactly the same codegen as regular select
@@ -2660,8 +2664,6 @@ static void cg_expr_select_if_nothing_throw(ast_node *ast, CSTR op, charbuf *is_
 // select statement part into its own result variable of the exact correct type
 // later we will safely assign that result to the final type if it held a value
 static void cg_expr_select_frag(ast_node *ast, charbuf *is_null, charbuf *value) {
-  int32_t stack_level_saved = stack_level;
-
   sem_t sem_type_result = ast->sem->sem_type;
 
   CG_SETUP_RESULT_VAR(ast, sem_type_result);
@@ -2675,8 +2677,6 @@ static void cg_expr_select_frag(ast_node *ast, charbuf *is_null, charbuf *value)
   cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
 
   CG_CLEANUP_RESULT_VAR();
-
-  Invariant(stack_level == stack_level_saved);
 
   // note that callers are expected to check the remaining error codes and clean up
   // the temp statement.
@@ -2692,7 +2692,6 @@ static void cg_expr_select_frag(ast_node *ast, charbuf *is_null, charbuf *value)
 // The helper methods takes care of sqlite error management.
 static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_expr(ast));
-  int32_t stack_level_saved = stack_level;
 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -2735,8 +2734,6 @@ static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, 
   CHARBUF_CLOSE(select_is_null);
 
   CG_CLEANUP_RESULT_VAR();
-
-  Invariant(stack_level == stack_level_saved);
 }
 
 // This is a nested select expression.  To evaluate we will
@@ -2749,7 +2746,6 @@ static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, 
 // The helper methods take care of sqlite error management.
 static void cg_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_or_null_expr(ast));
-  int32_t stack_level_saved = stack_level;
 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -2791,8 +2787,6 @@ static void cg_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbuf *i
   CHARBUF_CLOSE(select_is_null);
 
   CG_CLEANUP_RESULT_VAR();
-
-  Invariant(stack_level == stack_level_saved);
 }
 
 // This is the elementary piece of the if-then construct, it's one condition
@@ -5122,6 +5116,11 @@ static void cg_call_named_external(CSTR name, ast_node *arg_list) {
   CHARBUF_OPEN(prep);
   CHARBUF_OPEN(cleanup);
 
+  // Note this function is called in an expression context such as
+  // for the builtin "printf" SQL function it can also be called in the call
+  // statement context such as "call printf();"  In the second case it's
+  // top level and the stack doesn't matter as it will be reset but in the first
+  // case we need to restore the temp stack after we are done with the args.
   int32_t stack_level_saved = stack_level;
 
   bprintf(&invocation, "%s(", name);
@@ -5179,7 +5178,6 @@ static void cg_emit_external_arglist(ast_node *arg_list, charbuf *prep, charbuf 
       }
 
       CG_POP_EVAL(arg);
-      stack_level++; // burn a stack slot so arg will not be re-used
     }
 
     if (item->right) {
@@ -5272,8 +5270,6 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
   }  while (0);
 
   CG_POP_EVAL(arg);
-  // burn the stack slot for the temporary for the expression can't be re-used during the call
-  stack_level++;
 }
 
 // This generates the invocation for a user defined external function.
@@ -5330,8 +5326,6 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     bprintf(&invocation, "%s(", func_sym.ptr);
   }
 
-  int32_t stack_level_saved = stack_level;
-
   ast_node *item;
   for (item = arg_list; item; item = item->right, params = params->right) {
     EXTRACT_ANY(arg, item->left);
@@ -5367,7 +5361,6 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   }
 
   bprintf(&invocation, ")");
-  stack_level = stack_level_saved;  // put the scratch stack back
 
   // Now store the result of the call.
   // the only trick here is we have to make sure we honor create semantics
@@ -5391,7 +5384,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
 
   CHARBUF_CLOSE(func_sym);
   CHARBUF_CLOSE(invocation);
-  CG_CLEANUP_RESULT_VAR();
+  CG_CLEANUP_RESULT_VAR();  // this will restore the scratch stack for us
 }
 
 // Forward the call processing to the general helper (with cursor arg)
@@ -5579,7 +5572,9 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     bprintf(&invocation, ", ");
   }
 
-  int32_t stack_level_saved = stack_level;
+  // we don't need to manage the stack, we're always called at the top level
+  // we're wiping it when we exit this function anyway
+  Invariant(stack_level == 0);
 
   // emit provided args, the param specs are needed for possible type conversions
   cg_emit_proc_params(&invocation, params, expr_list);
@@ -5599,7 +5594,6 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   else {
     bprintf(&invocation, ");\n");
   }
-  stack_level = stack_level_saved;  // put the scratch stack back
 
   bprintf(cg_main_output, "%s", invocation.ptr);
 
@@ -5842,6 +5836,9 @@ static void cg_throw_stmt(ast_node *ast) {
 static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // we're going to compute the fragment name if needed but we always start clean
   base_fragment_name = NULL;
+
+  // reset the temp stack
+  stack_level = 0;
 
   // There are special rules for some procedures, we avoid emiting them here
   // so that we don't generate the comments or anything for them.  Testing later

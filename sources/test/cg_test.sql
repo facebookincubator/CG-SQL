@@ -160,25 +160,25 @@ declare function side_effect2() integer;
 -- it isn't though because there was expression work to get to the non-null
 -- state.  The Coalesce is important to this test for that reason.
 -- +  do {
--- +    _tmp_n_int_3 = side_effect1();
--- +    if (!_tmp_n_int_3.is_null) {
--- +      _tmp_int_2 = _tmp_n_int_3.value;
+-- +    _tmp_n_int_2 = side_effect1();
+-- +    if (!_tmp_n_int_2.is_null) {
+-- +      _tmp_int_1 = _tmp_n_int_2.value;
 -- +      break;
 -- +    }
--- +    _tmp_int_2 = 7;
+-- +    _tmp_int_1 = 7;
 -- +  } while (0);
--- +  if (!(_tmp_int_2)) {
+-- +  if (!(_tmp_int_1)) {
 -- +    _tmp_bool_0 = 0;
 -- +  }
 -- +  else {
--- +      _tmp_n_int_2 = side_effect2();
--- +      if (!_tmp_n_int_2.is_null) {
--- +        _tmp_int_1 = _tmp_n_int_2.value;
+-- +      _tmp_n_int_3 = side_effect2();
+-- +      if (!_tmp_n_int_3.is_null) {
+-- +        _tmp_int_2 = _tmp_n_int_3.value;
 -- +        break;
 -- +      }
--- +      _tmp_int_1 = 5;
+-- +      _tmp_int_2 = 5;
 -- +    } while (0);
--- +    _tmp_bool_0 = !!(_tmp_int_1);
+-- +    _tmp_bool_0 = !!(_tmp_int_2);
 -- +  }
 -- +  i2 = _tmp_bool_0;
 set i2 := coalesce(side_effect1(), 7) and coalesce(side_effect2(), 5);
@@ -210,26 +210,26 @@ set i2 := r2 or l2;
 
 -- TEST: complex side effect, looks safe but it isn't because of codegen
 -- +  do {
--- +    _tmp_n_int_3 = side_effect1();
--- +    if (!_tmp_n_int_3.is_null) {
--- +      _tmp_int_2 = _tmp_n_int_3.value;
+-- +    _tmp_n_int_2 = side_effect1();
+-- +    if (!_tmp_n_int_2.is_null) {
+-- +      _tmp_int_1 = _tmp_n_int_2.value;
 -- +      break;
 -- +    }
--- +    _tmp_int_2 = 7;
+-- +    _tmp_int_1 = 7;
 -- +  } while (0);
--- +  if (_tmp_int_2) {
+-- +  if (_tmp_int_1) {
 -- +    _tmp_bool_0 = 1;
 -- +  }
 -- +  else {
 -- +    do {
--- +      _tmp_n_int_2 = side_effect2();
--- +      if (!_tmp_n_int_2.is_null) {
--- +        _tmp_int_1 = _tmp_n_int_2.value;
+-- +      _tmp_n_int_3 = side_effect2();
+-- +      if (!_tmp_n_int_3.is_null) {
+-- +        _tmp_int_2 = _tmp_n_int_3.value;
 -- +        break;
 -- +      }
--- +      _tmp_int_1 = 5;
+-- +      _tmp_int_2 = 5;
 -- +    } while (0);
--- +    _tmp_bool_0 = !!(_tmp_int_1);
+-- +    _tmp_bool_0 = !!(_tmp_int_2);
 -- +  }
 -- +  i2 = _tmp_bool_0;
 set i2 := coalesce(side_effect1(), 7) or coalesce(side_effect2(), 5);
@@ -352,17 +352,17 @@ set b2 := 1 between 0 and 3;
 -- TEST: between with some nullables
 -- + SET i0_nullable := BETWEEN REWRITE _between_1_ := i1_nullable CHECK (_between_1_ >= i0_nullable AND _between_1_ <= r2);
 -- + cql_set_nullable(_between_1_, i1_nullable.is_null, i1_nullable.value);
--- + cql_combine_nullables(_tmp_n_bool_2, _between_1_.is_null, i0_nullable.is_null, _between_1_.value >= i0_nullable.value);
--- + if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_combine_nullables(_tmp_n_bool_1, _between_1_.is_null, i0_nullable.is_null, _between_1_.value >= i0_nullable.value);
+-- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
 -- + }
 -- + else {
--- +   cql_set_nullable(_tmp_n_bool_1, _between_1_.is_null, _between_1_.value <= r2);
--- +   if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +   cql_set_nullable(_tmp_n_bool_2, _between_1_.is_null, _between_1_.value <= r2);
+-- +   if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 0);
 -- +   }
 -- +   else {
--- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_2.is_null, _tmp_n_bool_1.is_null, 1);
+-- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_1.is_null, _tmp_n_bool_2.is_null, 1);
 -- +   }
 -- + }
 -- + cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -371,17 +371,17 @@ set i0_nullable := i1_nullable between i0_nullable and r2;
 -- TEST: between with different nullables
 -- + SET i0_nullable := BETWEEN REWRITE _between_2_ := i1_nullable CHECK (_between_2_ >= r2 AND _between_2_ <= i0_nullable);
 -- + cql_set_nullable(_between_2_, i1_nullable.is_null, i1_nullable.value);
--- + cql_set_nullable(_tmp_n_bool_2, _between_2_.is_null, _between_2_.value >= r2);
--- + if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_set_nullable(_tmp_n_bool_1, _between_2_.is_null, _between_2_.value >= r2);
+-- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
 -- + }
 -- + else {
--- +   cql_combine_nullables(_tmp_n_bool_1, _between_2_.is_null, i0_nullable.is_null, _between_2_.value <= i0_nullable.value);
--- +   if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +   cql_combine_nullables(_tmp_n_bool_2, _between_2_.is_null, i0_nullable.is_null, _between_2_.value <= i0_nullable.value);
+-- +   if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 0);
 -- +   }
 -- +   else {
--- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_2.is_null, _tmp_n_bool_1.is_null, 1);
+-- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_1.is_null, _tmp_n_bool_2.is_null, 1);
 -- +   }
 -- + }
 -- + cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -396,17 +396,17 @@ set b2 := 1 not between 0 and 3;
 -- TEST: not between with some nullables
 -- + SET i0_nullable := BETWEEN REWRITE _between_4_ := i1_nullable CHECK (_between_4_ < i0_nullable OR _between_4_ > r2);
 -- + cql_set_nullable(_between_4_, i1_nullable.is_null, i1_nullable.value);
--- + cql_combine_nullables(_tmp_n_bool_2, _between_4_.is_null, i0_nullable.is_null, _between_4_.value < i0_nullable.value);
--- + if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_combine_nullables(_tmp_n_bool_1, _between_4_.is_null, i0_nullable.is_null, _between_4_.value < i0_nullable.value);
+-- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
 -- + }
 -- + else {
--- +   cql_set_nullable(_tmp_n_bool_1, _between_4_.is_null, _between_4_.value > r2);
--- +   if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +   cql_set_nullable(_tmp_n_bool_2, _between_4_.is_null, _between_4_.value > r2);
+-- +   if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 1);
 -- +   }
 -- +   else {
--- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_2.is_null, _tmp_n_bool_1.is_null, 0);
+-- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_1.is_null, _tmp_n_bool_2.is_null, 0);
 -- +   }
 -- + }
 -- + cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -415,17 +415,17 @@ set i0_nullable := i1_nullable not between i0_nullable and r2;
 -- TEST: not between with different nullables
 -- + SET i0_nullable := BETWEEN REWRITE _between_5_ := i1_nullable CHECK (_between_5_ < r2 OR _between_5_ > i0_nullable);
 -- + cql_set_nullable(_between_5_, i1_nullable.is_null, i1_nullable.value);
--- + cql_set_nullable(_tmp_n_bool_2, _between_5_.is_null, _between_5_.value < r2);
--- + if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_set_nullable(_tmp_n_bool_1, _between_5_.is_null, _between_5_.value < r2);
+-- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
 -- + }
 -- + else {
--- +   cql_combine_nullables(_tmp_n_bool_1, _between_5_.is_null, i0_nullable.is_null, _between_5_.value > i0_nullable.value);
--- +   if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +   cql_combine_nullables(_tmp_n_bool_2, _between_5_.is_null, i0_nullable.is_null, _between_5_.value > i0_nullable.value);
+-- +   if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 1);
 -- +   }
 -- +   else {
--- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_2.is_null, _tmp_n_bool_1.is_null, 0);
+-- +     cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_1.is_null, _tmp_n_bool_2.is_null, 0);
 -- +   }
 -- + }
 -- + cql_set_nullable(i0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -628,22 +628,22 @@ set i0_nullable := i1_nullable not in (1, 2, null, b0_nullable);
 -- TEST: between with strings
 -- + SET b2 := BETWEEN REWRITE _between_6_ := 'b' CHECK (_between_6_ >= 'a' AND _between_6_ <= 'c');
 -- + cql_set_string_ref(&_between_6_, _literal_2_b_);
--- + b2 = cql_string_compare(_between_6_, _literal_4_a_) >= 0 && cql_string_compare(_between_6_, _literal_3_c_) <= 0;
+-- + b2 = cql_string_compare(_between_6_, _literal_%_a_) >= 0 && cql_string_compare(_between_6_, _literal_%_c_) <= 0;
 set b2 := 'b' between 'a' and 'c';
 
 -- TEST: between with nullable strings right
 -- + SET b0_nullable := BETWEEN REWRITE _between_7_ := 'b' CHECK (_between_7_ >= 'a' AND _between_7_ <= t0_nullable);
 -- + cql_set_string_ref(&_between_7_, _literal_2_b_);
--- + if (!(cql_string_compare(_between_7_, _literal_4_a_) >= 0)) {
+-- + if (!(cql_string_compare(_between_7_, _literal_%_a_) >= 0)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
 -- + }
 -- + else {
--- +   cql_combine_nullables(_tmp_n_bool_1, !_between_7_, !t0_nullable, cql_string_compare(_between_7_, t0_nullable) <= 0);
--- +   if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +   cql_combine_nullables(_tmp_n_bool_2, !_between_7_, !t0_nullable, cql_string_compare(_between_7_, t0_nullable) <= 0);
+-- +   if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 0);
 -- +   }
 -- +   else {
--- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_1.is_null, 1);
+-- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_2.is_null, 1);
 -- +   }
 -- + }
 -- + cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -652,16 +652,16 @@ set b0_nullable := 'b' between 'a' and t0_nullable;
 -- TEST: between with nullable strings left
 -- + SET b0_nullable := BETWEEN REWRITE _between_8_ := 'b' CHECK (_between_8_ >= t0_nullable AND _between_8_ <= 'c');
 -- + cql_set_string_ref(&_between_8_, _literal_2_b_);
--- + cql_combine_nullables(_tmp_n_bool_2, !_between_8_, !t0_nullable, cql_string_compare(_between_8_, t0_nullable) >= 0);
--- + if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_combine_nullables(_tmp_n_bool_1, !_between_8_, !t0_nullable, cql_string_compare(_between_8_, t0_nullable) >= 0);
+-- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
 -- + }
 -- + else {
--- +   if (!(cql_string_compare(_between_8_, _literal_3_c_) <= 0)) {
+-- +   if (!(cql_string_compare(_between_8_, _literal_%_c_) <= 0)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 0);
 -- +   }
 -- +   else {
--- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_2.is_null, 1);
+-- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_1.is_null, 1);
 -- +   }
 -- + }
 -- + cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -670,16 +670,16 @@ set b0_nullable := 'b' between t0_nullable and 'c';
 -- TEST: between with nullable strings null operand
 -- + SET b0_nullable := BETWEEN REWRITE _between_9_ := 'b' CHECK (_between_9_ >= NULL AND _between_9_ <= 'c');
 -- + cql_set_string_ref(&_between_9_, _literal_2_b_);
--- + cql_set_null(_tmp_n_bool_2);
--- + if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_set_null(_tmp_n_bool_1);
+-- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
 -- + }
 -- + else {
--- +   if (!(cql_string_compare(_between_9_, _literal_3_c_) <= 0)) {
+-- +   if (!(cql_string_compare(_between_9_, _literal_%_c_) <= 0)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 0);
 -- +   }
 -- +   else {
--- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_2.is_null, 1);
+-- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_1.is_null, 1);
 -- +   }
 -- + }
 -- + cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -688,22 +688,22 @@ set b0_nullable := 'b' between null and 'c';
 -- TEST: not between with strings
 -- + SET b2 := BETWEEN REWRITE _between_10_ := 'b' CHECK (_between_10_ < 'a' OR _between_10_ > 'c');
 -- + cql_set_string_ref(&_between_10_, _literal_2_b_);
--- + b2 = cql_string_compare(_between_10_, _literal_4_a_) < 0 || cql_string_compare(_between_10_, _literal_3_c_) > 0;
+-- + b2 = cql_string_compare(_between_10_, _literal_%_a_) < 0 || cql_string_compare(_between_10_, _literal_%_c_) > 0;
 set b2 := 'b' not between 'a' and 'c';
 
 -- TEST: not between with nullable strings right
 -- + SET b0_nullable := BETWEEN REWRITE _between_11_ := 'b' CHECK (_between_11_ < 'a' OR _between_11_ > t0_nullable);
 -- + cql_set_string_ref(&_between_11_, _literal_2_b_);
--- + if (cql_string_compare(_between_11_, _literal_4_a_) < 0) {
+-- + if (cql_string_compare(_between_11_, _literal_%_a_) < 0) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
 -- + }
 -- + else {
--- +   cql_combine_nullables(_tmp_n_bool_1, !_between_11_, !t0_nullable, cql_string_compare(_between_11_, t0_nullable) > 0);
--- +   if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +   cql_combine_nullables(_tmp_n_bool_2, !_between_11_, !t0_nullable, cql_string_compare(_between_11_, t0_nullable) > 0);
+-- +   if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 1);
 -- +   }
 -- +   else {
--- +      cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_1.is_null, 0);
+-- +      cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_2.is_null, 0);
 -- +   }
 -- + }
 -- + cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -712,16 +712,16 @@ set b0_nullable := 'b' not between 'a' and t0_nullable;
 -- TEST: not between with nullable strings left
 -- + SET b0_nullable := BETWEEN REWRITE _between_12_ := 'b' CHECK (_between_12_ < t0_nullable OR _between_12_ > 'c');
 -- + cql_set_string_ref(&_between_12_, _literal_2_b_);
--- + cql_combine_nullables(_tmp_n_bool_2, !_between_12_, !t0_nullable, cql_string_compare(_between_12_, t0_nullable) < 0);
--- + if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_combine_nullables(_tmp_n_bool_1, !_between_12_, !t0_nullable, cql_string_compare(_between_12_, t0_nullable) < 0);
+-- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
 -- + }
 -- + else {
--- +   if (cql_string_compare(_between_12_, _literal_3_c_) > 0) {
+-- +   if (cql_string_compare(_between_12_, _literal_%_c_) > 0) {
 -- +      cql_set_notnull(_tmp_n_bool_0, 1);
 -- +   }
 -- +   else {
--- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_2.is_null, 0);
+-- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_1.is_null, 0);
 -- +   }
 -- + }
 -- + cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -731,16 +731,16 @@ set b0_nullable := 'b' not between t0_nullable and 'c';
 -- verify rewrite
 -- + SET b0_nullable := BETWEEN REWRITE _between_13_ := 'b' CHECK (_between_13_ < NULL OR _between_13_ > 'c');
 -- + cql_set_string_ref(&_between_%, _literal_%_b_);
--- + cql_set_null(_tmp_n_bool_2);
--- + if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- + cql_set_null(_tmp_n_bool_1);
+-- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
 -- + }
 -- + else {
--- +   if (cql_string_compare(_between_%_, _literal_3_c_) > 0) {
+-- +   if (cql_string_compare(_between_%_, _literal_%_c_) > 0) {
 -- +     cql_set_notnull(_tmp_n_bool_0, 1);
 -- +   }
 -- +   else {
--- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_2.is_null, 0);
+-- +     cql_set_nullable(_tmp_n_bool_0, _tmp_n_bool_1.is_null, 0);
 -- +   }
 -- + }
 -- + cql_set_nullable(b0_nullable, _tmp_n_bool_0.is_null, _tmp_n_bool_0.value);
@@ -1035,13 +1035,13 @@ END;
 declare function simple_func(int1 integer) integer;
 
 -- TEST: call external function
--- + cql_set_notnull(_tmp_n_int_2, 2);
--- + result = simple_func(_tmp_n_int_2);
+-- + cql_set_notnull(_tmp_n_int_%, 2);
+-- + result = simple_func(_tmp_n_int_%);
 let result := simple_func(2);
 
 -- TEST: call external function
--- + cql_set_notnull(_tmp_n_int_3, 1);
--- + _tmp_n_int_1 = simple_func(_tmp_n_int_3);
+-- + cql_set_notnull(_tmp_n_int_2, 1);
+-- + _tmp_n_int_1 = simple_func(_tmp_n_int_2);
 -- + result = simple_func(_tmp_n_int_1);
 set result := simple_func(simple_func(1));
 
@@ -1049,8 +1049,8 @@ declare function text_func(int1 integer, int2 integer not null) text not null;
 declare text_result text;
 
 -- TEST: call external text function
--- + cql_set_notnull(_tmp_n_int_2, 123);
--- + cql_set_string_ref(&_tmp_text_0, text_func(_tmp_n_int_2, 456));
+-- + cql_set_notnull(_tmp_n_int_%, 123);
+-- + cql_set_string_ref(&_tmp_text_0, text_func(_tmp_n_int_%, 456));
 -- + cql_set_string_ref(&text_result, _tmp_text_0);
 set text_result := text_func(123, 456);
 
@@ -1084,7 +1084,7 @@ set b0_nullable := obj_var == obj_var;
 set b0_nullable := obj_var in (obj_var, obj_var);
 
 -- TEST: object variable in IN clause
--- + if (_tmp_object_2 == obj_var2) break;
+-- + if (_tmp_object_% == obj_var2) break;
 set b2 := obj_var2 in (obj_var2, obj_var2);
 
 -- TEST: object variable in NOT IN clause
@@ -1093,7 +1093,7 @@ set b2 := obj_var2 in (obj_var2, obj_var2);
 set b0_nullable := obj_var not in (obj_var, obj_var);
 
 -- TEST: object variable in NOT IN clause
--- + if (_tmp_object_2 == obj_var2) break;
+-- + if (_tmp_object_% == obj_var2) break;
 set b2 := obj_var2 not in (obj_var2, obj_var2);
 
 -- TEST: proc with object args
@@ -1394,28 +1394,29 @@ set b0_nullable := blob_var IS NOT blob_var;
 
 -- TEST: blob variable in IN clause
 -- + cql_set_notnull(_tmp_n_bool_0, 1);
--- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
--- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
 -- + cql_set_notnull(_tmp_n_bool_0, 0);
 set b0_nullable := blob_var in (blob_var, blob_var);
 
 -- TEST: blob variable in IN clause
 -- + _tmp_bool_0 = 1;
--- + if (cql_blob_equal(_tmp_blob_2, blob_var)) break;
--- + if (cql_blob_equal(_tmp_blob_2, blob_var2)) break;
+-- + if (cql_blob_equal(_tmp_blob_%, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_blob_%, blob_var2)) break;
 -- + _tmp_bool_0 = 0;
 set b2 := blob_var2 in (blob_var, blob_var2);
 
 -- TEST: blob variable in NOT IN clause
 -- + cql_set_notnull(_tmp_n_bool_0, 0);
--- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
--- + if (cql_blob_equal(_tmp_n_blob_2, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_n_blob_%, blob_var)) break;
 -- + cql_set_notnull(_tmp_n_bool_0, 1);
 set b0_nullable := blob_var not in (blob_var, blob_var);
 
 -- TEST: blob variable in NOT IN clause
--- + if (cql_blob_equal(_tmp_blob_2, blob_var)) break;
--- + if (cql_blob_equal(_tmp_blob_2, blob_var2)) break;
+-- + if (cql_blob_equal(_tmp_blob_%, blob_var)) break;
+-- + if (cql_blob_equal(_tmp_blob_%, blob_var2)) break;
+-- + b2 = _tmp_bool_0;
 set b2 := blob_var2 not in (blob_var, blob_var2);
 
 -- TEST: proc with blob args
@@ -4568,8 +4569,8 @@ LET abs_val_long := abs(-2L);
 LET abs_val_real := abs(-2.0);
 
 -- TEST: codegen for absolute value bool
--- + _tmp_bool_2 = 1;
--- + abs_val_bool = !!_tmp_bool_2;
+-- + _tmp_bool_% = 1;
+-- + abs_val_bool = !!_tmp_bool_%;
 LET abs_val_bool := abs(true);
 
 -- TEST: codegen for absolute value of null
@@ -4624,6 +4625,54 @@ begin
   let h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4")); 
 end;
 
+create proc f1(out x integer not null)
+begin
+  set x := 5;
+end;
+
+create proc f2(out x integer )
+begin
+  set x := 5;
+end;
+
+create proc f3(y integer, out x integer )
+begin
+  set x := y;
+end;
+
+-- TEST: ensure that the temporary from calling f1 is not reused in the 3rd call
+-- this was previously problematic because in the case of f1 we have a not null
+-- result so no result variable is used, the expression for the first f1() + f1()
+-- becomes something like tmp1 + tmp2 but then that part of the AST returns
+-- and we reused tmp1 again for the next call resulting in tmp1 + tmp2 + tmp1
+-- which is very bad indeed
+--- NOT NULL CASE: NO TEMPS CAN BE REUSED!
+-- +  f1(&_tmp_int_2);
+-- +  f1(&_tmp_int_3);
+-- +  f1(&_tmp_int_4);
+-- +  q = _tmp_int_2 + _tmp_int_3 + _tmp_int_4;
+--- NULLABLE CASE: TEMPS CAN BE REUSED tmp1 combines tmp2 and tmp3, tmp2 can be reused!
+-- +  f2(&_tmp_n_int_2);
+-- +  f2(&_tmp_n_int_3);
+-- +  cql_combine_nullables(_tmp_n_int_1, _tmp_n_int_2.is_null, _tmp_n_int_3.is_null, _tmp_n_int_2.value + _tmp_n_int_3.value);
+-- +  f2(&_tmp_n_int_2);
+-- +  cql_combine_nullables(r, _tmp_n_int_1.is_null, _tmp_n_int_2.is_null, _tmp_n_int_1.value + _tmp_n_int_2.value);
+--- NULLABLE CASE WITH BOXING: TEMPS CAN BE REUSED tmp1 combines tmp2 and tmp3, both can be reused
+-- +  cql_set_notnull(_tmp_n_int_3, 0);
+-- +  f3(_tmp_n_int_3, &_tmp_n_int_2);
+-- +  cql_set_notnull(_tmp_n_int_4, 1);
+-- +  f3(_tmp_n_int_4, &_tmp_n_int_3);
+-- +  cql_combine_nullables(_tmp_n_int_1, _tmp_n_int_2.is_null, _tmp_n_int_3.is_null, _tmp_n_int_2.value + _tmp_n_int_3.value);
+-- +  cql_set_notnull(_tmp_n_int_3, 2);
+-- +  f3(_tmp_n_int_3, &_tmp_n_int_2);
+-- + cql_combine_nullables(s, _tmp_n_int_1.is_null, _tmp_n_int_2.is_null, _tmp_n_int_1.value + _tmp_n_int_2.value);
+create proc multi_call_temp_reuse()
+begin
+  let q := f1() + f1() + f1();
+  let r := f2() + f2() + f2();
+  let s := f3(0) + f3(1) + f3(2);
+end;
+
 -- TEST: The `sensitive` function is a no-op and never appears in the C output.
 -- + cql_string_ref x = NULL;
 -- + cql_set_string_ref(&x, _literal_22_hello_sensitive_function_is_a_no_op);
@@ -4633,6 +4682,89 @@ create proc sensitive_function_is_a_no_op()
 begin
   let x := sensitive("hello");
   select sensitive("hello") as y;
+end;
+
+-- TEST: the AND operator has unusual short circuit evaluation
+-- we had a bug where the right arg was evaluated first but
+-- emitted second, this caused it to clobber temps from the left
+-- this test verifies that the temps inside the or are correct
+-- tmp_bool_1, _2, and _3 must be distinct.
+-- if you evaluate in the in the wrong order you end up with overlap
+-- this is a big snip but it's necessary here
+-- +  cql_combine_nullables(_tmp_n_bool_1, a.is_null, b.is_null, a.value > b.value);
+-- +  if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +    cql_set_notnull(_tmp_n_bool_0, 0);
+-- +  }
+-- +  else {
+-- +    cql_combine_nullables(_tmp_n_bool_3, a.is_null, c.is_null, a.value < c.value);
+-- +    if (cql_is_nullable_true(_tmp_n_bool_3.is_null, _tmp_n_bool_3.value)) {
+-- +      cql_set_notnull(_tmp_n_bool_2, 1);
+-- +    }
+-- +    else {
+-- +      if (c.is_null) {
+-- +        cql_set_notnull(_tmp_n_bool_2, 1);
+-- +      }
+-- +      else {
+-- +        cql_set_nullable(_tmp_n_bool_2, _tmp_n_bool_3.is_null, 0);
+-- +      }
+-- +    }
+-- +    if (cql_is_nullable_false(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- +      cql_set_notnull(_tmp_n_bool_0, 0);
+-- +    }
+-- +    else {
+-- +      cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_1.is_null, _tmp_n_bool_2.is_null, 1);
+-- +    }
+-- +  }
+-- +  if (cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) {
+-- +    cql_set_nullable(c, a.is_null, a.value);
+-- +  }
+create proc and_preserves_temps(a long, b long, c long)
+begin
+  if a > b and (a < c or c is null) then
+     set c := a;
+  end if;
+end;
+
+-- TEST: the OR operator has unusual short circuit evaluation
+-- we had a bug where the right arg was evaluated first but
+-- emitted second, this caused it to clobber temps from the left
+-- this test verifies that the temps inside the or are correct.
+-- tmp_bool_1, _2, and _3 must be distinct.
+-- this is a big snip but it's necessary here
+-- if you evaluate in the in the wrong order you end up with overlap
+-- +  cql_set_nullable(_tmp_n_bool_1, c.is_null, c.value < 0);
+-- +  if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
+-- +    cql_set_notnull(_tmp_n_bool_0, 1);
+-- +  }
+-- +  else {
+-- +    cql_combine_nullables(_tmp_n_bool_3, a.is_null, c.is_null, a.value > c.value);
+-- +    if (cql_is_nullable_false(_tmp_n_bool_3.is_null, _tmp_n_bool_3.value)) {
+-- +      cql_set_notnull(_tmp_n_bool_2, 0);
+-- +    }
+-- +    else {
+-- +      cql_combine_nullables(_tmp_n_bool_4, b.is_null, c.is_null, b.value > c.value);
+-- +      if (cql_is_nullable_false(_tmp_n_bool_4.is_null, _tmp_n_bool_4.value)) {
+-- +        cql_set_notnull(_tmp_n_bool_2, 0);
+-- +      }
+-- +      else {
+-- +        cql_combine_nullables(_tmp_n_bool_2, _tmp_n_bool_3.is_null, _tmp_n_bool_4.is_null, 1);
+-- +      }
+-- +    }
+-- +    if (cql_is_nullable_true(_tmp_n_bool_2.is_null, _tmp_n_bool_2.value)) {
+-- +      cql_set_notnull(_tmp_n_bool_0, 1);
+-- +    }
+-- +    else {
+-- +      cql_combine_nullables(_tmp_n_bool_0, _tmp_n_bool_1.is_null, _tmp_n_bool_2.is_null, 0);
+-- +    }
+-- +  }
+-- +  if (cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) {
+-- +    cql_set_nullable(c, a.is_null, a.value);
+-- +  }
+create proc or_preserves_temps(a long, b long, c long)
+begin
+  if c < 0 or (a > c and b > c) then
+     set c := a;
+  end if;
 end;
 
 --------------------------------------------------------------------

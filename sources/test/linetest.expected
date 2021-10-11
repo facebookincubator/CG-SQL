@@ -269,7 +269,7 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
   cql_bool _tmp_bool_0 = 0;
 # 1
-  cql_int32 _tmp_int_2 = 0;
+  cql_int32 _tmp_int_1 = 0;
 # 1
 
 # 1
@@ -277,15 +277,15 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 # 3 "x"
   do {
 # 3 "x"
-    _tmp_int_2 = i;
+    _tmp_int_1 = i;
 # 3
     _tmp_bool_0 = 1;
 # 4 "x"
-    if (_tmp_int_2 == 1) break;
+    if (_tmp_int_1 == 1) break;
 # 5 "x"
-    if (_tmp_int_2 == 3) break;
+    if (_tmp_int_1 == 3) break;
 # 6 "x"
-    if (_tmp_int_2 == 7) break;
+    if (_tmp_int_1 == 7) break;
 # 6
     _tmp_bool_0 = 0;
 # 6 "x"
@@ -325,13 +325,9 @@ void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
 
 # 1
-  cql_bool _tmp_bool_2 = 0;
-# 1
-  cql_int32 _tmp_int_4 = 0;
-# 1
   cql_bool _tmp_bool_1 = 0;
 # 1
-  cql_int32 _tmp_int_3 = 0;
+  cql_int32 _tmp_int_2 = 0;
 # 1
 
 # 1
@@ -344,21 +340,21 @@ void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
 # 6 "x"
       do {
 # 6 "x"
-        _tmp_int_4 = i;
+        _tmp_int_2 = i;
 # 6
-        _tmp_bool_2 = 1;
+        _tmp_bool_1 = 1;
 # 7 "x"
-        if (_tmp_int_4 == 10) break;
+        if (_tmp_int_2 == 10) break;
 # 8 "x"
-        if (_tmp_int_4 == 12) break;
+        if (_tmp_int_2 == 12) break;
 # 9 "x"
-        if (_tmp_int_4 == 14) break;
+        if (_tmp_int_2 == 14) break;
 # 9
-        _tmp_bool_2 = 0;
+        _tmp_bool_1 = 0;
 # 9 "x"
       } while (0);
 # 9
-      *b = _tmp_bool_2;
+      *b = _tmp_bool_1;
 # 9
       break;
 # 9
@@ -366,15 +362,15 @@ void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
 # 11 "x"
     do {
 # 11 "x"
-      _tmp_int_3 = i;
+      _tmp_int_2 = i;
 # 11
       _tmp_bool_1 = 1;
 # 12 "x"
-      if (_tmp_int_3 == 1) break;
+      if (_tmp_int_2 == 1) break;
 # 13 "x"
-      if (_tmp_int_3 == 3) break;
+      if (_tmp_int_2 == 3) break;
 # 14 "x"
-      if (_tmp_int_3 == 7) break;
+      if (_tmp_int_2 == 7) break;
 # 14
       _tmp_bool_1 = 0;
 # 14 "x"
