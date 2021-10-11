@@ -1667,6 +1667,35 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   CHARBUF_CLOSE(result);
 }
 
+static void cg_func_sign(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left); 
+
+  sem_t sem_type_result = call_ast->sem->sem_type;
+  sem_t sem_type_expr = expr->sem->sem_type;
+
+  CHARBUF_OPEN(sign_value);
+  CG_SETUP_RESULT_VAR(call_ast, sem_type_result);
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+  CG_PUSH_TEMP(temp, sem_type_expr);
+
+  cg_store_same_type(cg_main_output, temp.ptr, sem_type_result, expr_is_null.ptr, expr_value.ptr);
+
+  bprintf(&sign_value, "((%s > 0) - (%s < 0))", temp_value.ptr, temp_value.ptr);
+
+  cg_store_same_type(cg_main_output, result_var.ptr, sem_type_result, temp_is_null.ptr, sign_value.ptr);
+
+  CG_POP_TEMP(temp);
+  CG_POP_EVAL(expr);
+  CG_CLEANUP_RESULT_VAR();
+  CHARBUF_CLOSE(sign_value);
+}
+
 // To do `abs` we have to evaluate the argument and store it somewhere
 // we use the result variable for this.  We don't want to evaluate that
 // expression more than once, hence the temporary storage.  Once we have
@@ -7357,6 +7386,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(out_union_stmt);
   STMT_INIT(echo_stmt);
 
+  FUNC_INIT(sign);
   FUNC_INIT(abs);
   FUNC_INIT(sensitive);
   FUNC_INIT(nullable);

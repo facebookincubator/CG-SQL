@@ -4548,6 +4548,16 @@ BEGIN
   END;
 END;
 
+-- TEST: codegen for sign
+-- + _tmp_int_2 = - 2;
+-- + sign_val_int = ((_tmp_int_2 > 0) - (_tmp_int_2 < 0));
+LET sign_val_int := sign(-2);
+
+-- TEST: codegen for sign: nullable arg
+-- + cql_set_notnull(_tmp_n_int_2, (-2));
+-- + cql_set_nullable(sign_val_nullable, _tmp_n_int_2.is_null, ((_tmp_n_int_2.value > 0) - (_tmp_n_int_2.value < 0)));
+LET sign_val_nullable := sign(nullable(-2));
+
 -- TEST: codegen for absolute value
 -- + _tmp_int_2 = - 2;
 -- + abs_val_int = abs(_tmp_int_2);
@@ -4576,6 +4586,7 @@ LET abs_val_bool := abs(true);
 -- TEST: codegen for absolute value of null
 -- + cql_set_null(abs_val_nullable);
 SET abs_val_nullable := abs(null);
+
 
 -- Used in the following test.
 create proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) begin end;

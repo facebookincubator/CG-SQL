@@ -2762,13 +2762,6 @@ set X := (select sign());
 -- + {assign}: err
 set X := (select sign(1,2));
 
--- TEST: sign outside of normal context
--- + Error % function may not appear in this context 'sign'
--- +1 Error
--- + {call}: err
--- + {assign}: err
-set X := sign();
-
 -- TEST: argument in sign is not numeric
 -- + Error % argument must be numeric 'sign'
 -- +1 Error

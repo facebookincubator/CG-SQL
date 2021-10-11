@@ -223,7 +223,6 @@ Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect numbe
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'max'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'sign'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'sign'
-Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'sign'
 Error at test/sem_test.sql:XXXX : in str : CQL0082: argument must be numeric 'sign'
 Error at test/sem_test.sql:XXXX : in str : CQL0079: function got incorrect number of arguments 'round'
 Error at test/sem_test.sql:XXXX : in call : CQL0080: function may not appear in this context 'round'

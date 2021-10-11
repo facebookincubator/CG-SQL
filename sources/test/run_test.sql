@@ -294,6 +294,18 @@ BEGIN_TEST(simple_funcs)
   EXPECT_SQL_TOO(abs(true) == true);
   EXPECT_SQL_TOO(abs(false) == false);
   EXPECT_SQL_TOO(abs(null) is null);
+
+  EXPECT(sign(5) == 1);
+  EXPECT(sign(0.1) == 1);
+  EXPECT(sign(7L) == 1);
+  EXPECT(sign(true) == 1);
+  EXPECT(sign(-5) == -1);
+  EXPECT(sign(-0.1) == -1);
+  EXPECT(sign(-7L) == -1);
+  EXPECT(sign(0) == 0);
+  EXPECT(sign(0.0) == 0);
+  EXPECT(sign(0L) == 0);
+  EXPECT(sign(false) == 0);
 END_TEST(simple_funcs)
 
 -- verify that out parameter is set in proc call

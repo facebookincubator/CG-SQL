@@ -3226,6 +3226,12 @@ extern cql_bool false_test;
 extern CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern cql_int32 sign_val_int;
+
+// The statement ending at line XXXX
+extern cql_nullable_int32 sign_val_nullable;
+
+// The statement ending at line XXXX
 extern cql_int32 abs_val_int;
 
 // The statement ending at line XXXX
