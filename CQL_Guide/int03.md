@@ -2836,5 +2836,5 @@ Topics covered included:
 * the use of `charbuf` to create and assemble fragments
 
 As with the other parts, this is not a complete discussion of the code but a useful survey that
-should enable readers enough context to understand `cg_c.c` and the runtime helpers in `cqlrt.c`
-and `cqlrt_common.c`.  Good luck in your personal exploration.
+should give readers enough context to understand `cg_c.c` and the runtime helpers in `cqlrt.c`
+and `cqlrt_common.c`.  Good luck in your personal exploration!

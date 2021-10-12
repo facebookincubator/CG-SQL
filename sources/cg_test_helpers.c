@@ -272,7 +272,7 @@ static void find_all_table_nodes(dummy_test_info *info, ast_node *node) {
         CSTR table_saved = info->table_current;
         info->table_current = table_or_view_name;
 
-        // Now let walkthrough the new found table (table_or_view_name) to find all the tables it
+        // Now let's walk through the new found table (table_or_view_name) to find all the tables it
         // depends on.
         find_all_table_nodes_left_right(info, table_or_view);
 
@@ -1048,8 +1048,8 @@ static void collect_dummy_test_info(
           //   create table B(id integer primary key references A(id));
           //
           // If there is sample data provided for B.id then we must also ensure that
-          // the value provided for B.id is also used a row in A with the same value
-          // for id.
+          // the value provided for B.id is also add as a sample row in A with the same
+          // value for id.
           if (is_foreign_key(column_type)) {
             add_value_to_referenced_table(table_name, column_name, column_type, misc_attr_value);
           }
