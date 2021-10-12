@@ -326,7 +326,7 @@ The steps are pretty simple:
 * any triggers marked with `@delete` are not included for obvious reasons
 
 At the end of this looking up the table name will give you a list of trigger statement AST pointers.  From there
-of course you can everything you need.
+of course you can get everything you need.
 
 The index version is basically the same, the details of the `EXTRACT` ops to go from index to table name are different
 and of course we start from the `all_indices_list`
@@ -463,7 +463,7 @@ If there is enough of it (at least 2 rows per candidate table) then it might be 
 not designed to be fully general, after all it's not that hard to just write `INSERT ... VALUES` for all your tables anyway.  The goal
 is to provide something that will help you not have to remember all the FK relationships and maybe let you economically specify some leaf
 data you need and get the rest for free.  It's also possible to manually create dummy data that just won't work, again, scrubbing all
-this is is way beyond the ability of a simple test helper.  When the code runs you'll get SQLite errors which can be readily addressed.
+this is way beyond the ability of a simple test helper.  When the code runs you'll get SQLite errors which can be readily addressed.
 
 So keeping in mind this sort of "entry level data support" as the goal, we can take a look at how the system works -- it's all
 in the function `collect_dummy_test_info` which includes this helpful comment on structure.
@@ -550,7 +550,7 @@ for (ast_node *values_ast = column_name_list->right;
 The most important part is `bytebuf_append_var(column_values, misc_attr_value);` this is where the
 attribute value is added to the list of values that are on the column.
 
-Finally, the "foreign key stuff".  What we need to here is check the column name in the table to see if it's part of a foreign
+Finally, the "foreign key stuff".  What we need to do here is check the column name in the table to see if it's part of a foreign
 key and if it is we recursively add the current data value to the referenced column in the reference table.  That way
 if you add an initalizer to a leaf table you don't also have to add it to all the parent tables.  If it wasn't for this
 feature the manual data wouldn't be very useful at all, hand written `INSERT` statements would be just as good.
