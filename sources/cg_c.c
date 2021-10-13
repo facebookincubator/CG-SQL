@@ -282,10 +282,8 @@ static void cg_insert_line_directives(CSTR input, charbuf *output)
       else if ((trim[0] == '#' && trim[1] == ' ') || !strncmp(trim, line_directive, line_directive_len)) {
         bclear(&last_line_directive);
         bprintf(&last_line_directive, "%s", trim);
-        char* directive_start = strchr(last_line_directive.ptr, '#');
-        Invariant(directive_start != NULL);
-        bprintf(output, "%s\n", directive_start);
-        char* line_start = strchr(directive_start, ' ');
+        bprintf(output, "%s\n", last_line_directive.ptr);
+        char* line_start = strchr(last_line_directive.ptr, ' ');
         char* next_space = strchr(line_start + 1, ' ');
         if (next_space) *next_space = '\0';
 
@@ -297,13 +295,12 @@ static void cg_insert_line_directives(CSTR input, charbuf *output)
         continue;
       }
 
-      char* directive_start = strchr(last_line_directive.ptr, '#');
-      if (directive_start != NULL && !suppress_because_new_directive && now_in_proc) {
+      if (last_line_directive.ptr[0] && !suppress_because_new_directive && now_in_proc) {
         // this forces us to stay on the current line until we explicitly switch lines
         // every line becomes
         // #line 32
         // [whatever]
-        bprintf(output, "%s\n", directive_start);
+        bprintf(output, "%s\n", last_line_directive.ptr);
       }
 
       suppress_because_new_directive = false;
