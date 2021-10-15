@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+-- TEST: Validate parsing and strict enforcement for NULL CHECK ON NOT NULL. We
+-- leave this on for the remainder of the tests as this will soon be the
+-- default.
+-- + @ENFORCE_STRICT NULL CHECK ON NOT NULL
+-- + {enforce_strict_stmt}: ok
+-- + {int 12}
+@enforce_strict null check on not null;
+
 -- TEST: we'll be using printf in lots of places in the tests as an external proc
 -- + {declare_proc_no_check_stmt}: ok
 -- - Error
@@ -13565,17 +13573,17 @@ end;
 -- + END, CASE WHEN c2.x IS NULL THEN 'null'
 -- + ELSE printf('%d', c2.x)
 -- + END)
--- + WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
+-- + WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN nullable(c1.y) IS NULL THEN 'null'
 -- + ELSE printf('%s', c1.y)
--- + END, CASE WHEN c2.y IS NULL THEN 'null'
+-- + END, CASE WHEN nullable(c2.y) IS NULL THEN 'null'
 -- + ELSE printf('%s', c2.y)
 -- + END)
 -- + END);
 -- - Error
 create proc print_call_cql_cursor_diff_val()
 begin
-  declare c1 cursor for select 1 x, 'y' y;
-  declare c2 cursor for select 1 x, 'v' y;
+  declare c1 cursor for select nullable(1) x, 'y' y;
+  declare c2 cursor for select nullable(1) x, 'v' y;
   fetch c1;
   fetch c2;
   call printf(cql_cursor_diff_val(c1, c2));
@@ -13686,25 +13694,25 @@ set sens_text := (select trim("xyz", name) result from with_sensitive);
 
 -- TEST: call cql_cursor_format on a auto cursor
 -- + {create_proc_stmt}: ok dml_proc
--- + DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
+-- + DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, nullable(1.1) AS e, CAST('y' AS BLOB) AS f;
 -- + FETCH c1;
--- + SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN c1.a IS NULL THEN 'null'
+-- + SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN nullable(c1.a) IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.a)
--- + END, CASE WHEN c1.b IS NULL THEN 'null'
+-- + END, CASE WHEN nullable(c1.b) IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.b)
--- + END, CASE WHEN c1.c IS NULL THEN 'null'
+-- + END, CASE WHEN nullable(c1.c) IS NULL THEN 'null'
 -- + ELSE printf('%lld', c1.c)
--- + END, CASE WHEN c1.d IS NULL THEN 'null'
+-- + END, CASE WHEN nullable(c1.d) IS NULL THEN 'null'
 -- + ELSE printf('%s', c1.d)
 -- + END, CASE WHEN c1.e IS NULL THEN 'null'
 -- + ELSE printf('%f', c1.e)
--- + END, CASE WHEN c1.f IS NULL THEN 'null'
+-- + END, CASE WHEN nullable(c1.f) IS NULL THEN 'null'
 -- + ELSE printf('length %lld blob', cql_get_blob_size(c1.f))
 -- + END);
 -- - Error
 create proc print_call_cql_cursor_format()
 begin
-  declare c1 cursor for select TRUE a, 1 b, 99L c, 'x' d, 1.1 e, cast('y' as blob) f;
+  declare c1 cursor for select TRUE a, 1 b, 99L c, 'x' d, nullable(1.1) e, cast('y' as blob) f;
   fetch c1;
   set a_string := cql_cursor_format(c1);
 end;
@@ -15829,6 +15837,11 @@ create virtual table virtual_with_hidden_wrong using module_name as (
   y integer
 );
 
+-- TEST: save the current state
+-- + {enforce_push_stmt}: ok
+-- - Error
+@enforce_push;
+
 -- force this on so we can verify that it is turned off
 @enforce_strict foreign key on update;
 
@@ -15844,7 +15857,7 @@ create table fk_strict_err_0 (
   id integer REFERENCES foo(id)
 );
 
--- TEST: save the current state
+-- TEST: save the current state again
 -- + {enforce_push_stmt}: ok
 -- - Error
 @enforce_push;
@@ -15869,6 +15882,11 @@ create table fk_strict_err_1 (
 create table fk_strict_err_2 (
   id integer REFERENCES foo(id)
 );
+
+-- TEST: restore the state before our first push
+-- + {enforce_pop_stmt}: ok
+-- - Error
+@enforce_pop;
 
 -- TEST: pop too many enforcement options off the stack
 -- + {enforce_pop_stmt}: err
@@ -16729,7 +16747,7 @@ begin
     set b := null;
     let x2 := a;
     let y2 := b;
-    if a is not null and b is not null then
+    if b is not null then
       let x3 := a;
       let y3 := b;
       set a := null;
@@ -17110,17 +17128,6 @@ begin
   declare a int;
   if a is not null then
     select (1 + a) as b;
-  end if;
-end;
-
--- TEST: Improvements are not applied to variables of a NOT NULL type.
--- - cql_inferred_notnull
--- - Error
-create proc improvements_are_not_applied_to_notnull_variables()
-begin
-  let a := 42;
-  if a is not null then
-    let b := a;
   end if;
 end;
 
@@ -18437,26 +18444,28 @@ select 'x' not like ('y' = 1);
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- conversion to IS NULL requires parens
--- + SELECT (5 IS NULL) + 3;
+-- + SELECT (nullable(5) IS NULL) + 3;
 -- - Error
-select 5 isnull + 3;
+select nullable(5) isnull + 3;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- no parens needed left to right works
 -- + SELECT 5 IS NULL IS NULL;
--- - Error
+-- + Error % Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
+-- +1 Error
 select 5 isnull isnull;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- conversion to IS NOT NULL requires parens
--- + SELECT (5 IS NOT NULL) + 3;
+-- + SELECT (nullable(5) IS NOT NULL) + 3;
 -- - Error
-select 5 notnull + 3;
+select nullable(5) notnull + 3;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- no parens needed left to right works
 -- + SELECT 5 IS NOT NULL IS NULL;
--- - Error
+-- + Error % Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
+-- +1 Error
 select 5 notnull isnull;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
@@ -18790,3 +18799,30 @@ select printf("%-!8s %!-16s", "hello", "world");
 -- + {select_expr}: text notnull
 -- - Error
 select printf("%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E", 0x0, 00, "str", 0, 0.0);
+
+-- TEST: cannot use IS NULL on a nonnull type
+-- + Error % Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
+-- +1 Error
+let not_null_object_is_null := not_null_object is null;
+
+-- TEST: cannot use IS NOT NULL on a nonnull type
+-- + Error % Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
+-- +1 Error
+let not_null_object_is_not_null := not_null_object is not null;
+
+-- TEST: validate parsing and non-enforcement for NULL CHECK ON NOT NULL
+-- + @ENFORCE_NORMAL NULL CHECK ON NOT NULL
+-- + {enforce_normal_stmt}: ok
+-- + {int 12}
+@enforce_normal null check on not null;
+
+-- TEST: okay when NULL CHECK ON NOT NULL is disabled
+-- - Error
+let not_null_object_is_null := not_null_object is null;
+
+-- TEST: okay when NULL CHECK ON NOT NULL is disabled
+-- - Error
+let not_null_object_is_not_null := not_null_object is not null;
+
+-- re-enable for subsequent tests
+@enforce_strict null check on not null;

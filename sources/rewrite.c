@@ -1078,6 +1078,17 @@ static ast_node* rewrite_gen_printf_call(CSTR format, ast_node *arg_list) {
   return call;
 }
 
+// Generates a call to nullable with `ast` as the argument.
+static ast_node *rewrite_gen_nullable(ast_node *ast) {
+  Contract(ast);
+
+  return new_ast_call(
+    new_ast_str("nullable"),
+    new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL),
+      new_ast_arg_list(ast, NULL)));
+}
+
 // Generate a 'call' node for printf function from a cursor variable.
 // This is used to rewrite cql_cursor_format(X) when called from a
 // sql context.
@@ -1095,8 +1106,14 @@ static ast_node *rewrite_gen_cursor_printf(ast_node *variable) {
   for (int32_t i = count - 1; i >= 0; i--) {
     Invariant(sptr->names[i]);
     // left side of IS
-    ast_node* dot = new_ast_dot(
-        new_ast_str(variable->sem->name), new_ast_str(sptr->names[i]));
+    ast_node* dot = new_ast_dot(new_ast_str(variable->sem->name), new_ast_str(sptr->names[i]));
+    // We wrap the dot in a call to nullable if it is of a nonnull type so that
+    // the IS NULL check will not result in a type error. Eliding the check is
+    // not possible in the nonnull case because even a dot of a nonnull type
+    // could, unfortunately, be null if a row was not fetched.
+    if (is_not_nullable(sptr->semtypes[i])) {
+     dot = rewrite_gen_nullable(dot);
+    }
     // right side of IS
     ast_node* null_node = new_ast_null();
     // left side of WHEN
@@ -1199,9 +1216,16 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
       // CALL PRINTF ast on fourth argument
       ast_node *call_printf3 = rewrite_gen_printf_call(format_output.ptr, printf_arg_list3);
       // left of is node
-      ast_node *expr = new_ast_dot(new_ast_str(c2_name), new_ast_str(sptr2->names[i]));
+      ast_node *dot = new_ast_dot(new_ast_str(c2_name), new_ast_str(sptr2->names[i]));
+      // We wrap the dot in a call to nullable if it is of a nonnull type so
+      // that the IS NULL check will not result in a type error. Eliding the
+      // check is not possible in the nonnull case because even a dot of a
+      // nonnull type could, unfortunately, be null if a row was not fetched.
+      if (is_not_nullable(sptr2->semtypes[i])) {
+        dot = rewrite_gen_nullable(dot);
+      }
       // left of WHEN expr
-      ast_node* is_node = new_ast_is(expr, new_ast_null());
+      ast_node* is_node = new_ast_is(dot, new_ast_null());
       // case_expr node: CASE WHEN C.x IS NULL THEN 'null' ELSE printf("%s", C.x)
       ast_node *check_call_printf3 = rewrite_gen_iif_case_expr(
         is_node,
@@ -1216,9 +1240,12 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
       // CALL PRINTF ast on third argument
       ast_node *call_printf2 = rewrite_gen_printf_call(format_output.ptr, printf_arg_list2);
       // left of IS node
-      expr = new_ast_dot(new_ast_str(c1_name), new_ast_str(sptr1->names[i]));
+      dot = new_ast_dot(new_ast_str(c1_name), new_ast_str(sptr1->names[i]));
+      if (is_not_nullable(sptr1->semtypes[i])) {
+        dot = rewrite_gen_nullable(dot);
+      }
       // left of WHEN expr
-      is_node = new_ast_is(expr, new_ast_null());
+      is_node = new_ast_is(dot, new_ast_null());
       // case_expr node: CASE WHEN C.x IS NULL THEN 'null' ELSE printf("%s", C.x)
       ast_node *check_call_printf2 = rewrite_gen_iif_case_expr(
         is_node,

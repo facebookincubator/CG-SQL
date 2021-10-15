@@ -2,6 +2,13 @@
 
 The statement ending at line XXXX
 
+@ENFORCE_STRICT NULL CHECK ON NOT NULL;
+
+  {enforce_strict_stmt}: ok
+  | {int 12}
+
+The statement ending at line XXXX
+
 DECLARE PROC printf NO CHECK;
 
   {declare_proc_no_check_stmt}: ok
@@ -54775,8 +54782,8 @@ The statement ending at line XXXX
 
 CREATE PROC print_call_cql_cursor_diff_val ()
 BEGIN
-  DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
-  DECLARE c2 CURSOR FOR SELECT 1 AS x, 'v' AS y;
+  DECLARE c1 CURSOR FOR SELECT nullable(1) AS x, 'y' AS y;
+  DECLARE c2 CURSOR FOR SELECT nullable(1) AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
   CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
@@ -54784,9 +54791,9 @@ BEGIN
   END, CASE WHEN c2.x IS NULL THEN 'null'
   ELSE printf('%d', c2.x)
   END)
-  WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN c1.y IS NULL THEN 'null'
+  WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN nullable(c1.y) IS NULL THEN 'null'
   ELSE printf('%s', c1.y)
-  END, CASE WHEN c2.y IS NULL THEN 'null'
+  END, CASE WHEN nullable(c2.y) IS NULL THEN 'null'
   ELSE printf('%s', c2.y)
   END)
   END);
@@ -54796,15 +54803,20 @@ END;
   | {name print_call_cql_cursor_diff_val}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
-      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
-      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
-      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
-      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
-      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
-      |   |     | | {select_expr}: x: integer notnull
-      |   |     | | | {int 1}: integer notnull
+      | {declare_cursor}: c1: select: { x: integer, y: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer, y: text notnull }
+      |   | {select_core_list}: select: { x: integer, y: text notnull }
+      |   | | {select_core}: select: { x: integer, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer, y: text notnull }
+      |   |     | | {select_expr}: x: integer
+      |   |     | | | {call}: integer
+      |   |     | | | | {name nullable}: integer
+      |   |     | | | | {call_arg_list}
+      |   |     | | |   | {call_filter_clause}
+      |   |     | | |   | {arg_list}: ok
+      |   |     | | |     | {int 1}: integer notnull
       |   |     | | | {opt_as_alias}
       |   |     | |   | {name x}
       |   |     | | {select_expr_list}
@@ -54819,15 +54831,20 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {declare_cursor}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
-      | | {select_stmt}: select: { x: integer notnull, y: text notnull }
-      |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
-      |   | | {select_core}: select: { x: integer notnull, y: text notnull }
-      |   |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
-      |   |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
-      |   |     | | {select_expr}: x: integer notnull
-      |   |     | | | {int 1}: integer notnull
+      | {declare_cursor}: c2: select: { x: integer, y: text notnull } variable dml_proc
+      | | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer, y: text notnull }
+      |   | {select_core_list}: select: { x: integer, y: text notnull }
+      |   | | {select_core}: select: { x: integer, y: text notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer, y: text notnull }
+      |   |     | {select_expr_list}: select: { x: integer, y: text notnull }
+      |   |     | | {select_expr}: x: integer
+      |   |     | | | {call}: integer
+      |   |     | | | | {name nullable}: integer
+      |   |     | | | | {call_arg_list}
+      |   |     | | |   | {call_filter_clause}
+      |   |     | | |   | {arg_list}: ok
+      |   |     | | |     | {int 1}: integer notnull
       |   |     | | | {opt_as_alias}
       |   |     | |   | {name x}
       |   |     | | {select_expr_list}
@@ -54842,10 +54859,10 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
-      | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
-      | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage
+      | | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage
       | {call_stmt}: ok
         | {name printf}: ok
         | {expr_list}: ok
@@ -54854,10 +54871,10 @@ END;
               | {case_list}: text notnull
                 | {when}: text notnull
                 | | {is_not}: bool notnull
-                | | | {dot}: c1.x: integer notnull variable
+                | | | {dot}: c1.x: integer variable
                 | | | | {name c1}
                 | | | | {name x}
-                | | | {dot}: c2.x: integer notnull variable
+                | | | {dot}: c2.x: integer variable
                 | |   | {name c2}
                 | |   | {name x}
                 | | {call}: text notnull
@@ -54874,7 +54891,7 @@ END;
                 |           |   | {case_list}: text notnull
                 |           |   | | {when}: text notnull
                 |           |   |   | {is}: bool notnull
-                |           |   |   | | {dot}: c1.x: integer notnull variable
+                |           |   |   | | {dot}: c1.x: integer variable
                 |           |   |   | | | {name c1}
                 |           |   |   | | | {name x}
                 |           |   |   | | {null}: null
@@ -54886,16 +54903,21 @@ END;
                 |           |       | {arg_list}: ok
                 |           |         | {strlit '%d'}: text notnull
                 |           |         | {arg_list}
-                |           |           | {dot}: c1.x: integer notnull variable
-                |           |             | {name c1}
-                |           |             | {name x}
+                |           |           | {call}: c1.x: integer notnull variable
+                |           |             | {name cql_inferred_notnull}: c1.x: integer notnull variable
+                |           |             | {call_arg_list}
+                |           |               | {call_filter_clause}
+                |           |               | {arg_list}: ok
+                |           |                 | {dot}: c1.x: integer inferred_notnull variable
+                |           |                   | {name c1}
+                |           |                   | {name x}
                 |           | {arg_list}
                 |             | {case_expr}: text notnull
                 |               | {connector}: text notnull
                 |                 | {case_list}: text notnull
                 |                 | | {when}: text notnull
                 |                 |   | {is}: bool notnull
-                |                 |   | | {dot}: c2.x: integer notnull variable
+                |                 |   | | {dot}: c2.x: integer variable
                 |                 |   | | | {name c2}
                 |                 |   | | | {name x}
                 |                 |   | | {null}: null
@@ -54907,9 +54929,14 @@ END;
                 |                     | {arg_list}: ok
                 |                       | {strlit '%d'}: text notnull
                 |                       | {arg_list}
-                |                         | {dot}: c2.x: integer notnull variable
-                |                           | {name c2}
-                |                           | {name x}
+                |                         | {call}: c2.x: integer notnull variable
+                |                           | {name cql_inferred_notnull}: c2.x: integer notnull variable
+                |                           | {call_arg_list}
+                |                             | {call_filter_clause}
+                |                             | {arg_list}: ok
+                |                               | {dot}: c2.x: integer inferred_notnull variable
+                |                                 | {name c2}
+                |                                 | {name x}
                 | {case_list}: text notnull
                   | {when}: text notnull
                     | {is_not}: bool notnull
@@ -54933,9 +54960,14 @@ END;
                               |   | {case_list}: text notnull
                               |   | | {when}: text notnull
                               |   |   | {is}: bool notnull
-                              |   |   | | {dot}: c1.y: text notnull variable
-                              |   |   | | | {name c1}
-                              |   |   | | | {name y}
+                              |   |   | | {call}: c1.y: text variable
+                              |   |   | | | {name nullable}: c1.y: text variable
+                              |   |   | | | {call_arg_list}
+                              |   |   | |   | {call_filter_clause}
+                              |   |   | |   | {arg_list}: ok
+                              |   |   | |     | {dot}: c1.y: text notnull variable
+                              |   |   | |       | {name c1}
+                              |   |   | |       | {name y}
                               |   |   | | {null}: null
                               |   |   | {strlit 'null'}: text notnull
                               |   | {call}: text notnull
@@ -54954,9 +54986,14 @@ END;
                                     | {case_list}: text notnull
                                     | | {when}: text notnull
                                     |   | {is}: bool notnull
-                                    |   | | {dot}: c2.y: text notnull variable
-                                    |   | | | {name c2}
-                                    |   | | | {name y}
+                                    |   | | {call}: c2.y: text variable
+                                    |   | | | {name nullable}: c2.y: text variable
+                                    |   | | | {call_arg_list}
+                                    |   | |   | {call_filter_clause}
+                                    |   | |   | {arg_list}: ok
+                                    |   | |     | {dot}: c2.y: text notnull variable
+                                    |   | |       | {name c2}
+                                    |   | |       | {name y}
                                     |   | | {null}: null
                                     |   | {strlit 'null'}: text notnull
                                     | {call}: text notnull
@@ -55431,19 +55468,19 @@ The statement ending at line XXXX
 
 CREATE PROC print_call_cql_cursor_format ()
 BEGIN
-  DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, 1.1 AS e, CAST('y' AS BLOB) AS f;
+  DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, nullable(1.1) AS e, CAST('y' AS BLOB) AS f;
   FETCH c1;
-  SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN c1.a IS NULL THEN 'null'
+  SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN nullable(c1.a) IS NULL THEN 'null'
   ELSE printf('%d', c1.a)
-  END, CASE WHEN c1.b IS NULL THEN 'null'
+  END, CASE WHEN nullable(c1.b) IS NULL THEN 'null'
   ELSE printf('%d', c1.b)
-  END, CASE WHEN c1.c IS NULL THEN 'null'
+  END, CASE WHEN nullable(c1.c) IS NULL THEN 'null'
   ELSE printf('%lld', c1.c)
-  END, CASE WHEN c1.d IS NULL THEN 'null'
+  END, CASE WHEN nullable(c1.d) IS NULL THEN 'null'
   ELSE printf('%s', c1.d)
   END, CASE WHEN c1.e IS NULL THEN 'null'
   ELSE printf('%f', c1.e)
-  END, CASE WHEN c1.f IS NULL THEN 'null'
+  END, CASE WHEN nullable(c1.f) IS NULL THEN 'null'
   ELSE printf('length %lld blob', cql_get_blob_size(c1.f))
   END);
 END;
@@ -55452,13 +55489,13 @@ END;
   | {name print_call_cql_cursor_format}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc
-      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc shape_storage
-      | | {select_stmt}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
-      |   | {select_core_list}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
-      |   | | {select_core}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
-      |   |   | {select_expr_list_con}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
-      |   |     | {select_expr_list}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull }
+      | {declare_cursor}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull } variable dml_proc
+      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull }
+      |   | {select_core_list}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull }
+      |   | | {select_core}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull }
+      |   |   | {select_expr_list_con}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull }
+      |   |     | {select_expr_list}: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull }
       |   |     | | {select_expr}: a: bool notnull
       |   |     | | | {bool 1}: bool notnull
       |   |     | | | {opt_as_alias}
@@ -55479,8 +55516,13 @@ END;
       |   |     |       | | {opt_as_alias}
       |   |     |       |   | {name d}
       |   |     |       | {select_expr_list}
-      |   |     |         | {select_expr}: e: real notnull
-      |   |     |         | | {dbl 1.1}: real notnull
+      |   |     |         | {select_expr}: e: real
+      |   |     |         | | {call}: real
+      |   |     |         | | | {name nullable}: real
+      |   |     |         | | | {call_arg_list}
+      |   |     |         | |   | {call_filter_clause}
+      |   |     |         | |   | {arg_list}: ok
+      |   |     |         | |     | {dbl 1.1}: real notnull
       |   |     |         | | {opt_as_alias}
       |   |     |         |   | {name e}
       |   |     |         | {select_expr_list}
@@ -55497,8 +55539,8 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc shape_storage
-      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real notnull, f: blob notnull } variable dml_proc shape_storage
+      | {fetch_stmt}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull } variable dml_proc shape_storage
+      | | {name c1}: c1: select: { a: bool notnull, b: integer notnull, c: longint notnull, d: text notnull, e: real, f: blob notnull } variable dml_proc shape_storage
       | {assign}: a_string: text variable
         | {name a_string}: a_string: text variable
         | {call}: text notnull
@@ -55513,9 +55555,14 @@ END;
                 |   | {case_list}: text notnull
                 |   | | {when}: text notnull
                 |   |   | {is}: bool notnull
-                |   |   | | {dot}: c1.a: bool notnull variable
-                |   |   | | | {name c1}
-                |   |   | | | {name a}
+                |   |   | | {call}: c1.a: bool variable
+                |   |   | | | {name nullable}: c1.a: bool variable
+                |   |   | | | {call_arg_list}
+                |   |   | |   | {call_filter_clause}
+                |   |   | |   | {arg_list}: ok
+                |   |   | |     | {dot}: c1.a: bool notnull variable
+                |   |   | |       | {name c1}
+                |   |   | |       | {name a}
                 |   |   | | {null}: null
                 |   |   | {strlit 'null'}: text notnull
                 |   | {call}: text notnull
@@ -55534,9 +55581,14 @@ END;
                   |   | {case_list}: text notnull
                   |   | | {when}: text notnull
                   |   |   | {is}: bool notnull
-                  |   |   | | {dot}: c1.b: integer notnull variable
-                  |   |   | | | {name c1}
-                  |   |   | | | {name b}
+                  |   |   | | {call}: c1.b: integer variable
+                  |   |   | | | {name nullable}: c1.b: integer variable
+                  |   |   | | | {call_arg_list}
+                  |   |   | |   | {call_filter_clause}
+                  |   |   | |   | {arg_list}: ok
+                  |   |   | |     | {dot}: c1.b: integer notnull variable
+                  |   |   | |       | {name c1}
+                  |   |   | |       | {name b}
                   |   |   | | {null}: null
                   |   |   | {strlit 'null'}: text notnull
                   |   | {call}: text notnull
@@ -55555,9 +55607,14 @@ END;
                     |   | {case_list}: text notnull
                     |   | | {when}: text notnull
                     |   |   | {is}: bool notnull
-                    |   |   | | {dot}: c1.c: longint notnull variable
-                    |   |   | | | {name c1}
-                    |   |   | | | {name c}
+                    |   |   | | {call}: c1.c: longint variable
+                    |   |   | | | {name nullable}: c1.c: longint variable
+                    |   |   | | | {call_arg_list}
+                    |   |   | |   | {call_filter_clause}
+                    |   |   | |   | {arg_list}: ok
+                    |   |   | |     | {dot}: c1.c: longint notnull variable
+                    |   |   | |       | {name c1}
+                    |   |   | |       | {name c}
                     |   |   | | {null}: null
                     |   |   | {strlit 'null'}: text notnull
                     |   | {call}: text notnull
@@ -55576,9 +55633,14 @@ END;
                       |   | {case_list}: text notnull
                       |   | | {when}: text notnull
                       |   |   | {is}: bool notnull
-                      |   |   | | {dot}: c1.d: text notnull variable
-                      |   |   | | | {name c1}
-                      |   |   | | | {name d}
+                      |   |   | | {call}: c1.d: text variable
+                      |   |   | | | {name nullable}: c1.d: text variable
+                      |   |   | | | {call_arg_list}
+                      |   |   | |   | {call_filter_clause}
+                      |   |   | |   | {arg_list}: ok
+                      |   |   | |     | {dot}: c1.d: text notnull variable
+                      |   |   | |       | {name c1}
+                      |   |   | |       | {name d}
                       |   |   | | {null}: null
                       |   |   | {strlit 'null'}: text notnull
                       |   | {call}: text notnull
@@ -55597,7 +55659,7 @@ END;
                         |   | {case_list}: text notnull
                         |   | | {when}: text notnull
                         |   |   | {is}: bool notnull
-                        |   |   | | {dot}: c1.e: real notnull variable
+                        |   |   | | {dot}: c1.e: real variable
                         |   |   | | | {name c1}
                         |   |   | | | {name e}
                         |   |   | | {null}: null
@@ -55609,18 +55671,28 @@ END;
                         |       | {arg_list}: ok
                         |         | {strlit '%f'}: text notnull
                         |         | {arg_list}
-                        |           | {dot}: c1.e: real notnull variable
-                        |             | {name c1}
-                        |             | {name e}
+                        |           | {call}: c1.e: real notnull variable
+                        |             | {name cql_inferred_notnull}: c1.e: real notnull variable
+                        |             | {call_arg_list}
+                        |               | {call_filter_clause}
+                        |               | {arg_list}: ok
+                        |                 | {dot}: c1.e: real inferred_notnull variable
+                        |                   | {name c1}
+                        |                   | {name e}
                         | {arg_list}
                           | {case_expr}: text notnull
                             | {connector}: text notnull
                               | {case_list}: text notnull
                               | | {when}: text notnull
                               |   | {is}: bool notnull
-                              |   | | {dot}: c1.f: blob notnull variable
-                              |   | | | {name c1}
-                              |   | | | {name f}
+                              |   | | {call}: c1.f: blob variable
+                              |   | | | {name nullable}: c1.f: blob variable
+                              |   | | | {call_arg_list}
+                              |   | |   | {call_filter_clause}
+                              |   | |   | {arg_list}: ok
+                              |   | |     | {dot}: c1.f: blob notnull variable
+                              |   | |       | {name c1}
+                              |   | |       | {name f}
                               |   | | {null}: null
                               |   | {strlit 'null'}: text notnull
                               | {call}: text notnull
@@ -62370,6 +62442,12 @@ Error at test/sem_test.sql:XXXX : in col_attrs_hidden : CQL0362: The HIDDEN colu
 
 The statement ending at line XXXX
 
+@ENFORCE_PUSH;
+
+  {enforce_push_stmt}: ok
+
+The statement ending at line XXXX
+
 @ENFORCE_STRICT FOREIGN KEY ON UPDATE;
 
   {enforce_strict_stmt}: ok
@@ -62476,6 +62554,12 @@ CREATE TABLE fk_strict_err_2(
             | | {name_list}
             |   | {name id}: id: integer notnull
             | {int 0}
+
+The statement ending at line XXXX
+
+@ENFORCE_POP;
+
+  {enforce_pop_stmt}: ok
 
 The statement ending at line XXXX
 
@@ -65595,7 +65679,7 @@ BEGIN
     SET b := NULL;
     LET x2 := a;
     LET y2 := b;
-    IF a IS NOT NULL AND b IS NOT NULL THEN
+    IF b IS NOT NULL THEN
       LET x3 := a;
       LET y3 := b;
       SET a := NULL;
@@ -65670,18 +65754,9 @@ END;
       | |   | | {name b}: b: integer variable
       | |   | {if_stmt}: bool notnull
       | |   | | {cond_action}: bool notnull
-      | |   | | | {and}: bool notnull
-      | |   | | | | {is_not}: bool notnull
-      | |   | | | | | {call}: a: integer notnull variable
-      | |   | | | | | | {name cql_inferred_notnull}: a: integer notnull variable
-      | |   | | | | | | {call_arg_list}
-      | |   | | | | |   | {call_filter_clause}
-      | |   | | | | |   | {arg_list}: ok
-      | |   | | | | |     | {name a}: a: integer inferred_notnull variable
-      | |   | | | | | {null}: null
-      | |   | | | | {is_not}: bool notnull
-      | |   | | |   | {name b}: b: integer variable
-      | |   | | |   | {null}: null
+      | |   | | | {is_not}: bool notnull
+      | |   | | | | {name b}: b: integer variable
+      | |   | | | | {null}: null
       | |   | | | {stmt_list}: ok
       | |   | |   | {let_stmt}: x3: integer notnull variable
       | |   | |   | | {name x3}: x3: integer notnull variable
@@ -67105,34 +67180,6 @@ END;
         |     | {select_orderby}
         |       | {select_limit}
         |         | {select_offset}
-        | {if_alt}: ok
-
-The statement ending at line XXXX
-
-CREATE PROC improvements_are_not_applied_to_notnull_variables ()
-BEGIN
-  LET a := 42;
-  IF a IS NOT NULL THEN
-    LET b := a;
-  END IF;
-END;
-
-  {create_proc_stmt}: ok
-  | {name improvements_are_not_applied_to_notnull_variables}: ok
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {let_stmt}: a: integer notnull variable
-      | | {name a}: a: integer notnull variable
-      | | {int 42}: integer notnull
-      | {if_stmt}: bool notnull
-        | {cond_action}: bool notnull
-        | | {is_not}: bool notnull
-        | | | {name a}: a: integer notnull variable
-        | | | {null}: null
-        | | {stmt_list}: ok
-        |   | {let_stmt}: b: integer notnull variable
-        |     | {name b}: b: integer notnull variable
-        |     | {name a}: a: integer notnull variable
         | {if_alt}: ok
 
 The statement ending at line XXXX
@@ -71031,16 +71078,18 @@ The statement ending at line XXXX
 
 SELECT 1 + (NOT 2 IS NULL);
 
-  {select_stmt}: select: { _anon: integer notnull }
-  | {select_core_list}: select: { _anon: integer notnull }
-  | | {select_core}: select: { _anon: integer notnull }
-  |   | {select_expr_list_con}: select: { _anon: integer notnull }
-  |     | {select_expr_list}: select: { _anon: integer notnull }
-  |     | | {select_expr}: integer notnull
-  |     |   | {add}: integer notnull
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {add}: err
   |     |     | {int 1}: integer notnull
-  |     |     | {not}: bool notnull
-  |     |       | {is}: bool notnull
+  |     |     | {not}: err
+  |     |       | {is}: err
   |     |         | {int 2}: integer notnull
   |     |         | {null}: null
   |     | {select_from_etc}: ok
@@ -71055,17 +71104,19 @@ The statement ending at line XXXX
 
 SELECT (NOT 1) + (NOT 2 IS NULL);
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {add}: bool notnull
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {add}: err
   |     |     | {not}: bool notnull
   |     |     | | {int 1}: integer notnull
-  |     |     | {not}: bool notnull
-  |     |       | {is}: bool notnull
+  |     |     | {not}: err
+  |     |       | {is}: err
   |     |         | {int 2}: integer notnull
   |     |         | {null}: null
   |     | {select_from_etc}: ok
@@ -71080,16 +71131,18 @@ The statement ending at line XXXX
 
 SELECT NOT 1 + (2 IS NULL);
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {not}: bool notnull
-  |     |     | {add}: integer notnull
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {not}: err
+  |     |     | {add}: err
   |     |       | {int 1}: integer notnull
-  |     |       | {is}: bool notnull
+  |     |       | {is}: err
   |     |         | {int 2}: integer notnull
   |     |         | {null}: null
   |     | {select_from_etc}: ok
@@ -71104,14 +71157,16 @@ The statement ending at line XXXX
 
 SELECT NOT 1 + 2 IS NULL;
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {not}: bool notnull
-  |     |     | {is}: bool notnull
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1 + 2'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {not}: err
+  |     |     | {is}: err
   |     |       | {add}: integer notnull
   |     |       | | {int 1}: integer notnull
   |     |       | | {int 2}: integer notnull
@@ -71128,13 +71183,15 @@ The statement ending at line XXXX
 
 SELECT 1 + (NOT 2) IS NULL;
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {is}: bool notnull
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1 + (NOT 2)'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {is}: err
   |     |     | {add}: integer notnull
   |     |     | | {int 1}: integer notnull
   |     |     | | {not}: bool notnull
@@ -71152,17 +71209,20 @@ The statement ending at line XXXX
 
 SELECT 1 IS NOT NULL AND 2 + (NOT 3) IS NULL;
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {and}: bool notnull
-  |     |     | {is_not}: bool notnull
+Error at test/sem_test.sql:XXXX : in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1'
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2 + (NOT 3)'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {and}: err
+  |     |     | {is_not}: err
   |     |     | | {int 1}: integer notnull
   |     |     | | {null}: null
-  |     |     | {is}: bool notnull
+  |     |     | {is}: err
   |     |       | {add}: integer notnull
   |     |       | | {int 2}: integer notnull
   |     |       | | {not}: bool notnull
@@ -71180,20 +71240,23 @@ The statement ending at line XXXX
 
 SELECT 1 IS NOT NULL AND 2 + (NOT 3 IS NULL);
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {and}: bool notnull
-  |     |     | {is_not}: bool notnull
+Error at test/sem_test.sql:XXXX : in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1'
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '3'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {and}: err
+  |     |     | {is_not}: err
   |     |     | | {int 1}: integer notnull
   |     |     | | {null}: null
-  |     |     | {add}: integer notnull
+  |     |     | {add}: err
   |     |       | {int 2}: integer notnull
-  |     |       | {not}: bool notnull
-  |     |         | {is}: bool notnull
+  |     |       | {not}: err
+  |     |         | {is}: err
   |     |           | {int 3}: integer notnull
   |     |           | {null}: null
   |     | {select_from_etc}: ok
@@ -72168,7 +72231,7 @@ Error at test/sem_test.sql:XXXX : in eq : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-SELECT (5 IS NULL) + 3;
+SELECT (nullable(5) IS NULL) + 3;
 
   {select_stmt}: select: { _anon: integer notnull }
   | {select_core_list}: select: { _anon: integer notnull }
@@ -72178,7 +72241,12 @@ SELECT (5 IS NULL) + 3;
   |     | | {select_expr}: integer notnull
   |     |   | {add}: integer notnull
   |     |     | {is}: bool notnull
-  |     |     | | {int 5}: integer notnull
+  |     |     | | {call}: integer
+  |     |     | | | {name nullable}: integer
+  |     |     | | | {call_arg_list}
+  |     |     | |   | {call_filter_clause}
+  |     |     | |   | {arg_list}: ok
+  |     |     | |     | {int 5}: integer notnull
   |     |     | | {null}: null
   |     |     | {int 3}: integer notnull
   |     | {select_from_etc}: ok
@@ -72193,14 +72261,16 @@ The statement ending at line XXXX
 
 SELECT 5 IS NULL IS NULL;
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {is}: bool notnull
-  |     |     | {is}: bool notnull
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {is}: err
+  |     |     | {is}: err
   |     |     | | {int 5}: integer notnull
   |     |     | | {null}: null
   |     |     | {null}: null
@@ -72214,7 +72284,7 @@ SELECT 5 IS NULL IS NULL;
 
 The statement ending at line XXXX
 
-SELECT (5 IS NOT NULL) + 3;
+SELECT (nullable(5) IS NOT NULL) + 3;
 
   {select_stmt}: select: { _anon: integer notnull }
   | {select_core_list}: select: { _anon: integer notnull }
@@ -72224,7 +72294,12 @@ SELECT (5 IS NOT NULL) + 3;
   |     | | {select_expr}: integer notnull
   |     |   | {add}: integer notnull
   |     |     | {is_not}: bool notnull
-  |     |     | | {int 5}: integer notnull
+  |     |     | | {call}: integer
+  |     |     | | | {name nullable}: integer
+  |     |     | | | {call_arg_list}
+  |     |     | |   | {call_filter_clause}
+  |     |     | |   | {arg_list}: ok
+  |     |     | |     | {int 5}: integer notnull
   |     |     | | {null}: null
   |     |     | {int 3}: integer notnull
   |     | {select_from_etc}: ok
@@ -72239,14 +72314,16 @@ The statement ending at line XXXX
 
 SELECT 5 IS NOT NULL IS NULL;
 
-  {select_stmt}: select: { _anon: bool notnull }
-  | {select_core_list}: select: { _anon: bool notnull }
-  | | {select_core}: select: { _anon: bool notnull }
-  |   | {select_expr_list_con}: select: { _anon: bool notnull }
-  |     | {select_expr_list}: select: { _anon: bool notnull }
-  |     | | {select_expr}: bool notnull
-  |     |   | {is}: bool notnull
-  |     |     | {is_not}: bool notnull
+Error at test/sem_test.sql:XXXX : in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {is}: err
+  |     |     | {is_not}: err
   |     |     | | {int 5}: integer notnull
   |     |     | | {null}: null
   |     |     | {null}: null
@@ -73948,4 +74025,62 @@ SELECT printf("%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E", 0x0
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+LET not_null_object_is_null := not_null_object IS NULL;
+
+Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
+
+  {let_stmt}: err
+  | {name not_null_object_is_null}
+  | {is}: err
+    | {name not_null_object}: not_null_object: object notnull variable
+    | {null}: null
+
+The statement ending at line XXXX
+
+LET not_null_object_is_not_null := not_null_object IS NOT NULL;
+
+Error at test/sem_test.sql:XXXX : in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
+
+  {let_stmt}: err
+  | {name not_null_object_is_not_null}
+  | {is_not}: err
+    | {name not_null_object}: not_null_object: object notnull variable
+    | {null}: null
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL NULL CHECK ON NOT NULL;
+
+  {enforce_normal_stmt}: ok
+  | {int 12}
+
+The statement ending at line XXXX
+
+LET not_null_object_is_null := not_null_object IS NULL;
+
+  {let_stmt}: not_null_object_is_null: bool notnull variable
+  | {name not_null_object_is_null}: not_null_object_is_null: bool notnull variable
+  | {is}: bool notnull
+    | {name not_null_object}: not_null_object: object notnull variable
+    | {null}: null
+
+The statement ending at line XXXX
+
+LET not_null_object_is_not_null := not_null_object IS NOT NULL;
+
+  {let_stmt}: not_null_object_is_not_null: bool notnull variable
+  | {name not_null_object_is_not_null}: not_null_object_is_not_null: bool notnull variable
+  | {is_not}: bool notnull
+    | {name not_null_object}: not_null_object: object notnull variable
+    | {null}: null
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT NULL CHECK ON NOT NULL;
+
+  {enforce_strict_stmt}: ok
+  | {int 12}
 

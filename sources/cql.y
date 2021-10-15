@@ -1961,6 +1961,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
   | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
   | CAST { $enforcement_options = new_ast_opt(ENFORCE_CAST); }
+  | NULL_ CHECK ON NOT NULL_ { $enforcement_options = new_ast_opt(ENFORCE_NULL_CHECK_ON_NOT_NULL);}
   ;
 
 enforce_strict_stmt:

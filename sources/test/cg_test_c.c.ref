@@ -13103,13 +13103,13 @@ BEGIN
     FROM big_data;
   LOOP FETCH C
   BEGIN
-    LET s := printf('f1:%s|f2:%s|f3:%s|f4:%s|f5:%s|f6:%s|f7:%s|f8:%s|f9:%s|f10:%s|f11:%s|f12:%s|f13:%s|f14:%s|f15:%s|f16:%s|f17:%s|f18:%s|f19:%s|f20:%s|f21:%s|f22:%s|f23:%s|f24:%s|f25:%s|f26:%s|f27:%s|f28:%s|f29:%s|f30:%s|f31:%s|f32:%s|f33:%s|f34:%s|f35:%s|f36:%s|f38:%s|f39:%s|f40:%s|f41:%s|f42:%s|f43:%s|f44:%s|f45:%s|f46:%s|f47:%s|f48:%s|f49:%s|f50:%s|f51:%s|f52:%s|f53:%s|f54:%s|f55:%s|f56:%s|f57:%s|f58:%s|f59:%s|f60:%s|f61:%s|f62:%s|f63:%s|f64:%s|f65:%s|f66:%s|f67:%s|f68:%s|f69:%s|f70:%s|f71:%s|f72:%s|f73:%s|f74:%s|f75:%s', CASE WHEN C.f1 IS NULL THEN 'null'
+    LET s := printf('f1:%s|f2:%s|f3:%s|f4:%s|f5:%s|f6:%s|f7:%s|f8:%s|f9:%s|f10:%s|f11:%s|f12:%s|f13:%s|f14:%s|f15:%s|f16:%s|f17:%s|f18:%s|f19:%s|f20:%s|f21:%s|f22:%s|f23:%s|f24:%s|f25:%s|f26:%s|f27:%s|f28:%s|f29:%s|f30:%s|f31:%s|f32:%s|f33:%s|f34:%s|f35:%s|f36:%s|f38:%s|f39:%s|f40:%s|f41:%s|f42:%s|f43:%s|f44:%s|f45:%s|f46:%s|f47:%s|f48:%s|f49:%s|f50:%s|f51:%s|f52:%s|f53:%s|f54:%s|f55:%s|f56:%s|f57:%s|f58:%s|f59:%s|f60:%s|f61:%s|f62:%s|f63:%s|f64:%s|f65:%s|f66:%s|f67:%s|f68:%s|f69:%s|f70:%s|f71:%s|f72:%s|f73:%s|f74:%s|f75:%s', CASE WHEN nullable(C.f1) IS NULL THEN 'null'
     ELSE printf('%lld', C.f1)
-    END, CASE WHEN C.f2 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f2) IS NULL THEN 'null'
     ELSE printf('%d', C.f2)
     END, CASE WHEN C.f3 IS NULL THEN 'null'
     ELSE printf('%s', C.f3)
-    END, CASE WHEN C.f4 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f4) IS NULL THEN 'null'
     ELSE printf('%s', C.f4)
     END, CASE WHEN C.f5 IS NULL THEN 'null'
     ELSE printf('%s', C.f5)
@@ -13117,25 +13117,25 @@ BEGIN
     ELSE printf('%s', C.f6)
     END, CASE WHEN C.f7 IS NULL THEN 'null'
     ELSE printf('%lld', C.f7)
-    END, CASE WHEN C.f8 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f8) IS NULL THEN 'null'
     ELSE printf('%lld', C.f8)
-    END, CASE WHEN C.f9 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f9) IS NULL THEN 'null'
     ELSE printf('%lld', C.f9)
-    END, CASE WHEN C.f10 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f10) IS NULL THEN 'null'
     ELSE printf('%lld', C.f10)
-    END, CASE WHEN C.f11 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f11) IS NULL THEN 'null'
     ELSE printf('%lld', C.f11)
     END, CASE WHEN C.f12 IS NULL THEN 'null'
     ELSE printf('%s', C.f12)
-    END, CASE WHEN C.f13 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f13) IS NULL THEN 'null'
     ELSE printf('%d', C.f13)
     END, CASE WHEN C.f14 IS NULL THEN 'null'
     ELSE printf('%lld', C.f14)
     END, CASE WHEN C.f15 IS NULL THEN 'null'
     ELSE printf('%d', C.f15)
-    END, CASE WHEN C.f16 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f16) IS NULL THEN 'null'
     ELSE printf('%d', C.f16)
-    END, CASE WHEN C.f17 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f17) IS NULL THEN 'null'
     ELSE printf('%d', C.f17)
     END, CASE WHEN C.f18 IS NULL THEN 'null'
     ELSE printf('%s', C.f18)
@@ -13149,15 +13149,15 @@ BEGIN
     ELSE printf('%s', C.f22)
     END, CASE WHEN C.f23 IS NULL THEN 'null'
     ELSE printf('%d', C.f23)
-    END, CASE WHEN C.f24 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f24) IS NULL THEN 'null'
     ELSE printf('%lld', C.f24)
     END, CASE WHEN C.f25 IS NULL THEN 'null'
     ELSE printf('%s', C.f25)
-    END, CASE WHEN C.f26 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f26) IS NULL THEN 'null'
     ELSE printf('%d', C.f26)
-    END, CASE WHEN C.f27 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f27) IS NULL THEN 'null'
     ELSE printf('%d', C.f27)
-    END, CASE WHEN C.f28 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f28) IS NULL THEN 'null'
     ELSE printf('%d', C.f28)
     END, CASE WHEN C.f29 IS NULL THEN 'null'
     ELSE printf('%s', C.f29)
@@ -13175,13 +13175,13 @@ BEGIN
     ELSE printf('%s', C.f35)
     END, CASE WHEN C.f36 IS NULL THEN 'null'
     ELSE printf('%s', C.f36)
-    END, CASE WHEN C.f38 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f38) IS NULL THEN 'null'
     ELSE printf('%lld', C.f38)
     END, CASE WHEN C.f39 IS NULL THEN 'null'
     ELSE printf('%lld', C.f39)
     END, CASE WHEN C.f40 IS NULL THEN 'null'
     ELSE printf('%d', C.f40)
-    END, CASE WHEN C.f41 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f41) IS NULL THEN 'null'
     ELSE printf('%d', C.f41)
     END, CASE WHEN C.f42 IS NULL THEN 'null'
     ELSE printf('%s', C.f42)
@@ -13189,11 +13189,11 @@ BEGIN
     ELSE printf('%s', C.f43)
     END, CASE WHEN C.f44 IS NULL THEN 'null'
     ELSE printf('%lld', C.f44)
-    END, CASE WHEN C.f45 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f45) IS NULL THEN 'null'
     ELSE printf('%d', C.f45)
     END, CASE WHEN C.f46 IS NULL THEN 'null'
     ELSE printf('%lld', C.f46)
-    END, CASE WHEN C.f47 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f47) IS NULL THEN 'null'
     ELSE printf('%d', C.f47)
     END, CASE WHEN C.f48 IS NULL THEN 'null'
     ELSE printf('%s', C.f48)
@@ -13205,13 +13205,13 @@ BEGIN
     ELSE printf('%s', C.f51)
     END, CASE WHEN C.f52 IS NULL THEN 'null'
     ELSE printf('%lld', C.f52)
-    END, CASE WHEN C.f53 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f53) IS NULL THEN 'null'
     ELSE printf('%d', C.f53)
     END, CASE WHEN C.f54 IS NULL THEN 'null'
     ELSE printf('%s', C.f54)
-    END, CASE WHEN C.f55 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f55) IS NULL THEN 'null'
     ELSE printf('%lld', C.f55)
-    END, CASE WHEN C.f56 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f56) IS NULL THEN 'null'
     ELSE printf('%lld', C.f56)
     END, CASE WHEN C.f57 IS NULL THEN 'null'
     ELSE printf('%s', C.f57)
@@ -13229,11 +13229,11 @@ BEGIN
     ELSE printf('%lld', C.f63)
     END, CASE WHEN C.f64 IS NULL THEN 'null'
     ELSE printf('%d', C.f64)
-    END, CASE WHEN C.f65 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f65) IS NULL THEN 'null'
     ELSE printf('%lld', C.f65)
-    END, CASE WHEN C.f66 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f66) IS NULL THEN 'null'
     ELSE printf('%d', C.f66)
-    END, CASE WHEN C.f67 IS NULL THEN 'null'
+    END, CASE WHEN nullable(C.f67) IS NULL THEN 'null'
     ELSE printf('%d', C.f67)
     END, CASE WHEN C.f68 IS NULL THEN 'null'
     ELSE printf('%d', C.f68)
@@ -15677,6 +15677,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
+  SET i2 := 1 + 2 * 3 IS NOT NULL;
+  */
+  i2 = 1;
+
+  // The statement ending at line XXXX
+
+  /*
   SET i2 := i0_nullable + i1_nullable IS NULL;
   */
   cql_combine_nullables(_tmp_n_int_0, i0_nullable.is_null, i1_nullable.is_null, i0_nullable.value + i1_nullable.value);
@@ -15688,13 +15695,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET i2 := NULL IS NOT NULL;
   */
   i2 = !1;
-
-  // The statement ending at line XXXX
-
-  /*
-  SET i2 := 1 + 2 * 3 IS NOT NULL;
-  */
-  i2 = 1;
 
   // The statement ending at line XXXX
 
