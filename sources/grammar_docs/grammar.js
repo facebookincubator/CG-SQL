@@ -282,7 +282,7 @@ module.exports = grammar({
     enforce_push_stmt: $ => $.AT_ENFORCE_PUSH,
     enforce_pop_stmt: $ => $.AT_ENFORCE_POP,
     comment: $ => token(choice(seq('--', /(\\(.|\r?\n)|[^\\\n])*/), seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/'))),
-    line_directive: $ => seq(/#[ \t]*/, $.INT_LIT, $.C_STR_LIT, /[^\n]*/, /\n/),
+    line_directive: $ => seq(/#(line)?[ \t]*/, $.INT_LIT, $.C_STR_LIT, /[^\n]*/, /\n/),
     macro: $ => choice($.preproc_include, $.preproc_def, $.preproc_function_def, $.preproc_call),
     preproc_def: $ => seq(preprocessor('define'),field('name', $.ID),field('value', optional($.preproc_arg)),'\n'),
     preproc_call: $ => seq(field('directive', $.preproc_directive),field('argument', optional($.preproc_arg)),'\n'),
@@ -559,4 +559,3 @@ function preprocIf (suffix, content) {
     )
   }
 }
-

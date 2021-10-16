@@ -1519,6 +1519,8 @@ declare proc printf no check;
 
 # 1 "long/path/I/do/not/like"
 
+#line 1 "long/path/I/do/not/like"
+
 set file := @FILE('path/');  -- take starting at path
 set file := @FILE('');  -- keep the whole string
 set file := @FILE('xxxx');  -- pattern not found, keep it all
