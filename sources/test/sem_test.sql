@@ -18800,6 +18800,14 @@ select printf("%-!8s %!-16s", "hello", "world");
 -- - Error
 select printf("%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E", 0x0, 00, "str", 0, 0.0);
 
+-- TEST: substr uses zero based indices
+-- + {select_stmt}: err
+-- + {call}: err
+-- + {int 0}: err
+-- + Error % substr uses 1 based indices, the 2nd argument of substr may not be zero
+-- +1 Error
+select substr("123", 0, 2);
+
 -- TEST: cannot use IS NULL on a nonnull type
 -- + Error % Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
 -- +1 Error

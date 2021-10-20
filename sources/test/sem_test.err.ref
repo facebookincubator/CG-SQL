@@ -1232,6 +1232,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0413: width required when using fl
 Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 's'
 Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 'u'
 Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with inappropriate flags 'd'
+Error at test/sem_test.sql:XXXX : in num : CQL0406: substr uses 1 based indices, the 2nd argument of substr may not be zero
 Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
 Error at test/sem_test.sql:XXXX : in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
 semantic errors present; no code gen.

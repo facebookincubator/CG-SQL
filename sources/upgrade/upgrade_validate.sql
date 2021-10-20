@@ -51,7 +51,7 @@ begin
       with split(line, str) as (
           select '', s || '$'
         union all
-          select substr(str, 0, instr(str, '$')), substr(str, instr(str, '$')+1)
+          select substr(str, 1, instr(str, '$') - 1), substr(str, instr(str, '$') + 1)
         from split
         where str != '')
       select trim(line) line from split where line != '';

@@ -7342,6 +7342,20 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
+  // We try to evaluate arg 2 as a constant, if we can do so and if we get zero
+  // then the user has made a mistake.  The indices are 1 based.
+  eval_node result = EVAL_NIL;
+  eval(arg2, &result);
+  if (result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL) {
+    eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+    if (result.int64_value == 0) {
+      report_error(arg2, "CQL0406: substr uses 1 based indices, the 2nd argument of substr may not be zero", NULL);
+      record_error(arg2);
+      record_error(ast);
+      return;
+    }
+  }
+
   // the second index can be any numeric (if it exists)
   if (arg3) {
     if (!is_numeric_expr(arg3) || is_ast_null(arg3)) {

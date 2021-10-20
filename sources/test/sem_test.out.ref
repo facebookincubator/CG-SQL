@@ -74028,6 +74028,36 @@ SELECT printf("%%s%%%-#123.0194llX%%%.241o.%!.32s% -0,14.234llds%#-!1.000E", 0x0
 
 The statement ending at line XXXX
 
+SELECT substr("123", 0, 2);
+
+Error at test/sem_test.sql:XXXX : in num : CQL0406: substr uses 1 based indices, the 2nd argument of substr may not be zero
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name substr}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '123'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: err
+  |     |           | {arg_list}
+  |     |             | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 LET not_null_object_is_null := not_null_object IS NULL;
 
 Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
