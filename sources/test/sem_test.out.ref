@@ -32506,6 +32506,114 @@ Error at test/sem_test.sql:XXXX : in str : CQL0277: autotest has incorrect forma
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:autotest=(dummy_test, bar, ((id, name), (1, 'x'))))
+CREATE PROC autotest_dummy_test_not_nested_2 ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0278: autotest attribute name is not valid 'bar'
+Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0277: autotest has incorrect format 'found nested attributes that don't start with dummy_test'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name autotest}
+  |   | {misc_attr_value_list}: ok
+  |     | {name dummy_test}: ok
+  |     | {misc_attr_value_list}
+  |       | {name bar}: err
+  |       | {misc_attr_value_list}
+  |         | {misc_attr_value_list}: ok
+  |           | {misc_attr_value_list}: err
+  |           | | {name id}: ok
+  |           | | {misc_attr_value_list}
+  |           |   | {name name}: ok
+  |           | {misc_attr_value_list}
+  |             | {misc_attr_value_list}: ok
+  |               | {int 1}: ok
+  |               | {misc_attr_value_list}
+  |                 | {strlit 'x'}: ok
+  | {create_proc_stmt}: err
+    | {name autotest_dummy_test_not_nested_2}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:autotest=((dummy_test, ((bar, (id), (1), (2))))))
+CREATE PROC autotest_dummy_test_with_col_double_nested ()
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+Error at test/sem_test.sql:XXXX : in misc_attr_value_list : CQL0273: autotest attribute has incorrect format (table name should be nested) in 'dummy_test'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name autotest}
+  |   | {misc_attr_value_list}: ok
+  |     | {misc_attr_value_list}: ok
+  |       | {name dummy_test}: err
+  |       | {misc_attr_value_list}
+  |         | {misc_attr_value_list}: err
+  |           | {misc_attr_value_list}: ok
+  |             | {name bar}: ok
+  |             | {misc_attr_value_list}
+  |               | {misc_attr_value_list}: ok
+  |               | | {name id}: ok
+  |               | {misc_attr_value_list}
+  |                 | {misc_attr_value_list}: ok
+  |                 | | {int 1}: ok
+  |                 | {misc_attr_value_list}
+  |                   | {misc_attr_value_list}: ok
+  |                     | {int 2}: ok
+  | {create_proc_stmt}: err
+    | {name autotest_dummy_test_with_col_double_nested}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:autotest=dummy_table)
 CREATE PROC autotest_incorrect_formatting ()
 BEGIN

@@ -6913,7 +6913,7 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
   }
 
   ast_node *arg = first_arg(arg_list);
-  
+
   if (!is_numeric_expr(arg)) {
     report_error(name_ast, "CQL0082: argument must be numeric", name);
     record_error(ast);
@@ -14375,6 +14375,11 @@ static bool_t sem_autotest_dummy_test(
   void *context)
 {
   Contract(is_ast_misc_attr_value_list(misc_attr_value_list));
+
+  if (!is_ast_str(misc_attr_value_list->left)) {
+    return false;
+  }
+
   EXTRACT_STRING(autotest_attr_name, misc_attr_value_list->left);
 
   if (!is_autotest_dummy_test(autotest_attr_name)) {

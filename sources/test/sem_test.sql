@@ -2777,7 +2777,7 @@ set X := (select sign(1,2));
 -- + {assign}: err
 set X := (select sign('x'));
 
--- TEST: sign may accept a real arg 
+-- TEST: sign may accept a real arg
 -- + {let_stmt}: rs: integer notnull variable
 -- - Error
 let rs := (select sign(1.0));
@@ -8839,6 +8839,29 @@ end;
 -- +1 Error
 @attribute(cql:autotest=(dummy_test, (bar, (id), (1))))
 create proc autotest_dummy_test_not_nested()
+begin
+  select * from bar;
+end;
+
+-- TEST: autotest attribute not nested.
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + Error % autotest attribute name is not valid 'bar'
+-- + Error % autotest has incorrect format 'found nested attributes that don't start with dummy_test'
+-- +2 Error
+@attribute(cql:autotest=(dummy_test, bar, ((id, name),(1, 'x'))))
+create proc autotest_dummy_test_not_nested_2()
+begin
+  select * from bar;
+end;
+
+-- TEST: autotest attribute with column names double nested
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + Error % autotest attribute has incorrect format (table name should be nested) in 'dummy_test'
+-- +1 Error
+@attribute(cql:autotest=((dummy_test, ((bar, (id), (1), (2))))))
+create proc autotest_dummy_test_with_col_double_nested()
 begin
   select * from bar;
 end;
