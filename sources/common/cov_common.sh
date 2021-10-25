@@ -17,7 +17,6 @@ coverage() {
   if ! "$@" \
             --html \
             --html-details \
-            --object-directory . \
             -o ${OUT_DIR}/report.html \
             -e test \
             -e tester \
@@ -40,7 +39,6 @@ coverage() {
 
   echo generating ${OUT_DIR}/report.txt
   if ! "$@" \
-              --object-directory . \
               -o ${OUT_DIR}/report.txt \
               -e test \
               -e tester \
