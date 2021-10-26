@@ -157,6 +157,8 @@ $O/cqltest.o: $T/cqltest.c
 
 $O/run_test.o: $O/run_test.c
 
+$O/run_test_compressed.o: $O/run_test_compressed.c
+
 $O/cg_test_c.o: $O/cg_test_c.c
 
 $O/cg_test_c_with_type_getters.o: $O/cg_test_c_with_type_getters.c
@@ -182,15 +184,18 @@ $O/cqlrt_mocked.o: cqlrt.c cqlrt.h
 $O/cqlrt_compat.o: cqlrt.c cqlrt.h
 	$(CC) $(CFLAGS) -DCQL_RUN_TEST -DCQL_COMPAT_VERSION_NUMBER=1 -c -o $O/cqlrt_compat.o cqlrt.c
 
-RUN_TEST_ARGS=-o $O/a.out $O/run_test.o $O/cqltest.o $O/run_test_client.o $O/cqlrt_mocked.o $O/result_set_extension.o
+RUN_TEST_ARGS=$O/run_test.o $O/cqltest.o $O/run_test_client.o $O/cqlrt_mocked.o $O/result_set_extension.o
 
-COMPAT_TEST_ARGS=-o $O/a.out $O/run_test.o $O/cqltest.o $O/run_test_client.o $O/cqlrt_compat.o $O/result_set_extension.o
+COMPAT_TEST_ARGS=$O/run_test.o $O/cqltest.o $O/run_test_client.o $O/cqlrt_compat.o $O/result_set_extension.o
 
 run_test: $O/cqltest.o $O/run_test.o $O/run_test_client.o $O/result_set_extension.o $O/cqlrt_mocked.o
-	$(CC) $(CFLAGS) $(RUN_TEST_ARGS) $(SQLITE_LINK)
+	$(CC) -o $O/run_test $(CFLAGS) $(RUN_TEST_ARGS) $(SQLITE_LINK)
+
+run_test_compressed: $O/cqltest.o $O/run_test_compressed.o $O/run_test_client.o $O/result_set_extension.o $O/cqlrt_mocked.o
+	$(CC) -o $O/run_test_compressed $(CFLAGS) $(RUN_TEST_ARGS) $(SQLITE_LINK)
 
 run_test_compat: $O/cqltest.o $O/run_test.o $O/run_test_client.o $O/result_set_extension.o $O/cqlrt_compat.o
-	$(CC) $(CFLAGS) $(COMPAT_TEST_ARGS) $(SQLITE_LINK)
+	$(CC) -o $O/run_test_compat $(CFLAGS) $(COMPAT_TEST_ARGS) $(SQLITE_LINK)
 
 $O/upgrade_test.o: upgrade/upgrade_test.c
 	$(CC) -o $@ -c $(CFLAGS) upgrade/upgrade_test.c

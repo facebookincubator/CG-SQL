@@ -1261,19 +1261,19 @@ run_test() {
   then
     echo build failed
     failed
-  elif ! (echo "  executing tests"; "./${OUT_DIR}/a.out")
+  elif ! (echo "  executing tests"; "./${OUT_DIR}/run_test")
   then
     echo tests failed
     failed
-  elif ! ${CQL} --compress --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
+  elif ! ${CQL} --compress --cg "${OUT_DIR}/run_test_compressed.h" "${OUT_DIR}/run_test_compressed.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
   then
     echo compressed codegen failed.
     failed
-  elif ! (echo "  compiling code (compressed version)"; do_make run_test )
+  elif ! (echo "  compiling code (compressed version)"; do_make run_test_compressed )
   then
     echo build failed
     failed
-  elif ! (echo "  executing tests (compressed version)"; "./${OUT_DIR}/a.out")
+  elif ! (echo "  executing tests (compressed version)"; "./${OUT_DIR}/run_test_compressed")
   then
     echo tests failed
     failed
@@ -1281,7 +1281,7 @@ run_test() {
   then
     echo compile compat failed
     failed
-  elif ! (echo "  executing compat tests"; "./${OUT_DIR}/a.out")
+  elif ! (echo "  executing compat tests"; "./${OUT_DIR}/run_test_compat")
   then
     echo compat tests failed
     failed
