@@ -933,9 +933,22 @@ schema_migration_test() {
     failed;
   fi
 
+
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_schema_partial_upgrade.out
   on_diff_exit cg_test_schema_partial_upgrade.err
+
+  echo "  running schema migration with min version args"
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_min_version_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --min_schema_version 3 2>"${OUT_DIR}/cg_test_schema_min_version_upgrade.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_min_version_upgrade.err"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_schema_min_version_upgrade.out
+  on_diff_exit cg_test_schema_min_version_upgrade.err
 }
 
 misc_cases() {

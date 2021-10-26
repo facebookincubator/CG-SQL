@@ -302,7 +302,7 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
 static void cg_schema_emit_baseline_tables_proc(charbuf *output, charbuf *baseline) {
   cg_generate_baseline_tables(baseline);
 
-  if (baseline->used > 1) {
+  if (baseline->used > 1 && options.min_schema_version == 0) {
     bprintf(output, "CREATE PROCEDURE %s_cql_install_baseline_schema()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bindent(output, baseline, 2);
@@ -1087,7 +1087,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     bprintf(&main, "    CALL %s_cql_drop_all_triggers();\n\n", global_proc_name);
   }
 
-  if (baseline.used > 1) {
+  if (baseline.used > 1 && options.min_schema_version == 0) {
     llint_t baseline_crc = (llint_t)crc_charbuf(&baseline);
     bprintf(&main, "    ---- install baseline schema if needed ----\n\n");
     bprintf(&main, "    CALL %s_cql_get_version_crc(0, schema_version);\n", global_proc_name);
@@ -1112,6 +1112,10 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
     Invariant(note->version == vers);
     Invariant(vers > 0);
+
+    if (vers < options.min_schema_version) {
+      continue;
+    }
 
     if (prev_version != vers) {
       cg_schema_end_version(&main, &upgrade, &pending, prev_version);

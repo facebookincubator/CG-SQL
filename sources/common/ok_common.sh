@@ -64,6 +64,8 @@ copy_ref cg_test_query_plan.out
 # copy_ref cg_test_query_plan_js.out
 copy_ref cg_test_schema_partial_upgrade.out
 copy_ref cg_test_schema_partial_upgrade.err
+copy_ref cg_test_schema_min_version_upgrade.out
+copy_ref cg_test_schema_min_version_upgrade.err
 copy_ref cg_test_schema_prev.out
 copy_ref cg_test_schema_prev.err
 copy_ref cg_test_schema_sqlite.out

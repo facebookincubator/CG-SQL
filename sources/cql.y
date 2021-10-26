@@ -2123,8 +2123,11 @@ static void parse_cmd(int argc, char **argv) {
       yyrestart(f);
 
       current_file = argv[a];
+    } else if (strcmp(arg, "--min_schema_version") == 0) {
+      a = gather_arg_param(a, argc, argv, NULL, "for the minimum schema version");
+      options.min_schema_version = atoi(argv[a]);
     } else if (strcmp(arg, "--global_proc") == 0) {
-      a = gather_arg_param(a, argc, argv, NULL, "for the global proc name");
+      a = gather_arg_param(a, argc, argv, NULL,  "for the global proc name");
       global_proc_name = argv[a];
     } else if (strcmp(arg, "--objc_c_include_path") == 0) {
       a = gather_arg_param(a, argc, argv, &options.objc_c_include_path, "for the include path of a C header");
