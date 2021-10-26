@@ -1396,7 +1396,7 @@ query_plan_test() {
     failed
   fi
 
-  echo "query plan diff temporarily disbled until SQLite 3.32 changes are sorted out"
+  echo "query plan diff temporarily disabled until SQLite 3.32 changes are sorted out"
   # echo validating query plan view
   # echo "  computing diffs (empty if none)"
   # on_diff_exit cg_test_query_plan_js.out

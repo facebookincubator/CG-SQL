@@ -60,7 +60,7 @@ copy_ref cg_test_json_schema.out
 copy_ref cg_test_objc.out
 copy_ref cg_test_objc.err
 copy_ref cg_test_query_plan.out
-# query plan diff temporarily disbled until SQLite 3.32 changes are sorted out
+# query plan diff temporarily disabled until SQLite 3.32 changes are sorted out
 # copy_ref cg_test_query_plan_js.out
 copy_ref cg_test_schema_partial_upgrade.out
 copy_ref cg_test_schema_partial_upgrade.err
