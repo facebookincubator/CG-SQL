@@ -3826,6 +3826,17 @@ BEGIN_TEST(verify_temp_non_reuse)
   EXPECT(fn(1)+fnn(2)+fn(4)+f(8)+fnn(16)+f(32)==63);
 END_TEST(verify_temp_non_reuse)
 
+BEGIN_TEST(compressible_batch)
+  -- nest the batch so that it doesn't conflict with the macro proc preamble
+  IF 1 THEN
+    drop table if exists foo;
+    create table goo(id integer);
+    insert into goo values (1), (2), (3);
+  END IF;
+  EXPECT((select sum(id) from goo) == 6);
+  drop table goo;
+END_TEST(compressible_batch)
+
 -- a simple proc that creates a result set with out union
 -- this reference must be correctly managed
 create proc get_row()

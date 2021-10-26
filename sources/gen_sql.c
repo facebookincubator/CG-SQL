@@ -7,7 +7,7 @@
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_GEN_SQL)
 
-// stubs to avoid link errors, 
+// stubs to avoid link errors,
 
 cql_noexport void gen_init() {}
 cql_export void gen_cleanup() {}
@@ -114,7 +114,15 @@ cql_noexport void gen_col_def_with_callbacks(ast_node *ast, gen_sql_callbacks *_
 }
 
 cql_noexport void gen_statement_with_callbacks(ast_node *ast, gen_sql_callbacks *_callbacks) {
-  gen_with_callbacks(ast, gen_one_stmt, _callbacks);
+  // works for statements or statement lists
+  if (is_ast_stmt_list(ast)) {
+    gen_stmt_level = -1;  // the first statement list does not indent
+    gen_with_callbacks(ast, gen_stmt_list, _callbacks);
+  }
+  else {
+    gen_stmt_level = 0;  // nested statement lists will indent
+    gen_with_callbacks(ast, gen_one_stmt, _callbacks);
+  }
 }
 
 cql_noexport void gen_set_output_buffer(struct charbuf *buffer) {
@@ -3539,7 +3547,13 @@ static void gen_stmt_list(ast_node *root) {
       gen_misc_attrs(misc_attrs);
     }
     gen_one_stmt(stmt);
-    gen_printf(";\n");
+
+    if (gen_stmt_level == 0 && semi->right == NULL) {
+      gen_printf(";");
+    }
+    else {
+      gen_printf(";\n");
+    }
   }
 
   END_INDENT(statement);

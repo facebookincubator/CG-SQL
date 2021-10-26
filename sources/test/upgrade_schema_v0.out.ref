@@ -50,7 +50,7 @@ CREATE TABLE test_this_table_will_become_create(
 
 type: trigger
 tbl_name: test_create_table_A
-CREATE TRIGGER tr__dummy  BEFORE DELETE ON test_create_table_A BEGIN  SELECT 1; END
+CREATE TRIGGER tr__dummy  BEFORE DELETE ON test_create_table_A BEGIN SELECT 1; END
 
 ----- use_g1 -----
 

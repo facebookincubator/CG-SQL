@@ -4953,7 +4953,7 @@ CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_) {
       "FOR EACH ROW "
       "WHEN old.id > 7 "
     "BEGIN "
-      "SELECT old.id; "
+    "SELECT old.id; "
     "END");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;

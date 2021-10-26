@@ -1670,7 +1670,7 @@ static void cg_func_sign(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
-  EXTRACT_ANY_NOTNULL(expr, arg_list->left); 
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
 
   sem_t sem_type_result = call_ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
@@ -4019,7 +4019,7 @@ static int32_t cg_intern_fragment(CSTR str, int32_t len) {
   int32_t result = fragment_last_offset;
   symtab_add(text_fragments, Strdup(str), fragment_last_offset + (char *)NULL);
   fragment_last_offset += len + 1;  // include space for the nil
-  bprintf(cg_fragments_output, "  \"%s\\0\"\n", str);
+  bprintf(cg_fragments_output, "  \"%s\\0\" // %d\n", str, result);
   return result;
 }
 
@@ -4240,6 +4240,29 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   }
 
   // vars is pool allocated, so we don't need to free it
+}
+
+// Checks to see if the given statement or statement list is unbound
+// i.e. it does not mention any variables.  We do this so that we
+// detect if the statement is safe to batch with others.  If it had
+// binding then we would need to bind each statement in the block
+// seperately and then there would be no point in batching.
+static bool cg_verify_unbound_stmt(ast_node *stmt)
+{
+  list_item *vars = NULL;
+
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.variables_callback = cg_capture_variables;
+  callbacks.variables_context = &vars;
+
+  CHARBUF_OPEN(temp);
+  gen_set_output_buffer(&temp);
+  gen_statement_with_callbacks(stmt, &callbacks);
+  CHARBUF_CLOSE(temp);
+
+  // vars is pool allocated, so we don't need to free it
+  return !vars;
 }
 
 // This emits the declaration for an "auto cursor" -- that is a cursor
@@ -5891,7 +5914,6 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
   Contract(entry);
 
-
   if (!in_proc) {
     // DDL operations not in a procedure are ignored
     // but they can declare schema during the semantic pass
@@ -6011,6 +6033,47 @@ static void cg_stmt_list(ast_node *head) {
   charbuf *saved_main = cg_main_output;
   CHARBUF_OPEN(temp);
   cg_main_output = &temp;
+
+  // Check to see if the block starts with a sequence of DDL/DML, if it does we can execute
+  // it in one go; this saves us a lot of error checking code at the expense of less precise
+  // error tracing.
+
+  if (in_proc && options.compress) {
+    ast_node *ast = head;
+    ast_node *prev = head;
+    for (; ast; ast = ast->right) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
+
+      symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
+      Contract(entry);
+
+      if (entry->val != cg_any_ddl_stmt && entry->val != cg_std_dml_exec_stmt) {
+        break;
+      }
+      prev = ast;
+    }
+
+    // try to run the first statements of the statement list in bulk
+    // but only do this if we found at least 2 statements that match
+    if (ast != head && ast != head->right) {
+      ast_node *new_head = ast;
+
+      // temporarily nix the tail of the statement list
+      prev->right = NULL;
+
+      // we can't do this if any of the statements require variable binding
+      if (cg_verify_unbound_stmt(head)) {
+        // unbound batch, we can do this
+        cg_bound_sql_statement(NULL, head, CG_EXEC|CG_NO_MINIFY_ALIASES);
+
+        // now skip this batch, we already emitted them all in one go
+        head = new_head;
+      }
+
+      // repair the statement list back to normal
+      prev->right = new_head;
+    }
+  }
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
@@ -7173,11 +7236,44 @@ cql_noexport void cg_c_main(ast_node *head) {
   if (options.compress) {
     // seed the fragments with popular ones based on statistics
     CHARBUF_OPEN(ignored);
-    cg_statement_fragments(
-      ", " "AS " "." ",\n  " "NOT " "(" ") " "TEXT" "id " "thread_"
-      "NULL," "id," "LONG_" "timestamp_" "CAST," "TABLE " "media_"
-      "NULL " "EXISTS " "IF " "CREATE " "DROP " "C" "url_" "profile_" "VIEW " "= ",
-      &ignored);
+
+    cg_statement_fragments(", ", &ignored);
+    cg_statement_fragments("AS ", &ignored);
+    cg_statement_fragments("NOT ", &ignored);
+    cg_statement_fragments(".", &ignored);
+    cg_statement_fragments(",", &ignored);
+    cg_statement_fragments(",\n  ", &ignored);
+    cg_statement_fragments("id ", &ignored);
+    cg_statement_fragments("id,", &ignored);
+    cg_statement_fragments("KEY", &ignored);
+    cg_statement_fragments("KEY ", &ignored);
+    cg_statement_fragments("TEXT", &ignored);
+    cg_statement_fragments("LONG_", &ignored);
+    cg_statement_fragments("INT ", &ignored);
+    cg_statement_fragments("INTEGER ", &ignored);
+    cg_statement_fragments("ON ", &ignored);
+    cg_statement_fragments("TEXT ", &ignored);
+    cg_statement_fragments("CAST", &ignored);
+    cg_statement_fragments("TABLE ", &ignored);
+    cg_statement_fragments("(", &ignored);
+    cg_statement_fragments(")", &ignored);
+    cg_statement_fragments("( ", &ignored);
+    cg_statement_fragments(") ", &ignored);
+    cg_statement_fragments("0", &ignored);
+    cg_statement_fragments("1", &ignored);
+    cg_statement_fragments("= ", &ignored);
+    cg_statement_fragments("__", &ignored);
+    cg_statement_fragments("NULL ", &ignored);
+    cg_statement_fragments("NULL,", &ignored);
+    cg_statement_fragments("EXISTS ", &ignored);
+    cg_statement_fragments("CREATE ", &ignored);
+    cg_statement_fragments("DROP ", &ignored);
+    cg_statement_fragments("TABLE ", &ignored);
+    cg_statement_fragments("VIEW ", &ignored);
+    cg_statement_fragments("PRIMARY ", &ignored);
+    cg_statement_fragments("IF ", &ignored);
+    cg_statement_fragments("(\n", &ignored);
+
     CHARBUF_CLOSE(ignored);
   }
 
