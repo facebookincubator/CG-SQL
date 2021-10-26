@@ -192,11 +192,16 @@ run_test: $O/cqltest.o $O/run_test.o $O/run_test_client.o $O/result_set_extensio
 run_test_compat: $O/cqltest.o $O/run_test.o $O/run_test_client.o $O/result_set_extension.o $O/cqlrt_compat.o
 	$(CC) $(CFLAGS) $(COMPAT_TEST_ARGS) $(SQLITE_LINK)
 
-upgrade_test:
-	$(CC) $(CFLAGS) -o $O/upgrade0 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade0.c upgrade/upgrade_test.c $(SQLITE_LINK)
-	$(CC) $(CFLAGS) -o $O/upgrade1 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade1.c upgrade/upgrade_test.c $(SQLITE_LINK)
-	$(CC) $(CFLAGS) -o $O/upgrade2 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade2.c upgrade/upgrade_test.c $(SQLITE_LINK)
-	$(CC) $(CFLAGS) -o $O/upgrade3 $O/cqlrt.o $O/upgrade_validate.c $O/generated_upgrade3.c upgrade/upgrade_test.c $(SQLITE_LINK)
+$O/upgrade_test.o: upgrade/upgrade_test.c
+	$(CC) -o $@ -c $(CFLAGS) upgrade/upgrade_test.c
+
+$O/upgrade_validate.o: $O/upgrade_validate.c
+
+upgrade_test: $O/upgrade_test.o $O/upgrade_validate.o
+	$(CC) $(CFLAGS) -o $O/upgrade0 $O/cqlrt.o $O/upgrade_validate.o $O/generated_upgrade0.c $O/upgrade_test.o $(SQLITE_LINK)
+	$(CC) $(CFLAGS) -o $O/upgrade1 $O/cqlrt.o $O/upgrade_validate.o $O/generated_upgrade1.c $O/upgrade_test.o $(SQLITE_LINK)
+	$(CC) $(CFLAGS) -o $O/upgrade2 $O/cqlrt.o $O/upgrade_validate.o $O/generated_upgrade2.c $O/upgrade_test.o $(SQLITE_LINK)
+	$(CC) $(CFLAGS) -o $O/upgrade3 $O/cqlrt.o $O/upgrade_validate.o $O/generated_upgrade3.c $O/upgrade_test.o $(SQLITE_LINK)
 	$(CC) $(CFLAGS) -o $O/downgrade_test $O/cqlrt.o $O/generated_upgrade1.c upgrade/downgrade_test.c $(SQLITE_LINK)
 
 query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o
@@ -205,11 +210,11 @@ query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o
 test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o
 	$(CC) $(CFLAGS) -o $O/test_helpers_test $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o $(SQLITE_LINK)
 
-cql-verify: tester/main.c cqlrt.c cqlrt.h tester/dbhelp.c tester/dbhelp.h $(SQLITE_OBJ)
-	$(CC) $(CFLAGS) -I. -o $O/cql-verify tester/main.c cqlrt.c tester/dbhelp.c $(SQLITE_LINK)
+cql-verify: tester/main.c cqlrt.c cqlrt.h tester/dbhelp.c $O/cqlrt.o tester/dbhelp.h $(SQLITE_OBJ)
+	$(CC) $(CFLAGS) -I. -o $O/cql-verify tester/main.c $O/cqlrt.o tester/dbhelp.c $(SQLITE_LINK)
 
-cql-linetest: linetester/main.c cqlrt.c cqlrt.h linetester/linetest.c linetester/linetest.h $(SQLITE_OBJ)
-	$(CC) $(CFLAGS) -I. -o $O/cql-linetest linetester/main.c cqlrt.c linetester/linetest.c $(SQLITE_LINK)
+cql-linetest: linetester/linetest_main.c cqlrt.c cqlrt.h linetester/linetest.c $O/cqlrt.o linetester/linetest.h $(SQLITE_OBJ)
+	$(CC) $(CFLAGS) -I. -o $O/cql-linetest linetester/linetest_main.c $O/cqlrt.o linetester/linetest.c $(SQLITE_LINK)
 
 json-test: $O/json_test
 
