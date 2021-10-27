@@ -6566,7 +6566,7 @@ CQL includes a number of features to make it easier to create what you might cal
 
 ### Dummy Data
 
-Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.  
+Test code can be needlessly brittle, especially when creating dummy data; any column changes typically cause all sorts of data insertion code to need to be repaired.
 In many cases the actual data values are completely uninteresting to the test -- any values would do.  There are several strategies you can use to get good dummy data into your database in a more maintainable way.
 
 #### Simple Inserts With Dummy Data
@@ -6576,7 +6576,7 @@ The simplest form uses a variant of the insert statement that fills in any missi
 ```sql
 create proc dummy_user()
 begin
-  insert into users () values () @dummy_seed(123) 
+  insert into users () values () @dummy_seed(123)
      @dummy_nullables @dummy_defaults;
 end;
 ```
@@ -6585,7 +6585,7 @@ This statement causes all values including columns that are nullable or have a d
 
 If you omit the `@dummy_nullables` then any nullable fields will be null as usual.  And likewise if you omit `@dummy_defaults` then any fields with a default value will use thatt value as usual.  You might want any combination of those for your tests (null values are handy in your tests and default behavior is also handy).
 
-The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of 
+The `@dummy_seed` expression provided can be anything that resolves to a non-null integer value, so it can be pretty flexible.  You might use a `while` loop to insert a bunch of
 rows with the seed value being computed from the `while` loop variable.
 
 The form above is sort of like `insert * into table` in that it is giving dummy values for all columns but you can also specify some of the columns while using the seed value for others.  Importantly, you can specify values you particularly want to control either for purposes of creating a more tailored test or because you need them
@@ -6623,7 +6623,7 @@ begin
   FROM dummy;
 end;
 ```
-The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.  
+The first part of the above creates a series of numbers from 1 to `lim`.  The second uses those values to create dummy columns.
 Any result shape can be generated in this fashion.
 
 You get data like this from the above:
@@ -6640,8 +6640,8 @@ You get data like this from the above:
 10|name_10|0|13.0|10|10
 ```
 
-The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with 
-`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways 
+The result of the select statement is itself quite flexible and if more dummy data is what you wanted, this form can be combined with
+`INSERT ... FROM SELECT...` to create dummy data in real tables.   And of course once you have a core query you could use it in a variety of ways
 combined with cursors or any other strategy to `select` out pieces and `insert` them into various tables.
 
 #### Using Temporary Tables
@@ -6657,8 +6657,8 @@ emulating the results of `my_proc`.
 create proc begin_dummy()
 begin
    drop table if exists my_dummy_data;
-   
-   -- the shape of my_dummy_data matches the columns 
+
+   -- the shape of my_dummy_data matches the columns
    -- returned by proc_I_want_to_emulate
    create temp table my_dummy_data(
      like proc_I_want_to_emulate;
@@ -6667,7 +6667,7 @@ end;
 ```
 
 Next, you will need a procedure that accepts and writes a single row to your temp table.  You can of course write this all explicitly but the testing
-support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating, 
+support features provide more support to make things easier; In this example, arguments  of the procedure will exactly match the output of the procedure we emulating,
 one argument for each column the proc returns. The `insert` statement gets its values from the arguments.
 
 ```sql
@@ -6761,7 +6761,7 @@ The attributes dummy_table, dummy_insert, and dummy_select can be used together 
 
 Example:
 
-To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values. 
+To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values.
 
 ```sql
 create table foo(
@@ -6815,23 +6815,23 @@ When compiled, the above will create C methods that can create, drop, insert, an
 ```
 CQL_WARN_UNUSED cql_code open_sample_proc(
   sqlite3 *_Nonnull _db_);
-  
+
 CQL_WARN_UNUSED cql_code close_sample_proc(
   sqlite3 *_Nonnull _db_);
-  
+
 CQL_WARN_UNUSED cql_code insert_sample_proc(
-  sqlite3 *_Nonnull _db_, 
-  cql_int32 id_, 
+  sqlite3 *_Nonnull _db_,
+  cql_int32 id_,
   cql_string_ref _Nonnull name_);
 
 CQL_WARN_UNUSED cql_code select_sample_proc_fetch_results(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   select_sample_proc_result_set_ref _Nullable *_Nonnull result_set);
 ```
 
 #### Single Row ResultSet
 
-In some cases, using four APIs to generate fake data can be verbose. 
+In some cases, using four APIs to generate fake data can be verbose.
 In the case that only a single row of data needs to be faked, the dummy_result_set attribute can be more convenient.
 
 Example:
@@ -6859,8 +6859,8 @@ Which generates this C API:
 
 ```C
 void generate_sample_proc_row_fetch_results(
-    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set, 
-    string_ref _Nonnull foo_, 
+    generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set,
+    string_ref _Nonnull foo_,
     int64_t bar_);
 ```
 
@@ -7031,12 +7031,12 @@ Finally, the most complicated helper is the one that used that large annotation.
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(id) VALUES(1) @dummy_seed(123);
-  
-  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124) 
+
+  INSERT OR IGNORE INTO foo(id) VALUES(2) @dummy_seed(124)
       @dummy_nullables @dummy_defaults;
-  
+
 INSERT OR IGNORE INTO bar(data, id) VALUES('plugh', 1) @dummy_seed(125);
-  
+
   INSERT OR IGNORE INTO bar(id) VALUES(2) @dummy_seed(126)
      @dummy_nullables @dummy_defaults;
 END;
@@ -7055,7 +7055,7 @@ NOTE: if you include primary key and/or foreign key columns among the explicit v
 Generalizing the example a little bit, we could use the following:
 
 ```
-(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')), 
+(dummy_test, (foo, (name), ('fred'), ('barney'), ('wilma'), ('betty')),
                         (bar, (id, data), (1, 'dino'), (2, 'hopparoo'))))
 ```
 
@@ -7065,17 +7065,17 @@ to generate this population:
 CREATE PROC test_the_subject_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO foo(name, id) VALUES('fred', 1) @dummy_seed(123);
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES('barney', 2) @dummy_seed(124)
     @dummy_nullables @dummy_defaults;
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES('wilma', 3) @dummy_seed(125);
-  
+
   INSERT OR IGNORE INTO foo(name, id) VALUES('betty', 4) @dummy_seed(126)
     @dummy_nullables @dummy_defaults;
-    
+
   INSERT OR IGNORE INTO bar(id, data) VALUES(1, 'dino') @dummy_seed(127);
-  
+
   INSERT OR IGNORE INTO bar(id, data) VALUES(2, 'hopparoo') @dummy_seed(128)
     @dummy_nullables @dummy_defaults;
 END;
@@ -7090,6 +7090,26 @@ CQL_WARN_UNUSED cql_code test_the_subject_populate_tables(sqlite3 *_Nonnull _db_
 ```
 
 So it's fairly easy to call from C/C++ test code or from CQL test code.
+
+#### Cross Procedure Limitations
+
+Generally it's not possible to compute table usages that come from from called procedures. This is
+because to do so you need to see the body of the called procedure and typically that body is in a different
+translation -- and is therefore not available.  A common workaround for that particular problem is to create
+a dummy procedure that explicitly uses all the desired tables.  This is significantly easier than creating all
+the schema manually and still gets you triggers and indices automatically.  Something like this:
+
+```sql
+@attribute(cql:autotest=(dummy_test))
+create proc use_my_stuff()
+begin
+  let x := select 1 from t1, t2, t3, t4, t5, t6, etc..;
+end;
+```
+
+The above can be be done as a macro if desired.  But in any case `use_my_stuff` simply and directly lists the desired tables.
+Using this approach you can have one set of test helpers for an entire unit rather than one per procedure and that
+is often desirable.  And the maintenance is not too bad.  You just use the `use_my_stuff` test helpers everywhere.
 
 
 ## Chapter 13: JSON Output
@@ -8535,7 +8555,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Oct  8 18:24:20 PDT 2021
+Snapshot as of Tue Oct 26 16:04:49 PDT 2021
 
 ### Operators and Literals
 
@@ -9973,6 +9993,7 @@ enforcement_options:
   | "ENCODE" "CONTEXT TYPE" "BLOB"
   | "IS TRUE"
   | "CAST"
+  | "NULL" "CHECK" "ON" "NOT" "NULL"
   ;
 
 enforce_strict_stmt:
@@ -10073,7 +10094,7 @@ The complete list (as of this writing) is:
   * there are a number of attributes known to the compiler which I list below (complete as of this writing)
 
   * `cql:autodrop=(table1, table2, ...)` when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset
-  * `cql:indentity=(column1, column2, ...)` the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form `procedure_name_row_same(rowset1, row1, rowset2, row2)`
+  * `cql:identity=(column1, column2, ...)` the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form `procedure_name_row_same(rowset1, row1, rowset2, row2)`
   * `cql:suppress_getters` the annotated procedure should not emit its related column getter functions.
     * Useful if you only indend to call the procedure from CQL.
     * Saves code generation and removes the possibility of C code using the getters.
@@ -13576,7 +13597,11 @@ let result := some_external_proc("Hello!");
 
 ----
 
-CQL 0406 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0406: substr uses 1 based indices, the 2nd argument of substr may not be zero"
+
+A common mistake with substr is to assume it uses zero based indices like C does.  It does not.  In fact
+the result when using 0 as the second argument is not well defined.  If you want the first
+`n` characters of a string you use `substr(haystack, 1, n)`.
 
 ----
 
@@ -13590,7 +13615,22 @@ The encode context column can be only specified once in @vault_sensitive attribu
 
 ----
 
-CQL 0409 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'nonnull_expr'
+
+If the left side of an `IS NULL` or `IS NOT NULL` expression is of a `NOT NULL`
+type, the answer will always be the same (`FALSE` or `TRUE`, respectively). Such
+a check often indicates confusion that may lead to unexpected behavior (e.g.,
+checking, incorrectly, if a cursor has a row via `cursor IS NOT NULL`).
+
+**NOTE**: Cursor fields of cursors without a row and uninitialized variables of
+a NOT NULL reference type are exceptions to the above rule: Something may be
+NULL even if it is of a NOT NULL type in those cases. CQL will eventually
+eliminate these exceptions. In the cursor case, one can check whether or not a
+cursor has a row by using the cursor-as-boolean-expression syntax (e.g., `IF
+cursor THEN ... END IF;`, `IF NOT cursor ROLLBACK RETURN;`, et cetera). In the
+uninitialized variables case, writing code that checks for initialization is not
+recommended (and, indeed, use before initialization will soon be impossible
+anyway): One should simply always initialize the variable.
 
 ----
 
@@ -13709,7 +13749,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Oct  8 18:24:20 PDT 2021
+Snapshot as of Tue Oct 26 16:04:50 PDT 2021
 
 ### Rules
 

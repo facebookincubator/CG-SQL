@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Oct  8 18:24:20 2021
+// Snapshot as of Tue Oct 26 16:04:49 2021
 
 
 const PREC = {
@@ -275,7 +275,7 @@ module.exports = grammar({
     trigger_update_stmt: $ => $.basic_update_stmt,
     CONTEXT_COLUMN: $ => prec.left(1, seq(CI('context'), CI('column'))),
     CONTEXT_TYPE: $ => prec.left(1, seq(CI('context'), CI('type'))),
-    enforcement_options: $ => choice(seq($.FOREIGN, $.KEY, $.ON, $.UPDATE), seq($.FOREIGN, $.KEY, $.ON, $.DELETE), $.JOIN, seq($.UPSERT, $.STATEMENT), seq($.WINDOW, $.function), seq($.WITHOUT, $.ROWID), $.TRANSACTION, seq($.SELECT, $.IF, $.NOTHING), seq($.INSERT, $.SELECT), seq($.TABLE, $.FUNCTION), seq($.ENCODE, $.CONTEXT_COLUMN), seq($.ENCODE, $.CONTEXT_TYPE, $.INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.LONG_INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.REAL), seq($.ENCODE, $.CONTEXT_TYPE, $.BOOL), seq($.ENCODE, $.CONTEXT_TYPE, $.TEXT), seq($.ENCODE, $.CONTEXT_TYPE, $.BLOB), $.IS_TRUE, $.CAST),
+    enforcement_options: $ => choice(seq($.FOREIGN, $.KEY, $.ON, $.UPDATE), seq($.FOREIGN, $.KEY, $.ON, $.DELETE), $.JOIN, seq($.UPSERT, $.STATEMENT), seq($.WINDOW, $.function), seq($.WITHOUT, $.ROWID), $.TRANSACTION, seq($.SELECT, $.IF, $.NOTHING), seq($.INSERT, $.SELECT), seq($.TABLE, $.FUNCTION), seq($.ENCODE, $.CONTEXT_COLUMN), seq($.ENCODE, $.CONTEXT_TYPE, $.INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.LONG_INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.REAL), seq($.ENCODE, $.CONTEXT_TYPE, $.BOOL), seq($.ENCODE, $.CONTEXT_TYPE, $.TEXT), seq($.ENCODE, $.CONTEXT_TYPE, $.BLOB), $.IS_TRUE, $.CAST, seq($.NULL, $.CHECK, $.ON, $.NOT, $.NULL)),
     enforce_strict_stmt: $ => seq($.AT_ENFORCE_STRICT, $.enforcement_options),
     enforce_normal_stmt: $ => seq($.AT_ENFORCE_NORMAL, $.enforcement_options),
     enforce_reset_stmt: $ => $.AT_ENFORCE_RESET,
@@ -559,3 +559,4 @@ function preprocIf (suffix, content) {
     )
   }
 }
+
