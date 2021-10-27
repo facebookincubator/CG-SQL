@@ -74,7 +74,7 @@ cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql) {
 // only intended to be used in the context of schema maintenance or other cases where
 // there are highly compressible patterns (like DROP TRIGGER %s for 1000s of triggers).
 // All we do is convert the incoming string reference into a C string and then exec it.
-cql_code cql_exec_internal(sqlite3 *_Nonnull db, cql_string_ref _Nonnull str_ref) {
+CQL_WARN_UNUSED cql_code cql_exec_internal(sqlite3 *_Nonnull db, cql_string_ref _Nonnull str_ref) {
   cql_alloc_cstr(temp, str_ref);
   cql_code rc = cql_sqlite3_exec(db, temp);
   cql_free_cstr(temp, str_ref);

@@ -132,7 +132,7 @@ CQL_EXPORT cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_
 CQL_EXPORT cql_code cql_no_rows_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt);
 CQL_EXPORT cql_result_set_ref _Nonnull cql_no_rows_result_set(void);
 CQL_EXPORT cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql);
-CQL_EXPORT cql_code cql_exec_internal(sqlite3 *_Nonnull db, cql_string_ref _Nonnull str_ref);
+CQL_EXPORT CQL_WARN_UNUSED cql_code cql_exec_internal(sqlite3 *_Nonnull db, cql_string_ref _Nonnull str_ref);
 
 CQL_EXPORT cql_code cql_prepare_frags(sqlite3 *_Nonnull db,
                                       sqlite3_stmt *_Nullable *_Nonnull pstmt,
