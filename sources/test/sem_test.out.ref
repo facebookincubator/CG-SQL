@@ -44791,13 +44791,13 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_nullable (t TEXT)
+CREATE PROC substr_test_nullable_string (t TEXT)
 BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
 
   {create_proc_stmt}: select: { t: text } dml_proc
-  | {name substr_test_nullable}: select: { t: text } dml_proc
+  | {name substr_test_nullable_string}: select: { t: text } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text variable in
@@ -44833,13 +44833,109 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_sensitive (t TEXT @SENSITIVE)
+CREATE PROC substr_test_nullable_start (t TEXT NOT NULL)
+BEGIN
+  SELECT substr(t, nullable(1), 2) AS t;
+END;
+
+  {create_proc_stmt}: select: { t: text } dml_proc
+  | {name substr_test_nullable_start}: select: { t: text } dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: t: text notnull variable in
+    |   | {param_detail}: t: text notnull variable in
+    |     | {name t}: t: text notnull variable in
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {select_stmt}: select: { t: text }
+        | {select_core_list}: select: { t: text }
+        | | {select_core}: select: { t: text }
+        |   | {select_expr_list_con}: select: { t: text }
+        |     | {select_expr_list}: select: { t: text }
+        |     | | {select_expr}: t: text
+        |     |   | {call}: text
+        |     |   | | {name substr}: text
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text notnull variable in
+        |     |   |     | {arg_list}
+        |     |   |       | {call}: integer
+        |     |   |       | | {name nullable}: integer
+        |     |   |       | | {call_arg_list}
+        |     |   |       |   | {call_filter_clause}
+        |     |   |       |   | {arg_list}: ok
+        |     |   |       |     | {int 1}: integer notnull
+        |     |   |       | {arg_list}
+        |     |   |         | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC substr_test_nullable_count (t TEXT NOT NULL)
+BEGIN
+  SELECT substr(t, 1, nullable(2)) AS t;
+END;
+
+  {create_proc_stmt}: select: { t: text } dml_proc
+  | {name substr_test_nullable_count}: select: { t: text } dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: t: text notnull variable in
+    |   | {param_detail}: t: text notnull variable in
+    |     | {name t}: t: text notnull variable in
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {select_stmt}: select: { t: text }
+        | {select_core_list}: select: { t: text }
+        | | {select_core}: select: { t: text }
+        |   | {select_expr_list_con}: select: { t: text }
+        |     | {select_expr_list}: select: { t: text }
+        |     | | {select_expr}: t: text
+        |     |   | {call}: text
+        |     |   | | {name substr}: text
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text notnull variable in
+        |     |   |     | {arg_list}
+        |     |   |       | {int 1}: integer notnull
+        |     |   |       | {arg_list}
+        |     |   |         | {call}: integer
+        |     |   |           | {name nullable}: integer
+        |     |   |           | {call_arg_list}
+        |     |   |             | {call_filter_clause}
+        |     |   |             | {arg_list}: ok
+        |     |   |               | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC substr_test_sensitive_string (t TEXT @SENSITIVE)
 BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
 
   {create_proc_stmt}: select: { t: text sensitive } dml_proc
-  | {name substr_test_sensitive}: select: { t: text sensitive } dml_proc
+  | {name substr_test_sensitive_string}: select: { t: text sensitive } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text variable in sensitive
@@ -44864,6 +44960,100 @@ END;
         |     |   |       | {int 1}: integer notnull
         |     |   |       | {arg_list}
         |     |   |         | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC substr_test_sensitive_start (t TEXT)
+BEGIN
+  SELECT substr(t, sensitive(1), 2) AS t;
+END;
+
+  {create_proc_stmt}: select: { t: text sensitive } dml_proc
+  | {name substr_test_sensitive_start}: select: { t: text sensitive } dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: t: text variable in
+    |   | {param_detail}: t: text variable in
+    |     | {name t}: t: text variable in
+    |     | {type_text}: text
+    | {stmt_list}: ok
+      | {select_stmt}: select: { t: text sensitive }
+        | {select_core_list}: select: { t: text sensitive }
+        | | {select_core}: select: { t: text sensitive }
+        |   | {select_expr_list_con}: select: { t: text sensitive }
+        |     | {select_expr_list}: select: { t: text sensitive }
+        |     | | {select_expr}: t: text sensitive
+        |     |   | {call}: text sensitive
+        |     |   | | {name substr}: text sensitive
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text variable in
+        |     |   |     | {arg_list}
+        |     |   |       | {call}: integer notnull sensitive
+        |     |   |       | | {name sensitive}: integer notnull sensitive
+        |     |   |       | | {call_arg_list}
+        |     |   |       |   | {call_filter_clause}
+        |     |   |       |   | {arg_list}: ok
+        |     |   |       |     | {int 1}: integer notnull
+        |     |   |       | {arg_list}
+        |     |   |         | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name t}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC substr_test_sensitive_count (t TEXT)
+BEGIN
+  SELECT substr(t, 1, sensitive(2)) AS t;
+END;
+
+  {create_proc_stmt}: select: { t: text sensitive } dml_proc
+  | {name substr_test_sensitive_count}: select: { t: text sensitive } dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: t: text variable in
+    |   | {param_detail}: t: text variable in
+    |     | {name t}: t: text variable in
+    |     | {type_text}: text
+    | {stmt_list}: ok
+      | {select_stmt}: select: { t: text sensitive }
+        | {select_core_list}: select: { t: text sensitive }
+        | | {select_core}: select: { t: text sensitive }
+        |   | {select_expr_list_con}: select: { t: text sensitive }
+        |     | {select_expr_list}: select: { t: text sensitive }
+        |     | | {select_expr}: t: text sensitive
+        |     |   | {call}: text sensitive
+        |     |   | | {name substr}: text sensitive
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {name t}: t: text variable in
+        |     |   |     | {arg_list}
+        |     |   |       | {int 1}: integer notnull
+        |     |   |       | {arg_list}
+        |     |   |         | {call}: integer notnull sensitive
+        |     |   |           | {name sensitive}: integer notnull sensitive
+        |     |   |           | {call_arg_list}
+        |     |   |             | {call_filter_clause}
+        |     |   |             | {arg_list}: ok
+        |     |   |               | {int 2}: integer notnull
         |     |   | {opt_as_alias}
         |     |     | {name t}
         |     | {select_from_etc}: ok

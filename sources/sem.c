@@ -7328,8 +7328,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   ast_node *arg2 = second_arg(arg_list);
   ast_node *arg3 = (arg_count == 3) ? third_arg(arg_list) : NULL;
 
-  sem_t sem_type = arg1->sem->sem_type;
-  if (!is_text(sem_type)) {
+  if (!is_text(arg1->sem->sem_type)) {
     report_error(ast, "CQL0086: first argument must be a string in function", name);
     record_error(ast);
     return;
@@ -7365,10 +7364,15 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
     }
   }
 
-  // This will give us the same type nullability and sensitivity as the original string
-  sem_t flags = sem_type & (SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE);
+  // The result is nonnull if all arguments are nonnull, and sensitive if any
+  // arguments are sensitive.
+  sem_t flags = combine_flags(arg1->sem->sem_type, arg2->sem->sem_type);
+  if (arg3) {
+    flags = combine_flags(flags, arg3->sem->sem_type);
+  }
+
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | flags);
-  // applying substr loses the name, SQlite doesn't recognize substr(foo, ..) as foo
+  // applying substr loses the name, SQLite doesn't recognize substr(foo, ..) as foo
 
   // preserve the string 'kind' even though it's a substring (that seems the most sensible)
   ast->sem->kind = arg1->sem->kind;

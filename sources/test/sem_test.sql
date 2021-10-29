@@ -10967,18 +10967,54 @@ end;
 -- + {create_proc_stmt}: select: { t: text } dml_proc
 -- + {name substr}: text
 -- - Error
-create proc substr_test_nullable(t text)
+create proc substr_test_nullable_string(t text)
 begin
   select substr(t, 1, 2) as t;
+end;
+
+-- TEST: simple success -- substr nullable start
+-- + {create_proc_stmt}: select: { t: text } dml_proc
+-- + {name substr}: text
+-- - Error
+create proc substr_test_nullable_start(t text not null)
+begin
+  select substr(t, nullable(1), 2) as t;
+end;
+
+-- TEST: simple success -- substr nullable count
+-- + {create_proc_stmt}: select: { t: text } dml_proc
+-- + {name substr}: text
+-- - Error
+create proc substr_test_nullable_count(t text not null)
+begin
+  select substr(t, 1, nullable(2)) as t;
 end;
 
 -- TEST: simple success -- substr sensitive string
 -- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
 -- + {name substr}: text sensitive
 -- - Error
-create proc substr_test_sensitive(t text @sensitive)
+create proc substr_test_sensitive_string(t text @sensitive)
 begin
   select substr(t, 1, 2) as t;
+end;
+
+-- TEST: simple success -- substr sensitive start
+-- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
+-- + {name substr}: text sensitive
+-- - Error
+create proc substr_test_sensitive_start(t text)
+begin
+  select substr(t, sensitive(1), 2) as t;
+end;
+
+-- TEST: simple success -- substr sensitive count
+-- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
+-- + {name substr}: text sensitive
+-- - Error
+create proc substr_test_sensitive_count(t text)
+begin
+  select substr(t, 1, sensitive(2)) as t;
 end;
 
 -- TEST: substr error -- arg1 is not a string
