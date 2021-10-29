@@ -7412,20 +7412,11 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // The result is a string.
-  sem_t sem_type = SEM_TYPE_TEXT;
+  // The result is nonnull if all arguments are nonnull, and sensitive if any
+  // arguments are sensitive.
+  sem_t flags = combine_flags(input_type, combine_flags(find_type, replace_with_type));
 
-  // The result is nonnull only if all of the arguments are nonnull.
-  if (is_not_nullable(input_type) && is_not_nullable(find_type) && is_not_nullable(replace_with_type)) {
-    sem_type |= SEM_TYPE_NOTNULL;
-  }
-
-  // The result is sensitive if any of the arguments are sensitive.
-  sem_type |= sensitive_flag(input->sem->sem_type);
-  sem_type |= sensitive_flag(find->sem->sem_type);
-  sem_type |= sensitive_flag(replace_with->sem->sem_type);
-
-  name_ast->sem = ast->sem = new_sem(sem_type);
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | flags);
 
   // The result has the same kind as the input argument.
   ast->sem->kind = input->sem->kind;
