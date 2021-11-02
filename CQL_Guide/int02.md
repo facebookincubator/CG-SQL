@@ -1648,40 +1648,6 @@ ELSE
 END IF;
 ```
 
-When gathering up improvements from a conditional, it is critical that we take
-OUT arguments into account. For example, in the case of a condition like
-`requires_out_returns_bool(x) AND x IS NOT NULL`, it is safe to improve `x`; the
-converse expression `x IS NOT NULL AND requires_out_returns_bool(x)`, however,
-presents no such opportunity as `requires_out_returns_bool` may have mutated `x`
-after it was verified to not be NULL. Both
-`sem_set_notnull_improvements_for_true_condition` and
-`sem_set_notnull_improvements_for_false_condition` handle this by calling the
-`sem_unset_notnull_improvements_for_out_args` function while performing analysis
-in a left-to-right manner (which matches the order of evaluation at runtime) for
-all subexpressions that do not fit the `name IS NOT NULL` pattern (in the true
-case) or `name IS NULL` pattern (in the false case):
-
-```c
-// Given an arbitrary expression, perform a deep traversal and call
-// `sem_unset_notnull_improved` on all identifiers that are used as OUT or INOUT
-// arguments. This function is used to ensure that any identifers that would've
-// otherwise been improved by `sem_set_notnull_improvements_for_true_condition`
-// or `sem_set_notnull_improvements_for_false_condition` are not improved if
-// they're later used as an OUT or INOUT argument within the same conditional.
-// For example:
-//
-//   IF requires_out_arg_returns_bool(x) AND x IS NOT NULL THEN
-//     -- x CAN be improved here because the IS NOT NULL check occurs after
-//     -- the call to requires_out_arg_returns_bool.
-//   END IF;
-//
-//   IF x IS NOT NULL AND requires_out_arg_returns_bool(x) THEN
-//     -- x CANNOT be improved here because requires_out_arg_returns_bool may
-//     -- have set x to FALSE.
-//   END IF;
-static void sem_unset_notnull_improvements_for_out_args(ast_node *ast);
-```
-
 Global variables in CQL require special treatment when it comes to nullability
 improvements. This is because any procedure call could potentially mutate any
 number of global variables, and so all currently improved globals must be

@@ -6391,16 +6391,21 @@ begin
   declare C cursor fetch from call out_cursor_proc();
 end;
 
--- TEST: use proc_with_output like it was a function
--- + SET an_int := proc_with_output(1, an_int);
+-- used in the following tests
+create proc proc_with_single_output(a int, b int, out c int)
+begin
+end;
+
+-- TEST: use proc_with_single_output like it was a function
+-- + SET an_int := proc_with_single_output(1, an_int);
 -- + {assign}: an_int: integer variable
 -- + {call}: integer
--- + {name proc_with_output}
+-- + {name proc_with_single_output}
 -- + {arg_list}: ok
 -- - Error
-set an_int := proc_with_output(1, an_int);
+set an_int := proc_with_single_output(1, an_int);
 
--- TEST: helper proc to test distinc in proc used as a function
+-- TEST: helper proc to test distinct in proc used as a function
 create procedure proc_func(in arg1 integer, out arg2 integer)
 begin
   drop table foo;
@@ -6415,11 +6420,11 @@ end;
 -- +1 Error
 SET an_int := proc_func(distinct 1);
 
--- TEST: use proc_with_output like it was a function, too many args
+-- TEST: use proc_with_single_output like it was a function, too many args
 -- + {call}: err
--- + Error % too many arguments provided to procedure 'proc_with_output'
+-- + Error % too many arguments provided to procedure 'proc_with_single_output'
 -- +1 Error
-set an_int := proc_with_output(1, an_int, an_int);
+set an_int := proc_with_single_output(1, an_int, an_int);
 
 -- TEST: try to use a proc that deals with struct results
 -- + {call}: err
@@ -6435,9 +6440,9 @@ set an_int := proc2(1);
 
 -- TEST: user proc calls can't happen inside of SQL
 -- + {call}: err
--- + Error % Stored proc calls may not appear in the context of a SQL statement 'proc_with_output'
+-- + Error % Stored proc calls may not appear in the context of a SQL statement 'proc_with_single_output'
 -- +1 Error
-set an_int := (select proc_with_output(1, an_int, an_int));
+set an_int := (select proc_with_single_output(1, an_int, an_int));
 
 -- a helper proc that is for sure using dml
 create proc dml_func(out a integer not null)
@@ -17811,158 +17816,6 @@ begin
   let z4 := c;
 end;
 
--- Used in the following tests.
-create proc requires_out_returns_bool(out a integer, out b bool)
-begin
-end;
-
--- TEST: Improvements are not made for identifiers that are later used as OUT
--- (or INOUT) arguments within the same true conditional.
--- + {let_stmt}: x: integer variable
--- + {let_stmt}: y: integer notnull variable
--- + {let_stmt}: z: integer notnull variable
--- - Error
-create proc improvements_respect_out_args_in_true_conditions()
-begin
-  declare a int;
-  declare b int;
-  declare c int;
-
-  if a is not null and requires_out_returns_bool(a) then
-    -- nullable because `requires_out_returns_bool` may have set `a` to false
-    let x := a;
-  end if;
-
-  if requires_out_returns_bool(b) and b is not null then
-    -- nonnull because the null check was performed after the mutation
-    let y := b;
-  end if;
-
-  if c is not null and requires_out_returns_bool(c) and c is not null then
-    -- nonnull because a second null check was performed after the mutation
-    let z := c;
-  end if;
-end;
-
--- TEST: Improvements are not made for identifiers that are later used as OUT
--- (or INOUT) arguments within the same false conditional.
--- + {let_stmt}: x: integer variable
--- + {let_stmt}: y: integer notnull variable
--- + {let_stmt}: z: integer notnull variable
--- - Error
-create proc improvements_respect_out_args_in_false_conditions()
-begin
-  declare a int;
-  declare b int;
-  declare c int;
-
-  if a is null or requires_out_returns_bool(a) then
-    let dummy0 := 0;
-  else
-    -- nullable because `requires_out_returns_bool` may have set `a` to false
-    let x := a;
-  end if;
-
-  if requires_out_returns_bool(b) or b is null then
-    let dummy1 := 0;
-  else
-    -- nonnull because the null check was performed after the mutation
-    let y := b;
-  end if;
-
-  if c is null or requires_out_returns_bool(c) or c is null then
-    let dummy2 := 0;
-  else
-    -- nonnull because a second null check was performed after the mutation
-    let z := c;
-  end if;
-end;
-
--- TEST: Improvements are not made for identifiers that are later used as OUT
--- (or INOUT) arguments within the same false conditional for guards.
--- + {let_stmt}: x: integer variable
--- + {let_stmt}: y: integer notnull variable
--- + {let_stmt}: z: integer notnull variable
--- - Error
-create proc improvements_respect_out_args_in_false_conditions_for_guards()
-begin
-  declare a int;
-  declare b int;
-  declare c int;
-
-  if a is null or requires_out_returns_bool(a) then
-    return;
-  end if;
-
-  -- nullable because `requires_out_returns_bool` may have set `a` to false
-  let x := a;
-
-  if requires_out_returns_bool(b) or b is null then
-    return;
-  end if;
-
-  -- nonnull because the null check was performed after the mutation
-  let y := b;
-
-  if c is null or requires_out_returns_bool(c) or c is null then
-    return;
-  end if;
-
-  -- nonnull because a second null check was performed after the mutation
-  let z := c;
-end;
-
--- TEST: Improvements are not made for identifiers that are later used as OUT
--- (or INOUT) arguments within the same false conditional for CASE.
--- + {let_stmt}: x: integer variable
--- + {let_stmt}: y: integer notnull variable
--- + {let_stmt}: z: integer notnull variable
-create proc improvements_respect_out_args_in_false_conditions_for_case()
-begin
-  declare a int;
-  declare b int;
-  declare c int;
-
-  -- nullable because `requires_out_returns_bool` may have set `a` to false
-  let x := case
-    when a is null or requires_out_returns_bool(a) then 42
-    else a
-  end;
-
-  -- nonnull because the null check was performed after the mutation
-  let y := case
-    when requires_out_returns_bool(b) or b is null then 42
-    else b
-  end;
-
-  -- nonnull because a second null check was performed after the mutation
-  let z := case
-    when c is null or requires_out_returns_bool(c) or c is null then 42
-    else c
-  end;
-end;
-
--- TEST: Improvements are not made for identifiers that are later used as OUT
--- (or INOUT) arguments within the same false conditional for IIF.
--- + {let_stmt}: x: integer variable
--- + {let_stmt}: y: integer notnull variable
--- + {let_stmt}: z: integer notnull variable
-create proc improvements_respect_out_args_in_false_conditions_for_iif()
-begin
-  declare a int;
-  declare b int;
-  declare c int;
-
-  -- nullable because `requires_out_returns_bool` may have set `a` to false
-  let x := iif(a is null or requires_out_returns_bool(a), 42, a);
-
-  -- nonnull because the null check was performed after the mutation
-  let y := iif(requires_out_returns_bool(b) or b is null, 42, b);
-
-  -- nonnull because a second null check was performed after the mutation
-  let z := iif(c is null or requires_out_returns_bool(c) or c is null, 42, c);
-end;
-
 -- TEST: Un-improvements in one branch do not negatively affect later branches.
 -- + {let_stmt}: x0: integer variable
 -- + {let_stmt}: x1: integer notnull variable
@@ -18014,10 +17867,10 @@ end;
 -- + {let_stmt}: x2: integer notnull variable
 -- + {let_stmt}: y2: integer variable
 -- + {let_stmt}: z2: integer variable
--- + {let_stmt}: x3: integer variable
+-- + {let_stmt}: x3: integer notnull variable
 -- + {let_stmt}: y3: integer notnull variable
 -- + {let_stmt}: z3: integer notnull variable
--- + {let_stmt}: x4: integer variable
+-- + {let_stmt}: x4: integer notnull variable
 -- + {let_stmt}: y4: integer notnull variable
 -- + {let_stmt}: z4: integer notnull variable
 -- + {let_stmt}: x5: integer variable
@@ -18070,18 +17923,18 @@ begin
           let x2 := a; -- nonnull due to improvement from false condition
           let y2 := b; -- nullable due to previous set
           let z2 := c; -- nullable due to previous set
-        else if requires_out_returns_bool(a) then
-          let x3 := a; -- nullable due to use as out arg in condition
+        else if 0 then
+          let x3 := a; -- nonnull due to improvement from false condition
           let y3 := b; -- nonnull due to guard despite previous set
           let z3 := c; -- nonnull due to improvement from false condition
           set b := null;
           set c := null;
         else
-          let x4 := a; -- nullable due to use as out arg in previous condition
+          let x4 := a; -- nonnull due to improvement from false condition
           let y4 := b; -- nonnull due to guard despite previous set
           let z4 := c; -- nonnull due to improvement from false condition
         end if;
-        let x5 := a; -- nullable due to use as out arg in condition
+        let x5 := a; -- nullable due to set in previous branch
         let y5 := b; -- nullable due to set in previous branch
         let z5 := c; -- nullable due to previous set in this statement list
         set a := 42; -- won't affect nullability below because it may not occur
@@ -18191,74 +18044,6 @@ begin
   let y5 := b; -- nullable because of set
   let z5 := c; -- nullable because of set
   let w5 := d; -- nullable as statement list in which it was improved is over
-end;
-
--- Used in the following tests.
-create proc requires_out_returns_int_not_null(out a int, out b int not null)
-begin
-end;
-
--- TEST: Un-improvements in one branch do not negatively affect later branches
--- for CASE.
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer variable
--- - Error
-create proc unimprovements_do_not_negatively_affect_later_branches_for_case()
-begin
-  declare a int;
-
-  if a is null return;
-
-  let x0 := case
-    when 0 then
-      case
-        when 0 then requires_out_returns_int_not_null(a)
-        when 0 then a -- nonnull despite use as out arg
-        else
-          case
-            when 0 then requires_out_returns_int_not_null(a)
-            when 0 then a -- nonnull despite use as out arg
-            else a -- nonnull despite use as out arg
-          end
-      end
-    when 0 then
-      case
-        when 0 then requires_out_returns_int_not_null(a)
-        when 0 then a -- nonnull despite use as out arg
-        else
-          case
-            when 0 then requires_out_returns_int_not_null(a)
-            when 0 then a -- nonnull despite use as out arg
-            else a -- nonnull despite use as out arg
-          end
-      end
-    else a -- nonnull despite use as out arg
-  end;
-
-  -- nullable due to use as out arg
-  let x1 := a;
-end;
-
--- TEST: Un-improvements in one branch do not negatively affect later branches
--- for IIF.
--- + {let_stmt}: x0: integer notnull variable
--- + {let_stmt}: x1: integer variable
--- - Error
-create proc unimprovements_do_not_negatively_affect_later_branches_for_iif()
-begin
-  declare a int;
-
-  if a is null return;
-
-  -- `a` is nonnull at all non-OUT positions despite use as OUT arg
-  let x0 := iif(
-    0,
-    iif(0, iif(0, requires_out_returns_int_not_null(a), a), a),
-    iif(0, iif(0, requires_out_returns_int_not_null(a), a), a)
-  );
-
-  -- nullable due to use as out arg
-  let x1 := a;
 end;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
@@ -18894,12 +18679,6 @@ let not_null_object_is_not_null := not_null_object is not null;
 -- re-enable for subsequent tests
 @enforce_strict null check on not null;
 
--- TEST: validate parsing and enforcement for PROC AS FUNC ARGUMENTS
--- @ENFORCE_STRICT PROC AS FUNC ARGUMENTS
--- {enforce_strict_stmt}: ok
--- + {int 21}
-@enforce_strict proc as func arguments;
-
 -- used in the following test
 create proc proc_inout_text(inout a text)
 begin
@@ -18977,9 +18756,3 @@ end;
 -- + {call}: text
 -- - Error
 let proc_in_text_in_text_out_text_result := proc_in_text_in_text_out_text("a", "b");
-
--- TEST: validate parsing and non-enforcement for PROC AS FUNC ARGUMENTS
--- @ENFORCE_NORMAL PROC AS FUNC ARGUMENTS
--- {enforce_normal_stmt}: ok
--- + {int 21}
-@enforce_normal proc as func arguments;

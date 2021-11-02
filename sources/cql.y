@@ -1962,7 +1962,6 @@ enforcement_options:
   | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
   | CAST { $enforcement_options = new_ast_opt(ENFORCE_CAST); }
   | NULL_ CHECK ON NOT NULL_ { $enforcement_options = new_ast_opt(ENFORCE_NULL_CHECK_ON_NOT_NULL);}
-  | PROC AS FUNC ARGUMENTS { $enforcement_options = new_ast_opt(ENFORCE_PROC_AS_FUNC_ARGUMENTS); }
   ;
 
 enforce_strict_stmt:

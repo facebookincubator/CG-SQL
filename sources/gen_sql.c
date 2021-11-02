@@ -3353,10 +3353,6 @@ static void gen_enforcement_options(ast_node *ast) {
     case ENFORCE_NULL_CHECK_ON_NOT_NULL:
       gen_printf("NULL CHECK ON NOT NULL");
       break;
-    
-    case ENFORCE_PROC_AS_FUNC_ARGUMENTS:
-      gen_printf("PROC AS FUNC ARGUMENTS");
-      break;
 
     default:
       // this is all that's left

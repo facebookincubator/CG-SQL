@@ -241,7 +241,6 @@ struct enforcement_options {
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
   bool_t strict_cast;                 // NO-OP casts result in errors
   bool_t strict_null_check;           // IS NULL and IS NOT NULL may not be used on values of a NOT NULL type
-  bool_t strict_proc_as_func_args;    // only procedures with exactly one trailing OUT arg can be used as functions
 };
 
 static struct enforcement_options enforcement;
@@ -12016,97 +12015,6 @@ static void sem_revert_notnull_improvement_history(notnull_improvement_history_i
   }
 }
 
-// Looks up the user-defined function or proc and, if it exists, returns its
-// parameters, if any.
-static ast_node *find_params(CSTR name) {
-  Contract(name);
-
-  // We check for functions first, then procs, as in `sem_expr_call`, to ensure
-  // we get the right one.
-
-  ast_node *func = find_func(name);
-  if (func) {
-    return get_func_params(func);
-  }
-
-  ast_node *proc = find_proc(name);
-  if (proc) {
-    return get_proc_params(proc);
-  }
-
-  return NULL;
-}
-
-// Given an arbitrary expression, perform a deep traversal and call
-// `sem_unset_notnull_improved` on all identifiers that are used as OUT or INOUT
-// arguments. This function is used to ensure that any identifers that would've
-// otherwise been improved by `sem_set_notnull_improvements_for_true_condition`
-// or `sem_set_notnull_improvements_for_false_condition` are not improved if
-// they're later used as an OUT or INOUT argument within the same conditional.
-// For example:
-//
-//   IF requires_out_arg_returns_bool(x) AND x IS NOT NULL THEN
-//     -- x CAN be improved here because the IS NOT NULL check occurs after
-//     -- the call to requires_out_arg_returns_bool.
-//   END IF;
-//
-//   IF x IS NOT NULL AND requires_out_arg_returns_bool(x) THEN
-//     -- x CANNOT be improved here because requires_out_arg_returns_bool may
-//     -- have set x to FALSE.
-//   END IF;
-static void sem_unset_notnull_improvements_for_out_args(ast_node *ast) {
-  Contract(ast);
-
-  if (is_ast_call(ast)) {
-    // `ast` is a call, so one or more of its arguments may be an identifier
-    // passed as an OUT argument.
-    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-    EXTRACT_STRING(name, name_ast)
-    ast_node *params = find_params(name);
-    if (!params) {
-      // We either aren't calling a user-defined function or a procedure, or we
-      // are but it has no parameters. Either way, we're not going to have any
-      // OUT parameters, so we can just continue our traveral through any
-      // arguments that might be present.
-      if (ast_has_right(ast)) {
-        sem_unset_notnull_improvements_for_out_args(ast->right);
-      }
-      return;
-    }
-    EXTRACT_NOTNULL(call_arg_list, ast->right);
-    EXTRACT(arg_list, call_arg_list->right);
-    // We loop over the arguments, comparing them to the parameters as we go to
-    // see if any identifiers are being passed as OUT arguments.
-    for (ast_node *item = arg_list; item; item = item->right, params = params->right) {
-      EXTRACT_ANY_NOTNULL(arg, item->left);
-      EXTRACT_NOTNULL(param, params->left);
-      if (is_out_parameter(param->sem->sem_type)) {
-        // Since we've already analyzed this part of the AST, we know that the
-        // argument must be an identifier if its being passed as an OUT
-        // argument.
-        Invariant(is_id(arg));
-        EXTRACT_STRING(id, arg);
-        // Unset any improvement in effect for the identifier.
-        sem_unset_notnull_improved(id, NULL);
-      } else {
-        // Continue our search within the argument itself.
-        sem_unset_notnull_improvements_for_out_args(arg);
-      }
-    }
-    // We've already searched all of the arguments at this point, so we're done.
-    return;
-  }
-
-  // Since `ast` isn't an atom and it's not a call expression, our search simply
-  // continues within.
-  if (ast_has_left(ast)) {
-    sem_unset_notnull_improvements_for_out_args(ast->left);
-  }
-  if (ast_has_right(ast)) {
-    sem_unset_notnull_improvements_for_out_args(ast->right);
-  }
-}
-
 // Given a conditional expression `ast` containing possibly AND-linked IS NOT
 // NULL subexpressions, set all of the applicable improvements within the
 // current nullability context. If the optional `select_expr_list` is provided,
@@ -12123,12 +12031,6 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node* ast, ast_n
   if (is_ast_and(ast)) {
     Invariant(ast->left);
     Invariant(ast->right);
-    // We recurse over the left branch first, then the right, in keeping with
-    // the order of evaluation of the expressions at runtime. This is critical
-    // for ensuring that calls to `sem_unset_notnull_improvements_for_out_args`
-    // occur after any improvements have already been made for identifiers that
-    // are later used as OUT arguments within the same conditional, thus
-    // allowing said improvements to be reversed.
     sem_set_notnull_improvements_for_true_condition(ast->left, select_expr_list);
     sem_set_notnull_improvements_for_true_condition(ast->right, select_expr_list);
     return;
@@ -12136,10 +12038,14 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node* ast, ast_n
 
   // We improve only in case of `x IS NOT NULL` where `x` is an id or dot.
   if (!is_ast_is_not(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
-    // Since this isn't the type of expression for which an improvement can be
-    // made, we simply search it for any identifiers we may have just improved
-    // that need to be unimproved because they're later passed as OUT arguments.
-    sem_unset_notnull_improvements_for_out_args(ast);
+    // NOTE: Since calling a procedure as a function is only allowed if it has
+    // exactly one trailing OUT parameter (which becomes the return value), it
+    // cannot be the case that any call within `ast` could unset any
+    // improvements we just made (because no variables might be passed as OUT
+    // arguments therein). Were the aforementioned proc-as-func restriction not
+    // in place, we'd need to deep-traverse `ast` looking for any calls with OUT
+    // arguments as any improvements we just made could possibly be invalidated
+    // by such calls. This was, indeed, the case in earlier versions of CQL.
     return;
   }
 
@@ -12199,10 +12105,6 @@ static void sem_set_notnull_improvements_for_false_condition(ast_node *ast) {
 
   // We improve only in case of `x IS NULL` where `x` is an id or dot.
   if (!is_ast_is(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
-    // Since this isn't the type of expression for which an improvement can be
-    // made, we simply search it for any identifiers we may have just improved
-    // that need to be unimproved because they're later passed as OUT arguments.
-    sem_unset_notnull_improvements_for_out_args(ast);
     return;
   }
 
@@ -17764,20 +17666,18 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
       return;
     }
 
-    if (enforcement.strict_proc_as_func_args) {
-      // The proc-as-func case is only allowed for procedures with zero or more
-      // IN parameters followed by exactly one OUT (but not INOUT) parameter.
-      if (proc_as_func && is_out_parameter(param->sem->sem_type)) {
-        if (is_in_parameter(param->sem->sem_type)) {
-          report_error(ast, "CQL0424: procedure with INOUT parameter used as function", name);
-          record_error(ast);
-          return;
-        }
-        if (params->right) {
-          report_error(ast, "CQL0425: procedure with non-trailing OUT parameter used as function", name);
-          record_error(ast);
-          return;
-        }
+    // The proc-as-func case is only allowed for procedures with zero or more
+    // IN parameters followed by exactly one OUT (but not INOUT) parameter.
+    if (proc_as_func && is_out_parameter(param->sem->sem_type)) {
+      if (is_in_parameter(param->sem->sem_type)) {
+        report_error(ast, "CQL0424: procedure with INOUT parameter used as function", name);
+        record_error(ast);
+        return;
+      }
+      if (params->right) {
+        report_error(ast, "CQL0425: procedure with non-trailing OUT parameter used as function", name);
+        record_error(ast);
+        return;
       }
     }
   }
@@ -19437,10 +19337,6 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_NULL_CHECK_ON_NOT_NULL:
       enforcement.strict_null_check = strict;
-      break;
-    
-    case ENFORCE_PROC_AS_FUNC_ARGUMENTS:
-      enforcement.strict_proc_as_func_args = strict;
       break;
 
     default:
