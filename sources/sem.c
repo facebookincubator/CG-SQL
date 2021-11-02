@@ -241,6 +241,7 @@ struct enforcement_options {
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
   bool_t strict_cast;                 // NO-OP casts result in errors
   bool_t strict_null_check;           // IS NULL and IS NOT NULL may not be used on values of a NOT NULL type
+  bool_t strict_proc_as_func_args;    // only procedures with exactly one trailing OUT arg can be used as functions
 };
 
 static struct enforcement_options enforcement;
@@ -17762,6 +17763,23 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
       record_error(ast);
       return;
     }
+
+    if (enforcement.strict_proc_as_func_args) {
+      // The proc-as-func case is only allowed for procedures with zero or more
+      // IN parameters followed by exactly one OUT (but not INOUT) parameter.
+      if (proc_as_func && is_out_parameter(param->sem->sem_type)) {
+        if (is_in_parameter(param->sem->sem_type)) {
+          report_error(ast, "CQL0424: procedure with INOUT parameter used as function", name);
+          record_error(ast);
+          return;
+        }
+        if (params->right) {
+          report_error(ast, "CQL0425: procedure with non-trailing OUT parameter used as function", name);
+          record_error(ast);
+          return;
+        }
+      }
+    }
   }
 
   // If we used up all the args and it's a proc as func case then we have one
@@ -17776,7 +17794,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
     sem_t sem_type_param = param->sem->sem_type;
 
     if (!is_out_parameter(sem_type_param) || is_in_parameter(sem_type_param)) {
-      report_error(param, "CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function", name);
+      report_error(param, "CQL0211: procedure without trailing OUT parameter used as function", name);
       record_error(ast);
       return;
     }
@@ -19419,6 +19437,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_NULL_CHECK_ON_NOT_NULL:
       enforcement.strict_null_check = strict;
+      break;
+    
+    case ENFORCE_PROC_AS_FUNC_ARGUMENTS:
+      enforcement.strict_proc_as_func_args = strict;
       break;
 
     default:

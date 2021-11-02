@@ -563,7 +563,7 @@ Error at test/sem_test.sql:XXXX : in declare_value_cursor : CQL0197: duplicate v
 Error at test/sem_test.sql:XXXX : in call : CQL0305: DISTINCT may only be used in function that are aggregated or user defined 'proc_func'
 Error at test/sem_test.sql:XXXX : in call : CQL0235: too many arguments provided to procedure 'proc_with_output'
 Error at test/sem_test.sql:XXXX : in call : CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
-Error at test/sem_test.sql:XXXX : in param : CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function 'proc2'
+Error at test/sem_test.sql:XXXX : in param : CQL0211: procedure without trailing OUT parameter used as function 'proc2'
 Error at test/sem_test.sql:XXXX : in call : CQL0090: Stored proc calls may not appear in the context of a SQL statement 'proc_with_output'
 Error at test/sem_test.sql:XXXX : in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
 Error at test/sem_test.sql:XXXX : in str : CQL0205: variable is not a cursor 'C'
@@ -1238,4 +1238,7 @@ Error at test/sem_test.sql:XXXX : in str : CQL0418: type specifier combined with
 Error at test/sem_test.sql:XXXX : in num : CQL0406: substr uses 1 based indices, the 2nd argument of substr may not be zero
 Error at test/sem_test.sql:XXXX : in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
 Error at test/sem_test.sql:XXXX : in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
+Error at test/sem_test.sql:XXXX : in param : CQL0211: procedure without trailing OUT parameter used as function 'proc_inout_text'
+Error at test/sem_test.sql:XXXX : in call : CQL0424: procedure with INOUT parameter used as function 'proc_inout_text_out_text'
+Error at test/sem_test.sql:XXXX : in call : CQL0425: procedure with non-trailing OUT parameter used as function 'proc_out_text_out_text'
 semantic errors present; no code gen.

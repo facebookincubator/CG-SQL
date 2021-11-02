@@ -23045,7 +23045,7 @@ The statement ending at line XXXX
 
 SET an_int := proc2(1);
 
-Error at test/sem_test.sql:XXXX : in param : CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function 'proc2'
+Error at test/sem_test.sql:XXXX : in param : CQL0211: procedure without trailing OUT parameter used as function 'proc2'
 
   {assign}: err
   | {name an_int}: an_int: integer variable
@@ -74411,4 +74411,244 @@ The statement ending at line XXXX
 
   {enforce_strict_stmt}: ok
   | {int 12}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT PROC AS FUNC ARGUMENTS;
+
+  {enforce_strict_stmt}: ok
+  | {int 21}
+
+The statement ending at line XXXX
+
+CREATE PROC proc_inout_text (INOUT a TEXT)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name proc_inout_text}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: text variable in out
+        | {inout}
+        | {param_detail}: a: text variable in out
+          | {name a}: a: text variable in out
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+LET dummy := proc_inout_text();
+
+Error at test/sem_test.sql:XXXX : in param : CQL0211: procedure without trailing OUT parameter used as function 'proc_inout_text'
+
+  {let_stmt}: err
+  | {name dummy}
+  | {call}: err
+    | {name proc_inout_text}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+CALL proc_inout_text(a_string);
+
+  {call_stmt}: ok
+  | {name proc_inout_text}: ok
+  | {expr_list}: ok
+    | {name a_string}: a_string: text variable
+
+The statement ending at line XXXX
+
+CREATE PROC proc_inout_text_out_text (INOUT a TEXT, OUT b TEXT)
+BEGIN
+  SET b := NULL;
+END;
+
+  {create_proc_stmt}: ok
+  | {name proc_inout_text_out_text}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text variable in out
+    | | | {inout}
+    | | | {param_detail}: a: text variable in out
+    | |   | {name a}: a: text variable in out
+    | |   | {type_text}: text
+    | | {params}
+    |   | {param}: b: text variable out
+    |     | {out}
+    |     | {param_detail}: b: text variable out
+    |       | {name b}: b: text variable out
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {assign}: b: text variable out
+        | {name b}: b: text variable out
+        | {null}: null
+
+The statement ending at line XXXX
+
+LET dummy := proc_inout_text_out_text(a_string);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0424: procedure with INOUT parameter used as function 'proc_inout_text_out_text'
+
+  {let_stmt}: err
+  | {name dummy}
+  | {call}: err
+    | {name proc_inout_text_out_text}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name a_string}: a_string: text variable
+
+The statement ending at line XXXX
+
+CALL proc_inout_text_out_text(a_string, a_string2);
+
+  {call_stmt}: ok
+  | {name proc_inout_text_out_text}: ok
+  | {expr_list}: ok
+    | {name a_string}: a_string: text variable
+    | {expr_list}
+      | {name a_string2}: a_string2: text variable
+
+The statement ending at line XXXX
+
+CREATE PROC proc_out_text_out_text (OUT a TEXT, OUT b TEXT)
+BEGIN
+  SET a := NULL;
+  SET b := NULL;
+END;
+
+  {create_proc_stmt}: ok
+  | {name proc_out_text_out_text}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text variable out
+    | | | {out}
+    | | | {param_detail}: a: text variable out
+    | |   | {name a}: a: text variable out
+    | |   | {type_text}: text
+    | | {params}
+    |   | {param}: b: text variable out
+    |     | {out}
+    |     | {param_detail}: b: text variable out
+    |       | {name b}: b: text variable out
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {assign}: a: text variable out
+      | | {name a}: a: text variable out
+      | | {null}: null
+      | {assign}: b: text variable out
+        | {name b}: b: text variable out
+        | {null}: null
+
+The statement ending at line XXXX
+
+LET dummy := proc_out_text_out_text(a_string);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0425: procedure with non-trailing OUT parameter used as function 'proc_out_text_out_text'
+
+  {let_stmt}: err
+  | {name dummy}
+  | {call}: err
+    | {name proc_out_text_out_text}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name a_string}: a_string: text variable
+
+The statement ending at line XXXX
+
+CALL proc_out_text_out_text(a_string, a_string2);
+
+  {call_stmt}: ok
+  | {name proc_out_text_out_text}: ok
+  | {expr_list}: ok
+    | {name a_string}: a_string: text variable
+    | {expr_list}
+      | {name a_string2}: a_string2: text variable
+
+The statement ending at line XXXX
+
+CREATE PROC proc_out_text (OUT a TEXT)
+BEGIN
+  SET a := NULL;
+END;
+
+  {create_proc_stmt}: ok
+  | {name proc_out_text}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text variable out
+    |   | {out}
+    |   | {param_detail}: a: text variable out
+    |     | {name a}: a: text variable out
+    |     | {type_text}: text
+    | {stmt_list}: ok
+      | {assign}: a: text variable out
+        | {name a}: a: text variable out
+        | {null}: null
+
+The statement ending at line XXXX
+
+LET proc_out_text_result := proc_out_text();
+
+  {let_stmt}: proc_out_text_result: text variable
+  | {name proc_out_text_result}: proc_out_text_result: text variable
+  | {call}: text
+    | {name proc_out_text}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+CREATE PROC proc_in_text_in_text_out_text (a TEXT, b TEXT, OUT c TEXT)
+BEGIN
+  SET c := NULL;
+END;
+
+  {create_proc_stmt}: ok
+  | {name proc_in_text_in_text_out_text}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text variable in
+    | | | {param_detail}: a: text variable in
+    | |   | {name a}: a: text variable in
+    | |   | {type_text}: text
+    | | {params}
+    |   | {param}: b: text variable in
+    |   | | {param_detail}: b: text variable in
+    |   |   | {name b}: b: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: c: text variable out
+    |       | {out}
+    |       | {param_detail}: c: text variable out
+    |         | {name c}: c: text variable out
+    |         | {type_text}: text
+    | {stmt_list}: ok
+      | {assign}: c: text variable out
+        | {name c}: c: text variable out
+        | {null}: null
+
+The statement ending at line XXXX
+
+LET proc_in_text_in_text_out_text_result := proc_in_text_in_text_out_text("a", "b");
+
+  {let_stmt}: proc_in_text_in_text_out_text_result: text variable
+  | {name proc_in_text_in_text_out_text_result}: proc_in_text_in_text_out_text_result: text variable
+  | {call}: text
+    | {name proc_in_text_in_text_out_text}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'a'}: text notnull
+        | {arg_list}
+          | {strlit 'b'}: text notnull
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL PROC AS FUNC ARGUMENTS;
+
+  {enforce_normal_stmt}: ok
+  | {int 21}
 

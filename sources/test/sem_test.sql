@@ -6429,7 +6429,7 @@ set an_int := out_cursor_proc();
 
 -- TEST: this proc has no out arg that can be used as a result
 -- + {call}: err
--- + Error % last formal arg of procedure is not an out arg, cannot use proc as a function 'proc2'
+-- + Error % procedure without trailing OUT parameter used as function 'proc2'
 -- +1 Error
 set an_int := proc2(1);
 
@@ -18893,3 +18893,93 @@ let not_null_object_is_not_null := not_null_object is not null;
 
 -- re-enable for subsequent tests
 @enforce_strict null check on not null;
+
+-- TEST: validate parsing and enforcement for PROC AS FUNC ARGUMENTS
+-- @ENFORCE_STRICT PROC AS FUNC ARGUMENTS
+-- {enforce_strict_stmt}: ok
+-- + {int 21}
+@enforce_strict proc as func arguments;
+
+-- used in the following test
+create proc proc_inout_text(inout a text)
+begin
+end;
+
+-- TEST: proc-as-func requires a trailing OUT parameter
+-- + {let_stmt}: err
+-- + {call}: err
+-- + Error % procedure without trailing OUT parameter used as function 'proc_inout_text'
+-- +1 Error
+let dummy := proc_inout_text();
+
+-- TEST: okay if used via a call statement
+-- + {call_stmt}: ok
+-- - Error
+call proc_inout_text(a_string);
+
+-- used in the following test
+create proc proc_inout_text_out_text(inout a text, out b text)
+begin
+  set b := null;
+end;
+
+-- TEST: proc-as-func disallows INOUT parameters
+-- + {let_stmt}: err
+-- + {call}: err
+-- + Error % procedure with INOUT parameter used as function 'proc_inout_text_out_text'
+-- +1 Error
+let dummy := proc_inout_text_out_text(a_string);
+
+-- TEST: okay if used via a call statement
+-- + {call_stmt}: ok
+-- - Error
+call proc_inout_text_out_text(a_string, a_string2);
+
+-- used in the following test
+create proc proc_out_text_out_text(out a text, out b text)
+begin
+  set a := null;
+  set b := null;
+end;
+
+-- TEST: proc-as-func disallows non-trailing OUT parameters
+-- + {let_stmt}: err
+-- + {call}: err
+-- + Error % procedure with non-trailing OUT parameter used as function 'proc_out_text_out_text'
+-- +1 Error
+let dummy := proc_out_text_out_text(a_string);
+
+-- TEST: okay if used via a call statement
+-- + {call_stmt}: ok
+-- - Error
+call proc_out_text_out_text(a_string, a_string2);
+
+-- used in the following test
+create proc proc_out_text(out a text)
+begin
+  set a := null;
+end;
+
+-- TEST: okay with no parameters before the trailing out parameter
+-- + {let_stmt}: proc_out_text_result: text variable
+-- + {call}: text
+-- - Error
+let proc_out_text_result := proc_out_text();
+
+-- used in the following test
+create proc proc_in_text_in_text_out_text(a text, b text, out c text)
+begin
+  set c := null;
+end;
+
+-- TEST: okay in a typical case
+-- + {let_stmt}: proc_in_text_in_text_out_text_result: text variable
+-- + {call}: text
+-- - Error
+let proc_in_text_in_text_out_text_result := proc_in_text_in_text_out_text("a", "b");
+
+-- TEST: validate parsing and non-enforcement for PROC AS FUNC ARGUMENTS
+-- @ENFORCE_NORMAL PROC AS FUNC ARGUMENTS
+-- {enforce_normal_stmt}: ok
+-- + {int 21}
+@enforce_normal proc as func arguments;
