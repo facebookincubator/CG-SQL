@@ -4161,15 +4161,14 @@ end;
 -- used in the next suite of tests
 declare proc out2_proc(x integer, out y integer not null, out z integer not null);
 
--- TEST: mixed cases of implicit declare including duplicates and re-use
+-- TEST: implicit declare including re-use
 -- + void out_decl_test_3(cql_nullable_int32 x) {
 -- + cql_int32 u = 0;
 -- + cql_int32 v = 0;
--- + out2_proc(x, &u, &u);
--- + out2_proc(x, &u, &v);
+-- +2 out2_proc(x, &u, &v);
 create proc out_decl_test_3(x integer)
 begin
-  declare out call out2_proc(x, u, u);
+  declare out call out2_proc(x, u, v);
   declare out call out2_proc(x, u, v);
 end;
 

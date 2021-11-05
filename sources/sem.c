@@ -17640,6 +17640,128 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   return true;
 }
 
+// Pointer tag indicating an id that is passed as an OUT or INOUT argument.
+static const uintptr_t id_out_tag_bit = 0x1;
+
+// Given a (possibly) tagged id, return an untagged, deferencable pointer.
+static ast_node *id_from_out_tagged_id(ast_node *tagged_id) {
+  return (ast_node *)((uintptr_t)tagged_id & ~id_out_tag_bit);
+}
+
+// Given an id, return the tagged version.
+static ast_node *out_tagged_id_from_id(ast_node *id) {
+ return (ast_node *)((uintptr_t)id | id_out_tag_bit);
+}
+
+// Returns true if `id` is tagged, else false.
+static bool_t is_id_out_tagged(ast_node *id) {
+  return !!((uintptr_t)id & id_out_tag_bit);
+}
+
+// Compares the names of two (possibly) tagged ids in a manner such that
+// `out_tagged_id_comparator` can be used as a comparator for `qsort`. If the
+// names match, we then compare by line number so that, if we later report an
+// error, we can easily point to the first use.
+static int out_tagged_id_comparator(const void *a, const void *b) {
+  ast_node *id_a = id_from_out_tagged_id(*(ast_node **)a);
+  ast_node *id_b = id_from_out_tagged_id(*(ast_node **)b);
+  EXTRACT_STRING(a_name, id_a);
+  EXTRACT_STRING(b_name, id_b);
+
+  int result = strcmp(a_name, b_name);
+  if (!result) {
+    return id_a->lineno > id_b->lineno ? 1 : id_a->lineno < id_b->lineno ? -1 : 0;
+  }
+
+  return result;
+}
+
+// Returns true if all OUT and INOUT arguments in `arg_list` are unique with
+// respect to all other arguments (including IN arguments), else false. If OUT
+// and INOUT arguments were allowed to alias, setting a variable passed in via
+// an OUT or INOUT parameter could cause the values of other parameters to be
+// unexpectedly mutated.
+static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *params) {
+  Contract(!arg_list || is_ast_arg_list(arg_list) || is_ast_expr_list(arg_list));
+  Contract(!params || is_ast_params(params));
+
+  // Count up the ids passed as arguments so that we can allocate an array of
+  // the correct size to hold all of them. As a minor optimization, we also
+  // check whether we have at least one OUT or INOUT argument so we can bail out
+  // early if we don't.
+  //
+  // NOTE: Technically, we only count ids with an associated parameter. If this
+  // procedure is called after checking that the correct number of arguments
+  // were provided, we'll always have enough parameters to count all of the ids
+  // and will check all of the arguments for aliasing. If not, we'll check just
+  // the arguments that have parameters and the caller can then fail due to
+  // excess arguments later on. The caller decides which behavior it prefers.
+  uint32_t ids_count = 0;
+  bool_t has_out_argument = false;
+  ast_node *arg_item = arg_list;
+  ast_node *param_item = params;
+  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
+    EXTRACT_ANY_NOTNULL(arg, arg_item->left);
+    if (!is_id(arg)) {
+      continue;
+    }
+    ids_count++;
+    EXTRACT_NOTNULL(param, param_item->left);
+    if (is_out_parameter(param->sem->sem_type)) {
+      has_out_argument = true;
+    }
+  }
+
+  // If there isn't at least one OUT or INOUT argument, or if we don't have at
+  // least two ids, there can be no aliasing.
+  if (!has_out_argument || ids_count < 2) {
+    return true;
+  }
+
+  // Put all of the ids into an array, tagging the ones that were used for OUT
+  // or INOUT arguments. We do this because the arguments themselves do not
+  // contain whether or not they were used as OUT or INOUT arguments in their
+  // sem nodes: That information is only present in the associated parameter.
+  // Tagging ids gives us an easy way to track OUT/INOUT usage without having to
+  // later unset anything on the ids themselves.
+  ast_node **ids = _ast_pool_new_array(ast_node *, ids_count);
+  ast_node **ids_ptr = ids;
+  arg_item = arg_list;
+  param_item = params;
+  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
+    EXTRACT_ANY_NOTNULL(arg, arg_item->left);
+    if (!is_id(arg)) {
+      continue;
+    }
+    EXTRACT_NOTNULL(param, param_item->left);
+    *ids_ptr++ = is_out_parameter(param->sem->sem_type) ? out_tagged_id_from_id(arg) : arg;
+  }
+
+  // Sort them by name, then by line number.
+  qsort(ids, ids_count, sizeof(ast_node *), out_tagged_id_comparator);
+
+  // Look for duplicates involving an OUT or INOUT usage.
+  for (uint32_t i = 1; i < ids_count; i++) {
+    // If either the current id or previous id is tagged, and if their names
+    // match, it must be the case that an OUT or INOUT argument is aliased.
+    if (is_id_out_tagged(ids[i - 1]) || is_id_out_tagged(ids[i])) {
+      ast_node *previous_id = id_from_out_tagged_id(ids[i - 1]);
+      ast_node *id = id_from_out_tagged_id(ids[i]);
+      EXTRACT_STRING(previous_id_name, previous_id);
+      EXTRACT_STRING(id_name, id);
+      if (!strcmp(previous_id_name, id_name)) {
+        // We sorted by name and then by line number, so `previous_id` is
+        // guaranteed to contain the earliest line number we could report.
+        CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
+        report_error(previous_id, msg, id_name);
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 // This is the core helper method for procedure calls and function calls.
 // It validates that the type and number of arguments are compatible for the
 // call in question. When we get here, we typically have a list of unchecked
@@ -17659,12 +17781,13 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
 //    * non-out parameters must be type-compatible, but exact match is not
 //      required
 static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func) {
-  ast_node *item = arg_list;
+  ast_node *arg_item = arg_list;
+  ast_node *param_item = params;
 
   // First, we check the arguments themselves.
-  for (; item && params; item = item->right, params = params->right) {
-    EXTRACT_ANY_NOTNULL(arg, item->left);
-    EXTRACT_NOTNULL(param, params->left);
+  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
+    EXTRACT_ANY_NOTNULL(arg, arg_item->left);
+    EXTRACT_NOTNULL(param, param_item->left);
 
     if (!sem_validate_arg_vs_formal(arg, param)) {
       record_error(ast);
@@ -17679,7 +17802,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
         record_error(ast);
         return;
       }
-      if (params->right) {
+      if (param_item->right) {
         report_error(ast, "CQL0425: procedure with non-trailing OUT parameter used as function", name);
         record_error(ast);
         return;
@@ -17690,8 +17813,8 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
   // If we used up all the args and it's a proc as func case then we have one
   // last chance to be correct, there has to be exactly one out argument left
   // we'll treat that as the virtual return.
-  if (proc_as_func && !item && params && !params->right) {
-    EXTRACT_NOTNULL(param, params->left);
+  if (proc_as_func && !arg_item && param_item && !param_item->right) {
+    EXTRACT_NOTNULL(param, param_item->left);
 
     Invariant(param->sem);
     Invariant(is_unitary(param->sem->sem_type)); // params can't be structs or cursors
@@ -17708,7 +17831,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
     return;
   }
 
-  if (params) {
+  if (param_item) {
     report_error(ast, "CQL0212: too few arguments provided to procedure", name);
     record_error(ast);
     return;
@@ -17716,16 +17839,20 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 
   // if any args are left that's an error
   // if items matches and it's proc as func then the last arg was provided, that's also an error
-  if (item || proc_as_func) {
+  if (arg_item || proc_as_func) {
     report_error(ast, "CQL0235: too many arguments provided to procedure", name);
+    record_error(ast);
+    return;
+  }
+
+  // Finally, we check whether or not any OUT or INOUT arguments are aliased.
+  if (!sem_validate_out_args_are_unique(arg_list, params)) {
     record_error(ast);
     return;
   }
 
   record_ok(ast);
 }
-
-
 
 // This is the sematic analysis for a call statement.  There are three ways
 // that a call can happen:
@@ -18535,20 +18662,12 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
       symtab_entry *entry = symtab_find(current_variables, var_name);
       Invariant(entry);  // we just added it!
       ast_node *var = (ast_node*)(entry->val);
-
-      if (var->sem->sem_type & SEM_TYPE_IMPLICIT) {
-        // take it off the variable (so later uses will not get the mark)
-        var->sem->sem_type &= sem_not(SEM_TYPE_IMPLICIT);
-
-        // the implicit bit stays on the expression
-        // this is the normal case, unique args
-      }
-      else {
-        // the variable has already been processed, remove the IMPLICIT bit there is
-        // no need to imply a second declaration
-        // declare out foo(v, v);  case
-        sem_remove_flags(arg, SEM_TYPE_IMPLICIT);
-      }
+      // This must be the case as the same variable may only appear once if used
+      // as an OUT or INOUT argument.
+      Invariant(var->sem->sem_type & SEM_TYPE_IMPLICIT);
+      // take it off the variable (so later uses will not get the mark)
+      var->sem->sem_type &= sem_not(SEM_TYPE_IMPLICIT);
+      // the implicit bit stays on the expression
     }
   }
 

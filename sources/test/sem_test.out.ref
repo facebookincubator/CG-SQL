@@ -8464,6 +8464,66 @@ END;
 
 The statement ending at line XXXX
 
+CALL proc_with_output(1, X, X);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {expr_list}: ok
+    | {int 1}: integer notnull
+    | {expr_list}
+      | {name X}: X: integer variable
+      | {expr_list}
+        | {name X}: X: integer variable
+
+The statement ending at line XXXX
+
+CALL proc_with_output(X, X, Y);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {expr_list}: ok
+    | {name X}: X: integer variable
+    | {expr_list}
+      | {name X}: X: integer variable
+      | {expr_list}
+        | {name Y}: Y: integer variable
+
+The statement ending at line XXXX
+
+CALL proc_with_output(X, Y, X);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'X'
+
+  {call_stmt}: err
+  | {name proc_with_output}: ok
+  | {expr_list}: ok
+    | {name X}: X: integer variable
+    | {expr_list}
+      | {name Y}: Y: integer variable
+      | {expr_list}
+        | {name X}: X: integer variable
+
+The statement ending at line XXXX
+
+CALL proc_with_output(1 + X, Y, X);
+
+  {call_stmt}: ok
+  | {name proc_with_output}: ok
+  | {expr_list}: ok
+    | {add}: integer
+    | | {int 1}: integer notnull
+    | | {name X}: X: integer variable
+    | {expr_list}
+      | {name Y}: Y: integer variable
+      | {expr_list}
+        | {name X}: X: integer variable
+
+The statement ending at line XXXX
+
 CREATE PROC cursors_cannot_be_used_as_out_args ()
 BEGIN
   DECLARE c CURSOR FOR SELECT 0 AS x;
@@ -23037,7 +23097,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0305: DISTINCT may only be used i
 
 The statement ending at line XXXX
 
-SET an_int := proc_with_single_output(1, an_int, an_int);
+SET an_int := proc_with_single_output(1, an_int, an_int2);
 
 Error at test/sem_test.sql:XXXX : in call : CQL0235: too many arguments provided to procedure 'proc_with_single_output'
 
@@ -23052,7 +23112,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0235: too many arguments provided
         | {arg_list}
           | {name an_int}: an_int: integer variable
           | {arg_list}
-            | {name an_int}: an_int: integer variable
+            | {name an_int2}: an_int2: integer variable
 
 The statement ending at line XXXX
 
@@ -64953,6 +65013,38 @@ Error at test/sem_test.sql:XXXX : in declare_out_call_stmt : CQL0213: procedure 
 
 The statement ending at line XXXX
 
+DECLARE OUT CALL out2_proc(u, u, v);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
+
+  {declare_out_call_stmt}: err
+  | {call_stmt}: err
+    | {name out2_proc}: ok
+    | {expr_list}: ok
+      | {name u}: u: integer notnull variable implicit
+      | {expr_list}
+        | {name u}: u: integer notnull variable implicit
+        | {expr_list}
+          | {name v}: v: integer notnull variable implicit
+
+The statement ending at line XXXX
+
+DECLARE OUT CALL out2_proc(1, u, u);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
+
+  {declare_out_call_stmt}: err
+  | {call_stmt}: err
+    | {name out2_proc}: ok
+    | {expr_list}: ok
+      | {int 1}: integer notnull
+      | {expr_list}
+        | {name u}: u: integer notnull variable implicit
+        | {expr_list}
+          | {name u}: u: integer notnull variable implicit
+
+The statement ending at line XXXX
+
 CREATE PROC out_decl_test_2 (x INTEGER)
 BEGIN
   DECLARE OUT CALL out2_proc(x, 1 + 3, v);
@@ -65097,38 +65189,12 @@ The statement ending at line XXXX
 
 CREATE PROC out_decl_test_4 (x INTEGER)
 BEGIN
-  DECLARE OUT CALL out2_proc(x, u, u);
-END;
-
-  {create_proc_stmt}: ok
-  | {name out_decl_test_4}: ok
-  | {proc_params_stmts}
-    | {params}: ok
-    | | {param}: x: integer variable in
-    |   | {param_detail}: x: integer variable in
-    |     | {name x}: x: integer variable in
-    |     | {type_int}: integer
-    | {stmt_list}: ok
-      | {declare_out_call_stmt}: ok
-        | {call_stmt}: ok
-          | {name out2_proc}: ok
-          | {expr_list}: ok
-            | {name x}: x: integer variable in
-            | {expr_list}
-              | {name u}: u: integer notnull variable implicit
-              | {expr_list}
-                | {name u}: u: integer notnull variable
-
-The statement ending at line XXXX
-
-CREATE PROC out_decl_test_5 (x INTEGER)
-BEGIN
-  DECLARE OUT CALL out2_proc(x, u, u);
+  DECLARE OUT CALL out2_proc(x, u, v);
   DECLARE OUT CALL out2_proc(x, u, v);
 END;
 
   {create_proc_stmt}: ok
-  | {name out_decl_test_5}: ok
+  | {name out_decl_test_4}: ok
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: x: integer variable in
@@ -65144,7 +65210,7 @@ END;
       |     | {expr_list}
       |       | {name u}: u: integer notnull variable implicit
       |       | {expr_list}
-      |         | {name u}: u: integer notnull variable
+      |         | {name v}: v: integer notnull variable implicit
       | {declare_out_call_stmt}: ok
         | {call_stmt}: ok
           | {name out2_proc}: ok
@@ -65153,7 +65219,7 @@ END;
             | {expr_list}
               | {name u}: u: integer notnull variable
               | {expr_list}
-                | {name v}: v: integer notnull variable implicit
+                | {name v}: v: integer notnull variable
 
 The statement ending at line XXXX
 

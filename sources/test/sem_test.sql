@@ -2637,6 +2637,30 @@ begin
   call proc_with_output(1, X, arg1);
 end;
 
+-- TEST: a variable may not be passed as both an INOUT and OUT argument
+-- Error % variable passed as OUT or INOUT argument must not be aliased 'X'
+-- + {call_stmt}: err
+-- +1 Error
+call proc_with_output(1, X, X);
+
+-- TEST: a variable may not be passed as both an IN and INOUT argument
+-- Error % variable passed as OUT or INOUT argument must not be aliased 'X'
+-- + {call_stmt}: err
+-- +1 Error
+call proc_with_output(X, X, Y);
+
+-- TEST: a variable may not be passed as both an IN and OUT argument
+-- Error % variable passed as OUT or INOUT argument must not be aliased 'X'
+-- + {call_stmt}: err
+-- +1 Error
+call proc_with_output(X, Y, X);
+
+-- TEST: a variable may be passed as an OUT or INOUT argument and used within a
+-- subexpression of another argument
+-- + {call_stmt}: ok
+-- - Error
+call proc_with_output(1 + X, Y, X);
+
 -- TEST: Cursors cannot be passed as OUT arguments.
 -- + Error % expected a variable name for out argument 'arg1'
 -- +1 Error
@@ -6424,7 +6448,7 @@ SET an_int := proc_func(distinct 1);
 -- + {call}: err
 -- + Error % too many arguments provided to procedure 'proc_with_single_output'
 -- +1 Error
-set an_int := proc_with_single_output(1, an_int, an_int);
+set an_int := proc_with_single_output(1, an_int, an_int2);
 
 -- TEST: try to use a proc that deals with struct results
 -- + {call}: err
@@ -16544,6 +16568,20 @@ end;
 -- +1 Error
 declare out call decl_test_err(1, 2, 3);
 
+-- TEST: try to call a proc but an OUT arg is aliased by an IN arg
+-- + {declare_out_call_stmt}: err
+-- + {call_stmt}: err
+-- + Error % CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
+-- +1 Error
+declare out call out2_proc(u, u, v);
+
+-- TEST: try to call a proc but an OUT arg is aliased by another OUT arg
+-- + {declare_out_call_stmt}: err
+-- + {call_stmt}: err
+-- + Error % CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
+-- +1 Error
+declare out call out2_proc(1, u, u);
+
 -- TEST: non-variable out arg in declare out
 -- + {declare_out_call_stmt}: err
 -- + Error % expected a variable name for out argument 'y'
@@ -16595,23 +16633,13 @@ end;
 -- + {declare_out_call_stmt}: ok
 -- + {call_stmt}: ok
 -- +1 {name u}: u: integer notnull variable implicit
+-- +1 {name v}: v: integer notnull variable implicit
 -- +2 {name u}: u: integer notnull variable
+-- +2 {name v}: v: integer notnull variable
 -- - Error
 create proc out_decl_test_4(x integer)
 begin
-  declare out call out2_proc(x, u, u);
-end;
-
--- + {declare_out_call_stmt}: ok
--- + {call_stmt}: ok
--- +1 {name u}: u: integer notnull variable implicit
--- +3 {name u}: u: integer notnull variable
--- +1 {name v}: v: integer notnull variable implicit
--- +1 {name v}: v: integer notnull variable
--- - Error
-create proc out_decl_test_5(x integer)
-begin
-  declare out call out2_proc(x, u, u);
+  declare out call out2_proc(x, u, v);
   declare out call out2_proc(x, u, v);
 end;
 
