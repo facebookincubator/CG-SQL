@@ -1229,7 +1229,10 @@ end_schema_region_stmt:
   ;
 
 schema_ad_hoc_migration_stmt:
-  AT_SCHEMA_AD_HOC_MIGRATION version_annotation  { $schema_ad_hoc_migration_stmt = new_ast_schema_ad_hoc_migration_stmt($version_annotation); }
+  AT_SCHEMA_AD_HOC_MIGRATION version_annotation
+    { $schema_ad_hoc_migration_stmt = new_ast_schema_ad_hoc_migration_stmt($version_annotation, NULL); }
+  | AT_SCHEMA_AD_HOC_MIGRATION FOR AT_RECREATE '(' name[group] ',' name[proc] ')'
+    { $schema_ad_hoc_migration_stmt = new_ast_schema_ad_hoc_migration_stmt($group, $proc); }
   ;
 
 emit_enums_stmt:

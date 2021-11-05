@@ -241,6 +241,7 @@ cql_noexport ast_node *find_func(CSTR name);
 cql_noexport ast_node *find_table_or_view_even_deleted(CSTR name);
 cql_noexport ast_node *find_enum(CSTR name);
 cql_noexport ast_node *find_base_fragment(CSTR name);
+cql_noexport ast_node *find_recreate_migrator(CSTR name);
 cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);
 cql_noexport void sem_accumulate_full_region_image(symtab *regions, CSTR name);
 cql_noexport void sem_accumulate_public_region_image(symtab *regions, CSTR name);
@@ -288,10 +289,12 @@ cql_data_decl( struct list_item *all_enums_list );
 cql_data_decl( symtab *schema_regions );
 cql_data_decl( ast_node *current_proc );
 cql_data_decl( charbuf *error_capture );
+
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc
 cql_data_decl( bool_t use_encode );
 cql_data_decl( CSTR encode_context_column );
+
 // List of column names reference in a stored proc that we should vault
 cql_data_decl( symtab *encode_columns );
 
@@ -299,3 +302,7 @@ cql_data_decl( symtab *encode_columns );
 cql_data_decl( symtab *included_regions );
 cql_data_decl( symtab *excluded_regions );
 cql_data_decl( sem_t global_proc_flags );
+
+// This is the table for all the migration procs for any recreate procs or groups
+// that might need them, these are the second form of ad hoc schema migration
+cql_data_decl( symtab *ad_hoc_recreate_actions );

@@ -3444,11 +3444,21 @@ static void gen_end_schema_region_stmt(ast_node * ast) {
 
 static void gen_schema_ad_hoc_migration_stmt(ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
-  EXTRACT_ANY_NOTNULL(attrs, ast->left);
+  EXTRACT_ANY_NOTNULL(l, ast->left);
+  EXTRACT_ANY(r, ast->right);
 
-  gen_printf("@SCHEMA_AD_HOC_MIGRATION(");
-  gen_version_and_proc(attrs);
-  gen_printf(")");
+  // two arg version is a recreate upgrade instruction
+  if (r) {
+    EXTRACT_STRING(group, l);
+    EXTRACT_STRING(proc, r);
+    gen_printf("@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(");
+    gen_printf("%s, %s)", group, proc);
+  }
+  else {
+    gen_printf("@SCHEMA_AD_HOC_MIGRATION(");
+    gen_version_and_proc(l);
+    gen_printf(")");
+  }
 }
 
 static void gen_emit_enums_stmt(ast_node *ast) {

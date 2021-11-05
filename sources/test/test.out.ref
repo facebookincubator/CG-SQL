@@ -1197,6 +1197,8 @@ SELECT 1;
 
 @SCHEMA_AD_HOC_MIGRATION(11, YourProcHere);
 
+@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(some_group, some_proc);
+
 CREATE PROC emit_several_rows ()
 BEGIN
   DECLARE C CURSOR LIKE SELECT 1 AS x, "2" AS y;

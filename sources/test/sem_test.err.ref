@@ -844,6 +844,7 @@ Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strin
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
 Error at test/sem_test.sql:XXXX : in call : CQL0085: all arguments must be strings 'replace'
+Error at test/sem_test.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0176: the indicated procedure or group already has a recreate action 'group_foo'
 Error at test/sem_test.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0338: the name of a migration procedure may not end in '_crc' 'not_allowed_crc'
 Error at test/sem_test.sql:XXXX : in str : CQL0027: a procedure can appear in only one annotation 'MyAdHocMigration'
 Error at test/sem_test.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0284: ad hoc schema migration directive must provide a procedure to run

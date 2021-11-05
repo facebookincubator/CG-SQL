@@ -329,12 +329,13 @@ BEGIN
 END;
 
 -- declared upgrade procedures if any
-DECLARE proc CreateName1Proc() USING TRANSACTION;
-DECLARE proc CreateName2Proc() USING TRANSACTION;
-DECLARE proc DeadViewMigration() USING TRANSACTION;
-DECLARE proc CreateId2Proc() USING TRANSACTION;
-DECLARE proc DeleteRate2Proc() USING TRANSACTION;
-DECLARE proc MyAdHocMigrationScript() USING TRANSACTION;
+DECLARE PROC RecreateGroup1Migration() USING TRANSACTION;
+DECLARE PROC CreateName1Proc() USING TRANSACTION;
+DECLARE PROC CreateName2Proc() USING TRANSACTION;
+DECLARE PROC DeadViewMigration() USING TRANSACTION;
+DECLARE PROC CreateId2Proc() USING TRANSACTION;
+DECLARE PROC DeleteRate2Proc() USING TRANSACTION;
+DECLARE PROC MyAdHocMigrationScript() USING TRANSACTION;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
 BEGIN
@@ -527,6 +528,10 @@ BEGIN
     );
     CREATE INDEX gr1_index ON g1 (name);
     CREATE INDEX gr1_index2 ON g1 (name, id);
+
+    -- recreate migration procedure required
+    CALL RecreateGroup1Migration();
+
     CALL test_cql_set_facet_version('gr1_group_crc', -5344641248211221614);
   END IF;
   IF cql_facet_find(test_facets, 'my_group_group_crc') != 5282334304804635811 THEN

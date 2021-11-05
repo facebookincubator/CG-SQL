@@ -1106,6 +1106,8 @@ explain select 1;
 
 @schema_ad_hoc_migration(11, YourProcHere);
 
+@schema_ad_hoc_migration for @recreate(some_group, some_proc);
+
 create proc emit_several_rows()
 begin
    declare C cursor like select 1 x, "2" y;

@@ -45769,6 +45769,24 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(group_foo, proc_bar);
+
+  {schema_ad_hoc_migration_stmt}: ok
+  | {name group_foo}
+  | {name proc_bar}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(group_foo, proc_bar);
+
+Error at test/sem_test.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0176: the indicated procedure or group already has a recreate action 'group_foo'
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {name group_foo}
+  | {name proc_bar}
+
+The statement ending at line XXXX
+
 @SCHEMA_AD_HOC_MIGRATION(5, not_allowed_crc);
 
 Error at test/sem_test.sql:XXXX : in schema_ad_hoc_migration_stmt : CQL0338: the name of a migration procedure may not end in '_crc' 'not_allowed_crc'

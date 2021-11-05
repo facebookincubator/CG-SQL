@@ -247,8 +247,8 @@ BEGIN
 END;
 
 -- declared upgrade procedures if any
-DECLARE proc CreateName1Proc() USING TRANSACTION;
-DECLARE proc CreateName2Proc() USING TRANSACTION;
+DECLARE PROC CreateName1Proc() USING TRANSACTION;
+DECLARE PROC CreateName2Proc() USING TRANSACTION;
 
 CREATE PROCEDURE test_cql_install_baseline_schema()
 BEGIN

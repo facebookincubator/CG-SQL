@@ -11200,6 +11200,20 @@ select replace('a', 'b', sensitive('c'));
 -- - Error
 @schema_ad_hoc_migration(5, MyAdHocMigration);
 
+-- TEST: ok to go, simiple recreate migration
+-- + {schema_ad_hoc_migration_stmt}: ok
+-- + {name group_foo}
+-- + {name proc_bar}
+-- - Error
+@schema_ad_hoc_migration for @recreate(group_foo, proc_bar);
+
+-- TEST: duplicate group/proc in recreate migration
+-- + {schema_ad_hoc_migration_stmt}: err
+-- + {name group_foo}
+-- + {name proc_bar}
+-- + Error % the indicated procedure or group already has a recreate action 'group_foo'
+@schema_ad_hoc_migration for @recreate(group_foo, proc_bar);
+
 -- TEST: create ad hoc version migration -- bogus name
 -- + Error % the name of a migration procedure may not end in '_crc' 'not_allowed_crc'
 -- +1 Error

@@ -148,6 +148,9 @@ end @delete(3);
 -- do an ad hoc migration at version 5 (inside the region)
 @schema_ad_hoc_migration(5, MyAdHocMigrationScript);
 
+-- do an ad hoc migration for recreation
+@schema_ad_hoc_migration for @recreate(gr1, RecreateGroup1Migration);
+
 @end_schema_region;
 
 -- declare a select function that we will use

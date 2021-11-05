@@ -1023,6 +1023,11 @@ ast_node *find_func(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
+ast_node *find_recreate_migrator(CSTR name) {
+  symtab_entry *entry = symtab_find(ad_hoc_recreate_actions, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
 // Wrappers for the index list (note we only use these for validation).
 static void add_index(ast_node *ast, CSTR name) {
   symtab_add(indices, name, ast);
@@ -19831,7 +19836,7 @@ static void sem_validate_previous_ad_hoc(ast_node *prev, CSTR name, int32_t vers
   sem_add_flags(schema_ad_hoc_migration_stmt, SEM_TYPE_VALIDATED);
 }
 
-static void sem_schema_ad_hoc_migration_stmt(ast_node *ast) {
+static void sem_schema_ad_hoc_migration_stmt_for_version(ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
 
@@ -19862,6 +19867,39 @@ static void sem_schema_ad_hoc_migration_stmt(ast_node *ast) {
     add_item_to_list(&all_ad_hoc_list, ast);
     symtab_add(ad_hoc_migrates, name, ast);
     record_schema_annotation(version, ast, name, SCHEMA_ANNOTATION_AD_HOC, NULL, version_annotation, 0);
+  }
+}
+
+// this is where you specify a procedure that should be run if you need to recreate a table or a table group
+static void sem_schema_ad_hoc_migration_stmt_for_recreate(ast_node *ast) {
+  Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
+  EXTRACT_STRING(group, ast->left);
+  EXTRACT_STRING(proc, ast->right);
+
+  bool_t adding_current_entity = will_add_current_entity();
+
+  ast->sem = new_sem(SEM_TYPE_OK);
+  ast->sem->region = current_region;
+
+  // there is no previous schema validation for these guys, you can add and remove them as you please
+
+  if (adding_current_entity) {
+    if (!symtab_add(ad_hoc_recreate_actions, group, ast)) {
+       report_error(ast, "CQL0176: the indicated procedure or group already has a recreate action", group);
+       record_error(ast);
+       return;
+    }
+  }
+  record_ok(ast);
+}
+
+static void sem_schema_ad_hoc_migration_stmt(ast_node *ast) {
+  Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
+  if (ast->right) {
+    sem_schema_ad_hoc_migration_stmt_for_recreate(ast);
+  }
+  else {
+    sem_schema_ad_hoc_migration_stmt_for_version(ast);
   }
 }
 
@@ -20041,6 +20079,7 @@ cql_noexport void sem_main(ast_node *ast) {
   builtin_aggregated_funcs = symtab_new();
   global_types = symtab_new();
   misc_attributes = symtab_new();
+  ad_hoc_recreate_actions = symtab_new();
 
   schema_annotations = _ast_pool_new(bytebuf);
   recreate_annotations = _ast_pool_new(bytebuf);
@@ -20355,6 +20394,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(excluded_regions);
   SYMTAB_CLEANUP(global_types);
   SYMTAB_CLEANUP(misc_attributes);
+  SYMTAB_CLEANUP(ad_hoc_recreate_actions);
 
   // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
 
@@ -20441,3 +20481,6 @@ cql_data_defn( symtab *excluded_regions );
 // all the schema annotations
 cql_data_defn( bytebuf *schema_annotations );
 cql_data_defn( bytebuf *recreate_annotations );
+
+// any table or group can have an action
+cql_data_defn( symtab *ad_hoc_recreate_actions );

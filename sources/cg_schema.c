@@ -32,7 +32,7 @@ static void cg_schema_emit_baseline_tables_proc(charbuf *output, charbuf *baseli
 static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *creates);
 static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *creates);
 static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *creates);
-static void cg_schema_manage_recreate_tables(charbuf *output, recreate_annotation *recreates, size_t count);
+static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, recreate_annotation *recreates, size_t count);
 
 // We declare all schema we might depend on in this upgrade (this is the include list)
 // e.g. we need all our dependent tables so that we can legally use them in an FK
@@ -864,7 +864,12 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
   CHARBUF_CLOSE(create);
 }
 
-static void cg_schema_manage_recreate_tables(charbuf *output, recreate_annotation *notes, size_t count) {
+static void cg_schema_manage_recreate_tables(
+  charbuf *output,
+  charbuf *decls,
+  recreate_annotation *notes,
+  size_t count)
+{
   Contract(notes);
   Contract(count);
 
@@ -938,12 +943,24 @@ static void cg_schema_manage_recreate_tables(charbuf *output, recreate_annotatio
 
     CHARBUF_OPEN(facet);
 
+    CSTR migrate_key = NULL;
+
     if (gname[0]) {
       // we're updating the whole group
       bprintf(&facet, "%s_group_crc", gname);
+      migrate_key = gname;
     }
     else {
       bprintf(&facet, "%s_table_crc", table_name);
+      migrate_key = table_name;
+    }
+
+    ast_node *migration = find_recreate_migrator(migrate_key);
+    if (migration) {
+      EXTRACT_STRING(proc, migration->right);
+      bprintf(&update_tables, "\n    -- recreate migration procedure required\n");
+      bprintf(&update_tables, "    CALL %s();\n\n", proc);
+      bprintf(decls, "DECLARE PROC %s() USING TRANSACTION;\n", proc);
     }
 
     bprintf(&recreate, "  IF cql_facet_find(%s_facets, '%s') != %lld THEN\n", global_proc_name, facet.ptr, (llint_t)table_crc);
@@ -1041,7 +1058,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   cg_schema_manage_triggers(&preamble, &trigger_drops, &trigger_creates);
 
   if (recreate_items_count) {
-    cg_schema_manage_recreate_tables(&preamble, recreates, recreate_items_count);
+    cg_schema_manage_recreate_tables(&preamble, &decls, recreates, recreate_items_count);
   }
 
   bool_t has_temp_schema = cg_schema_emit_temp_schema_proc(&preamble);
@@ -1247,7 +1264,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         bprintf(&pending, "        CALL %s();\n", proc);
         bprintf(&pending, "        CALL %s_cql_set_facet_version('%s', %d);\n", global_proc_name, proc, vers);
         bprintf(&pending, "      END IF;\n");
-        bprintf(&decls, "DECLARE proc %s() USING TRANSACTION;\n", proc);
+        bprintf(&decls, "DECLARE PROC %s() USING TRANSACTION;\n", proc);
       }
     }
   }
