@@ -372,6 +372,40 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
     bprintf(output, "\n}");
   }
 
+  uint32_t count = ad_hoc_recreate_actions->count;
+  symtab_entry *actions = symtab_copy_sorted_payload(ad_hoc_recreate_actions, default_symtab_comparator);
+
+  for (int32_t i = 0; i < count; i++) {
+    ast_node *ast = (ast_node *)actions[i].val;
+    EXTRACT_STRING(group, ast->left);
+    EXTRACT_STRING(proc, ast->right);
+
+    ast_node *misc_attrs = NULL;
+    ast_node *attr_target = ast->parent;
+    if (is_ast_stmt_and_attr(attr_target)) {
+      EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc, attr_target->parent);
+      misc_attrs = misc;
+    }
+
+    cg_json_test_details(output, ast, misc_attrs);
+
+    COMMA;
+    bprintf(output, "{\n");
+    BEGIN_INDENT(t, 2);
+    bprintf(output, "\"name\" : \"%s\",\n", proc);
+    bprintf(output, "\"CRC\" : \"%lld\",\n", crc_stmt(ast));
+
+    if (misc_attrs) {
+      cg_json_misc_attrs(output, misc_attrs);
+      bprintf(output, ",\n");
+    }
+
+    bprintf(output, "\"onRecreateOf\" : \"%s\"", group);
+    END_INDENT(t);
+    bprintf(output, "\n}");
+  }
+  free(actions);
+
   END_LIST;
   END_INDENT(list);
   bprintf(output, "]");

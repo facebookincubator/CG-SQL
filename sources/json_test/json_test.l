@@ -127,6 +127,7 @@ int fileno(FILE *);
 \"checkExpr\"[ \t]*:             { return CHECK_EXPR; }
 \"checkExprArgs\"[ \t]*:         { return CHECK_EXPR_ARGS; }
 \"checkExpressions\"[ \t]*:      { return CHECK_EXPRESSIONS; }
+\"onRecreateOf\"[ \t]*:          { return ON_RECREATE_OF; }
 
 [01]                             { return yytext[0]; }
 [0-9]+L                          { return LONG_LITERAL; }

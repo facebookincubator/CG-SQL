@@ -50,7 +50,7 @@ void yyset_lineno(int);
 %token COLUMNS
 %token TYPE KIND IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
 %token PRIMARY_KEY PRIMARY_KEY_SORT_ORDERS PRIMARY_KEY_NAME FOREIGN_KEYS UNIQUE_KEYS
-%token REFERENCE_TABLE REFERENCE_COLUMNS ON_UPDATE ON_DELETE IS_DEFERRED
+%token REFERENCE_TABLE REFERENCE_COLUMNS ON_UPDATE ON_DELETE IS_DEFERRED ON_RECREATE_OF
 %token ATTRIBUTES VALUE DEFAULT_VALUE VALUES
 %token VIEWS PROJECTION SELECT SELECT_ARGS
 %token INDICES SORT_ORDERS TABLE IS_UNIQUE WHERE
@@ -699,6 +699,12 @@ ad_hoc_migration: '{'
                   CRC STRING_LITERAL ','
                   opt_attributes
                   VERSION any_integer
+                  '}'
+  | '{'
+                  NAME STRING_LITERAL ','
+                  CRC STRING_LITERAL ','
+                  opt_attributes
+                  ON_RECREATE_OF STRING_LITERAL
                   '}'
   ;
 

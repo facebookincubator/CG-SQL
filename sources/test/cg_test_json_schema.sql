@@ -1121,6 +1121,17 @@ end;
 -- + "version" : 2
 @schema_ad_hoc_migration(2, ad_hoc_migration_proc_2);
 
+-- TEST: ad-hoc migration proc for recreate group
+-- + "name" : "a_migration_proc",
+-- + "CRC" : "%",
+-- + "onRecreateOf" : "a_recreate_group"
+-- + "attributes" : [
+-- +    "name" : "test_attribute",
+-- +    "value" : "hello"
+-- + ],
+@attribute(test_attribute=hello)
+@schema_ad_hoc_migration for @recreate(a_recreate_group, a_migration_proc);
+
 -- TEST: ad-hoc migration proc with attributes
 -- + @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
 -- + @ATTRIBUTE(my_single_attribute='other_value')

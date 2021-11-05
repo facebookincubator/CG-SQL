@@ -3513,6 +3513,23 @@
       ],
       "version" : 3
     }
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(test_attribute=hello)
+    @SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(a_recreate_group, a_migration_proc)
+
+    ,
+    {
+      "name" : "a_migration_proc",
+      "CRC" : "8272789293224661607",
+      "attributes" : [
+        {
+          "name" : "test_attribute",
+          "value" : "hello"
+        }
+      ],
+      "onRecreateOf" : "a_recreate_group"
+    }
   ],
   "enums" : [
 
