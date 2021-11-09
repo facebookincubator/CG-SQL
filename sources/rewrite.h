@@ -43,5 +43,6 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *_Nonnull ast);
 cql_noexport void rewrite_right_col_def_type_attrs_if_needed(ast_node *_Nonnull ast);
 cql_noexport void rewrite_nullable_to_notnull(ast_node *_Nonnull ast);
 cql_noexport void rewrite_guard_stmt_to_if_stmt(ast_node *_Nonnull ast);
+cql_noexport void rewrite_printf_inserting_casts_as_needed(ast_node *_Nonnull ast, CSTR _Nonnull format_string);
 
 #endif

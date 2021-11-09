@@ -363,6 +363,10 @@ extern cql_string_ref _Nonnull s;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX

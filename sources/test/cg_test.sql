@@ -896,6 +896,15 @@ set s := printf('%d and %d', 1, 2);
 -- + s = cql_string_ref_new(_printf_result);
 set s := printf('%d and %d', 3, 4);
 
+-- TEST: printf inserts casts for numeric types (but only as needed)
+-- + sqlite3_mprintf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", ((cql_int64)(5)), _tmp_n_int64_%.value,
+-- + ((cql_int64)!!(1)), _64(0), ((cql_int32)!!(0)), 0, _64(6), 7, 0.0, 0.0, NULL, ((cql_double)(8)));
+set s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, nullable(5), true, null, false, null, 6L, 7, 0.0, null, null, 8);
+
+-- TEST: printf doesn't insert casts when used in SQL
+-- + SELECT printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, 5, 1, NULL, 0, NULL, 6, 7, 0.0, NULL, NULL, 8)
+set s := (select printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, nullable(5), true, null, false, null, 6L, 7, 0.0, null, null, 8));
+
 -- TEST: make sure that we use the canonical name for 's' in codegen not 'S'.  Even though S is legal.
 -- + cql_set_string_ref(&s, _literal%x_);
 set S := 'x';

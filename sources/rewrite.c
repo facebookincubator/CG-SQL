@@ -30,6 +30,7 @@
 #include "symtab.h"
 #include "eval.h"
 #include "rewrite.h"
+#include "printf.h"
 
 static ast_node* rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type);
 static ast_node* rewrite_gen_printf_call(CSTR format, ast_node *arg_list);
@@ -1417,5 +1418,76 @@ cql_noexport void rewrite_guard_stmt_to_if_stmt(ast_node *_Nonnull ast) {
 
   sem_one_stmt(ast);
 }
+
+// Rewrites an already analyzed printf call such that all arguments whose core
+// types do not match the format string exactly have casts inserted to make them
+// do so. This allows programmers to enjoy the usual subtyping semantics of
+// `sem_verify_assignment` while making sure that all types match up exactly for
+// calls to `sqlite3_mprintf` in the C output.
+cql_noexport void rewrite_printf_inserting_casts_as_needed(ast_node *ast, CSTR format_string) {
+  Contract(is_ast_call(ast));
+  Contract(!is_error(ast));
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT_NOTNULL(arg_list, call_arg_list->right);
+
+  printf_iterator *iterator = minipool_alloc(ast_pool, (uint32_t)sizeof_printf_iterator);
+  printf_iterator_init(iterator, NULL, format_string);
+
+  ast_node *args_for_format = arg_list->right;
+  for (ast_node *arg_item = args_for_format; arg_item; arg_item = arg_item->right) {
+    sem_t sem_type = printf_iterator_next(iterator);
+    // We know the format string cannot have an error.
+    Contract(sem_type != SEM_TYPE_ERROR);
+    // We know that we do not have too many arguments.
+    Contract(sem_type != SEM_TYPE_OK);
+    ast_node *arg = arg_item->left;
+    AST_REWRITE_INFO_SET(arg->lineno, arg->filename);
+    if (core_type_of(arg->sem->sem_type) == SEM_TYPE_NULL) {
+      // We cannot cast NULL outside of an SQL context, so we just insert the
+      // correct zero-valued literal instead, if needed.
+      switch (sem_type) {
+        case SEM_TYPE_INTEGER:
+          arg_item->left = new_ast_num(NUM_INT, "0");
+          break;
+        case SEM_TYPE_LONG_INTEGER:
+          arg_item->left = new_ast_num(NUM_LONG, "0");
+          break;
+        case SEM_TYPE_REAL:
+          arg_item->left = new_ast_num(NUM_REAL, "0.0");
+          break;
+        default:
+          // Reference types do not need to be casted.
+          break;
+      }
+    }
+    else if (core_type_of(arg->sem->sem_type) != sem_type) {
+      Invariant(is_numeric(sem_type));
+      // The format string specifies a larger type than what was provided, so
+      // we must insert a cast to make the types match exactly.
+      ast_node *type_ast;
+      switch (sem_type) {
+        case SEM_TYPE_INTEGER:
+          type_ast = new_ast_type_int(NULL);
+          break;
+        case SEM_TYPE_LONG_INTEGER:
+          type_ast = new_ast_type_long(NULL);
+          break;
+        default:
+          Invariant(sem_type == SEM_TYPE_REAL);
+          type_ast = new_ast_type_real(NULL);
+          break;
+      } 
+      arg_item->left = new_ast_cast_expr(arg, type_ast);
+    }
+    AST_REWRITE_INFO_RESET();
+  }
+  
+  // We know that we do not have too few arguments.
+  Contract(printf_iterator_next(iterator) == SEM_TYPE_OK);
+
+  // Validate the rewrite.
+  sem_expr(ast);
+}
+  
 
 #endif

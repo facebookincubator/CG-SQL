@@ -40,8 +40,9 @@ typedef struct printf_iterator printf_iterator;
 // memory and then call `printf_iterator_init` to initialize it.
 extern size_t sizeof_printf_iterator;
 
-// Initializes a `printf_iterator`. This must be called before
-// `printf_iterator_next`.
+// Initializes a `printf_iterator` with an optional `format_strlit` (used for
+// reporting errors) and a decoded format string (i.e., the format string absent
+// any surrounding quotes). This must be called before `printf_iterator_next`.
 cql_noexport void printf_iterator_init(printf_iterator *iterator, ast_node *format_strlit, CSTR format_string);
 
 // Attempts to parse the next substitution in the format string returning one

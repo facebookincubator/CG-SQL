@@ -98,7 +98,7 @@ size_t sizeof_printf_iterator = sizeof(printf_iterator);
 
 // Initializes a `printf_iterator`.
 cql_noexport void printf_iterator_init(printf_iterator *iterator, ast_node *format_strlit, CSTR format_string) {
-  Contract(is_strlit(format_strlit));
+  Contract(!format_strlit || is_strlit(format_strlit));
 
   iterator->ast = format_strlit;
   iterator->flags = PRINTF_FLAGS_NONE;
@@ -134,8 +134,10 @@ static printf_flags printf_flag_of_char(char c) {
 
 // Indicates an error in the format string and sets `SEM_TYPE_ERROR`.
 static void printf_iterator_error(printf_iterator *iterator, CSTR msg, CSTR subject) {
-  report_error(iterator->ast, msg, subject);
-  record_error(iterator->ast);
+  if (iterator->ast) {
+    report_error(iterator->ast, msg, subject);
+    record_error(iterator->ast);
+  }
   iterator->sem_type = SEM_TYPE_ERROR;
 }
 

@@ -13128,11 +13128,11 @@ BEGIN
     END, CASE WHEN C.f12 IS NULL THEN 'null'
     ELSE printf('%s', C.f12)
     END, CASE WHEN nullable(C.f13) IS NULL THEN 'null'
-    ELSE printf('%d', C.f13)
+    ELSE printf('%d', CAST(C.f13 AS INTEGER))
     END, CASE WHEN C.f14 IS NULL THEN 'null'
     ELSE printf('%lld', C.f14)
     END, CASE WHEN C.f15 IS NULL THEN 'null'
-    ELSE printf('%d', C.f15)
+    ELSE printf('%d', CAST(C.f15 AS INTEGER))
     END, CASE WHEN nullable(C.f16) IS NULL THEN 'null'
     ELSE printf('%d', C.f16)
     END, CASE WHEN nullable(C.f17) IS NULL THEN 'null'
@@ -13154,11 +13154,11 @@ BEGIN
     END, CASE WHEN C.f25 IS NULL THEN 'null'
     ELSE printf('%s', C.f25)
     END, CASE WHEN nullable(C.f26) IS NULL THEN 'null'
-    ELSE printf('%d', C.f26)
+    ELSE printf('%d', CAST(C.f26 AS INTEGER))
     END, CASE WHEN nullable(C.f27) IS NULL THEN 'null'
-    ELSE printf('%d', C.f27)
+    ELSE printf('%d', CAST(C.f27 AS INTEGER))
     END, CASE WHEN nullable(C.f28) IS NULL THEN 'null'
-    ELSE printf('%d', C.f28)
+    ELSE printf('%d', CAST(C.f28 AS INTEGER))
     END, CASE WHEN C.f29 IS NULL THEN 'null'
     ELSE printf('%s', C.f29)
     END, CASE WHEN C.f30 IS NULL THEN 'null'
@@ -13180,9 +13180,9 @@ BEGIN
     END, CASE WHEN C.f39 IS NULL THEN 'null'
     ELSE printf('%lld', C.f39)
     END, CASE WHEN C.f40 IS NULL THEN 'null'
-    ELSE printf('%d', C.f40)
+    ELSE printf('%d', CAST(C.f40 AS INTEGER))
     END, CASE WHEN nullable(C.f41) IS NULL THEN 'null'
-    ELSE printf('%d', C.f41)
+    ELSE printf('%d', CAST(C.f41 AS INTEGER))
     END, CASE WHEN C.f42 IS NULL THEN 'null'
     ELSE printf('%s', C.f42)
     END, CASE WHEN C.f43 IS NULL THEN 'null'
@@ -13190,7 +13190,7 @@ BEGIN
     END, CASE WHEN C.f44 IS NULL THEN 'null'
     ELSE printf('%lld', C.f44)
     END, CASE WHEN nullable(C.f45) IS NULL THEN 'null'
-    ELSE printf('%d', C.f45)
+    ELSE printf('%d', CAST(C.f45 AS INTEGER))
     END, CASE WHEN C.f46 IS NULL THEN 'null'
     ELSE printf('%lld', C.f46)
     END, CASE WHEN nullable(C.f47) IS NULL THEN 'null'
@@ -13678,7 +13678,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f13);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f13)));
         cql_string_release(_tmp_text_14);
         _tmp_text_14 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -13704,7 +13704,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f15.value);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f15.value)));
         cql_string_release(_tmp_text_16);
         _tmp_text_16 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -13855,7 +13855,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f26);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f26)));
         cql_string_release(_tmp_text_27);
         _tmp_text_27 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -13868,7 +13868,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f27);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f27)));
         cql_string_release(_tmp_text_28);
         _tmp_text_28 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -13881,7 +13881,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f28);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f28)));
         cql_string_release(_tmp_text_29);
         _tmp_text_29 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -14034,7 +14034,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f40.value);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f40.value)));
         cql_string_release(_tmp_text_40);
         _tmp_text_40 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -14047,7 +14047,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f41);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f41)));
         cql_string_release(_tmp_text_41);
         _tmp_text_41 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -14103,7 +14103,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
         break;
       }
       {
-        char *_printf_result = sqlite3_mprintf("%d", C.f45);
+        char *_printf_result = sqlite3_mprintf("%d", ((cql_int32)!!(C.f45)));
         cql_string_release(_tmp_text_45);
         _tmp_text_45 = cql_string_ref_new(_printf_result);
         sqlite3_free(_printf_result);
@@ -15270,6 +15270,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_nullable_bool _tmp_n_bool_2;
   cql_nullable_int64 _tmp_n_int64_1;
   cql_nullable_int32 _tmp_n_int_1;
+  cql_nullable_int64 _tmp_n_int64_2;
   cql_string_ref _tmp_text_0 = NULL;
   cql_object_ref _tmp_n_object_1 = NULL;
   cql_object_ref _tmp_object_1 = NULL;
@@ -16291,6 +16292,32 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     s = cql_string_ref_new(_printf_result);
     sqlite3_free(_printf_result);
   }
+
+  // The statement ending at line XXXX
+
+  /*
+  SET s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', CAST(5 AS LONG_INT), CAST(nullable(5) AS LONG_INT), CAST(TRUE AS LONG_INT), 0L, CAST(FALSE AS INTEGER), 0, 6L, 7, 0.0, 0.0, NULL, CAST(8 AS REAL));
+  */
+  {
+  cql_set_notnull(_tmp_n_int64_2, ((cql_int64)(5)));
+    char *_printf_result = sqlite3_mprintf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", ((cql_int64)(5)), _tmp_n_int64_2.value, ((cql_int64)!!(1)), _64(0), ((cql_int32)!!(0)), 0, _64(6), 7, 0.0, 0.0, NULL, ((cql_double)(8)));
+    cql_string_release(s);
+    s = cql_string_ref_new(_printf_result);
+    sqlite3_free(_printf_result);
+  }
+
+  // The statement ending at line XXXX
+
+  /*
+  SET s := ( SELECT printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, nullable(5), TRUE, NULL, FALSE, NULL, 6L, 7, 0.0, NULL, NULL, 8) );
+  */
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, 5, 1, NULL, 0, NULL, 6, 7, 0.0, NULL, NULL, 8)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    cql_column_string_ref(_temp_stmt, 0, &s);
+  cql_finalize_stmt(&_temp_stmt);
 
   // The statement ending at line XXXX
 

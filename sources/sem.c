@@ -7986,44 +7986,40 @@ static void sem_func_cql_cursor_format(ast_node *ast, uint32_t arg_count) {
   return;
 }
 
-// Given an already analyzed argument list and a string literal containing a
-// format string, verify that the format string is valid and that the arguments
-// provided match up appropriately. Returns `true` if successful, else `false`.
-static bool_t sem_validate_args_for_format(ast_node *arg_list, ast_node *format_strlit, CSTR context) {
-  Contract(is_strlit(format_strlit));
+// Given an already analyzed argument list, an AST to use for reporting errors
+// in the format string, the decoded format string itself, and the name of the
+// procedure being called, verify that the format string is valid and that the
+// arguments provided match up appropriately. Returns `true` if successful, else
+// `false`.
+static bool_t sem_validate_args_for_format(
+  ast_node *arg_list,
+  ast_node *format_strlit,
+  CSTR format_string,
+  CSTR proc_name)
+{
   Contract(!arg_list || is_ast_arg_list(arg_list));
-
-  bool_t success = true;
-
-  // We need to initialize the `printf_iterator` with the decoded format string
-  // (i.e., absent the quotes in the literal itself).
-  EXTRACT_STRING(encoded_format_string, format_strlit);
-  CHARBUF_OPEN(format_string);
-  cg_decode_string_literal(encoded_format_string, &format_string);
+  Contract(is_strlit(format_strlit));
 
   // Allocate space for a `printf_iterator`, then initialize it with
   // `format_strlit` (so any errors in the format string itself will report the
   // location of the string literal) and the decoded format string.
   printf_iterator *iterator = minipool_alloc(ast_pool, (uint32_t)sizeof_printf_iterator);
-  printf_iterator_init(iterator, format_strlit, format_string.ptr);
+  printf_iterator_init(iterator, format_strlit, format_string);
 
   // Iterate over the arguments, checking them against the format string (and
   // validating the format string itself) as we go.
   for (ast_node *arg_item = arg_list; arg_item; arg_item = arg_item->right) {
     sem_t sem_type = printf_iterator_next(iterator);
     if (sem_type == SEM_TYPE_ERROR) {
-      success = false;
-      goto cleanup;
+      return false;
     }
     if (sem_type == SEM_TYPE_OK) {
-      report_error(arg_list, "CQL0422: more arguments provided than expected by format string", context);
-      success = false;
-      goto cleanup;
+      report_error(arg_list, "CQL0422: more arguments provided than expected by format string", proc_name);
+      return false;
     }
     ast_node *arg = arg_item->left;
-    if (!sem_verify_assignment(arg, sem_type, core_type_of(arg->sem->sem_type), context)) {
-      success = false;
-      goto cleanup;
+    if (!sem_verify_assignment(arg, sem_type, core_type_of(arg->sem->sem_type), proc_name)) {
+      return false;
     }
   }
 
@@ -8031,19 +8027,30 @@ static bool_t sem_validate_args_for_format(ast_node *arg_list, ast_node *format_
   // no errors are lurking later in the format string.
   sem_t sem_type = printf_iterator_next(iterator);
   if (sem_type == SEM_TYPE_ERROR) {
-    success = false;
-    goto cleanup;
+    return false;
   }
   if (sem_type != SEM_TYPE_OK) {
-    report_error(arg_list, "CQL0423: fewer arguments provided than expected by format string", context);
-    success = false;
-    goto cleanup;
+    report_error(arg_list, "CQL0423: fewer arguments provided than expected by format string", proc_name);
+    return false;
   }
 
-cleanup:
-  CHARBUF_CLOSE(format_string);
+  return true;
+}
 
-  return success;
+// Returns the decoded format string (i.e., the string literal absent the
+// surrounding quotes) for initializing a `printf_iterator`.
+static CSTR format_string_from_format_strlit(ast_node *format_strlit) {
+  Contract(is_ast_str(format_strlit));
+
+  CSTR result;
+
+  EXTRACT_STRING(encoded_format_string, format_strlit);
+  CHARBUF_OPEN(format_string_buf);
+  cg_decode_string_literal(encoded_format_string, &format_string_buf);
+  result = Strdup(format_string_buf.ptr);
+  CHARBUF_CLOSE(format_string_buf);
+
+  return result;
 }
 
 // The printf function converts its arguments to a string. It must be called
@@ -8084,15 +8091,34 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
+  CSTR format_string = format_string_from_format_strlit(format_strlit);
+
   // Verify that the arguments are appropriate for the format string provided.
   ast_node *args_for_format = arg_list->right;
-  if (!sem_validate_args_for_format(args_for_format, format_strlit, name)) {
+  if (!sem_validate_args_for_format(args_for_format, format_strlit, format_string, name)) {
     record_error(ast);
     return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
-  return;
+
+  // We do not require that the types implied by the format string match the
+  // types of the arguments exactly -- the former is allowed to be larger than
+  // the latter -- but they must match in the generated code when we're using
+  // printf outside SQL. Calling `rewrite_printf_inserting_casts_as_needed` will
+  // insert casts appropriately such that the types match up exactly.
+  if (current_expr_context == SEM_EXPR_CONTEXT_NONE) {
+    // We use a static variable to keep track of whether or not we're currently
+    // in the process of a rewrite: `rewrite_printf_inserting_casts_as_needed`
+    // will call `sem_expr` to validate the rewrite and we don't want to loop
+    // forever.
+    static bool_t is_rewriting = false;
+    if (!is_rewriting) {
+      is_rewriting = true;
+      rewrite_printf_inserting_casts_as_needed(ast, format_string);
+      is_rewriting = false;
+    }
+  }
 }
 
 // Compute the semantic type of each argument, this is minimally necessary

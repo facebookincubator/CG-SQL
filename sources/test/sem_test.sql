@@ -13807,7 +13807,7 @@ set sens_text := (select trim("xyz", name) result from with_sensitive);
 -- + DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, nullable(1.1) AS e, CAST('y' AS BLOB) AS f;
 -- + FETCH c1;
 -- + SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN nullable(c1.a) IS NULL THEN 'null'
--- + ELSE printf('%d', c1.a)
+-- + ELSE printf('%d', CAST(c1.a AS INTEGER))
 -- + END, CASE WHEN nullable(c1.b) IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.b)
 -- + END, CASE WHEN nullable(c1.c) IS NULL THEN 'null'
