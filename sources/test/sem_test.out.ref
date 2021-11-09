@@ -7643,7 +7643,7 @@ The statement ending at line XXXX
 UPDATE foo
 SET id = 'x';
 
-Error at test/sem_test.sql:XXXX : in update_entry : CQL0012: incompatible types in expression 'id'
+Error at test/sem_test.sql:XXXX : in str : CQL0012: incompatible types in expression 'id'
 
   {update_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -7651,8 +7651,30 @@ Error at test/sem_test.sql:XXXX : in update_entry : CQL0012: incompatible types 
     | {update_list}: err
     | | {update_entry}: err
     |   | {name id}: id: integer notnull
-    |   | {strlit 'x'}: text notnull
+    |   | {strlit 'x'}: err
     | {update_where}
+      | {update_orderby}
+
+The statement ending at line XXXX
+
+UPDATE foo
+SET id = 1L
+  WHERE id = 2;
+
+Error at test/sem_test.sql:XXXX : in num : CQL0242: lossy conversion from type 'LONG_INT' in 1L
+
+  {update_stmt}: err
+  | {name foo}: foo: { id: integer notnull primary_key autoinc }
+  | {update_set}
+    | {update_list}: err
+    | | {update_entry}: err
+    |   | {name id}: id: integer notnull
+    |   | {longint 1}: longint notnull
+    | {update_where}
+      | {opt_where}
+      | | {eq}
+      |   | {name id}
+      |   | {int 2}
       | {update_orderby}
 
 The statement ending at line XXXX
@@ -7660,7 +7682,7 @@ The statement ending at line XXXX
 UPDATE bar
 SET name = 2;
 
-Error at test/sem_test.sql:XXXX : in update_entry : CQL0009: incompatible types in expression 'name'
+Error at test/sem_test.sql:XXXX : in num : CQL0009: incompatible types in expression 'name'
 
   {update_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
@@ -7668,7 +7690,7 @@ Error at test/sem_test.sql:XXXX : in update_entry : CQL0009: incompatible types 
     | {update_list}: err
     | | {update_entry}: err
     |   | {name name}: name: text
-    |   | {int 2}: integer notnull
+    |   | {int 2}: err
     | {update_where}
       | {update_orderby}
 
@@ -7677,13 +7699,13 @@ The statement ending at line XXXX
 UPDATE bar
 SET id = NULL;
 
-Error at test/sem_test.sql:XXXX : in update_entry : CQL0013: cannot assign/copy possibly null expression to not null target 'id'
+Error at test/sem_test.sql:XXXX : in null : CQL0013: cannot assign/copy possibly null expression to not null target 'id'
 
   {update_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {update_set}
     | {update_list}: err
-    | | {update_entry}
+    | | {update_entry}: err
     |   | {name id}: id: integer notnull
     |   | {null}: null
     | {update_where}
@@ -30824,13 +30846,13 @@ UPDATE bar
 SET id = coalesce(_sens, 0)
   WHERE name = 'x';
 
-Error at test/sem_test.sql:XXXX : in update_entry : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
+Error at test/sem_test.sql:XXXX : in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
 
   {update_stmt}: err
   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
   | {update_set}
     | {update_list}: err
-    | | {update_entry}
+    | | {update_entry}: err
     |   | {name id}: id: integer notnull
     |   | {call}: integer notnull sensitive
     |     | {name coalesce}

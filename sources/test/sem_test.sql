@@ -2319,8 +2319,16 @@ update foo set non_existent_column = 1;
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name id}: id: integer notnull
--- + {strlit 'x'}: text notnull
+-- + {strlit 'x'}: err
 update foo set id = 'x';
+
+-- TEST: update with loss of precision
+-- + {update_stmt}: err
+-- + {update_list}: err
+-- + {update_entry}: err
+-- + Error % lossy conversion from type 'LONG_INT' in 1L
+-- +1 Error
+update foo set id = 1L where id = 2;
 
 -- TEST: update with string type mismatch (string <- number)
 -- + Error % incompatible types in expression 'name'
@@ -2329,7 +2337,7 @@ update foo set id = 'x';
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name name}: name: text
--- + {int 2}: integer notnull
+-- + {int 2}: err
 update bar set name = 2;
 
 -- TEST: update not null column to constant null

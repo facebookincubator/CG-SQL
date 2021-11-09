@@ -2486,7 +2486,7 @@ static bool_t sem_verify_compat(ast_node *ast, sem_t sem_type_needed, sem_t sem_
   return true;
 }
 
-// When performing assignment either explicity ( set X := Y ) or implicit (binding args to a proc call)
+// When performing assignment either explicitly ( set X := Y ) or implicit (binding args to a proc call)
 // there are additional type compat checks to be done beyond the normal is compat.  The above helps you
 // with symmetric operations like X == Y where either side can be promoted.  In an assignment the left
 // side cannot be promoted so the store can be lossy.  This checks for the lossy cases that are otherwise
@@ -12451,7 +12451,8 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns) {
   Invariant(!is_object(sem_type_left));
   Invariant(!is_object(sem_type_right));
 
-  if (!sem_verify_assignment(ast, sem_type_left, sem_type_right, left->sem->name)) {
+  if (!sem_verify_assignment(right, sem_type_left, sem_type_right, left->sem->name)) {
+    record_error(ast);
     return;
   }
 
