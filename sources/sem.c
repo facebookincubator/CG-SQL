@@ -17667,64 +17667,29 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   return true;
 }
 
-// Pointer tag indicating an id that is passed as an OUT or INOUT argument.
-static const uintptr_t id_out_tag_bit = 0x1;
-
-// Given a (possibly) tagged id, return an untagged, deferencable pointer.
-static ast_node *id_from_out_tagged_id(ast_node *tagged_id) {
-  return (ast_node *)((uintptr_t)tagged_id & ~id_out_tag_bit);
-}
-
-// Given an id, return the tagged version.
-static ast_node *out_tagged_id_from_id(ast_node *id) {
- return (ast_node *)((uintptr_t)id | id_out_tag_bit);
-}
-
-// Returns true if `id` is tagged, else false.
-static bool_t is_id_out_tagged(ast_node *id) {
-  return !!((uintptr_t)id & id_out_tag_bit);
-}
-
-// Compares the names of two (possibly) tagged ids in a manner such that
-// `out_tagged_id_comparator` can be used as a comparator for `qsort`. If the
-// names match, we then compare by line number so that, if we later report an
-// error, we can easily point to the first use.
-static int out_tagged_id_comparator(const void *a, const void *b) {
-  ast_node *id_a = id_from_out_tagged_id(*(ast_node **)a);
-  ast_node *id_b = id_from_out_tagged_id(*(ast_node **)b);
-  EXTRACT_STRING(a_name, id_a);
-  EXTRACT_STRING(b_name, id_b);
-
-  int result = strcmp(a_name, b_name);
-  if (!result) {
-    return id_a->lineno > id_b->lineno ? 1 : id_a->lineno < id_b->lineno ? -1 : 0;
-  }
-
-  return result;
-}
-
 // Returns true if all OUT and INOUT arguments in `arg_list` are unique with
 // respect to all other arguments (including IN arguments), else false. If OUT
 // and INOUT arguments were allowed to alias, setting a variable passed in via
 // an OUT or INOUT parameter could cause the values of other parameters to be
 // unexpectedly mutated.
+//
+// NOTE: Technically, we only check arguments with an associated parameter. If
+// this procedure is called after checking that the correct number of arguments
+// were provided, we'll always have enough parameters to check all of the
+// arguments for aliasing. If not, we'll check just the arguments that have
+// parameters and the caller can then fail due to excess arguments later on. The
+// caller decides which behavior it prefers.
 static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *params) {
   Contract(!arg_list || is_ast_arg_list(arg_list) || is_ast_expr_list(arg_list));
   Contract(!params || is_ast_params(params));
 
-  // Count up the ids passed as arguments so that we can allocate an array of
-  // the correct size to hold all of them. As a minor optimization, we also
-  // check whether we have at least one OUT or INOUT argument so we can bail out
-  // early if we don't.
-  //
-  // NOTE: Technically, we only count ids with an associated parameter. If this
-  // procedure is called after checking that the correct number of arguments
-  // were provided, we'll always have enough parameters to count all of the ids
-  // and will check all of the arguments for aliasing. If not, we'll check just
-  // the arguments that have parameters and the caller can then fail due to
-  // excess arguments later on. The caller decides which behavior it prefers.
-  uint32_t ids_count = 0;
-  bool_t has_out_argument = false;
+  // This first OUT or INOUT argument that is not unique (which we'll use for
+  // error reporting).
+  ast_node *error_arg = NULL;
+
+  symtab *in_args = symtab_new();
+  symtab *out_and_inout_args = symtab_new();
+
   ast_node *arg_item = arg_list;
   ast_node *param_item = params;
   for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
@@ -17732,61 +17697,39 @@ static bool_t sem_validate_out_args_are_unique(ast_node *arg_list, ast_node *par
     if (!is_id(arg)) {
       continue;
     }
-    ids_count++;
-    EXTRACT_NOTNULL(param, param_item->left);
+    EXTRACT_STRING(arg_name, arg);
+    symtab_entry *entry = symtab_find(out_and_inout_args, arg_name);
+    if (entry) {
+      // This argument was previously used as an OUT or INOUT argument. We
+      // assign the error to the first OUT/INOUT usage.
+      error_arg = entry->val;
+      goto error;
+    }
+    EXTRACT_ANY_NOTNULL(param, param_item->left);
     if (is_out_parameter(param->sem->sem_type)) {
-      has_out_argument = true;
-    }
-  }
-
-  // If there isn't at least one OUT or INOUT argument, or if we don't have at
-  // least two ids, there can be no aliasing.
-  if (!has_out_argument || ids_count < 2) {
-    return true;
-  }
-
-  // Put all of the ids into an array, tagging the ones that were used for OUT
-  // or INOUT arguments. We do this because the arguments themselves do not
-  // contain whether or not they were used as OUT or INOUT arguments in their
-  // sem nodes: That information is only present in the associated parameter.
-  // Tagging ids gives us an easy way to track OUT/INOUT usage without having to
-  // later unset anything on the ids themselves.
-  ast_node **ids = _ast_pool_new_array(ast_node *, ids_count);
-  ast_node **ids_ptr = ids;
-  arg_item = arg_list;
-  param_item = params;
-  for (; arg_item && param_item; arg_item = arg_item->right, param_item = param_item->right) {
-    EXTRACT_ANY_NOTNULL(arg, arg_item->left);
-    if (!is_id(arg)) {
-      continue;
-    }
-    EXTRACT_NOTNULL(param, param_item->left);
-    *ids_ptr++ = is_out_parameter(param->sem->sem_type) ? out_tagged_id_from_id(arg) : arg;
-  }
-
-  // Sort them by name, then by line number.
-  qsort(ids, ids_count, sizeof(ast_node *), out_tagged_id_comparator);
-
-  // Look for duplicates involving an OUT or INOUT usage.
-  for (uint32_t i = 1; i < ids_count; i++) {
-    // If either the current id or previous id is tagged, and if their names
-    // match, it must be the case that an OUT or INOUT argument is aliased.
-    if (is_id_out_tagged(ids[i - 1]) || is_id_out_tagged(ids[i])) {
-      ast_node *previous_id = id_from_out_tagged_id(ids[i - 1]);
-      ast_node *id = id_from_out_tagged_id(ids[i]);
-      EXTRACT_STRING(previous_id_name, previous_id);
-      EXTRACT_STRING(id_name, id);
-      if (!strcmp(previous_id_name, id_name)) {
-        // We sorted by name and then by line number, so `previous_id` is
-        // guaranteed to contain the earliest line number we could report.
-        CSTR msg = "CQL0426: OUT or INOUT argument cannot be used again in same call";
-        report_error(previous_id, msg, id_name);
-        return false;
+      entry = symtab_find(in_args, arg_name);
+      if (entry) {
+        // This argument is an OUT or INOUT argument that was used previously as
+        // an IN argument. We assign the error to the OUT/INOUT usage.
+        error_arg = arg;
+        goto error;
       }
+      symtab_add(out_and_inout_args, arg_name, arg);
+    } else {
+      symtab_add(in_args, arg_name, arg);
     }
   }
 
-  return true;
+cleanup:
+  symtab_delete(in_args);
+  symtab_delete(out_and_inout_args);
+
+  return !error_arg;
+
+error:
+  EXTRACT_STRING(arg_name, error_arg);
+  report_error(error_arg, "CQL0426: OUT or INOUT argument cannot be used again in same call", arg_name);
+  goto cleanup;
 }
 
 // This is the core helper method for procedure calls and function calls.
