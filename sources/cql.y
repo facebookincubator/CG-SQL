@@ -2074,6 +2074,8 @@ static void parse_cmd(int argc, char **argv) {
       options.print_ast = 1;
     } else if (strcmp(arg, "--nolines") == 0) {
       options.nolines = 1;
+    } else if (strcmp(arg, "--schema_exclusive") == 0) {
+      options.schema_exclusive = 1;
     } else if (strcmp(arg, "--dot") == 0) {
       options.print_dot = 1;
     } else if (strcmp(arg, "--sem") == 0) {

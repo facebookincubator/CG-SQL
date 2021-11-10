@@ -48,3 +48,17 @@ CREATE TABLE use_g1(
 CREATE TABLE test_this_table_will_become_create(
   id integer primary key
 ) @create(1, cql:from_recreate);
+
+-- extra items that will disappear when we switch to exclusive mode
+CREATE VIEW extra_view AS SELECT * FROM g1;
+
+CREATE INDEX extra_index ON g1(id);
+
+CREATE TRIGGER extra_trigger BEFORE DELETE ON g1 BEGIN SELECT 1; END;
+
+-- additional items that will not disappear even in exclusive mode
+CREATE VIEW staying_view AS SELECT * FROM g1;
+
+CREATE INDEX staying_index ON g1(id);
+
+CREATE TRIGGER staying_trigger BEFORE DELETE ON g1 BEGIN SELECT 1; END;

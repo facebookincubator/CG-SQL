@@ -1,5 +1,25 @@
 reference results for version 1
 
+----- extra_index -----
+
+type: index
+tbl_name: g1
+CREATE INDEX extra_index ON g1 (
+  id)
+
+----- extra_trigger -----
+
+type: trigger
+tbl_name: g1
+CREATE TRIGGER extra_trigger  BEFORE DELETE ON g1 BEGIN SELECT 1; END
+
+----- extra_view -----
+
+type: view
+tbl_name: extra_view
+CREATE VIEW extra_view AS SELECT id,
+name  FROM g1
+
 ----- g1 -----
 
 type: table
@@ -12,6 +32,26 @@ CREATE TABLE g1(
 
 type: index
 tbl_name: test_cql_schema_facets
+
+----- staying_index -----
+
+type: index
+tbl_name: g1
+CREATE INDEX staying_index ON g1 (
+  id)
+
+----- staying_trigger -----
+
+type: trigger
+tbl_name: g1
+CREATE TRIGGER staying_trigger  BEFORE DELETE ON g1 BEGIN SELECT 1; END
+
+----- staying_view -----
+
+type: view
+tbl_name: staying_view
+CREATE VIEW staying_view AS SELECT id,
+name  FROM g1
 
 ----- test_cql_schema_facets -----
 

@@ -2949,6 +2949,12 @@ static void sem_validate_previous_index(ast_node *prev_index) {
   ast_node *ast = find_index(index_name);
 
   if (!ast) {
+    if (options.schema_exclusive) {
+      // In exclusive schema mode, unknown indices are bulk deleted
+      // therefore you do not need a tombstone
+      return;
+    }
+
     // If the table the index was on is going away then we don't need
     // to verify that the index has a tombstone.  In fact it is not
     // possible to declare the tombstone now because the table name is not
@@ -10258,9 +10264,12 @@ static void sem_validate_previous_view(ast_node *prev_view) {
 
   ast_node *ast = find_table_or_view_even_deleted(name);
 
-  if (is_temp && !ast) {
-    // temp view totally deleted -> that's ok
-    return;
+  if (!ast) {
+    if (is_temp || options.schema_exclusive) {
+      // temp view totally deleted -> that's ok
+      // In exclusive mode views  are bulk deleted, so no tombstones are needed
+      return;
+    }
   }
 
   if (!ast) {
@@ -10281,7 +10290,7 @@ static void sem_validate_previous_view(ast_node *prev_view) {
 
 // Here we check the trigger found in the "previous" schema against the current schema.
 // There are several validations we have to do here:
-//  * the view should be present (but maybe marked with @delete)
+//  * the trigger should be present (but maybe marked with @delete)
 //  * the trigger has to have a compatible delete version
 //  * the create flags (like TEMP, or IF NOT EXISTS) must be the same
 static void sem_validate_previous_trigger(ast_node *prev_trigger) {
@@ -10294,17 +10303,13 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
   EXTRACT_ANY_NOTNULL(prev_trigger_name_ast, prev_trigger_def->left);
   EXTRACT_STRING(name, prev_trigger_name_ast);
 
-  // "Legacy" triggers start with "tr__" they are bulk deleted, no rules for them.
-  if (!Strncasecmp(name, "tr__", 4)) {
-    return;
-  }
-
   bool_t is_temp = !! (prev_flags & TRIGGER_IS_TEMP);
 
   ast_node *ast = find_trigger(name);
   if (!ast) {
-    if (is_temp) {
-      // temp totally deleted -> that's ok
+    if (is_temp || options.schema_exclusive) {
+      // Temp totally deleted -> that's ok, they always go away
+      // In exclusive mode triggers are bulk deleted, so no tombstones are needed
       return;
     }
 

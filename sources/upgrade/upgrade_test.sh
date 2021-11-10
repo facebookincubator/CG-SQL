@@ -37,6 +37,14 @@ diff_exit() {
   fi
 }
 
+set_exclusive() {
+  if [ $1 -eq 4 ]; then
+    exclusive="--schema_exclusive"
+  else
+    exclusive=""
+  fi
+}
+
 # Delete databases (if they exist).
 rm -f ${OUT_DIR}/*.db
 
@@ -54,9 +62,11 @@ fi
 
 echo "creating the upgrade to v[n] schema upgraders"
 
-for i in {0..3}
+for i in {0..4}
 do
-  if ! ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"; then
+  set_exclusive $i
+
+  if ! ${CQL} ${exclusive} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"; then
     echo ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"
     echo "failed generating upgrade to version $i CQL"
     exit 1
@@ -69,7 +79,7 @@ do
   fi
 done
 
-# compile the upgraders above to executables upgrade0, 1, 2, 3
+# compile the upgraders above to executables upgrade0-4
 
 if ! make ${MAKE_COVERAGE_ARGS} upgrade_test; then
   echo make ${MAKE_COVERAGE_ARGS} upgrade_test
@@ -77,12 +87,13 @@ if ! make ${MAKE_COVERAGE_ARGS} upgrade_test; then
 fi
 
 # now do the basic validation, can we create a schema of version n?
-for i in {0..3}
+for i in {0..4}
 do
   echo "testing upgrade to v$i from scratch"
   if ! "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${OUT_DIR}/upgrade_schema_v$i.out"; then
     echo "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${OUT_DIR}/upgrade_schema_v$i.out"
     echo "failed generating schema from scratch"
+    cat "${OUT_DIR}/upgrade_schema_v$i.out"
     exit 1
   fi
 
@@ -91,7 +102,7 @@ done
 
 # now we'll try various previous schema combos with the current upgrader to make sure the work
 
-for i in {1..3}
+for i in {1..4}
 do
   (( j=i-1 ))
   echo "Verifying previous schema $j vs. final schema $i is ok"
@@ -101,8 +112,10 @@ do
   echo "@previous_schema;" >> "$SCHEMA_FILE"
   cat "upgrade/SchemaPersistentV$j.sql" >> "$SCHEMA_FILE"
 
+  set_exclusive $i
+
   # Generate upgrade CQL.
-  if ! ${CQL} --in "$SCHEMA_FILE" --cg "$CQL_FILE" --rt schema_upgrade --global_proc "$TEST_PREFIX"; then
+  if ! ${CQL} ${exclusive} --in "$SCHEMA_FILE" --cg "$CQL_FILE" --rt schema_upgrade --global_proc "$TEST_PREFIX"; then
     echo "Failed to generate upgrade CQL."
     echo "cc -I./ -Iupgrade -w -E -x c $SCHEMA_FILE > $TEMP_FILE && ${CQL} -- \
         --in $TEMP_FILE --cg $CQL_FILE --rt schema_upgrade \
@@ -117,9 +130,9 @@ do
   fi
 done
 
-for i in {0..3}
+for i in {0..4}
 do
-  for j in {0..3}
+  for j in {0..4}
   do
     if [ $j -le $i ]; then
 

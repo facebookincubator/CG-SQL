@@ -122,6 +122,7 @@ copy_ref upgrade_schema_v0.out
 copy_ref upgrade_schema_v1.out
 copy_ref upgrade_schema_v2.out
 copy_ref upgrade_schema_v3.out
+copy_ref upgrade_schema_v4.out
 
 copy_extras
 

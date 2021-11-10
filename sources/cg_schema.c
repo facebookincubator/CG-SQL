@@ -250,16 +250,6 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "-- helper proc to reset any triggers that are on the old plan --\n");
   bprintf(decls, "DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;\n\n");
 
-  bprintf(decls, "@attribute(cql:private)\n");
-  bprintf(decls, "CREATE PROCEDURE %s_cql_drop_legacy_triggers()\n", global_proc_name);
-  bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  DECLARE C CURSOR FOR SELECT name from sqlite_master\n");
-  bprintf(decls, "     WHERE type = 'trigger' AND name GLOB 'tr__*';\n");
-  bprintf(decls, "  LOOP FETCH C\n");
-  bprintf(decls, "  BEGIN\n");
-  bprintf(decls, "    call cql_exec_internal(printf('DROP TRIGGER %%s;', C.name));\n");
-  bprintf(decls, "  END;\n");
-  bprintf(decls, "END;\n\n");
 }
 
 static void cg_schema_emit_one_time_drop(charbuf *decls) {
@@ -643,7 +633,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
   callbacks.mode = gen_mode_no_annotations;
 
   *creates = 0;
-  *drops = 1;  // for now we have at least one for the legacy drops
+  *drops = 0;
 
   for (list_item *item = all_triggers_list; item; item = item->next) {
     ast_node *ast = item->ast;
@@ -675,12 +665,37 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     }
   }
 
-  if (*drops) {
+  if (options.schema_exclusive) {
+    bprintf(output, "\n-- get all the trigger names, store them in a result set\n");
+    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "CREATE PROCEDURE %s_cql_get_all_triggers()\n", global_proc_name);
+    bprintf(output, "BEGIN\n");
+    bprintf(output, "  DECLARE C CURSOR FOR SELECT name from sqlite_master where type = 'trigger';\n");
+    bprintf(output, "  LOOP FETCH C\n");
+    bprintf(output, "  BEGIN\n");
+    bprintf(output, "    OUT UNION C;\n");
+    bprintf(output, "  END;\n");
+    bprintf(output, "END;\n\n");
+
+    bprintf(output, "-- drop all the triggers using the fetched names\n");
+    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_triggers()\n", global_proc_name);
+    bprintf(output, "BEGIN\n");
+    bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_triggers();\n", global_proc_name);
+    bprintf(output, "  LOOP FETCH C\n");
+    bprintf(output, "  BEGIN\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER %%s;', C.name));\n");
+    bprintf(output, "  END;\n");
+    bprintf(output, "END;\n\n");
+
+    // we always behave as though we have some drops in exclusive mode
+    *drops = 1;
+  }
+  else if (*drops) {
     bprintf(output, "-- drop all the triggers we know\n");
     bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_triggers()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
-    bprintf(output, "  CALL %s_cql_drop_legacy_triggers();\n", global_proc_name);
     bprintf(output, "%s", drop.ptr);
     bprintf(output, "END;\n\n");
   }
@@ -741,7 +756,33 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     }
   }
 
-  if (*drops) {
+  if (options.schema_exclusive) {
+    bprintf(output, "\n-- get all the view names, store them in a result set\n");
+    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "CREATE PROCEDURE %s_cql_get_all_views()\n", global_proc_name);
+    bprintf(output, "BEGIN\n");
+    bprintf(output, "  DECLARE C CURSOR FOR SELECT name from sqlite_master where type = 'view';\n");
+    bprintf(output, "  LOOP FETCH C\n");
+    bprintf(output, "  BEGIN\n");
+    bprintf(output, "    OUT UNION C;\n");
+    bprintf(output, "  END;\n");
+    bprintf(output, "END;\n\n");
+
+    bprintf(output, "-- drop all the views using the fetched names\n");
+    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_views()\n", global_proc_name);
+    bprintf(output, "BEGIN\n");
+    bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_views();\n", global_proc_name);
+    bprintf(output, "  LOOP FETCH C\n");
+    bprintf(output, "  BEGIN\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW %%s;', C.name));\n");
+    bprintf(output, "  END;\n");
+    bprintf(output, "END;\n\n");
+
+    // we always behave as though we have some drops in exclusive mode
+    *drops = 1;
+  }
+  else if (*drops) {
     bprintf(output, "-- drop all the views we know\n");
     bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_views()\n", global_proc_name);
@@ -768,6 +809,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
   Contract(drops);
   CHARBUF_OPEN(create);
   CHARBUF_OPEN(drop);
+  CHARBUF_OPEN(names);
 
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
   gen_sql_callbacks callbacks;
@@ -795,6 +837,13 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     EXTRACT_STRING(index_name, index_name_ast);
     EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
+
+    if (names.used > 1) {
+      bprintf(&names, ",\n      '%s'", index_name);
+    }
+    else {
+      bprintf(&names, "\n      '%s'", index_name);
+    }
 
     if (ast->sem->delete_version > 0) {
       // delete only, we're done here
@@ -842,6 +891,40 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     (*drops)++;
   }
 
+  if (options.schema_exclusive) {
+    bprintf(output, "\n-- get all the unknown index names, store them in a result set\n");
+    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "CREATE PROCEDURE %s_cql_get_unknown_indices()\n", global_proc_name);
+    bprintf(output, "BEGIN\n");
+    bprintf(output, "  DECLARE C CURSOR FOR SELECT name from sqlite_master where type = 'index'\n");
+    bprintf(output, "    AND name NOT LIKE 'sqlite%%'", names.ptr);
+    if (names.used > 1) {
+      bprintf(output, "\n    AND name NOT IN (%s)", names.ptr);
+    }
+    bprintf(output, ";\n");
+    bprintf(output, "  LOOP FETCH C\n");
+    bprintf(output, "  BEGIN\n");
+    bprintf(output, "    OUT UNION C;\n");
+    bprintf(output, "  END;\n");
+    bprintf(output, "END;\n\n");
+
+    bprintf(output, "-- drop all the indices using the fetched names\n");
+    bprintf(output, "@attribute(cql:private)\n");
+    bprintf(output, "CREATE PROCEDURE %s_cql_drop_unknown_indices()\n", global_proc_name);
+    bprintf(output, "BEGIN\n");
+    bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_unknown_indices();\n", global_proc_name);
+    bprintf(output, "  LOOP FETCH C\n");
+    bprintf(output, "  BEGIN\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX %%s;', C.name));\n");
+    bprintf(output, "  END;\n");
+    bprintf(output, "END;\n\n");
+
+    bprintf(&drop, "  CALL %s_cql_drop_unknown_indices();\n", global_proc_name);
+
+    // we always behave as though we have some drops in exclusive mode
+    *drops = 1;
+  }
+
   if (*drops) {
     bprintf(output, "-- drop all the indices that are deleted or changing\n");
     bprintf(output, "@attribute(cql:private)\n");
@@ -860,6 +943,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     bprintf(output, "END;\n\n");
   }
 
+  CHARBUF_CLOSE(names);
   CHARBUF_CLOSE(drop);
   CHARBUF_CLOSE(create);
 }

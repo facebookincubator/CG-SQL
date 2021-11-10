@@ -1,25 +1,5 @@
 reference results for version 3
 
------ extra_index -----
-
-type: index
-tbl_name: g1
-CREATE INDEX extra_index ON g1 (
-  id)
-
------ extra_trigger -----
-
-type: trigger
-tbl_name: g1
-CREATE TRIGGER extra_trigger  BEFORE DELETE ON g1 BEGIN SELECT 1; END
-
------ extra_view -----
-
-type: view
-tbl_name: extra_view
-CREATE VIEW extra_view AS SELECT id,
-name  FROM g1
-
 ----- g1 -----
 
 type: table

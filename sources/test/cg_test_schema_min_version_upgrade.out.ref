@@ -317,17 +317,6 @@ END;
 -- helper proc to reset any triggers that are on the old plan --
 DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
 
-@attribute(cql:private)
-CREATE PROCEDURE test_cql_drop_legacy_triggers()
-BEGIN
-  DECLARE C CURSOR FOR SELECT name from sqlite_master
-     WHERE type = 'trigger' AND name GLOB 'tr__*';
-  LOOP FETCH C
-  BEGIN
-    call cql_exec_internal(printf('DROP TRIGGER %s;', C.name));
-  END;
-END;
-
 -- declared upgrade procedures if any
 DECLARE PROC RecreateGroup1Migration() USING TRANSACTION;
 DECLARE PROC CreateId2Proc() USING TRANSACTION;
@@ -401,7 +390,6 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_triggers()
 BEGIN
-  CALL test_cql_drop_legacy_triggers();
   DROP TRIGGER IF EXISTS shared_trigger;
   DROP TRIGGER IF EXISTS not_shared_trigger;
   DROP TRIGGER IF EXISTS insert_trigger;
