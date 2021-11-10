@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Oct 26 16:04:49 PDT 2021
+Snapshot as of Tue Nov  9 19:35:02 PST 2021
 
 ### Operators and Literals
 
@@ -847,6 +847,9 @@ end_schema_region_stmt:
 
 schema_ad_hoc_migration_stmt:
   "@SCHEMA_AD_HOC_MIGRATION" version_annotation
+
+  | "@SCHEMA_AD_HOC_MIGRATION" "FOR" "@RECREATE" '(' name ',' name ')'
+
   ;
 
 emit_enums_stmt:

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue Oct 26 16:04:49 2021
+// Snapshot as of Tue Nov  9 19:35:03 2021
 
 
 const PREC = {
@@ -155,7 +155,7 @@ module.exports = grammar({
     declare_deployable_region_stmt: $ => choice(seq($.AT_DECLARE_DEPLOYABLE_REGION, $.name), seq($.AT_DECLARE_DEPLOYABLE_REGION, $.name, $.USING, $.region_list)),
     begin_schema_region_stmt: $ => seq($.AT_BEGIN_SCHEMA_REGION, $.name),
     end_schema_region_stmt: $ => $.AT_END_SCHEMA_REGION,
-    schema_ad_hoc_migration_stmt: $ => seq($.AT_SCHEMA_AD_HOC_MIGRATION, $.version_annotation),
+    schema_ad_hoc_migration_stmt: $ => choice(seq($.AT_SCHEMA_AD_HOC_MIGRATION, $.version_annotation), seq($.AT_SCHEMA_AD_HOC_MIGRATION, $.FOR, $.AT_RECREATE, '(', $.name, ',', $.name, ')')),
     emit_enums_stmt: $ => seq($.AT_EMIT_ENUMS, optional($.opt_name_list)),
     opt_from_query_parts: $ => seq($.FROM, $.query_parts),
     opt_where: $ => seq($.WHERE, $.expr),
@@ -422,6 +422,7 @@ module.exports = grammar({
     AT_BEGIN_SCHEMA_REGION: $ => CI('@begin_schema_region'),
     AT_END_SCHEMA_REGION: $ => CI('@end_schema_region'),
     AT_SCHEMA_AD_HOC_MIGRATION: $ => CI('@schema_ad_hoc_migration'),
+    FOR: $ => CI('for'),
     AT_EMIT_ENUMS: $ => CI('@emit_enums'),
     WHERE: $ => CI('where'),
     GROUP: $ => CI('group'),
@@ -455,7 +456,6 @@ module.exports = grammar({
     TRANSACTION: $ => CI('transaction'),
     BEGIN: $ => CI('begin'),
     INOUT: $ => CI('inout'),
-    FOR: $ => CI('for'),
     FETCH: $ => CI('fetch'),
     CALL: $ => CI('call'),
     WHILE: $ => CI('while'),
