@@ -1,2 +1,2 @@
-Error at test/parse_test_fetch_from_call_columns.sql:XXXX : Cursor columns not allowed in this form.
+test/parse_test_fetch_from_call_columns.sql:XXXX:1 error: Cursor columns not allowed in this form.
 Parse errors found, no further passes will run.

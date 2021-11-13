@@ -5,7 +5,7 @@ The statement ending at line XXXX
 EXPLAIN
 SELECT 1;
 
-Error at test/sem_test_dev.sql:XXXX : in explain_stmt : CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions
+test/sem_test_dev.sql:XXXX:1 error: in explain_stmt : CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions
 
   {explain_stmt}: err
   | {int 1}
@@ -32,7 +32,7 @@ SELECT *
   INNER JOIN bar
   WHERE foo.id = 1;
 
-Error at test/sem_test_dev.sql:XXXX : in explain_stmt : CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions
+test/sem_test_dev.sql:XXXX:1 error: in explain_stmt : CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions
 
   {explain_stmt}: err
   | {int 2}

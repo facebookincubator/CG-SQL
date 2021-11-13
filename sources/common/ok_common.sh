@@ -60,6 +60,8 @@ copy_ref cg_test_json_schema.out
 copy_ref cg_test_objc.out
 copy_ref cg_test_objc.err
 copy_ref cg_test_query_plan.out
+copy_ref parse_test_fetch_from_call_columns.err
+copy_ref parse_test_cql_inferred_notnull.err
 # query plan diff temporarily disabled until SQLite 3.32 changes are sorted out
 # copy_ref cg_test_query_plan_js.out
 copy_ref cg_test_schema_partial_upgrade.out

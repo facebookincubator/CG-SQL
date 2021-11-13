@@ -41,14 +41,14 @@ create table fk_not_there_yet(
 );
 
 -- TEST: try to read a missing field
--- + Error % name not found 'rate_2'
--- +1 Error
+-- + error: % name not found 'rate_2'
+-- +1 error:
 select rate_2 from foo;
 
 -- TEST: try to declare 'deletor' but it doesn't do anything
 -- + {create_proc_stmt}: err
--- + Error % procedure is supposed to do schema migration but it doesn't have any DML 'deletor'
--- +1 Error
+-- + error: % procedure is supposed to do schema migration but it doesn't have any DML 'deletor'
+-- +1 error:
 create proc deletor()
 begin
  declare i integer;
@@ -62,8 +62,8 @@ create table bar(
 
 -- TEST: try to make an upgrade proc with args
 -- + {create_proc_stmt}: err
--- + Error % procedure previously declared as schema upgrade proc, it can have no args 'name_creator'
--- +1 Error
+-- + error: % procedure previously declared as schema upgrade proc, it can have no args 'name_creator'
+-- +1 error:
 create proc name_creator(i integer)
 begin
   select 1 x;
@@ -101,8 +101,8 @@ create table t4(
 
 -- TEST: t1 is not visible in this schema version (v5)
 -- + {delete_stmt}: err
--- + Error % table in delete statement does not exist (not visible in schema version 5) 't1'
--- +1 Error
+-- + error: % table in delete statement does not exist (not visible in schema version 5) 't1'
+-- +1 error:
 delete from t1;
 
 -- TEST: t2 is visible in this schema version (v5)
@@ -113,8 +113,8 @@ delete from t2;
 
 -- TEST: t3 is not visible in this schema version (v5)
 -- + {delete_stmt}: err
--- + Error % table in delete statement does not exist (not visible in schema version 5) 't3'
--- +1 Error
+-- + error: % table in delete statement does not exist (not visible in schema version 5) 't3'
+-- +1 error:
 delete from t3;
 
 -- TEST: t4 is visible in this schema version (v5)
@@ -150,6 +150,6 @@ begin
 end;
 
 -- TEST: try to switch to previous schema validation mode in a migrate script
--- + Error % switching to previous schema validation mode not allowed if @schema_upgrade_version was used
--- +1 Error
+-- + error: % switching to previous schema validation mode not allowed if @schema_upgrade_version was used
+-- +1 error:
 @previous_schema;

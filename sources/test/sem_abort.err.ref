@@ -1,2 +1,2 @@
-Error at test/semantic_error.sql:XXXX : in assign : CQL0173: variable not found 'x'
+test/semantic_error.sql:XXXX:1 error: in assign : CQL0173: variable not found 'x'
 semantic errors present; no code gen.
