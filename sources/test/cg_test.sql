@@ -4797,6 +4797,16 @@ begin
   end if;
 end;
 
+declare const group some_constants (
+  const_u = false,
+  const_w = 3.5,
+  const_x = 1L,
+  const_y = 2+3,
+  const_z = "hello, world\n"
+);
+
+@emit_constants some_constants;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
@@ -4809,3 +4819,4 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
+

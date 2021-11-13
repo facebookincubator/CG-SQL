@@ -3326,6 +3326,20 @@ extern void and_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_
 extern void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable_int64 c);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+#ifndef const_group_some_constants_defined
+#define const_group_some_constants_defined
+
+#define const_u 0
+#define const_w 3.500000e+00
+#define const_x _64(1)
+#define const_y 5
+#define const_z "hello, world\n"
+
+#endif
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

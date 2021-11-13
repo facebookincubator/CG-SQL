@@ -2978,6 +2978,32 @@ static void gen_declare_enum_stmt(ast_node *ast) {
   gen_printf("\n)");
 }
 
+static void gen_declare_const_stmt(ast_node *ast) {
+  Contract(is_ast_declare_const_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NOTNULL(const_values, ast->right);
+  gen_printf("DECLARE CONST GROUP %s (", name);
+
+  while (const_values) {
+     EXTRACT_NOTNULL(const_value, const_values->left);
+     EXTRACT_STRING(const_name, const_value->left);
+     EXTRACT_ANY(expr, const_value->right);
+
+     gen_printf("\n  %s", const_name);
+     if (expr) {
+       gen_printf(" = ");
+       gen_root_expr(expr);
+     }
+
+     if (const_values->right) {
+       gen_printf(",");
+     }
+
+     const_values = const_values->right;
+  }
+  gen_printf("\n)");
+}
+
 static void gen_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_STRING(var_name, ast->left);
@@ -3472,6 +3498,14 @@ static void gen_emit_enums_stmt(ast_node *ast) {
   }
 }
 
+static void gen_emit_constants_stmt(ast_node *ast) {
+  Contract(is_ast_emit_constants_stmt(ast));
+  EXTRACT_NOTNULL(name_list, ast->left);
+
+  gen_printf("@EMIT_CONSTANTS ");
+  gen_name_list(name_list);
+}
+
 static void gen_conflict_target(ast_node *ast) {
   Contract(is_ast_conflict_target(ast));
   EXTRACT(indexed_columns, ast->left);
@@ -3637,6 +3671,7 @@ cql_noexport void gen_init() {
   STMT_INIT(conflict_target);
   STMT_INIT(fetch_values_stmt);
   STMT_INIT(declare_enum_stmt);
+  STMT_INIT(declare_const_stmt);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
@@ -3675,6 +3710,7 @@ cql_noexport void gen_init() {
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(explain_stmt);
   STMT_INIT(emit_enums_stmt);
+  STMT_INIT(emit_constants_stmt);
 
   EXPR_INIT(num, gen_expr_num, "NUM", EXPR_PRI_ROOT);
   EXPR_INIT(str, gen_expr_str, "STR", EXPR_PRI_ROOT);

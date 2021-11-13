@@ -1639,6 +1639,14 @@ DECLARE PROC printf NO CHECK;
 
 @ENFORCE_STRICT IS TRUE;
 
+DECLARE CONST GROUP foo (
+  x = 'this',
+  y = 5 + 3,
+  z = 3.0
+);
+
+@EMIT_CONSTANTS foo;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

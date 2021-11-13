@@ -4298,12 +4298,12 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   CHARBUF_CLOSE(row_type);
 }
 
-// This causes enum-ish declarations to go into the header file.
-// Those enum things are not even used in our codegen because the CQL codegen
-// simply resolves to constants.  However this will make it possible to use
-// the enum in callers.  The enum is "public" in this sense.  This is a lot
-// like the gen_sql code except it will be in C format.  Note C has no floating
-// point enums so we have to do those with macros.
+// This causes enum declarations to go into the header file.
+// Those enum values  are not even used in our codegen because the ast is
+// rewritten to have the actual value rather than the name.  However this will
+// make it possible to use the enums in callers from C.  The enum values are
+// "public" in this sense.  This is a lot like the gen_sql code except it will be
+// in C format.  Note C has no floating point enums so we have to do those with macros.
 
 static void cg_emit_one_enum(ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
@@ -4381,6 +4381,78 @@ static void cg_emit_enums_stmt(ast_node *ast) {
     for (list_item *item = all_enums_list; item; item = item->next) {
       EXTRACT_NOTNULL(declare_enum_stmt, item->ast);
       cg_emit_one_enum(declare_enum_stmt);
+    }
+  }
+}
+
+// This causes global constant declarations to go into the header file.
+// Those constants are not even used in our codegen because the ast is
+// rewritten to have the actual value rather than the name.  However this will
+// make it possible to use the constant in callers from C.  The constant values are
+// "public" in this sense.  This is a lot like the gen_sql code except it will be
+// in C format.
+
+static void cg_emit_one_const_group(ast_node *ast) {
+  Contract(is_ast_declare_const_stmt(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NOTNULL(const_values, ast->right);
+  EXTRACT_STRING(name, name_ast);
+
+  bprintf(cg_header_output, "#ifndef const_group_%s_defined\n", name);
+  bprintf(cg_header_output, "#define const_group_%s_defined\n\n", name);
+
+  while (const_values) {
+     EXTRACT_NOTNULL(const_value, const_values->left);
+     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+     EXTRACT_STRING(const_name, const_name_ast);
+
+     bprintf(cg_header_output, "#define %s ", const_name);
+
+     if (is_numeric(const_value->sem->sem_type)) {
+
+       bool_t is_long = core_type_of(const_value->sem->sem_type) == SEM_TYPE_LONG_INTEGER;
+
+       if (is_long) {
+         bprintf(cg_header_output, "_64(");
+       }
+
+       eval_format_number(const_value->sem->value, cg_header_output);
+
+       if (is_long) {
+         bprintf(cg_header_output, ")");
+       }
+
+     }
+     else {
+       // we don't make a string object for string literals that are being emitted, just the C literal
+       CHARBUF_OPEN(quoted);
+
+       EXTRACT_STRING(literal, const_value->right);
+       cg_requote_literal(literal, &quoted);
+       bprintf(cg_header_output, "%s", quoted.ptr);
+
+       CHARBUF_CLOSE(quoted);
+     }
+
+     bprintf(cg_header_output, "\n");
+
+     const_values = const_values->right;
+  }
+  bprintf(cg_header_output, "\n#endif\n", name);
+}
+
+static void cg_emit_constants_stmt(ast_node *ast) {
+  Contract(is_ast_emit_constants_stmt(ast));
+  EXTRACT_NOTNULL(name_list, ast->left);
+
+  if (name_list) {
+    // names specified: emit those
+    while (name_list) {
+      // names previously checked, we assert they are good here
+      EXTRACT_STRING(name, name_list->left);
+      EXTRACT_NOTNULL(declare_const_stmt, find_constant_group(name));
+      cg_emit_one_const_group(declare_const_stmt);
+      name_list = name_list->right;
     }
   }
 }
@@ -7416,6 +7488,7 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(schema_upgrade_script_stmt);
   NO_OP_STMT_INIT(schema_ad_hoc_migration_stmt);
   NO_OP_STMT_INIT(declare_enum_stmt);
+  NO_OP_STMT_INIT(declare_const_stmt);
   NO_OP_STMT_INIT(declare_named_type);
   NO_OP_STMT_INIT(declare_proc_no_check_stmt);
 
@@ -7455,6 +7528,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(set_from_cursor);
   STMT_INIT(create_proc_stmt);
   STMT_INIT(emit_enums_stmt);
+  STMT_INIT(emit_constants_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);

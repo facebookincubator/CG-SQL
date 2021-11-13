@@ -18806,3 +18806,122 @@ end;
 -- + {call}: text
 -- - Error
 let proc_in_text_in_text_out_text_result := proc_in_text_in_text_out_text("a", "b");
+
+-- TEST: declare some constants we can use later
+-- + {declare_const_stmt}: ok
+-- + | {name foo}
+-- + | {const_values}
+-- + | {const_value}: bool = 0 notnull
+-- + | | {name const_v}: bool = 0 notnull
+-- + | | {bool 0}: bool = 0 notnull
+-- + | {const_values}
+-- + | {const_value}: real = 3.500000e+00 notnull
+-- + | | {name const_w}: real = 3.500000e+00 notnull
+-- + | | {dbl 3.5}: real = 3.500000e+00 notnull
+-- + | {const_values}
+-- + | {const_value}: longint = 1 notnull
+-- + | | {name const_x}: longint = 1 notnull
+-- + | | {longint 1}: longint = 1 notnull
+-- + | {const_values}
+-- + | {const_value}: integer = 5 notnull
+-- + | | {name const_y}: integer = 5 notnull
+-- + | | {add}: integer = 5 notnull
+-- + |   | {int 2}: integer notnull
+-- + |   | {int 3}: integer notnull
+-- + | {const_values}
+-- + | {const_value}: text notnull
+-- + | {name const_z}: text notnull
+-- + | {strlit 'hello, world
+-- - Error
+declare const group foo (
+  const_v = false,
+  const_w = 3.5,
+  const_x = 1L,
+  const_y = 2+3,
+  const_z = "hello, world\n"
+);
+
+-- TEST: try to use the constants
+-- + {let_stmt}: v: bool notnull variable
+-- +  | {bool 0}: bool notnull
+-- + {let_stmt}: w: real notnull variable
+-- +  | {name w}: w: real notnull variable
+-- +  | {dbl 3.500000e+00}: real notnull
+-- + {let_stmt}: x: longint notnull variable
+-- +  | {name x}: x: longint notnull variable
+-- +  | {longint 1}: longint notnull
+-- + {let_stmt}: y: integer notnull variable
+-- +  | {name y}: y: integer notnull variable
+-- +  | {int 5}: integer notnull
+-- + {let_stmt}: z: text notnull variable
+-- +  | {strlit 'hello, world
+-- - Error
+create proc use_global_constants()
+begin
+  let v := const_v;
+  let w := const_w;
+  let x := const_x;
+  let y := const_y;
+  let z := const_z;
+end;
+
+-- TEST:  bad type form
+-- + {declare_const_stmt}: err
+-- + Error % string operand not allowed in 'NOT'
+-- +1 Error
+declare const group err1 (
+  const_err1 = NOT 'x'
+);
+
+-- TEST: bad evaluation
+-- + {declare_const_stmt}: err
+-- + Error % global constants must be either constant numeric expressions or string literals 'const_err2 = 1 / 0'
+-- +1 Error
+declare const group err2 (
+  const_err2 = 1 / 0
+);
+
+-- TEST: not a string literal
+-- + {declare_const_stmt}: err
+-- + Error % global constants must be either constant numeric expressions or string literals 'const_err3 = printf("bar")'
+-- +1 Error
+declare const group err3 (
+  const_err3 = printf("bar")
+);
+
+-- TEST: duplicate constant
+-- + {declare_const_stmt}: err
+-- + Error % duplicate constant name 'const_v'
+-- +1 Error
+declare const group err4 (
+  const_v = false
+);
+
+-- TEST: duplicate constant group that's different
+-- + {declare_const_stmt}: err
+-- + Error % const definitions do not match 'foo'
+declare const group foo (
+  const_v = false
+);
+
+-- TEST: nested constants not allowed
+-- + {declare_const_stmt}: err
+-- + Error % declared constants must be top level 'err5'
+-- +1 Error
+create proc try_to_nest_constants()
+begin
+  declare const group err5 (
+   err5 = 1
+  );
+end;
+
+-- TEST: emit constants for a valid name
+-- + {emit_constants_stmt}: ok
+-- - Error
+@emit_constants foo;
+
+-- TEST: try to emit constants for a bogus name
+-- + {emit_constants_stmt}: err
+-- + Error % constant group not found 'not_found'
+-- +1 Error
+@emit_constants not_found;

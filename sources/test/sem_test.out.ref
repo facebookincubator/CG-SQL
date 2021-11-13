@@ -73939,3 +73939,206 @@ LET proc_in_text_in_text_out_text_result := proc_in_text_in_text_out_text("a", "
         | {arg_list}
           | {strlit 'b'}: text notnull
 
+The statement ending at line XXXX
+
+DECLARE CONST GROUP foo (
+  const_v = FALSE,
+  const_w = 3.5,
+  const_x = 1L,
+  const_y = 2 + 3,
+  const_z = "hello, world\n"
+);
+
+  {declare_const_stmt}: ok
+  | {name foo}
+  | {const_values}
+    | {const_value}: bool = 0 notnull
+    | | {name const_v}: bool = 0 notnull
+    | | {bool 0}: bool = 0 notnull
+    | {const_values}
+      | {const_value}: real = 3.500000e+00 notnull
+      | | {name const_w}: real = 3.500000e+00 notnull
+      | | {dbl 3.5}: real = 3.500000e+00 notnull
+      | {const_values}
+        | {const_value}: longint = 1 notnull
+        | | {name const_x}: longint = 1 notnull
+        | | {longint 1}: longint = 1 notnull
+        | {const_values}
+          | {const_value}: integer = 5 notnull
+          | | {name const_y}: integer = 5 notnull
+          | | {add}: integer = 5 notnull
+          |   | {int 2}: integer notnull
+          |   | {int 3}: integer notnull
+          | {const_values}
+            | {const_value}: text notnull
+              | {name const_z}: text notnull
+              | {strlit 'hello, world
+'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC use_global_constants ()
+BEGIN
+  LET v := FALSE;
+  LET w := 3.500000e+00;
+  LET x := 1L;
+  LET y := 5;
+  LET z := "hello, world\n";
+END;
+
+  {create_proc_stmt}: ok
+  | {name use_global_constants}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: v: bool notnull variable
+      | | {name v}: v: bool notnull variable
+      | | {bool 0}: bool notnull
+      | {let_stmt}: w: real notnull variable
+      | | {name w}: w: real notnull variable
+      | | {dbl 3.500000e+00}: real notnull
+      | {let_stmt}: x: longint notnull variable
+      | | {name x}: x: longint notnull variable
+      | | {longint 1}: longint notnull
+      | {let_stmt}: y: integer notnull variable
+      | | {name y}: y: integer notnull variable
+      | | {int 5}: integer notnull
+      | {let_stmt}: z: text notnull variable
+        | {name z}: z: text notnull variable
+        | {strlit 'hello, world
+'}: text notnull
+
+The statement ending at line XXXX
+
+DECLARE CONST GROUP err1 (
+  const_err1 = NOT 'x'
+);
+
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
+
+  {declare_const_stmt}: err
+  | {name err1}
+  | {const_values}
+    | {const_value}
+      | {name const_err1}
+      | {not}: err
+        | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+DECLARE CONST GROUP err2 (
+  const_err2 = 1 / 0
+);
+
+Error at test/sem_test.sql:XXXX : in div : CQL0177: global constants must be either constant numeric expressions or string literals 'const_err2 = 1 / 0'
+
+  {declare_const_stmt}: err
+  | {name err2}
+  | {const_values}
+    | {const_value}
+      | {name const_err2}
+      | {div}: err
+        | {int 1}: integer notnull
+        | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE CONST GROUP err3 (
+  const_err3 = printf("bar")
+);
+
+Error at test/sem_test.sql:XXXX : in call : CQL0177: global constants must be either constant numeric expressions or string literals 'const_err3 = printf("bar")'
+
+  {declare_const_stmt}: err
+  | {name err3}
+  | {const_values}
+    | {const_value}
+      | {name const_err3}
+      | {call}: err
+        | {name printf}: text notnull
+        | {call_arg_list}
+          | {call_filter_clause}
+          | {arg_list}: ok
+            | {strlit 'bar'}: text notnull
+
+The statement ending at line XXXX
+
+DECLARE CONST GROUP err4 (
+  const_v = FALSE
+);
+
+Error at test/sem_test.sql:XXXX : in const_value : CQL0354: duplicate constant name 'const_v'
+
+  {declare_const_stmt}: err
+  | {name err4}
+  | {const_values}
+    | {const_value}
+      | {name const_v}
+      | {bool 0}
+
+The statement ending at line XXXX
+
+DECLARE CONST GROUP foo (
+  const_v = FALSE
+);
+
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in declare_const_stmt : DECLARE CONST GROUP foo (
+  const_v = FALSE
+)
+Error at test/sem_test.sql:XXXX : in declare_const_stmt : DECLARE CONST GROUP foo (
+  const_v = FALSE,
+  const_w = 3.5,
+  const_x = 1L,
+  const_y = 2 + 3,
+  const_z = "hello, world\n"
+)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in declare_const_stmt : CQL0356: const definitions do not match 'foo'
+
+  {declare_const_stmt}: err
+  | {name foo}
+  | {const_values}
+    | {const_value}: bool = 0 notnull
+      | {name const_v}: bool = 0 notnull
+      | {bool 0}: bool = 0 notnull
+
+The statement ending at line XXXX
+
+CREATE PROC try_to_nest_constants ()
+BEGIN
+  DECLARE CONST GROUP err5 (
+    err5 = 1
+  );
+END;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0358: declared constants must be top level 'err5'
+
+  {create_proc_stmt}: err
+  | {name try_to_nest_constants}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_const_stmt}: err
+        | {name err5}
+        | {const_values}
+          | {const_value}
+            | {name err5}
+            | {int 1}
+
+The statement ending at line XXXX
+
+@EMIT_CONSTANTS foo;
+
+  {emit_constants_stmt}: ok
+  | {name_list}
+    | {name foo}
+
+The statement ending at line XXXX
+
+@EMIT_CONSTANTS not_found;
+
+Error at test/sem_test.sql:XXXX : in str : CQL0169: constant group not found 'not_found'
+
+  {emit_constants_stmt}: err
+  | {name_list}
+    | {name not_found}
+

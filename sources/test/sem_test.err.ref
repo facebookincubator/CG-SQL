@@ -1248,4 +1248,23 @@ Error at test/sem_test.sql:XXXX : in is_not : CQL0409: Cannot use IS NULL or IS 
 Error at test/sem_test.sql:XXXX : in param : CQL0211: procedure without trailing OUT parameter used as function 'proc_inout_text'
 Error at test/sem_test.sql:XXXX : in call : CQL0424: procedure with INOUT parameter used as function 'proc_inout_text_out_text'
 Error at test/sem_test.sql:XXXX : in call : CQL0425: procedure with non-trailing OUT parameter used as function 'proc_out_text_out_text'
+Error at test/sem_test.sql:XXXX : in str : CQL0047: string operand not allowed in 'NOT'
+Error at test/sem_test.sql:XXXX : in div : CQL0177: global constants must be either constant numeric expressions or string literals 'const_err2 = 1 / 0'
+Error at test/sem_test.sql:XXXX : in call : CQL0177: global constants must be either constant numeric expressions or string literals 'const_err3 = printf("bar")'
+Error at test/sem_test.sql:XXXX : in const_value : CQL0354: duplicate constant name 'const_v'
+Incompatible declarations found
+Error at test/sem_test.sql:XXXX : in declare_const_stmt : DECLARE CONST GROUP foo (
+  const_v = FALSE
+)
+Error at test/sem_test.sql:XXXX : in declare_const_stmt : DECLARE CONST GROUP foo (
+  const_v = FALSE,
+  const_w = 3.5,
+  const_x = 1L,
+  const_y = 2 + 3,
+  const_z = "hello, world\n"
+)
+The above must be identical.
+Error at test/sem_test.sql:XXXX : in declare_const_stmt : CQL0356: const definitions do not match 'foo'
+Error at test/sem_test.sql:XXXX : in str : CQL0358: declared constants must be top level 'err5'
+Error at test/sem_test.sql:XXXX : in str : CQL0169: constant group not found 'not_found'
 semantic errors present; no code gen.

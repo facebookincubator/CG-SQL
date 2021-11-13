@@ -241,6 +241,7 @@ RETURN                       { return RETURN; }
 @FILE                        { return AT_FILE; }
 @ATTRIBUTE                   { return AT_ATTRIBUTE; }
 @EMIT_ENUMS                  { return AT_EMIT_ENUMS; }
+@EMIT_CONSTANTS              { return AT_EMIT_CONSTANTS; }
 DEFERRED                     { return DEFERRED; }
 DEFERRABLE                   { return DEFERRABLE; }
 NOT{sp}DEFERRABLE/{stop}     { return NOT_DEFERRABLE; }

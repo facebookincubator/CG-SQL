@@ -548,6 +548,8 @@ static symtab *indices;
 static symtab *globals;
 static symtab *locals;
 static symtab *enums;
+static symtab *constant_groups;
+static symtab *constants;
 static symtab *current_variables;
 static symtab *savepoints;
 static symtab *table_items;  // assorted things that go into a table
@@ -788,18 +790,24 @@ static void destroy_name_check(name_check *check) {
 }
 
 // create a durable copy of the text of a simple expression
-CSTR dup_expr_text(ast_node *expr) {
+static CSTR dup_expr_text_buffer(charbuf *tmp, ast_node *expr) {
   CSTR result = NULL;
 
-  CHARBUF_OPEN(tmp);
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
-  gen_set_output_buffer(&tmp);
+  gen_set_output_buffer(tmp);
   gen_with_callbacks(expr, gen_root_expr, &callbacks);
-  result = Strdup(tmp.ptr);
-  CHARBUF_CLOSE(tmp);
+  result = Strdup(tmp->ptr);
 
+  return result;
+}
+
+// create a durable copy of the text of a simple expression
+CSTR dup_expr_text(ast_node *expr) {
+  CHARBUF_OPEN(tmp);
+  CSTR result = dup_expr_text_buffer(&tmp, expr);
+  CHARBUF_CLOSE(tmp);
   return result;
 }
 
@@ -1764,6 +1772,18 @@ static bool_t add_trigger(ast_node *ast, CSTR name) {
 
 static ast_node *find_trigger(CSTR name) {
   symtab_entry *entry = symtab_find(triggers, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+// wrapper for constant groups
+ast_node *find_constant_group(CSTR name) {
+  symtab_entry *entry = symtab_find(constant_groups, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+// wrapper for constants
+ast_node *find_constant(CSTR name) {
+  symtab_entry *entry = symtab_find(constants, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
@@ -5589,13 +5609,40 @@ static sem_resolve sem_try_resolve_enum(ast_node *ast, CSTR name, CSTR scope, se
         ast->sem = ast_new->sem;
         ast->sem->kind = enum_stmt->sem->kind;
       }
-      return true;
+      return SEM_RESOLVE_STOP;
     }
     enum_values = enum_values->right;
   }
 
   report_resolve_error(ast, "CQL0357: enum does not contain", name);
   record_resolve_error(ast);
+
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_global_constant(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *const_value = find_constant(name);
+  if (!const_value) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  if (ast) {
+    if (is_numeric(const_value->sem->sem_type)) {
+      ast_node *ast_new = eval_set(ast, const_value->left->sem->value);
+      sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
+      ast->sem = ast_new->sem;
+    }
+    else {
+      *ast = *const_value->right;
+    }
+  }
 
   return SEM_RESOLVE_STOP;
 }
@@ -5684,6 +5731,7 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
     sem_try_resolve_cursor_as_expression,
     sem_try_resolve_variable,
     sem_try_resolve_enum,
+    sem_try_resolve_global_constant,
     sem_try_resolve_cursor_field,
     sem_try_resolve_arg_bundle,
   };
@@ -6096,8 +6144,8 @@ static void sem_expr_between_or_not_between(ast_node *ast, CSTR cstr) {
 
   // If we're going to be doing this not to SQL then we rewrite the between operation
   // as follows:
-  //  * x between y and z ==> temp = x,  temp >= y AND temp <= z
-  //  * x not between y and z ==>  temp = x,  temp < y OR temp > z
+  //  * x between y and z ==> temp = x, temp >= y AND temp <= z
+  //  * x not between y and z ==>  temp = x, temp < y OR temp > z
   // We do this to get the right short circuit behavior for between without having
   // to duplicate the highly complex codge for shortcut AND/OR
   if (current_expr_context == SEM_EXPR_CONTEXT_NONE) {
@@ -7541,7 +7589,7 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
 
     // Note arg3 is a default value for arg1, to be used if the offset in arg2 results in us going off the
     // end of the partition, so arg1 can't be evaluated.  This means we aren't truly doing an assignment
-    // assignment here,  But we are trying to keep the save result type though because if arg3 caused the
+    // assignment here.  But we are trying to keep the save result type though because if arg3 caused the
     // result type to get bigger (e.g. arg3 is real and arg1 is an integer) that's probably just wrong.
     // But, we are allowing the nullability and sensitivity bits to mix.  So if arg3 is sensitive the
     // entire result becomes sensitive.  And if arg3 is nullable the result becomes nullable.  Note that
@@ -10571,7 +10619,7 @@ static void sem_drop_index_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
-  ast_node *index_ast = find_usable_index(name, name_ast,  "CQL0112: index in drop statement was not declared");
+  ast_node *index_ast = find_usable_index(name, name_ast, "CQL0112: index in drop statement was not declared");
   if (!index_ast) {
     record_error(ast);
     return;
@@ -10581,7 +10629,7 @@ static void sem_drop_index_stmt(ast_node *ast) {
 }
 
 // This is the basic checking for the drop trigger statement
-// * the trigger  must exist (have been declared) in some version
+// * the trigger must exist (have been declared) in some version
 // * it could be deleted now, that's ok, but the name has to be valid
 static void sem_drop_trigger_stmt(ast_node *ast) {
   Contract(is_ast_drop_trigger_stmt(ast));
@@ -11204,7 +11252,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   flags |= cond_flags;
   EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
   EXTRACT_NOTNULL(trigger_operation, trigger_op_target->left);
-  EXTRACT_OPTION(op_flags,  trigger_operation->left);
+  EXTRACT_OPTION(op_flags, trigger_operation->left);
   EXTRACT(name_list, trigger_operation->right);
   flags |= op_flags;
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
@@ -16463,6 +16511,120 @@ cleanup:
    symtab_delete(names);
 }
 
+// Constant groups are a way of declaring arbitrary unscoped constants, the name
+// reference of the constant will be rewritten wherever it appears so that
+// neither the C compiler nor SQLite will ever see a constant name.  Which
+// is good because neither would know its meaning.
+// Declaration follows the usual rules.
+//   * the group name must be unique or else the declaration must be identical
+//     to any we've seen before.
+//   * the constant names must be unique
+//   * the values must be valid expressions that can be resolved
+//   * the value expressions can include other constants
+//   * numeric constants expressions are evaluated at compile time
+//   * string constants must be a string literal
+static void sem_declare_const_stmt(ast_node *ast) {
+  Contract(is_ast_declare_const_stmt(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(const_values, ast->right);
+
+  if (current_proc) {
+    report_error(name_ast, "CQL0358: declared constants must be top level", name);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *existing_constant_group = find_constant_group(name);
+
+  if (!existing_constant_group) {
+    symtab_add(constant_groups, name, ast);
+  }
+
+  eval_node result = EVAL_NIL;
+
+  while (const_values) {
+     EXTRACT_NOTNULL(const_value, const_values->left);
+     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+     EXTRACT_STRING(const_name, const_name_ast);
+     EXTRACT_ANY(expr, const_value->right);
+
+     if (!existing_constant_group) {
+       if (!symtab_add(constants, const_name, const_value)) {
+         report_error(const_value, "CQL0354: duplicate constant name", const_name);
+         record_error(ast);
+         return;
+       }
+     }
+
+     sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+     if (is_error(expr)) {
+        record_error(ast);
+        return;
+     }
+
+     if (is_numeric(expr->sem->sem_type)) {
+       eval(expr, &result);
+     
+       if (result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL) {
+         const_value->sem = expr->sem;
+         const_name_ast->sem = expr->sem;
+         const_name_ast->sem->value = _ast_pool_new(eval_node);
+         *const_name_ast->sem->value = result;
+         const_values = const_values->right;
+         continue;
+       }
+     }
+     else if (is_strlit(expr)) {
+       const_name_ast->sem = expr->sem;
+       const_value->sem = expr->sem;
+       const_values = const_values->right;
+       continue;
+     }
+
+     CHARBUF_OPEN(tmp);
+     bprintf(&tmp, "%s = ", const_name);
+     CSTR expr_text = dup_expr_text_buffer(&tmp, expr);
+
+     report_error(expr, "CQL0177: global constants must be either constant numeric expressions or string literals", expr_text);
+     record_error(expr);
+     record_error(ast);
+     CHARBUF_CLOSE(tmp);
+     return;
+
+  }
+
+  if (existing_constant_group) {
+    bool_t matching = sem_validate_identical_ddl(ast, existing_constant_group);
+    if (!matching) {
+      report_error(ast, "CQL0356: const definitions do not match", name);
+      record_error(ast);
+      return;
+    }
+  }
+  else {
+    // note that consts get a slightly different treatment when in previous schema
+    // validation mode.  Most entites are not added to the name tables at all
+    // we check it as we visit it and then move on;   We can't do that with consts
+    // because they are used by later things (e.g. default values) and the "new" constants
+    // (before the @previous_schema  marker) might be very different. We need the "old"
+    // consts to calculate the default values or whatever and make sure they haven't changed.
+    // So we can't just check them and move on like we do with other stuff.
+    // At the end we'll have two symbol tables, the second of which we'll end up discarding.
+
+    bool_t adding_current_entity = will_add_current_entity();
+
+    // when processing previous schema we don't add the const to the all consts list
+    // so that it won't show up in JSON etc.
+    if (adding_current_entity) {
+      add_item_to_list(&all_constant_groups_list, ast);
+    }
+  }
+
+  record_ok(ast);
+
+}
+
 // Declares an external procedure that can be called with any combination of C args
 // this is intended for procedures like `printf` that cannot be readily described with
 // CQL strict types.
@@ -20158,6 +20320,26 @@ static void sem_emit_enums_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+static void sem_emit_constants_stmt(ast_node *ast) {
+  Contract(is_ast_emit_constants_stmt(ast));
+  EXTRACT_NOTNULL(name_list, ast->left);
+
+  while (name_list) {
+    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_STRING(name, name_ast);
+
+    if (!find_constant_group(name)) {
+      report_error(name_ast, "CQL0169: constant group not found", name);
+      record_error(ast);
+      return;
+    }
+
+    name_list = name_list->right;
+  }
+
+  record_ok(ast);
+}
+
 // Most codegen types are not compatible with previous schema generation because it adds stuff to the AST
 // and that stuff isn't even fully type evaluated.  So the best thing to do is punt on codegen if we
 // did that sort of validation.
@@ -20218,6 +20400,8 @@ cql_noexport void sem_main(ast_node *ast) {
   tables = symtab_new();
   indices = symtab_new();
   globals = symtab_new();
+  constant_groups = symtab_new();
+  constants = symtab_new();
   current_variables = globals;
   savepoints = symtab_new();
   schema_regions = symtab_new();
@@ -20259,6 +20443,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(misc_attrs);
   STMT_INIT(create_proc_stmt);
   STMT_INIT(declare_enum_stmt);
+  STMT_INIT(declare_const_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
@@ -20324,6 +20509,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(emit_enums_stmt);
+  STMT_INIT(emit_constants_stmt);
 
   AGGR_FUNC_INIT(max);
   AGGR_FUNC_INIT(min);
@@ -20525,6 +20711,8 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(globals);
   SYMTAB_CLEANUP(indices);
   SYMTAB_CLEANUP(locals);
+  SYMTAB_CLEANUP(constant_groups);
+  SYMTAB_CLEANUP(constants);
   SYMTAB_CLEANUP(monitor_symtab );
   SYMTAB_CLEANUP(new_regions);
   SYMTAB_CLEANUP(new_enums);
@@ -20610,6 +20798,7 @@ cql_data_defn( list_item *all_regions_list );
 cql_data_defn( list_item *all_ad_hoc_list );
 cql_data_defn( list_item *all_select_functions_list );
 cql_data_defn( list_item *all_enums_list );
+cql_data_defn( list_item *all_constant_groups_list );
 cql_data_defn( bool_t use_encode );
 cql_data_defn( CSTR _Nullable encode_context_column );
 cql_data_defn( symtab *encode_columns );

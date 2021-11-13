@@ -1517,6 +1517,10 @@ declare proc printf no check;
 
 @enforce_strict is true;
 
+declare const group foo ( x = 'this', y = 5+3, z = 3.0 );
+
+@emit_constants foo;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

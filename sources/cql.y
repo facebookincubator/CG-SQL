@@ -193,7 +193,7 @@ static void cql_reset_globals(void);
 %token RS ">>"
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ "NULL" DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS
+%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ "NULL" DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS AT_EMIT_CONSTANTS
 %token OBJECT TEXT BLOB LONG_ "LONG" INT_ "INT" INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -270,6 +270,7 @@ static void cql_reset_globals(void);
 %type <aval> control_stmt
 %type <aval> declare_stmt
 %type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt
+%type <aval> declare_const_stmt const_values const_value emit_constants_stmt
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape
 %type <aval> guard_stmt
@@ -388,6 +389,7 @@ any_stmt:
   | create_virtual_table_stmt
   | declare_deployable_region_stmt
   | declare_enum_stmt
+  | declare_const_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -401,6 +403,7 @@ any_stmt:
   | drop_view_stmt
   | echo_stmt
   | emit_enums_stmt
+  | emit_constants_stmt
   | end_schema_region_stmt
   | enforce_normal_stmt
   | enforce_pop_stmt
@@ -1239,6 +1242,10 @@ emit_enums_stmt:
   AT_EMIT_ENUMS opt_name_list { $emit_enums_stmt = new_ast_emit_enums_stmt($opt_name_list); }
   ;
 
+emit_constants_stmt:
+  AT_EMIT_CONSTANTS name_list { $emit_constants_stmt = new_ast_emit_constants_stmt($name_list); }
+  ;
+
 opt_from_query_parts:
   /* nil */  { $opt_from_query_parts = NULL; }
   | FROM query_parts  { $opt_from_query_parts = $query_parts; }
@@ -1544,6 +1551,20 @@ enum_values[result]:
 enum_value:
     name { $enum_value = new_ast_enum_value($name, NULL); }
   | name '=' expr { $enum_value = new_ast_enum_value($name, $expr); }
+  ;
+
+declare_const_stmt:
+  DECLARE CONST GROUP name '(' const_values ')' {
+    $declare_const_stmt = new_ast_declare_const_stmt($name, $const_values);
+  }
+  ;
+
+const_values[result]:
+   const_value { $result = new_ast_const_values($const_value, NULL);  }
+  | const_value ',' const_values[next] { $result = new_ast_const_values($const_value, $next); }
+  ;
+
+const_value:  name '=' expr { $const_value = new_ast_const_value($name, $expr); }
   ;
 
 declare_func_stmt:
