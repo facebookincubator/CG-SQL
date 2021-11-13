@@ -438,6 +438,8 @@
   ],
   "enums" : [
   ],
+  "constantGroups" : [
+  ],
   "tableUsers" : {
     "bar" : [ "base_fragment", "assembly_core" ],
     "plugin_table" : [ "extension_fragment_two", "assembly_core" ]

@@ -61,7 +61,7 @@ void yyset_lineno(int);
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
 %token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS CHECK_EXPRESSIONS
-%token ENUMS
+%token ENUMS CONSTANT_GROUPS
 
 %start json_schema
 
@@ -82,7 +82,8 @@ json_schema: '{'
          GENERAL '[' opt_generals ']' ','
          REGIONS '[' opt_regions ']' ','
          AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']' ','
-         ENUMS  '[' opt_enums ']'
+         ENUMS  '[' opt_enums ']' ','
+         CONSTANT_GROUPS  '[' opt_const_groups ']'
          '}'
   ;
 
@@ -658,6 +659,37 @@ enum_values: enum_value | enum_value ',' enum_values
 enum_value: '{'
              NAME STRING_LITERAL ','
              VALUE num_literal
+            '}'
+  ;
+
+opt_const_groups: | const_groups
+  ;
+
+const_groups: const_group | const_group ',' const_groups
+  ;
+
+const_group: '{'
+      NAME STRING_LITERAL ','
+      VALUES '[' const_values ']'
+      '}'
+  ;
+
+const_values: const_value | const_value ',' const_values
+  ;
+
+const_value: '{'
+             NAME STRING_LITERAL ','
+             TYPE STRING_LITERAL ','
+             opt_kind
+             IS_NOT_NULL BOOL_LITERAL ','
+             VALUE num_literal
+            '}'
+  | '{'
+             NAME STRING_LITERAL ','
+             TYPE STRING_LITERAL ','
+             opt_kind
+             IS_NOT_NULL BOOL_LITERAL ','
+             VALUE STRING_LITERAL
             '}'
   ;
 

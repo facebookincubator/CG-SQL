@@ -1297,3 +1297,25 @@ create table with_from_recreate(
   id integer,
   t text
 ) @create(3, cql:from_recreate);
+
+-- TEST: create a global constant group with some values
+-- + "name" : "const_group",
+-- + "values" : [
+-- +      "name" : "global_numeric",
+-- +      "type" : "integer",
+-- +      "isNotNull" : 1,
+-- +      "value" : 4
+-- +      "name" : "global_string",
+-- +      "type" : "text",
+-- +      "isNotNull" : 1,
+-- +      "value" : "\tx\ny"
+-- +      "name" : "global_enum_alias",
+-- +      "type" : "real",
+-- +      "kind" : "some_reals",
+-- +      "isNotNull" : 1,
+-- +      "value" : 1.000000e+00
+declare const group const_group (
+  global_numeric = 1+3,
+  global_string = "\tx\ny",
+  global_enum_alias = some_reals.one
+);

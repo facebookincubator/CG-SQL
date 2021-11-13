@@ -4,6 +4,7 @@ s/[[:<:]]NAME[[:>:]]/'"name"' ':'/g
 s/[[:<:]]WHERE[[:>:]]/'"where"' ':'/g
 s/[[:<:]]ARG_ORIGIN[[:>:]]/'"argOrigin"' ':'/g
 s/[[:<:]]ENUMS[[:>:]]/'"enums"' ':'/g
+s/[[:<:]]CONSTANT_GROUPS[[:>:]]/'"constantGroups"' ':'/g
 s/[[:<:]]IS_TEMP[[:>:]]/'"isTemp"' ':'/g
 s/[[:<:]]IF_NOT_EXISTS[[:>:]]/'"ifNotExists"' ':'/g
 s/[[:<:]]WITHOUT_ROWID[[:>:]]/'"withoutRowid"' ':'/g

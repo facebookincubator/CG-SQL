@@ -16563,6 +16563,9 @@ static void sem_declare_const_stmt(ast_node *ast) {
         return;
      }
 
+     // refetch, this could be rewritten
+     expr = const_value->right;
+
      if (is_numeric(expr->sem->sem_type)) {
        eval(expr, &result);
      

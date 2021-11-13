@@ -8555,7 +8555,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Oct 26 16:04:49 PDT 2021
+Snapshot as of Fri Nov 12 16:59:19 PST 2021
 
 ### Operators and Literals
 
@@ -8593,30 +8593,30 @@ REALLIT /* floating point literal */
 ```
 "@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@CREATE"
 "@DECLARE_DEPLOYABLE_REGION" "@DECLARE_SCHEMA_REGION"
-"@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_ENUMS"
-"@END_SCHEMA_REGION" "@ENFORCE_NORMAL" "@ENFORCE_POP"
-"@ENFORCE_PUSH" "@ENFORCE_RESET" "@ENFORCE_STRICT" "@FILE"
-"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE"
-"@SCHEMA_AD_HOC_MIGRATION" "@SCHEMA_UPGRADE_SCRIPT"
-"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "ABORT" "ACTION"
-"ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
-"AUTOINCREMENT" "BEFORE" "BEGIN" "BLOB" "BY" "CALL"
-"CASCADE" "CASE" "CAST" "CATCH" "CHECK" "CLOSE" "COLUMN"
-"COMMIT" "CONST" "CONSTRAINT" "CONTEXT COLUMN" "CONTEXT
-TYPE" "CONTINUE" "CREATE" "CROSS" "CURRENT ROW" "CURSOR"
-"DECLARE" "DEFAULT" "DEFERRABLE" "DEFERRED" "DELETE" "DESC"
-"DISTINCT" "DISTINCTROW" "DO" "DROP" "ELSE IF" "ELSE"
-"ENCODE" "END" "ENUM" "EXCLUDE CURRENT ROW" "EXCLUDE GROUP"
-"EXCLUDE NO OTHERS" "EXCLUDE TIES" "EXCLUSIVE" "EXISTS"
-"EXPLAIN" "FAIL" "FETCH" "FILTER" "FOLLOWING" "FOR EACH
-ROW" "FOR" "FOREIGN" "FROM" "FUNC" "FUNCTION" "GROUP"
-"GROUPS" "HAVING" "HIDDEN" "IF" "IGNORE" "IMMEDIATE"
-"INDEX" "INITIALLY" "INNER" "INOUT" "INSERT" "INSTEAD"
-"INT" "INTEGER" "INTO" "JOIN" "KEY" "LEAVE" "LEFT" "LET"
-"LIMIT" "LONG" "LONG_INT" "LONG_INTEGER" "LOOP" "NO" "NOT
-DEFERRABLE" "NOTHING" "NULL" "OBJECT" "OF" "OFFSET" "ON
-CONFLICT" "ON" "OPEN" "ORDER" "OUT" "OUTER" "OVER"
-"PARTITION" "PRECEDING" "PRIMARY" "PRIVATE" "PROC"
+"@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
+"@EMIT_ENUMS" "@END_SCHEMA_REGION" "@ENFORCE_NORMAL"
+"@ENFORCE_POP" "@ENFORCE_PUSH" "@ENFORCE_RESET"
+"@ENFORCE_STRICT" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
+"@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
+"@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
+"@SENSITIVE" "ABORT" "ACTION" "ADD" "AFTER" "ALL" "ALTER"
+"ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE" "BEGIN"
+"BLOB" "BY" "CALL" "CASCADE" "CASE" "CAST" "CATCH" "CHECK"
+"CLOSE" "COLUMN" "COMMIT" "CONST" "CONSTRAINT" "CONTEXT
+COLUMN" "CONTEXT TYPE" "CONTINUE" "CREATE" "CROSS" "CURRENT
+ROW" "CURSOR" "DECLARE" "DEFAULT" "DEFERRABLE" "DEFERRED"
+"DELETE" "DESC" "DISTINCT" "DISTINCTROW" "DO" "DROP" "ELSE
+IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE CURRENT ROW"
+"EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE TIES"
+"EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH" "FILTER"
+"FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM" "FUNC"
+"FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF" "IGNORE"
+"IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT" "INSERT"
+"INSTEAD" "INT" "INTEGER" "INTO" "JOIN" "KEY" "LEAVE"
+"LEFT" "LET" "LIMIT" "LONG" "LONG_INT" "LONG_INTEGER"
+"LOOP" "NO" "NOT DEFERRABLE" "NOTHING" "NULL" "OBJECT" "OF"
+"OFFSET" "ON CONFLICT" "ON" "OPEN" "ORDER" "OUT" "OUTER"
+"OVER" "PARTITION" "PRECEDING" "PRIMARY" "PRIVATE" "PROC"
 "PROCEDURE" "QUERY PLAN" "RAISE" "RANGE" "REAL" "RECURSIVE"
 "REFERENCES" "RELEASE" "RENAME" "REPLACE" "RESTRICT"
 "RETURN" "RIGHT" "ROLLBACK" "ROWID" "ROWS" "SAVEPOINT"
@@ -8667,6 +8667,7 @@ any_stmt:
   | create_virtual_table_stmt
   | declare_deployable_region_stmt
   | declare_enum_stmt
+  | declare_const_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -8680,6 +8681,7 @@ any_stmt:
   | drop_view_stmt
   | echo_stmt
   | emit_enums_stmt
+  | emit_constants_stmt
   | end_schema_region_stmt
   | enforce_normal_stmt
   | enforce_pop_stmt
@@ -9389,10 +9391,17 @@ end_schema_region_stmt:
 
 schema_ad_hoc_migration_stmt:
   "@SCHEMA_AD_HOC_MIGRATION" version_annotation
+
+  | "@SCHEMA_AD_HOC_MIGRATION" "FOR" "@RECREATE" '(' name ',' name ')'
+
   ;
 
 emit_enums_stmt:
   "@EMIT_ENUMS" opt_name_list
+  ;
+
+emit_constants_stmt:
+  "@EMIT_CONSTANTS" name_list
   ;
 
 opt_from_query_parts:
@@ -9651,6 +9660,18 @@ enum_values:
 enum_value:
     name
   | name '=' expr
+  ;
+
+declare_const_stmt:
+  "DECLARE" "CONST" "GROUP" name '(' const_values ')'
+  ;
+
+const_values:
+   const_value
+  | const_value ',' const_values
+  ;
+
+const_value:  name '=' expr
   ;
 
 declare_func_stmt:
@@ -11458,11 +11479,18 @@ In a parameter list for a function or a procedure, the named parameter appears m
 
 -----
 
-### CQL0176 available for re-use
+### CQL0176: the indicated procedure or group already has a recreate action 'name'
+
+There can only be one migration rule for a table or group, the indicated item already has such an action.  If you need more than one migration action you can
+create a containing procedure that dispatches to other migrators.
 
 -----
 
-### CQL0177 available for re-use
+### CQL0177: global constants must be either constant numeric expressions or string literals 'constant_definition'
+
+Global constants must be either a combination other constants for numeric expressions or else string literals.  The indicated expression was not one of those.
+
+This can happen if the expression uses variables, or has other problems that prevent it from evaluating, or if a function is used that is not supported.
 
 -----
 
@@ -11725,7 +11753,7 @@ CQL0210: proc out parameter: arg must be an exact type match (even nullability)
 
 -----
 
-### CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function 'name'
+### CQL0211: procedure without trailing OUT parameter used as function 'procedure_name'
 
 In a function call, the target of the function call was a procedure, procedures can be used like functions but their last parameter must be marked `out`. That will be the return value.  In this case the last argument was not marked as `out` and so the call is invalid.
 
@@ -13738,6 +13766,42 @@ are necessary. The most likely cause for this problem is that an argument was
 accidentally omitted.
 
 
+### CQL0424: procedure with INOUT parameter used as function 'procedure_name'
+
+If a procedure has an `INOUT` parameter, it cannot be used as a function: It may
+only be called via a `CALL` statement.
+
+
+### CQL0425: procedure with non-trailing OUT parameter used as function 'procedure_name'
+
+For a procedure to be used as a function, it must have exactly one `OUT`
+parameter, and that parameter must be the last parameter of the procedure. In
+all other cases, procedures with one or more `OUT` parameters may only be called
+via a `CALL` statement.
+----
+
+### CQL0426: OUT or INOUT argument cannot be used again in same call 'variable'
+
+When a variable is passed as an `OUT` or `INOUT` argument, it may not be used as
+another argument within the same procedure call. It can, however, be used within
+a _subexpression_ of another argument. For example:
+
+```sql
+CREATE PROC some_proc(IN a TEXT, OUT b TEXT)
+BEGIN
+  ...
+END
+
+DECLARE t TEXT;
+
+-- This is NOT legal.
+CALL some_proc(t, t);
+
+-- This, however, is perfectly fine.
+CALL some_proc(some_other_proc(t), t);
+```
+
+
 
 ## Appendix 5: JSON Schema Grammar
 <!---
@@ -13749,7 +13813,7 @@ accidentally omitted.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Oct 26 16:04:50 PDT 2021
+Snapshot as of Fri Nov 12 16:59:19 PST 2021
 
 ### Rules
 
@@ -13771,7 +13835,8 @@ json_schema: '{'
          '"general"' ':' '[' opt_generals ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
-         '"enums"' ':'  '[' opt_enums ']'
+         '"enums"' ':'  '[' opt_enums ']' ','
+         '"constantGroups"' ':'  '[' opt_const_groups ']'
          '}'
   ;
 
@@ -14350,6 +14415,37 @@ enum_value: '{'
             '}'
   ;
 
+opt_const_groups: | const_groups
+  ;
+
+const_groups: const_group | const_group ',' const_groups
+  ;
+
+const_group: '{'
+      '"name"' ':' STRING_LITERAL ','
+      '"values"' ':' '[' const_values ']'
+      '}'
+  ;
+
+const_values: const_value | const_value ',' const_values
+  ;
+
+const_value: '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"type"' ':' STRING_LITERAL ','
+             opt_kind
+             '"isNotNull"' ':' BOOL_LITERAL ','
+             '"value"' ':' num_literal
+            '}'
+  | '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"type"' ':' STRING_LITERAL ','
+             opt_kind
+             '"isNotNull"' ':' BOOL_LITERAL ','
+             '"value"' ':' STRING_LITERAL
+            '}'
+  ;
+
 opt_regions: | regions
   ;
 
@@ -14388,6 +14484,12 @@ ad_hoc_migration: '{'
                   '"crc"' ':' STRING_LITERAL ','
                   opt_attributes
                   '"version"' ':' any_integer
+                  '}'
+  | '{'
+                  '"name"' ':' STRING_LITERAL ','
+                  '"crc"' ':' STRING_LITERAL ','
+                  opt_attributes
+                  ON_RECREATE_OF STRING_LITERAL
                   '}'
   ;
 

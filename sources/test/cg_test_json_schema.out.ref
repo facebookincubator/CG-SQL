@@ -3584,6 +3584,41 @@
       ]
     }
   ],
+  "constantGroups" : [
+
+    The statement ending at line XXXX
+
+    DECLARE CONST GROUP const_group (
+      global_numeric = 1 + 3,
+      global_string = "\tx\ny",
+      global_enum_alias = 1.000000e+00
+    )
+
+    {
+      "name" : "const_group",
+      "values" : [
+        {
+          "name" : "global_numeric",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 4
+        },
+        {
+          "name" : "global_string",
+          "type" : "text",
+          "isNotNull" : 1,
+          "value" : "\tx\ny"
+        },
+        {
+          "name" : "global_enum_alias",
+          "type" : "real",
+          "kind" : "some_reals",
+          "isNotNull" : 1,
+          "value" : 1.000000e+00
+        }
+      ]
+    }
+  ],
   "tableUsers" : {
     "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute" ],
     "T3" : [ "insert_with_select", "insert_compound", "insert_multi_value", "upsert_proc", "with_upsert_proc", "with_insert_proc" ],

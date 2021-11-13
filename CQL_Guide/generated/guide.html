@@ -532,8 +532,8 @@
 <li><a href="#cql0173-variable-not-found-variable_name">CQL0173: variable not found ‘variable_name’</a></li>
 <li><a href="#cql0174-cannot-set-a-cursor-cursor_name">CQL0174: cannot set a cursor ‘cursor_name’</a></li>
 <li><a href="#cql0175-duplicate-parameter-name-parameter_name">CQL0175: duplicate parameter name ‘parameter_name’</a></li>
-<li><a href="#cql0176-available-for-re-use">CQL0176 available for re-use</a></li>
-<li><a href="#cql0177-available-for-re-use">CQL0177 available for re-use</a></li>
+<li><a href="#cql0176-the-indicated-procedure-or-group-already-has-a-recreate-action-name">CQL0176: the indicated procedure or group already has a recreate action ‘name’</a></li>
+<li><a href="#cql0177-global-constants-must-be-either-constant-numeric-expressions-or-string-literals-constant_definition">CQL0177: global constants must be either constant numeric expressions or string literals ‘constant_definition’</a></li>
 <li><a href="#cql0178-proc-has-no-result-like_name">CQL0178: proc has no result ‘like_name’</a></li>
 <li><a href="#cql0179-available-for-re-use">CQL0179 available for re-use</a></li>
 <li><a href="#cql0180-duplicate-column-name-in-result-not-allowed-column_name">CQL0180: duplicate column name in result not allowed ‘column_name’</a></li>
@@ -567,7 +567,7 @@
 <li><a href="#cql0208-available-for-re-use">CQL0208 available for re-use</a></li>
 <li><a href="#cql0209-proc-out-parameter-arg-must-be-an-exact-type-match-expected-expected_type-found-actual_type-param_name">CQL0209: proc out parameter: arg must be an exact type match (expected expected_type; found actual_type) ‘param_name’</a></li>
 <li><a href="#cql0210-proc-out-parameter-arg-must-be-an-exact-type-match-even-nullability">CQL0210: proc out parameter: arg must be an exact type match (even nullability)</a></li>
-<li><a href="#cql0211-last-formal-arg-of-procedure-is-not-an-out-arg-cannot-use-proc-as-a-function-name">CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function ‘name’</a></li>
+<li><a href="#cql0211-procedure-without-trailing-out-parameter-used-as-function-procedure_name">CQL0211: procedure without trailing OUT parameter used as function ‘procedure_name’</a></li>
 <li><a href="#cql0212-too-few-arguments-provided-to-procedure-name">CQL0212: too few arguments provided to procedure ‘name’</a></li>
 <li><a href="#cql0213-procedure-had-errors-cant-call.-proc_name">CQL0213: procedure had errors, can’t call. ‘proc_name’</a></li>
 <li><a href="#cql0214-procedures-with-results-can-only-be-called-using-a-cursor-in-global-context-name">CQL0214: procedures with results can only be called using a cursor in global context ‘name’</a></li>
@@ -775,6 +775,9 @@
 <li><a href="#cql0421-first-argument-must-be-a-string-literal-function">CQL0421: first argument must be a string literal ‘function’</a></li>
 <li><a href="#cql0422-more-arguments-provided-than-expected-by-format-string-function">CQL0422: more arguments provided than expected by format string ‘function’</a></li>
 <li><a href="#cql0423-fewer-arguments-provided-than-expected-by-format-string-function">CQL0423: fewer arguments provided than expected by format string ‘function’</a></li>
+<li><a href="#cql0424-procedure-with-inout-parameter-used-as-function-procedure_name">CQL0424: procedure with INOUT parameter used as function ‘procedure_name’</a></li>
+<li><a href="#cql0425-procedure-with-non-trailing-out-parameter-used-as-function-procedure_name">CQL0425: procedure with non-trailing OUT parameter used as function ‘procedure_name’</a></li>
+<li><a href="#cql0426-out-or-inout-argument-cannot-be-used-again-in-same-call-variable">CQL0426: OUT or INOUT argument cannot be used again in same call ‘variable’</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -6652,7 +6655,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Oct 26 16:04:49 PDT 2021</p>
+<p>Snapshot as of Fri Nov 12 16:59:19 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -6681,30 +6684,30 @@ REALLIT /* floating point literal */</code></pre>
 <h3 id="statementtype-keywords">Statement/Type Keywords</h3>
 <pre><code>&quot;@ATTRIBUTE&quot; &quot;@BEGIN_SCHEMA_REGION&quot; &quot;@CREATE&quot;
 &quot;@DECLARE_DEPLOYABLE_REGION&quot; &quot;@DECLARE_SCHEMA_REGION&quot;
-&quot;@DELETE&quot; &quot;@DUMMY_SEED&quot; &quot;@ECHO&quot; &quot;@EMIT_ENUMS&quot;
-&quot;@END_SCHEMA_REGION&quot; &quot;@ENFORCE_NORMAL&quot; &quot;@ENFORCE_POP&quot;
-&quot;@ENFORCE_PUSH&quot; &quot;@ENFORCE_RESET&quot; &quot;@ENFORCE_STRICT&quot; &quot;@FILE&quot;
-&quot;@PREVIOUS_SCHEMA&quot; &quot;@PROC&quot; &quot;@RC&quot; &quot;@RECREATE&quot;
-&quot;@SCHEMA_AD_HOC_MIGRATION&quot; &quot;@SCHEMA_UPGRADE_SCRIPT&quot;
-&quot;@SCHEMA_UPGRADE_VERSION&quot; &quot;@SENSITIVE&quot; &quot;ABORT&quot; &quot;ACTION&quot;
-&quot;ADD&quot; &quot;AFTER&quot; &quot;ALL&quot; &quot;ALTER&quot; &quot;ARGUMENTS&quot; &quot;AS&quot; &quot;ASC&quot;
-&quot;AUTOINCREMENT&quot; &quot;BEFORE&quot; &quot;BEGIN&quot; &quot;BLOB&quot; &quot;BY&quot; &quot;CALL&quot;
-&quot;CASCADE&quot; &quot;CASE&quot; &quot;CAST&quot; &quot;CATCH&quot; &quot;CHECK&quot; &quot;CLOSE&quot; &quot;COLUMN&quot;
-&quot;COMMIT&quot; &quot;CONST&quot; &quot;CONSTRAINT&quot; &quot;CONTEXT COLUMN&quot; &quot;CONTEXT
-TYPE&quot; &quot;CONTINUE&quot; &quot;CREATE&quot; &quot;CROSS&quot; &quot;CURRENT ROW&quot; &quot;CURSOR&quot;
-&quot;DECLARE&quot; &quot;DEFAULT&quot; &quot;DEFERRABLE&quot; &quot;DEFERRED&quot; &quot;DELETE&quot; &quot;DESC&quot;
-&quot;DISTINCT&quot; &quot;DISTINCTROW&quot; &quot;DO&quot; &quot;DROP&quot; &quot;ELSE IF&quot; &quot;ELSE&quot;
-&quot;ENCODE&quot; &quot;END&quot; &quot;ENUM&quot; &quot;EXCLUDE CURRENT ROW&quot; &quot;EXCLUDE GROUP&quot;
-&quot;EXCLUDE NO OTHERS&quot; &quot;EXCLUDE TIES&quot; &quot;EXCLUSIVE&quot; &quot;EXISTS&quot;
-&quot;EXPLAIN&quot; &quot;FAIL&quot; &quot;FETCH&quot; &quot;FILTER&quot; &quot;FOLLOWING&quot; &quot;FOR EACH
-ROW&quot; &quot;FOR&quot; &quot;FOREIGN&quot; &quot;FROM&quot; &quot;FUNC&quot; &quot;FUNCTION&quot; &quot;GROUP&quot;
-&quot;GROUPS&quot; &quot;HAVING&quot; &quot;HIDDEN&quot; &quot;IF&quot; &quot;IGNORE&quot; &quot;IMMEDIATE&quot;
-&quot;INDEX&quot; &quot;INITIALLY&quot; &quot;INNER&quot; &quot;INOUT&quot; &quot;INSERT&quot; &quot;INSTEAD&quot;
-&quot;INT&quot; &quot;INTEGER&quot; &quot;INTO&quot; &quot;JOIN&quot; &quot;KEY&quot; &quot;LEAVE&quot; &quot;LEFT&quot; &quot;LET&quot;
-&quot;LIMIT&quot; &quot;LONG&quot; &quot;LONG_INT&quot; &quot;LONG_INTEGER&quot; &quot;LOOP&quot; &quot;NO&quot; &quot;NOT
-DEFERRABLE&quot; &quot;NOTHING&quot; &quot;NULL&quot; &quot;OBJECT&quot; &quot;OF&quot; &quot;OFFSET&quot; &quot;ON
-CONFLICT&quot; &quot;ON&quot; &quot;OPEN&quot; &quot;ORDER&quot; &quot;OUT&quot; &quot;OUTER&quot; &quot;OVER&quot;
-&quot;PARTITION&quot; &quot;PRECEDING&quot; &quot;PRIMARY&quot; &quot;PRIVATE&quot; &quot;PROC&quot;
+&quot;@DELETE&quot; &quot;@DUMMY_SEED&quot; &quot;@ECHO&quot; &quot;@EMIT_CONSTANTS&quot;
+&quot;@EMIT_ENUMS&quot; &quot;@END_SCHEMA_REGION&quot; &quot;@ENFORCE_NORMAL&quot;
+&quot;@ENFORCE_POP&quot; &quot;@ENFORCE_PUSH&quot; &quot;@ENFORCE_RESET&quot;
+&quot;@ENFORCE_STRICT&quot; &quot;@FILE&quot; &quot;@PREVIOUS_SCHEMA&quot; &quot;@PROC&quot; &quot;@RC&quot;
+&quot;@RECREATE&quot; &quot;@SCHEMA_AD_HOC_MIGRATION&quot;
+&quot;@SCHEMA_UPGRADE_SCRIPT&quot; &quot;@SCHEMA_UPGRADE_VERSION&quot;
+&quot;@SENSITIVE&quot; &quot;ABORT&quot; &quot;ACTION&quot; &quot;ADD&quot; &quot;AFTER&quot; &quot;ALL&quot; &quot;ALTER&quot;
+&quot;ARGUMENTS&quot; &quot;AS&quot; &quot;ASC&quot; &quot;AUTOINCREMENT&quot; &quot;BEFORE&quot; &quot;BEGIN&quot;
+&quot;BLOB&quot; &quot;BY&quot; &quot;CALL&quot; &quot;CASCADE&quot; &quot;CASE&quot; &quot;CAST&quot; &quot;CATCH&quot; &quot;CHECK&quot;
+&quot;CLOSE&quot; &quot;COLUMN&quot; &quot;COMMIT&quot; &quot;CONST&quot; &quot;CONSTRAINT&quot; &quot;CONTEXT
+COLUMN&quot; &quot;CONTEXT TYPE&quot; &quot;CONTINUE&quot; &quot;CREATE&quot; &quot;CROSS&quot; &quot;CURRENT
+ROW&quot; &quot;CURSOR&quot; &quot;DECLARE&quot; &quot;DEFAULT&quot; &quot;DEFERRABLE&quot; &quot;DEFERRED&quot;
+&quot;DELETE&quot; &quot;DESC&quot; &quot;DISTINCT&quot; &quot;DISTINCTROW&quot; &quot;DO&quot; &quot;DROP&quot; &quot;ELSE
+IF&quot; &quot;ELSE&quot; &quot;ENCODE&quot; &quot;END&quot; &quot;ENUM&quot; &quot;EXCLUDE CURRENT ROW&quot;
+&quot;EXCLUDE GROUP&quot; &quot;EXCLUDE NO OTHERS&quot; &quot;EXCLUDE TIES&quot;
+&quot;EXCLUSIVE&quot; &quot;EXISTS&quot; &quot;EXPLAIN&quot; &quot;FAIL&quot; &quot;FETCH&quot; &quot;FILTER&quot;
+&quot;FOLLOWING&quot; &quot;FOR EACH ROW&quot; &quot;FOR&quot; &quot;FOREIGN&quot; &quot;FROM&quot; &quot;FUNC&quot;
+&quot;FUNCTION&quot; &quot;GROUP&quot; &quot;GROUPS&quot; &quot;HAVING&quot; &quot;HIDDEN&quot; &quot;IF&quot; &quot;IGNORE&quot;
+&quot;IMMEDIATE&quot; &quot;INDEX&quot; &quot;INITIALLY&quot; &quot;INNER&quot; &quot;INOUT&quot; &quot;INSERT&quot;
+&quot;INSTEAD&quot; &quot;INT&quot; &quot;INTEGER&quot; &quot;INTO&quot; &quot;JOIN&quot; &quot;KEY&quot; &quot;LEAVE&quot;
+&quot;LEFT&quot; &quot;LET&quot; &quot;LIMIT&quot; &quot;LONG&quot; &quot;LONG_INT&quot; &quot;LONG_INTEGER&quot;
+&quot;LOOP&quot; &quot;NO&quot; &quot;NOT DEFERRABLE&quot; &quot;NOTHING&quot; &quot;NULL&quot; &quot;OBJECT&quot; &quot;OF&quot;
+&quot;OFFSET&quot; &quot;ON CONFLICT&quot; &quot;ON&quot; &quot;OPEN&quot; &quot;ORDER&quot; &quot;OUT&quot; &quot;OUTER&quot;
+&quot;OVER&quot; &quot;PARTITION&quot; &quot;PRECEDING&quot; &quot;PRIMARY&quot; &quot;PRIVATE&quot; &quot;PROC&quot;
 &quot;PROCEDURE&quot; &quot;QUERY PLAN&quot; &quot;RAISE&quot; &quot;RANGE&quot; &quot;REAL&quot; &quot;RECURSIVE&quot;
 &quot;REFERENCES&quot; &quot;RELEASE&quot; &quot;RENAME&quot; &quot;REPLACE&quot; &quot;RESTRICT&quot;
 &quot;RETURN&quot; &quot;RIGHT&quot; &quot;ROLLBACK&quot; &quot;ROWID&quot; &quot;ROWS&quot; &quot;SAVEPOINT&quot;
@@ -6752,6 +6755,7 @@ any_stmt:
   | create_virtual_table_stmt
   | declare_deployable_region_stmt
   | declare_enum_stmt
+  | declare_const_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -6765,6 +6769,7 @@ any_stmt:
   | drop_view_stmt
   | echo_stmt
   | emit_enums_stmt
+  | emit_constants_stmt
   | end_schema_region_stmt
   | enforce_normal_stmt
   | enforce_pop_stmt
@@ -7474,10 +7479,17 @@ end_schema_region_stmt:
 
 schema_ad_hoc_migration_stmt:
   &quot;@SCHEMA_AD_HOC_MIGRATION&quot; version_annotation
+
+  | &quot;@SCHEMA_AD_HOC_MIGRATION&quot; &quot;FOR&quot; &quot;@RECREATE&quot; &#39;(&#39; name &#39;,&#39; name &#39;)&#39;
+
   ;
 
 emit_enums_stmt:
   &quot;@EMIT_ENUMS&quot; opt_name_list
+  ;
+
+emit_constants_stmt:
+  &quot;@EMIT_CONSTANTS&quot; name_list
   ;
 
 opt_from_query_parts:
@@ -7736,6 +7748,18 @@ enum_values:
 enum_value:
     name
   | name &#39;=&#39; expr
+  ;
+
+declare_const_stmt:
+  &quot;DECLARE&quot; &quot;CONST&quot; &quot;GROUP&quot; name &#39;(&#39; const_values &#39;)&#39;
+  ;
+
+const_values:
+   const_value
+  | const_value &#39;,&#39; const_values
+  ;
+
+const_value:  name &#39;=&#39; expr
   ;
 
 declare_func_stmt:
@@ -8832,9 +8856,12 @@ enforce_pop_stmt:
 <h3 id="cql0175-duplicate-parameter-name-parameter_name">CQL0175: duplicate parameter name ‘parameter_name’</h3>
 <p>In a parameter list for a function or a procedure, the named parameter appears more than once. The formal names for function arguments must be unique.</p>
 <hr />
-<h3 id="cql0176-available-for-re-use">CQL0176 available for re-use</h3>
+<h3 id="cql0176-the-indicated-procedure-or-group-already-has-a-recreate-action-name">CQL0176: the indicated procedure or group already has a recreate action ‘name’</h3>
+<p>There can only be one migration rule for a table or group, the indicated item already has such an action. If you need more than one migration action you can create a containing procedure that dispatches to other migrators.</p>
 <hr />
-<h3 id="cql0177-available-for-re-use">CQL0177 available for re-use</h3>
+<h3 id="cql0177-global-constants-must-be-either-constant-numeric-expressions-or-string-literals-constant_definition">CQL0177: global constants must be either constant numeric expressions or string literals ‘constant_definition’</h3>
+<p>Global constants must be either a combination other constants for numeric expressions or else string literals. The indicated expression was not one of those.</p>
+<p>This can happen if the expression uses variables, or has other problems that prevent it from evaluating, or if a function is used that is not supported.</p>
 <hr />
 <h3 id="cql0178-proc-has-no-result-like_name">CQL0178: proc has no result ‘like_name’</h3>
 <p>In an argument list, the <code>LIKE</code> construct was used to create arguments that are the same as the return type of the named procedure. However the named procedure does not produce a result set and therefore has no columns to mimic. Probably the name is wrong.</p>
@@ -8971,7 +8998,7 @@ enforce_pop_stmt:
 <div class="sourceCode" id="cb417"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb417-1"><a href="#cb417-1" aria-hidden="true" tabindex="-1"></a>CQL0210: proc <span class="kw">out</span> parameter: arg must be an exact <span class="kw">type</span> match (even nullability)</span>
 <span id="cb417-2"><a href="#cb417-2" aria-hidden="true" tabindex="-1"></a>(expected <span class="dt">integer</span> notnull; found <span class="dt">integer</span>) <span class="st">&#39;y&#39;</span></span></code></pre></div>
 <hr />
-<h3 id="cql0211-last-formal-arg-of-procedure-is-not-an-out-arg-cannot-use-proc-as-a-function-name">CQL0211: last formal arg of procedure is not an out arg, cannot use proc as a function ‘name’</h3>
+<h3 id="cql0211-procedure-without-trailing-out-parameter-used-as-function-procedure_name">CQL0211: procedure without trailing OUT parameter used as function ‘procedure_name’</h3>
 <p>In a function call, the target of the function call was a procedure, procedures can be used like functions but their last parameter must be marked <code>out</code>. That will be the return value. In this case the last argument was not marked as <code>out</code> and so the call is invalid.</p>
 <p>Example:</p>
 <div class="sourceCode" id="cb418"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb418-1"><a href="#cb418-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> proc foo(x <span class="dt">integer</span>);</span>
@@ -9931,6 +9958,24 @@ enforce_pop_stmt:
 <hr />
 <h3 id="cql0423-fewer-arguments-provided-than-expected-by-format-string-function">CQL0423: fewer arguments provided than expected by format string ‘function’</h3>
 <p>Fewer arguments were provided to the function than its format string indicates are necessary. The most likely cause for this problem is that an argument was accidentally omitted.</p>
+<h3 id="cql0424-procedure-with-inout-parameter-used-as-function-procedure_name">CQL0424: procedure with INOUT parameter used as function ‘procedure_name’</h3>
+<p>If a procedure has an <code>INOUT</code> parameter, it cannot be used as a function: It may only be called via a <code>CALL</code> statement.</p>
+<h3 id="cql0425-procedure-with-non-trailing-out-parameter-used-as-function-procedure_name">CQL0425: procedure with non-trailing OUT parameter used as function ‘procedure_name’</h3>
+<p>For a procedure to be used as a function, it must have exactly one <code>OUT</code> parameter, and that parameter must be the last parameter of the procedure. In all other cases, procedures with one or more <code>OUT</code> parameters may only be called via a <code>CALL</code> statement. —-</p>
+<h3 id="cql0426-out-or-inout-argument-cannot-be-used-again-in-same-call-variable">CQL0426: OUT or INOUT argument cannot be used again in same call ‘variable’</h3>
+<p>When a variable is passed as an <code>OUT</code> or <code>INOUT</code> argument, it may not be used as another argument within the same procedure call. It can, however, be used within a <em>subexpression</em> of another argument. For example:</p>
+<div class="sourceCode" id="cb473"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb473-1"><a href="#cb473-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PROC some_proc(<span class="kw">IN</span> a TEXT, <span class="kw">OUT</span> b TEXT)</span>
+<span id="cb473-2"><a href="#cb473-2" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb473-3"><a href="#cb473-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">..</span>.</span>
+<span id="cb473-4"><a href="#cb473-4" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span></span>
+<span id="cb473-5"><a href="#cb473-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb473-6"><a href="#cb473-6" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> t TEXT;</span>
+<span id="cb473-7"><a href="#cb473-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb473-8"><a href="#cb473-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- This is NOT legal.</span></span>
+<span id="cb473-9"><a href="#cb473-9" aria-hidden="true" tabindex="-1"></a><span class="kw">CALL</span> some_proc(t, t);</span>
+<span id="cb473-10"><a href="#cb473-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb473-11"><a href="#cb473-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- This, however, is perfectly fine.</span></span>
+<span id="cb473-12"><a href="#cb473-12" aria-hidden="true" tabindex="-1"></a><span class="kw">CALL</span> some_proc(some_other_proc(t), t);</span></code></pre></div>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -9939,7 +9984,7 @@ enforce_pop_stmt:
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Oct 26 16:04:50 PDT 2021</p>
+<p>Snapshot as of Fri Nov 12 16:59:19 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -9958,7 +10003,8 @@ json_schema: &#39;{&#39;
          &#39;&quot;general&quot;&#39; &#39;:&#39; &#39;[&#39; opt_generals &#39;]&#39; &#39;,&#39;
          &#39;&quot;regions&quot;&#39; &#39;:&#39; &#39;[&#39; opt_regions &#39;]&#39; &#39;,&#39;
          &#39;&quot;adHocMigrationProcs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_ad_hoc_migrations &#39;]&#39; &#39;,&#39;
-         &#39;&quot;enums&quot;&#39; &#39;:&#39;  &#39;[&#39; opt_enums &#39;]&#39;
+         &#39;&quot;enums&quot;&#39; &#39;:&#39;  &#39;[&#39; opt_enums &#39;]&#39; &#39;,&#39;
+         &#39;&quot;constantGroups&quot;&#39; &#39;:&#39;  &#39;[&#39; opt_const_groups &#39;]&#39;
          &#39;}&#39;
   ;
 
@@ -10537,6 +10583,37 @@ enum_value: &#39;{&#39;
             &#39;}&#39;
   ;
 
+opt_const_groups: | const_groups
+  ;
+
+const_groups: const_group | const_group &#39;,&#39; const_groups
+  ;
+
+const_group: &#39;{&#39;
+      &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+      &#39;&quot;values&quot;&#39; &#39;:&#39; &#39;[&#39; const_values &#39;]&#39;
+      &#39;}&#39;
+  ;
+
+const_values: const_value | const_value &#39;,&#39; const_values
+  ;
+
+const_value: &#39;{&#39;
+             &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+             &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+             opt_kind
+             &#39;&quot;isNotNull&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+             &#39;&quot;value&quot;&#39; &#39;:&#39; num_literal
+            &#39;}&#39;
+  | &#39;{&#39;
+             &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+             &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+             opt_kind
+             &#39;&quot;isNotNull&quot;&#39; &#39;:&#39; BOOL_LITERAL &#39;,&#39;
+             &#39;&quot;value&quot;&#39; &#39;:&#39; STRING_LITERAL
+            &#39;}&#39;
+  ;
+
 opt_regions: | regions
   ;
 
@@ -10575,6 +10652,12 @@ ad_hoc_migration: &#39;{&#39;
                   &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
                   opt_attributes
                   &#39;&quot;version&quot;&#39; &#39;:&#39; any_integer
+                  &#39;}&#39;
+  | &#39;{&#39;
+                  &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+                  &#39;&quot;crc&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+                  opt_attributes
+                  ON_RECREATE_OF STRING_LITERAL
                   &#39;}&#39;
   ;
 </code></pre>
@@ -11435,146 +11518,146 @@ fetch C USING
 <p>Refer also to Appendix 8: CQL Best Practices.</p>
 <h3 id="common-schema">Common Schema</h3>
 <p>For these examples let’s create a couple of tables we might need for examples</p>
-<div class="sourceCode" id="cb475"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb475-1"><a href="#cb475-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> foo (</span>
-<span id="cb475-2"><a href="#cb475-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
-<span id="cb475-3"><a href="#cb475-3" aria-hidden="true" tabindex="-1"></a>    name text</span>
-<span id="cb475-4"><a href="#cb475-4" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb475-5"><a href="#cb475-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb475-6"><a href="#cb475-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> bar (</span>
-<span id="cb475-7"><a href="#cb475-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
-<span id="cb475-8"><a href="#cb475-8" aria-hidden="true" tabindex="-1"></a>    rate <span class="dt">real</span></span>
-<span id="cb475-9"><a href="#cb475-9" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<div class="sourceCode" id="cb476"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb476-1"><a href="#cb476-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> foo (</span>
+<span id="cb476-2"><a href="#cb476-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
+<span id="cb476-3"><a href="#cb476-3" aria-hidden="true" tabindex="-1"></a>    name text</span>
+<span id="cb476-4"><a href="#cb476-4" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb476-5"><a href="#cb476-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb476-6"><a href="#cb476-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> bar (</span>
+<span id="cb476-7"><a href="#cb476-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">integer</span> <span class="kw">primary</span> <span class="kw">key</span>,</span>
+<span id="cb476-8"><a href="#cb476-8" aria-hidden="true" tabindex="-1"></a>    rate <span class="dt">real</span></span>
+<span id="cb476-9"><a href="#cb476-9" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
 <h3 id="declarations">Declarations</h3>
-<div class="sourceCode" id="cb476"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb476-1"><a href="#cb476-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">LONG</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
-<span id="cb476-2"><a href="#cb476-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb477"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb477-1"><a href="#cb477-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">LONG</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb477-2"><a href="#cb477-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
 <p>better</p>
-<div class="sourceCode" id="cb477"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb477-1"><a href="#cb477-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> 1L;  <span class="co">-- long literals have the L suffix like in C</span></span></code></pre></div>
+<div class="sourceCode" id="cb478"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb478-1"><a href="#cb478-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> 1L;  <span class="co">-- long literals have the L suffix like in C</span></span></code></pre></div>
 <p>Similarly</p>
-<div class="sourceCode" id="cb478"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb478-1"><a href="#cb478-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">REAL</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
-<span id="cb478-2"><a href="#cb478-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb479"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb479-1"><a href="#cb479-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> v <span class="dt">REAL</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span>
+<span id="cb479-2"><a href="#cb479-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</span></code></pre></div>
 <p>better</p>
-<div class="sourceCode" id="cb479"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb479-1"><a href="#cb479-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> <span class="fl">1.0</span>; <span class="co">-- use scientific notation or add .0 to make a real literal</span></span></code></pre></div>
+<div class="sourceCode" id="cb480"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb480-1"><a href="#cb480-1" aria-hidden="true" tabindex="-1"></a>LET v <span class="op">:=</span> <span class="fl">1.0</span>; <span class="co">-- use scientific notation or add .0 to make a real literal</span></span></code></pre></div>
 <h3 id="casts">Casts</h3>
 <p>Redundant casts fatten the code and don’t really add anything to readability. Sometimems it’s necessary to cast NULL to a particular type so that you can be sure that generated result set has the right data type, but most of the casts below are not necessary.</p>
-<div class="sourceCode" id="cb480"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb480-1"><a href="#cb480-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb480-2"><a href="#cb480-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
-<span id="cb480-3"><a href="#cb480-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.name <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
-<span id="cb480-4"><a href="#cb480-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
-<span id="cb480-5"><a href="#cb480-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb480-6"><a href="#cb480-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb480-7"><a href="#cb480-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb480-8"><a href="#cb480-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
-<span id="cb480-9"><a href="#cb480-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
-<span id="cb480-10"><a href="#cb480-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.rate <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
-<span id="cb480-11"><a href="#cb480-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
-<p>Better</p>
 <div class="sourceCode" id="cb481"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb481-1"><a href="#cb481-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb481-2"><a href="#cb481-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
-<span id="cb481-3"><a href="#cb481-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
+<span id="cb481-2"><a href="#cb481-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
+<span id="cb481-3"><a href="#cb481-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(foo.name <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
 <span id="cb481-4"><a href="#cb481-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
 <span id="cb481-5"><a href="#cb481-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
 <span id="cb481-6"><a href="#cb481-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
 <span id="cb481-7"><a href="#cb481-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb481-8"><a href="#cb481-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb481-8"><a href="#cb481-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.<span class="kw">id</span> <span class="kw">as</span> <span class="dt">INTEGER</span>) <span class="kw">as</span> <span class="kw">id</span>,</span>
 <span id="cb481-9"><a href="#cb481-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
-<span id="cb481-10"><a href="#cb481-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
+<span id="cb481-10"><a href="#cb481-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(bar.rate <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
 <span id="cb481-11"><a href="#cb481-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<p>Better</p>
+<div class="sourceCode" id="cb482"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb482-1"><a href="#cb482-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb482-2"><a href="#cb482-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb482-3"><a href="#cb482-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
+<span id="cb482-4"><a href="#cb482-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</span>
+<span id="cb482-5"><a href="#cb482-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb482-6"><a href="#cb482-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb482-7"><a href="#cb482-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb482-8"><a href="#cb482-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb482-9"><a href="#cb482-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</span>
+<span id="cb482-10"><a href="#cb482-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
+<span id="cb482-11"><a href="#cb482-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
 <p>It’s possible to do the following to make this even cleaner:</p>
-<div class="sourceCode" id="cb482"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb482-1"><a href="#cb482-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- somewhere central</span></span>
-<span id="cb482-2"><a href="#cb482-2" aria-hidden="true" tabindex="-1"></a>#define NULL_TEXT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT)</span>
-<span id="cb482-3"><a href="#cb482-3" aria-hidden="true" tabindex="-1"></a>#define NULL_REAL <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>)</span>
-<span id="cb482-4"><a href="#cb482-4" aria-hidden="true" tabindex="-1"></a>#define NULL_INT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">INTEGER</span>)</span>
-<span id="cb482-5"><a href="#cb482-5" aria-hidden="true" tabindex="-1"></a>#define NULL_LONG <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">LONG</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb483"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb483-1"><a href="#cb483-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- somewhere central</span></span>
+<span id="cb483-2"><a href="#cb483-2" aria-hidden="true" tabindex="-1"></a>#define NULL_TEXT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT)</span>
+<span id="cb483-3"><a href="#cb483-3" aria-hidden="true" tabindex="-1"></a>#define NULL_REAL <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">REAL</span>)</span>
+<span id="cb483-4"><a href="#cb483-4" aria-hidden="true" tabindex="-1"></a>#define NULL_INT <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">INTEGER</span>)</span>
+<span id="cb483-5"><a href="#cb483-5" aria-hidden="true" tabindex="-1"></a>#define NULL_LONG <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> <span class="dt">LONG</span>)</span></code></pre></div>
 <p>Then you can write</p>
-<div class="sourceCode" id="cb483"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb483-1"><a href="#cb483-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb483-2"><a href="#cb483-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
-<span id="cb483-3"><a href="#cb483-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
-<span id="cb483-4"><a href="#cb483-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate</span>
-<span id="cb483-5"><a href="#cb483-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb483-6"><a href="#cb483-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb483-7"><a href="#cb483-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb483-8"><a href="#cb483-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
-<span id="cb483-9"><a href="#cb483-9" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
-<span id="cb483-10"><a href="#cb483-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
-<span id="cb483-11"><a href="#cb483-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
-<h4 id="booleans">Booleans</h4>
-<p>TRUE and FALSE can be used as boolean literals.</p>
-<p>SQLite doesn’t care about the type but CQL will get the type information it needs to make the columns of type BOOL</p>
 <div class="sourceCode" id="cb484"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb484-1"><a href="#cb484-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
 <span id="cb484-2"><a href="#cb484-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
 <span id="cb484-3"><a href="#cb484-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
-<span id="cb484-4"><a href="#cb484-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
-<span id="cb484-5"><a href="#cb484-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
-<span id="cb484-6"><a href="#cb484-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_rate</span>
-<span id="cb484-7"><a href="#cb484-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb484-8"><a href="#cb484-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb484-9"><a href="#cb484-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb484-10"><a href="#cb484-10" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
-<span id="cb484-11"><a href="#cb484-11" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
-<span id="cb484-12"><a href="#cb484-12" aria-hidden="true" tabindex="-1"></a>    bar.rate,</span>
-<span id="cb484-13"><a href="#cb484-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_name,</span>
-<span id="cb484-14"><a href="#cb484-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_rate</span>
-<span id="cb484-15"><a href="#cb484-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<span id="cb484-4"><a href="#cb484-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate</span>
+<span id="cb484-5"><a href="#cb484-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb484-6"><a href="#cb484-6" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb484-7"><a href="#cb484-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb484-8"><a href="#cb484-8" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb484-9"><a href="#cb484-9" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb484-10"><a href="#cb484-10" aria-hidden="true" tabindex="-1"></a>    bar.rate</span>
+<span id="cb484-11"><a href="#cb484-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
+<h4 id="booleans">Booleans</h4>
+<p>TRUE and FALSE can be used as boolean literals.</p>
+<p>SQLite doesn’t care about the type but CQL will get the type information it needs to make the columns of type BOOL</p>
+<div class="sourceCode" id="cb485"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb485-1"><a href="#cb485-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb485-2"><a href="#cb485-2" aria-hidden="true" tabindex="-1"></a>    foo.<span class="kw">id</span>,</span>
+<span id="cb485-3"><a href="#cb485-3" aria-hidden="true" tabindex="-1"></a>    foo.name,</span>
+<span id="cb485-4"><a href="#cb485-4" aria-hidden="true" tabindex="-1"></a>    NULL_REAL <span class="kw">as</span> rate,</span>
+<span id="cb485-5"><a href="#cb485-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_name,  <span class="co">-- this is a bit artificial but you get the idea</span></span>
+<span id="cb485-6"><a href="#cb485-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_rate</span>
+<span id="cb485-7"><a href="#cb485-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb485-8"><a href="#cb485-8" aria-hidden="true" tabindex="-1"></a><span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb485-9"><a href="#cb485-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb485-10"><a href="#cb485-10" aria-hidden="true" tabindex="-1"></a>    bar.<span class="kw">id</span>,</span>
+<span id="cb485-11"><a href="#cb485-11" aria-hidden="true" tabindex="-1"></a>    NULL_TEXT <span class="kw">as</span> name,</span>
+<span id="cb485-12"><a href="#cb485-12" aria-hidden="true" tabindex="-1"></a>    bar.rate,</span>
+<span id="cb485-13"><a href="#cb485-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FALSE</span> <span class="kw">as</span> has_name,</span>
+<span id="cb485-14"><a href="#cb485-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">TRUE</span> <span class="kw">as</span> has_rate</span>
+<span id="cb485-15"><a href="#cb485-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> bar</span></code></pre></div>
 <h3 id="boolean-expressions-and-casewhen">Boolean expressions and CASE/WHEN</h3>
 <p>It’s easy to get carried away with the power of <code>CASE</code> expressions, I’ve seen this kind of thing:</p>
-<div class="sourceCode" id="cb485"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb485-1"><a href="#cb485-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span> <span class="cf">ELSE</span> <span class="dv">1</span> <span class="cf">END</span> <span class="kw">AS</span> BOOL)</span></code></pre></div>
+<div class="sourceCode" id="cb486"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb486-1"><a href="#cb486-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span> <span class="cf">ELSE</span> <span class="dv">1</span> <span class="cf">END</span> <span class="kw">AS</span> BOOL)</span></code></pre></div>
 <p>But this is simply</p>
-<div class="sourceCode" id="cb486"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb486-1"><a href="#cb486-1" aria-hidden="true" tabindex="-1"></a>foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span></code></pre></div>
+<div class="sourceCode" id="cb487"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb487-1"><a href="#cb487-1" aria-hidden="true" tabindex="-1"></a>foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span></code></pre></div>
 <p>In general, if your case alternates are booleans a direct boolean expression would have served you better.</p>
 <h3 id="case-and-cast-and-null">CASE and CAST and NULL</h3>
 <p>Somtimes there’s clamping or filtering going on in a case statement</p>
-<div class="sourceCode" id="cb487"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb487-1"><a href="#cb487-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span> <span class="kw">AS</span> TEXT)</span></code></pre></div>
+<div class="sourceCode" id="cb488"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb488-1"><a href="#cb488-1" aria-hidden="true" tabindex="-1"></a><span class="fu">CAST</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span> <span class="kw">AS</span> TEXT)</span></code></pre></div>
 <p>Here the <code>CAST</code> is not needed at all so we could go to</p>
-<div class="sourceCode" id="cb488"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb488-1"><a href="#cb488-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span></span></code></pre></div>
+<div class="sourceCode" id="cb489"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb489-1"><a href="#cb489-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">ELSE</span> <span class="kw">NULL</span> <span class="cf">END</span></span></code></pre></div>
 <p><code>NULL</code> is already the default value for the <code>ELSE</code> clause so you never need <code>ELSE NULL</code></p>
 <p>So better:</p>
-<div class="sourceCode" id="cb489"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb489-1"><a href="#cb489-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">END</span></span></code></pre></div>
+<div class="sourceCode" id="cb490"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb490-1"><a href="#cb490-1" aria-hidden="true" tabindex="-1"></a><span class="cf">CASE</span> <span class="cf">WHEN</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="cf">THEN</span> foo.name <span class="cf">END</span></span></code></pre></div>
 <h3 id="filtering-out-nulls">Filtering out NULLs</h3>
 <p>Consider</p>
-<div class="sourceCode" id="cb490"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb490-1"><a href="#cb490-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
-<span id="cb490-2"><a href="#cb490-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> foo</span>
-<span id="cb490-3"><a href="#cb490-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
-<p>There’s no need to test for <code>NOT NULL</code> here, the boolean will result in <code>NULL</code> if <code>foo.name</code> is null which is not true so the <code>WHERE</code> test will fail.</p>
-<p>Better:</p>
 <div class="sourceCode" id="cb491"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb491-1"><a href="#cb491-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
 <span id="cb491-2"><a href="#cb491-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> foo</span>
-<span id="cb491-3"><a href="#cb491-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
+<span id="cb491-3"><a href="#cb491-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
+<p>There’s no need to test for <code>NOT NULL</code> here, the boolean will result in <code>NULL</code> if <code>foo.name</code> is null which is not true so the <code>WHERE</code> test will fail.</p>
+<p>Better:</p>
+<div class="sourceCode" id="cb492"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb492-1"><a href="#cb492-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb492-2"><a href="#cb492-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> foo</span>
+<span id="cb492-3"><a href="#cb492-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> foo.name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>;</span></code></pre></div>
 <h3 id="not-null-boolean-expressions">Not null boolean expressions</h3>
 <p>In this statement we do not want to have a null result for the boolean expression</p>
-<div class="sourceCode" id="cb492"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb492-1"><a href="#cb492-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
-<span id="cb492-2"><a href="#cb492-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>,</span>
-<span id="cb492-3"><a href="#cb492-3" aria-hidden="true" tabindex="-1"></a>    name,</span>
-<span id="cb492-4"><a href="#cb492-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(IFNULL(name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>, <span class="dv">0</span>) <span class="kw">AS</span> BOOL) <span class="kw">AS</span> name_bigger_than_m</span>
-<span id="cb492-5"><a href="#cb492-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
-<p>So now we’ve made several mistakes. We could have used the usual <code>FALSE</code> defintion to avoid the cast. But even that would have left us with an IFNULL that’s harder to read. Here’s a much simpler formulation:</p>
 <div class="sourceCode" id="cb493"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb493-1"><a href="#cb493-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
 <span id="cb493-2"><a href="#cb493-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>,</span>
 <span id="cb493-3"><a href="#cb493-3" aria-hidden="true" tabindex="-1"></a>    name,</span>
-<span id="cb493-4"><a href="#cb493-4" aria-hidden="true" tabindex="-1"></a>    name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="kw">IS</span> <span class="kw">TRUE</span> <span class="kw">AS</span> name_bigger_than_m</span>
+<span id="cb493-4"><a href="#cb493-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(IFNULL(name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span>, <span class="dv">0</span>) <span class="kw">AS</span> BOOL) <span class="kw">AS</span> name_bigger_than_m</span>
 <span id="cb493-5"><a href="#cb493-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
+<p>So now we’ve made several mistakes. We could have used the usual <code>FALSE</code> defintion to avoid the cast. But even that would have left us with an IFNULL that’s harder to read. Here’s a much simpler formulation:</p>
+<div class="sourceCode" id="cb494"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb494-1"><a href="#cb494-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb494-2"><a href="#cb494-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>,</span>
+<span id="cb494-3"><a href="#cb494-3" aria-hidden="true" tabindex="-1"></a>    name,</span>
+<span id="cb494-4"><a href="#cb494-4" aria-hidden="true" tabindex="-1"></a>    name <span class="op">&gt;</span> <span class="st">&#39;m&#39;</span> <span class="kw">IS</span> <span class="kw">TRUE</span> <span class="kw">AS</span> name_bigger_than_m</span>
+<span id="cb494-5"><a href="#cb494-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> FOO;</span></code></pre></div>
 <p>Even without the <code>TRUE</code> macro you could do <code>IS 1</code> above and still get a result of type <code>BOOL NOT NULL</code></p>
 <h3 id="using-is-when-it-makes-sense-to-do-so">Using <code>IS</code> when it makes sense to do so</h3>
 <p>This kind of boolean expression is also verbose for no reason</p>
-<div class="sourceCode" id="cb494"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb494-1"><a href="#cb494-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> rate <span class="op">=</span> <span class="dv">20</span></span></code></pre></div>
+<div class="sourceCode" id="cb495"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb495-1"><a href="#cb495-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> rate <span class="op">=</span> <span class="dv">20</span></span></code></pre></div>
 <p>In a <code>WHERE</code> clause probably <code>rate = 20</code> suffices but even if you really need a <code>NOT NULL BOOL</code> result the expression above is exactly what the <code>IS</code> operator is for. e.g.</p>
-<div class="sourceCode" id="cb495"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb495-1"><a href="#cb495-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="dv">20</span></span></code></pre></div>
+<div class="sourceCode" id="cb496"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb496-1"><a href="#cb496-1" aria-hidden="true" tabindex="-1"></a>    rate <span class="kw">IS</span> <span class="dv">20</span></span></code></pre></div>
 <p>The <code>IS</code> operator is frequently avoided except for <code>IS NULL</code> and <code>IS NOT NULL</code> but it’s a general equality operator with the added semantic that it never returns <code>NULL</code>. <code>NULL IS NULL</code> is true. <code>NULL IS [anything not null]</code> is false.</p>
 <h3 id="left-joins-that-are-not-left-joins">Left joins that are not left joins</h3>
 <p>Consider</p>
-<div class="sourceCode" id="cb496"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb496-1"><a href="#cb496-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
-<span id="cb496-2"><a href="#cb496-2" aria-hidden="true" tabindex="-1"></a>         foo.name,</span>
-<span id="cb496-3"><a href="#cb496-3" aria-hidden="true" tabindex="-1"></a>         bar.rate</span>
-<span id="cb496-4"><a href="#cb496-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb496-5"><a href="#cb496-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
-<span id="cb496-6"><a href="#cb496-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
-<p>This is no longer a left join because the <code>WHERE</code> clause demands a value for at least one column from <code>bar</code>.</p>
-<p>Better:</p>
 <div class="sourceCode" id="cb497"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb497-1"><a href="#cb497-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
 <span id="cb497-2"><a href="#cb497-2" aria-hidden="true" tabindex="-1"></a>         foo.name,</span>
 <span id="cb497-3"><a href="#cb497-3" aria-hidden="true" tabindex="-1"></a>         bar.rate</span>
 <span id="cb497-4"><a href="#cb497-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
-<span id="cb497-5"><a href="#cb497-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">INNER</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
+<span id="cb497-5"><a href="#cb497-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
 <span id="cb497-6"><a href="#cb497-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
+<p>This is no longer a left join because the <code>WHERE</code> clause demands a value for at least one column from <code>bar</code>.</p>
+<p>Better:</p>
+<div class="sourceCode" id="cb498"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb498-1"><a href="#cb498-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> foo.<span class="kw">id</span>,</span>
+<span id="cb498-2"><a href="#cb498-2" aria-hidden="true" tabindex="-1"></a>         foo.name,</span>
+<span id="cb498-3"><a href="#cb498-3" aria-hidden="true" tabindex="-1"></a>         bar.rate</span>
+<span id="cb498-4"><a href="#cb498-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> foo</span>
+<span id="cb498-5"><a href="#cb498-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">INNER</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></span>
+<span id="cb498-6"><a href="#cb498-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
 <h2 id="appendix-8-cql-best-practices">Appendix 8: CQL Best Practices</h2>
 <!---
 -- Copyright (c) Facebook, Inc. and its affiliates.
@@ -11771,41 +11854,41 @@ fetch C USING
 <p>This is a brief discussion of the CQL Amalgam and its normal usage patterns.</p>
 <h3 id="building-the-amalgam">Building the Amalgam</h3>
 <p>The amalgam has to include the results of bison and flex, so a normal build must run first. The simplest way to build it starting from the <code>sources</code> directory is:</p>
-<div class="sourceCode" id="cb498"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb498-1"><a href="#cb498-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
-<span id="cb498-2"><a href="#cb498-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./make_amalgam.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb499"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb499-1"><a href="#cb499-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
+<span id="cb499-2"><a href="#cb499-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./make_amalgam.sh</span></span></code></pre></div>
 <p>The result goes in <code>out/cql_amalgam.c</code>. It can then be built using <code>cc</code> with whatever flags you might desire. With a few <code>-D</code> directives it can readily be compiled with Microsoft C and it also works with Emscripten (<code>emcc</code>) basically unchanged. Clang and Gcc of course also work.</p>
 <p>The standard test script <code>test.sh</code> builds the amalgam and attempts to compile it as well, this ensures that the amalgam can at least compile at all times.</p>
 <h3 id="testing-the-amalgam">Testing the Amalgam</h3>
 <p>Of course you can do whatever tests you might like by simply compiling the amalgam as is and then using it to compile things. But importantly the test script <code>test.sh</code> can test the amalgam build like so:</p>
-<div class="sourceCode" id="cb499"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb499-1"><a href="#cb499-1" aria-hidden="true" tabindex="-1"></a><span class="ex">test.sh</span> <span class="at">--use_amalgam</span></span></code></pre></div>
+<div class="sourceCode" id="cb500"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb500-1"><a href="#cb500-1" aria-hidden="true" tabindex="-1"></a><span class="ex">test.sh</span> <span class="at">--use_amalgam</span></span></code></pre></div>
 <p>This runs all the normal tests using the binary built from the amalgam rather than the normal binary.</p>
 <p>Normal CQL development practices result in this happening pretty often so the amalgam tends to stay in good shape. The code largely works in either form with very few affordances for the amalgam build needed. Most developers don’t even think about the amalgam build flavor; to a first approximation “it just works”.</p>
 <h3 id="using-the-amalgam">Using the Amalgam</h3>
 <p>To use the amalgam you’ll want to do something like this:</p>
-<div class="sourceCode" id="cb500"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb500-1"><a href="#cb500-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CQL_IS_NOT_MAIN 1</span></span>
-<span id="cb500-2"><a href="#cb500-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb500-3"><a href="#cb500-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Suppresses a bunch of warnings because the code</span></span>
-<span id="cb500-4"><a href="#cb500-4" aria-hidden="true" tabindex="-1"></a><span class="co">// is in an #include context</span></span>
-<span id="cb500-5"><a href="#cb500-5" aria-hidden="true" tabindex="-1"></a><span class="co">// PR&#39;s to remove these are welcome :D</span></span>
-<span id="cb500-6"><a href="#cb500-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma clang diagnostic ignored &quot;-Wnullability-completeness&quot;</span></span>
-<span id="cb500-7"><a href="#cb500-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb500-8"><a href="#cb500-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;cql_amalgam.c&quot;</span></span>
-<span id="cb500-9"><a href="#cb500-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb500-10"><a href="#cb500-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> go_for_it<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>your_buffer<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb500-11"><a href="#cb500-11" aria-hidden="true" tabindex="-1"></a>  YY_BUFFER_STATE my_string_buffer <span class="op">=</span> yy_scan_string<span class="op">(</span>your_buffer<span class="op">);</span></span>
-<span id="cb500-12"><a href="#cb500-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb500-13"><a href="#cb500-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Note: &quot;--in&quot; is irrelevant because the scanner is</span></span>
-<span id="cb500-14"><a href="#cb500-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// going to read from the buffer above.</span></span>
-<span id="cb500-15"><a href="#cb500-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
-<span id="cb500-16"><a href="#cb500-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If you don&#39;t use yy_scan_string, you could use &quot;--in&quot;</span></span>
-<span id="cb500-17"><a href="#cb500-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// to get data from a file.</span></span>
-<span id="cb500-18"><a href="#cb500-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb500-19"><a href="#cb500-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> argc <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
-<span id="cb500-20"><a href="#cb500-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span> <span class="st">&quot;cql&quot;</span><span class="op">,</span> <span class="st">&quot;--cg&quot;</span><span class="op">,</span> <span class="st">&quot;foo.h&quot;</span><span class="op">,</span> <span class="st">&quot;foo.c&quot;</span> <span class="op">};</span></span>
-<span id="cb500-21"><a href="#cb500-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb500-22"><a href="#cb500-22" aria-hidden="true" tabindex="-1"></a>  cql_main<span class="op">(</span>argc<span class="op">,</span> argv<span class="op">);</span></span>
-<span id="cb500-23"><a href="#cb500-23" aria-hidden="true" tabindex="-1"></a>  yy_delete_buffer<span class="op">(</span>my_string_buffer<span class="op">);</span></span>
-<span id="cb500-24"><a href="#cb500-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb501"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb501-1"><a href="#cb501-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CQL_IS_NOT_MAIN 1</span></span>
+<span id="cb501-2"><a href="#cb501-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb501-3"><a href="#cb501-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Suppresses a bunch of warnings because the code</span></span>
+<span id="cb501-4"><a href="#cb501-4" aria-hidden="true" tabindex="-1"></a><span class="co">// is in an #include context</span></span>
+<span id="cb501-5"><a href="#cb501-5" aria-hidden="true" tabindex="-1"></a><span class="co">// PR&#39;s to remove these are welcome :D</span></span>
+<span id="cb501-6"><a href="#cb501-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#pragma clang diagnostic ignored &quot;-Wnullability-completeness&quot;</span></span>
+<span id="cb501-7"><a href="#cb501-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb501-8"><a href="#cb501-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;cql_amalgam.c&quot;</span></span>
+<span id="cb501-9"><a href="#cb501-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb501-10"><a href="#cb501-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> go_for_it<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>your_buffer<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb501-11"><a href="#cb501-11" aria-hidden="true" tabindex="-1"></a>  YY_BUFFER_STATE my_string_buffer <span class="op">=</span> yy_scan_string<span class="op">(</span>your_buffer<span class="op">);</span></span>
+<span id="cb501-12"><a href="#cb501-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb501-13"><a href="#cb501-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Note: &quot;--in&quot; is irrelevant because the scanner is</span></span>
+<span id="cb501-14"><a href="#cb501-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// going to read from the buffer above.</span></span>
+<span id="cb501-15"><a href="#cb501-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">//</span></span>
+<span id="cb501-16"><a href="#cb501-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If you don&#39;t use yy_scan_string, you could use &quot;--in&quot;</span></span>
+<span id="cb501-17"><a href="#cb501-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// to get data from a file.</span></span>
+<span id="cb501-18"><a href="#cb501-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb501-19"><a href="#cb501-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> argc <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb501-20"><a href="#cb501-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">char</span> <span class="op">*</span>argv<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span> <span class="st">&quot;cql&quot;</span><span class="op">,</span> <span class="st">&quot;--cg&quot;</span><span class="op">,</span> <span class="st">&quot;foo.h&quot;</span><span class="op">,</span> <span class="st">&quot;foo.c&quot;</span> <span class="op">};</span></span>
+<span id="cb501-21"><a href="#cb501-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb501-22"><a href="#cb501-22" aria-hidden="true" tabindex="-1"></a>  cql_main<span class="op">(</span>argc<span class="op">,</span> argv<span class="op">);</span></span>
+<span id="cb501-23"><a href="#cb501-23" aria-hidden="true" tabindex="-1"></a>  yy_delete_buffer<span class="op">(</span>my_string_buffer<span class="op">);</span></span>
+<span id="cb501-24"><a href="#cb501-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>So the general pattern is:</p>
 <ul>
 <li>predefine the options you want to use (see below)</li>
@@ -11829,15 +11912,15 @@ fetch C USING
 <h4 id="cql_is_not_main">CQL_IS_NOT_MAIN</h4>
 <p>If this symbol is defined then <code>cql_main</code> will not be redefined to be <code>main</code>.</p>
 <p>As the comments in the source say:</p>
-<div class="sourceCode" id="cb501"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb501-1"><a href="#cb501-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef CQL_IS_NOT_MAIN</span></span>
-<span id="cb501-2"><a href="#cb501-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb501-3"><a href="#cb501-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Normally CQL is the main entry point.  If you are using CQL</span></span>
-<span id="cb501-4"><a href="#cb501-4" aria-hidden="true" tabindex="-1"></a><span class="co">// in an embedded fashion then you want to invoke its main at</span></span>
-<span id="cb501-5"><a href="#cb501-5" aria-hidden="true" tabindex="-1"></a><span class="co">// some other time. If you define CQL_IS_NOT_MAIN then cql_main</span></span>
-<span id="cb501-6"><a href="#cb501-6" aria-hidden="true" tabindex="-1"></a><span class="co">// is not renamed to main.  You call cql_main when you want.</span></span>
-<span id="cb501-7"><a href="#cb501-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb501-8"><a href="#cb501-8" aria-hidden="true" tabindex="-1"></a>  <span class="pp">#define cql_main main</span></span>
-<span id="cb501-9"><a href="#cb501-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<div class="sourceCode" id="cb502"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb502-1"><a href="#cb502-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef CQL_IS_NOT_MAIN</span></span>
+<span id="cb502-2"><a href="#cb502-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb502-3"><a href="#cb502-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Normally CQL is the main entry point.  If you are using CQL</span></span>
+<span id="cb502-4"><a href="#cb502-4" aria-hidden="true" tabindex="-1"></a><span class="co">// in an embedded fashion then you want to invoke its main at</span></span>
+<span id="cb502-5"><a href="#cb502-5" aria-hidden="true" tabindex="-1"></a><span class="co">// some other time. If you define CQL_IS_NOT_MAIN then cql_main</span></span>
+<span id="cb502-6"><a href="#cb502-6" aria-hidden="true" tabindex="-1"></a><span class="co">// is not renamed to main.  You call cql_main when you want.</span></span>
+<span id="cb502-7"><a href="#cb502-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb502-8"><a href="#cb502-8" aria-hidden="true" tabindex="-1"></a>  <span class="pp">#define cql_main main</span></span>
+<span id="cb502-9"><a href="#cb502-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
 <p>Set this symbol so that you own main and cql_main is called at your pleasure.</p>
 <h4 id="cql_no_system_headers">CQL_NO_SYSTEM_HEADERS</h4>
 <p>The amalgam includes the normal <code>#include</code> directives needed to make it compile. Things like stdio and such. In your situation these headers may not be appropriate. If <code>CQL_NO_SYSTEM_HEADERS</code> is defined then the amalgam will not include anything; you can then add whatever headers you need before you include the amalgam.</p>
@@ -11845,114 +11928,114 @@ fetch C USING
 <p>The amalgam includes a set of recommended directives for warnings to suppress and include. If you want to make other choices for these you can suppress the defaults by defining <code>CQL_NO_DIAGNOSTIC_BLOCK</code>; you can then add whatever diagnostic pragmas you want/need.</p>
 <h4 id="cql_emit_error">cql_emit_error</h4>
 <p>The amalgam uses <code>cql_emit_error</code> to write its messages to stderr. The documentation is included in the code which is attached here. If you want the error messages to go somewhere else, define <code>cql_emit_error</code> as the name of your error handling function. It should accept a <code>const char *</code> and record that string however you deem appropriate.</p>
-<div class="sourceCode" id="cb502"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb502-1"><a href="#cb502-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_emit_error</span></span>
-<span id="cb502-2"><a href="#cb502-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb502-3"><a href="#cb502-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL &quot;stderr&quot; outputs are emitted with this API.</span></span>
-<span id="cb502-4"><a href="#cb502-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb502-5"><a href="#cb502-5" aria-hidden="true" tabindex="-1"></a><span class="co">// You can define it to be a method of your choice with</span></span>
-<span id="cb502-6"><a href="#cb502-6" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_emit_error your_method&quot; and then your method</span></span>
-<span id="cb502-7"><a href="#cb502-7" aria-hidden="true" tabindex="-1"></a><span class="co">// will get the data instead. This will be whatever output the</span></span>
-<span id="cb502-8"><a href="#cb502-8" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to to stderr.  This includes</span></span>
-<span id="cb502-9"><a href="#cb502-9" aria-hidden="true" tabindex="-1"></a><span class="co">// semantic errors or invalid argument combinations.  Note that</span></span>
-<span id="cb502-10"><a href="#cb502-10" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL never emits error fragments with this API, you always</span></span>
-<span id="cb502-11"><a href="#cb502-11" aria-hidden="true" tabindex="-1"></a><span class="co">// get all the text of one error.  This is important if you</span></span>
-<span id="cb502-12"><a href="#cb502-12" aria-hidden="true" tabindex="-1"></a><span class="co">// are filtering or looking for particular errors in a test</span></span>
-<span id="cb502-13"><a href="#cb502-13" aria-hidden="true" tabindex="-1"></a><span class="co">// harness or some such.</span></span>
-<span id="cb502-14"><a href="#cb502-14" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb502-15"><a href="#cb502-15" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
-<span id="cb502-16"><a href="#cb502-16" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
-<span id="cb502-17"><a href="#cb502-17" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb502-18"><a href="#cb502-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you may use cql_cleanup_and_exit to force a failure from</span></span>
-<span id="cb502-19"><a href="#cb502-19" aria-hidden="true" tabindex="-1"></a><span class="co">// within this API but doing so might result in unexpected cleanup</span></span>
-<span id="cb502-20"><a href="#cb502-20" aria-hidden="true" tabindex="-1"></a><span class="co">// paths that have not been tested.</span></span>
-<span id="cb502-21"><a href="#cb502-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb502-22"><a href="#cb502-22" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_emit_error<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>err<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb502-23"><a href="#cb502-23" aria-hidden="true" tabindex="-1"></a>  fprintf<span class="op">(</span>stderr<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> err<span class="op">);</span></span>
-<span id="cb502-24"><a href="#cb502-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>error_capture<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb502-25"><a href="#cb502-25" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>error_capture<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> err<span class="op">);</span></span>
-<span id="cb502-26"><a href="#cb502-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb502-27"><a href="#cb502-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb502-28"><a href="#cb502-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb502-29"><a href="#cb502-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<div class="sourceCode" id="cb503"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb503-1"><a href="#cb503-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_emit_error</span></span>
+<span id="cb503-2"><a href="#cb503-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb503-3"><a href="#cb503-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL &quot;stderr&quot; outputs are emitted with this API.</span></span>
+<span id="cb503-4"><a href="#cb503-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb503-5"><a href="#cb503-5" aria-hidden="true" tabindex="-1"></a><span class="co">// You can define it to be a method of your choice with</span></span>
+<span id="cb503-6"><a href="#cb503-6" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_emit_error your_method&quot; and then your method</span></span>
+<span id="cb503-7"><a href="#cb503-7" aria-hidden="true" tabindex="-1"></a><span class="co">// will get the data instead. This will be whatever output the</span></span>
+<span id="cb503-8"><a href="#cb503-8" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to to stderr.  This includes</span></span>
+<span id="cb503-9"><a href="#cb503-9" aria-hidden="true" tabindex="-1"></a><span class="co">// semantic errors or invalid argument combinations.  Note that</span></span>
+<span id="cb503-10"><a href="#cb503-10" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL never emits error fragments with this API, you always</span></span>
+<span id="cb503-11"><a href="#cb503-11" aria-hidden="true" tabindex="-1"></a><span class="co">// get all the text of one error.  This is important if you</span></span>
+<span id="cb503-12"><a href="#cb503-12" aria-hidden="true" tabindex="-1"></a><span class="co">// are filtering or looking for particular errors in a test</span></span>
+<span id="cb503-13"><a href="#cb503-13" aria-hidden="true" tabindex="-1"></a><span class="co">// harness or some such.</span></span>
+<span id="cb503-14"><a href="#cb503-14" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb503-15"><a href="#cb503-15" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
+<span id="cb503-16"><a href="#cb503-16" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
+<span id="cb503-17"><a href="#cb503-17" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb503-18"><a href="#cb503-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you may use cql_cleanup_and_exit to force a failure from</span></span>
+<span id="cb503-19"><a href="#cb503-19" aria-hidden="true" tabindex="-1"></a><span class="co">// within this API but doing so might result in unexpected cleanup</span></span>
+<span id="cb503-20"><a href="#cb503-20" aria-hidden="true" tabindex="-1"></a><span class="co">// paths that have not been tested.</span></span>
+<span id="cb503-21"><a href="#cb503-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb503-22"><a href="#cb503-22" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_emit_error<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>err<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb503-23"><a href="#cb503-23" aria-hidden="true" tabindex="-1"></a>  fprintf<span class="op">(</span>stderr<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> err<span class="op">);</span></span>
+<span id="cb503-24"><a href="#cb503-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>error_capture<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb503-25"><a href="#cb503-25" aria-hidden="true" tabindex="-1"></a>    bprintf<span class="op">(</span>error_capture<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> err<span class="op">);</span></span>
+<span id="cb503-26"><a href="#cb503-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb503-27"><a href="#cb503-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb503-28"><a href="#cb503-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb503-29"><a href="#cb503-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
 <p>Typically you would <code>#define cql_emit_error your_error_function</code> before you include the amalgam and then define your_error_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
 <h4 id="cql_emit_output">cql_emit_output</h4>
 <p>The amalgam uses <code>cql_emit_output</code> to write its messages to stdout. The documentation is included in the code which is attached here. If you want the standard output to go somewhere else, define <code>cql_emit_output</code> as the name of your output handling function. It should accept a <code>const char *</code> and record that string however you deem appropriate.</p>
-<div class="sourceCode" id="cb503"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb503-1"><a href="#cb503-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_emit_output</span></span>
-<span id="cb503-2"><a href="#cb503-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb503-3"><a href="#cb503-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL &quot;stdout&quot; outputs are emitted (in arbitrarily small pieces)</span></span>
-<span id="cb503-4"><a href="#cb503-4" aria-hidden="true" tabindex="-1"></a><span class="co">// with this API.</span></span>
-<span id="cb503-5"><a href="#cb503-5" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb503-6"><a href="#cb503-6" aria-hidden="true" tabindex="-1"></a><span class="co">// You can define it to be a method of your choice with</span></span>
-<span id="cb503-7"><a href="#cb503-7" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_emit_output your_method&quot; and then your method will</span></span>
-<span id="cb503-8"><a href="#cb503-8" aria-hidden="true" tabindex="-1"></a><span class="co">// get the data instead. This will be whatever output the</span></span>
-<span id="cb503-9"><a href="#cb503-9" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to to stdout.  This is usually</span></span>
-<span id="cb503-10"><a href="#cb503-10" aria-hidden="true" tabindex="-1"></a><span class="co">// reformated CQL or semantic trees and such -- not the normal </span></span>
-<span id="cb503-11"><a href="#cb503-11" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler output.</span></span>
-<span id="cb503-12"><a href="#cb503-12" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb503-13"><a href="#cb503-13" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
-<span id="cb503-14"><a href="#cb503-14" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
-<span id="cb503-15"><a href="#cb503-15" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb503-16"><a href="#cb503-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you may use cql_cleanup_and_exit to force a failure from</span></span>
-<span id="cb503-17"><a href="#cb503-17" aria-hidden="true" tabindex="-1"></a><span class="co">// within this API but doing so might result in unexpected cleanup</span></span>
-<span id="cb503-18"><a href="#cb503-18" aria-hidden="true" tabindex="-1"></a><span class="co">// paths that have not been tested.</span></span>
-<span id="cb503-19"><a href="#cb503-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb503-20"><a href="#cb503-20" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_emit_output<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>msg<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb503-21"><a href="#cb503-21" aria-hidden="true" tabindex="-1"></a>  printf<span class="op">(</span><span class="st">&quot;%s&quot;</span><span class="op">,</span> msg<span class="op">);</span></span>
-<span id="cb503-22"><a href="#cb503-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb503-23"><a href="#cb503-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb503-24"><a href="#cb503-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<div class="sourceCode" id="cb504"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb504-1"><a href="#cb504-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_emit_output</span></span>
+<span id="cb504-2"><a href="#cb504-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb504-3"><a href="#cb504-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL &quot;stdout&quot; outputs are emitted (in arbitrarily small pieces)</span></span>
+<span id="cb504-4"><a href="#cb504-4" aria-hidden="true" tabindex="-1"></a><span class="co">// with this API.</span></span>
+<span id="cb504-5"><a href="#cb504-5" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb504-6"><a href="#cb504-6" aria-hidden="true" tabindex="-1"></a><span class="co">// You can define it to be a method of your choice with</span></span>
+<span id="cb504-7"><a href="#cb504-7" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_emit_output your_method&quot; and then your method will</span></span>
+<span id="cb504-8"><a href="#cb504-8" aria-hidden="true" tabindex="-1"></a><span class="co">// get the data instead. This will be whatever output the</span></span>
+<span id="cb504-9"><a href="#cb504-9" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to to stdout.  This is usually</span></span>
+<span id="cb504-10"><a href="#cb504-10" aria-hidden="true" tabindex="-1"></a><span class="co">// reformated CQL or semantic trees and such -- not the normal </span></span>
+<span id="cb504-11"><a href="#cb504-11" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler output.</span></span>
+<span id="cb504-12"><a href="#cb504-12" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb504-13"><a href="#cb504-13" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
+<span id="cb504-14"><a href="#cb504-14" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
+<span id="cb504-15"><a href="#cb504-15" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb504-16"><a href="#cb504-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you may use cql_cleanup_and_exit to force a failure from</span></span>
+<span id="cb504-17"><a href="#cb504-17" aria-hidden="true" tabindex="-1"></a><span class="co">// within this API but doing so might result in unexpected cleanup</span></span>
+<span id="cb504-18"><a href="#cb504-18" aria-hidden="true" tabindex="-1"></a><span class="co">// paths that have not been tested.</span></span>
+<span id="cb504-19"><a href="#cb504-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb504-20"><a href="#cb504-20" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_emit_output<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>msg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb504-21"><a href="#cb504-21" aria-hidden="true" tabindex="-1"></a>  printf<span class="op">(</span><span class="st">&quot;%s&quot;</span><span class="op">,</span> msg<span class="op">);</span></span>
+<span id="cb504-22"><a href="#cb504-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb504-23"><a href="#cb504-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb504-24"><a href="#cb504-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
 <p>Typically you would <code>#define cql_emit_output your_output_function</code> before you include the amalgam and then define your_error_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
 <h4 id="cql_open_file_for_write">cql_open_file_for_write</h4>
 <p>If you still want normal file i/o for your output but you simply want to control the placement of the output (such as forcing it to be on some virtual drive) you can replace this function by defining <code>cql_open_file_for_write</code>.</p>
 <p>If all you need to do is control the origin of the <code>FILE *</code> that is written to, you can replace just this function.</p>
-<div class="sourceCode" id="cb504"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb504-1"><a href="#cb504-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_open_file_for_write</span></span>
-<span id="cb504-2"><a href="#cb504-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb504-3"><a href="#cb504-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Not a normal integration point, the normal thing to do is</span></span>
-<span id="cb504-4"><a href="#cb504-4" aria-hidden="true" tabindex="-1"></a><span class="co">// replace cql_write_file but if all you need to do is adjust</span></span>
-<span id="cb504-5"><a href="#cb504-5" aria-hidden="true" tabindex="-1"></a><span class="co">// the path or something like that you could replace</span></span>
-<span id="cb504-6"><a href="#cb504-6" aria-hidden="true" tabindex="-1"></a><span class="co">// this method instead.  This presumes that a FILE * is still ok</span></span>
-<span id="cb504-7"><a href="#cb504-7" aria-hidden="true" tabindex="-1"></a><span class="co">// for your scenario.</span></span>
-<span id="cb504-8"><a href="#cb504-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb504-9"><a href="#cb504-9" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>_Nonnull cql_open_file_for_write<span class="op">(</span></span>
-<span id="cb504-10"><a href="#cb504-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull file_name<span class="op">)</span></span>
-<span id="cb504-11"><a href="#cb504-11" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
-<span id="cb504-12"><a href="#cb504-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">FILE</span> <span class="op">*</span>file<span class="op">;</span></span>
-<span id="cb504-13"><a href="#cb504-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!(</span>file <span class="op">=</span> fopen<span class="op">(</span>file_name<span class="op">,</span> <span class="st">&quot;w&quot;</span><span class="op">)))</span> <span class="op">{</span></span>
-<span id="cb504-14"><a href="#cb504-14" aria-hidden="true" tabindex="-1"></a>    cql_error<span class="op">(</span><span class="st">&quot;unable to open %s for write</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> file_name<span class="op">);</span></span>
-<span id="cb504-15"><a href="#cb504-15" aria-hidden="true" tabindex="-1"></a>    cql_cleanup_and_exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
-<span id="cb504-16"><a href="#cb504-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
-<span id="cb504-17"><a href="#cb504-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> file<span class="op">;</span></span>
-<span id="cb504-18"><a href="#cb504-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb504-19"><a href="#cb504-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb504-20"><a href="#cb504-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<div class="sourceCode" id="cb505"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb505-1"><a href="#cb505-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_open_file_for_write</span></span>
+<span id="cb505-2"><a href="#cb505-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb505-3"><a href="#cb505-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Not a normal integration point, the normal thing to do is</span></span>
+<span id="cb505-4"><a href="#cb505-4" aria-hidden="true" tabindex="-1"></a><span class="co">// replace cql_write_file but if all you need to do is adjust</span></span>
+<span id="cb505-5"><a href="#cb505-5" aria-hidden="true" tabindex="-1"></a><span class="co">// the path or something like that you could replace</span></span>
+<span id="cb505-6"><a href="#cb505-6" aria-hidden="true" tabindex="-1"></a><span class="co">// this method instead.  This presumes that a FILE * is still ok</span></span>
+<span id="cb505-7"><a href="#cb505-7" aria-hidden="true" tabindex="-1"></a><span class="co">// for your scenario.</span></span>
+<span id="cb505-8"><a href="#cb505-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb505-9"><a href="#cb505-9" aria-hidden="true" tabindex="-1"></a><span class="dt">FILE</span> <span class="op">*</span>_Nonnull cql_open_file_for_write<span class="op">(</span></span>
+<span id="cb505-10"><a href="#cb505-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull file_name<span class="op">)</span></span>
+<span id="cb505-11"><a href="#cb505-11" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb505-12"><a href="#cb505-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">FILE</span> <span class="op">*</span>file<span class="op">;</span></span>
+<span id="cb505-13"><a href="#cb505-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!(</span>file <span class="op">=</span> fopen<span class="op">(</span>file_name<span class="op">,</span> <span class="st">&quot;w&quot;</span><span class="op">)))</span> <span class="op">{</span></span>
+<span id="cb505-14"><a href="#cb505-14" aria-hidden="true" tabindex="-1"></a>    cql_error<span class="op">(</span><span class="st">&quot;unable to open %s for write</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> file_name<span class="op">);</span></span>
+<span id="cb505-15"><a href="#cb505-15" aria-hidden="true" tabindex="-1"></a>    cql_cleanup_and_exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb505-16"><a href="#cb505-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb505-17"><a href="#cb505-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> file<span class="op">;</span></span>
+<span id="cb505-18"><a href="#cb505-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb505-19"><a href="#cb505-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb505-20"><a href="#cb505-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
 <p>Typically you would <code>#define cql_open_file_for_write your_open_function</code> before you include the amalgam and then define your_open_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
 <h4 id="cql_write_file">cql_write_file</h4>
 <p>The amalgam uses <code>cql_write_file</code> to write its compilation outputs to the file system. The documentation is included in the code which is attached here. If you want the compilation output to go somewhere else, define <code>cql_write_file</code> as the name of your output handling function. It should accept a <code>const char *</code> for the file name and another for the data to be written. You can then store those compilation results however you deem appropriate.</p>
-<div class="sourceCode" id="cb505"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb505-1"><a href="#cb505-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_write_file</span></span>
-<span id="cb505-2"><a href="#cb505-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb505-3"><a href="#cb505-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL code generation outputs are emitted in one &quot;gulp&quot; with this</span></span>
-<span id="cb505-4"><a href="#cb505-4" aria-hidden="true" tabindex="-1"></a><span class="co">// API. You can define it to be a method of your choice with</span></span>
-<span id="cb505-5"><a href="#cb505-5" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_write_file your_method&quot; and then your method will</span></span>
-<span id="cb505-6"><a href="#cb505-6" aria-hidden="true" tabindex="-1"></a><span class="co">// get the filename and the data. This will be whatever output the</span></span>
-<span id="cb505-7"><a href="#cb505-7" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to one of it&#39;s --cg arguments.</span></span>
-<span id="cb505-8"><a href="#cb505-8" aria-hidden="true" tabindex="-1"></a><span class="co">// You can then write it to a location of your choice.</span></span>
-<span id="cb505-9"><a href="#cb505-9" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
-<span id="cb505-10"><a href="#cb505-10" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
-<span id="cb505-11"><a href="#cb505-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb505-12"><a href="#cb505-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you *may* use cql_cleanup_and_exit to force a failure </span></span>
-<span id="cb505-13"><a href="#cb505-13" aria-hidden="true" tabindex="-1"></a><span class="co">// from within this API.  That&#39;s a normal failure mode that is</span></span>
-<span id="cb505-14"><a href="#cb505-14" aria-hidden="true" tabindex="-1"></a><span class="co">// well-tested.</span></span>
-<span id="cb505-15"><a href="#cb505-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb505-16"><a href="#cb505-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_write_file<span class="op">(</span></span>
-<span id="cb505-17"><a href="#cb505-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull file_name<span class="op">,</span> </span>
-<span id="cb505-18"><a href="#cb505-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull data<span class="op">)</span></span>
-<span id="cb505-19"><a href="#cb505-19" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
-<span id="cb505-20"><a href="#cb505-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">FILE</span> <span class="op">*</span>file <span class="op">=</span> cql_open_file_for_write<span class="op">(</span>file_name<span class="op">);</span></span>
-<span id="cb505-21"><a href="#cb505-21" aria-hidden="true" tabindex="-1"></a>  fprintf<span class="op">(</span>file<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> data<span class="op">);</span></span>
-<span id="cb505-22"><a href="#cb505-22" aria-hidden="true" tabindex="-1"></a>  fclose<span class="op">(</span>file<span class="op">);</span></span>
-<span id="cb505-23"><a href="#cb505-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb505-24"><a href="#cb505-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb505-25"><a href="#cb505-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
+<div class="sourceCode" id="cb506"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb506-1"><a href="#cb506-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef cql_write_file</span></span>
+<span id="cb506-2"><a href="#cb506-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb506-3"><a href="#cb506-3" aria-hidden="true" tabindex="-1"></a><span class="co">// CQL code generation outputs are emitted in one &quot;gulp&quot; with this</span></span>
+<span id="cb506-4"><a href="#cb506-4" aria-hidden="true" tabindex="-1"></a><span class="co">// API. You can define it to be a method of your choice with</span></span>
+<span id="cb506-5"><a href="#cb506-5" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;#define cql_write_file your_method&quot; and then your method will</span></span>
+<span id="cb506-6"><a href="#cb506-6" aria-hidden="true" tabindex="-1"></a><span class="co">// get the filename and the data. This will be whatever output the</span></span>
+<span id="cb506-7"><a href="#cb506-7" aria-hidden="true" tabindex="-1"></a><span class="co">// compiler would have emitted to one of it&#39;s --cg arguments.</span></span>
+<span id="cb506-8"><a href="#cb506-8" aria-hidden="true" tabindex="-1"></a><span class="co">// You can then write it to a location of your choice.</span></span>
+<span id="cb506-9"><a href="#cb506-9" aria-hidden="true" tabindex="-1"></a><span class="co">// You must copy the memory if you intend to keep it. &quot;data&quot; will</span></span>
+<span id="cb506-10"><a href="#cb506-10" aria-hidden="true" tabindex="-1"></a><span class="co">// be freed.</span></span>
+<span id="cb506-11"><a href="#cb506-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb506-12"><a href="#cb506-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: you *may* use cql_cleanup_and_exit to force a failure </span></span>
+<span id="cb506-13"><a href="#cb506-13" aria-hidden="true" tabindex="-1"></a><span class="co">// from within this API.  That&#39;s a normal failure mode that is</span></span>
+<span id="cb506-14"><a href="#cb506-14" aria-hidden="true" tabindex="-1"></a><span class="co">// well-tested.</span></span>
+<span id="cb506-15"><a href="#cb506-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb506-16"><a href="#cb506-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cql_write_file<span class="op">(</span></span>
+<span id="cb506-17"><a href="#cb506-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull file_name<span class="op">,</span> </span>
+<span id="cb506-18"><a href="#cb506-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull data<span class="op">)</span></span>
+<span id="cb506-19"><a href="#cb506-19" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb506-20"><a href="#cb506-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">FILE</span> <span class="op">*</span>file <span class="op">=</span> cql_open_file_for_write<span class="op">(</span>file_name<span class="op">);</span></span>
+<span id="cb506-21"><a href="#cb506-21" aria-hidden="true" tabindex="-1"></a>  fprintf<span class="op">(</span>file<span class="op">,</span> <span class="st">&quot;%s&quot;</span><span class="op">,</span> data<span class="op">);</span></span>
+<span id="cb506-22"><a href="#cb506-22" aria-hidden="true" tabindex="-1"></a>  fclose<span class="op">(</span>file<span class="op">);</span></span>
+<span id="cb506-23"><a href="#cb506-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb506-24"><a href="#cb506-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb506-25"><a href="#cb506-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span></code></pre></div>
 <p>Typically you would <code>#define cql_write_file your_write_function</code> before you include the amalgam and then define your_write_function elsewhere in that file (before or after the amalgam is included are both fine).</p>
 <h3 id="other-notes">Other Notes</h3>
 <p>The amalgam will use malloc/calloc for its allocations and it is designed to release all memory it allocated when cql_main returns control to you. Even in the face of error.</p>

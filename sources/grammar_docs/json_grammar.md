@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Oct 26 16:04:50 PDT 2021
+Snapshot as of Fri Nov 12 16:59:19 PST 2021
 
 ### Rules
 
@@ -34,7 +34,8 @@ json_schema: '{'
          '"general"' ':' '[' opt_generals ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
-         '"enums"' ':'  '[' opt_enums ']'
+         '"enums"' ':'  '[' opt_enums ']' ','
+         '"constantGroups"' ':'  '[' opt_const_groups ']'
          '}'
   ;
 
@@ -613,6 +614,37 @@ enum_value: '{'
             '}'
   ;
 
+opt_const_groups: | const_groups
+  ;
+
+const_groups: const_group | const_group ',' const_groups
+  ;
+
+const_group: '{'
+      '"name"' ':' STRING_LITERAL ','
+      '"values"' ':' '[' const_values ']'
+      '}'
+  ;
+
+const_values: const_value | const_value ',' const_values
+  ;
+
+const_value: '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"type"' ':' STRING_LITERAL ','
+             opt_kind
+             '"isNotNull"' ':' BOOL_LITERAL ','
+             '"value"' ':' num_literal
+            '}'
+  | '{'
+             '"name"' ':' STRING_LITERAL ','
+             '"type"' ':' STRING_LITERAL ','
+             opt_kind
+             '"isNotNull"' ':' BOOL_LITERAL ','
+             '"value"' ':' STRING_LITERAL
+            '}'
+  ;
+
 opt_regions: | regions
   ;
 
@@ -651,6 +683,12 @@ ad_hoc_migration: '{'
                   '"crc"' ':' STRING_LITERAL ','
                   opt_attributes
                   '"version"' ':' any_integer
+                  '}'
+  | '{'
+                  '"name"' ':' STRING_LITERAL ','
+                  '"crc"' ':' STRING_LITERAL ','
+                  opt_attributes
+                  ON_RECREATE_OF STRING_LITERAL
                   '}'
   ;
 

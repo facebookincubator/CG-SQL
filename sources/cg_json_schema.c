@@ -212,6 +212,22 @@ static void cg_json_name(charbuf *output, ast_node *ast) {
   bprintf(output, "%s", name);
 }
 
+// Emit a quoted string into the JSON
+static void cg_json_emit_string(charbuf *output, ast_node *ast) {
+  Invariant(is_strlit(ast));
+  EXTRACT_STRING(str, ast);
+
+  // note str is the lexeme, so it is still quoted and escaped
+  CHARBUF_OPEN(str1);
+  CHARBUF_OPEN(str2);
+  // requote it as a c style literal
+  cg_decode_string_literal(str, &str1);
+  cg_encode_json_string_literal(str1.ptr, &str2);
+  bprintf(output, "%s", str2.ptr);
+  CHARBUF_CLOSE(str2);
+  CHARBUF_CLOSE(str1);
+}
+
 // Emit out a single miscellaneous attribute value into the current output stream
 // We could be processing any kind of entity, we don't care.  We're just
 // emitting a single value here.  The legal values are:
@@ -237,15 +253,7 @@ static void cg_json_attr_value(charbuf *output, ast_node *ast) {
     EXTRACT_STRING(str, ast);
 
     if (is_strlit(ast)) {
-      // note str is the lexeme, so it is still quoted and escaped
-      CHARBUF_OPEN(str1);
-      CHARBUF_OPEN(str2);
-      // requote it as a c style literal
-      cg_decode_string_literal(str, &str1);
-      cg_encode_json_string_literal(str1.ptr, &str2);
-      bprintf(output, "%s", str2.ptr);
-      CHARBUF_CLOSE(str2);
-      CHARBUF_CLOSE(str1);
+      cg_json_emit_string(output, ast);
     }
     else {
       bprintf(output, "\"%s\"", str);  // an identifier
@@ -411,6 +419,7 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
   bprintf(output, "]");
 }
 
+// Emits the name and value for each value in the enumeration
 static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
   Contract(is_ast_enum_values(enum_values));
 
@@ -466,6 +475,82 @@ static void cg_json_enums(charbuf* output) {
     bprintf(output, ",\n");
 
     cg_json_enum_values(enum_values, output);
+
+    END_INDENT(t);
+    bprintf(output, "}");
+  }
+
+  END_LIST;
+  END_INDENT(list);
+  bprintf(output, "]");
+}
+
+// emits the type and value for each constant in the constant group
+static void cg_json_const_values(ast_node *const_values, charbuf *output) {
+  Contract(is_ast_const_values(const_values));
+
+  bprintf(output, "\"values\" : [\n");
+
+  BEGIN_INDENT(list, 2);
+  BEGIN_LIST;
+
+  while (const_values) {
+     EXTRACT_NOTNULL(const_value, const_values->left);
+     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+     EXTRACT_STRING(const_name, const_name_ast);
+     EXTRACT_ANY_NOTNULL(const_expr, const_value->right);
+
+     COMMA;
+     bprintf(output, "{\n");
+
+     bprintf(output, "  \"name\" : \"%s\",\n", const_name);
+     BEGIN_INDENT(type, 2);
+       cg_json_data_type(output, const_expr->sem->sem_type, const_expr->sem->kind);
+     END_INDENT(type);
+     bprintf(output, ",\n");
+     bprintf(output, "  \"value\" : ");
+
+     if (is_strlit(const_expr)) {
+       cg_json_emit_string(output, const_expr);
+     }
+     else {
+       eval_format_number(const_expr->sem->value, output);
+     }
+
+     bprintf(output, "\n}");
+
+     const_values = const_values->right;
+  }
+
+  END_LIST;
+  END_INDENT(list);
+
+  bprintf(output, "]\n");
+}
+
+// Emits the JSON for all the global constants
+// note that these are in groups for convenience but they are all global
+// scope, not like enums.
+static void cg_json_constant_groups(charbuf* output) {
+  bprintf(output, "\"constantGroups\" : [\n");
+  BEGIN_INDENT(list, 2);
+  BEGIN_LIST;
+
+  for (list_item *item = all_constant_groups_list; item; item = item->next) {
+    ast_node *ast = item->ast;
+    Invariant(is_ast_declare_const_stmt(ast));
+    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+    EXTRACT_NOTNULL(const_values, ast->right);
+    EXTRACT_STRING(name, name_ast);
+
+    cg_json_test_details(output, ast, NULL);
+
+    COMMA;
+    bprintf(output, "{\n");
+    BEGIN_INDENT(t, 2);
+    bprintf(output, "\"name\" : \"%s\",\n", name);
+
+    cg_json_const_values(const_values, output);
 
     END_INDENT(t);
     bprintf(output, "}");
@@ -2248,6 +2333,8 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
   cg_json_ad_hoc_migration_procs(output);
   bprintf(output, ",\n");
   cg_json_enums(output);
+  bprintf(output, ",\n");
+  cg_json_constant_groups( output);
 
   if (options.test) {
     bprintf(output, ",\n");

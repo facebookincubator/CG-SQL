@@ -550,6 +550,8 @@
   ],
   "enums" : [
   ],
+  "constantGroups" : [
+  ],
   "tableUsers" : {
     "bar" : [ "base_fragment" ],
     "foo" : [ "second_base_fragment" ],

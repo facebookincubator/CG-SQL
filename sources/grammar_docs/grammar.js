@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue Nov  9 19:35:03 2021
+// Snapshot as of Fri Nov 12 16:59:19 2021
 
 
 const PREC = {
@@ -27,7 +27,7 @@ module.exports = grammar({
     opt_stmt_list: $ => $.stmt_list,
     stmt_list: $ => repeat1(choice(seq($.stmt, ';'), $.comment, $.line_directive, $.macro)),
     stmt: $ => seq(optional($.misc_attrs), $.any_stmt),
-    any_stmt: $ => choice($.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_func_stmt, $.declare_out_call_stmt, $.declare_proc_no_check_stmt, $.declare_proc_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.guard_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.open_stmt, $.out_stmt, $.out_union_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.select_stmt, $.schema_ad_hoc_migration_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
+    any_stmt: $ => choice($.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_const_stmt, $.declare_func_stmt, $.declare_out_call_stmt, $.declare_proc_no_check_stmt, $.declare_proc_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.emit_constants_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.guard_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.open_stmt, $.out_stmt, $.out_union_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.select_stmt, $.schema_ad_hoc_migration_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
     explain_stmt: $ => seq($.EXPLAIN, optional($.opt_query_plan), $.explain_target),
     QUERY_PLAN: $ => prec.left(1, seq(CI('query'), CI('plan'))),
     opt_query_plan: $ => $.QUERY_PLAN,
@@ -157,6 +157,7 @@ module.exports = grammar({
     end_schema_region_stmt: $ => $.AT_END_SCHEMA_REGION,
     schema_ad_hoc_migration_stmt: $ => choice(seq($.AT_SCHEMA_AD_HOC_MIGRATION, $.version_annotation), seq($.AT_SCHEMA_AD_HOC_MIGRATION, $.FOR, $.AT_RECREATE, '(', $.name, ',', $.name, ')')),
     emit_enums_stmt: $ => seq($.AT_EMIT_ENUMS, optional($.opt_name_list)),
+    emit_constants_stmt: $ => seq($.AT_EMIT_CONSTANTS, $.name_list),
     opt_from_query_parts: $ => seq($.FROM, $.query_parts),
     opt_where: $ => seq($.WHERE, $.expr),
     opt_groupby: $ => seq($.GROUP, $.BY, $.groupby_list),
@@ -207,6 +208,9 @@ module.exports = grammar({
     declare_enum_stmt: $ => seq($.DECLARE, $.ENUM, $.name, $.data_type_numeric, '(', $.enum_values, ')'),
     enum_values: $ => choice($.enum_value, seq($.enum_value, ',', $.enum_values)),
     enum_value: $ => choice($.name, seq($.name, '=', $.expr)),
+    declare_const_stmt: $ => seq($.DECLARE, $.CONST, $.GROUP, $.name, '(', $.const_values, ')'),
+    const_values: $ => choice($.const_value, seq($.const_value, ',', $.const_values)),
+    const_value: $ => seq($.name, '=', $.expr),
     declare_func_stmt: $ => choice(seq($.DECLARE, $.function, $.name, '(', optional($.params), ')', $.data_type_with_options), seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', $.data_type_with_options), seq($.DECLARE, $.function, $.name, '(', optional($.params), ')', $.CREATE, $.data_type_with_options), seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', '(', $.typed_names, ')')),
     procedure: $ => choice($.PROC, $.PROCEDURE),
     declare_proc_no_check_stmt: $ => seq($.DECLARE, $.procedure, $.name, $.NO, $.CHECK),
@@ -424,6 +428,7 @@ module.exports = grammar({
     AT_SCHEMA_AD_HOC_MIGRATION: $ => CI('@schema_ad_hoc_migration'),
     FOR: $ => CI('for'),
     AT_EMIT_ENUMS: $ => CI('@emit_enums'),
+    AT_EMIT_CONSTANTS: $ => CI('@emit_constants'),
     WHERE: $ => CI('where'),
     GROUP: $ => CI('group'),
     ASC: $ => CI('asc'),

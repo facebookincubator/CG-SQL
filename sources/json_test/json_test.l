@@ -105,6 +105,7 @@ int fileno(FILE *);
 \"deletes\"[ \t]*:               { return DELETES; }
 \"updates\"[ \t]*:               { return UPDATES; }
 \"enums\"[ \t]*:                 { return ENUMS; }
+\"constantGroups\"[ \t]*:        { return CONSTANT_GROUPS; }
 \"args\"[ \t]*:                  { return ARGS; }
 \"definedInFile\"[ \t]*:         { return DEFINED_IN_FILE; }
 \"statementType\"[ \t]*:         { return STATEMENT_TYPE; }
