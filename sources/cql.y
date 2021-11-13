@@ -69,6 +69,7 @@ static void print_dot(struct ast_node* node);
 static ast_node *file_literal(ast_node *);
 static void cql_exit_on_parse_errors();
 static void parse_cleanup();
+static void cql_usage();
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
@@ -318,7 +319,7 @@ program:
       print_dot($opt_stmt_list);
       cql_output("\n}\n");
     }
-    else {
+    else if (options.echo_input) {
       gen_stmt_list_to_stdout($opt_stmt_list);
     }
     if (options.semantic) {
@@ -2082,6 +2083,11 @@ static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out
 
 static void parse_cmd(int argc, char **argv) {
 
+  if (argc == 1) {
+    cql_usage();
+    cql_cleanup_and_exit(0);
+  }
+
   // default result type
   options.rt = "c";
   rt = find_rtdata(options.rt);
@@ -2091,7 +2097,9 @@ static void parse_cmd(int argc, char **argv) {
 
   for (int32_t a = 1; a < argc; a++) {
     char *arg = argv[a];
-    if (strcmp(arg, "--print") == 0 || strcmp(arg, "-p") == 0) {
+    if (strcmp(arg, "--echo") == 0) {
+      options.echo_input = 1;
+    } else if (strcmp(arg, "--ast") == 0) {
       options.print_ast = 1;
     } else if (strcmp(arg, "--nolines") == 0) {
       options.nolines = 1;
@@ -2443,3 +2451,80 @@ void cql_write_file(const char *_Nonnull file_name, const char *_Nonnull data) {
 }
 
 #endif
+
+static void cql_usage() {
+  cql_emit_output(
+    "Usage:\n"
+    "--in file\n"
+    "  reads the given file for the input instead of stdin\n"
+    "--sem\n"
+    "  performs semantic analysis on the input file ONLY\n"
+    "--ast\n"
+    "  prints the internal AST to stdout\n"
+    "--dot\n"
+    "  prints the internal AST to stdout in DOT format for graph visualization\n"
+    "--cg output1 output2 ...\n"
+    "  codegen into the named outputs\n"
+    "  any number of output files may be needed for a particular result type, two is common\n"
+    "--nolines\n"
+    "  suppress the #line directives for lines; useful if you need to debug the C code\n"
+    "--global_proc name\n"
+    "  any loose SQL statements not in a stored proc are gathered and put into a procedure of the given name\n"
+    "--compress\n"
+    "  compresses SQL text into fragements that can be assembled into queries to save space\n"
+    "--test\n"
+    "  some of the output types can include extra diagnostics if --test is included\n"
+    "--dev\n"
+    "  some codegen features only make sense during development, this enables dev mode\n"
+    "  example: explain query plans\n"
+    "\n"
+    "Result Types (--rt *) These are the various outputs the compiler can produce.\n"
+    "\n"
+    "--rt c\n"
+    "  this is the standard C compilation of the sql file\n"
+    "  requires two output files (foo.h and foo.c)\n"
+    "--rt objc\n"
+    "  Objective-C wrappers for result sets produced by the stored procedures in the input\n"
+    "  requires one output file (foo.h)\n"
+    "--rt java\n"
+    "  java wrappers for result sets produced by the stored procedures in the input\n"
+    "  requires one output file (foo.java)\n"
+    "--rt schema\n"
+    "  produces the canonical schema for the given input files; stored procedures etc. are removed\n"
+    "  requires one output file\n"
+    "--rt schema_upgrade\n"
+    "  produces a CQL schema upgrade script which can then be compiled with CQL itself\n"
+    "  requires one output file (foo.sql)\n"
+    "--rt json_schema#\n"
+    "  produces JSON output suitable for consumption by downstream codegen like the android mlite system\n"
+    "  requires one output file (foo.json)\n"
+    "\n"
+    "--include_regions a b c\n"
+    "  the indicated regions will be declared;\n"
+    "  used with --rt schema_upgrade or --rt schema\n"
+    "--exclude_regions x y z\n"
+    "  the indicated regions will still be declared but the upgrade code will be suppressed\n"
+    "  used with --rt schema_upgrade\n"
+    "--min_schema_version n\n"
+    "  the schema upgrade script will not include upgrade steps for schema older than the version specified\n"
+    "  used with --rt schema_upgrade\n"
+    "--schema_exclusive\n"
+    "  the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things\n"
+    "  used with --rt schema_upgrade\n"
+    "--java_package_name name\n"
+    "  specifies the name of package a generated java class will be a part of\n"
+    "--java_assembly_query_classname name\n"
+    "  fully qualified name of the parent class for the Java assembly\n"
+    "  used by java code generators when they output an extension fragment class\n"
+    "--java_fragment_interface_mode\n"
+    "  sets the Java codegen mode to generate interfaces for base and extension fragments\n"
+    "--java_fragment_interfaces interface\n"
+    "  fully qualified name of the generated Java interfaces for extension or assembly fragments\n"
+    "--java_imports name\n"
+    "  fully qualified name to import in the emitted java source\n"
+    "--c_include_namespace\n"
+    "  for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>\n"
+    "--objc_c_include_path\n"
+    "  for ObjC codegen runtimes this represents the header of the C generated code for the same file\n"
+    );
+}

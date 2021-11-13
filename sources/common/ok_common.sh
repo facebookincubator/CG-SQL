@@ -75,6 +75,7 @@ copy_ref cg_test_schema_upgrade.err
 copy_ref cg_test_test_helpers.out
 copy_ref cqlrt_arg_missing.err
 copy_ref dasm_test.out
+copy_ref usage.out
 copy_ref dottest.out
 copy_ref excl_invalid_regions.err
 copy_ref gen_exports_args.err

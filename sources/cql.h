@@ -77,6 +77,7 @@ struct charbuf;
 
 typedef struct cmd_options {
   bool_t test;
+  bool_t echo_input;
   bool_t print_ast;
   bool_t print_dot;
   bool_t semantic;

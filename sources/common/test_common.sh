@@ -144,7 +144,7 @@ create_unwritable_file() {
 basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
   echo running "${TEST_DIR}/test.sql"
-  if ! ${CQL} --dev --in "${TEST_DIR}/test.sql" >"${OUT_DIR}/test.out"
+  if ! ${CQL} --echo --dev --in "${TEST_DIR}/test.sql" >"${OUT_DIR}/test.out"
   then
    echo basic parsing test failed
    failed
@@ -170,7 +170,7 @@ dot_test() {
 semantic_test() {
   echo '--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST'
   echo running semantic analysis test
-  if ! sem_check --sem --print --dev --in "${TEST_DIR}/sem_test.sql" >"${OUT_DIR}/sem_test.out" 2>"${OUT_DIR}/sem_test.err"
+  if ! sem_check --sem --ast --dev --in "${TEST_DIR}/sem_test.sql" >"${OUT_DIR}/sem_test.out" 2>"${OUT_DIR}/sem_test.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/sem_test.err"
@@ -185,7 +185,7 @@ semantic_test() {
   fi
 
   echo running dev semantic analysis test
-  if ! sem_check --sem --print --in "${TEST_DIR}/sem_test_dev.sql" >"${OUT_DIR}/sem_test_dev.out" 2>"${OUT_DIR}/sem_test_dev.err"
+  if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_dev.sql" >"${OUT_DIR}/sem_test_dev.out" 2>"${OUT_DIR}/sem_test_dev.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/sem_test_dev.err"
@@ -776,7 +776,7 @@ assorted_errors_test() {
 schema_migration_test() {
   echo '--------------------------------- STAGE 9 -- SCHEMA MIGRATION TESTS'
   echo running semantic analysis for migration test
-  if ! sem_check --sem --print --in "${TEST_DIR}/sem_test_migrate.sql" >"${OUT_DIR}/sem_test_migrate.out" 2>"${OUT_DIR}/sem_test_migrate.err"
+  if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_migrate.sql" >"${OUT_DIR}/sem_test_migrate.out" 2>"${OUT_DIR}/sem_test_migrate.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/sem_test_migrate.err"
@@ -795,7 +795,7 @@ schema_migration_test() {
 
   echo '---------------------------------'
   echo running a schema migrate proc test
-  if ! sem_check --sem --in "${TEST_DIR}/schema_version_error.sql" --print >"${OUT_DIR}/schema_version_error.out" 2>"${OUT_DIR}/schema_version_error.err.out"
+  if ! sem_check --sem --in "${TEST_DIR}/schema_version_error.sql" --ast >"${OUT_DIR}/schema_version_error.out" 2>"${OUT_DIR}/schema_version_error.err.out"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/schema_version_error.err.out"
@@ -810,7 +810,7 @@ schema_migration_test() {
 
   echo '---------------------------------'
   echo running semantic analysis for previous schema error checks test
-  if ! sem_check --sem --print --exclude_regions high_numbered_thing --in "${TEST_DIR}/sem_test_prev.sql" >"${OUT_DIR}/sem_test_prev.out" 2>"${OUT_DIR}/sem_test_prev.err"
+  if ! sem_check --sem --ast --exclude_regions high_numbered_thing --in "${TEST_DIR}/sem_test_prev.sql" >"${OUT_DIR}/sem_test_prev.out" 2>"${OUT_DIR}/sem_test_prev.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/sem_test_prev.err"
@@ -953,6 +953,14 @@ schema_migration_test() {
 
 misc_cases() {
   echo '--------------------------------- STAGE 10 -- MISC CASES'
+  echo running usage test
+  if ! ${CQL} >"${OUT_DIR}/usage.out" 2>"${OUT_DIR}/usage.err"
+  then
+    echo usage test failed
+    failed
+  fi
+  on_diff_exit usage.out
+
   echo running simple error test
   if ${CQL} --in "${TEST_DIR}/error.sql" >"${OUT_DIR}/error.out" 2>"${OUT_DIR}/simple_error.err"
   then
@@ -1228,7 +1236,7 @@ test_helpers_test() {
   on_diff_exit cg_test_test_helpers.out
 
   echo running semantic analysis on test helpers output
-  if ! ${CQL} --sem --print --in "${OUT_DIR}/cg_test_test_helpers.out" >/dev/null 2>"${OUT_DIR}/cg_test_test_helpers.err"
+  if ! ${CQL} --sem --ast --in "${OUT_DIR}/cg_test_test_helpers.out" >/dev/null 2>"${OUT_DIR}/cg_test_test_helpers.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/cg_test_test_helpers.err"
@@ -1316,7 +1324,7 @@ query_plan_test() {
   cc -DCQL_TEST -E -x c "${TEST_DIR}/cg_test_query_plan.sql" >"${OUT_DIR}/cg_test_query_plan2.sql"
 
   echo semantic analysis
-  if ! ${CQL} --sem --print --dev --in "${OUT_DIR}/cg_test_query_plan2.sql" >"${OUT_DIR}/__temp" 2>"${OUT_DIR}/cg_test_query_plan.err"
+  if ! ${CQL} --sem --ast --dev --in "${OUT_DIR}/cg_test_query_plan2.sql" >"${OUT_DIR}/__temp" 2>"${OUT_DIR}/cg_test_query_plan.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/cg_test_query_plan.err"
@@ -1332,7 +1340,7 @@ query_plan_test() {
   fi
 
   echo semantic analysis
-  if ! ${CQL} --sem --print --dev --test --in "${OUT_DIR}/cg_test_query_plan.out" >"${OUT_DIR}/__temp" 2>"${OUT_DIR}/cg_test_query_plan.err"
+  if ! ${CQL} --sem --ast --dev --test --in "${OUT_DIR}/cg_test_query_plan.out" >"${OUT_DIR}/__temp" 2>"${OUT_DIR}/cg_test_query_plan.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/cg_test_query_plan.err"

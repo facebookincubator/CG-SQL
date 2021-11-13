@@ -1,0 +1,72 @@
+Usage:
+--in file
+  reads the given file for the input instead of stdin
+--sem
+  performs semantic analysis on the input file ONLY
+--ast
+  prints the internal AST to stdout
+--dot
+  prints the internal AST to stdout in DOT format for graph visualization
+--cg output1 output2 ...
+  codegen into the named outputs
+  any number of output files may be needed for a particular result type, two is common
+--nolines
+  suppress the #line directives for lines; useful if you need to debug the C code
+--global_proc name
+  any loose SQL statements not in a stored proc are gathered and put into a procedure of the given name
+--compress
+  compresses SQL text into fragements that can be assembled into queries to save space
+--test
+  some of the output types can include extra diagnostics if --test is included
+--dev
+  some codegen features only make sense during development, this enables dev mode
+  example: explain query plans
+
+Result Types (--rt *) These are the various outputs the compiler can produce.
+
+--rt c
+  this is the standard C compilation of the sql file
+  requires two output files (foo.h and foo.c)
+--rt objc
+  Objective-C wrappers for result sets produced by the stored procedures in the input
+  requires one output file (foo.h)
+--rt java
+  java wrappers for result sets produced by the stored procedures in the input
+  requires one output file (foo.java)
+--rt schema
+  produces the canonical schema for the given input files; stored procedures etc. are removed
+  requires one output file
+--rt schema_upgrade
+  produces a CQL schema upgrade script which can then be compiled with CQL itself
+  requires one output file (foo.sql)
+--rt json_schema#
+  produces JSON output suitable for consumption by downstream codegen like the android mlite system
+  requires one output file (foo.json)
+
+--include_regions a b c
+  the indicated regions will be declared;
+  used with --rt schema_upgrade or --rt schema
+--exclude_regions x y z
+  the indicated regions will still be declared but the upgrade code will be suppressed
+  used with --rt schema_upgrade
+--min_schema_version n
+  the schema upgrade script will not include upgrade steps for schema older than the version specified
+  used with --rt schema_upgrade
+--schema_exclusive
+  the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things
+  used with --rt schema_upgrade
+--java_package_name name
+  specifies the name of package a generated java class will be a part of
+--java_assembly_query_classname name
+  fully qualified name of the parent class for the Java assembly
+  used by java code generators when they output an extension fragment class
+--java_fragment_interface_mode
+  sets the Java codegen mode to generate interfaces for base and extension fragments
+--java_fragment_interfaces interface
+  fully qualified name of the generated Java interfaces for extension or assembly fragments
+--java_imports name
+  fully qualified name to import in the emitted java source
+--c_include_namespace
+  for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>
+--objc_c_include_path
+  for ObjC codegen runtimes this represents the header of the C generated code for the same file

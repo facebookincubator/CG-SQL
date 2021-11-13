@@ -33,31 +33,31 @@ int32_t main(int32_t argc, char **argv) {
 
   fprintf(stdout, "-- RUN %s:\n", cql_success_file);
   fprintf(stderr, "-- RUN %s:\n", cql_success_file);
-  const char *args_1[4] = {"cql", "--in", cql_success_file, "--sem"};
-  if (cql_main(4, (char **)args_1) != 0) {
+  const char *args_1[5] = {"cql", "--in", cql_success_file, "--sem", "--echo"};
+  if (cql_main(5, (char **)args_1) != 0) {
     fprintf(stderr, "%s reported an error: this is unexpected\n", cql_success_file);
     exit(1);
   }
 
   fprintf(stdout, "\n-- RUN %s:\n", cql_semantic_error_file);
   fprintf(stderr, "\n-- RUN %s:\n", cql_semantic_error_file);
-  const char *args_2[4] = {"cql", "--in", cql_semantic_error_file, "--sem"};
-  if (cql_main(4, (char **)args_2) == 0) {
+  const char *args_2[5] = {"cql", "--in", cql_semantic_error_file, "--sem", "--echo"};
+  if (cql_main(5, (char **)args_2) == 0) {
     fprintf(stderr, "%s did not reported an error: this is unexpected\n", cql_semantic_error_file);
     exit(1);
   }
 
   fprintf(stdout, "\n-- RUN %s:\n", cql_syntax_error_file);
   fprintf(stderr, "\n-- RUN %s:\n", cql_syntax_error_file);
-  const char *args_3[4] = {"cql", "--in", cql_syntax_error_file, "--sem"};
-  if (cql_main(4, (char **)args_3) == 0) {
+  const char *args_3[5] = {"cql", "--in", cql_syntax_error_file, "--sem", "--echo"};
+  if (cql_main(5, (char **)args_3) == 0) {
     fprintf(stderr, "%s did not reported an error: this is unexpected\n", cql_syntax_error_file);
     exit(1);
   }
 
   fprintf(stdout, "\n-- RUN %s:\n", cql_success_file);
   fprintf(stderr, "\n-- RUN %s:\n", cql_success_file);
-  if (cql_main(4, (char **)args_1) != 0) {
+  if (cql_main(5, (char **)args_1) != 0) {
     fprintf(stderr, "%s reported an error: this is unexpected\n", cql_success_file);
     exit(1);
   }
