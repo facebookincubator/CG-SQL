@@ -1,2 +1,2 @@
-test/parse_test_cql_inferred_notnull.sql:XXXX:1 error: Call to internal function is not allowed 'cql_inferred_notnull'
+test/parse_test_cql_inferred_notnull.sql:XXXX:1: error: Call to internal function is not allowed 'cql_inferred_notnull'
 Parse errors found, no further passes will run.

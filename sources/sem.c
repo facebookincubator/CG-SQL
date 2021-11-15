@@ -2168,7 +2168,7 @@ cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject) {
     subj3 = "'";
   }
 
-  cql_error("%s:%d:1 error: in %s : %s%s%s%s\n",
+  cql_error("%s:%d:1: error: in %s : %s%s%s%s\n",
       ast->filename,
       ast->lineno,
       ast->type,

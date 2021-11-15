@@ -2019,7 +2019,7 @@ void yyerror(const char *format, ...) {
   va_start(args, format);
 
   CHARBUF_OPEN(err);
-  bprintf(&err, "%s:%d:1 error: ", current_file, yylineno);
+  bprintf(&err, "%s:%d:1: error: ", current_file, yylineno);
   vbprintf(&err, format, args);
   bputc(&err, '\n');
   cql_emit_error(err.ptr);

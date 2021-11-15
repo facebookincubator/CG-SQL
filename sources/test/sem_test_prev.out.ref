@@ -690,7 +690,7 @@ CREATE TABLE t_new_table_no_annotation(
   b INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -718,7 +718,7 @@ CREATE TABLE t_new_table_stale_annotation(
   b INTEGER
 ) @CREATE(2);
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -1136,7 +1136,7 @@ CREATE TABLE recreate_created_in_the_past(
   id INTEGER
 ) @CREATE(2, cql:from_recreate);
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0399: table must leave @recreate management with @create(6) or later 'recreate_created_in_the_past'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0399: table must leave @recreate management with @create(6) or later 'recreate_created_in_the_past'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -1404,7 +1404,7 @@ The statement ending at line XXXX
 
 @SCHEMA_AD_HOC_MIGRATION(3, MigrateInThePast);
 
-test/sem_test_prev.sql:XXXX:1 error: in schema_ad_hoc_migration_stmt : new ad hoc rule must be added at version 6 or later 'MigrateInThePast'
+test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : new ad hoc rule must be added at version 6 or later 'MigrateInThePast'
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
@@ -1475,7 +1475,7 @@ CREATE TABLE TChanging(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TChanging'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TChanging'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -1493,7 +1493,7 @@ The statement ending at line XXXX
 
 CREATE INDEX IChanging ON TChanging (id);
 
-test/sem_test_prev.sql:XXXX:1 error: in create_index_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'IChanging'
+test/sem_test_prev.sql:XXXX:1: error: in create_index_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'IChanging'
 
   {create_index_stmt}: err
   | {create_index_on_list}
@@ -1513,7 +1513,7 @@ CREATE VIEW VChanging AS
 SELECT *
   FROM TChanging;
 
-test/sem_test_prev.sql:XXXX:1 error: in create_view_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'VChanging'
+test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'VChanging'
 
   {create_view_stmt}: err
   | {int 0}
@@ -1545,7 +1545,7 @@ BEGIN
   SELECT old.id;
 END;
 
-test/sem_test_prev.sql:XXXX:1 error: in create_trigger_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TrigChanging'
+test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TrigChanging'
 
   {create_trigger_stmt}: err
   | {int 0}
@@ -1584,7 +1584,7 @@ The statement ending at line XXXX
 
 @SCHEMA_AD_HOC_MIGRATION(2, AdHocChanging);
 
-test/sem_test_prev.sql:XXXX:1 error: in schema_ad_hoc_migration_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'AdHocChanging'
+test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'AdHocChanging'
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
@@ -1617,7 +1617,7 @@ CREATE TABLE TableWithDeferredOwner(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0311: object's deployment region changed from 'DeployableRegion1' to 'DeployableRegion2' 'TableWithDeferredOwner'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0311: object's deployment region changed from 'DeployableRegion1' to 'DeployableRegion2' 'TableWithDeferredOwner'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2227,7 +2227,7 @@ CREATE TABLE column_undeleted_in_this_table(
   being_undeleted TEXT @DELETE(6)
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0122: column current delete version not equal to previous delete version 'being_undeleted'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete version not equal to previous delete version 'being_undeleted'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2281,7 +2281,7 @@ CREATE TABLE t_create_verison_changed(
   id INTEGER
 ) @CREATE(2);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0115: current create version not equal to previous create version for 't_create_verison_changed'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version not equal to previous create version for 't_create_verison_changed'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2304,7 +2304,7 @@ CREATE TABLE t_delete_verison_changed(
   id INTEGER
 ) @DELETE(2);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0116: current delete version not equal to previous delete version for 't_delete_verison_changed'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version not equal to previous delete version for 't_delete_verison_changed'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2327,7 +2327,7 @@ CREATE TABLE t_not_present_in_new_schema(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 't_not_present_in_new_schema'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 't_not_present_in_new_schema'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2347,7 +2347,7 @@ CREATE TABLE t_became_a_view(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in create_view_stmt : CQL0127: object was a table but is now a view 't_became_a_view'
+test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0127: object was a table but is now a view 't_became_a_view'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2367,7 +2367,7 @@ CREATE TABLE t_created_in_wrong_version(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0115: current create version not equal to previous create version for 't_created_in_wrong_version'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version not equal to previous create version for 't_created_in_wrong_version'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2405,7 +2405,7 @@ CREATE TABLE t_column_name_changed(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0119: column name is different between previous and current schema 'id_'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0119: column name is different between previous and current schema 'id_'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2425,7 +2425,7 @@ CREATE TABLE t_column_type_changed(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0120: column type is different between previous and current schema 'id'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different between previous and current schema 'id'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2445,7 +2445,7 @@ CREATE TABLE t_column_attribute_changed(
   id INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0120: column type is different between previous and current schema 'id'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different between previous and current schema 'id'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2466,7 +2466,7 @@ CREATE TABLE t_column_delete_version_changed(
   id2 INTEGER @DELETE(2)
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0122: column current delete version not equal to previous delete version 'id2'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete version not equal to previous delete version 'id2'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2496,7 +2496,7 @@ CREATE TABLE t_column_create_version_changed(
   id2 INTEGER @CREATE(2)
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0121: column current create version not equal to previous create version 'id2'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0121: column current create version not equal to previous create version 'id2'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2527,10 +2527,10 @@ CREATE TABLE t_column_default_value_changed(
 );
 
 Incompatible declarations found
-test/sem_test_prev.sql:XXXX:1 error: in num : 1
-test/sem_test_prev.sql:XXXX:1 error: in num : 2
+test/sem_test_prev.sql:XXXX:1: error: in num : 1
+test/sem_test_prev.sql:XXXX:1: error: in num : 2
 The above must be identical.
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0125: column current default value not equal to previous default value 'id2'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0125: column current default value not equal to previous default value 'id2'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2626,10 +2626,10 @@ CREATE TABLE t_additional_attribute_mismatch(
 );
 
 Incompatible declarations found
-test/sem_test_prev.sql:XXXX:1 error: in pk_def : PRIMARY KEY (a)
-test/sem_test_prev.sql:XXXX:1 error: in pk_def : PRIMARY KEY (a, b)
+test/sem_test_prev.sql:XXXX:1: error: in pk_def : PRIMARY KEY (a)
+test/sem_test_prev.sql:XXXX:1: error: in pk_def : PRIMARY KEY (a, b)
 The above must be identical.
-test/sem_test_prev.sql:XXXX:1 error: in pk_def : CQL0132: table has a facet that is different in the previous and current schema 't_additional_attribute_mismatch'
+test/sem_test_prev.sql:XXXX:1: error: in pk_def : CQL0132: table has a facet that is different in the previous and current schema 't_additional_attribute_mismatch'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2667,7 +2667,7 @@ CREATE TABLE t_columns_removed(
   id2 INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in col_key_list : CQL0129: a column was removed from the table rather than marked with @delete 'id2'
+test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0129: a column was removed from the table rather than marked with @delete 'id2'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2693,7 +2693,7 @@ CREATE TABLE t_attribute_added(
   a INTEGER NOT NULL
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in col_key_list : CQL0134: table has a new non-column facet in the current schema 't_attribute_added'
+test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0134: table has a new non-column facet in the current schema 't_attribute_added'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2714,7 +2714,7 @@ CREATE TABLE t_additional_column(
   a INTEGER NOT NULL
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in col_def : CQL0130: table has columns added without marking them @create 't_additional_column'
+test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0130: table has columns added without marking them @create 't_additional_column'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2765,7 +2765,7 @@ CREATE TABLE t_becomes_temp_table(
   b INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0135: table create statement attributes different than previous version 't_becomes_temp_table'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0135: table create statement attributes different than previous version 't_becomes_temp_table'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2792,7 +2792,7 @@ CREATE TABLE t_new_table_create_and_delete(
   a INTEGER NOT NULL
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in col_def : CQL0131: table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
+test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0131: table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2832,7 +2832,7 @@ CREATE TABLE with_create_migrator(
   id INTEGER
 ) @CREATE(1);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0118: @create procedure changed in object 'with_create_migrator'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure changed in object 'with_create_migrator'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2855,7 +2855,7 @@ CREATE TABLE with_create_migrator(
   id INTEGER
 ) @CREATE(1, ADifferentCreateMigrator);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0118: @create procedure changed in object 'with_create_migrator'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure changed in object 'with_create_migrator'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2879,7 +2879,7 @@ CREATE TABLE with_delete_migrator(
   id INTEGER
 ) @DELETE(1);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2902,7 +2902,7 @@ CREATE TABLE with_delete_migrator(
   id INTEGER
 ) @DELETE(1, ADifferentDeleteMigrator);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -2925,7 +2925,7 @@ The statement ending at line XXXX
 CREATE VIEW view_becomes_a_table AS
 SELECT 1 AS X;
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0105: object was a view but is now a table 'view_becomes_a_table'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0105: object was a view but is now a table 'view_becomes_a_table'
 
   {create_view_stmt}: err
   | {int 0}
@@ -2954,7 +2954,7 @@ The statement ending at line XXXX
 CREATE VIEW view_was_zomg_deleted AS
 SELECT 1 AS X;
 
-test/sem_test_prev.sql:XXXX:1 error: in create_view_stmt : CQL0104: view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
+test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0104: view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
 
   {create_view_stmt}: err
   | {int 0}
@@ -3009,7 +3009,7 @@ The statement ending at line XXXX
 
 CREATE INDEX this_index_was_deleted_with_no_annotation ON foo (id);
 
-test/sem_test_prev.sql:XXXX:1 error: in create_index_stmt : CQL0017: index was present but now it does not exist (use @delete instead) 'this_index_was_deleted_with_no_annotation'
+test/sem_test_prev.sql:XXXX:1: error: in create_index_stmt : CQL0017: index was present but now it does not exist (use @delete instead) 'this_index_was_deleted_with_no_annotation'
 
   {create_index_stmt}: err
   | {create_index_on_list}
@@ -3030,7 +3030,7 @@ CREATE TABLE create_column_migrate_test(
   id2 INTEGER @CREATE(2, PreviousColumnCreateMigrator)
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0124: column @create procedure changed 'id2'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0124: column @create procedure changed 'id2'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3062,7 +3062,7 @@ CREATE TABLE delete_column_migrate_test(
   id2 INTEGER @DELETE(2, PreviousColumnDeleteMigrator)
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0123: column @delete procedure changed 'id2'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0123: column @delete procedure changed 'id2'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3094,10 +3094,10 @@ CREATE TABLE fk_facet(
 );
 
 Incompatible declarations found
-test/sem_test_prev.sql:XXXX:1 error: in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
-test/sem_test_prev.sql:XXXX:1 error: in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON UPDATE CASCADE
+test/sem_test_prev.sql:XXXX:1: error: in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+test/sem_test_prev.sql:XXXX:1: error: in fk_def : FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON UPDATE CASCADE
 The above must be identical.
-test/sem_test_prev.sql:XXXX:1 error: in fk_def : CQL0132: table has a facet that is different in the previous and current schema 'fk_facet'
+test/sem_test_prev.sql:XXXX:1: error: in fk_def : CQL0132: table has a facet that is different in the previous and current schema 'fk_facet'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3128,7 +3128,7 @@ CREATE TABLE cannot_change_to_recreate(
   id INTEGER
 ) @CREATE(1);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0114: current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3189,7 +3189,7 @@ CREATE TABLE not_ok_to_create_recreate_table(
   id INTEGER
 ) @RECREATE;
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3281,7 +3281,7 @@ CREATE TABLE disapparing_recreate(
   id INTEGER
 ) @RECREATE;
 
-test/sem_test_prev.sql:XXXX:1 error: in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3306,7 +3306,7 @@ BEGIN
   SELECT old.id;
 END;
 
-test/sem_test_prev.sql:XXXX:1 error: in create_trigger_stmt : CQL0106: trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
+test/sem_test_prev.sql:XXXX:1: error: in create_trigger_stmt : CQL0106: trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
 
   {create_trigger_stmt}: err
   | {int 0}
@@ -3394,7 +3394,7 @@ CREATE TABLE t_removed_facet(
   PRIMARY KEY (id)
 );
 
-test/sem_test_prev.sql:XXXX:1 error: in col_key_list : CQL0133: non-column facets have been removed from the table 't_removed_facet'
+test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0133: non-column facets have been removed from the table 't_removed_facet'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3422,10 +3422,10 @@ CREATE TABLE t_subtle_column_change(
 );
 
 Incompatible declarations found
-test/sem_test_prev.sql:XXXX:1 error: in col_def : id INTEGER REFERENCES create_column_migrate_test (id)
-test/sem_test_prev.sql:XXXX:1 error: in col_def : id INTEGER REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+test/sem_test_prev.sql:XXXX:1: error: in col_def : id INTEGER REFERENCES create_column_migrate_test (id)
+test/sem_test_prev.sql:XXXX:1: error: in col_def : id INTEGER REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
 The above must be identical.
-test/sem_test_prev.sql:XXXX:1 error: in col_def : CQL0128: table has a column that is different in the previous and current schema 'id'
+test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column that is different in the previous and current schema 'id'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -3475,7 +3475,7 @@ The statement ending at line XXXX
 
 @SCHEMA_AD_HOC_MIGRATION(1, WhoopsItsGone);
 
-test/sem_test_prev.sql:XXXX:1 error: in schema_ad_hoc_migration_stmt : CQL0286: ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
+test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0286: ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
@@ -3486,7 +3486,7 @@ The statement ending at line XXXX
 
 @SCHEMA_AD_HOC_MIGRATION(1, WhoopsItChanged);
 
-test/sem_test_prev.sql:XXXX:1 error: in schema_ad_hoc_migration_stmt : CQL0285: ad hoc schema migration directive version number changed 'WhoopsItChanged'
+test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0285: ad hoc schema migration directive version number changed 'WhoopsItChanged'
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
@@ -4018,10 +4018,10 @@ CREATE TABLE foo_with_check(
 );
 
 Incompatible declarations found
-test/sem_test_prev.sql:XXXX:1 error: in col_def : x INTEGER CHECK(x = 1) 
-test/sem_test_prev.sql:XXXX:1 error: in col_def : x INTEGER CHECK(x = 10) 
+test/sem_test_prev.sql:XXXX:1: error: in col_def : x INTEGER CHECK(x = 1) 
+test/sem_test_prev.sql:XXXX:1: error: in col_def : x INTEGER CHECK(x = 10) 
 The above must be identical.
-test/sem_test_prev.sql:XXXX:1 error: in col_def : CQL0128: table has a column that is different in the previous and current schema 'x'
+test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column that is different in the previous and current schema 'x'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -4093,7 +4093,7 @@ CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
   id INTEGER
 ) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0114: current schema can't go back to @recreate semantics for 'undead_virtual'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go back to @recreate semantics for 'undead_virtual'
 
   {create_virtual_table_stmt}: err
   | {module_info}
@@ -4148,7 +4148,7 @@ CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
   id INTEGER
 ) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
-test/sem_test_prev.sql:XXXX:1 error: in str : CQL0116: current delete version not equal to previous delete version for 'delete_change_virtual'
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version not equal to previous delete version for 'delete_change_virtual'
 
   {create_virtual_table_stmt}: err
   | {module_info}

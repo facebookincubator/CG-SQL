@@ -1,11 +1,11 @@
 -- RUN test/cql_amalgam_test_success.sql:
 
 -- RUN test/cql_amalgam_test_semantic_error.sql:
-test/cql_amalgam_test_semantic_error.sql:XXXX:1 error: in str : CQL0069: name not found 'bogus'
+test/cql_amalgam_test_semantic_error.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 semantic errors present; no code gen.
 
 -- RUN test/cql_amalgam_test_syntax_error.sql:
-test/cql_amalgam_test_syntax_error.sql:XXXX:1 error: syntax error, unexpected SELECT
+test/cql_amalgam_test_syntax_error.sql:XXXX:1: error: syntax error, unexpected SELECT
 Parse errors found, no further passes will run.
 
 -- RUN test/cql_amalgam_test_success.sql:
