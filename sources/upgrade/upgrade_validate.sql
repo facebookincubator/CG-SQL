@@ -103,7 +103,7 @@ begin
       call printf("ERROR! test_this_table_will_become_create should not have a column named xyzzy in v%d\n", version);
       throw;
     end if;
-    if recreate_sql is null or recreate_sql not like '%id INTEGER PRIMARY KEY%' then
+    if recreate_sql not like '%id INTEGER PRIMARY KEY%' then
       call printf("ERROR! test_this_table_will_become_create should have a column named id in v%d\n", version);
       throw;
     end if;

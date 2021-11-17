@@ -18712,23 +18712,6 @@ let not_null_object_is_null := not_null_object is null;
 -- +1 error:
 let not_null_object_is_not_null := not_null_object is not null;
 
--- TEST: validate parsing and non-enforcement for NULL CHECK ON NOT NULL
--- + @ENFORCE_NORMAL NULL CHECK ON NOT NULL
--- + {enforce_normal_stmt}: ok
--- + {int 12}
-@enforce_normal null check on not null;
-
--- TEST: okay when NULL CHECK ON NOT NULL is disabled
--- - error:
-let not_null_object_is_null := not_null_object is null;
-
--- TEST: okay when NULL CHECK ON NOT NULL is disabled
--- - error:
-let not_null_object_is_not_null := not_null_object is not null;
-
--- re-enable for subsequent tests
-@enforce_strict null check on not null;
-
 -- used in the following test
 create proc proc_inout_text(inout a text)
 begin

@@ -240,7 +240,6 @@ struct enforcement_options {
   bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
   bool_t strict_cast;                 // NO-OP casts result in errors
-  bool_t strict_null_check;           // IS NULL and IS NOT NULL may not be used on values of a NOT NULL type
 };
 
 static struct enforcement_options enforcement;
@@ -4706,15 +4705,13 @@ static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
     return;
   }
 
-  if (enforcement.strict_null_check) {
-    if (is_ast_null(ast->right) && is_not_nullable(ast->left->sem->sem_type)) {
-      report_error(
-        ast,
-        "CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type",
-        expr_as_text(ast->left));
-      record_error(ast);
-      return;
-    }
+  if (is_ast_null(ast->right) && is_not_nullable(ast->left->sem->sem_type)) {
+    report_error(
+      ast,
+      "CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type",
+      expr_as_text(ast->left));
+    record_error(ast);
+    return;
   }
 
   // the result of is or is not is always a bool and never null
@@ -19657,7 +19654,7 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
       break;
 
     case ENFORCE_NULL_CHECK_ON_NOT_NULL:
-      enforcement.strict_null_check = strict;
+      // This is a no-op present temporarily for backwards compatibility.
       break;
 
     default:

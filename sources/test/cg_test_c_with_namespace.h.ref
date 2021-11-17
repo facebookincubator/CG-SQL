@@ -8,8 +8,6 @@
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
 extern cql_nullable_int32 i0_nullable;
 
 // The statement ending at line XXXX
@@ -102,14 +100,6 @@ extern cql_nullable_int32 side_effect1(void);
 
 // The statement ending at line XXXX
 extern cql_nullable_int32 side_effect2(void);
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 

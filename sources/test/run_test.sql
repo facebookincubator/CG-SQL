@@ -12,9 +12,6 @@
 
 BEGIN_SUITE()
 
--- enable this as it will soon be the default
-@enforce_strict null check on not null;
-
 declare function blob_from_string(str text @sensitive) create blob not null;
 declare function string_from_blob(b blob @sensitive) create text not null;
 declare procedure cql_init_extensions() using transaction;

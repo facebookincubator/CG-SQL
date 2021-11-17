@@ -73681,40 +73681,6 @@ test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: Cannot use IS NULL or IS N
 
 The statement ending at line XXXX
 
-@ENFORCE_NORMAL NULL CHECK ON NOT NULL;
-
-  {enforce_normal_stmt}: ok
-  | {int 12}
-
-The statement ending at line XXXX
-
-LET not_null_object_is_null := not_null_object IS NULL;
-
-  {let_stmt}: not_null_object_is_null: bool notnull variable
-  | {name not_null_object_is_null}: not_null_object_is_null: bool notnull variable
-  | {is}: bool notnull
-    | {name not_null_object}: not_null_object: object notnull variable
-    | {null}: null
-
-The statement ending at line XXXX
-
-LET not_null_object_is_not_null := not_null_object IS NOT NULL;
-
-  {let_stmt}: not_null_object_is_not_null: bool notnull variable
-  | {name not_null_object_is_not_null}: not_null_object_is_not_null: bool notnull variable
-  | {is_not}: bool notnull
-    | {name not_null_object}: not_null_object: object notnull variable
-    | {null}: null
-
-The statement ending at line XXXX
-
-@ENFORCE_STRICT NULL CHECK ON NOT NULL;
-
-  {enforce_strict_stmt}: ok
-  | {int 12}
-
-The statement ending at line XXXX
-
 CREATE PROC proc_inout_text (INOUT a TEXT)
 BEGIN
 END;

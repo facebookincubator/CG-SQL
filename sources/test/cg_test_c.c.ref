@@ -15671,20 +15671,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET i2 := 1 + 2 * 3 IS NULL;
-  */
-  i2 = 0;
-
-  // The statement ending at line XXXX
-
-  /*
-  SET i2 := 1 + 2 * 3 IS NOT NULL;
-  */
-  i2 = 1;
-
-  // The statement ending at line XXXX
-
-  /*
   SET i2 := i0_nullable + i1_nullable IS NULL;
   */
   cql_combine_nullables(_tmp_n_int_0, i0_nullable.is_null, i1_nullable.is_null, i0_nullable.value + i1_nullable.value);

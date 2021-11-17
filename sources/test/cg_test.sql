@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
--- enable this as it will soon be the default
-@enforce_strict null check on not null;
-
 declare proc printf no check;
 declare proc puts no check;
 
@@ -261,22 +258,6 @@ set i0_nullable := i0_nullable or NULL;
 -- TEST: is null basic test
 -- + i2 = 1;
 set i2 := null is null;
-
--- temporarily disable NULL CHECK ON NOT NULL enforcement to ensure we generate
--- code correctly in the following situations even though they will soon fail
--- semantic analysis by default (at which point these tests will disappear)
-@enforce_normal null check on not null;
-
--- TEST: is null test non-null subexpression
--- + i2 = 0;
-set i2 := (1+2*3) is null;
-
--- TEST: is not null test non-null subexpression
--- + i2 = 1;
-set i2 := (1+2*3) is not null;
-
--- re-enable NULL CHECK ON NOT NULL enforcement for the remaining tests
-@enforce_strict null check on not null;
 
 -- TEST: is null test general case
 -- + cql_combine_nullables(_tmp_n_int_0, i0_nullable.is_null, i1_nullable.is_null, i0_nullable.value + i1_nullable.value);
