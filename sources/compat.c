@@ -42,3 +42,11 @@ cql_noexport int32_t Strncasecmp(const char *_Nonnull s1, const char *_Nonnull s
   }
   return result;
 }
+
+cql_noexport int32_t Strendswith(const char *_Nonnull haystack, const char *_Nonnull needle) {
+  size_t haystack_len = strlen(haystack);
+  size_t needle_len = strlen(needle);
+
+  return (haystack_len >= needle_len) &&
+         (!Strncasecmp(haystack + haystack_len - needle_len, needle, needle_len));
+}

@@ -5860,8 +5860,8 @@ END;</code></pre>
       &quot;sortOrders&quot; : [ &quot;desc&quot;, &quot;asc&quot; ]
     }
   ],</code></pre>
-<p>The top level attributes go, by convention, on a the global variable named <code>database</code> of type <code>object</code>. These attributes move into the JSON. Other globals are ignored.</p>
-<p>NOTE: attributes are very flexible, allowing nesting of arrays. Attributes values can either be any literal, or a name, or an array of values, recursively.</p>
+<p>It’s sometimes useful to include some top level attributes about your system in the JSON. By convention all the attributes on any global variables whose name ends in “database” (see example below) are emitted into the attributes section of the JSON. This lets you easily contribute to this section from various schema fragments by providing “database” objects from each source. Any other globals are ignored.</p>
+<p>NOTE: attributes are very flexible, even allowing nesting of arrays. Attribute values can either be any literal, or a name, or an array of values, recursively.</p>
 <pre><code>
   @ATTRIBUTE(my_other_attribute=(&#39;any&#39;, (&#39;tree&#39;, &#39;of&#39;), &#39;values&#39;))
   @ATTRIBUTE(dbname=&#39;fred.sql&#39;)
@@ -6655,7 +6655,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Fri Nov 12 16:59:19 PST 2021</p>
+<p>Snapshot as of Wed Nov 17 12:31:18 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -9984,7 +9984,7 @@ enforce_pop_stmt:
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Fri Nov 12 16:59:19 PST 2021</p>
+<p>Snapshot as of Wed Nov 17 12:31:18 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

@@ -2203,6 +2203,7 @@
       "usesTables" : [  ]
     }
   ],
+  "attributes" : [
 
   The statement ending at line XXXX
 
@@ -2211,7 +2212,6 @@
   @ATTRIBUTE(dbfile='test/cg_test_json_schema.sql')
   DECLARE database OBJECT
 
-  "attributes" : [
     {
       "name" : "my_other_attribute",
       "value" : ["any", ["tree", "of"], "values"]
@@ -2223,6 +2223,16 @@
     {
       "name" : "dbfile",
       "value" : "test/cg_test_json_schema.sql"
+    }
+  The statement ending at line XXXX
+
+  @ATTRIBUTE(additional_info='yowsa')
+  DECLARE other_database OBJECT
+
+    ,
+    {
+      "name" : "additional_info",
+      "value" : "yowsa"
     }
   ],
   "queries" : [

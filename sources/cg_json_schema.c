@@ -2180,19 +2180,46 @@ cleanup:
 
 // This lets us have top level attributes that go into the main output stream
 // this is stuff like the name of the database and so forth.  By convention these
-// are placed as an attribution on the statement "declare object database"
+// are placed as an attribution on the statements "declare database object".
+// Attributes for any object variables named *database are unified so that
+// different schema fragments can contribute easily.
 static void cg_json_declare_vars_type(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_vars_type(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
 
+  bool_t first_attr = output->used == 1;
+
   // we're looking for "declare database object"  and nothing else
   if (misc_attrs && !name_list->right && is_object(data_type->sem->sem_type)) {
     EXTRACT_STRING(name, name_list->left);
-    if (!Strcasecmp(name, "database")) {
+    if (Strendswith(name, "database")) {
+
+      if (first_attr) {
+        bprintf(output, "\n");
+      }
+
       cg_json_test_details(output, ast, misc_attrs);
-      cg_json_misc_attrs(output, misc_attrs);
-      bprintf(output, ",\n");
+
+      BEGIN_INDENT(attr, 2);
+
+      // The attributes from all the various sources are unified, they will
+      // go into one attributes block.  Note there can be duplicates but that's
+      // not a problem for the schema and may even be desired.  Note also
+      // that even if we had only one such object there could still be duplicates
+      // because again, attributes on a single object are not unique.  They mean
+      // whatever you want them to mean.  So we just spit them out and let
+      // the consumer sort it out.  In practice this isn't really a problem.
+      // Whatever tool is downstream will complain if the attributes are badly formed.
+      for (ast_node *item = misc_attrs; item; item = item->right) {
+        if (!first_attr) {
+          bprintf(output, ",\n");
+        }
+        first_attr = false;
+        cg_json_misc_attr(output, item->left);
+      }
+
+      END_INDENT(attr);
     }
   }
 }
@@ -2226,12 +2253,9 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
     }
   }
 
-  if (attributes_buf.used > 1) {
-    bprintf(output, "%s", attributes_buf.ptr);
-  }
-  else {
-    bprintf(output, "\"attributes\" : [\n],\n");
-  }
+  bprintf(output, "\"attributes\" : [");
+  bprintf(output, "%s", attributes_buf.ptr);
+  bprintf(output, "\n],\n");
 
   bprintf(output, "\"queries\" : [\n");
   bindent(output, queries, 2);

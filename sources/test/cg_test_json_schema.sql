@@ -617,10 +617,18 @@ end;
 -- + "value" : "test/cg_test_json_schema.sql"
 -- + "name" : "my_other_attribute",
 -- + "value" : ["any", ["tree", "of"], "values"]
+-- this is in the next block, it should not appear here
+-- - yowsa
 @attribute(my_other_attribute = ('any', ('tree', 'of'), 'values'))
 @attribute(dbname = 'fred.sql')
 @attribute(dbfile = @FILE('xplat/'))
 declare database object;
+
+-- TEST: add some additional attributes, emitted in a different test section of the same array
+-- + "name" : "additional_info",
+-- + "value" : "yowsa"
+@attribute(additional_info = 'yowsa')
+declare other_database object;
 
 -- TEST: declare a table with some fk columns on the column
 -- + "columns" : [ "id1" ],

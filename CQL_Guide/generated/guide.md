@@ -7640,9 +7640,11 @@ Likewise indices contain the table and indexed columns.  This one example illust
     }
   ],
 ```
-The top level attributes go, by convention, on a the global variable named `database` of type `object`.  These attributes move into the JSON.  Other globals are ignored.
+It's sometimes useful to include some top level attributes about your system in the JSON.  By convention all the attributes on any global variables
+whose name ends in "database" (see example below) are emitted into the attributes section of the JSON.  This lets you easily contribute to this section
+from various schema fragments by providing "database" objects from each source. Any other globals are ignored.
 
-NOTE: attributes are very flexible, allowing nesting of arrays.  Attributes values can either be any literal, or a name, or an array of values, recursively.
+NOTE: attributes are very flexible, even allowing nesting of arrays.  Attribute values can either be any literal, or a name, or an array of values, recursively.
 ```
 
   @ATTRIBUTE(my_other_attribute=('any', ('tree', 'of'), 'values'))
@@ -8555,7 +8557,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Nov 12 16:59:19 PST 2021
+Snapshot as of Wed Nov 17 12:31:18 PST 2021
 
 ### Operators and Literals
 
@@ -13813,7 +13815,7 @@ CALL some_proc(some_other_proc(t), t);
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Nov 12 16:59:19 PST 2021
+Snapshot as of Wed Nov 17 12:31:18 PST 2021
 
 ### Rules
 
