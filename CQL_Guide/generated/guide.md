@@ -1,7 +1,7 @@
 <!--- @generated -->
 ## Chapter 1: Introduction
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -24,7 +24,7 @@ checks, error checks, and the other miscellany needed to use SQLite correctly.
 CQL is also strongly typed, whereas SQLite is very forgiving with regard to what operations
 are allowed on which data.  Strict type checking is much more reasonable given CQL's compiled programming model.
 
-NOTE: CQL was created to help solve problems in the building of Facebook's Messenger application, but this content is free from references to Messenger. The CQL code generation here is done in the simplest
+NOTE: CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this content is free from references to Messenger. The CQL code generation here is done in the simplest
 mode with the fewest runtime dependencies allowed for illustration.
 
 ### Getting Started
@@ -245,7 +245,7 @@ The above causes the C compiler to invoke only the pre-processor `-E` and to tre
 
 ## Chapter 2: Using Data
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -659,7 +659,7 @@ Which probably doesn't come up very often but it does illustrate several things:
 
 ## Chapter 3: Expressions, Literals, Nullability, Sensitivity
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2058,7 +2058,7 @@ cql_cleanup:
 
 ## Chapter 4: Procedures, Functions, and Control Flow
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2407,7 +2407,7 @@ This feature is really only syntatic sugar for the "awkward" form above, but it 
 
 ## Chapter 5: Types of Cursors, OUT and OUT UNION, and FETCH flavors
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3264,7 +3264,7 @@ Boxing isn’t the usual pattern at all and returning cursors in a box, while po
 
 ## Chapter 6: Calling Procedures Defined Elsewhere
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3535,7 +3535,7 @@ as long as they are not recombined with SQLite statements.
 
 ## Chapter 7: CQL Result Sets
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3785,7 +3785,7 @@ Of course, if you make a million rows, well, that would burn a lot of memory.
 
 ## Chapter 8: Functions
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3983,7 +3983,7 @@ binding object variables, so passing memory addresses is the best we can do on a
 
 ## Chapter 9: Statements Summary and Error Checking
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -4843,7 +4843,7 @@ In fact, only the `select *` form could possibly be different, so in most cases 
 
 ## Chapter 10: Schema Management Features
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5993,7 +5993,7 @@ So, in summary, to get true privacy first make whatever logical regions you like
 
 ## Chapter 11: Previous Schema Validation
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -6557,7 +6557,7 @@ NOTE: in addition to these errors, there are many more that do not require the p
 
 ## Chapter 12: Testability Features
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -7114,7 +7114,7 @@ is often desirable.  And the maintenance is not too bad.  You just use the `use_
 
 ## Chapter 13: JSON Output
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8071,7 +8071,7 @@ NOTE: `@ATTRIBUTE` can be applied any number of times to the entities here, incl
 
 ## Chapter 14: CQL Query Fragments
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8388,7 +8388,7 @@ With the combined set of methods you can create a variety of assembled queries f
 
 ## Appendix 1: Command Line Options
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8585,7 +8585,7 @@ These are the various outputs the compiler can produce.
 
 ## Appendix 2: CQL Grammar
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8594,7 +8594,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Nov 17 15:10:30 PST 2021
+Snapshot as of Fri Nov 19 15:20:18 PST 2021
 
 ### Operators and Literals
 
@@ -10082,7 +10082,7 @@ enforce_pop_stmt:
 
 ## Appendix 3: Control Directives
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -10177,7 +10177,7 @@ The complete list (as of this writing) is:
 
 ## Appendix 4: CQL Error Codes
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -13844,7 +13844,7 @@ CALL some_proc(some_other_proc(t), t);
 
 ## Appendix 5: JSON Schema Grammar
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -13852,7 +13852,7 @@ CALL some_proc(some_other_proc(t), t);
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Nov 17 15:10:31 PST 2021
+Snapshot as of Fri Nov 19 15:20:19 PST 2021
 
 ### Rules
 
@@ -14538,7 +14538,7 @@ ad_hoc_migration: '{'
 
 ## Appendix 6: CQL In 20 Minutes
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -15398,7 +15398,7 @@ If you've read this far you know more than most now.  :)
 
 ## Appendix 7: CQL Anti-patterns
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -15668,7 +15668,7 @@ Better:
 
 ## Appendix 8: CQL Best Practices
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -15959,7 +15959,7 @@ These are your bread and butter and they will appear all over.  One tip: Use the
 
 ## Appendix 9: Using the CQL Amalgam
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.

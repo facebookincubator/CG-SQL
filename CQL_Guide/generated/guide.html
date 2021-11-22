@@ -834,7 +834,7 @@
 <!--- @generated -->
 <h2 id="chapter-1-introduction">Chapter 1: Introduction</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -843,7 +843,7 @@
 <p>CQL simplifies this situation by providing a high level SQL language not unlike the stored procedure forms that are available in client/server SQL solutions and lowering that language to “The C you could have written to do that job using the normal SQLite interfaces.”</p>
 <p>As a result, the C generated is generally very approachable but now the source language does not suffer from brittleness due to query or table changes and CQL always generates correct column indices, nullability checks, error checks, and the other miscellany needed to use SQLite correctly.</p>
 <p>CQL is also strongly typed, whereas SQLite is very forgiving with regard to what operations are allowed on which data. Strict type checking is much more reasonable given CQL’s compiled programming model.</p>
-<p>NOTE: CQL was created to help solve problems in the building of Facebook’s Messenger application, but this content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the fewest runtime dependencies allowed for illustration.</p>
+<p>NOTE: CQL was created to help solve problems in the building of Meta Platforms’s Messenger application, but this content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the fewest runtime dependencies allowed for illustration.</p>
 <h3 id="getting-started">Getting Started</h3>
 <p>The “Hello World” program rendered in CQL looks like this:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> proc hello()</span>
@@ -1001,7 +1001,7 @@
 <p>The above causes the C compiler to invoke only the pre-processor <code>-E</code> and to treat the input as though it were C code <code>-x c</code> even though it is in a <code>.sql</code> file. Later examples will assume that you have configured CQL to be used with the C pre-processor as above.</p>
 <h2 id="chapter-2-using-data">Chapter 2: Using Data</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -1224,7 +1224,7 @@
 </ul>
 <h2 id="chapter-3-expressions-literals-nullability-sensitivity">Chapter 3: Expressions, Literals, Nullability, Sensitivity</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2153,7 +2153,7 @@ cql_cleanup:
 }</code></pre>
 <h2 id="chapter-4-procedures-functions-and-control-flow">Chapter 4: Procedures, Functions, and Control Flow</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2380,7 +2380,7 @@ end;</code></pre>
 <p>If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail. If that happens the result code will propagate just like it would have with a the usual <code>call</code> form. Any failures can be caught with <code>try/catch</code> as usual. This feature is really only syntatic sugar for the “awkward” form above, but it does allow for slightly better generated C code.</p>
 <h2 id="chapter-5-types-of-cursors-out-and-out-union-and-fetch-flavors">Chapter 5: Types of Cursors, OUT and OUT UNION, and FETCH flavors</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2911,7 +2911,7 @@ insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000
 <p>Summarizing, the main reason for using the boxing patterns is to allow for standard helper procedures that can get a cursor from a variety of places and process it. Boxing isn’t the usual pattern at all and returning cursors in a box, while possible, should be avoided in favor of the simpler patterns, if only because then then lifetime management is very simple in all those cases.</p>
 <h2 id="chapter-6-calling-procedures-defined-elsewhere">Chapter 6: Calling Procedures Defined Elsewhere</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3075,7 +3075,7 @@ This form implies <code>USING TRANSACTION</code>.</p>
 <p>These combinations allow for pretty general composition of stored procedures as long as they are not recombined with SQLite statements.</p>
 <h2 id="chapter-7-cql-result-sets">Chapter 7: CQL Result Sets</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3231,7 +3231,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>Of course, if you make a million rows, well, that would burn a lot of memory.</p>
 <h2 id="chapter-8-functions">Chapter 8: Functions</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3348,7 +3348,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p><code>Ptr</code> is used to cause a reference type variable to be bound as a long integer to SQLite. This is a way of giving object pointers to SQLite UDFs. Not all versions of Sqlite support binding object variables, so passing memory addresses is the best we can do on all versions.</p>
 <h2 id="chapter-9-statements-summary-and-error-checking">Chapter 9: Statements Summary and Error Checking</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3736,7 +3736,7 @@ result:
 <p>In fact, only the <code>select *</code> form could possibly be different, so in most cases this ends up being moot anyway. Typically you don’t to use <code>*</code> in the presence of joins because of name duplication and ambiguity of the column names of the result set. CQL’s automatic expansion means you have a much better idea exactly what columns you will get – those that were present in the schema you declared.</p>
 <h2 id="chapter-10-schema-management-features">Chapter 10: Schema Management Features</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -4611,7 +4611,7 @@ Master Deployment 2
 <p>So, in summary, to get true privacy first make whatever logical regions you like that are helpful. Put privacy where you need/want it. Import logical regions as much as you want in your own bundle of regions. Then wrap that bundle up in a deployable region (they nest) and then your private regions are safe from unwanted usage.</p>
 <h2 id="chapter-11-previous-schema-validation">Chapter 11: Previous Schema Validation</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5001,7 +5001,7 @@ For easy visibility I have brought each fragment of current and previous schema 
 <p>NOTE: in addition to these errors, there are many more that do not require the previous schema which are also checked (not shown here). These comprise things like making sure the delete version is greater than the create version on any item. There is a lot of sensibility checking that can happen without reference to the previous schema.</p>
 <h2 id="chapter-12-testability-features">Chapter 12: Testability Features</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5370,7 +5370,7 @@ END;</code></pre>
 <p>The above can be be done as a macro if desired. But in any case <code>use_my_stuff</code> simply and directly lists the desired tables. Using this approach you can have one set of test helpers for an entire unit rather than one per procedure and that is often desirable. And the maintenance is not too bad. You just use the <code>use_my_stuff</code> test helpers everywhere.</p>
 <h2 id="chapter-13-json-output">Chapter 13: JSON Output</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -6256,7 +6256,7 @@ END;</code></pre>
 <p>NOTE: <code>@ATTRIBUTE</code> can be applied any number of times to the entities here, including the procedures (i.e. immediately before the <code>CREATE PROCEDURE</code>) . Those attributes appear in the JSON in an optional <code>attributes</code> chunk. Attributes are quite flexible (you can easily encode a lisp program in attributes if you were so inclined) so you can use them very effectively to annotate your CQL entities as needed for downstream tools.</p>
 <h2 id="chapter-14-cql-query-fragments">Chapter 14: CQL Query Fragments</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -6497,7 +6497,7 @@ end;</code></pre>
 <p>With the combined set of methods you can create a variety of assembled queries from extensions in a fairly straightforward way.</p>
 <h2 id="appendix-1-command-line-options">Appendix 1: Command Line Options</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -6694,13 +6694,13 @@ end;</code></pre>
 </ul>
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Nov 17 15:10:30 PST 2021</p>
+<p>Snapshot as of Fri Nov 19 15:20:18 PST 2021</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8172,7 +8172,7 @@ enforce_pop_stmt:
 </code></pre>
 <h2 id="appendix-3-control-directives">Appendix 3: Control Directives</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8234,7 +8234,7 @@ enforce_pop_stmt:
 </ul>
 <h2 id="appendix-4-cql-error-codes">Appendix 4: CQL Error Codes</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -10023,13 +10023,13 @@ enforce_pop_stmt:
 <span id="cb474-12"><a href="#cb474-12" aria-hidden="true" tabindex="-1"></a><span class="kw">CALL</span> some_proc(some_other_proc(t), t);</span></code></pre></div>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Nov 17 15:10:31 PST 2021</p>
+<p>Snapshot as of Fri Nov 19 15:20:19 PST 2021</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -10708,7 +10708,7 @@ ad_hoc_migration: &#39;{&#39;
 </code></pre>
 <h2 id="appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -11554,7 +11554,7 @@ fetch C USING
 <p>If you’ve read this far you know more than most now. :)</p>
 <h2 id="appendix-7-cql-anti-patterns">Appendix 7: CQL Anti-patterns</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -11705,7 +11705,7 @@ fetch C USING
 <span id="cb499-6"><a href="#cb499-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</span></code></pre></div>
 <h2 id="appendix-8-cql-best-practices">Appendix 8: CQL Best Practices</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -11891,7 +11891,7 @@ fetch C USING
 </ul>
 <h2 id="appendix-9-using-the-cql-amalgam">Appendix 9: Using the CQL Amalgam</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.

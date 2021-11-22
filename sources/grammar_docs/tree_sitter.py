@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta Platforms, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -231,7 +231,7 @@ grammar = ",\n    ".join(
 
 print(
     "/**\n"
-    " * Copyright (c) Facebook, Inc. and its affiliates.\n"
+    " * Copyright (c) Meta Platforms, Inc. and its affiliates.\n"
     " *\n"
     " * This source code is licensed under the MIT license found in the\n"
     " * LICENSE file in the root directory of this source tree.\n"

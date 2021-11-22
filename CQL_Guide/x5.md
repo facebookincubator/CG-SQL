@@ -4,7 +4,7 @@ title: "Appendix 5: JSON Schema Grammar"
 sidebar_label: "Appendix 5: JSON Schema Grammar"
 ---
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Nov 17 15:10:31 PST 2021
+Snapshot as of Fri Nov 19 15:20:19 PST 2021
 
 ### Rules
 

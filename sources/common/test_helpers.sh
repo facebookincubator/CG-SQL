@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta Platforms, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -28,7 +28,7 @@ colordiff() {
 # the reference output we replace the line numbers with XXXX
 normalize_lines() {
   sed -e "s/The statement ending at line .*/The statement ending at line XXXX/" \
-      -e "/(c) Facebook, Inc. and its affiliates/d" \
+      -e "/(c) Meta Platforms, Inc. and its affiliates/d" \
       -e "/g.nerated S.gnedSource<<.*>>/d" \
       -e "s/MBQ/CGB/g" \
       -e "s/MCQ/CGC/g" \

@@ -354,7 +354,7 @@
 <!--- @generated -->
 <h2 id="part-1-lexing-parsing-and-the-ast">Part 1: Lexing, Parsing, and the AST</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -861,7 +861,7 @@ AST(or)</code></pre>
 <p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few samples and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> function into a new/needed semantic analysis or code-generation function.</p>
 <h2 id="part-2-semantic-analysis">Part 2: Semantic Analysis</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2569,7 +2569,7 @@ AST(or)</code></pre>
 <p>This isn’t everything but it should leave you well armed to begin your own exploration of <code>sem.c</code>.</p>
 <h2 id="part-3-c-code-generation">Part 3: C Code Generation</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -4606,7 +4606,7 @@ cql_cleanup:
 <p>As with the other parts, this is not a complete discussion of the code but a useful survey that should give readers enough context to understand <code>cg_c.c</code> and the runtime helpers in <code>cqlrt.c</code> and <code>cqlrt_common.c</code>. Good luck in your personal exploration!</p>
 <h2 id="part-4-testing">Part 4: Testing</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5210,7 +5210,7 @@ Upgrade from nothing to v3, then to v3 -- must match direct update to v3</code><
 <p>Generally, the test files are designed to hold as many tests as can reasonably fit with the gating factor being cases where different flags are necessary. There are two different stages were many different tiny input files are used to create trivial failures like missing command line arguments and such. But those cases are all just looking for simple error text and a failure code, so they should be self-evident. With so many options, many such baby tests are needed.</p>
 <h2 id="part-5-cql-runtime">Part 5: CQL Runtime</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5219,7 +5219,7 @@ Upgrade from nothing to v3, then to v3 -- must match direct update to v3</code><
 <p>Part 5 continues with a discussion of the essentials of the CQL Runtime. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how the runtime works in general – the core strategies and implementation choices – so that when reading the source you will have an idea how it all hangs together. To accomplish this, we’ll illustrate the key pieces that can be customized and we’ll discuss some interesting cases.</p>
 <h2 id="cql-runtime">CQL Runtime</h2>
 <p>The parts of the runtime that you can change are in <code>cqlrt.h</code>, that file invariably ends by including <code>cqlrt_common.h</code> which are the runtime parts that you shouldn’t change. Of course this is open source so you can change anything, but the common things usually don’t need to change – <code>cqlrt.h</code> should provide you with everything you need to target new environments.</p>
-<p>The compiler itself can be customized see <code>rt.c</code> to emit different strings to work with your runtime. This is pretty easy to do without creating a merge hell for yourself. Facebook, for instance, has its own CQL runtime customized for use on phones that is not open source (and really I don’t think anyone would want it anyway). But the point is that you can make your own. In fact I know of two just within Facebook.</p>
+<p>The compiler itself can be customized see <code>rt.c</code> to emit different strings to work with your runtime. This is pretty easy to do without creating a merge hell for yourself. Meta Platforms, for instance, has its own CQL runtime customized for use on phones that is not open source (and really I don’t think anyone would want it anyway). But the point is that you can make your own. In fact I know of two just within Meta Platforms.</p>
 <p>We’ll go over <code>cqlrt.h</code> bit by bit. Keeping in mind it might change but this is essentially what’s going on. And the essentials don’t change very often.</p>
 <h3 id="standard-headers">Standard headers</h3>
 <p>The rest of the system will use these, <code>cqlrt.h</code> is responsible for bringing in what you need later, or what <code>cqlrt_common.h</code> needs on your system.</p>
@@ -5422,7 +5422,7 @@ typedef struct cql_boxed_stmt {
 <span id="cb271-2"><a href="#cb271-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;cqlrt_common.h&quot;</span></span></code></pre></div>
 <h2 id="part-6-schema-management">Part 6: Schema Management</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5911,7 +5911,7 @@ typedef struct cql_boxed_stmt {
 <p>As with the other parts, no attempt was made to cover every function in detail. That is best done by reading the source code. But there is overall structure here and an understanding of the basic principles is helpful before diving into the source code.</p>
 <h2 id="part-7-json-generation">Part 7: JSON Generation</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -6409,7 +6409,7 @@ typedef struct cql_boxed_stmt {
 <p>As with the other parts, no attempt was made to cover every function in detail. That is best done by reading the source code. But there is overall structure here and an understanding of the basic principles is helpful before diving into the source code.</p>
 <h2 id="part-8-test-helpers">Part 8: Test Helpers</h2>
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.

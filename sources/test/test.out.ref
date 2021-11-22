@@ -230,34 +230,6 @@ WHEN b = 4 THEN ( SELECT c
 ELSE g
 END AS h;
 
-SELECT T.thread_key, CASE WHEN count(P.contact_id) > 1 THEN group_concat(coalesce(P.nickname, C.first_name, C.name, 'Facebook User'), ', ')
-WHEN count(P.contact_id) = 1 THEN group_concat(coalesce(P.nickname, C.name, 'Facebook User'), ', ')
-ELSE ( SELECT name
-  FROM contacts
-  WHERE id = UI.facebook_user_id )
-END AS thread_name, CASE WHEN T.thread_type = 2 THEN NULL
-WHEN T.thread_key = UI.facebook_user_id THEN ( SELECT profile_picture_url
-  FROM contacts
-  WHERE id = UI.facebook_user_id )
-ELSE C.profile_picture_url
-END AS other_participant_profile_picture_url, CASE WHEN T.thread_type = 2 THEN NULL
-WHEN T.thread_key = UI.facebook_user_id THEN ( SELECT profile_picture_fallback_url
-  FROM contacts
-  WHERE id = UI.facebook_user_id )
-ELSE C.profile_picture_fallback_url
-END AS other_participant_profile_picture_fallback_url, CASE WHEN T.thread_type = 2 THEN NULL
-WHEN T.thread_key = UI.facebook_user_id THEN ( SELECT profile_picture_url_expiration_timestamp_ms
-  FROM contacts
-  WHERE id = UI.facebook_user_id )
-ELSE C.profile_picture_url_expiration_timestamp_ms
-END AS other_participant_url_expiration_timestamp_ms
-  FROM _user_info AS UI
-  INNER JOIN threads AS T
-  LEFT OUTER JOIN participants AS P ON P.thread_key = T.thread_key AND P.contact_id <> UI.facebook_user_id
-  LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id
-  WHERE UI.id = 1
-  GROUP BY T.thread_key;
-
 CREATE VIEW a AS
 SELECT b
   FROM c;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -198,24 +198,6 @@ select case when x = 1 then 2 when x = 3 then 4 else 5 end;
 
 -- case with nested select
 select case when a = 2 then 3 when b = 4 then (select c from d where e = f) else g end as h;
-
--- compound crazy select with lots of when and else from lightspeed
-select T.thread_key,
-         case when count(P.contact_id) > 1 then group_concat(coalesce(P.nickname, C.first_name, C.name, 'Facebook User'), ', ')
-                         when count(P.contact_id) = 1 then group_concat(coalesce(P.nickname, C.name, 'Facebook User'), ', ')
-                         else (select name from contacts where id = UI.facebook_user_id) end as thread_name,
-         case when T.thread_type = 2 then null when T.thread_key = UI.facebook_user_id then (select profile_picture_url from contacts where id = UI.facebook_user_id)
-                         else C.profile_picture_url end as other_participant_profile_picture_url,
-         case when T.thread_type = 2 then null when T.thread_key = UI.facebook_user_id then (select profile_picture_fallback_url from contacts where id = UI.facebook_user_id)
-                         else C.profile_picture_fallback_url end as other_participant_profile_picture_fallback_url,
-         case when T.thread_type = 2 then null when T.thread_key = UI.facebook_user_id then (select profile_picture_url_expiration_timestamp_ms from contacts where id = UI.facebook_user_id)
-                             else C.profile_picture_url_expiration_timestamp_ms end as other_participant_url_expiration_timestamp_ms
-  from _user_info UI
-  inner join threads T
-  left outer join participants P on P.thread_key = T.thread_key and P.contact_id <> UI.facebook_user_id
-  left outer join contacts C on C.id = P.contact_id
-  where UI.id = 1
-  group by T.thread_key;
 
 -- simple create view
 create view a as select b from c;

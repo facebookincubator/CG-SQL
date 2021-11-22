@@ -4,7 +4,7 @@ title: "Part 5: CQL Runtime"
 sidebar_label: "Part 5: CQL Runtime"
 ---
 <!---
--- Copyright (c) Facebook, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and its affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -26,10 +26,10 @@ so you can change anything, but the common things usually don't need to change -
 provide you with everything you need to target new environments.
 
 The compiler itself can be customized see `rt.c` to emit different strings to work with your runtime.
-This is pretty easy to do without creating a merge hell for yourself. Facebook, for instance,  has its
+This is pretty easy to do without creating a merge hell for yourself. Meta Platforms, for instance,  has its
 own CQL runtime customized for use on phones that is not open source (and really I don't think anyone
 would want it anyway).  But the point is that you can make your own. In fact I know of two just within
-Facebook.
+Meta Platforms.
 
 We'll go over `cqlrt.h` bit by bit.  Keeping in mind it might change but this is
 essentially what's going on.  And the essentials don't change very often.
