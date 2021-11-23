@@ -52,8 +52,14 @@ APPLY_FUNC_LIST = {
 REPLACEMENT_RULE_NAMES = {
     "integer-literal": ["INT_LIT", "INT_LIT: $ => choice(/[0-9]+/, /0x[0-9a-fA-F]+/)"],
     "long-literal": ["LONG_LIT", "LONG_LIT: $ => choice(/[0-9]+L/, /0x[0-9a-fA-F]+L/)"],
-    "real-literal": ["REAL_LIT", "REAL_LIT: $ => /([0-9]+\.[0-9]*|\.[0-9]+)((E|e)(\+|\-)?[0-9]+)?/"],
-    "sql-blob-literal": ["BLOB_LIT", "BLOB_LIT: $ => /[xX]'([0-9a-fA-F][0-9a-fA-F])*'/"],
+    "real-literal": [
+        "REAL_LIT",
+        "REAL_LIT: $ => /([0-9]+\.[0-9]*|\.[0-9]+)((E|e)(\+|\-)?[0-9]+)?/",
+    ],
+    "sql-blob-literal": [
+        "BLOB_LIT",
+        "BLOB_LIT: $ => /[xX]'([0-9a-fA-F][0-9a-fA-F])*'/",
+    ],
     "c-string-literal": [
         "C_STR_LIT",
         'C_STR_LIT: $ => /\\"(\\\\.|[^"\\n])*\\"/',
@@ -83,7 +89,7 @@ DEFAULT_RULES = [
     "argument_list: $ => seq('(', commaSep($.expression), ')')",
     "preproc_expression: $ => $.expression",
     "expression: $ => $.expr",
-    "string_literal: $ => seq(choice(\'L\"\', \'u\"\', \'U\"\', \'u8\"\', \'\"\'),repeat(choice(token.immediate(prec(1, /[^\\\\\"\\n]+/)),$.escape_sequence)),\'\"\',)",
+    "string_literal: $ => seq(choice('L\"', 'u\"', 'U\"', 'u8\"', '\"'),repeat(choice(token.immediate(prec(1, /[^\\\\\"\\n]+/)),$.escape_sequence)),'\"',)",
     "escape_sequence: $ => token(prec(1, seq('\\\\',choice(/[^xuU]/,/\d{2,3}/,/x[0-9a-fA-F]{2,}/,/u[0-9a-fA-F]{4}/,/U[0-9a-fA-F]{8}/))))",
     "system_lib_string: $ => token(seq('<',repeat(choice(/[^>\\n]/, '\\\\>')),'>'))",
     "preproc_params: $ => seq(token.immediate('('), commaSep(choice($.ID, '...')), ')')",
@@ -165,6 +171,7 @@ def get_sequence(sequence):
                 tokens_list.append(get_rule_ref(tk))
     return tokens_list
 
+
 with open(cql_grammar) as fp:
     for line in RULE_PATTERN.finditer(fp.read()):
         assert line.lastindex == 2
@@ -220,7 +227,9 @@ for name in sorted_rule_names:
 
 # redefine the if_stmt rule because if not we're going to have parsing issues with "opt_elseif_list" and "opt_else" rule.
 # I tried to fix it by providing a priority to the conflict but it didn't work.
-ts_grammar["if_stmt"] = "$ => seq($.IF, $.expr, $.THEN, optional($.opt_stmt_list), optional(repeat1($.elseif_item)), optional($.opt_else), $.END, $.IF)"
+ts_grammar[
+    "if_stmt"
+] = "$ => seq($.IF, $.expr, $.THEN, optional($.opt_stmt_list), optional(repeat1($.elseif_item)), optional($.opt_else), $.END, $.IF)"
 
 grammar = ",\n    ".join(
     ["{}: {}".format(ts, ts_grammar[ts]) for ts in ts_rule_names]
@@ -274,7 +283,7 @@ print(
     "function commaSep (rule) {\n"
     "  return optional(commaSep1(rule))\n"
     "}\n\n"
-    "// generic rule for a list of ID separated by \",\"\n"
+    '// generic rule for a list of ID separated by ","\n'
     "function commaSep1 (rule) {\n"
     "  return seq(rule, repeat(seq(',', rule)))\n"
     "}\n\n"
