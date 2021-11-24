@@ -1503,6 +1503,12 @@ declare const group foo ( x = 'this', y = 5+3, z = 3.0 );
 
 @emit_constants foo;
 
+with foo(*) as (call bar(1,2) using a as x, b as y)
+select  * from foo;
+
+with foo(*) as (call bar(1,2))
+select  * from foo;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

@@ -1619,6 +1619,16 @@ DECLARE CONST GROUP foo (
 
 @EMIT_CONSTANTS foo;
 
+WITH
+foo (*) AS (CALL bar(1, 2) USING a AS x, b AS y)
+SELECT *
+  FROM foo;
+
+WITH
+foo (*) AS (CALL bar(1, 2))
+SELECT *
+  FROM foo;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

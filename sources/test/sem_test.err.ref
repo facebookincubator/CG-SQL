@@ -732,6 +732,9 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0238: strict FK validation requi
 test/sem_test.sql:XXXX:1: error: in fk_def : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: procedure identity column does not exist in result set 'col3'
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0240: identity annotation can only go on a procedure that returns a result set 'no_result_set_identity'
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0208: shared fragments cannot have any out or in/out parameters 'x'
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0256: fragment name conflicts with existing base fragment 'core'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_one'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_two'

@@ -440,6 +440,9 @@ cql_noexport uint32_t exists_attribute_str(
   ast_node *_Nullable misc_attr_list,
   const char *_Nonnull attribute_name);
 
+cql_noexport uint32_t find_shared_fragment_attr(
+  ast_node *_Nullable misc_attr_list);
+
 cql_noexport uint32_t find_base_fragment_attr(
   ast_node *_Nullable misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
@@ -459,6 +462,7 @@ cql_noexport uint32_t find_assembly_query_attr(
 #define FRAG_TYPE_BASE 1
 #define FRAG_TYPE_EXTENSION 2
 #define FRAG_TYPE_ASSEMBLY 3
+#define FRAG_TYPE_SHARED 4  // this type does not interoperate with base+extension+assembly
 #define FRAG_TYPE_MIXED 0xff  // more than one/ambiguous
 cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list);
 
@@ -610,6 +614,9 @@ AST1(with_recursive)
 AST(cte_decl)
 AST(cte_table)
 AST(cte_tables)
+AST(cte_binding_list)
+AST(cte_binding)
+AST(shared_cte)
 AST1(select_opts)
 AST(select_expr_list)
 AST(select_core)

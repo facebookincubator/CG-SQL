@@ -17931,6 +17931,247 @@ SELECT current
 
 The statement ending at line XXXX
 
+WITH
+foo (u, v) AS (SELECT 1 AS u, 2 AS v),
+bar (x, y) AS (WITH
+baz (x, y) AS (SELECT 2.0 AS x, 3.0 AS y
+UNION ALL
+SELECT *
+  FROM baz
+LIMIT 5)
+SELECT *
+  FROM baz)
+SELECT *
+  FROM bar
+  INNER JOIN foo;
+
+  {with_select_stmt}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: foo: { u: integer notnull, v: integer notnull }
+  |   | | {cte_decl}: foo: { u: integer notnull, v: integer notnull }
+  |   | | | {name foo}
+  |   | | | {name_list}
+  |   | |   | {name u}
+  |   | |   | {name_list}
+  |   | |     | {name v}
+  |   | | {select_stmt}: select: { u: integer notnull, v: integer notnull }
+  |   |   | {select_core_list}: select: { u: integer notnull, v: integer notnull }
+  |   |   | | {select_core}: select: { u: integer notnull, v: integer notnull }
+  |   |   |   | {select_expr_list_con}: select: { u: integer notnull, v: integer notnull }
+  |   |   |     | {select_expr_list}: select: { u: integer notnull, v: integer notnull }
+  |   |   |     | | {select_expr}: u: integer notnull
+  |   |   |     | | | {int 1}: integer notnull
+  |   |   |     | | | {opt_as_alias}
+  |   |   |     | |   | {name u}
+  |   |   |     | | {select_expr_list}
+  |   |   |     |   | {select_expr}: v: integer notnull
+  |   |   |     |     | {int 2}: integer notnull
+  |   |   |     |     | {opt_as_alias}
+  |   |   |     |       | {name v}
+  |   |   |     | {select_from_etc}: ok
+  |   |   |       | {select_where}
+  |   |   |         | {select_groupby}
+  |   |   |           | {select_having}
+  |   |   | {select_orderby}
+  |   |     | {select_limit}
+  |   |       | {select_offset}
+  |   | {cte_tables}
+  |     | {cte_table}: bar: { x: real notnull, y: real notnull }
+  |       | {cte_decl}: bar: { x: real notnull, y: real notnull }
+  |       | | {name bar}
+  |       | | {name_list}
+  |       |   | {name x}
+  |       |   | {name_list}
+  |       |     | {name y}
+  |       | {with_select_stmt}: select: { x: real notnull, y: real notnull }
+  |         | {with}
+  |         | | {cte_tables}: ok
+  |         |   | {cte_table}: baz: { x: real notnull, y: real notnull }
+  |         |     | {cte_decl}: baz: { x: real notnull, y: real notnull }
+  |         |     | | {name baz}
+  |         |     | | {name_list}
+  |         |     |   | {name x}
+  |         |     |   | {name_list}
+  |         |     |     | {name y}
+  |         |     | {select_stmt}: UNION ALL: { x: real notnull, y: real notnull }
+  |         |       | {select_core_list}: UNION ALL: { x: real notnull, y: real notnull }
+  |         |       | | {select_core}: select: { x: real notnull, y: real notnull }
+  |         |       | | | {select_expr_list_con}: select: { x: real notnull, y: real notnull }
+  |         |       | |   | {select_expr_list}: select: { x: real notnull, y: real notnull }
+  |         |       | |   | | {select_expr}: x: real notnull
+  |         |       | |   | | | {dbl 2.0}: real notnull
+  |         |       | |   | | | {opt_as_alias}
+  |         |       | |   | |   | {name x}
+  |         |       | |   | | {select_expr_list}
+  |         |       | |   |   | {select_expr}: y: real notnull
+  |         |       | |   |     | {dbl 3.0}: real notnull
+  |         |       | |   |     | {opt_as_alias}
+  |         |       | |   |       | {name y}
+  |         |       | |   | {select_from_etc}: ok
+  |         |       | |     | {select_where}
+  |         |       | |       | {select_groupby}
+  |         |       | |         | {select_having}
+  |         |       | | {select_core_compound}
+  |         |       |   | {int 2}
+  |         |       |   | {select_core_list}: select: { x: real notnull, y: real notnull }
+  |         |       |     | {select_core}: select: { x: real notnull, y: real notnull }
+  |         |       |       | {select_expr_list_con}: select: { x: real notnull, y: real notnull }
+  |         |       |         | {select_expr_list}: select: { x: real notnull, y: real notnull }
+  |         |       |         | | {star}: select: { x: real notnull, y: real notnull }
+  |         |       |         | {select_from_etc}: TABLE { baz: baz }
+  |         |       |           | {table_or_subquery_list}: TABLE { baz: baz }
+  |         |       |           | | {table_or_subquery}: TABLE { baz: baz }
+  |         |       |           |   | {name baz}: TABLE { baz: baz }
+  |         |       |           | {select_where}
+  |         |       |             | {select_groupby}
+  |         |       |               | {select_having}
+  |         |       | {select_orderby}
+  |         |         | {select_limit}
+  |         |           | {opt_limit}: integer notnull
+  |         |           | | {int 5}: integer notnull
+  |         |           | {select_offset}
+  |         | {select_stmt}: select: { x: real notnull, y: real notnull }
+  |           | {select_core_list}: select: { x: real notnull, y: real notnull }
+  |           | | {select_core}: select: { x: real notnull, y: real notnull }
+  |           |   | {select_expr_list_con}: select: { x: real notnull, y: real notnull }
+  |           |     | {select_expr_list}: select: { x: real notnull, y: real notnull }
+  |           |     | | {star}: select: { x: real notnull, y: real notnull }
+  |           |     | {select_from_etc}: TABLE { baz: baz }
+  |           |       | {table_or_subquery_list}: TABLE { baz: baz }
+  |           |       | | {table_or_subquery}: TABLE { baz: baz }
+  |           |       |   | {name baz}: TABLE { baz: baz }
+  |           |       | {select_where}
+  |           |         | {select_groupby}
+  |           |           | {select_having}
+  |           | {select_orderby}
+  |             | {select_limit}
+  |               | {select_offset}
+  | {select_stmt}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+    | {select_core_list}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+    | | {select_core}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+    |   | {select_expr_list_con}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+    |     | {select_expr_list}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+    |     | | {star}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+    |     | {select_from_etc}: JOIN { bar: bar, foo: foo }
+    |       | {join_clause}: JOIN { bar: bar, foo: foo }
+    |       | | {table_or_subquery}: TABLE { bar: bar }
+    |       | | | {name bar}: TABLE { bar: bar }
+    |       | | {join_target_list}
+    |       |   | {join_target}: JOIN { bar: bar, foo: foo }
+    |       |     | {int 1}
+    |       |     | {table_join}
+    |       |       | {table_or_subquery}: TABLE { foo: foo }
+    |       |         | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC a_shared_frag (x INTEGER NOT NULL, y INTEGER NOT NULL)
+BEGIN
+  SELECT 1 AS x, 2 AS y, 3.0 AS z;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x: integer notnull variable in
+      | | | {param_detail}: x: integer notnull variable in
+      | |   | {name x}: x: integer notnull variable in
+      | |   | {notnull}: integer notnull
+      | |     | {type_int}: integer
+      | | {params}
+      |   | {param}: y: integer notnull variable in
+      |     | {param_detail}: y: integer notnull variable in
+      |       | {name y}: y: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          | {select_core_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          | | {select_core}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     | | {select_expr}: x: integer notnull
+          |     | | | {int 1}: integer notnull
+          |     | | | {opt_as_alias}
+          |     | |   | {name x}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: y: integer notnull
+          |     |   | | {int 2}: integer notnull
+          |     |   | | {opt_as_alias}
+          |     |   |   | {name y}
+          |     |   | {select_expr_list}
+          |     |     | {select_expr}: z: real notnull
+          |     |       | {dbl 3.0}: real notnull
+          |     |       | {opt_as_alias}
+          |     |         | {name z}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+foo (x, y, z) AS (CALL a_shared_frag(1, 2))
+SELECT *
+  FROM foo;
+
+  {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: foo: { x: integer notnull, y: integer notnull, z: real notnull }
+  |     | {cte_decl}: foo: { x: integer notnull, y: integer notnull, z: real notnull }
+  |     | | {name foo}
+  |     | | {name_list}
+  |     |   | {name x}
+  |     |   | {name_list}
+  |     |     | {name y}
+  |     |     | {name_list}
+  |     |       | {name z}
+  |     | {shared_cte}
+  |       | {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | {expr_list}: ok
+  |           | {int 1}: integer notnull
+  |           | {expr_list}
+  |             | {int 2}: integer notnull
+  | {select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+    | {select_core_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+    | | {select_core}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+    |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+    |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+    |     | | {star}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 WITH RECURSIVE
 cnt (current, current) AS (SELECT 1
 UNION ALL
@@ -33896,6 +34137,316 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0240: identity annotation ca
     | {name no_result_set_identity}: err
     | {proc_params_stmts}
       | {stmt_list}: ok
+        | {declare_vars_type}: integer
+          | {name_list}: x: integer variable
+          | | {name x}: x: integer variable
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC test_shared_fragment_with_CTEs (id_ INTEGER NOT NULL)
+BEGIN
+  WITH
+  t1 (id) AS (SELECT id
+    FROM foo
+    WHERE id = id_
+  LIMIT 20),
+  t2 (x, y, z) AS (SELECT t1.id, name, rate
+    FROM bar
+    INNER JOIN t1 ON t1.id = bar.id)
+  SELECT *
+    FROM t2;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_shared_fragment_with_CTEs}: select: { x: integer notnull, y: text, z: longint } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer notnull variable in
+      |   | {param_detail}: id_: integer notnull variable in
+      |     | {name id_}: id_: integer notnull variable in
+      |     | {notnull}: integer notnull
+      |       | {type_int}: integer
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull, y: text, z: longint }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: t1: { id: integer notnull }
+          |   | | {cte_decl}: t1: { id: integer notnull }
+          |   | | | {name t1}
+          |   | | | {name_list}
+          |   | |   | {name id}
+          |   | | {select_stmt}: select: { id: integer notnull }
+          |   |   | {select_core_list}: select: { id: integer notnull }
+          |   |   | | {select_core}: select: { id: integer notnull }
+          |   |   |   | {select_expr_list_con}: select: { id: integer notnull }
+          |   |   |     | {select_expr_list}: select: { id: integer notnull }
+          |   |   |     | | {select_expr}: id: integer notnull
+          |   |   |     |   | {name id}: id: integer notnull
+          |   |   |     | {select_from_etc}: TABLE { foo: foo }
+          |   |   |       | {table_or_subquery_list}: TABLE { foo: foo }
+          |   |   |       | | {table_or_subquery}: TABLE { foo: foo }
+          |   |   |       |   | {name foo}: TABLE { foo: foo }
+          |   |   |       | {select_where}
+          |   |   |         | {opt_where}: bool notnull
+          |   |   |         | | {eq}: bool notnull
+          |   |   |         |   | {name id}: id: integer notnull
+          |   |   |         |   | {name id_}: id_: integer notnull variable in
+          |   |   |         | {select_groupby}
+          |   |   |           | {select_having}
+          |   |   | {select_orderby}
+          |   |     | {select_limit}
+          |   |       | {opt_limit}: integer notnull
+          |   |       | | {int 20}: integer notnull
+          |   |       | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: t2: { x: integer notnull, y: text, z: longint }
+          |       | {cte_decl}: t2: { x: integer notnull, y: text, z: longint }
+          |       | | {name t2}
+          |       | | {name_list}
+          |       |   | {name x}
+          |       |   | {name_list}
+          |       |     | {name y}
+          |       |     | {name_list}
+          |       |       | {name z}
+          |       | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          |         | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          |         | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |         |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |         |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |         |     | | {select_expr}: id: integer notnull
+          |         |     | | | {dot}: id: integer notnull
+          |         |     | |   | {name t1}
+          |         |     | |   | {name id}
+          |         |     | | {select_expr_list}
+          |         |     |   | {select_expr}: name: text
+          |         |     |   | | {name name}: name: text
+          |         |     |   | {select_expr_list}
+          |         |     |     | {select_expr}: rate: longint
+          |         |     |       | {name rate}: rate: longint
+          |         |     | {select_from_etc}: JOIN { bar: bar, t1: t1 }
+          |         |       | {join_clause}: JOIN { bar: bar, t1: t1 }
+          |         |       | | {table_or_subquery}: TABLE { bar: bar }
+          |         |       | | | {name bar}: TABLE { bar: bar }
+          |         |       | | {join_target_list}
+          |         |       |   | {join_target}: JOIN { bar: bar, t1: t1 }
+          |         |       |     | {int 1}
+          |         |       |     | {table_join}
+          |         |       |       | {table_or_subquery}: TABLE { t1: t1 }
+          |         |       |       | | {name t1}: TABLE { t1: t1 }
+          |         |       |       | {join_cond}: JOIN { bar: bar, t1: t1 }
+          |         |       |         | {on}: bool notnull
+          |         |       |         | {eq}: bool notnull
+          |         |       |           | {dot}: id: integer notnull
+          |         |       |           | | {name t1}
+          |         |       |           | | {name id}
+          |         |       |           | {dot}: id: integer notnull
+          |         |       |             | {name bar}
+          |         |       |             | {name id}
+          |         |       | {select_where}
+          |         |         | {select_groupby}
+          |         |           | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
+          | {select_stmt}: select: { x: integer notnull, y: text, z: longint }
+            | {select_core_list}: select: { x: integer notnull, y: text, z: longint }
+            | | {select_core}: select: { x: integer notnull, y: text, z: longint }
+            |   | {select_expr_list_con}: select: { x: integer notnull, y: text, z: longint }
+            |     | {select_expr_list}: select: { x: integer notnull, y: text, z: longint }
+            |     | | {star}: select: { x: integer notnull, y: text, z: longint }
+            |     | {select_from_etc}: TABLE { t2: t2 }
+            |       | {table_or_subquery_list}: TABLE { t2: t2 }
+            |       | | {table_or_subquery}: TABLE { t2: t2 }
+            |       |   | {name t2}: TABLE { t2: t2 }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC test_shared_fragment_without_CTEs (id_ INTEGER NOT NULL)
+BEGIN
+  SELECT id, name, rate
+    FROM bar
+    WHERE id = id_;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name test_shared_fragment_without_CTEs}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer notnull variable in
+      |   | {param_detail}: id_: integer notnull variable in
+      |     | {name id_}: id_: integer notnull variable in
+      |     | {notnull}: integer notnull
+      |       | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {select_expr}: id: integer notnull
+          |     | | | {name id}: id: integer notnull
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: name: text
+          |     |   | | {name name}: name: text
+          |     |   | {select_expr_list}
+          |     |     | {select_expr}: rate: longint
+          |     |       | {name rate}: rate: longint
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {opt_where}: bool notnull
+          |         | | {eq}: bool notnull
+          |         |   | {name id}: id: integer notnull
+          |         |   | {name id_}: id_: integer notnull variable in
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC test_shared_fragment_wrong_form ()
+BEGIN
+  SELECT *
+    FROM bar;
+  SELECT *
+    FROM bar;
+END;
+
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name test_shared_fragment_wrong_form}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+        | | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+        | | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+        | |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+        | |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+        | |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+        | |     | {select_from_etc}: TABLE { bar: bar }
+        | |       | {table_or_subquery_list}: TABLE { bar: bar }
+        | |       | | {table_or_subquery}: TABLE { bar: bar }
+        | |       |   | {name bar}: TABLE { bar: bar }
+        | |       | {select_where}
+        | |         | {select_groupby}
+        | |           | {select_having}
+        | | {select_orderby}
+        |   | {select_limit}
+        |     | {select_offset}
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC test_shared_fragment_bad_args (OUT x INTEGER)
+BEGIN
+  SELECT *
+    FROM bar;
+END;
+
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0208: shared fragments cannot have any out or in/out parameters 'x'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name test_shared_fragment_bad_args}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x: integer variable out
+      |   | {out}
+      |   | {param_detail}: x: integer variable out
+      |     | {name x}: x: integer variable out
+      |     | {type_int}: integer
+      | {stmt_list}: err
+        | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
+          | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
+          | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
+          |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
+          |     | {select_from_etc}: TABLE { bar: bar }
+          |       | {table_or_subquery_list}: TABLE { bar: bar }
+          |       | | {table_or_subquery}: TABLE { bar: bar }
+          |       |   | {name bar}: TABLE { bar: bar }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC test_shared_fragment_wrong_form_not_select ()
+BEGIN
+  DECLARE x INTEGER;
+END;
+
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name test_shared_fragment_wrong_form_not_select}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
         | {declare_vars_type}: integer
           | {name_list}: x: integer variable
           | | {name x}: x: integer variable

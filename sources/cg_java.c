@@ -541,10 +541,14 @@ static void cg_java_stmt_list(ast_node *head, cg_java_context *java_context) {
   uint32_t frag_type = FRAG_TYPE_NONE;
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
+    frag_type = find_fragment_attr_type(misc_attrs);
+    if (frag_type == FRAG_TYPE_SHARED) {
+      // shared fragment types generate no code ever
+      continue;
+    }
     if (!options.java_fragment_interface_mode) {
       // skiping the base fragment getters since generating in each extension
       // will cause collisions including two fragments headers
-      frag_type = find_fragment_attr_type(misc_attrs);
       if (frag_type == FRAG_TYPE_BASE) {
         continue;
       }

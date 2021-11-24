@@ -4858,6 +4858,44 @@ with recursive
   )
 select current from cnt;
 
+-- TEST: CTE body that uses with_select
+-- + {with_select_stmt}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
+-- + {with_select_stmt}: select: { x: real notnull, y: real notnull }
+-- - error:
+with
+  foo(*) as (select 1 u, 2 v),
+  bar(*) as (
+    with baz(*) as (
+      select 2.0 x, 3.0 y
+    union all
+      select * from baz
+    limit 5)
+    select * from baz
+ )
+select * from bar join foo;
+
+-- TEST: create a shared fragment we can use in the next test
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- + {name cql}
+-- + {name shared_fragment}
+-- + {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc a_shared_frag(x integer not null, y integer not null)
+begin
+  select 1 x, 2 y, 3.0 z;
+end;
+
+-- TEST: create a shared fragment we can use in the next test
+-- + {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+-- + {cte_tables}: ok
+-- + {cte_table}: foo: { x: integer notnull, y: integer notnull, z: real notnull }
+-- + {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- - error:
+with foo(*) as (call a_shared_frag(1,2))
+select * from foo;
+
 -- TEST: with recursive with error in the definition
 -- + error: % duplicate name in list 'current'
 -- +1 error:
@@ -9236,7 +9274,64 @@ begin
   declare x integer;  /* no op */
 end;
 
+-- TEST: shared_fragment attribute (correct usage, has with clause)
+-- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_with_CTEs(id_ integer not null)
+begin
+  with
+    t1(id) as (select id from foo where id = id_ limit 20),
+    t2(x,y,z) as (select t1.id, name, rate from bar inner join t1 on t1.id = bar.id)
+  select * from t2;
+end;
+
+-- TEST: shared_fragment attribute (correct usage)
+-- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_without_CTEs(id_ integer not null)
+begin
+  select id, name, rate from bar where id = id_;
+end;
+
+-- TEST: shared_fragment attribute (incorrect usage)
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_wrong_form()
+begin
+  select * from bar;
+  select * from bar;
+end;
+
+-- TEST: shared_fragment attribute (incorrect usage)
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments cannot have any out or in/out parameters 'x'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_bad_args(out x integer)
+begin
+  select * from bar;
+end;
+
+-- TEST: shared_fragment attribute (incorrect usage)
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_wrong_form_not_select()
+begin
+  declare x integer;
+end;
+
 -- TEST: base_fragment attribute (correct usage)
+-- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+-- - error:
 @attribute(cql:base_fragment=core)
 create proc test_base_fragment(id_ integer not null)
 begin
@@ -18908,3 +19003,4 @@ end;
 -- + error: % constant group not found 'not_found'
 -- +1 error:
 @emit_constants not_found;
+

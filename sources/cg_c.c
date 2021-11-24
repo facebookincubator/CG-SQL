@@ -3453,6 +3453,11 @@ static void cg_create_proc_stmt(ast_node *ast) {
   // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
+  if (frag_type == FRAG_TYPE_SHARED) {
+    // shared fragments produce no code at all, no header, nothing
+    return;
+  }
+
   // Neither extension fragments nor base fragments produce the code for the procedure, only
   // the assembly fragment actually generates the result set.  For the others all we do
   // is generate the getter functions for the result set.

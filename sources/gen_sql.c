@@ -68,6 +68,7 @@ static void gen_shape_def(ast_node *ast);
 static void gen_expr_names(ast_node *ast);
 static void gen_opt_where(ast_node *ast);
 static void gen_conflict_clause(ast_node *ast);
+static void gen_call_stmt(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -1849,14 +1850,41 @@ static void gen_cte_decl(ast_node *ast)  {
   gen_printf(")", name);
 }
 
+static void gen_cte_binding_list(ast_node *ast) {
+  Contract(is_ast_cte_binding_list(ast));
+  
+  while (ast) {
+     EXTRACT_NOTNULL(cte_binding, ast->left);
+     EXTRACT_STRING(formal, cte_binding->left);
+     EXTRACT_STRING(actual, cte_binding->right);
+     gen_printf("%s AS %s", formal, actual);
+     if (ast->right) {
+       gen_printf(", ");
+     }
+     ast = ast->right;
+  }
+}
+
 static void gen_cte_table(ast_node *ast)  {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
-  EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(cte_body, ast->right);
 
   gen_cte_decl(cte_decl);
   gen_printf(" AS (");
-  gen_select_stmt(select_stmt);
+  if (is_ast_shared_cte(cte_body)) {
+    EXTRACT_NOTNULL(call_stmt, cte_body->left);
+    EXTRACT(cte_binding_list, cte_body->right);
+    gen_call_stmt(call_stmt);
+    if (cte_binding_list) {
+      gen_printf(" USING ");
+      gen_cte_binding_list(cte_binding_list);
+    }
+  }
+  else {
+    // the only other alternative is the select statement form
+    gen_select_stmt(cte_body);
+  }
   gen_printf(")");
 }
 

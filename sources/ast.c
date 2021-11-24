@@ -26,6 +26,7 @@ typedef struct misc_attrs_type {
   CSTR attribute_name;
   void * context;
   find_ast_str_node_callback str_node_callback;
+  bool_t presence_only;
   uint32_t count;
 } misc_attrs_type;
 
@@ -65,7 +66,7 @@ cql_noexport bool_t is_ast_str(ast_node *node) {
 cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
-  
+
 cql_noexport bool_t is_at_rc(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node*)node)->value);
 }
@@ -374,7 +375,7 @@ cql_noexport ast_node *get_func_params(ast_node *func_stmt) {
 //    select * from baa;
 //  end;
 //
-//  1- find_ast_misc_attr_callback ("cql", "foo", <(baa, (name, 'nelly'))>, <context>)
+//  1- find_ast_misc_attr_callback("cql", "foo", <(baa, (name, 'nelly'))>, <context>)
 //  2- find_ast_misc_attr_callback("cql", "foo", <raoul>, <context>)
 //  3- End
 cql_noexport void find_misc_attrs(
@@ -421,11 +422,18 @@ static void ast_find_ast_misc_attr_callback(
       !Strcasecmp(misc_attr_prefix, "cql") &&
       !Strcasecmp(misc_attr_name, misc->attribute_name)) {
 
+    // callback regardless of value, could be any payload
+    if (misc->presence_only) {
+      Invariant(!misc->str_node_callback);
+      misc->count++;
+      return;
+    }
+
     // The attribute value might be a string or a list of strings.
     // Non-string, non-list attributes are ignored for this callback type
     if (is_ast_str(ast_misc_attr_values)) {
-      EXTRACT_STRING(name, ast_misc_attr_values);
       if (misc->str_node_callback) {
+        EXTRACT_STRING(name, ast_misc_attr_values);
         misc->str_node_callback(name, ast_misc_attr_values, misc->context);
       }
       misc->count++;
@@ -536,6 +544,23 @@ cql_noexport uint32_t find_identity_columns(
   return find_attribute_str(misc_attr_list, callback, context, "identity");
 }
 
+// Helper function to extract the shared fragment node (if any) from the misc attributes
+// provided, and invoke the callback function.
+cql_noexport uint32_t find_shared_fragment_attr(
+  ast_node *_Nullable misc_attr_list)
+{
+  Contract(is_ast_misc_attrs(misc_attr_list));
+
+  misc_attrs_type misc = {
+    .presence_only = 1,
+    .attribute_name = "shared_fragment",
+    .count = 0,
+  };
+
+  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
+  return misc.count;
+}
+
 // Helper function to extract the base fragment node (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_base_fragment_attr(
@@ -592,12 +617,16 @@ cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list
   uint32_t base = find_base_fragment_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
   uint32_t extension = find_extension_fragment_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
   uint32_t assembly = find_assembly_query_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
+  uint32_t shared = find_shared_fragment_attr(misc_attr_list);
 
-  if (base + extension + assembly > 1) {
+  if (base + extension + assembly + shared > 1) {
     return FRAG_TYPE_MIXED;
   }
-  if (base + extension + assembly == 0) {
+  if (base + extension + assembly + shared == 0) {
     return FRAG_TYPE_NONE;
+  }
+  if (shared) {
+    return FRAG_TYPE_SHARED;
   }
   if (base) {
     return FRAG_TYPE_BASE;

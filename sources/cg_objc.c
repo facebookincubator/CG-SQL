@@ -533,16 +533,24 @@ static void cg_objc_stmt_list(ast_node *head) {
   bool_t containsAssembly = false;
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
-    // skiping the base fragment getters since generating in each extension
-    // will cause collisions including two fragments headers
     objc_frag_type = find_fragment_attr_type(misc_attrs);
-    if (objc_frag_type == FRAG_TYPE_BASE) {
+
+    if (objc_frag_type == FRAG_TYPE_SHARED) {
+      // shared fragments never create any code
       continue;
     }
+
+    if (objc_frag_type == FRAG_TYPE_BASE) {
+      // skipping the base fragment getters since generating in each extension
+      // will cause collisions including two fragments headers
+      continue;
+    }
+
     if (!containsAssembly) {
       // record if an assembly is present
       containsAssembly = objc_frag_type == FRAG_TYPE_ASSEMBLY;
     }
+
     cg_objc_one_stmt(stmt);
   }
 

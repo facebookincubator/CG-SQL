@@ -10168,46 +10168,94 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
 static void sem_cte_table(ast_node *ast)  {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
-  EXTRACT_NOTNULL(select_stmt, ast->right);
+  EXTRACT_ANY_NOTNULL(cte_body, ast->right);
 
-  // To handle possible recursive references we check if the cte is being
-  // defined by a union or union all.  If it, we create the type information
-  // for the CTE from just the top half of the union.  Which must not have
-  // recursive references.  Otherwise we use the whole thing.
-  EXTRACT_NOTNULL(select_core, select_stmt->left->left);
+  // the simple select form is allowed to be recursive
 
-  // analyze just the top half of the union
-  sem_select_core(select_core);
-  if (is_error(select_core)) {
-    record_error(ast);
-    return;
+  if (is_ast_select_stmt(cte_body)) {
+    ast_node *select_stmt = cte_body;
+    // To handle possible recursive references we check if the cte is being
+    // defined by a union or union all.  If it, we create the type information
+    // for the CTE from just the top half of the union.  Which must not have
+    // recursive references.  Otherwise we use the whole thing.
+    EXTRACT_NOTNULL(select_core, select_stmt->left->left);
+
+    // analyze just the top half of the union
+    sem_select_core(select_core);
+    if (is_error(select_core)) {
+      record_error(ast);
+      return;
+    }
+
+    // now process the declaration using the types from the base select
+    sem_cte_decl(cte_decl, select_core);
+    if (is_error(cte_decl)) {
+      record_error(ast);
+      return;
+    }
+
+    // at this point the cte is defined, we can analyze the entire select
+    // for the CTE.  This allows recursive references other parts of the select.
+    // However the type defined for the CTE is provisional, we haven't yet
+    // considered the effect of the union on nullability.  But what we have
+    // is what we will use for the recurrence.
+
+    sem_select_no_with(select_stmt);
+    if (is_error(select_stmt)) {
+      record_error(ast);
+      return;
+    }
+
+    // Once this is done we have to revise the semantic type to account for
+    // possible nulls in the other branches of the union.  This is the type
+    // we will expose to the world.
+
+    // replace the types but not the names!
+    cte_decl->sem->sptr->semtypes = select_stmt->sem->sptr->semtypes;
   }
+  else if (is_ast_shared_cte(cte_body)) {
+    EXTRACT_NOTNULL(call_stmt, cte_body->left);
+    EXTRACT(name_list, cte_body->right);
 
-  // now process the declaration using the types from the base select
-  sem_cte_decl(cte_decl, select_core);
-  if (is_error(cte_decl)) {
-    record_error(ast);
-    return;
+    // todo: handle name list
+    // todo: ensure the name matches and it's the correct type of procedure
+
+    // The semantic info for this kind of call looks just like any other
+    // we use the helper directly because this is not a loose call statement
+    // but there is no cursor.  We don't want the procedure we are in (if any)
+    // to become a result-set procedure.
+    sem_call_stmt_opt_cursor(call_stmt, NULL);
+    if (is_error(call_stmt)) {
+      record_error(ast);
+      return;
+    }
+
+    // now process the declaration using the types from call
+    sem_cte_decl(cte_decl, call_stmt);
+    if (is_error(cte_decl)) {
+      record_error(ast);
+      return;
+    }
   }
+  else {
+    // all the other forms are treated directly like a "local view"
+    // which is basically what a CTE is.  No special processing of the top half etc.
 
-  // at this point the cte is defined, we can analyze the entire select
-  // for the CTE.  This allows recursive references other parts of the select.
-  // However the type defined for the CTE is provisional, we haven't yet
-  // considered the effect of the union on nullability.  But what we have
-  // is what we will use for the recurrence.
+    ast_node *select_stmt = cte_body;
 
-  sem_select_no_with(select_stmt);
-  if (is_error(select_stmt)) {
-    record_error(ast);
-    return;
+    sem_select(select_stmt);
+    if (is_error(select_stmt)) {
+      record_error(ast);
+      return;
+    }
+
+    // now process the declaration using the types from the select
+    sem_cte_decl(cte_decl, select_stmt);
+    if (is_error(cte_decl)) {
+      record_error(ast);
+      return;
+    }
   }
-
-  // Once this is done we have to revise the semantic type to account for
-  // possible nulls in the other branches of the union.  This is the type
-  // we will expose to the world.
-
-  // replace the types but not the names!
-  cte_decl->sem->sptr->semtypes =  select_stmt->sem->sptr->semtypes;
 
   ast->sem = cte_decl->sem;
 }
@@ -14903,7 +14951,45 @@ static void find_named_cql_attribute(ast_node *misc_attr_list, CSTR attr_name, n
   Invariant(data->ast);
 }
 
-// If a stored proc is marked with base_fragment attribute, we syntax check that it specifies base fragment table inside
+// If a stored proc is marked with the shared_fragment attribute, we check for the simple
+// shared form of one select statement, with no OUT or IN/OUT args
+// The attribute should look like this:
+// @attribute(cql:shared_fragment)
+static void sem_shared_fragment(ast_node *misc_attrs, ast_node *create_proc_stmt) {
+  Contract(is_ast_create_proc_stmt(create_proc_stmt));
+  Contract(is_ast_misc_attrs(misc_attrs));
+
+  Contract(!current_joinscope);  // I don't belong inside a select(!)
+  EXTRACT_NOTNULL(proc_params_stmts, create_proc_stmt->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
+  EXTRACT_STRING(proc_name, current_proc->left);
+
+  if (stmt_list->right || !is_select_stmt(stmt_list->left)) {
+    report_error(stmt_list,
+      "CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT",
+      proc_name);
+    record_error(misc_attrs);
+    record_error(stmt_list);
+    record_error(create_proc_stmt);
+    return;
+  }
+
+  for (ast_node *ast = params; ast; ast = ast->right) {
+    Contract(is_ast_params(ast));
+    EXTRACT_NOTNULL(param, ast->left);
+
+    if (is_out_parameter(param->sem->sem_type)) {
+      report_error(stmt_list,  "CQL0208: shared fragments cannot have any out or in/out parameters", param->sem->name);
+      record_error(misc_attrs);
+      record_error(stmt_list);
+      record_error(create_proc_stmt);
+      return;
+    }
+  }
+}
+
+// If a stored proc is marked with the base_fragment attribute, we syntax check that it specifies base fragment table inside
 // The attributes should look like this:
 // @attribute(cql:base_fragment=core_table)
 static void sem_base_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast_node *create_proc_stmt) {
@@ -16093,6 +16179,12 @@ static void sem_create_proc_stmt(ast_node *ast) {
       report_error(misc_attrs, "CQL0318: more than one fragment annotation on procedure", name);
       goto cleanup;
     }
+    else if (frag_type == FRAG_TYPE_SHARED) {
+      sem_shared_fragment(misc_attrs, ast);
+      if (is_error(ast)) {
+        goto cleanup;
+      }
+    }
     else if (frag_type == FRAG_TYPE_BASE) {
       sem_base_fragment(misc_attrs, stmt_list, ast);
       if (is_error(ast)) {
@@ -16565,7 +16657,7 @@ static void sem_declare_const_stmt(ast_node *ast) {
 
      if (is_numeric(expr->sem->sem_type)) {
        eval(expr, &result);
-     
+
        if (result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL) {
          const_value->sem = expr->sem;
          const_name_ast->sem = expr->sem;
@@ -18096,7 +18188,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   }
 
   if (proc_stmt && is_struct(proc_stmt->sem->sem_type)) {
-    if (!cursor_name && !current_proc) {
+    if (!cursor_name && !current_proc && !cte_cur) {
       report_error(ast, "CQL0214: procedures with results can only be called using a cursor in global context", name);
       record_error(ast);
       return;
