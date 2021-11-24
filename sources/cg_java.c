@@ -392,7 +392,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
+  uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
   bool_t is_query_proc = cg_java_frag_type_query_proc(frag_type);
   cg_java_validate_proc_count(java_context, frag_type);
 
@@ -541,7 +541,7 @@ static void cg_java_stmt_list(ast_node *head, cg_java_context *java_context) {
   uint32_t frag_type = FRAG_TYPE_NONE;
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
-    frag_type = find_fragment_attr_type(misc_attrs);
+    frag_type = find_fragment_attr_type(misc_attrs, NULL);
     if (frag_type == FRAG_TYPE_SHARED) {
       // shared fragment types generate no code ever
       continue;

@@ -602,21 +602,24 @@ cql_data_defn ( CSTR base_fragment_name );
 // and then we put those together.  This function is the callback used to harvest
 // the base fragment name from wherever we found it.  Each fragment has it.
 static void cg_set_base_fragment_name(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
-  base_fragment_name = name;
+  if (_context) {
+    CSTR *base_name = (CSTR *)_context;
+    *base_name = name;
+  }
 }
 
 // Look for the assembly fragment annotations, return the type or MIXED if
 // there is no unique type. This is used to find cases where the same attribute
 // is present more than once or different/incompatible attributes are present
-cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list) {
+cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list, CSTR *_Nullable base_name) {
   if (!misc_attr_list) {
     base_fragment_name = NULL;
     return FRAG_TYPE_NONE;
   }
 
-  uint32_t base = find_base_fragment_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
-  uint32_t extension = find_extension_fragment_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
-  uint32_t assembly = find_assembly_query_attr(misc_attr_list, cg_set_base_fragment_name, NULL);
+  uint32_t base = find_base_fragment_attr(misc_attr_list, cg_set_base_fragment_name, base_name);
+  uint32_t extension = find_extension_fragment_attr(misc_attr_list, cg_set_base_fragment_name, base_name);
+  uint32_t assembly = find_assembly_query_attr(misc_attr_list, cg_set_base_fragment_name, base_name);
   uint32_t shared = find_shared_fragment_attr(misc_attr_list);
 
   if (base + extension + assembly + shared > 1) {
@@ -636,6 +639,14 @@ cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list
   }
   Invariant(assembly);
   return FRAG_TYPE_ASSEMBLY;
+}
+
+// helper to get the fragment type of a given procedure
+cql_noexport uint32_t find_proc_frag_type(ast_node *ast) {
+  Contract(is_ast_create_proc_stmt(ast));
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  return find_fragment_attr_type(misc_attrs, NULL);
 }
 
 cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_t flip) {

@@ -1494,7 +1494,17 @@ static void gen_table_or_subquery(ast_node *ast) {
 
   if (is_ast_str(factor)) {
     EXTRACT_STRING(name, factor);
-    gen_printf("%s", name);
+
+    bool_t has_table_rename_callback = gen_callbacks && gen_callbacks->table_rename_callback;
+    bool_t handled = false;
+
+    if (has_table_rename_callback) {
+      handled = gen_callbacks->table_rename_callback(factor, gen_callbacks->table_rename_context, output);
+    }
+
+    if (!handled) {
+      gen_printf("%s", name);
+    }
   }
   else if (is_ast_select_stmt(factor) || is_ast_with_select_stmt(factor)) {
     gen_printf("(");
@@ -1855,9 +1865,10 @@ static void gen_cte_binding_list(ast_node *ast) {
   
   while (ast) {
      EXTRACT_NOTNULL(cte_binding, ast->left);
-     EXTRACT_STRING(formal, cte_binding->left);
-     EXTRACT_STRING(actual, cte_binding->right);
-     gen_printf("%s AS %s", formal, actual);
+     EXTRACT_STRING(actual, cte_binding->left);
+     EXTRACT_STRING(formal, cte_binding->right);
+     gen_printf("%s AS %s", actual, formal);
+
      if (ast->right) {
        gen_printf(", ");
      }
@@ -1871,14 +1882,37 @@ static void gen_cte_table(ast_node *ast)  {
   EXTRACT_ANY_NOTNULL(cte_body, ast->right);
 
   gen_cte_decl(cte_decl);
+
+  if (is_ast_like(cte_body)) {
+    gen_printf(" LIKE ");
+    if (is_ast_str(cte_body->left)) {
+      gen_name(cte_body->left);
+    }
+   else {
+     gen_printf("(");
+     gen_select_stmt(cte_body->left);
+     gen_printf(")");
+   }
+   return;
+  }
+
   gen_printf(" AS (");
   if (is_ast_shared_cte(cte_body)) {
-    EXTRACT_NOTNULL(call_stmt, cte_body->left);
-    EXTRACT(cte_binding_list, cte_body->right);
-    gen_call_stmt(call_stmt);
-    if (cte_binding_list) {
-      gen_printf(" USING ");
-      gen_cte_binding_list(cte_binding_list);
+    bool_t has_cte_procs_callback = gen_callbacks && gen_callbacks->cte_proc_callback;
+    bool_t handled = false;
+
+    if (has_cte_procs_callback) {
+      handled = gen_callbacks->cte_proc_callback(cte_body, gen_callbacks->cte_proc_context, output);
+    }
+
+    if (!handled) {
+      EXTRACT_NOTNULL(call_stmt, cte_body->left);
+      EXTRACT(cte_binding_list, cte_body->right);
+      gen_call_stmt(call_stmt);
+      if (cte_binding_list) {
+        gen_printf(" USING ");
+        gen_cte_binding_list(cte_binding_list);
+      }
     }
   }
   else {
@@ -1888,35 +1922,57 @@ static void gen_cte_table(ast_node *ast)  {
   gen_printf(")");
 }
 
-static void gen_cte_tables(ast_node *ast)  {
+static void gen_cte_tables(ast_node *ast, CSTR prefix) {
   Contract(is_ast_cte_tables(ast));
 
+  bool_t first = true;
   while (ast) {
-    gen_cte_table(ast->left);
-    if (ast->right) {
-      gen_printf(",\n");
+    EXTRACT_NOTNULL(cte_table, ast->left);
+
+    // callbacks can suppress some CTE for use in shared_fragments
+    bool_t has_cte_suppress_callback = gen_callbacks && gen_callbacks->cte_suppress_callback;
+    bool_t handled = false;
+
+    if (has_cte_suppress_callback) {
+      handled = gen_callbacks->cte_suppress_callback(cte_table, gen_callbacks->cte_suppress_context, output);
     }
+
+    if (!handled) {
+      if (first) {
+        gen_printf("%s", prefix);
+        first = false;
+      }
+      else {
+        gen_printf(",\n");
+      }
+      gen_cte_table(cte_table);
+    }
+
     ast = ast->right;
+  }
+
+  if (!first) {
+    gen_printf("\n");
   }
 }
 
 static void gen_with_prefix(ast_node *ast) {
   EXTRACT(cte_tables, ast->left);
+  CSTR prefix;
 
   // for us there is no difference between WITH and WITH RECURSIVE
   // except we have to remember which one it was so that we can
   // emit the same thing we saw.  Sqlite lets you do recursion
   // even if don't use WITH RECURSIVE
   if (is_ast_with(ast)) {
-    gen_printf("WITH\n");
+    prefix = "WITH\n";
   }
   else {
     Contract(is_ast_with_recursive(ast));
-    gen_printf("WITH RECURSIVE\n");
+    prefix = "WITH RECURSIVE\n";
   }
 
-  gen_cte_tables(cte_tables);
-  gen_printf("\n");
+  gen_cte_tables(cte_tables, prefix);
 }
 
 static void gen_with_select_stmt(ast_node *ast) {

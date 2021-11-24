@@ -15229,6 +15229,16 @@ void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable
 
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC shared_frag ()
+BEGIN
+  SELECT 1 AS this_is_not_emitted;
+END;
+*/
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

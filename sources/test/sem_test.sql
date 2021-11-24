@@ -4874,7 +4874,7 @@ with
  )
 select * from bar join foo;
 
--- TEST: create a shared fragment we can use in the next test
+-- TEST: create a shared fragment we can use in the frag tests
 -- + {stmt_and_attr}: ok
 -- + {misc_attrs}: ok
 -- + {name cql}
@@ -4887,7 +4887,225 @@ begin
   select 1 x, 2 y, 3.0 z;
 end;
 
--- TEST: create a shared fragment we can use in the next test
+-- TEST: create a shared fragment with a parameter for later use
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- + {name cql}
+-- + {name shared_fragment}
+-- + {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc shared_frag2(x integer not null, y integer not null)
+begin
+  with source(*) LIKE a_shared_frag
+  select * from source;
+end;
+
+-- a typedef
+-- - error:
+declare proc frag_type() (id integer<job>, name text);
+
+-- TEST: create a shared fragment that requires a particular type kind
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- + {name cql}
+-- + {name shared_fragment}
+-- + {cte_table}: source: { id: integer<job>, name: text }
+-- + {create_proc_stmt}: select: { id: integer<job>, name: text } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc shared_frag3()
+begin
+  with source(*) LIKE frag_type
+  select * from source;
+end;
+
+create table jobstuff(id integer<job>, name text);
+create table bad_jobstuff(id integer<meters>, name text);
+
+-- TEST: try to use fragment with correct type kind
+-- + {with_select_stmt}: select: { id: integer<job>, name: text }
+-- - error:
+with 
+  data(*) as (call shared_frag3() using jobstuff as source)
+  select * from data;
+
+-- TEST: try to use fragment with incorrect type kind
+-- + {with_select_stmt}: err
+-- + error: % expressions of different kinds can't be mixed: 'meters' vs. 'job'
+-- +1 error:
+with 
+  data(*) as (call shared_frag3() using bad_jobstuff as source)
+  select * from data;
+
+-- TEST: create a shared fragment but use a reference to a shape that doesn't exist
+-- + {with_select_stmt}: err
+-- + error: % must be a cursor, proc, table, or view 'there_is_no_such_source'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc shared_frag_bad_like()
+begin
+  with source(*) LIKE there_is_no_such_source
+  select 1 x, 2 y, 3.0 z;
+end;
+
+-- TEST: try to use LIKE outside of a procedure
+-- + {with_select_stmt}: err
+-- + error: % the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
+-- +1 error:
+with source(*) LIKE there_is_no_such_source
+select 1 x, 2 y, 3.0 z;
+
+-- TEST: try to use LIKE in a procedure that is not a shared fragment
+-- + {with_select_stmt}: err
+-- + error: % the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'not_a_shared_fragment'
+-- +1 error:
+create proc not_a_shared_fragment()
+begin
+  with source(*) LIKE there_is_no_such_source
+  select 1 x, 2 y, 3.0 z;
+end;
+
+-- TEST: try to use the shared fragment with a table arg even though it has none
+-- + {with_select_stmt}: err
+-- + error: % the called procedure has no table arguments but a USING clause is present 'a_shared_frag'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call a_shared_frag(1, 2) USING bar as foo)
+  select * from x;
+
+-- TEST: try to use the shared fragment with a table arg but don't provide the arg
+-- + {with_select_stmt}: err
+-- + error: % no actual table was provided for the table parameter 'source'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call shared_frag2(1, 2) USING bar as foo)
+  select * from x;
+
+-- TEST: try to use the shared fragment with a table arg but have duplicate arg names
+-- + {with_select_stmt}: err
+-- + error: % duplicate binding of table in CALL/USING clause 'bar'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call shared_frag2(1, 2) USING source as bar, source as bar)
+  select * from x;
+
+-- TEST: try to use the shared fragment with a table arg but have extra arguments
+-- + {with_select_stmt}: err
+-- + error: % an actual table was provided for a table parameter that does not exist 'bogus'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call shared_frag2(1, 2) USING bar as source, bar as bogus)
+  select * from x;
+
+-- TEST: try to use the shared fragment with a table arg that isn't actually a table
+-- + {with_select_stmt}: err
+-- + error: % table/view not defined 'bogus'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call shared_frag2(1, 2) USING bogus as source)
+  select * from x;
+
+-- TEST: try to use the shared fragment with a table arg that has the wrong arg count
+-- + {with_select_stmt}: err
+-- + {name bar}: bar: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
+-- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
+-- + error: % the table provided must have the same number of columns as the table parameter 'bar'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, 3.0 z, 4 u),
+  x(*) AS (call shared_frag2(1, 2) USING bar as source)
+  select * from x;
+
+-- TEST: try to use the shared fragment with a table arg that is missing a column
+-- + {with_select_stmt}: err
+-- + {name bar}: bar: { x: integer notnull, y: integer notnull, w: real notnull }
+-- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
+-- + error: % The table argument 'source' requires column 'z' but it is missing in provided table 'bar'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, 3.0 w),
+  x(*) AS (call shared_frag2(1, 2) USING bar as source)
+  select * from x;
+
+-- TEST: try to use the shared fragment with a table arg that is of the wrong type
+-- + {with_select_stmt}: err
+-- + {name bar}: err
+-- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
+-- + error: % incompatible types in expression 'z'
+-- +1 error:
+with 
+  bar(*) as (select 1 x, 2 y, '3.0' z),
+  x(*) AS (call shared_frag2(1, 2) USING bar as source)
+  select * from x;
+
+-- TEST: try to use LIKE in a procedure that is a shared fragment but not at the top level
+-- + {with_select_stmt}: err
+-- + error: % the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'bogus_like_in_shared'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc bogus_like_in_shared()
+begin
+  with data(*) AS (
+     with source(*) LIKE there_is_no_such_source
+     select * from source
+  )
+  select 1 x, 2 y, 3.0 z;
+end;
+
+-- TEST: create a shared fragment with an unbound table but botch the CTE decl
+-- + {with_select_stmt}: err
+-- + error: % too few column names specified in common table expression 'source'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc shared_frag_bad_like_decl()
+begin
+  with source(u) LIKE a_shared_frag
+  select 1 x, 2 y, 3.0 z;
+end;
+
+-- TEST: create a shared fragment but use a bogus CTE declaration
+-- + {with_select_stmt}: err
+-- + error: % duplicate name in list 'id'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc shared_frag_bogus_cte_columns()
+begin
+  with source(id, id) LIKE (select 1 x, 2 y)
+  select 1 x, 2 y, 3.0 z;
+end;
+
+-- TEST: use a shared fragment but with a bad CTE declaration
+-- + {with_select_stmt}: err
+-- + error: % duplicate name in list 'id'
+-- +1 error:
+with foo(id, id) as (call a_shared_frag(1,2))
+select * from foo;
+
+-- TEST: use the general form of the with CTE but with an error
+-- + {with_select_stmt}: err
+-- + error: % duplicate name in list 'goo'
+-- +1 error:
+with foo(*) as (
+  with garbonzo(goo, goo) as (select 1 x, 2 y)
+  select * from garbonzo)
+select * from foo;
+
+-- TEST: use the general form of the with CTE but with an error in the outer cte_decl
+-- + {with_select_stmt}: err
+-- + error: % duplicate name in list 'goo'
+-- +1 error:
+with foo(goo, goo) as (
+  with garbonzo(*) as (select 1 x, 2 y)
+  select * from garbonzo)
+select * from foo;
+
+-- TEST: use the shared fragment, simple correct case
 -- + {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + {cte_tables}: ok
 -- + {cte_table}: foo: { x: integer notnull, y: integer notnull, z: real notnull }
@@ -4895,6 +5113,75 @@ end;
 -- - error:
 with foo(*) as (call a_shared_frag(1,2))
 select * from foo;
+
+-- TEST: the call form must call a shared fragment
+-- + {with_select_stmt}: err
+-- + error: % a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
+-- +1 error:
+with foo(*) as (call return_with_attr())
+select * from foo;
+
+-- TEST: the call form must make a valid call
+-- + {with_select_stmt}: err
+-- + error: % calls to undeclared procedures are forbidden; declaration missing or typo 'this_is_not_even_a_proc'
+-- +1 error:
+with foo(*) as (call this_is_not_even_a_proc())
+select * from foo;
+
+-- TEST: shared_fragment attribute (correct usage, has with clause)
+-- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_with_CTEs(id_ integer not null)
+begin
+  with
+    t1(id) as (select id from foo where id = id_ limit 20),
+    t2(x,y,z) as (select t1.id, name, rate from bar inner join t1 on t1.id = bar.id)
+  select * from t2;
+end;
+
+-- TEST: shared_fragment attribute (correct usage)
+-- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_without_CTEs(id_ integer not null)
+begin
+  select id, name, rate from bar where id = id_;
+end;
+
+-- TEST: shared_fragment attribute (incorrect usage)
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_wrong_form()
+begin
+  select * from bar;
+  select * from bar;
+end;
+
+-- TEST: shared_fragment attribute (incorrect usage)
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments cannot have any out or in/out parameters 'x'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_bad_args(out x integer)
+begin
+  select * from bar;
+end;
+
+-- TEST: shared_fragment attribute (incorrect usage)
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc test_shared_fragment_wrong_form_not_select()
+begin
+  declare x integer;
+end;
 
 -- TEST: with recursive with error in the definition
 -- + error: % duplicate name in list 'current'
@@ -4990,7 +5277,6 @@ select T.*;
 -- + error: % table not found 'T'
 -- + {table_star}: err
 select T.* from (select 1) as U;
-
 
 -- TEST: simple test for declare function
 -- + name simple_func}: real notnull
@@ -9274,60 +9560,6 @@ begin
   declare x integer;  /* no op */
 end;
 
--- TEST: shared_fragment attribute (correct usage, has with clause)
--- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
--- - error:
-@attribute(cql:shared_fragment)
-create proc test_shared_fragment_with_CTEs(id_ integer not null)
-begin
-  with
-    t1(id) as (select id from foo where id = id_ limit 20),
-    t2(x,y,z) as (select t1.id, name, rate from bar inner join t1 on t1.id = bar.id)
-  select * from t2;
-end;
-
--- TEST: shared_fragment attribute (correct usage)
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
--- - error:
-@attribute(cql:shared_fragment)
-create proc test_shared_fragment_without_CTEs(id_ integer not null)
-begin
-  select id, name, rate from bar where id = id_;
-end;
-
--- TEST: shared_fragment attribute (incorrect usage)
--- + {stmt_and_attr}: err
--- + {create_proc_stmt}: err
--- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
--- +1 error:
-@attribute(cql:shared_fragment)
-create proc test_shared_fragment_wrong_form()
-begin
-  select * from bar;
-  select * from bar;
-end;
-
--- TEST: shared_fragment attribute (incorrect usage)
--- + {stmt_and_attr}: err
--- + {create_proc_stmt}: err
--- + error: % shared fragments cannot have any out or in/out parameters 'x'
--- +1 error:
-@attribute(cql:shared_fragment)
-create proc test_shared_fragment_bad_args(out x integer)
-begin
-  select * from bar;
-end;
-
--- TEST: shared_fragment attribute (incorrect usage)
--- + {stmt_and_attr}: err
--- + {create_proc_stmt}: err
--- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
--- +1 error:
-@attribute(cql:shared_fragment)
-create proc test_shared_fragment_wrong_form_not_select()
-begin
-  declare x integer;
-end;
 
 -- TEST: base_fragment attribute (correct usage)
 -- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc

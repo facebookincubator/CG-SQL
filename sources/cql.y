@@ -237,7 +237,7 @@ static void cql_reset_globals(void);
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
 %type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names expr_name
-%type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding
+%type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
 %type <aval> select_stmt_no_with select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
@@ -1038,21 +1038,23 @@ cte_tables[result]:
   | cte_table ',' cte_tables[ct]  { $result = new_ast_cte_tables($cte_table, $ct); }
   ;
 
+cte_decl:
+  name '(' name_list ')'  { $cte_decl = new_ast_cte_decl($name, $name_list); }
+  | name '(' '*' ')'  { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
+  ;
+
 cte_table:
-    name '(' name_list ')' AS '(' select_stmt ')'  {
-      ast_node *cte_decl = new_ast_cte_decl($name, $name_list);
-      $cte_table = new_ast_cte_table(cte_decl, $select_stmt); }
-  | name '(' '*' ')' AS '(' select_stmt ')' {
-      ast_node *cte_decl = new_ast_cte_decl($name, new_ast_star());
-      $cte_table = new_ast_cte_table(cte_decl, $select_stmt); }
-  | name '(' '*' ')' AS '(' call_stmt ')' {
-      ast_node *cte_decl = new_ast_cte_decl($name, new_ast_star());
+    cte_decl AS '(' select_stmt ')'  { $cte_table = new_ast_cte_table($cte_decl, $select_stmt); }
+  | cte_decl AS '(' call_stmt ')' {
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, NULL);
-      $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
-  | name '(' '*' ')' AS '(' call_stmt USING cte_binding_list ')' {
-      ast_node *cte_decl = new_ast_cte_decl($name, new_ast_star());
+      $cte_table = new_ast_cte_table($cte_decl, shared_cte); }
+  | cte_decl AS '(' call_stmt USING cte_binding_list ')' {
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, $cte_binding_list);
-      $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
+      $cte_table = new_ast_cte_table($cte_decl, shared_cte); }
+  | cte_decl LIKE '(' select_stmt ')'  {
+      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
+  | cte_decl LIKE name  {
+      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($name, NULL)); }
   ;
 
 with_prefix:

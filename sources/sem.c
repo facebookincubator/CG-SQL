@@ -212,7 +212,9 @@ static void sem_unset_notnull_improvements_in_context(notnull_improvement_contex
 static void sem_revert_notnull_improvement_history(notnull_improvement_history history);
 static void sem_set_notnull_improvements_for_true_condition(ast_node *expr, ast_node *select_expr_list);
 static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
-static void reset_enforcements();
+static void reset_enforcements(void);
+static uint32_t sem_with_depth(void);
+static ast_node *sem_find_table(CSTR name, ast_node *ast_error);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -340,6 +342,9 @@ static int32_t loop_depth;
 
 // If the current proc has used DML/DDL.
 static bool_t has_dml;
+
+// If the current proc is a shared fragment
+static bool_t in_shared_fragment;
 
 // If the current context is a trigger statement list
 static bool_t in_trigger;
@@ -2233,7 +2238,7 @@ static void report_sem_type_mismatch(
 }
 
 // This is the basic constructor for the semantic info node.
-static sem_node * new_sem(sem_t sem_type) {
+cql_noexport sem_node * new_sem(sem_t sem_type) {
   sem_node *sem = _ast_pool_new(sem_node);
   sem->sem_type = sem_type;
   sem->name = NULL;
@@ -5828,7 +5833,7 @@ static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_n
 static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright) {
   if (kright) {
     if (kleft) {
-      if (strcmp(kleft, kright)) {
+      if (Strcasecmp(kleft, kright)) {
         CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kright, kleft);
         report_error(ast, errmsg, NULL);
         record_error(ast);
@@ -8866,6 +8871,26 @@ static void sem_select_expr_list_with_opt_where(ast_node *ast, ast_node *opt_whe
   POP_NOTNULL_IMPROVEMENT_CONTEXT();
 }
 
+// Helper function for looking up a table in a table factor context
+// This is the normal context where tables are found inside of select
+// statements.  We have to search the cte space as well as the normal
+// table names.  Note this is not a table alias, but an actual table
+// or cte.  So we don't use this for instance to resolve "T1.x" that's
+// done by normal name resolution rules.
+static ast_node *sem_find_table(CSTR name, ast_node *ast_error) {
+  ast_node *table_ast = find_cte(name);
+  if (!table_ast) {
+    table_ast = find_usable_and_not_deleted_table_or_view(
+      name,
+      ast_error,
+      "CQL0095: table/view not defined");
+    if (!table_ast) {
+      record_error(ast_error);
+    }
+  }
+  return table_ast;
+}
+
 // A table factor is one of three things:
 // * a table name (a string)  select * from X
 // * a select subquery (select X,Y from..) as T2
@@ -8881,16 +8906,9 @@ static void sem_table_or_subquery(ast_node *ast) {
   if (is_ast_str(factor)) {
     // [name]
     EXTRACT_STRING(name, factor);
-    ast_node *table_ast = find_cte(name);
+    ast_node *table_ast = sem_find_table(name, ast);
     if (!table_ast) {
-      table_ast = find_usable_and_not_deleted_table_or_view(
-        name,
-        ast,
-        "CQL0095: table/view not defined");
-      if (!table_ast) {
-        record_error(ast);
-        return;
-      }
+      return;
     }
 
     sem_node *sem = new_sem(SEM_TYPE_JOIN);
@@ -10159,6 +10177,187 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
   add_cte(ast);
 }
 
+static void sem_shared_fragment_table_binding(
+  ast_node *call_stmt,
+  ast_node *create_proc_stmt,
+  ast_node *cte_binding_list)
+{
+  Contract(is_ast_call_stmt(call_stmt));
+  Contract(is_ast_create_proc_stmt(create_proc_stmt));
+  Contract(is_ast_cte_binding_list(cte_binding_list));
+
+  // the procedure exists, and it is not in an error state (already checked)
+  Contract(!is_error(create_proc_stmt));
+
+  // and furthermore it's got a result type, again this is already checked.
+  Contract(is_struct(create_proc_stmt->sem->sem_type));
+
+  EXTRACT_STRING(proc_name, call_stmt->left);
+
+  symtab *bindings = symtab_new();
+  symtab *formals = symtab_new();
+  symtab *cols = NULL;
+  ast_node *item = NULL;
+
+  for (item = cte_binding_list ; item; item = item->right) {
+    EXTRACT_NOTNULL(cte_binding, item->left);
+    EXTRACT_STRING(actual, cte_binding->left);
+    EXTRACT_STRING(formal, cte_binding->right);
+
+    bool_t added = symtab_add(bindings, formal, cte_binding);
+    if (!added) {
+      report_error(cte_binding->right, "CQL0428: duplicate binding of table in CALL/USING clause", formal);
+      record_error(call_stmt);
+      return;
+    }
+  }
+
+  EXTRACT_NOTNULL(proc_params_stmts, create_proc_stmt->right);
+  EXTRACT_NOTNULL(stmt_list, proc_params_stmts->right);
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+  if (!is_ast_with_select_stmt(stmt)) {
+    report_error(cte_binding_list, "CQL0429: the called procedure has no table arguments but a USING clause is present", proc_name);
+    record_error(call_stmt);
+    goto cleanup;
+  }
+
+  // Now we get the top level CTE tables out of the target procedure.
+  // We need to scan the CTEs for entries that use LIKE, those are the table arguments
+  // for each one of those we then need to ensure that the of the actual table is compatible
+  // with the type of the formal table and that the total number of columns is a match.
+  // Note that there cannot be extra columns because if there were that might create ambiguities
+  // in the result.
+
+  Contract(is_ast_with_select_stmt(stmt));
+  EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
+  EXTRACT(cte_tables, with_prefix->left);
+
+  for (ast_node *ast = cte_tables; ast; ast = ast->right) {
+    EXTRACT_NOTNULL(cte_table, ast->left);
+    EXTRACT_NOTNULL(cte_decl, cte_table->left);
+    EXTRACT_ANY_NOTNULL(cte_body, cte_table->right);
+
+    if (!is_ast_like(cte_body)) {
+      continue;
+    }
+
+    EXTRACT_STRING(cte_name, cte_decl->left);
+    symtab_entry *entry = symtab_find(bindings, cte_name);
+
+    if (!entry) {
+      report_error(cte_binding_list, "CQL0430: no actual table was provided for the table parameter", cte_name);
+      record_error(call_stmt);
+      goto cleanup;
+    }
+
+    EXTRACT_NOTNULL(cte_binding, entry->val);
+    ast_node *ast_formal = cte_binding->right;
+    ast_node *ast_actual = cte_binding->left;
+    EXTRACT_STRING(actual, ast_actual);
+    EXTRACT_STRING(formal, ast_formal);
+
+    // sanity check, the name matches, we just looked it up...
+    Invariant(!strcmp(formal, cte_name));
+
+    bool_t added = symtab_add(formals, cte_name, cte_decl);
+    Contract(added); // known to be unique due to previous checks
+
+    // We have to bind the name of the actual table in the current context
+    // sem_find_table does exactly this -- this is the code used for a table_ref
+    // inside of a from clause
+    ast_node *table = sem_find_table(actual, ast_actual);
+    if (!table) {
+      // errors already reported
+      record_error(call_stmt);
+      goto cleanup;
+    }
+
+    sem_struct *sptr_formals = cte_decl->sem->sptr;
+    sem_struct *sptr_actuals = table->sem->sptr;
+    ast_formal->sem = cte_decl->sem;
+    ast_actual->sem = table->sem;
+    sem_add_flags(ast_formal, 0); // forces the sem info to be copied but change nothing
+    sem_add_flags(ast_actual, 0); // forces the sem info to be copied but change nothing
+
+    // Both are known to be struct types
+    Invariant(sptr_formals);
+    Invariant(sptr_actuals);
+
+    if (sptr_formals->count != sptr_actuals->count) {
+      report_error(ast_actual, "CQL0432: the table provided must have the same number of columns as the table parameter", actual);
+      record_error(call_stmt);
+      goto cleanup;
+    }
+
+    cols = symtab_new();
+
+    for (uint32_t i = 0; i < sptr_actuals->count; i++) {
+      // we're adding the address of the name as a surrogate for the index 'i'
+      // we can easily undo this to get 'i' back when we look it up
+      symtab_add(cols, sptr_actuals->names[i], &sptr_actuals->names[i]);
+    }
+
+    for (uint32_t i = 0; i < sptr_formals->count; i++) {
+      CSTR name = sptr_formals->names[i];
+      symtab_entry *col_entry = symtab_find(cols, name);
+      if (!col_entry) {
+        CSTR msg = dup_printf(
+          "CQL0433: The table argument '%s' requires column '%s' but it is missing in provided table",
+          formal, name);
+        report_error(ast_actual, msg, actual);
+        record_error(call_stmt);
+        goto cleanup;
+      }
+
+      CSTR *pname = col_entry->val;
+
+      uint32_t j = (uint32_t)(pname - &sptr_actuals->names[0]);
+
+      sem_t sem_type_formal = sptr_formals->semtypes[i];
+      sem_t sem_type_actual = sptr_actuals->semtypes[j];
+      CSTR kformal = sptr_formals->kinds[i];
+      CSTR kactual = sptr_actuals->kinds[j];
+
+      if (!sem_verify_assignment(ast_actual, sem_type_formal, sem_type_actual, name)) {
+        record_error(call_stmt);
+        goto cleanup;
+      }
+
+      sem_combine_kinds_general(ast_actual, kformal, kactual);
+      if (is_error(ast_actual)) {
+        record_error(call_stmt);
+        goto cleanup;
+      }
+    }
+
+    symtab_delete(cols);
+    cols = NULL;
+  }
+
+  for (item = cte_binding_list ; item; item = item->right) {
+    EXTRACT_NOTNULL(cte_binding, item->left);
+    EXTRACT_ANY_NOTNULL(ast_formal, cte_binding->right);
+    EXTRACT_ANY_NOTNULL(ast_actual, cte_binding->left);
+
+    EXTRACT_STRING(actual, ast_actual);
+    EXTRACT_STRING(formal, ast_formal);
+
+    if (!symtab_find(formals, formal)) {
+      report_error(ast_formal, "CQL0431: an actual table was provided for a table parameter that does not exist", formal);
+      record_error(call_stmt);
+      goto cleanup;
+    }
+  }
+
+cleanup:
+  if (cols) {
+    symtab_delete(cols);
+  }
+  symtab_delete(bindings);
+  symtab_delete(formals);
+}
+
 // Here we process the CTE and the select it is associated with:
 //  * analyze the select
 //    * if it is compound analyze only the first part of the union;
@@ -10169,6 +10368,50 @@ static void sem_cte_table(ast_node *ast)  {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
   EXTRACT_ANY_NOTNULL(cte_body, ast->right);
+
+  if (is_ast_like(cte_body)) {
+    EXTRACT_NAMED_NOTNULL(like_ast, like, cte_body);
+
+    if (!in_shared_fragment || sem_with_depth() > 1) {
+      CSTR name = NULL;
+      if (current_proc) {
+        EXTRACT_STRING(proc_name, current_proc->left);
+        name = proc_name;
+      }
+
+      report_error(cte_body,
+          "CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level"
+          " i.e. @attribute(cql:shared_fragment)", name);
+
+      record_error(ast);
+      return;
+    }
+
+    if (is_id(like_ast->left)) {
+      // name alias
+
+      // must be a valid shape
+      ast_node *found_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
+      if (!found_shape) {
+        record_error(ast);
+        return;
+      }
+
+      // now process the declaration using the types from the select
+      sem_cte_decl(cte_decl, found_shape);
+      if (is_error(cte_decl)) {
+        record_error(ast);
+        return;
+      }
+
+      ast->sem = cte_decl->sem;
+      return;
+    }
+    else {
+      // this is the LIKE (select ..) case, we just evaluate the select as usual
+      cte_body = cte_body->left;
+    }
+  }
 
   // the simple select form is allowed to be recursive
 
@@ -10215,10 +10458,7 @@ static void sem_cte_table(ast_node *ast)  {
   }
   else if (is_ast_shared_cte(cte_body)) {
     EXTRACT_NOTNULL(call_stmt, cte_body->left);
-    EXTRACT(name_list, cte_body->right);
-
-    // todo: handle name list
-    // todo: ensure the name matches and it's the correct type of procedure
+    EXTRACT(cte_binding_list, cte_body->right);
 
     // The semantic info for this kind of call looks just like any other
     // we use the helper directly because this is not a loose call statement
@@ -10228,6 +10468,25 @@ static void sem_cte_table(ast_node *ast)  {
     if (is_error(call_stmt)) {
       record_error(ast);
       return;
+    }
+
+    // check if we are calling a shared fragment
+    EXTRACT_ANY_NOTNULL(proc_name_ast, call_stmt->left);
+    EXTRACT_STRING(proc_name, proc_name_ast);
+    ast_node *proc_stmt = find_proc(proc_name);
+    uint32_t frag_type = find_proc_frag_type(proc_stmt);
+    if (frag_type != FRAG_TYPE_SHARED) {
+      report_error(proc_name_ast, "CQL0224: a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
+      record_error(ast);
+      return;
+    }
+
+    if (cte_binding_list) {
+      sem_shared_fragment_table_binding(call_stmt, proc_stmt, cte_binding_list);
+      if (is_error(call_stmt)) {
+        record_error(ast);
+        return;
+      }
     }
 
     // now process the declaration using the types from call
@@ -10274,6 +10533,17 @@ static void sem_cte_tables(ast_node *head)  {
   }
 
   record_ok(head);
+}
+
+// This tells us how deeply nested we are in CTE expressions at the moment
+static uint32_t sem_with_depth() {
+  uint32_t depth = 0;
+  cte_state *head = cte_cur;
+  while (head) {
+    depth++;
+    head = head->prev;
+  }
+  return depth;
 }
 
 // Add a new set of tables to the stack
@@ -16046,6 +16316,9 @@ static void sem_create_proc_stmt(ast_node *ast) {
     goto cleanup;
   }
 
+  uint32_t frag_type = find_proc_frag_type(ast);
+  in_shared_fragment = frag_type == FRAG_TYPE_SHARED;
+
   Invariant(!locals);
   Invariant(!local_types);
 
@@ -16173,8 +16446,6 @@ static void sem_create_proc_stmt(ast_node *ast) {
       goto cleanup;
     }
 
-    uint32_t frag_type = find_fragment_attr_type(misc_attrs);
-
     if (frag_type == FRAG_TYPE_MIXED) {
       report_error(misc_attrs, "CQL0318: more than one fragment annotation on procedure", name);
       goto cleanup;
@@ -16246,6 +16517,7 @@ cleanup:
   name_ast->sem = ast->sem;
   current_proc = NULL;
   SYMTAB_CLEANUP(local_types);
+  in_shared_fragment = false;
 }
 
 // Validate the name is unique in the given name list and attach the type

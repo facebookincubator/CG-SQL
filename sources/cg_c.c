@@ -133,6 +133,17 @@ static symtab *string_literals;
 // Statement text fragments are frequently duplicated, we want a unique constant for each chunk of DML/DDL
 static symtab *text_fragments;
 
+// The current shared fragment number in the current procdure
+static int32_t proc_cte_index;
+
+// This is the mapping between the original parameter name and the aliased name
+// for a particular parameter of a particular shared CTE fragment
+static symtab *proc_arg_aliases;
+
+// This is the mapping between the original CTE and the aliased name
+// for a particular parameter of a particular shared CTE fragment
+static symtab *proc_cte_aliases;
+
 // See cg_find_best_line for more details on why this is what it is.
 // All that's going on here is we recursively visit the tree and find the smallest
 // line number that matches the given file in that branch.
@@ -2302,6 +2313,16 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
     return;
   }
 
+  // while generating expressions for the CTE assignments we might have to
+  // rename the proc args to the name in the outermost context
+  if (proc_arg_aliases) {
+    symtab_entry *entry = symtab_find(proc_arg_aliases, name);
+    if (entry) {
+      EXTRACT_ANY_NOTNULL(var, entry->val);
+      name = var->sem->name;
+    }
+  }
+
   CHARBUF_OPEN(name_buff);
 
   if (is_out_parameter(sem_type)) {
@@ -3449,9 +3470,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
   bool_t calls_out_union = has_out_union_call(ast);
+  proc_cte_index = 0;
 
   // sets base_fragment_name as well for the current fragment
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
+  uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
 
   if (frag_type == FRAG_TYPE_SHARED) {
     // shared fragments produce no code at all, no header, nothing
@@ -3853,16 +3875,63 @@ static void cg_declare_vars_type(ast_node *declare_vars_type) {
   }
 }
 
-// This is the callback method handed to the gen_ method that creates SQL for us
+// This is a callback method handed to the gen_ method that creates SQL for us
 // it will call us every time it finds a variable that needs to be bound.  That
 // variable is replaced by ? in the SQL output.  We end up with a list of variables
 // to bind on a silver platter (but in reverse order).
 static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer) {
+  // all variables have a name
+  Contract(ast->sem->name);
+
+  symtab_entry *entry = symtab_find(proc_arg_aliases, ast->sem->name);
+  if (entry) {
+    // this variable has been rewritten to a new name, use the alias
+    ast = entry->val;
+  }
+
   list_item **head = (list_item**)context;
   add_item_to_list(head, ast);
 
   bprintf(buffer, "?");
   return true;
+}
+
+// This is a callback method handed to the gen_ method that creates SQL for us
+// it will call us every time it finds a cte table that needs to be generated.
+// If this is one of the tables that is supposed to be an "argument" then
+// we will remove the stub definition of the CTE.  References to this name
+// will be changed to required table in another callback
+static bool_t cg_suppress_cte(ast_node *ast, void *context, charbuf *buffer) {
+  Contract(is_ast_cte_table(ast));
+  EXTRACT(cte_decl, ast->left);
+  EXTRACT_STRING(name, cte_decl->left);
+
+  // if we have an alias we suppress the name
+  symtab_entry *entry = symtab_find(proc_cte_aliases, name);
+  return !!entry;
+}
+
+// This a callback method handed to the gen_ method that creates SQL for us
+// it will call us every time it finds a table reference that needs to be generated.
+// If this is one of the tables that is supposed to be an "argument" then
+// we will emit the desired value instead of the stub name.   Note that
+// this is always the name of a CTE and CTE of the old name was suppressed
+// using the callback above cg_suppress_cte
+static bool_t cg_table_rename(ast_node *ast, void *context, charbuf *buffer) {
+  // this is a simple table factor, so an actual name...
+  EXTRACT_STRING(name, ast);
+  bool_t handled = false;
+
+  // if we have an alias we suppress the name
+  symtab_entry *entry = symtab_find(proc_cte_aliases, name);
+  if (entry) {
+    EXTRACT(cte_binding, entry->val);
+    EXTRACT_STRING(actual, cte_binding->left);
+    bprintf(buffer, "%s", actual);
+    handled = true;
+  }
+
+  return handled;
 }
 
 // This helper method fetchs a single column from a select statement.  The result
@@ -3895,7 +3964,6 @@ static void cg_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR var, 
       case SEM_TYPE_BLOB:
         bprintf(output, "cql_column_nullable_blob_ref(%s, %d, &%s);\n", cursor, index, var);
         break;
-
     }
   }
   else {
@@ -4144,6 +4212,127 @@ cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
   return count;
 }
 
+static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
+  EXTRACT_NOTNULL(call_stmt, cte_body->left);
+  EXTRACT(cte_binding_list, cte_body->right);
+
+  EXTRACT_STRING(name, call_stmt->left);
+  EXTRACT_ANY(expr_list, call_stmt->right);
+
+  ast_node *ast = find_proc(name);
+
+  Contract(is_ast_create_proc_stmt(ast));
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  symtab *saved_proc_arg_aliases = proc_arg_aliases;
+  symtab *saved_proc_cte_aliases = proc_cte_aliases;
+  symtab *new_arg_aliases = symtab_new();
+  proc_cte_aliases = symtab_new();
+
+  while (cte_binding_list) {
+    EXTRACT_NOTNULL(cte_binding, cte_binding_list->left);
+    EXTRACT_STRING(formal, cte_binding->right);
+    EXTRACT_STRING(actual, cte_binding->left);
+
+    // The "actual" might itself be an alias from the outer scope
+    // be sure to push that down if that's the case.  One level
+    // is always enough because each level does its own push if
+    // needed.
+
+    bool_t handled = false;
+
+    if (saved_proc_cte_aliases) {
+      symtab_entry *entry = symtab_find(saved_proc_cte_aliases, actual);
+      if (entry) {
+        symtab_add(proc_cte_aliases, formal, entry->val);
+        handled = true;
+      }
+    }
+
+    if (!handled) {
+      // normal case, the first time a name is aliased
+      symtab_add(proc_cte_aliases, formal, cte_binding);
+    }
+
+    cte_binding_list = cte_binding_list->right;
+  }
+
+  if (params) {
+    // move to the next index if we need to alias anything
+    proc_cte_index++;
+  }
+
+  while (params) {
+    Invariant(is_ast_params(params));
+    Invariant(expr_list); // expressions match the args
+
+    EXTRACT_NOTNULL(param, params->left);
+    EXTRACT_ANY_NOTNULL(expr, expr_list->left);
+
+    EXTRACT_NOTNULL(param_detail, param->right);
+    EXTRACT_ANY_NOTNULL(param_name_ast, param_detail->left)
+    EXTRACT_STRING(param_name, param_name_ast);
+
+    sem_t sem_type_var = param_name_ast->sem->sem_type;
+
+    CSTR alias_name = dup_printf("_p%d_%s_", proc_cte_index, param_name);
+
+    AST_REWRITE_INFO_SET(param->lineno, param->filename);
+
+    ast_node *alias  = new_ast_str(alias_name);
+    symtab_add(new_arg_aliases, param_name, alias);
+    alias->sem = new_sem(sem_type_var);
+    alias->sem->name = alias_name;
+    alias->sem->kind = param_name_ast->sem->kind;
+
+    AST_REWRITE_INFO_RESET();
+
+    // emit the declaration
+    cg_var_decl(cg_declarations_output, sem_type_var, alias_name, CG_VAR_DECL_LOCAL);
+
+    sem_t sem_type_expr = expr->sem->sem_type;
+
+    // evaluate the expression and assign
+    // note that any arg aliases here are in the context of the caller not the callee
+    // we're setting up the aliases for the callee right now and they aren't ready yet even
+    // but that's ok because the expressions are in the context of the caller.
+
+    // todo: if the evaluation has a nested select statement then we will have to re-enter
+    // all of this.  We can either ban that (which isn't insane really) or else we can
+    // save the codegen state like callbacks and such so that it can re-enter.  That's
+    // the desired path.
+
+    CG_PUSH_EVAL(expr, C_EXPR_PRI_ASSIGN);
+    cg_store(cg_main_output, alias_name, sem_type_var, sem_type_expr, expr_is_null.ptr, expr_value.ptr);
+    CG_POP_EVAL(expr);
+
+    // guaranteed to stay in lock step
+    params = params->right;
+    expr_list = expr_list->right;
+  }
+
+  // exactly one statment
+  Invariant(!stmt_list->right);
+
+  // it's some kind of "select"
+  EXTRACT_ANY_NOTNULL(select_stmt, stmt_list->left);
+
+  // now replace the aliases for just this one bit
+  proc_arg_aliases = new_arg_aliases;
+
+  gen_one_stmt(select_stmt);
+
+  symtab_delete(proc_arg_aliases);
+  symtab_delete(proc_cte_aliases);
+  proc_arg_aliases = saved_proc_arg_aliases;
+  proc_cte_aliases = saved_proc_cte_aliases;
+
+  return true;
+}
+
 // This is the most important function for sqlite access;  it does the heavy
 // lifting of generating the C code to prepare and bind a SQL statement.
 // If cg_exec is true (CG_EXEC) then the statement is executed immediately
@@ -4176,6 +4365,9 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   callbacks.minify_casts = 1;
   callbacks.minify_aliases = minify_aliases;
   callbacks.long_to_int_conv = true;
+  callbacks.cte_proc_callback = cg_call_in_cte;
+  callbacks.cte_suppress_callback = cg_suppress_cte;
+  callbacks.table_rename_callback = cg_table_rename;
 
   CHARBUF_OPEN(temp);
   gen_set_output_buffer(&temp);
@@ -5977,7 +6169,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     // The assembly expects that we have seen all the extensions before it is compiled.
 
     // sets base_fragment_name as well for the current fragment
-    uint32_t frag_type = find_fragment_attr_type(misc_attrs);
+    uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
 
     if (frag_type == FRAG_TYPE_EXTENSION) {
       // We know the name of the assembly fragment it must be the same as the name in the attribute.
@@ -6745,7 +6937,7 @@ static void cg_proc_result_set(ast_node *ast) {
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
   // sets base_fragment_name as well for the current fragment
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
+  uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
 
   // register the proc name if there is a callback, the particular result type will do whatever it wants
   rt->register_proc_name && rt->register_proc_name(name);

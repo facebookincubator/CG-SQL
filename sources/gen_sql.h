@@ -75,6 +75,22 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable if_not_exists_callback;
   void *_Nullable if_not_exists_context;
 
+  // This callback is used to allow the caller to rename some table references to other names
+  // Normally this is used to make replacements in shared fragments
+  gen_sql_callback _Nullable table_rename_callback;
+  void *_Nullable table_rename_context;
+
+  // This callback is used to expand CALL sequences inside of a CTE expression inline
+  // the normal response will be to recursively generate the SQL for the procedure
+  // and emit it to the output stream
+  gen_sql_callback _Nullable cte_proc_callback;
+  void *_Nullable cte_proc_context;
+
+  // This callback is used to suppress any particular CTE that we might need to omit from a select statement
+  // normally this causes us to check the name of the CTE against a blocklist
+  gen_sql_callback _Nullable cte_suppress_callback;
+  void *_Nullable cte_suppress_context;
+
   // If true, hex literals are converted to decimal.  This is for JSON which does not support hex literals.
   bool_t convert_hex;
 

@@ -4778,6 +4778,14 @@ begin
   end if;
 end;
 
+-- TEST: make sure we don't emit this into the output
+-- - cql_code
+@attribute(cql:shared_fragment)
+create proc shared_frag()
+begin
+ select 1 this_is_not_emitted; -- hence no cql_code return type
+end;
+
 declare const group some_constants (
   const_u = false,
   const_w = 3.5,

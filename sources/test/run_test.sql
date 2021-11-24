@@ -3870,6 +3870,49 @@ BEGIN_TEST(out_union_refcounts)
   EXPECT(NOT D);
 END_TEST(out_union_refcounts)
 
+
+@attribute(cql:shared_fragment)
+create proc f1(pattern text)
+begin
+  with source(*) LIKE (select 1 id, "x" t)
+  select * from source where t like pattern;
+end;
+
+@attribute(cql:shared_fragment)
+create proc f2(pattern text, idstart int not null, idend int not null, lim int not null)
+begin
+  with 
+  source(*) LIKE f1,
+  data(*) as (call f1(pattern) using source as source)
+  select * from data where data.id between idstart and idend
+  limit lim;
+end;
+
+@attribute(cql:private)
+create proc shared_consumer()
+begin
+  with 
+   source1(id, t) as (values (1100, 'x_x'), (1101, 'zz')),
+   source2(id, t) as (values (4500, 'y_y'), (4501, 'zz')),
+   t1(*) as (call f2('x%', 1000, 2000, 10) using source1 as source),
+   t2(*) as (call f2('y%', 4000, 5000, 20) using source2 as source)
+  select * from t1
+  union all 
+  select * from t2;
+end;
+
+BEGIN_TEST(shared_fragments)
+  declare C cursor for call shared_consumer();
+  fetch C;
+  EXPECT(C.id = 1100);
+  EXPECT(C.t = 'x_x');
+  fetch C;
+  EXPECT(C.id = 4500);
+  EXPECT(C.t = 'y_y');
+  fetch C;
+  EXPECT(not C);
+END_TEST(shared_fragments)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros
@@ -3919,3 +3962,4 @@ end;
 @echo c,"#define cql_error_trace()\n";
 
 @emit_enums;
+

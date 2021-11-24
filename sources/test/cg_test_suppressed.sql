@@ -18,3 +18,9 @@ create procedure suppressed_getters_test()
 begin
   select * from bar;
 end;
+
+@attribute(cql:shared_fragment)
+create procedure frag()
+begin
+  select * from bar;
+end;

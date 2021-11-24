@@ -3318,6 +3318,8 @@ extern void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_n
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 #ifndef const_group_some_constants_defined
 #define const_group_some_constants_defined
 

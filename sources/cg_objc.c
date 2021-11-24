@@ -533,7 +533,7 @@ static void cg_objc_stmt_list(ast_node *head) {
   bool_t containsAssembly = false;
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
-    objc_frag_type = find_fragment_attr_type(misc_attrs);
+    objc_frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
 
     if (objc_frag_type == FRAG_TYPE_SHARED) {
       // shared fragments never create any code
