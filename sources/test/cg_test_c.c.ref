@@ -199,6 +199,8 @@ typedef struct simple_cursor_proc_row {
 } simple_cursor_proc_row;
 extern void simple_cursor_proc(simple_cursor_proc_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code redundant_cast(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code top_level_select_alias_unused(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 typedef struct p1_row {
   cql_bool _has_row_;
@@ -5852,6 +5854,172 @@ CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC top_level_select_alias_unused ()
+BEGIN
+  SELECT 1 AS id, 2 AS x
+  UNION ALL
+  SELECT foo.id, 2 AS x
+    FROM foo;
+END;
+*/
+
+#define _PROC_ "top_level_select_alias_unused"
+static int32_t top_level_select_alias_unused_perf_index;
+
+cql_string_proc_name(top_level_select_alias_unused_stored_procedure_name, "top_level_select_alias_unused");
+
+typedef struct top_level_select_alias_unused_row {
+  cql_int32 id;
+  cql_int32 x;
+} top_level_select_alias_unused_row;
+
+cql_int32 top_level_select_alias_unused_get_id(top_level_select_alias_unused_result_set_ref _Nonnull result_set, cql_int32 row) {
+  top_level_select_alias_unused_row *data = (top_level_select_alias_unused_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_int32 top_level_select_alias_unused_get_x(top_level_select_alias_unused_result_set_ref _Nonnull result_set, cql_int32 row) {
+  top_level_select_alias_unused_row *data = (top_level_select_alias_unused_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t top_level_select_alias_unused_data_types[top_level_select_alias_unused_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 top_level_select_alias_unused_col_offsets[] = { 2,
+  cql_offsetof(top_level_select_alias_unused_row, id),
+  cql_offsetof(top_level_select_alias_unused_row, x)
+};
+
+cql_int32 top_level_select_alias_unused_result_count(top_level_select_alias_unused_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code top_level_select_alias_unused_fetch_results(sqlite3 *_Nonnull _db_, top_level_select_alias_unused_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_top_level_select_alias_unused, &top_level_select_alias_unused_perf_index);
+  cql_code rc = top_level_select_alias_unused(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = top_level_select_alias_unused_data_types,
+    .col_offsets = top_level_select_alias_unused_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(top_level_select_alias_unused_row),
+    .crc = CRC_top_level_select_alias_unused,
+    .perf_index = &top_level_select_alias_unused_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC top_level_select_alias_unused () (id INTEGER NOT NULL, x INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code top_level_select_alias_unused(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT 1, 2 "
+    "UNION ALL "
+    "SELECT foo.id, 2 "
+      "FROM foo");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC top_level_select_alias_used_in_orderby ()
+BEGIN
+  SELECT 1 AS id, 2 AS x
+  UNION ALL
+  SELECT foo.id, 2 AS x
+    FROM foo
+  ORDER BY id;
+END;
+*/
+
+#define _PROC_ "top_level_select_alias_used_in_orderby"
+static int32_t top_level_select_alias_used_in_orderby_perf_index;
+
+cql_string_proc_name(top_level_select_alias_used_in_orderby_stored_procedure_name, "top_level_select_alias_used_in_orderby");
+
+typedef struct top_level_select_alias_used_in_orderby_row {
+  cql_int32 id;
+  cql_int32 x;
+} top_level_select_alias_used_in_orderby_row;
+
+cql_int32 top_level_select_alias_used_in_orderby_get_id(top_level_select_alias_used_in_orderby_result_set_ref _Nonnull result_set, cql_int32 row) {
+  top_level_select_alias_used_in_orderby_row *data = (top_level_select_alias_used_in_orderby_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_int32 top_level_select_alias_used_in_orderby_get_x(top_level_select_alias_used_in_orderby_result_set_ref _Nonnull result_set, cql_int32 row) {
+  top_level_select_alias_used_in_orderby_row *data = (top_level_select_alias_used_in_orderby_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t top_level_select_alias_used_in_orderby_data_types[top_level_select_alias_used_in_orderby_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 top_level_select_alias_used_in_orderby_col_offsets[] = { 2,
+  cql_offsetof(top_level_select_alias_used_in_orderby_row, id),
+  cql_offsetof(top_level_select_alias_used_in_orderby_row, x)
+};
+
+cql_int32 top_level_select_alias_used_in_orderby_result_count(top_level_select_alias_used_in_orderby_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby_fetch_results(sqlite3 *_Nonnull _db_, top_level_select_alias_used_in_orderby_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_top_level_select_alias_used_in_orderby, &top_level_select_alias_used_in_orderby_perf_index);
+  cql_code rc = top_level_select_alias_used_in_orderby(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = top_level_select_alias_used_in_orderby_data_types,
+    .col_offsets = top_level_select_alias_used_in_orderby_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(top_level_select_alias_used_in_orderby_row),
+    .crc = CRC_top_level_select_alias_used_in_orderby,
+    .perf_index = &top_level_select_alias_used_in_orderby_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC top_level_select_alias_used_in_orderby () (id INTEGER NOT NULL, x INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT 1 AS id, 2 "
+    "UNION ALL "
+    "SELECT foo.id, 2 "
+      "FROM foo "
+    "ORDER BY id");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

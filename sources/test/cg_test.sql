@@ -2380,6 +2380,35 @@ BEGIN
     FROM switch_account_badges AS S) AS A;
 END;
 
+-- TEST: aliases in top-level selects can be removed if not referenced
+-- + "SELECT 1, 2 "
+-- + "UNION ALL "
+-- + "SELECT foo.id, 2 "
+-- +   "FROM foo");
+CREATE PROC top_level_select_alias_unused()
+BEGIN
+  SELECT 1 AS id, 2 as x
+  UNION ALL
+  SELECT foo.id, 2 as x
+  FROM foo;
+END;
+
+-- TEST: aliases in top-level selects must not be removed if referenced from an
+-- order by clause
+-- + "SELECT 1 AS id, 2 "
+-- + "UNION ALL "
+-- + "SELECT foo.id, 2 "
+-- +   "FROM foo "
+-- + "ORDER BY id");
+CREATE PROC top_level_select_alias_used_in_orderby()
+BEGIN
+  SELECT 1 AS id, 2 as x
+  UNION ALL
+  SELECT foo.id, 2 as x
+  FROM foo
+  ORDER BY id;
+END;
+
 -- TEST: try to use a WITH_SELECT form in a select expression
 -- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
 -- +   "WITH "
@@ -4808,4 +4837,3 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
-

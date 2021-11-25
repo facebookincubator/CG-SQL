@@ -95,6 +95,8 @@ DECLARE PROC simple_cursor_proc () OUT (id INTEGER NOT NULL);
 DECLARE PROC redundant_cast () (plugh INTEGER NOT NULL, five INTEGER NOT NULL);
 DECLARE PROC view_creator () USING TRANSACTION;
 DECLARE PROC settings_info () USING TRANSACTION;
+DECLARE PROC top_level_select_alias_unused () (id INTEGER NOT NULL, x INTEGER NOT NULL);
+DECLARE PROC top_level_select_alias_used_in_orderby () (id INTEGER NOT NULL, x INTEGER NOT NULL);
 DECLARE PROC use_with_select () USING TRANSACTION;
 DECLARE PROC rowset_object_reader (rowset OBJECT<rowset>) USING TRANSACTION;
 DECLARE PROC upsert_do_something () USING TRANSACTION;

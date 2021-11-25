@@ -1512,6 +1512,84 @@ static inline BOOL CGBRedundantCastRowEqual(CGBRedundantCast *resultSet1, int32_
   return CGCRedundantCastRowEqual(CGCRedundantCastFromCGBRedundantCast(resultSet1), row1, CGCRedundantCastFromCGBRedundantCast(resultSet2), row2);
 }
 
+@class CGBTopLevelSelectAliasUnused;
+
+static inline CGBTopLevelSelectAliasUnused *CGBTopLevelSelectAliasUnusedFromCGCTopLevelSelectAliasUnused(CGCTopLevelSelectAliasUnusedResultSetRef resultSet)
+{
+  return (__bridge CGBTopLevelSelectAliasUnused *)resultSet;
+}
+
+static inline CGCTopLevelSelectAliasUnusedResultSetRef CGCTopLevelSelectAliasUnusedFromCGBTopLevelSelectAliasUnused(CGBTopLevelSelectAliasUnused *resultSet)
+{
+  return (__bridge CGCTopLevelSelectAliasUnusedResultSetRef)resultSet;
+}
+
+static inline int32_t CGBTopLevelSelectAliasUnusedGetId(CGBTopLevelSelectAliasUnused *resultSet, int32_t row)
+{
+  CGCTopLevelSelectAliasUnusedResultSetRef cResultSet = CGCTopLevelSelectAliasUnusedFromCGBTopLevelSelectAliasUnused(resultSet);
+  return CGCTopLevelSelectAliasUnusedGetId(cResultSet, row);
+}
+
+static inline int32_t CGBTopLevelSelectAliasUnusedGetX(CGBTopLevelSelectAliasUnused *resultSet, int32_t row)
+{
+  CGCTopLevelSelectAliasUnusedResultSetRef cResultSet = CGCTopLevelSelectAliasUnusedFromCGBTopLevelSelectAliasUnused(resultSet);
+  return CGCTopLevelSelectAliasUnusedGetX(cResultSet, row);
+}
+
+static inline int32_t CGBTopLevelSelectAliasUnusedResultCount(CGBTopLevelSelectAliasUnused *resultSet)
+{
+  return CGCTopLevelSelectAliasUnusedResultCount(CGCTopLevelSelectAliasUnusedFromCGBTopLevelSelectAliasUnused(resultSet));
+}
+
+static inline NSUInteger CGBTopLevelSelectAliasUnusedRowHash(CGBTopLevelSelectAliasUnused *resultSet, int32_t row)
+{
+  return CGCTopLevelSelectAliasUnusedRowHash(CGCTopLevelSelectAliasUnusedFromCGBTopLevelSelectAliasUnused(resultSet), row);
+}
+
+static inline BOOL CGBTopLevelSelectAliasUnusedRowEqual(CGBTopLevelSelectAliasUnused *resultSet1, int32_t row1, CGBTopLevelSelectAliasUnused *resultSet2, int32_t row2)
+{
+  return CGCTopLevelSelectAliasUnusedRowEqual(CGCTopLevelSelectAliasUnusedFromCGBTopLevelSelectAliasUnused(resultSet1), row1, CGCTopLevelSelectAliasUnusedFromCGBTopLevelSelectAliasUnused(resultSet2), row2);
+}
+
+@class CGBTopLevelSelectAliasUsedInOrderby;
+
+static inline CGBTopLevelSelectAliasUsedInOrderby *CGBTopLevelSelectAliasUsedInOrderbyFromCGCTopLevelSelectAliasUsedInOrderby(CGCTopLevelSelectAliasUsedInOrderbyResultSetRef resultSet)
+{
+  return (__bridge CGBTopLevelSelectAliasUsedInOrderby *)resultSet;
+}
+
+static inline CGCTopLevelSelectAliasUsedInOrderbyResultSetRef CGCTopLevelSelectAliasUsedInOrderbyFromCGBTopLevelSelectAliasUsedInOrderby(CGBTopLevelSelectAliasUsedInOrderby *resultSet)
+{
+  return (__bridge CGCTopLevelSelectAliasUsedInOrderbyResultSetRef)resultSet;
+}
+
+static inline int32_t CGBTopLevelSelectAliasUsedInOrderbyGetId(CGBTopLevelSelectAliasUsedInOrderby *resultSet, int32_t row)
+{
+  CGCTopLevelSelectAliasUsedInOrderbyResultSetRef cResultSet = CGCTopLevelSelectAliasUsedInOrderbyFromCGBTopLevelSelectAliasUsedInOrderby(resultSet);
+  return CGCTopLevelSelectAliasUsedInOrderbyGetId(cResultSet, row);
+}
+
+static inline int32_t CGBTopLevelSelectAliasUsedInOrderbyGetX(CGBTopLevelSelectAliasUsedInOrderby *resultSet, int32_t row)
+{
+  CGCTopLevelSelectAliasUsedInOrderbyResultSetRef cResultSet = CGCTopLevelSelectAliasUsedInOrderbyFromCGBTopLevelSelectAliasUsedInOrderby(resultSet);
+  return CGCTopLevelSelectAliasUsedInOrderbyGetX(cResultSet, row);
+}
+
+static inline int32_t CGBTopLevelSelectAliasUsedInOrderbyResultCount(CGBTopLevelSelectAliasUsedInOrderby *resultSet)
+{
+  return CGCTopLevelSelectAliasUsedInOrderbyResultCount(CGCTopLevelSelectAliasUsedInOrderbyFromCGBTopLevelSelectAliasUsedInOrderby(resultSet));
+}
+
+static inline NSUInteger CGBTopLevelSelectAliasUsedInOrderbyRowHash(CGBTopLevelSelectAliasUsedInOrderby *resultSet, int32_t row)
+{
+  return CGCTopLevelSelectAliasUsedInOrderbyRowHash(CGCTopLevelSelectAliasUsedInOrderbyFromCGBTopLevelSelectAliasUsedInOrderby(resultSet), row);
+}
+
+static inline BOOL CGBTopLevelSelectAliasUsedInOrderbyRowEqual(CGBTopLevelSelectAliasUsedInOrderby *resultSet1, int32_t row1, CGBTopLevelSelectAliasUsedInOrderby *resultSet2, int32_t row2)
+{
+  return CGCTopLevelSelectAliasUsedInOrderbyRowEqual(CGCTopLevelSelectAliasUsedInOrderbyFromCGBTopLevelSelectAliasUsedInOrderby(resultSet1), row1, CGCTopLevelSelectAliasUsedInOrderbyFromCGBTopLevelSelectAliasUsedInOrderby(resultSet2), row2);
+}
+
 @class CGBOutUnionTwo;
 
 static inline CGBOutUnionTwo *CGBOutUnionTwoFromCGCOutUnionTwo(CGCOutUnionTwoResultSetRef resultSet)

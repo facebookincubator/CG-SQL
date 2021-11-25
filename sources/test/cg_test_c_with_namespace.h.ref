@@ -1542,6 +1542,52 @@ extern CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_);
 extern CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+#define CRC_top_level_select_alias_unused 8945202615310966896L
+
+extern cql_string_ref _Nonnull top_level_select_alias_unused_stored_procedure_name;
+
+#define top_level_select_alias_unused_data_types_count 2
+
+#ifndef result_set_type_decl_top_level_select_alias_unused_result_set
+#define result_set_type_decl_top_level_select_alias_unused_result_set 1
+cql_result_set_type_decl(top_level_select_alias_unused_result_set, top_level_select_alias_unused_result_set_ref);
+#endif
+extern cql_int32 top_level_select_alias_unused_get_id(top_level_select_alias_unused_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 top_level_select_alias_unused_get_x(top_level_select_alias_unused_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 top_level_select_alias_unused_result_count(top_level_select_alias_unused_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code top_level_select_alias_unused_fetch_results(sqlite3 *_Nonnull _db_, top_level_select_alias_unused_result_set_ref _Nullable *_Nonnull result_set);
+#define top_level_select_alias_unused_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define top_level_select_alias_unused_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_top_level_select_alias_used_in_orderby -1046988496440581988L
+
+extern cql_string_ref _Nonnull top_level_select_alias_used_in_orderby_stored_procedure_name;
+
+#define top_level_select_alias_used_in_orderby_data_types_count 2
+
+#ifndef result_set_type_decl_top_level_select_alias_used_in_orderby_result_set
+#define result_set_type_decl_top_level_select_alias_used_in_orderby_result_set 1
+cql_result_set_type_decl(top_level_select_alias_used_in_orderby_result_set, top_level_select_alias_used_in_orderby_result_set_ref);
+#endif
+extern cql_int32 top_level_select_alias_used_in_orderby_get_id(top_level_select_alias_used_in_orderby_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 top_level_select_alias_used_in_orderby_get_x(top_level_select_alias_used_in_orderby_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 top_level_select_alias_used_in_orderby_result_count(top_level_select_alias_used_in_orderby_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby_fetch_results(sqlite3 *_Nonnull _db_, top_level_select_alias_used_in_orderby_result_set_ref _Nullable *_Nonnull result_set);
+#define top_level_select_alias_used_in_orderby_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define top_level_select_alias_used_in_orderby_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
