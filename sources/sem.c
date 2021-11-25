@@ -8572,6 +8572,10 @@ static void sem_window_name_defn(ast_node *ast) {
   }
 
   sem_window_defn(window_defn);
+  if (is_error(window_defn)) {
+    record_error(ast);
+    return;
+  }
 
   record_ok(ast);
 }

@@ -886,6 +886,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 test/sem_test.sql:XXXX:1: error: in window_func_inv : CQL0294: Window function invocations can only appear in the select list of a select statement
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'row_number'
 test/sem_test.sql:XXXX:1: error: in str : CQL0295: window name is not defined 'bogus'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 test/sem_test.sql:XXXX:1: error: in str : CQL0296: Window name definition is not used 'win'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'alias'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'row_number'

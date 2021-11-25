@@ -11961,6 +11961,20 @@ order by id;
 select id, row_number() over bogus
   from foo;
 
+-- TEST: test invalid window definition
+-- + {select_stmt}: err
+-- + {opt_select_window}: err
+-- + {window_clause}: err
+-- + {window_name_defn}: err
+-- + {window_defn}: err
+-- + {name bogus}: err
+-- + error: % name not found 'bogus'
+-- + Error
+select id, row_number() over win
+  from foo
+  window
+    win as (order by bogus);
+
 -- TEST: test window name definition not used
 -- + {select_stmt}: err
 -- + {opt_select_window}: err

@@ -49152,6 +49152,53 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0295: window name is not defined 'b
 
 The statement ending at line XXXX
 
+SELECT id, 
+  row_number() OVER win
+  FROM foo
+  WINDOW 
+    win AS (ORDER BY bogus);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: id: integer notnull
+  |     | | | {name id}: id: integer notnull
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: integer notnull
+  |     |     | {window_func_inv}: integer notnull
+  |     |       | {call}: integer notnull
+  |     |       | | {name row_number}: integer notnull
+  |     |       | | {call_arg_list}
+  |     |       |   | {call_filter_clause}
+  |     |       | {name win}: ok
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  |             | {opt_select_window}: err
+  |               | {window_clause}: err
+  |                 | {window_name_defn_list}
+  |                   | {window_name_defn}: err
+  |                     | {name win}
+  |                     | {window_defn}: err
+  |                       | {window_defn_orderby}
+  |                         | {opt_orderby}: err
+  |                           | {groupby_list}: err
+  |                             | {groupby_item}
+  |                               | {name bogus}: err
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT id
   FROM foo
   WINDOW 
