@@ -1629,6 +1629,8 @@ foo (*) AS (CALL bar(1, 2))
 SELECT *
   FROM foo;
 
+CALL foo(FROM ARGUMENTS LIKE foo ARGUMENTS);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

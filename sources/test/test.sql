@@ -1509,6 +1509,8 @@ select  * from foo;
 with foo(*) as (call bar(1,2))
 select  * from foo;
 
+call foo(*);
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

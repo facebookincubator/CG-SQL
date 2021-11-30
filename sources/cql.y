@@ -1680,12 +1680,18 @@ declare_stmt:
 call_stmt:
   CALL name '(' ')'  {
       YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      $call_stmt = new_ast_call_stmt($name, NULL);
-  }
+      $call_stmt = new_ast_call_stmt($name, NULL); }
   | CALL name '(' call_expr_list ')'  {
       YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      $call_stmt = new_ast_call_stmt($name, $call_expr_list);
-  }
+      $call_stmt = new_ast_call_stmt($name, $call_expr_list); }
+  | CALL name '(' '*' ')'  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
+      // sugar form -- this is the same as
+      // CALL name ( FROM ARGUMENTS LIKE name ARGUMENTS) -- i.e. all arg names that match
+      ast_node *shape_def = new_ast_like($name, $name);
+      ast_node *call_expr = new_ast_from_shape(new_ast_str("ARGUMENTS"), shape_def);
+      ast_node *call_expr_list = new_ast_expr_list(call_expr, NULL);
+      $call_stmt = new_ast_call_stmt($name, call_expr_list); }
   ;
 
 while_stmt:
