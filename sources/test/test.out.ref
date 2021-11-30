@@ -1631,6 +1631,13 @@ SELECT *
 
 CALL foo(FROM ARGUMENTS LIKE foo ARGUMENTS);
 
+WITH
+bar (*) AS (CALL bar(1, 5) USING goo AS too),
+tar (*) AS (CALL tar(3) USING soo AS woo)
+SELECT *
+  FROM bar,
+tar;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

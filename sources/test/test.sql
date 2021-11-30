@@ -1511,6 +1511,11 @@ select  * from foo;
 
 call foo(*);
 
+with 
+  (call bar(1,5) using goo as too),
+  (call tar(3) using soo as woo)
+select * from bar, tar;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"
