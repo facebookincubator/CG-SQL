@@ -10212,7 +10212,7 @@ static void sem_shared_fragment_table_binding(
     if (!added) {
       report_error(cte_binding->right, "CQL0428: duplicate binding of table in CALL/USING clause", formal);
       record_error(call_stmt);
-      return;
+      goto cleanup;
     }
   }
 
