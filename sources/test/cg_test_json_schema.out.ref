@@ -3428,6 +3428,38 @@
       ],
       "usesTables" : [  ],
       "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
+    CREATE PROC shared_frag_user ()
+    BEGIN
+    WITH
+    shared (id) AS (CALL shared_frag_proc() USING T1 AS source, T2 AS control)
+    SELECT *
+      FROM shared
+    UNION ALL
+    SELECT id
+      FROM T6;
+    END
+
+    {
+      "name" : "shared_frag_user",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "fromTables" : [ "Foo", "T1", "T2", "T6" ],
+      "usesTables" : [ "Foo", "T1", "T2", "T6" ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "kind" : "ident",
+          "isNotNull" : 0
+        }
+      ],
+      "hasSelectResult" : 1,
+      "usesDatabase" : 1
     }
   ],
   "regions" : [
@@ -3630,9 +3662,12 @@
     }
   ],
   "tableUsers" : {
-    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute" ],
+    "Foo" : [ "a_query", "bigger_query", "insert_proc", "delete_proc", "delete_with_values", "update_proc", "update_with_proc", "dummy_insert_proc", "joiner", "use_view", "null_attribute", "shared_frag_user" ],
+    "T1" : [ "shared_frag_user" ],
+    "T2" : [ "shared_frag_user" ],
     "T3" : [ "insert_with_select", "insert_compound", "insert_multi_value", "upsert_proc", "with_upsert_proc", "with_insert_proc" ],
     "T5" : [ "typical_select", "joiner" ],
+    "T6" : [ "shared_frag_user" ],
     "radioactive" : [ "radioactive_proc" ]
   }
 }

@@ -1717,6 +1717,14 @@ static bool_t cg_json_params(charbuf *output, ast_node *ast, CSTR *infos) {
   return simple;
 }
 
+static bool_t found_shared_fragment;
+
+// simply record the factthat we found a shared fragment
+static bool_t cg_json_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
+  found_shared_fragment = true;
+  return false;
+}
+
 // Use the indicated generation function to create a SQL fragment.  The fragment
 // may have parameters.  They are captured and emitted as an array.
 static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) {
@@ -1728,6 +1736,9 @@ static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *as
   callbacks.variables_callback = cg_json_record_var;
   callbacks.variables_context = &vars;
   callbacks.star_callback = cg_expand_star;
+  callbacks.cte_proc_callback = cg_json_call_in_cte;
+
+  found_shared_fragment = false;
 
   bprintf(output, "\"%s\" : ", frag);
   gen_with_callbacks(ast, fn, &callbacks);
@@ -2087,6 +2098,13 @@ static void cg_json_create_proc(ast_node *ast, ast_node *misc_attrs) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
 
+  // shared fragments are invisible to the JSON or anything else, they have
+  // no external interface.
+  uint32_t frag_type = find_proc_frag_type(ast);
+  if (frag_type == FRAG_TYPE_SHARED)  {
+    return;
+  }
+
   CHARBUF_OPEN(param_buffer);
   charbuf *output = &param_buffer;
 
@@ -2131,6 +2149,16 @@ static void cg_json_create_proc(ast_node *ast, ast_node *misc_attrs) {
   // if more than one statement it isn't simple
   if (stmt_list->right) {
     simple = 0;
+  }
+
+  // we have to see if it uses shared fragments, this can't be "simple"
+  // because the parameters can be synthetic and require assignments and such
+  if (simple && is_select_stmt(stmt)) {
+    found_shared_fragment = false;
+    CHARBUF_OPEN(scratch);
+    cg_json_select_stmt(&scratch, stmt); // easy way to walk the tree
+    CHARBUF_CLOSE(scratch);
+    simple = !found_shared_fragment;
   }
 
   if (simple && is_select_stmt(stmt)) {

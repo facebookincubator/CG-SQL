@@ -1327,3 +1327,35 @@ declare const group const_group (
   global_string = "\tx\ny",
   global_enum_alias = some_reals.one
 );
+
+-- TEST: shared fragment that we can use
+-- invisible to JSON
+@attribute(cql:shared_fragment)
+create proc shared_frag_proc()
+begin
+  with
+    source(*) like T1,
+    control(*) like T2
+  select source.id from source inner join control where source.id = control.id
+  union all
+  select id from foo;
+end;
+
+
+-- TEST: verify that we dive into the contents of the called shared fragment
+-- the shared fragment uses Foo;  source and control do not appear but
+-- are instead replaced by T1 and T2.  T6 was used in the main procedure
+-- this has to be in the general section because of arg rewriting so
+-- it will not emit a "statement" attribute like the simple form does
+-- + "name" : "shared_frag_user",
+-- + "definedInFile" : "cg_test_json_schema.sql",
+-- + "fromTables" : [ "Foo", "T1", "T2", "T6" ],
+-- + "usesTables" : [ "Foo", "T1", "T2", "T6" ],
+-- - "statement" : % WITH shared
+create proc shared_frag_user()
+begin
+  with shared(*) as (call shared_frag_proc() using T1 as source, T2 as control)
+  select * from shared
+  union all
+  select id from T6;
+end;
