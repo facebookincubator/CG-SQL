@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Nov 19 15:20:18 2021
+// Snapshot as of Tue Nov 30 14:36:50 2021
 
 
 const PREC = {
@@ -84,6 +84,8 @@ module.exports = grammar({
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
+    cte_binding_list: $ => choice($.cte_binding, seq($.cte_binding, ',', $.cte_binding_list)),
+    cte_binding: $ => choice(seq($.name, $.name), seq($.name, $.AS, $.name)),
     col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.HIDDEN, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
     version_annotation: $ => choice(seq('(', $.INT_LIT, ',', $.name, ')'), seq('(', $.INT_LIT, ',', $.name, ':', $.name, ')'), seq('(', $.INT_LIT, ')')),
     opt_kind: $ => seq('<', $.name, '>'),
@@ -118,7 +120,8 @@ module.exports = grammar({
     call_expr: $ => choice($.expr, $.shape_arguments),
     call_expr_list: $ => choice($.call_expr, seq($.call_expr, ',', $.call_expr_list)),
     cte_tables: $ => choice($.cte_table, seq($.cte_table, ',', $.cte_tables)),
-    cte_table: $ => choice(seq($.name, '(', $.name_list, ')', $.AS, '(', $.select_stmt_no_with, ')'), seq($.name, '(', '*', ')', $.AS, '(', $.select_stmt_no_with, ')')),
+    cte_decl: $ => choice(seq($.name, '(', $.name_list, ')'), seq($.name, '(', '*', ')')),
+    cte_table: $ => choice(seq($.cte_decl, $.AS, '(', $.select_stmt, ')'), seq($.cte_decl, $.AS, '(', $.call_stmt, ')'), seq($.cte_decl, $.AS, '(', $.call_stmt, $.USING, $.cte_binding_list, ')'), seq('(', $.call_stmt, ')'), seq('(', $.call_stmt, $.USING, $.cte_binding_list, ')'), seq($.cte_decl, $.LIKE, '(', $.select_stmt, ')'), seq($.cte_decl, $.LIKE, $.name)),
     with_prefix: $ => choice(seq($.WITH, $.cte_tables), seq($.WITH, $.RECURSIVE, $.cte_tables)),
     with_select_stmt: $ => seq($.with_prefix, $.select_stmt_no_with),
     select_stmt: $ => choice($.with_select_stmt, $.select_stmt_no_with),
@@ -222,7 +225,7 @@ module.exports = grammar({
     param: $ => choice(seq($.name, $.data_type_with_options), seq($.inout, $.name, $.data_type_with_options), $.shape_def, seq($.name, $.shape_def)),
     params: $ => choice($.param, seq($.param, ',', optional($.params))),
     declare_stmt: $ => choice(seq($.DECLARE, $.name_list, $.data_type_with_options), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.explain_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FETCH, $.FROM, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.shape_def), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.name), seq($.DECLARE, $.name, $.TYPE, $.data_type_with_options)),
-    call_stmt: $ => choice(seq($.CALL, $.name, '(', ')'), seq($.CALL, $.name, '(', $.call_expr_list, ')')),
+    call_stmt: $ => choice(seq($.CALL, $.name, '(', ')'), seq($.CALL, $.name, '(', $.call_expr_list, ')'), seq($.CALL, $.name, '(', '*', ')')),
     while_stmt: $ => seq($.WHILE, $.expr, $.BEGIN, optional($.opt_stmt_list), $.END),
     switch_stmt: $ => choice(seq($.SWITCH, $.expr, $.switch_case, $.switch_cases), seq($.SWITCH, $.expr, $.ALL, $.VALUES, $.switch_case, $.switch_cases)),
     switch_case: $ => choice(seq($.WHEN, $.expr_list, $.THEN, $.stmt_list), seq($.WHEN, $.expr_list, $.THEN, $.NOTHING)),

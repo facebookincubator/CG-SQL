@@ -8385,6 +8385,332 @@ extern CQL_WARN_UNUSED cql_code base_frag_fetch_results(
 
 With the combined set of methods you can create a variety of assembled queries from extensions in a fairly straightforward way.
 
+### Shared Fragments
+
+Shared fragments do not have the various restrictions that the "extension" style fragments have.  While extensions
+were created to allow a single query to be composed by authors that did not necessarily work with each other,
+and therefore they are full of restrictions on the shape, shared queries instead are designed to give you
+maximum flexibility in how the fragments are re-used.  You can think of them as being somewhat like a parameterized
+view, but the parameters are both value parameters and type parameters.  In Java or C#, a shared fragments might have
+had an invocation that looked something like this:  `my_fragment(1,2)<table1, table2>.  As with the other fragment types
+the common table expression (CTE) is the way that they plug in.
+
+It's helpful to consider a real example:
+
+```sql
+split_text(tok) AS (
+  WITH RECURSIVE
+    splitter(tok,rest) AS (
+      SELECT
+        '' tok,
+        IFNULL( some_variable_ || ',', '') rest
+      UNION ALL
+      SELECT
+        substr(rest, 1, instr(rest, ',') - 1) tok,
+        substr(rest, instr(rest, ',') + 1) rest
+        FROM splitter
+        WHERE rest != ''
+  )
+  SELECT tok from splitter where tok != ''
+)
+```
+
+This text might appear in dozens of places where a comma seperated list needs to be split into pieces and there is no good way
+to share the code between these locations.  CQL is frequently used in conjunction with the C-pre-processor so you could
+come up with something using the #define construct but this is problematic for several reasons:
+
+* the compiler does not then known that the origin of the text really is the same
+  * thus it has no clue that sharing the text of the string might be a good idea
+* any error messages happen in the context of the use of the macro not the definition
+* bonus: a multi-line macro like the above gets folded into one line so any error messages are impenetrable
+* if you try to compose such macros it only gets, worse, it's more code duplication harder error cases
+* any IDE support for syntax coloring and so forth will be confused by the macro as it's not part of the language
+
+None of this is any good but the desire to create helpers like this is real both for correctness and for performance.
+
+To make these things possible, we introduce the notion of shared fragments.  We need to give them parameters
+and the natural way to create a select statement that is bindable in CQL is the procedure so the shape we choose
+looks like this:
+
+```sql
+@attribute(cql:shared_fragment)
+CREATE PROC split_text(value TEXT)
+BEGIN
+  WITH RECURSIVE
+    splitter(tok,rest) AS (
+      SELECT
+        '' tok,
+        IFNULL( value || ',', '') rest
+      UNION ALL
+      SELECT
+        substr(rest, 1, instr(rest, ',') - 1) tok,
+        substr(rest, instr(rest, ',') + 1) rest
+        FROM tokens
+        WHERE rest != ''
+  )
+  SELECT tok from splitter where tok != ''
+END;
+```
+
+The introductory attribute `@attribute(cql:shared_fragment)` indicates that the procedure is to produce
+no code, but rather it will be inlined as a CTE in other locations.  To use it, we introduce the ability
+to call a procedure as part of a CTE declaration.  Like so:
+
+```sql
+WITH
+  values(v) as (call split_text('x,y,z'))
+  select * from v;
+```
+
+Once the fragment has been defined, the statement above could appear anywhere, and of course the
+text `'x,y,z'` need not be constant.  For instance:
+
+```sql
+CREATE PROC print_parts(value TEXT)
+BEGIN
+  DECLARE C CURSOR FOR
+    WITH
+      values(v) as (CALL split_text('x,y,z'))
+      SELECT * from v;
+
+  LOOP FETCH C
+  BEGIN
+     CALL printf("%s\n", C.v);
+  END;
+END;
+```
+
+Fragments are also composable, so for instance, we might also want some shared code that
+extracts comma separated numbers.  We could do this:
+
+```sql
+@attribute(cql:shared_fragment)
+CREATE PROC ids_from_string(value TEXT)
+BEGIN
+  WITH
+    values(v) as (CALL split_text(value))
+  SELECT CAST(v as LONG) as id from values;
+END;
+```
+
+Now we could write:
+
+```sql 
+CREATE PROC print_ids(value TEXT)
+BEGIN
+  DECLARE C CURSOR FOR
+    WITH
+      values(id) as (CALL ids_from_string('1,2,3'))
+      SELECT * from v;
+
+  LOOP FETCH C
+  BEGIN
+     CALL printf("%ld\n", C.id);
+  END;
+END;
+```
+
+Of course these are very simple examples but in principle you can use the generated tables in whatever
+way is necessary.  For instance, here's a silly but illustrative example:
+
+```sql
+/* This is a bit silly */
+CREATE PROC print_common_ids(value TEXT)
+BEGIN
+  DECLARE C CURSOR FOR
+    WITH
+      v1(id) as (CALL ids_from_string('1,2,3')),
+      v2(id) as (CALL ids_from_string('2,4,6'))
+      SELECT * from v1
+      INTERSECT
+      SELECT * from v2;
+
+  LOOP FETCH C
+  BEGIN
+     CALL printf("%ld\n", C.id);
+  END;
+END;
+```
+
+With a small amount of dynamism in the generation of the SQL for the above, it's possible to share the body
+of v1 and v2.  SQL will of course see the fully expanded but your program only needs one copy no matter
+how many times you use the fragment anywhere in the code.
+
+So far we have illustrated the "parameter" part of the flexibility.  Now let's look at the "generics" part,
+even though it's overkill for this example it should still but illustratative.  You could imagine that
+the procedure we wrote above `ids_from_string` might do something more complicated, maybe filtering out
+negative ids, ids that are too big, or that don't match some pattern. Whatever the case might be.  You
+might want these features in a variety of contexts, maybe not just starting from a string to split.
+
+We can rewrite the fragment in a "generic" way like so:
+
+```sql
+@attribute(cql:shared_fragment)
+CREATE PROC ids_from_strings()
+BEGIN
+  WITH
+    values(v) LIKE (select nullable("x") v)
+  SELECT CAST(v as LONG) as id from values;
+END;
+```
+
+Note the new construct for CTE definition:  inside a fragment we can use "LIKE" to define a pluggable CTE.
+In this case we used a `select` statement to describe the shape the fragment requires.  We could also
+have used a name `values(*) LIKE shape_name` just like we use shape names when describing cursors.  The
+name can be any existing view, table, a procedure with a result, etc.  Any name that looks like a record.
+
+Now when the fragment is invoked, you provide the actual data source (some table, view, or CTE) and
+that parameter takes the role of "values".  Here's a full example:
+
+```sql 
+CREATE PROC print_ids(value TEXT)
+BEGIN
+  DECLARE C CURSOR FOR
+    WITH
+      my_data(*) as (CALL split_text(value)),
+      my_numbers(id) as (CALL ids_from_strings() USING my_data AS values)
+      SELECT id from my_numbers;
+
+  LOOP FETCH C
+  BEGIN
+     CALL printf("%ld\n", C.id);
+  END;
+END;
+```
+
+We could actually rewrite the previous simple id fragment as follows:
+
+```sql
+@attribute(cql:shared_fragment)
+CREATE PROC ids_from_string(value TEXT)
+BEGIN
+  WITH
+    tokens(v) as (CALL split_text(value))
+    ids(id) as (CALL ids_from_strings() USING tokens as values)
+  SELECT * from ids;
+END;
+```
+
+And actually we have a convenient name we could use for the shape we need so
+we could have used the shape syntax to define `ids_from_strings` (this
+still has to go before `ids_from_string`)
+
+```sql
+@attribute(cql:shared_fragment)
+CREATE PROC ids_from_strings()
+BEGIN
+  WITH
+    values(*) LIKE split_text
+  SELECT CAST(tok as LONG) as id from values;
+END;
+```
+
+These examples have made very little use of the database but of course
+normal data is readily available so shared fragments can make a great
+way to provide access to complex data with shareable, correct, code.
+For instance you could write a fragment that provides the ids of all
+open businesses matching a name from a combination of tables.  This is
+similar to what you could do with a `VIEW` plus a `WHERE` clause but:
+
+* such a system can give you well controlled combinations known to work well
+* there is no schema required, so your database open time can still be fast
+* parameterization is not limited to filtering VIEWs after the fact
+* "generic" patterns are available, allowing arbitary data sources to be filtered, validated, augmented
+* each fragment can be tested seperately with its own suite rather than only in the context of some larger thing
+* code generation can be more economical because the compiler is aware of what is being shared
+
+In short, shared fragments can help with the composition of any complicated kinds of queries.
+If you're producing an SDK to access a data set, they are indispensible.
+
+#### Creating and Using Valid Shared Fragments
+
+When creating a fragment the following rules are enforced:
+
+* the fragment many not have any out arguments
+* it must consist of exactly one valid select statement (but see future forms below)
+* it may use the LIKE construct in CTE definitions to create placeholder shapes
+  * this form is illegal outside of shared fragments (otherwise how would you bind it)
+* the LIKE form may only appear in top level CTE expressions in the fragment
+* the fragment is free to use other fragments, but it may not call itself
+  * calling itself would result in infinite inlining
+
+Usage of a fragment is always intruced by a "call" to the fragment name in a CTE body.
+When using a fragment the following rules are enforced.
+
+* the provided parameters must create a valid procedure call just like normal procedure calls
+  * i.e. the correct number and type of arguments
+* the provided parameters may not use nested `(SELECT ...)` expressions
+  * this could easily create fragment building within fragment building which seems not worth the complexity
+  * if database access is required in the parameters simply wrap it in a helper procedure
+* the optional USING clause must specify each required table parameter exactly once
+* the USING clause may not add any extra tables
+* every actual table provided must match the column names of the corresponding table parameter
+  * i.e. in `USING my_data AS values` the actual columns in `my_data` must be the same as in the `values` parameter
+  * the columns need not be in the same order
+* each column in any actual table must be "assignment compatible" with its corresponding column in the parameters
+  * i.e. the actual type could be converted to the formal type using the same rules as the := operator
+  * these are the same rules used for procedure calls for instance where the call is kind of like assigning the actual parameter values to the formal parameter variables
+* the provided table values must not conflict with top level CTEs in the shared fragment
+  * exception: the top level CTEs that were parameters do not create conflicts
+  * e.g. it's common to do `values(*) as (CALL something() using source as source)` here the caller's "source" takes the value of the fragment's "source", this is not a true conflict
+  * however, the caller's source might itself have been a parameter in which case the value provided could create an inner conflict
+    * all these problems are easily avoided with a simple naming convention for parameters so that real arguments never look like parameter names and parameter forwarding is apparent
+    * e.g. `USING _source AS _source` makes it clear that a parameter is being forwarded and `_source` is not likely to conflict with real table or view names
+
+### Shared Fragment Futures (not yet implemented)
+
+It's a bit strange to include features not in the language in a language guide but these are coming very soon (weeks from this writing) and
+they are worth mentioning now, if only to be sure that the text will have some reasonable flow in the future.  There are two things to discuss:
+
+Firstly, while it's *possible* to share the text of fragments in the current formulation, the compiler does not yet do this.  That will hopefully become
+a reality before end of 2021.  The code is designed to do this but it doesn't yet. (expect additions to the Internals Chapter 3 on code generation).
+
+Secondly, there is an important additional flexibility in fragments not mentioned above that will be coming once code sharing is in place.  Once
+dynamic assembly of the text is possible then it will also be possible to create alternative texts.  This is crucial because there are many instances
+where it is desirable to not just replace parameters but use an entirely different join sequence.  Today, the only way to accomplish this is to
+fork the query at the topmost level (because SQLite has no internal possibly of "IF" conditions).  This is expensive in terms of code size and
+also cognitive load because the entire alternative sequences have to be kept carefully in sync.  Macros can help with this but then you get
+the usual macro problems. And of course there is no possibilty to share the common parts of the text of the code.
+
+The idea is to allow this form:
+
+```sql
+@attribute(cql:shared_fragment)
+CREATE PROC get_filtered_things(filter TEXT)
+BEGIN
+  IF filter IS NOT NULL THEN
+    SELECT * FROM main_table T1
+    INNER JOIN secondary_table T2 USING(id)
+    WHERE T2.name like filter;
+  ELSE
+    SELECT * FROM main_table T1;
+  END IF;
+END;
+```
+
+Now when do something like:
+
+```sql
+  my_things(*) AS (CALL get_filtered_things(filter))
+```
+
+You might get the join, or you might not, depending on if the filter was provided.  In fact the code might be entirely different between the branches
+removing unnecessary code, or swapping in a new experimental cache in your test environment, or anything like that.  The generalization is simply this:
+
+* instead of just one select statement you get one "IF" statement
+* each statement list of the IF must be exactly one select statement
+* there must be an ELSE clause
+* the select statements must be type compatible, just like in a normal procedure
+
+With this additional flexibility a wide variety of SQL statements can be constructed economically and maintainably.  Importantly
+consumers of the fragments need not deal with all these various alternate possibilities but they can readily create their own
+useful combinations out of building blocks.
+
+Ultimately, from SQLite's perspective, all of these shared fragment forms result in nothing more complicated than a chain of CTE expressions.
+
+
+
+
 
 ## Appendix 1: Command Line Options
 <!---
@@ -8594,7 +8920,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Nov 19 15:20:18 PST 2021
+Snapshot as of Tue Nov 30 14:36:49 PST 2021
 
 ### Operators and Literals
 
@@ -9055,6 +9381,15 @@ opt_name_list:
   | name_list
   ;
 
+cte_binding_list:
+  cte_binding
+  | cte_binding ',' cte_binding_list
+  ;
+
+cte_binding: name name
+  | name "AS" name
+  ;
+
 col_attrs:
   /* nil */
   | "NOT" "NULL" opt_conflict_clause col_attrs
@@ -9271,9 +9606,19 @@ cte_tables:
   | cte_table ',' cte_tables
   ;
 
+cte_decl:
+  name '(' name_list ')'
+  | name '(' '*' ')'
+  ;
+
 cte_table:
-    name '(' name_list ')' "AS" '(' select_stmt_no_with ')'
-  | name '(' '*' ')' "AS" '(' select_stmt_no_with ')'
+  cte_decl "AS" '(' select_stmt ')'
+  | cte_decl "AS" '(' call_stmt ')'
+  | cte_decl "AS" '(' call_stmt "USING" cte_binding_list ')'
+  | '(' call_stmt ')'
+  | '(' call_stmt "USING" cte_binding_list ')'
+  | cte_decl "LIKE" '(' select_stmt ')'
+  | cte_decl "LIKE" name
   ;
 
 with_prefix:
@@ -9786,6 +10131,7 @@ declare_stmt:
 call_stmt:
   "CALL" name '(' ')'
   | "CALL" name '(' call_expr_list ')'
+  | "CALL" name '(' '*' ')'
   ;
 
 while_stmt:
@@ -11539,7 +11885,9 @@ In an argument list, the `LIKE` construct was used to create arguments that are 
 
 -----
 
-### CQL0179 available for re-use
+### CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT, 'proc_name'
+
+A shared query fragment consist of a procedure with exactly one statement and that statement is a SELECT or WITH...SELECT statement.
 
 -----
 
@@ -11745,7 +12093,9 @@ call foo(1); '
 ```
 -----
 
-### CQL0208 available for re-use
+### CQL0208: shared fragments cannot have any out or in/out parameters 'param_name'
+
+A shared fragment will be expanded into the body of a SQL select statement, as such it can have no side-effects such as out arguments.
 
 -----
 
@@ -11938,7 +12288,27 @@ out C;
 
 -----
 
-### CQL0224 available for re-use
+### CQL0224: a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment)
+
+Inside of a WITH clause you can create a CTE by calling a shared fragment like so:
+
+```
+WITH
+  my_shared_something(*) AS (CALL shared_proc(5))
+SELECT * from my shared_something;
+```
+
+However `shared_proc` must define a shareable fragment, like so:
+
+```
+@attribute(cql:shared_fragment)
+create proc shared_proc(lim_ integer)
+begin
+   select * from somewhere limit lim_;
+end;
+```
+
+Here the target of the CALL is not a shared fragment.
 
 -----
 
@@ -12563,10 +12933,9 @@ going to 110% on the reactor... possible, but not recommended.
 
 -----
 
-
 ### CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
 
-All of the query fragment types consist of a procedure with exactly one statement and that statement is a WITH...SELECT statement.  If you have more than one statement or some other type of statement you'll get this error.
+All of the extendable query fragment types consist of a procedure with exactly one statement and that statement is a WITH...SELECT statement.  If you have more than one statement or some other type of statement you'll get this error.
 
 -----
 
@@ -13817,6 +14186,7 @@ For a procedure to be used as a function, it must have exactly one `OUT`
 parameter, and that parameter must be the last parameter of the procedure. In
 all other cases, procedures with one or more `OUT` parameters may only be called
 via a `CALL` statement.
+
 ----
 
 ### CQL0426: OUT or INOUT argument cannot be used again in same call 'variable'
@@ -13840,6 +14210,161 @@ CALL some_proc(t, t);
 CALL some_proc(some_other_proc(t), t);
 ```
 
+----
+
+### CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'proc_name'
+
+When creating a shared fragment you can specify "table parameters" by defining their shape like so:
+
+```
+@attribute(cql:shared_fragment)
+create proc shared_proc(lim_ integer)
+begin
+   with source(*) LIKE any_shape
+   select * from source limit lim_;
+end;
+```
+
+However this LIKE form only makes sense withing a shared fragment, and only as a top level CTE in such a fragment.  So either:
+
+* the LIKE appeared outside of any procedure
+* the LIKE appeared in a procedure, but that procedure is not a shared fragment
+* the LIKE appeared in a nested WITH clause
+
+----
+
+### CQL0428: duplicate binding of table in CALL/USING clause 'table_name'
+
+In a CALL clause to access a shared fragment there is a duplicate table name in the USING portion.
+
+Example:
+
+```
+my_cte(*) AS (call my_fragment(1) USING something as param1, something_else as param1),
+```
+
+Here `param1` is supposed to take on the value of both `something` and `something_else`.  Each parameter
+may appear only once in the `USING` clause.
+
+### CQL0429: the called procedure has no table arguments but a USING clause is present 'proc_name'
+
+In a CALL clause to access a shared fragment there are table bindings but the shared fragment that
+is being called does not have any table bindings.
+
+Example:
+
+```
+@attribute(cql:shared_fragment)
+create proc my_fragment(lim integer not null)
+begin
+ select * from a_location limit lim;
+end;
+
+-- here we try to use my_fragment with table parameter but it has none
+with
+  my_cte(*) AS (call my_fragment(1) USING something as param)
+  select * from my_cte;
+```
+
+----
+
+### CQL0430: no actual table was provided for the table parameter 'table_name'
+
+In a CALL clause to access a shared fragment the table bindings are missing a table parameter.
+
+Example:
+
+```
+@attribute(cql:shared_fragment)
+create proc my_fragment(lim integer not null)
+begin
+ with source LIKE source_shape
+ select * from source limit lim;
+end;
+
+-- here we try to use my_fragment but no table was specified to play the role of "source"
+with
+  my_cte(*) AS (call my_fragment(1))
+  select * from my_cte;
+```
+
+----
+
+### CQL0431: an actual table was provided for a table parameter that does not exist 'table_name'
+
+In a CALL clause to access a shared fragment the table bindings refer to a table parameter
+that does not exist.
+
+Example:
+
+```
+@attribute(cql:shared_fragment)
+create proc my_fragment(lim integer not null)
+begin
+ with source LIKE source_shape
+ select * from source limit lim;
+end;
+
+-- here we try to use my_fragment but there is a table name "soruce" that doesn't match source
+with
+  my_cte(*) AS (call my_fragment(1) USING something as soruce)
+  select * from my_cte;
+```
+
+----
+
+### CQL0432: the table provided must have the same number of columns as the table parameter 'table_name'
+
+In a CALL clause to access a shared fragment the table bindings are trying to use a table
+that has the wrong number of columns.  The column count, names, and types must be compatible.
+Extra columns for instance are not allowed because they might create ambiguities that were not
+present in the shared fragment.
+
+Example:
+
+```
+@attribute(cql:shared_fragment)
+create proc my_fragment(lim integer not null)
+begin
+ with source LIKE (select 1 x, 2 y)
+ select * from source limit lim;
+end;
+
+-- here we try to use my_fragment but we provided 3 columns not 2
+with
+  my_source(*) AS (select 1 x, 2 y, 3 z),
+  my_cte(*) AS (call my_fragment(1) USING my_source as source)
+  select * from my_cte;
+```
+
+Here `my_fragment` wants a `source` table with 2 columns (x, y).  But 3 were provided.
+
+----
+
+### CQL0433: The table argument 'formal_name' requires column 'column_name' but it is missing in provided table 'actual_name'
+
+In a CALL clause to access a shared fragment the table bindings are trying to use a table
+that is missing a required column.
+
+Example:
+
+```
+@attribute(cql:shared_fragment)
+create proc my_fragment(lim integer not null)
+begin
+ with source LIKE (select 1 x, 2 y)
+ select * from source limit lim;
+end;
+
+-- here we try to use my_fragment but we passed in a table with (w,x) not (x,y)
+with
+  my_source(*) AS (select 1 w, 2 x),
+  my_cte(*) AS (call my_fragment(1) USING my_source as source)
+  select * from my_cte;
+```
+
+----
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -13852,7 +14377,7 @@ CALL some_proc(some_other_proc(t), t);
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Nov 19 15:20:19 PST 2021
+Snapshot as of Tue Nov 30 14:36:50 PST 2021
 
 ### Rules
 

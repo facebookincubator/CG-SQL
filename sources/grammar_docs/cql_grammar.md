@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Nov 19 15:20:18 PST 2021
+Snapshot as of Tue Nov 30 14:36:49 PST 2021
 
 ### Operators and Literals
 
@@ -474,6 +474,15 @@ opt_name_list:
   | name_list
   ;
 
+cte_binding_list:
+  cte_binding
+  | cte_binding ',' cte_binding_list
+  ;
+
+cte_binding: name name
+  | name "AS" name
+  ;
+
 col_attrs:
   /* nil */
   | "NOT" "NULL" opt_conflict_clause col_attrs
@@ -690,9 +699,19 @@ cte_tables:
   | cte_table ',' cte_tables
   ;
 
+cte_decl:
+  name '(' name_list ')'
+  | name '(' '*' ')'
+  ;
+
 cte_table:
-    name '(' name_list ')' "AS" '(' select_stmt_no_with ')'
-  | name '(' '*' ')' "AS" '(' select_stmt_no_with ')'
+  cte_decl "AS" '(' select_stmt ')'
+  | cte_decl "AS" '(' call_stmt ')'
+  | cte_decl "AS" '(' call_stmt "USING" cte_binding_list ')'
+  | '(' call_stmt ')'
+  | '(' call_stmt "USING" cte_binding_list ')'
+  | cte_decl "LIKE" '(' select_stmt ')'
+  | cte_decl "LIKE" name
   ;
 
 with_prefix:
@@ -1205,6 +1224,7 @@ declare_stmt:
 call_stmt:
   "CALL" name '(' ')'
   | "CALL" name '(' call_expr_list ')'
+  | "CALL" name '(' '*' ')'
   ;
 
 while_stmt:
