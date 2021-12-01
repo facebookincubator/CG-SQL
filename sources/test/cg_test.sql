@@ -4658,11 +4658,11 @@ begin
   let a := ltor_proc_int_not_null(ltor_proc_int_not_null(1, 2), ltor_proc_int_not_null(3, 4));
   let b := ltor_proc_int(ltor_proc_int(1, 2), ltor_proc_int(3, 4));
   let c := ltor_proc_text_not_null(ltor_proc_text_not_null("1", "2"), ltor_proc_text_not_null("3", "4"));
-  let d := ltor_proc_text(ltor_proc_text("1", "2"), ltor_proc_text("3", "4")); 
+  let d := ltor_proc_text(ltor_proc_text("1", "2"), ltor_proc_text("3", "4"));
   let e := ltor_func_int_not_null(ltor_func_int_not_null(1, 2), ltor_func_int_not_null(3, 4));
   let f := ltor_func_int(ltor_func_int(1, 2), ltor_func_int(3, 4));
   let g := ltor_func_text_not_null(ltor_func_text_not_null("1", "2"), ltor_func_text_not_null("3", "4"));
-  let h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4")); 
+  let h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4"));
 end;
 
 create proc f1(out x integer not null)
