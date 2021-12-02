@@ -63,11 +63,70 @@ cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pst
   return cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
 }
 
+// create a single string from the varargs and count provided
+static char *_Nonnull cql_vconcat(cql_int32 count, va_list args) {
+  va_list pass1, pass2;
+  va_copy(pass1, args);
+  va_copy(pass2, args);
+
+  cql_int32 bytes = 0;
+
+  // first we have to figure out how much to allocate
+  for (cql_int32 istr = 0; istr < count; istr++) {
+    const char *str = va_arg(pass1, const char *);
+    bytes += strlen(str);
+  }
+
+  char *result = malloc(bytes + 1);
+
+  cql_int32 offset = 0;
+
+  for (cql_int32 istr = 0; istr < count; istr++) {
+    const char *str = va_arg(pass2, const char *);
+    size_t len = strlen(str);
+    memcpy(result + offset, str, len+1); // copies the trailing null byte
+    offset += len;
+  }
+
+  va_end(pass1);
+  va_end(pass2);
+
+  return result;
+}
+
+// This method is used when handling CQL cursors; the cursor local variable may already
+// contain a statement.  When preparing a new statement, we want to finalize any statement
+// the cursor used to hold.  This lets us do simple preparation in a loop without added
+// conditionals in the generated code.  This is the varargs version
+cql_code cql_prepare_var(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, cql_int32 count, ...) {
+  cql_finalize_stmt(pstmt);
+  va_list args;
+  va_start(args, count);
+  char *sql = cql_vconcat(count, args);
+  cql_code result = cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
+  va_end(args);
+  free(sql);
+  return result;
+}
+
 // This is a simple wrapper for the sqlite3_exec method with the usual extra arguments.
 // This code is here just to reduce the code size of exec calls in the generated code.
 // There are a lot of such calls.
 cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql) {
   return cql_sqlite3_exec(db, sql);
+}
+
+// This is a simple wrapper for the sqlite3_exec method with the usual extra arguments.
+// This code is here just to reduce the code size of exec calls in the generated code.
+// There are a lot of such calls.
+cql_code cql_exec_var(sqlite3 *_Nonnull db, cql_int32 count, ...) {
+  va_list args;
+  va_start(args, count);
+  char *sql = cql_vconcat(count, args);
+  cql_code result = cql_sqlite3_exec(db, sql);
+  va_end(args);
+  free(sql);
+  return result;
 }
 
 // This version of exec takes a string variable and is therefore more dangerous.  It is

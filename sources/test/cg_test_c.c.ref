@@ -384,6 +384,7 @@ typedef struct out_proc_with_contract_in_fetch_results_row {
 extern void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc_with_contract_in_fetch_results_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_a_, "a");
@@ -15404,9 +15405,87 @@ void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable
 @ATTRIBUTE(cql:shared_fragment)
 CREATE PROC shared_frag ()
 BEGIN
-  SELECT 1 AS this_is_not_emitted;
+  SELECT 1234 AS shared_something;
 END;
 */
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC foo ()
+BEGIN
+  WITH
+  shared_frag (shared_something) AS (CALL shared_frag())
+  SELECT *
+    FROM shared_frag;
+END;
+*/
+
+#define _PROC_ "foo"
+static int32_t foo_perf_index;
+
+cql_string_proc_name(foo_stored_procedure_name, "foo");
+
+typedef struct foo_row {
+  cql_int32 shared_something;
+} foo_row;
+
+cql_int32 foo_get_shared_something(foo_result_set_ref _Nonnull result_set, cql_int32 row) {
+  foo_row *data = (foo_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].shared_something;
+}
+
+uint8_t foo_data_types[foo_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // shared_something
+};
+
+static cql_uint16 foo_col_offsets[] = { 1,
+  cql_offsetof(foo_row, shared_something)
+};
+
+cql_int32 foo_result_count(foo_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code foo_fetch_results(sqlite3 *_Nonnull _db_, foo_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_foo, &foo_perf_index);
+  cql_code rc = foo(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = foo_data_types,
+    .col_offsets = foo_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(foo_row),
+    .crc = CRC_foo,
+    .perf_index = &foo_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC foo () (shared_something INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    3,
+  "WITH "
+    "shared_frag (shared_something) AS (",
+  "SELECT 1234",
+  ") "
+    "SELECT shared_something "
+      "FROM shared_frag"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

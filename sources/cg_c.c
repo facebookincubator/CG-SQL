@@ -19,6 +19,7 @@ cql_noexport void cg_c_cleanup() {}
 #include "cg_c.h"
 
 #include "ast.h"
+#include "bytebuf.h"
 #include "cg_common.h"
 #include "charbuf.h"
 #include "cql.h"
@@ -4212,6 +4213,8 @@ cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
   return count;
 }
 
+static bytebuf shared_fragment_strings = {NULL, 0, 0};
+
 static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
@@ -4323,7 +4326,15 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   // now replace the aliases for just this one bit
   proc_arg_aliases = new_arg_aliases;
 
+  CSTR str = Strdup(buffer->ptr);
+  bytebuf_append_var(&shared_fragment_strings, str);
+  bclear(buffer);
+
   gen_one_stmt(select_stmt);
+
+  str = Strdup(buffer->ptr);
+  bytebuf_append_var(&shared_fragment_strings, str);
+  bclear(buffer);
 
   symtab_delete(proc_arg_aliases);
   symtab_delete(proc_cte_aliases);
@@ -4348,6 +4359,8 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_flags) {
   list_item *vars = NULL;
   CSTR amp = "&";
+
+  bytebuf_open(&shared_fragment_strings);
 
   if (stmt_name && !strcmp("_result", stmt_name)) {
     // predefined out argument
@@ -4384,7 +4397,14 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
     stmt_name = "_temp";
   }
 
-  if (options.compress) {
+  bool_t has_shared_fragments = !!shared_fragment_strings.used;
+  if (has_shared_fragments) {
+    CSTR str = Strdup(temp.ptr);
+    bytebuf_append_var(&shared_fragment_strings, str);
+    bclear(&temp);
+  }
+
+  if (!has_shared_fragments && options.compress) {
     bprintf(cg_main_output, "/*  ");
     cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
     bprintf(cg_main_output, " */\n");
@@ -4401,13 +4421,33 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
     bprintf(cg_main_output, ");\n");
   }
   else {
+    CSTR suffix = has_shared_fragments ? "_var" : "";
+    
     if (!has_prepare_stmt) {
-      bprintf(cg_main_output, "_rc_ = cql_exec(_db_,\n  ");
+      bprintf(cg_main_output, "_rc_ = cql_exec%s(_db_,\n  ", suffix);
     }
     else {
-      bprintf(cg_main_output, "_rc_ = cql_prepare(_db_, %s%s_stmt,\n  ", amp, stmt_name);
+      bprintf(cg_main_output, "_rc_ = cql_prepare%s(_db_, %s%s_stmt,\n  ", suffix, amp, stmt_name);
     }
-    cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+
+    if (!has_shared_fragments) {
+      cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+    }
+    else {
+      int32_t scount = (int32_t)(shared_fragment_strings.used / sizeof(CSTR));
+      bprintf(cg_main_output, "%d,\n", scount);
+
+      CSTR *strs = (CSTR *)(shared_fragment_strings.ptr);
+      for (size_t i = 0; i < scount; i++) {
+        cg_pretty_quote_plaintext(strs[i], cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+        if (i + 1 < scount) {
+          bprintf(cg_main_output, ",\n");
+        }
+        else {
+          bprintf(cg_main_output, "\n");
+        }
+      }
+    }
     bprintf(cg_main_output, ");\n");
   }
 
@@ -4437,6 +4477,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   }
 
   // vars is pool allocated, so we don't need to free it
+  bytebuf_close(&shared_fragment_strings);
 }
 
 // Checks to see if the given statement or statement list is unbound

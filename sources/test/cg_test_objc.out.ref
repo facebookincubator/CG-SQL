@@ -3629,6 +3629,39 @@ static inline BOOL CGBSensitiveFunctionIsANoOpRowEqual(CGBSensitiveFunctionIsANo
   return CGCSensitiveFunctionIsANoOpRowEqual(CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(resultSet1), row1, CGCSensitiveFunctionIsANoOpFromCGBSensitiveFunctionIsANoOp(resultSet2), row2);
 }
 
+@class CGBFoo;
+
+static inline CGBFoo *CGBFooFromCGCFoo(CGCFooResultSetRef resultSet)
+{
+  return (__bridge CGBFoo *)resultSet;
+}
+
+static inline CGCFooResultSetRef CGCFooFromCGBFoo(CGBFoo *resultSet)
+{
+  return (__bridge CGCFooResultSetRef)resultSet;
+}
+
+static inline int32_t CGBFooGetSharedSomething(CGBFoo *resultSet, int32_t row)
+{
+  CGCFooResultSetRef cResultSet = CGCFooFromCGBFoo(resultSet);
+  return CGCFooGetSharedSomething(cResultSet, row);
+}
+
+static inline int32_t CGBFooResultCount(CGBFoo *resultSet)
+{
+  return CGCFooResultCount(CGCFooFromCGBFoo(resultSet));
+}
+
+static inline NSUInteger CGBFooRowHash(CGBFoo *resultSet, int32_t row)
+{
+  return CGCFooRowHash(CGCFooFromCGBFoo(resultSet), row);
+}
+
+static inline BOOL CGBFooRowEqual(CGBFoo *resultSet1, int32_t row1, CGBFoo *resultSet2, int32_t row2)
+{
+  return CGCFooRowEqual(CGCFooFromCGBFoo(resultSet1), row1, CGCFooFromCGBFoo(resultSet2), row2);
+}
+
 @class CGBFragTest;
 
 static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)

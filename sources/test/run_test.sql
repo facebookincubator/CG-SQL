@@ -3913,6 +3913,36 @@ BEGIN_TEST(shared_fragments)
   EXPECT(not C);
 END_TEST(shared_fragments)
 
+@attribute(cql:shared_fragment)
+create proc get_values()
+begin
+  select 1 id, 'x' t
+  union all
+  select 2 id, 'y' t;
+end;
+
+create table x(id integer, t text);
+
+BEGIN_TEST(shared_exec)
+  drop table if exists x;
+  create table x(id integer, t text);
+  with 
+    (call get_values())
+  insert into x select * from get_values;
+
+  declare C cursor for select * from x;
+  fetch C;
+  EXPECT(C.id = 1);
+  EXPECT(C.t = 'x');
+  fetch C;
+  EXPECT(C.id = 2);
+  EXPECT(C.t = 'y');
+  fetch C;
+  EXPECT(not C);
+
+  drop table x;
+END_TEST(shared_exec)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

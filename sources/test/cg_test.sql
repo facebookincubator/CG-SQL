@@ -4812,7 +4812,30 @@ end;
 @attribute(cql:shared_fragment)
 create proc shared_frag()
 begin
- select 1 this_is_not_emitted; -- hence no cql_code return type
+ select 1234 shared_something; -- hence no cql_code return type
+end;
+
+-- TEST use the above
+-- note that the generated string has the query parts above
+-- Fragment sandwich:
+-- ---- first we see the prepare_var variant
+-- +  _rc_ = cql_prepare_var(_db_, _result_stmt,
+-- --- three parts in this sandwich
+-- +    3,
+-- +  "WITH "
+-- +    "shared_frag (shared_something) AS (",
+-- ---- then we see the shared fragment-- note the name can be elided and it is!
+-- +  "SELECT 1234",
+-- ---- then we see what came after the shared fragment
+-- +  ") "
+-- +    "SELECT shared_something "
+-- +      "FROM shared_frag"
+-- +  );
+create proc foo()
+begin
+  with 
+    (call shared_frag())
+  select * from shared_frag;
 end;
 
 declare const group some_constants (
