@@ -1047,10 +1047,6 @@ update foo set xyzzy = 7 where foo.id in (select * from x);
 
 @enforce_normal encode context column;
 
-@enforce_strict null check on not null;
-
-@enforce_normal null check on not null;
-
 @enforce_reset;
 
 set rc := @rc;

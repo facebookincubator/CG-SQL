@@ -2,13 +2,6 @@
 
 The statement ending at line XXXX
 
-@ENFORCE_STRICT NULL CHECK ON NOT NULL;
-
-  {enforce_strict_stmt}: ok
-  | {int 12}
-
-The statement ending at line XXXX
-
 DECLARE PROC printf NO CHECK;
 
   {declare_proc_no_check_stmt}: ok

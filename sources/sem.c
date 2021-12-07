@@ -20021,10 +20021,6 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
       enforcement.strict_is_true = strict;
       break;
 
-    case ENFORCE_NULL_CHECK_ON_NOT_NULL:
-      // This is a no-op present temporarily for backwards compatibility.
-      break;
-
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);

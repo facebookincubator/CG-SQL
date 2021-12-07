@@ -5,14 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
--- TEST: Validate parsing and strict enforcement for NULL CHECK ON NOT NULL. We
--- leave this on for the remainder of the tests as this will soon be the
--- default.
--- + @ENFORCE_STRICT NULL CHECK ON NOT NULL
--- + {enforce_strict_stmt}: ok
--- + {int 12}
-@enforce_strict null check on not null;
-
 -- TEST: we'll be using printf in lots of places in the tests as an external proc
 -- + {declare_proc_no_check_stmt}: ok
 -- - error:
@@ -19249,4 +19241,3 @@ end;
 -- + error: % constant group not found 'not_found'
 -- +1 error:
 @emit_constants not_found;
-
