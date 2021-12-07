@@ -1,4 +1,4 @@
-%option noyywrap nodefault yylineno case-insensitive
+%option noyywrap nodefault yylineno case-insensitive never-interactive
 %{
 
 /*

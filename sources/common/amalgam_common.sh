@@ -92,7 +92,6 @@ generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 // to get the system symbols or you can adjust it.  Simply copy these
 // headers as a starting point and then make your equivalents.
 
-#include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>

@@ -64,6 +64,12 @@
 // it's just a stack alloc.
 #define YYSTACK_USE_ALLOCA 1
 
+// Bison defines this only if __GNUC__ is defined, but Clang defines _MSC_VER
+// and not __GNUC__ on Windows.
+#ifdef __clang__
+  #define YY_ATTRIBUTE_UNUSED __attribute__((unused))
+#endif
+
 static void parse_cmd(int argc, char **argv);
 static void print_dot(struct ast_node* node);
 static ast_node *file_literal(ast_node *);
