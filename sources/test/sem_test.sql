@@ -4879,6 +4879,12 @@ begin
   select 1 x, 2 y, 3.0 z;
 end;
 
+-- TEST: cannot call shared fragments outside of a SQL context
+-- + {call_stmt}: err
+-- + shared fragments may not be called outside of a SQL statement 'a_shared_frag'
+-- +1 error:
+call a_shared_frag();
+
 -- TEST: create a shared fragment with a parameter for later use
 -- + {stmt_and_attr}: ok
 -- + {misc_attrs}: ok

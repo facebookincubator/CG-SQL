@@ -10181,6 +10181,10 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
   add_cte(ast);
 }
 
+// Here we ensure that the table binding for any given shared CTE is correct
+// This means that the number of table args has to match and the provided names
+// have to exist and be compatible with the table parameters. There can be no
+// extras and no conflicts.
 static void sem_shared_fragment_table_binding(
   ast_node *call_stmt,
   ast_node *create_proc_stmt,
@@ -18461,6 +18465,15 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     report_error(ast, "CQL0213: procedure had errors, can't call", name);
     record_error(ast);
     return;
+  }
+
+  if (proc_stmt &&
+    is_ast_create_proc_stmt(proc_stmt) &&
+    find_proc_frag_type(proc_stmt) == FRAG_TYPE_SHARED &&
+    !is_ast_shared_cte(ast->parent)) {
+      report_error(ast, "CQL0434: shared fragments may not be called outside of a SQL statement", name);
+      record_error(ast);
+      return;
   }
 
   if (proc_stmt && is_struct(proc_stmt->sem->sem_type)) {

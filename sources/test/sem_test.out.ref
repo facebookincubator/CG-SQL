@@ -18122,6 +18122,15 @@ END;
 
 The statement ending at line XXXX
 
+CALL a_shared_frag();
+
+test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0434: shared fragments may not be called outside of a SQL statement 'a_shared_frag'
+
+  {call_stmt}: err
+  | {name a_shared_frag}
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:shared_fragment)
 CREATE PROC shared_frag2 (x INTEGER NOT NULL, y INTEGER NOT NULL)
 BEGIN

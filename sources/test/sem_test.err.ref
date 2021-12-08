@@ -399,6 +399,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0101: too few column names spe
 test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0102: too many column names specified in common table expression 'foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0434: shared fragments may not be called outside of a SQL statement 'a_shared_frag'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'meters' vs. 'job'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'there_is_no_such_source'
 test/sem_test.sql:XXXX:1: error: in like : CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
