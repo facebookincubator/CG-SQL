@@ -18,13 +18,8 @@
 
 void yyerror(const char *s, ...);
 void line_directive(const char *);
-#ifndef _WIN32
-int isatty(int);
-#endif
 char *Strdup(const char *);
 int fileno(FILE *);
-
-int a;
 
 // the lexer has unused functions and implicit conversions, not easily removed
 #pragma clang diagnostic ignored "-Wunused-function"
