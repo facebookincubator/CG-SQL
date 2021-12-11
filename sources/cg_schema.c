@@ -959,6 +959,7 @@ static void cg_schema_manage_recreate_tables(
 
   CHARBUF_OPEN(recreate);
   CHARBUF_OPEN(update_tables);
+  CHARBUF_OPEN(pending_table_creates);
 
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
   gen_sql_callbacks callbacks;
@@ -1013,8 +1014,28 @@ static void cg_schema_manage_recreate_tables(
     }
 
     table_crc ^= crc_charbuf(&make_table);
-    bindent(&update_tables, &make_table, 4);
 
+    // Now we have to remember that the tables in the recreate annotations have been
+    // sorted by reverse ordinal, meaning they are in the correct order to DROP
+    // we emit the DROP statements first as normal but the creates have to be
+    // stashed in a pending buffer that accumulates in the reverse order.  When we're
+    // done with the group, then we emit the whole batch of creates in the natural order.
+    // This is done in one pass because there could be filtering and whatnot and so
+    // this way we know we get exactly the right tables.  It does mean some buffer
+    // shuffling.
+
+    // This only matters for recreate groups, with none-groups this is a big no-op
+    // Note also that CQL0060 prevents anyone from taking an FK on a table that is
+    // recreate and either not in a group at all or in a different group.  So only
+    // the tables in the processed group could have FKs and those are handled correctly here.
+
+    CHARBUF_OPEN(temp);
+    bindent(&temp, &make_table, 4);
+    bprintf(&temp, "%s", pending_table_creates.ptr);
+    bclear(&pending_table_creates);
+    bprintf(&pending_table_creates, "%s", temp.ptr);
+    CHARBUF_CLOSE(temp);
+    
     CHARBUF_CLOSE(make_table);
 
     CSTR gname = note->group_name;
@@ -1024,6 +1045,9 @@ static void cg_schema_manage_recreate_tables(
     if (i + 1 < count && gname[0] && !Strcasecmp(gname, (note+1)->group_name)) {
       continue;
     }
+    
+    bprintf(&update_tables, "%s", pending_table_creates.ptr);
+    bclear(&pending_table_creates);
 
     CHARBUF_OPEN(facet);
 
@@ -1066,6 +1090,7 @@ static void cg_schema_manage_recreate_tables(
   bprintf(output, "%s", recreate.ptr);
   bprintf(output, "END;\n\n");
 
+  CHARBUF_CLOSE(pending_table_creates);
   CHARBUF_CLOSE(update_tables);
   CHARBUF_CLOSE(recreate);
 }

@@ -456,10 +456,6 @@ BEGIN
   END IF;
   IF cql_facet_find(test_facets, 'gr1_group_crc') != -5344641248211221614 THEN
     DROP TABLE IF EXISTS use_g1;
-    CREATE TABLE use_g1(
-      id INTEGER PRIMARY KEY REFERENCES g1 (id),
-      name2 TEXT
-    );
     DROP TABLE IF EXISTS g1;
     CREATE TABLE g1(
       id INTEGER PRIMARY KEY,
@@ -467,6 +463,10 @@ BEGIN
     );
     CREATE INDEX gr1_index ON g1 (name);
     CREATE INDEX gr1_index2 ON g1 (name, id);
+    CREATE TABLE use_g1(
+      id INTEGER PRIMARY KEY REFERENCES g1 (id),
+      name2 TEXT
+    );
 
     -- recreate migration procedure required
     CALL RecreateGroup1Migration();
@@ -475,17 +475,17 @@ BEGIN
   END IF;
   IF cql_facet_find(test_facets, 'my_group_group_crc') != 5282334304804635811 THEN
     DROP TABLE IF EXISTS grouped_table_3;
-    CREATE TABLE grouped_table_3(
+    DROP TABLE IF EXISTS grouped_table_2;
+    DROP TABLE IF EXISTS grouped_table_1;
+    CREATE TABLE grouped_table_1(
       id INTEGER NOT NULL,
       name TEXT
     );
-    DROP TABLE IF EXISTS grouped_table_2;
     CREATE TABLE grouped_table_2(
       id INTEGER NOT NULL,
       name TEXT
     );
-    DROP TABLE IF EXISTS grouped_table_1;
-    CREATE TABLE grouped_table_1(
+    CREATE TABLE grouped_table_3(
       id INTEGER NOT NULL,
       name TEXT
     );
