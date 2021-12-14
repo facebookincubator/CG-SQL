@@ -2043,6 +2043,9 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
   context.used_procs = &used_procs;
 
   table_callbacks callbacks = {
+      .notify_table_or_view_drops = false,
+      .notify_fk = false,
+      .notify_triggers = false,
       .callback_any_table = cg_found_table,
       .callback_any_view = cg_found_view,
       .callback_inserts = cg_found_insert,

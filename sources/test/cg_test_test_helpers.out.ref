@@ -788,9 +788,6 @@ BEGIN
     FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
-  CREATE VIEW IF NOT EXISTS Foo AS
-  SELECT *
-    FROM Caa;
   CREATE TABLE IF NOT EXISTS primary_as_column(
     id_ TEXT NOT NULL,
     seat TEXT,
@@ -798,6 +795,9 @@ BEGIN
     PRIMARY KEY (id_, seat)
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
+  CREATE VIEW IF NOT EXISTS Foo AS
+  SELECT *
+    FROM Caa;
 END;
 
 CREATE PROC test_sample_proc17_create_triggers()
@@ -831,8 +831,8 @@ END;
 
 CREATE PROC test_sample_proc17_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS primary_as_column;
   DROP VIEW IF EXISTS Foo;
+  DROP TABLE IF EXISTS primary_as_column;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS Aaa;
@@ -865,14 +865,14 @@ BEGIN
   SELECT * FROM Caa;
 END;
 
-CREATE PROC test_sample_proc17_read_Foo()
-BEGIN
-  SELECT * FROM Foo;
-END;
-
 CREATE PROC test_sample_proc17_read_primary_as_column()
 BEGIN
   SELECT * FROM primary_as_column;
+END;
+
+CREATE PROC test_sample_proc17_read_Foo()
+BEGIN
+  SELECT * FROM Foo;
 END;
 
 CREATE PROC test_sample_proc17_drop_indexes()

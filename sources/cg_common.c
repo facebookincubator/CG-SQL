@@ -256,7 +256,7 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
 
 // Recursively finds table nodes, executing the callback for each that is found.  The
 // callback will not be executed more than once for the same table name.
-static void find_table_node(table_callbacks *callbacks, ast_node *node) {
+cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node *node) {
   // Check the type of node so that we can find the direct references to tables. We
   // can't know the difference between a table or view in the ast, so we will need to
   // later find the definition to see if it points to a create_table_stmt to distinguish
@@ -292,11 +292,11 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
       ast_node *proc = find_proc(name);
       if (proc) {
         // Look through the proc definition for tables. Just call through recursively.
-        find_table_node(callbacks, proc);
+        continue_find_table_node(callbacks, proc);
       }
 
       if (cte_binding_list) {
-        find_table_node(callbacks, cte_binding_list);
+        continue_find_table_node(callbacks, cte_binding_list);
       }
 
       // no further recursion is needed
@@ -324,6 +324,27 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
       table_or_view_name_ast = factor;
       alt_callback = callbacks->callback_from;
       alt_visited = callbacks->visited_from;
+    }
+  }
+  else if (is_ast_fk_target(node)) {
+    // if we're walking a table then we'll also walk its FK's
+    // normally we don't start by walking tables anyway so this doesn't
+    // run if you do a standard walk of a procedure
+    if (callbacks->notify_fk) {
+      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      table_or_view_name_ast = name_ast;
+    }
+  }
+  else if (is_ast_drop_view_stmt(node) || is_ast_drop_table_stmt(node)) {
+    if (callbacks->notify_table_or_view_drops) {
+      EXTRACT_ANY_NOTNULL(name_ast, node->right);
+      table_or_view_name_ast = name_ast;
+    }
+  }
+  else if (is_ast_trigger_target_action(node)) {
+    if (callbacks->notify_triggers) {
+      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      table_or_view_name_ast = name_ast;
     }
   }
   else if (is_ast_delete_stmt(node)) {
@@ -366,7 +387,7 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
       }
     }
   }
-
+  
   if (table_or_view_name_ast) {
     // Find the definition and see if we have a create_table_stmt.
     EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
@@ -400,7 +421,7 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
           }
 
           // Look through the view definition for tables. Just call through recursively.
-          find_table_node(callbacks, table_or_view);
+          continue_find_table_node(callbacks, table_or_view);
         }
       }
     }
@@ -408,13 +429,14 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
 
   // Check the left and right nodes.
   if (ast_has_left(node)) {
-    find_table_node(callbacks, node->left);
+    continue_find_table_node(callbacks, node->left);
   }
 
   if (ast_has_right(node)) {
-    find_table_node(callbacks, node->right);
+    continue_find_table_node(callbacks, node->right);
   }
 }
+
 
 // Find references in a proc and invoke the corresponding callback on them
 // this is useful for dependency analysis.
@@ -433,7 +455,7 @@ cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
   callbacks->visited_from = symtab_new();
   callbacks->visited_proc = symtab_new();
 
-  find_table_node(callbacks, node);
+  continue_find_table_node(callbacks, node);
 
   SYMTAB_CLEANUP(callbacks->visited_any_table);
   SYMTAB_CLEANUP(callbacks->visited_insert);
