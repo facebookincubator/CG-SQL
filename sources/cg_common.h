@@ -237,8 +237,8 @@ cql_data_decl( charbuf *_Nullable cg_scratch_vars_output );
 // we were holding on to.
 cql_data_decl( charbuf *_Nullable cg_cleanup_output );
 
-// The definitions of all of the statement fragments go into this section
-cql_data_decl( charbuf *_Nullable cg_fragments_output );
+// The definitions of all of the statement pieces go into this section
+cql_data_decl( charbuf *_Nullable cg_pieces_output );
 
 // Prints a symbol name, along with any configured prefix, to the specified buffer.
 // Multiple CSTRs may be supplied to build the name, which will be concatenated

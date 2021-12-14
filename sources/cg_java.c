@@ -11,6 +11,7 @@
 
 // stubs to avoid link errors
 cql_noexport void cg_java_main(ast_node *head) {}
+cql_noexport void cg_java_cleanup() {}
 
 #else
 
@@ -597,6 +598,10 @@ cql_noexport void cg_java_main(ast_node *head) {
   CHARBUF_CLOSE(frag_col_offsets_for_core);
   symtab_delete(frag_assembly_interfaces);
   symtab_delete(frag_extension_interfaces);
+}
+
+cql_noexport void cg_java_cleanup() {
+  SYMTAB_CLEANUP( encode_columns );
 }
 
 #endif

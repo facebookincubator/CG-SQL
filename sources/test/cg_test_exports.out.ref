@@ -217,4 +217,6 @@ DECLARE PROC sensitive_function_is_a_no_op () (y TEXT NOT NULL @SENSITIVE);
 DECLARE PROC and_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
 DECLARE PROC or_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
 DECLARE PROC foo () (shared_something INTEGER NOT NULL);
+DECLARE PROC shared_conditional_user (x INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+DECLARE PROC nested_shared_stuff () (x INTEGER NOT NULL);
 DECLARE PROC end_proc ();

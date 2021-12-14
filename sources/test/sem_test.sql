@@ -1378,7 +1378,7 @@ if 1 then
   select not 'x';
 end if;
 
--- TEST: if with bogus statement list in else blocki, no double error reporting
+-- TEST: if with bogus statement list in else block, no double error reporting
 -- + error: % string operand not allowed in 'NOT'
 -- +1 error:
 -- +1 {if_stmt}: err
@@ -4866,6 +4866,15 @@ with
  )
 select * from bar join foo;
 
+-- TEST: empty fragments are invalid for all fragment types
+-- + {create_proc_stmt}: err
+-- + error: % fragments may not have an empty body 'empty_fragment'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc empty_fragment()
+begin
+end;
+
 -- TEST: create a shared fragment we can use in the frag tests
 -- + {stmt_and_attr}: ok
 -- + {misc_attrs}: ok
@@ -4877,6 +4886,109 @@ select * from bar join foo;
 create proc a_shared_frag(x integer not null, y integer not null)
 begin
   select 1 x, 2 y, 3.0 z;
+end;
+
+-- TEST: create a conditional fragment with no else
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc bogus_conditional_no_else()
+begin
+  if 1 then
+    select 1 x;
+  end if;
+end;
+
+-- TEST: create a conditional fragment with matching like clauses in both branches
+-- + {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc ok_conditional_duplicate_cte_names()
+begin
+  if 1 then
+    with X(*) like a_shared_frag
+    select * from X;
+  else
+    with X(*) like a_shared_frag
+    select * from X;
+  end if;
+end;
+
+-- TEST: create a conditional fragment with not matching like clauses
+-- + {create_proc_stmt}: err
+-- + error: % bogus_cte, all must have the same column count
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc bogus_conditional_duplicate_cte_names()
+begin
+  /* note that these branches return the same type so the proc looks ok 
+     but it's still wrong because bogus_cte is not of the same type 
+     here we did his by ignoring bogus_cte but it doesn't matter how you arrange it;
+     you might just select id out of bogus_cte or something.
+   */
+  if 1 then
+    with bogus_cte(*) like a_shared_frag
+    select 1 x;
+  else
+    with bogus_cte(*) like foo
+    select 1 x;
+  end if;
+end;
+
+-- TEST: create a conditional fragment with no else
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc bogus_conditional_two_selects()
+begin
+  if 1 then
+    select 1 x;
+    select 1 x;
+  else
+    select 1 x;
+  end if;
+end;
+
+-- TEST: create a conditional fragment with a non-select statement
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc bogus_conditional_non_select()
+begin
+  if 1 then
+    declare x integer;
+  else
+    select 1 x;
+  end if;
+end;
+
+-- TEST: create a conditional fragment with an empty if clause
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc bogus_conditional_empty_clause()
+begin
+  if 1 then
+  else
+    select 1 x;
+  end if;
+end;
+
+-- TEST: create a conditional fragment with an empty else clause
+-- + {create_proc_stmt}: err
+-- + error: % shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_else_clause'
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc bogus_conditional_empty_else_clause()
+begin
+  if 1 then
+    select 1 x;
+  else
+  end if;
 end;
 
 -- TEST: cannot call shared fragments outside of a SQL context
@@ -4898,6 +5010,13 @@ begin
   with source(*) LIKE a_shared_frag
   select * from source;
 end;
+
+-- TEST: try to use the shared frag without the needed USING clause
+-- + {with_select_stmt}: err
+-- + error: % no actual table was provided for the table parameter 'source'
+-- +1 error:
+with (call shared_frag2(1,2))
+select * from a_shared_frag;
 
 -- a typedef
 -- - error:
@@ -5150,7 +5269,7 @@ end;
 -- TEST: shared_fragment attribute (incorrect usage)
 -- + {stmt_and_attr}: err
 -- + {create_proc_stmt}: err
--- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
+-- + error: % shared fragments must consist of exactly one top level statement 'test_shared_fragment_wrong_form'
 -- +1 error:
 @attribute(cql:shared_fragment)
 create proc test_shared_fragment_wrong_form()
@@ -5173,7 +5292,7 @@ end;
 -- TEST: shared_fragment attribute (incorrect usage)
 -- + {stmt_and_attr}: err
 -- + {create_proc_stmt}: err
--- + error: % shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
+-- + error: % shared fragments may only have IF, SELECT, or WITH...SELECT at the top level 'test_shared_fragment_wrong_form_not_select'
 -- +1 error:
 @attribute(cql:shared_fragment)
 create proc test_shared_fragment_wrong_form_not_select()
@@ -9681,7 +9800,7 @@ begin
 end;
 
 -- TEST: base_fragment attribute (erroneous usage)
--- + error: % fragments can only have one statement in the statement list and it must be a WITH..SELECT
+-- + error: % fragments can only have one statement in the statement list and it must be a WITH...SELECT
 -- +1 error:
 @attribute(cql:base_fragment=core_four)
 create proc bad_base_fragment_four(id_ integer not null)
@@ -10029,7 +10148,7 @@ begin
 end;
 
 -- TEST: extension_fragment attribute (erroneous usage)
--- + error: % fragments can only have one statement in the statement list and it must be a WITH..SELECT
+-- + error: % fragments can only have one statement in the statement list and it must be a WITH...SELECT
 -- +1 error:
 @attribute(cql:extension_fragment=core)
 create proc test_bad_extension_fragment_eleven(id_ integer not null)
@@ -10193,7 +10312,7 @@ end;
 
 -- TEST: base fragment with atypical body
 -- + create_proc_stmt}: err
--- + error: % fragments can only have one statement in the statement list and it must be a WITH..SELECT
+-- + error: % fragments can only have one statement in the statement list and it must be a WITH...SELECT
 @attribute(cql:base_fragment=for_bad2)
 create proc test_assembly_base_for_bad2(id_ integer not null)
 begin
@@ -10215,7 +10334,7 @@ end;
 
 -- TEST: extension fragment with bogus content
 -- + create_proc_stmt}: err
--- + error: % fragments can only have one statement in the statement list and it must be a WITH..SELECT
+-- + error: % fragments can only have one statement in the statement list and it must be a WITH...SELECT
 @attribute(cql:extension_fragment=for_bad)
 create proc test_bad_ext(id_ integer not null)
 begin
@@ -10228,7 +10347,7 @@ end;
 
 -- TEST: assembly fragment with atypical body
 -- + {create_proc_stmt}: err
--- + error: % fragments can only have one statement in the statement list and it must be a WITH..SELECT
+-- + error: % fragments can only have one statement in the statement list and it must be a WITH...SELECT
 @attribute(cql:assembly_fragment=for_bad)
 create proc test_assembly_fragment2(id_ integer not null)
 begin
@@ -10290,7 +10409,7 @@ begin
 end;
 
 -- TEST: assembly_fragment attribute (erroneous usage)
--- + error: % fragments can only have one statement in the statement list and it must be a WITH..SELECT
+-- + error: % fragments can only have one statement in the statement list and it must be a WITH...SELECT
 -- +1 error:
 @attribute(cql:assembly_fragment=test_bad_assembly_base_fragment)
 create proc bad_assembly_fragment_three(id_ integer not null)
@@ -19247,3 +19366,32 @@ end;
 -- + error: % constant group not found 'not_found'
 -- +1 error:
 @emit_constants not_found;
+
+-- TEST: verify that we can identify a well shaped conditional fragment
+-- + {create_proc_stmt}: select: { id: integer notnull } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc conditional_frag(bb integer not null)
+begin
+  if bb == 1 then
+    with source(*) like foo
+    select * from source;
+  else if bb == 2 then
+    with source2(*) like foo
+    select * from source2 where x != bb;
+  else
+    with source(*) like foo
+    select * from source where x = bb;
+  end if;
+end;
+
+-- TEST: verify that we can use parameters in a conditional
+-- + {create_proc_stmt}: select: { id: integer notnull } dml_proc
+-- + {call_stmt}: select: { id: integer notnull } dml_proc
+-- + {name conditional_frag}: select: { id: integer notnull } dml_proc
+-- - error:
+create proc conditional_user(xx integer not null)
+begin
+  with D(*) AS (call conditional_frag(1) using foo as source, foo as source2)
+  select * from D;
+end;

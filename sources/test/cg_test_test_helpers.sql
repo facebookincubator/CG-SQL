@@ -909,3 +909,24 @@ create proc test_blob_literal_in_dummy_test()
 begin
   select * from child_blob_primary_key;
 end;
+
+
+@attribute(cql:shared_fragment)
+create proc simple_frag()
+begin
+  with source(*) like child_blob_primary_key
+  select * from source;
+end;
+
+-- TEST: we need to make sure we recurse into the shared fragment
+-- and consider the tables it contains
+-- + CREATE TABLE IF NOT EXISTS blob_primary_key(
+-- + CREATE TABLE IF NOT EXISTS child_blob_primary_key(
+-- - dbl_table
+@attribute(cql:autotest=((dummy_test)))
+create proc test_frags()
+begin
+  declare C cursor like select * from dbl_table;
+  with (call simple_frag() using child_blob_primary_key as source)
+  select * from simple_frag;
+end;

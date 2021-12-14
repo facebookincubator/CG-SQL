@@ -3388,6 +3388,61 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+#define CRC_shared_conditional_user -652417972557262450L
+
+extern cql_string_ref _Nonnull shared_conditional_user_stored_procedure_name;
+
+#define shared_conditional_user_data_types_count 5
+
+#ifndef result_set_type_decl_shared_conditional_user_result_set
+#define result_set_type_decl_shared_conditional_user_result_set 1
+cql_result_set_type_decl(shared_conditional_user_result_set, shared_conditional_user_result_set_ref);
+#endif
+extern cql_int32 shared_conditional_user_get_id(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nullable shared_conditional_user_get_name(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool shared_conditional_user_get_rate_is_null(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int64 shared_conditional_user_get_rate_value(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool shared_conditional_user_get_type_is_null(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 shared_conditional_user_get_type_value(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_bool shared_conditional_user_get_size_is_null(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_double shared_conditional_user_get_size_value(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 shared_conditional_user_result_count(shared_conditional_user_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code shared_conditional_user_fetch_results(sqlite3 *_Nonnull _db_, shared_conditional_user_result_set_ref _Nullable *_Nonnull result_set, cql_int32 x);
+#define shared_conditional_user_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define shared_conditional_user_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+#define CRC_nested_shared_stuff 8821613027549937349L
+
+extern cql_string_ref _Nonnull nested_shared_stuff_stored_procedure_name;
+
+#define nested_shared_stuff_data_types_count 1
+
+#ifndef result_set_type_decl_nested_shared_stuff_result_set
+#define result_set_type_decl_nested_shared_stuff_result_set 1
+cql_result_set_type_decl(nested_shared_stuff_result_set, nested_shared_stuff_result_set_ref);
+#endif
+extern cql_int32 nested_shared_stuff_get_x(nested_shared_stuff_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 nested_shared_stuff_result_count(nested_shared_stuff_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code nested_shared_stuff_fetch_results(sqlite3 *_Nonnull _db_, nested_shared_stuff_result_set_ref _Nullable *_Nonnull result_set);
+#define nested_shared_stuff_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define nested_shared_stuff_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 #ifndef const_group_some_constants_defined
 #define const_group_some_constants_defined
 

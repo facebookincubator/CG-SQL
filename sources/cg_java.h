@@ -10,3 +10,4 @@
 #include "cql.h"
 
 cql_noexport void cg_java_main(struct ast_node *root);
+cql_noexport void cg_java_cleanup();

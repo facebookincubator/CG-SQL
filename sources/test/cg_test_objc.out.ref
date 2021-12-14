@@ -3662,6 +3662,96 @@ static inline BOOL CGBFooRowEqual(CGBFoo *resultSet1, int32_t row1, CGBFoo *resu
   return CGCFooRowEqual(CGCFooFromCGBFoo(resultSet1), row1, CGCFooFromCGBFoo(resultSet2), row2);
 }
 
+@class CGBSharedConditionalUser;
+
+static inline CGBSharedConditionalUser *CGBSharedConditionalUserFromCGCSharedConditionalUser(CGCSharedConditionalUserResultSetRef resultSet)
+{
+  return (__bridge CGBSharedConditionalUser *)resultSet;
+}
+
+static inline CGCSharedConditionalUserResultSetRef CGCSharedConditionalUserFromCGBSharedConditionalUser(CGBSharedConditionalUser *resultSet)
+{
+  return (__bridge CGCSharedConditionalUserResultSetRef)resultSet;
+}
+
+static inline int32_t CGBSharedConditionalUserGetId(CGBSharedConditionalUser *resultSet, int32_t row)
+{
+  CGCSharedConditionalUserResultSetRef cResultSet = CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet);
+  return CGCSharedConditionalUserGetId(cResultSet, row);
+}
+
+static inline NSString *_Nullable CGBSharedConditionalUserGetName(CGBSharedConditionalUser *resultSet, int32_t row)
+{
+  CGCSharedConditionalUserResultSetRef cResultSet = CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet);
+  return (__bridge NSString *)CGCSharedConditionalUserGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBSharedConditionalUserGetRate(CGBSharedConditionalUser *resultSet, int32_t row)
+{
+  CGCSharedConditionalUserResultSetRef cResultSet = CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet);
+  return CGCSharedConditionalUserGetRateIsNull(cResultSet, row) ? nil : @(CGCSharedConditionalUserGetRateValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBSharedConditionalUserGetType(CGBSharedConditionalUser *resultSet, int32_t row)
+{
+  CGCSharedConditionalUserResultSetRef cResultSet = CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet);
+  return CGCSharedConditionalUserGetTypeIsNull(cResultSet, row) ? nil : @(CGCSharedConditionalUserGetTypeValue(cResultSet, row));
+}
+
+static inline NSNumber *_Nullable CGBSharedConditionalUserGetSize(CGBSharedConditionalUser *resultSet, int32_t row)
+{
+  CGCSharedConditionalUserResultSetRef cResultSet = CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet);
+  return CGCSharedConditionalUserGetSizeIsNull(cResultSet, row) ? nil : @(CGCSharedConditionalUserGetSizeValue(cResultSet, row));
+}
+
+static inline int32_t CGBSharedConditionalUserResultCount(CGBSharedConditionalUser *resultSet)
+{
+  return CGCSharedConditionalUserResultCount(CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet));
+}
+
+static inline NSUInteger CGBSharedConditionalUserRowHash(CGBSharedConditionalUser *resultSet, int32_t row)
+{
+  return CGCSharedConditionalUserRowHash(CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet), row);
+}
+
+static inline BOOL CGBSharedConditionalUserRowEqual(CGBSharedConditionalUser *resultSet1, int32_t row1, CGBSharedConditionalUser *resultSet2, int32_t row2)
+{
+  return CGCSharedConditionalUserRowEqual(CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet1), row1, CGCSharedConditionalUserFromCGBSharedConditionalUser(resultSet2), row2);
+}
+
+@class CGBNestedSharedStuff;
+
+static inline CGBNestedSharedStuff *CGBNestedSharedStuffFromCGCNestedSharedStuff(CGCNestedSharedStuffResultSetRef resultSet)
+{
+  return (__bridge CGBNestedSharedStuff *)resultSet;
+}
+
+static inline CGCNestedSharedStuffResultSetRef CGCNestedSharedStuffFromCGBNestedSharedStuff(CGBNestedSharedStuff *resultSet)
+{
+  return (__bridge CGCNestedSharedStuffResultSetRef)resultSet;
+}
+
+static inline int32_t CGBNestedSharedStuffGetX(CGBNestedSharedStuff *resultSet, int32_t row)
+{
+  CGCNestedSharedStuffResultSetRef cResultSet = CGCNestedSharedStuffFromCGBNestedSharedStuff(resultSet);
+  return CGCNestedSharedStuffGetX(cResultSet, row);
+}
+
+static inline int32_t CGBNestedSharedStuffResultCount(CGBNestedSharedStuff *resultSet)
+{
+  return CGCNestedSharedStuffResultCount(CGCNestedSharedStuffFromCGBNestedSharedStuff(resultSet));
+}
+
+static inline NSUInteger CGBNestedSharedStuffRowHash(CGBNestedSharedStuff *resultSet, int32_t row)
+{
+  return CGCNestedSharedStuffRowHash(CGCNestedSharedStuffFromCGBNestedSharedStuff(resultSet), row);
+}
+
+static inline BOOL CGBNestedSharedStuffRowEqual(CGBNestedSharedStuff *resultSet1, int32_t row1, CGBNestedSharedStuff *resultSet2, int32_t row2)
+{
+  return CGCNestedSharedStuffRowEqual(CGCNestedSharedStuffFromCGBNestedSharedStuff(resultSet1), row1, CGCNestedSharedStuffFromCGBNestedSharedStuff(resultSet2), row2);
+}
+
 @class CGBFragTest;
 
 static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)

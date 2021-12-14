@@ -3943,6 +3943,158 @@ BEGIN_TEST(shared_exec)
   drop table x;
 END_TEST(shared_exec)
 
+@attribute(cql:shared_fragment)
+create proc conditional_values_base(x_ integer)
+begin
+  if x_ == 2 then
+    select x_ id, 'y' t;
+  else
+    select x_ id, 'u' t
+    union all
+    select x_+1 id, 'v' t;
+  end if;
+end;
+
+@attribute(cql:shared_fragment)
+create proc conditional_values(x_ integer not null)
+begin
+  if x_ == 1 then
+    select nullable(x_) id, 'x' t;
+  else if x_ == 99 then  -- this branch won't run
+    select nullable(99) id, 'x' t;
+  else
+    with result(*) as (call conditional_values_base(x_))
+    select * from result;
+  end if;
+end;
+
+BEGIN_TEST(conditional_fragment)
+  declare C cursor for 
+    with x(*) as (call conditional_values(1))
+    select * from x;
+
+  fetch C;
+
+  EXPECT(C.id = 1);
+  EXPECT(C.t = 'x');
+  fetch C;
+  EXPECT(not C);
+
+  declare D cursor for 
+    with x(*) as (call conditional_values(2))
+  select * from x;
+
+  fetch D;
+  EXPECT(D.id = 2);
+  EXPECT(D.t = 'y');
+  fetch D;
+  EXPECT(not D);
+
+  declare E cursor for 
+    with x(*) as (call conditional_values(3))
+  select * from x;
+
+  fetch E;
+  EXPECT(E.id = 3);
+  EXPECT(E.t = 'u');
+  fetch E;
+  EXPECT(E.id = 4);
+  EXPECT(E.t = 'v');
+  fetch E;
+  EXPECT(not E);
+END_TEST(conditional_fragment)
+
+@attribute(cql:shared_fragment)
+create proc skip_notnulls(
+ a_ integer not null,
+ b_ bool not null,
+ c_ long not null,
+ d_ real not null,
+ e_ text not null,
+ f_ blob not null,
+ g_ object not null)
+begin
+  if a_ == 0 then
+    select a_ - 100 result;
+  else if a_ == 1 then
+    select case when
+      a_ == a_ and
+      b_ == b_ and
+      c_ == c_ and
+      d_ == d_ and
+      e_ == e_ and
+      f_ == f_ and
+      ptr(g_) == ptr(g_)
+    then a_ + 100
+    else a_ + 200
+    end result;
+  else
+    select a_ result;
+  end if;
+end;
+
+BEGIN_TEST(skip_notnulls)
+  declare _set object not null;
+  set _set := set_create();
+  declare _bl blob not null;
+  set _bl := blob_from_string('hi');
+
+  declare C cursor for 
+    with x(*) as (call skip_notnulls(123, false, 1L, 2.3, 'x', _bl, _set))
+    select * from x;
+
+  fetch C;
+  EXPECT(C.result == 123);
+  fetch C;
+  EXPECT(not C);
+END_TEST(skip_notnulls)
+
+@attribute(cql:shared_fragment)
+create proc skip_nullables(
+ a_ integer,
+ b_ bool,
+ c_ long,
+ d_ real,
+ e_ text,
+ f_ blob,
+ g_ object)
+begin
+  if a_ == 0 then
+    select a_ - 100 result;
+  else if a_ == 1 then
+    select case when
+      a_ == a_ and
+      b_ == b_ and
+      c_ == c_ and
+      d_ == d_ and
+      e_ == e_ and
+      f_ == f_ and
+      ptr(g_) == ptr(g_)
+    then a_ + 100
+    else a_ + 200
+    end result;
+  else
+    select a_ result;
+  end if;
+end;
+
+BEGIN_TEST(skip_nullables)
+  declare _set object not null;
+  set _set := set_create();
+  declare _bl blob not null;
+  set _bl := blob_from_string('hi');
+
+  declare C cursor for 
+    with x(*) as (call skip_nullables(456, false, 1L, 2.3, 'x', _bl, _set))
+    select * from x;
+
+  fetch C;
+  EXPECT(C.result == 456);
+  fetch C;
+  EXPECT(not C);
+END_TEST(skip_nullables)
+
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

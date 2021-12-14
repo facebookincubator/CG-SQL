@@ -18066,6 +18066,25 @@ SELECT *
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
+CREATE PROC empty_fragment ()
+BEGIN
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0440: fragments may not have an empty body 'empty_fragment'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name empty_fragment}: err
+    | {proc_params_stmts}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
 CREATE PROC a_shared_frag (x INTEGER NOT NULL, y INTEGER NOT NULL)
 BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
@@ -18119,6 +18138,463 @@ END;
           | {select_orderby}
             | {select_limit}
               | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC bogus_conditional_no_else ()
+BEGIN
+  IF 1 THEN
+    SELECT 1 AS x;
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0442: shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name bogus_conditional_no_else}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {select_stmt}: select: { x: integer notnull }
+          |     | {select_core_list}: select: { x: integer notnull }
+          |     | | {select_core}: select: { x: integer notnull }
+          |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     |     | {select_expr_list}: select: { x: integer notnull }
+          |     |     | | {select_expr}: x: integer notnull
+          |     |     |   | {int 1}: integer notnull
+          |     |     |   | {opt_as_alias}
+          |     |     |     | {name x}
+          |     |     | {select_from_etc}: ok
+          |     |       | {select_where}
+          |     |         | {select_groupby}
+          |     |           | {select_having}
+          |     | {select_orderby}
+          |       | {select_limit}
+          |         | {select_offset}
+          | {if_alt}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC ok_conditional_duplicate_cte_names ()
+BEGIN
+  IF 1 THEN
+    WITH
+    X (x, y, z) LIKE a_shared_frag
+    SELECT *
+      FROM X;
+  ELSE
+    WITH
+    X (x, y, z) LIKE a_shared_frag
+    SELECT *
+      FROM X;
+  END IF;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {name ok_conditional_duplicate_cte_names}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     | {with}
+          |     | | {cte_tables}: ok
+          |     |   | {cte_table}: X: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |     | {cte_decl}: X: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |     | | {name X}
+          |     |     | | {name_list}
+          |     |     |   | {name x}
+          |     |     |   | {name_list}
+          |     |     |     | {name y}
+          |     |     |     | {name_list}
+          |     |     |       | {name z}
+          |     |     | {like}: ok
+          |     |       | {name a_shared_frag}
+          |     | {select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |       | {select_core_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |       | | {select_core}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |       |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |       |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |       |     | | {star}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |       |     | {select_from_etc}: TABLE { X: X }
+          |       |       | {table_or_subquery_list}: TABLE { X: X }
+          |       |       | | {table_or_subquery}: TABLE { X: X }
+          |       |       |   | {name X}: TABLE { X: X }
+          |       |       | {select_where}
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {if_alt}: ok
+            | {else}: ok
+              | {stmt_list}: ok
+                | {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+                  | {with}
+                  | | {cte_tables}: ok
+                  |   | {cte_table}: X: { x: integer notnull, y: integer notnull, z: real notnull }
+                  |     | {cte_decl}: X: { x: integer notnull, y: integer notnull, z: real notnull }
+                  |     | | {name X}
+                  |     | | {name_list}
+                  |     |   | {name x}
+                  |     |   | {name_list}
+                  |     |     | {name y}
+                  |     |     | {name_list}
+                  |     |       | {name z}
+                  |     | {like}: ok
+                  |       | {name a_shared_frag}
+                  | {select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+                    | {select_core_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+                    | | {select_core}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+                    |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+                    |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+                    |     | | {star}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+                    |     | {select_from_etc}: TABLE { X: X }
+                    |       | {table_or_subquery_list}: TABLE { X: X }
+                    |       | | {table_or_subquery}: TABLE { X: X }
+                    |       |   | {name X}: TABLE { X: X }
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC bogus_conditional_duplicate_cte_names ()
+BEGIN
+  IF 1 THEN
+    WITH
+    bogus_cte (x, y, z) LIKE a_shared_frag
+    SELECT 1 AS x;
+  ELSE
+    WITH
+    bogus_cte (id) LIKE foo
+    SELECT 1 AS x;
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0057: bogus_cte, all must have the same column count
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name bogus_conditional_duplicate_cte_names}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {with_select_stmt}: select: { x: integer notnull }
+          |     | {with}
+          |     | | {cte_tables}: ok
+          |     |   | {cte_table}: bogus_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |     | {cte_decl}: bogus_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |     | | {name bogus_cte}
+          |     |     | | {name_list}
+          |     |     |   | {name x}
+          |     |     |   | {name_list}
+          |     |     |     | {name y}
+          |     |     |     | {name_list}
+          |     |     |       | {name z}
+          |     |     | {like}: ok
+          |     |       | {name a_shared_frag}
+          |     | {select_stmt}: select: { x: integer notnull }
+          |       | {select_core_list}: select: { x: integer notnull }
+          |       | | {select_core}: select: { x: integer notnull }
+          |       |   | {select_expr_list_con}: select: { x: integer notnull }
+          |       |     | {select_expr_list}: select: { x: integer notnull }
+          |       |     | | {select_expr}: x: integer notnull
+          |       |     |   | {int 1}: integer notnull
+          |       |     |   | {opt_as_alias}
+          |       |     |     | {name x}
+          |       |     | {select_from_etc}: ok
+          |       |       | {select_where}
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {if_alt}: ok
+            | {else}: ok
+              | {stmt_list}: ok
+                | {with_select_stmt}: select: { x: integer notnull }
+                  | {with}
+                  | | {cte_tables}: ok
+                  |   | {cte_table}: bogus_cte: { id: integer notnull }
+                  |     | {cte_decl}: err
+                  |     | | {name bogus_cte}
+                  |     | | {name_list}
+                  |     |   | {name id}
+                  |     | {like}: ok
+                  |       | {name foo}
+                  | {select_stmt}: select: { x: integer notnull }
+                    | {select_core_list}: select: { x: integer notnull }
+                    | | {select_core}: select: { x: integer notnull }
+                    |   | {select_expr_list_con}: select: { x: integer notnull }
+                    |     | {select_expr_list}: select: { x: integer notnull }
+                    |     | | {select_expr}: x: integer notnull
+                    |     |   | {int 1}: integer notnull
+                    |     |   | {opt_as_alias}
+                    |     |     | {name x}
+                    |     | {select_from_etc}: ok
+                    |       | {select_where}
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC bogus_conditional_two_selects ()
+BEGIN
+  IF 1 THEN
+    SELECT 1 AS x;
+    SELECT 1 AS x;
+  ELSE
+    SELECT 1 AS x;
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name bogus_conditional_two_selects}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {select_stmt}: select: { x: integer notnull }
+          |   | | {select_core_list}: select: { x: integer notnull }
+          |   | | | {select_core}: select: { x: integer notnull }
+          |   | |   | {select_expr_list_con}: select: { x: integer notnull }
+          |   | |     | {select_expr_list}: select: { x: integer notnull }
+          |   | |     | | {select_expr}: x: integer notnull
+          |   | |     |   | {int 1}: integer notnull
+          |   | |     |   | {opt_as_alias}
+          |   | |     |     | {name x}
+          |   | |     | {select_from_etc}: ok
+          |   | |       | {select_where}
+          |   | |         | {select_groupby}
+          |   | |           | {select_having}
+          |   | | {select_orderby}
+          |   |   | {select_limit}
+          |   |     | {select_offset}
+          |   | {select_stmt}: select: { x: integer notnull }
+          |     | {select_core_list}: select: { x: integer notnull }
+          |     | | {select_core}: select: { x: integer notnull }
+          |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     |     | {select_expr_list}: select: { x: integer notnull }
+          |     |     | | {select_expr}: x: integer notnull
+          |     |     |   | {int 1}: integer notnull
+          |     |     |   | {opt_as_alias}
+          |     |     |     | {name x}
+          |     |     | {select_from_etc}: ok
+          |     |       | {select_where}
+          |     |         | {select_groupby}
+          |     |           | {select_having}
+          |     | {select_orderby}
+          |       | {select_limit}
+          |         | {select_offset}
+          | {if_alt}: ok
+            | {else}: ok
+              | {stmt_list}: ok
+                | {select_stmt}: select: { x: integer notnull }
+                  | {select_core_list}: select: { x: integer notnull }
+                  | | {select_core}: select: { x: integer notnull }
+                  |   | {select_expr_list_con}: select: { x: integer notnull }
+                  |     | {select_expr_list}: select: { x: integer notnull }
+                  |     | | {select_expr}: x: integer notnull
+                  |     |   | {int 1}: integer notnull
+                  |     |   | {opt_as_alias}
+                  |     |     | {name x}
+                  |     | {select_from_etc}: ok
+                  |       | {select_where}
+                  |         | {select_groupby}
+                  |           | {select_having}
+                  | {select_orderby}
+                    | {select_limit}
+                      | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC bogus_conditional_non_select ()
+BEGIN
+  IF 1 THEN
+    DECLARE x INTEGER;
+  ELSE
+    SELECT 1 AS x;
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0443: shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name bogus_conditional_non_select}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {declare_vars_type}: integer
+          |     | {name_list}: x: integer variable
+          |     | | {name x}: x: integer variable
+          |     | {type_int}: integer
+          | {if_alt}: ok
+            | {else}: ok
+              | {stmt_list}: ok
+                | {select_stmt}: select: { x: integer notnull }
+                  | {select_core_list}: select: { x: integer notnull }
+                  | | {select_core}: select: { x: integer notnull }
+                  |   | {select_expr_list_con}: select: { x: integer notnull }
+                  |     | {select_expr_list}: select: { x: integer notnull }
+                  |     | | {select_expr}: x: integer notnull
+                  |     |   | {int 1}: integer notnull
+                  |     |   | {opt_as_alias}
+                  |     |     | {name x}
+                  |     | {select_from_etc}: ok
+                  |       | {select_where}
+                  |         | {select_groupby}
+                  |           | {select_having}
+                  | {select_orderby}
+                    | {select_limit}
+                      | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC bogus_conditional_empty_clause ()
+BEGIN
+  IF 1 THEN
+  ELSE
+    SELECT 1 AS x;
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in cond_action : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name bogus_conditional_empty_clause}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | {if_alt}: ok
+            | {else}: ok
+              | {stmt_list}: ok
+                | {select_stmt}: select: { x: integer notnull }
+                  | {select_core_list}: select: { x: integer notnull }
+                  | | {select_core}: select: { x: integer notnull }
+                  |   | {select_expr_list_con}: select: { x: integer notnull }
+                  |     | {select_expr_list}: select: { x: integer notnull }
+                  |     | | {select_expr}: x: integer notnull
+                  |     |   | {int 1}: integer notnull
+                  |     |   | {opt_as_alias}
+                  |     |     | {name x}
+                  |     | {select_from_etc}: ok
+                  |       | {select_where}
+                  |         | {select_groupby}
+                  |           | {select_having}
+                  | {select_orderby}
+                    | {select_limit}
+                      | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC bogus_conditional_empty_else_clause ()
+BEGIN
+  IF 1 THEN
+    SELECT 1 AS x;
+  ELSE
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_else_clause'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name bogus_conditional_empty_else_clause}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {select_stmt}: select: { x: integer notnull }
+          |     | {select_core_list}: select: { x: integer notnull }
+          |     | | {select_core}: select: { x: integer notnull }
+          |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     |     | {select_expr_list}: select: { x: integer notnull }
+          |     |     | | {select_expr}: x: integer notnull
+          |     |     |   | {int 1}: integer notnull
+          |     |     |   | {opt_as_alias}
+          |     |     |     | {name x}
+          |     |     | {select_from_etc}: ok
+          |     |       | {select_where}
+          |     |         | {select_groupby}
+          |     |           | {select_having}
+          |     | {select_orderby}
+          |       | {select_limit}
+          |         | {select_offset}
+          | {if_alt}: ok
+            | {else}: ok
 
 The statement ending at line XXXX
 
@@ -18192,6 +18668,46 @@ END;
             | {select_orderby}
               | {select_limit}
                 | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+shared_frag2 (*) AS (CALL shared_frag2(1, 2))
+SELECT *
+  FROM a_shared_frag;
+
+test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0430: no actual table was provided for the table parameter 'source'
+
+  {with_select_stmt}: err
+  | {with}
+  | | {cte_tables}: err
+  |   | {cte_table}: err
+  |     | {cte_decl}
+  |     | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |     | | {star}
+  |     | {shared_cte}
+  |       | {call_stmt}: err
+  |         | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | {expr_list}: ok
+  |           | {int 1}: integer notnull
+  |           | {expr_list}
+  |             | {int 2}: integer notnull
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name a_shared_frag}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
 
 The statement ending at line XXXX
 
@@ -19958,7 +20474,7 @@ BEGIN
     FROM bar;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments must consist of exactly one top level statement 'test_shared_fragment_wrong_form'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -20055,7 +20571,7 @@ BEGIN
   DECLARE x INTEGER;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
+test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0441: shared fragments may only have IF, SELECT, or WITH...SELECT at the top level 'test_shared_fragment_wrong_form_not_select'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -36986,7 +37502,7 @@ BEGIN
     WHERE id = id_;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -40400,7 +40916,7 @@ BEGIN
     FROM plugin_table;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -41999,7 +42515,7 @@ BEGIN
     FROM for_bad;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -42141,7 +42657,7 @@ BEGIN
     FROM plugin_one;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -42240,7 +42756,7 @@ BEGIN
     FROM for_bad;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -42677,7 +43193,7 @@ BEGIN
     WHERE id = id_;
 END;
 
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -76297,4 +76813,205 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0169: constant group not found 'not
   {emit_constants_stmt}: err
   | {name_list}
     | {name not_found}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC conditional_frag (bb INTEGER NOT NULL)
+BEGIN
+  IF bb = 1 THEN
+    WITH
+    source (id) LIKE foo
+    SELECT *
+      FROM source;
+  ELSE IF bb = 2 THEN
+    WITH
+    source2 (id) LIKE foo
+    SELECT *
+      FROM source2
+      WHERE x <> bb;
+  ELSE
+    WITH
+    source (id) LIKE foo
+    SELECT *
+      FROM source
+      WHERE x = bb;
+  END IF;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { id: integer notnull } dml_proc
+    | {name conditional_frag}: select: { id: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: bb: integer notnull variable in
+      |   | {param_detail}: bb: integer notnull variable in
+      |     | {name bb}: bb: integer notnull variable in
+      |     | {notnull}: integer notnull
+      |       | {type_int}: integer
+      | {stmt_list}: ok
+        | {if_stmt}: bool notnull
+          | {cond_action}: bool notnull
+          | | {eq}: bool notnull
+          | | | {name bb}: bb: integer notnull variable in
+          | | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {with_select_stmt}: select: { id: integer notnull }
+          |     | {with}
+          |     | | {cte_tables}: ok
+          |     |   | {cte_table}: source: { id: integer notnull }
+          |     |     | {cte_decl}: source: { id: integer notnull }
+          |     |     | | {name source}
+          |     |     | | {name_list}
+          |     |     |   | {name id}
+          |     |     | {like}: ok
+          |     |       | {name foo}
+          |     | {select_stmt}: select: { id: integer notnull }
+          |       | {select_core_list}: select: { id: integer notnull }
+          |       | | {select_core}: select: { id: integer notnull }
+          |       |   | {select_expr_list_con}: select: { id: integer notnull }
+          |       |     | {select_expr_list}: select: { id: integer notnull }
+          |       |     | | {star}: select: { id: integer notnull }
+          |       |     | {select_from_etc}: TABLE { source: source }
+          |       |       | {table_or_subquery_list}: TABLE { source: source }
+          |       |       | | {table_or_subquery}: TABLE { source: source }
+          |       |       |   | {name source}: TABLE { source: source }
+          |       |       | {select_where}
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {if_alt}: ok
+            | {elseif}: bool notnull
+            | | {cond_action}: bool notnull
+            |   | {eq}: bool notnull
+            |   | | {name bb}: bb: integer notnull variable in
+            |   | | {int 2}: integer notnull
+            |   | {stmt_list}: ok
+            |     | {with_select_stmt}: select: { id: integer notnull }
+            |       | {with}
+            |       | | {cte_tables}: ok
+            |       |   | {cte_table}: source2: { id: integer notnull }
+            |       |     | {cte_decl}: source2: { id: integer notnull }
+            |       |     | | {name source2}
+            |       |     | | {name_list}
+            |       |     |   | {name id}
+            |       |     | {like}: ok
+            |       |       | {name foo}
+            |       | {select_stmt}: select: { id: integer notnull }
+            |         | {select_core_list}: select: { id: integer notnull }
+            |         | | {select_core}: select: { id: integer notnull }
+            |         |   | {select_expr_list_con}: select: { id: integer notnull }
+            |         |     | {select_expr_list}: select: { id: integer notnull }
+            |         |     | | {star}: select: { id: integer notnull }
+            |         |     | {select_from_etc}: TABLE { source2: source2 }
+            |         |       | {table_or_subquery_list}: TABLE { source2: source2 }
+            |         |       | | {table_or_subquery}: TABLE { source2: source2 }
+            |         |       |   | {name source2}: TABLE { source2: source2 }
+            |         |       | {select_where}
+            |         |         | {opt_where}: bool
+            |         |         | | {ne}: bool
+            |         |         |   | {name x}: X: integer variable
+            |         |         |   | {name bb}: bb: integer notnull variable in
+            |         |         | {select_groupby}
+            |         |           | {select_having}
+            |         | {select_orderby}
+            |           | {select_limit}
+            |             | {select_offset}
+            | {else}: ok
+              | {stmt_list}: ok
+                | {with_select_stmt}: select: { id: integer notnull }
+                  | {with}
+                  | | {cte_tables}: ok
+                  |   | {cte_table}: source: { id: integer notnull }
+                  |     | {cte_decl}: source: { id: integer notnull }
+                  |     | | {name source}
+                  |     | | {name_list}
+                  |     |   | {name id}
+                  |     | {like}: ok
+                  |       | {name foo}
+                  | {select_stmt}: select: { id: integer notnull }
+                    | {select_core_list}: select: { id: integer notnull }
+                    | | {select_core}: select: { id: integer notnull }
+                    |   | {select_expr_list_con}: select: { id: integer notnull }
+                    |     | {select_expr_list}: select: { id: integer notnull }
+                    |     | | {star}: select: { id: integer notnull }
+                    |     | {select_from_etc}: TABLE { source: source }
+                    |       | {table_or_subquery_list}: TABLE { source: source }
+                    |       | | {table_or_subquery}: TABLE { source: source }
+                    |       |   | {name source}: TABLE { source: source }
+                    |       | {select_where}
+                    |         | {opt_where}: bool
+                    |         | | {eq}: bool
+                    |         |   | {name x}: X: integer variable
+                    |         |   | {name bb}: bb: integer notnull variable in
+                    |         | {select_groupby}
+                    |           | {select_having}
+                    | {select_orderby}
+                      | {select_limit}
+                        | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC conditional_user (xx INTEGER NOT NULL)
+BEGIN
+  WITH
+  D (id) AS (CALL conditional_frag(1) USING foo AS source, foo AS source2)
+  SELECT *
+    FROM D;
+END;
+
+  {create_proc_stmt}: select: { id: integer notnull } dml_proc
+  | {name conditional_user}: select: { id: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: xx: integer notnull variable in
+    |   | {param_detail}: xx: integer notnull variable in
+    |     | {name xx}: xx: integer notnull variable in
+    |     | {notnull}: integer notnull
+    |       | {type_int}: integer
+    | {stmt_list}: ok
+      | {with_select_stmt}: select: { id: integer notnull }
+        | {with}
+        | | {cte_tables}: ok
+        |   | {cte_table}: D: { id: integer notnull }
+        |     | {cte_decl}: D: { id: integer notnull }
+        |     | | {name D}
+        |     | | {name_list}
+        |     |   | {name id}
+        |     | {shared_cte}
+        |       | {call_stmt}: select: { id: integer notnull } dml_proc
+        |       | | {name conditional_frag}: select: { id: integer notnull } dml_proc
+        |       | | {expr_list}: ok
+        |       |   | {int 1}: integer notnull
+        |       | {cte_binding_list}
+        |         | {cte_binding}
+        |         | | {name foo}: foo: { id: integer notnull primary_key autoinc }
+        |         | | {name source}: source: { id: integer notnull }
+        |         | {cte_binding_list}
+        |           | {cte_binding}
+        |             | {name foo}: foo: { id: integer notnull primary_key autoinc }
+        |             | {name source2}: source2: { id: integer notnull }
+        | {select_stmt}: select: { id: integer notnull }
+          | {select_core_list}: select: { id: integer notnull }
+          | | {select_core}: select: { id: integer notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull }
+          |     | {select_expr_list}: select: { id: integer notnull }
+          |     | | {star}: select: { id: integer notnull }
+          |     | {select_from_etc}: TABLE { D: D }
+          |       | {table_or_subquery_list}: TABLE { D: D }
+          |       | | {table_or_subquery}: TABLE { D: D }
+          |       |   | {name D}: TABLE { D: D }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
 

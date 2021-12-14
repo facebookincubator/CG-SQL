@@ -70,9 +70,9 @@ static int32_t stack_level = 0;
 // Every string literal in a compiland gets a unique number.  This is it.
 static int32_t string_literals_count = 0;
 
-// Every output string fragment gets unique number, the offset of the string in the frag buffer
+// Every output string piece gets unique number, the offset of the string in the frag buffer
 // this tracks the biggest number we've seen so far.
-static int32_t fragment_last_offset = 0;
+static int32_t piece_last_offset = 0;
 
 // Case statements might need to generate a unique label for their "else" code
 // We count the statements to make an easy label
@@ -131,11 +131,16 @@ static symtab *named_temporaries;
 // String literals are frequently duplicated, we want a unique constant for each piece of text
 static symtab *string_literals;
 
-// Statement text fragments are frequently duplicated, we want a unique constant for each chunk of DML/DDL
-static symtab *text_fragments;
+// Statement text pieces are frequently duplicated, we want a unique constant for each chunk of DML/DDL
+// To avoid confusion with shared fragments and/or extension fragments we call the bits of text
+// used to create SQL with the --compress option "pieces"
+static symtab *text_pieces;
 
 // The current shared fragment number in the current procdure
 static int32_t proc_cte_index;
+
+
+
 
 // This is the mapping between the original parameter name and the aliased name
 // for a particular parameter of a particular shared CTE fragment
@@ -144,6 +149,30 @@ static symtab *proc_arg_aliases;
 // This is the mapping between the original CTE and the aliased name
 // for a particular parameter of a particular shared CTE fragment
 static symtab *proc_cte_aliases;
+
+// Shared fragment management state
+// These are the important fragment classifications, we can use simpler codegen if
+// some of these are false.
+static bool_t has_conditional_fragments;
+static bool_t has_shared_fragments;
+static bool_t has_variables;
+
+// Each bound statement in a proc gets a unique index
+static int32_t cur_bound_statement;
+
+// this holds the text of the generated SQL broken at fragment boundaries
+static bytebuf shared_fragment_strings = {NULL, 0, 0};
+
+// these track the current and max predicate number, these
+// correspond 1:1 with a fragment string in the shared_fragment_strings buffer
+static int32_t max_fragment_predicate = 0;
+static int32_t cur_fragment_predicate = 0;
+
+// these track the current variable count, we snapshot the previous count
+// before generating each fragment string so we know how many variables were in there
+// we use these to emit the appropriate booleans for each bound variable
+static int32_t prev_variable_count;
+static int32_t cur_variable_count;
 
 // See cg_find_best_line for more details on why this is what it is.
 // All that's going on here is we recursively visit the tree and find the smallest
@@ -3472,6 +3501,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t out_union_proc = has_out_union_stmt_result(ast);
   bool_t calls_out_union = has_out_union_call(ast);
   proc_cte_index = 0;
+  cur_bound_statement = 0;
 
   // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
@@ -3884,6 +3914,8 @@ static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer
   // all variables have a name
   Contract(ast->sem->name);
 
+  cur_variable_count++;
+
   symtab_entry *entry = symtab_find(proc_arg_aliases, ast->sem->name);
   if (entry) {
     // this variable has been rewritten to a new name, use the alias
@@ -4077,23 +4109,23 @@ static void ensure_temp_statement() {
   }
 }
 
-// Now we either find the fragment already and get its number or else
-// we can make a new fragment.  This is all about creating the shared
+// Now we either find the piece already and get its number or else
+// we can make a new piece.  This is all about creating the shared
 // identifiers.  Note that we use character offsets in the main string
 // as the identifiers so that we can easily offset from the base.  This
 // saves us from having yet another array.  Note also that we might want to
 // encode these ids in a variable length encoding so that we can have more
 // than 64k of them...
-static int32_t cg_intern_fragment(CSTR str, int32_t len) {
-  symtab_entry *entry = symtab_find(text_fragments, str);
+static int32_t cg_intern_piece(CSTR str, int32_t len) {
+  symtab_entry *entry = symtab_find(text_pieces, str);
   if (entry) {
     return (int32_t)(int64_t)(entry->val);
   }
 
-  int32_t result = fragment_last_offset;
-  symtab_add(text_fragments, Strdup(str), fragment_last_offset + (char *)NULL);
-  fragment_last_offset += len + 1;  // include space for the nil
-  bprintf(cg_fragments_output, "  \"%s\\0\" // %d\n", str, result);
+  int32_t result = piece_last_offset;
+  symtab_add(text_pieces, Strdup(str), piece_last_offset + (char *)NULL);
+  piece_last_offset += len + 1;  // include space for the nil
+  bprintf(cg_pieces_output, "  \"%s\\0\" // %d\n", str, result);
   return result;
 }
 
@@ -4116,7 +4148,7 @@ static void cg_varinteger(int32_t val, charbuf *output) {
 // We found a shareable fragment, encode it for emission into the literal.
 // Importantly these ids are 32 bits but we store them in a variable length
 // encoding because 32 bits everywhere eats the savings
-static void cg_flush_fragment(CSTR start, CSTR cur, charbuf *output) {
+static void cg_flush_piece(CSTR start, CSTR cur, charbuf *output) {
   CHARBUF_OPEN(temp);
   int32_t len = (int32_t)(cur - start);
 
@@ -4125,7 +4157,7 @@ static void cg_flush_fragment(CSTR start, CSTR cur, charbuf *output) {
     start++;
   }
 
-  int32_t offset = cg_intern_fragment(temp.ptr, len);
+  int32_t offset = cg_intern_piece(temp.ptr, len);
   CHARBUF_CLOSE(temp);
 
   cg_varinteger(offset + 1, output);
@@ -4137,7 +4169,7 @@ static void cg_flush_fragment(CSTR start, CSTR cur, charbuf *output) {
 // SQL (e.g. the words SELECT, DROP, EXISTS appear a lot) and we can encode this
 // much more economically.  Note also column names like system_function_name are
 // broken because the system_ part is often shared.
-cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
+cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output) {
   Contract(in);
   int32_t len = (int32_t)strlen(in);
   Contract(len);
@@ -4190,7 +4222,7 @@ cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
 
     // if we've anything to flush at this point the run is over, flush it.
     if (start < cur) {
-      cg_flush_fragment(start, cur, output);
+      cg_flush_piece(start, cur, output);
       start = cur;
       count++;
 
@@ -4204,7 +4236,7 @@ cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
 
   // if there's anything left pending when we hit the end, flush it.
   if (start < cur) {
-    cg_flush_fragment(start, cur, output);
+    cg_flush_piece(start, cur, output);
     count++;
   }
 
@@ -4213,7 +4245,181 @@ cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output) {
   return count;
 }
 
-static bytebuf shared_fragment_strings = {NULL, 0, 0};
+// This tells us how many fragments we emitted using some size math
+static int32_t cg_fragment_count() {
+  return (int32_t)(shared_fragment_strings.used / sizeof(CSTR));
+}
+
+// when we complete a chunk of fragment text we have to emit the predicates
+// for the variables that were in that chunk.  We do this in the same
+// context as the conditional for that string.
+static void cg_flush_variable_predicates() {
+  if (!has_conditional_fragments) {
+    return;
+  }
+
+  while (prev_variable_count < cur_variable_count) {
+    if (cur_fragment_predicate == 0 || cur_fragment_predicate + 1 == max_fragment_predicate) {
+      bprintf(cg_main_output, "_vpreds_%d[%d] = 1; // pred %d known to be 1\n",
+      cur_bound_statement,
+      prev_variable_count++,
+      cur_fragment_predicate);
+    }
+    else {
+      // If we're back in previous context we can always just use the predicate value
+      // for that context which was set in an earlier block.
+      // TODO: I think we can prove that it's always true in the code block we are in
+      // so this could be = 1 and hence is the same as the above.
+      bprintf(cg_main_output, "_vpreds_%d[%d] = _preds_%d[%d];\n",
+        cur_bound_statement,
+        prev_variable_count++,
+        cur_bound_statement,
+        cur_fragment_predicate);
+    }
+  }
+}
+
+// If we have set up the predicate for this chunk of text we can just use it
+// we see that by looking at how many predicates we set up and if we
+// are past that point. If we need a predicate for the current line
+// we use the predicate value for the "current" predicate scope,
+// which nests.  Whatever the current predicate is we use that
+// and make an entry in the array.  So that way there is always
+// one computed predicate for each chunk of text we plan to emit.
+static void cg_fragment_copy_pred() {
+  if (!has_conditional_fragments) {
+    return;
+  }
+
+  int32_t count = cg_fragment_count();
+  if (count + 1 == max_fragment_predicate) {
+    return;
+  }
+
+  if (cur_fragment_predicate == 0) {
+    bprintf(cg_main_output, "_preds_%d[%d] = 1;\n",
+      cur_bound_statement,
+      max_fragment_predicate++);
+  }
+  else {
+    // TODO: I think we can prove that it's always true in the code block we are in
+    // so this could be = 1 and hence is the same as the above.
+    bprintf(cg_main_output, "_preds_%d[%d] = _preds_%d[%d];\n",
+      cur_bound_statement,
+      max_fragment_predicate++,
+      cur_bound_statement,
+      cur_fragment_predicate);
+  }
+
+  cg_flush_variable_predicates();
+}
+
+// First we make sure we have a predicate row and then we emit the line
+// assuming there is anything to emit...
+static void cg_emit_one_frag(charbuf *buffer) {
+  // TODO: can we make this an invariant?
+  if (buffer->used > 1) {
+    cg_fragment_copy_pred();
+    CSTR str = Strdup(buffer->ptr);
+    bytebuf_append_var(&shared_fragment_strings, str);
+    bclear(buffer);
+  }
+}
+
+// Emit a fragment from a statement, note that this can nest
+static void cg_fragment_stmt(ast_node *stmt, charbuf *buffer) {
+  gen_one_stmt(stmt);
+  cg_emit_one_frag(buffer);
+  cg_flush_variable_predicates();
+}
+
+// a new block in a conditional, this is the "it's true" case for it
+// assign it a number and move on.  Note the code is always inside of
+// if (the_expression_was_true) {...}
+static void cg_fragment_setpred() {
+  cur_fragment_predicate = max_fragment_predicate;
+  if (has_conditional_fragments) {
+    bprintf(cg_main_output, "_preds_%d[%d] = 1;\n",
+      cur_bound_statement,
+      max_fragment_predicate++);
+  }
+}
+
+// Emit the if condition for the conditional fragment and then generate the
+// predicate setting as well as the SQL for that part of the fragment.
+static void cg_fragment_cond_action(ast_node *ast, charbuf *buffer) {
+  Contract(is_ast_cond_action(ast));
+  EXTRACT_NOTNULL(stmt_list, ast->right);
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  // [expr ast->left] THEN stmt_list
+
+  sem_t sem_type_expr = expr->sem->sem_type;
+
+  cg_line_directive_max(expr, cg_main_output);
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  if (is_ast_null(expr) || is_not_nullable(sem_type_expr)) {
+    bprintf(cg_main_output, "if (%s) {\n", expr_value.ptr);
+  }
+  else {
+    bprintf(cg_main_output, "if (cql_is_nullable_true(%s, %s)) {\n", expr_is_null.ptr, expr_value.ptr);
+  }
+
+  CG_POP_EVAL(expr);
+
+  int32_t cur_fragment_predicate_saved = cur_fragment_predicate;
+
+  CG_PUSH_MAIN_INDENT(ifbody, 2);
+  cg_fragment_setpred();
+
+  // and we emit the next statement string fragment
+  cg_fragment_stmt(stmt_list->left, buffer);
+
+  cur_fragment_predicate = cur_fragment_predicate_saved;
+
+  CG_POP_MAIN_INDENT(ifbody);
+  bprintf(cg_main_output, "}\n");
+}
+
+// Here we're just walking the elseif list, as with normal codegen when we get
+// to the end we deal with the elsenode.  We can't do the else node in the caller
+// because we need to emit it inside the deepest matching parens.  So we just
+// push the elsenode down the recursion until its needed.
+static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *buffer) {
+  if (ast) {
+    Contract(is_ast_elseif(ast));
+    EXTRACT(cond_action, ast->left);
+
+    // ELSE IF [cond_action]
+    bprintf(cg_main_output, "else {\n");
+      CG_PUSH_MAIN_INDENT(else, 2);
+      cg_fragment_cond_action(cond_action, buffer);
+      cg_fragment_elseif_list(ast->right, elsenode, buffer);
+      CG_POP_MAIN_INDENT(else);
+    bprintf(cg_main_output, "}\n");
+  }
+  else if (elsenode) {
+    Contract(is_ast_else(elsenode));
+    // ELSE [stmt_list]
+    cg_line_directive_min(elsenode, cg_main_output);
+    EXTRACT(stmt_list, elsenode->left);
+
+    bprintf(cg_main_output, "else {\n");
+      CG_PUSH_MAIN_INDENT(else, 2);
+
+      int32_t cur_fragment_predicate_saved = cur_fragment_predicate;
+      cg_fragment_setpred();
+
+      // this is the next string fragment
+      cg_fragment_stmt(stmt_list->left, buffer);
+
+      cur_fragment_predicate = cur_fragment_predicate_saved;
+      CG_POP_MAIN_INDENT(else);
+    bprintf(cg_main_output, "}\n");
+  }
+}
 
 static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
@@ -4320,21 +4526,25 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   // exactly one statment
   Invariant(!stmt_list->right);
 
-  // it's some kind of "select"
-  EXTRACT_ANY_NOTNULL(select_stmt, stmt_list->left);
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
 
   // now replace the aliases for just this one bit
   proc_arg_aliases = new_arg_aliases;
 
-  CSTR str = Strdup(buffer->ptr);
-  bytebuf_append_var(&shared_fragment_strings, str);
-  bclear(buffer);
+  cg_emit_one_frag(buffer);
 
-  gen_one_stmt(select_stmt);
+  if (is_ast_if_stmt(stmt)) {
+    EXTRACT_NOTNULL(cond_action, stmt->left);
+    EXTRACT_NOTNULL(if_alt, stmt->right);
+    EXTRACT(elseif, if_alt->left);
+    EXTRACT_NAMED_NOTNULL(elsenode, else, if_alt->right);
 
-  str = Strdup(buffer->ptr);
-  bytebuf_append_var(&shared_fragment_strings, str);
-  bclear(buffer);
+    cg_fragment_cond_action(cond_action, buffer);
+    cg_fragment_elseif_list(elseif, elsenode, buffer);
+  }
+  else {
+    cg_fragment_stmt(stmt, buffer);
+  }
 
   symtab_delete(proc_arg_aliases);
   symtab_delete(proc_cte_aliases);
@@ -4342,6 +4552,58 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   proc_cte_aliases = saved_proc_cte_aliases;
 
   return true;
+}
+
+// We're looking for the presence of any shared fragments and in particular
+// the presence of conditionals within them.  We don't have to do much for
+// this check but we do have to recurse the search as the normal walk doesn't
+// go into the body of shared fragments and the conditionals might be deeper
+// in the tree.
+static bool_t cg_search_conditionals_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
+  EXTRACT_NOTNULL(call_stmt, cte_body->left);
+  EXTRACT_STRING(name, call_stmt->left);
+
+  ast_node *ast = find_proc(name);
+
+  Contract(is_ast_create_proc_stmt(ast));
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+  has_conditional_fragments |= is_ast_if_stmt(stmt);
+  has_shared_fragments = true;
+
+  // recurse the fragment contents, we might find more stuff, like variables
+  // and such deeper in the tree
+  gen_one_stmt(stmt);
+
+  return false;
+}
+
+// We simply record that we found some variables, any variables
+static bool_t cg_note_variable_exists(ast_node *cte_body, void *context, charbuf *buffer) {
+  has_variables = true;
+  return false;
+}
+
+// We set up a walk of the tree using the echo functions but
+// we are going to note what kinds of things we spotted while doing
+// the walk.  We need to know in advance what style of codegen we'll
+// be doing.
+static void cg_classify_fragments(ast_node *stmt) {
+  has_shared_fragments = false;
+  has_conditional_fragments = false;
+  has_variables = false;
+
+  CHARBUF_OPEN(sql);
+  gen_set_output_buffer(&sql);
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.cte_proc_callback = cg_search_conditionals_call_in_cte;
+  callbacks.variables_callback = cg_note_variable_exists;
+  gen_statement_with_callbacks(stmt, &callbacks);
+  CHARBUF_CLOSE(sql);
 }
 
 // This is the most important function for sqlite access;  it does the heavy
@@ -4360,11 +4622,30 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   list_item *vars = NULL;
   CSTR amp = "&";
 
+  cur_bound_statement++;
+  cur_fragment_predicate = 0;
+  max_fragment_predicate = 0;
+  prev_variable_count = 0;
+  cur_variable_count = 0;
+
   bytebuf_open(&shared_fragment_strings);
 
   if (stmt_name && !strcmp("_result", stmt_name)) {
     // predefined out argument
     amp = "";
+  }
+
+  cg_classify_fragments(stmt);
+
+  if (has_conditional_fragments) {
+    bprintf(cg_main_output, "memset(&_preds_%d[0], 0, sizeof(_preds_%d));\n",
+      cur_bound_statement,
+      cur_bound_statement);
+    if (has_variables) {
+      bprintf(cg_main_output, "memset(&_vpreds_%d[0], 0, sizeof(_vpreds_%d));\n",
+        cur_bound_statement,
+        cur_bound_statement);
+    }
   }
 
   bool_t minify_aliases = !!(cg_flags & CG_MINIFY_ALIASES);
@@ -4397,11 +4678,9 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
     stmt_name = "_temp";
   }
 
-  bool_t has_shared_fragments = !!shared_fragment_strings.used;
+  // take care of what's left in the buffer after the other fragments have been emitted
   if (has_shared_fragments) {
-    CSTR str = Strdup(temp.ptr);
-    bytebuf_append_var(&shared_fragment_strings, str);
-    bclear(&temp);
+    cg_emit_one_frag(&temp);
   }
 
   if (!has_shared_fragments && options.compress) {
@@ -4416,13 +4695,13 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
       bprintf(cg_main_output, "_rc_ = cql_prepare_frags(_db_, %s%s_stmt,\n  ", amp, stmt_name);
     }
 
-    bprintf(cg_main_output, "_fragments_, ");
-    cg_statement_fragments(temp.ptr, cg_main_output);
+    bprintf(cg_main_output, "_pieces_, ");
+    cg_statement_pieces(temp.ptr, cg_main_output);
     bprintf(cg_main_output, ");\n");
   }
   else {
     CSTR suffix = has_shared_fragments ? "_var" : "";
-    
+
     if (!has_prepare_stmt) {
       bprintf(cg_main_output, "_rc_ = cql_exec%s(_db_,\n  ", suffix);
     }
@@ -4434,8 +4713,19 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
       cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
     }
     else {
-      int32_t scount = (int32_t)(shared_fragment_strings.used / sizeof(CSTR));
-      bprintf(cg_main_output, "%d,\n", scount);
+      int32_t scount = cg_fragment_count();
+
+      // declare the predicate variables if needed
+      if (has_conditional_fragments) {
+        bprintf(cg_main_output, "%d, _preds_%d,\n", scount, cur_bound_statement);
+        bprintf(cg_declarations_output, "char _preds_%d[%d];\n", cur_bound_statement, scount);
+        if (has_variables) {
+          bprintf(cg_declarations_output, "char _vpreds_%d[%d];\n", cur_bound_statement, cur_variable_count);
+        }
+      }
+      else {
+        bprintf(cg_main_output, "%d, NULL,\n", scount);
+      }
 
       CSTR *strs = (CSTR *)(shared_fragment_strings.ptr);
       for (size_t i = 0; i < scount; i++) {
@@ -4456,7 +4746,12 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   reverse_list(&vars);
 
   if (count) {
-    bprintf(cg_main_output, "cql_multibind(&_rc_, _db_, %s%s_stmt, %d", amp, stmt_name, count);
+    if (has_conditional_fragments) {
+      bprintf(cg_main_output, "cql_multibind_var(&_rc_, _db_, %s%s_stmt, %d, _vpreds_%d", amp, stmt_name, count, cur_bound_statement);
+    }
+    else {
+      bprintf(cg_main_output, "cql_multibind(&_rc_, _db_, %s%s_stmt, %d", amp, stmt_name, count);
+    }
 
     // Now emit the binding args for each variable
     for (list_item *item = vars; item; item = item->next)  {
@@ -7547,42 +7842,42 @@ cql_noexport void cg_c_main(ast_node *head) {
     // seed the fragments with popular ones based on statistics
     CHARBUF_OPEN(ignored);
 
-    cg_statement_fragments(", ", &ignored);
-    cg_statement_fragments("AS ", &ignored);
-    cg_statement_fragments("NOT ", &ignored);
-    cg_statement_fragments(".", &ignored);
-    cg_statement_fragments(",", &ignored);
-    cg_statement_fragments(",\n  ", &ignored);
-    cg_statement_fragments("id ", &ignored);
-    cg_statement_fragments("id,", &ignored);
-    cg_statement_fragments("KEY", &ignored);
-    cg_statement_fragments("KEY ", &ignored);
-    cg_statement_fragments("TEXT", &ignored);
-    cg_statement_fragments("LONG_", &ignored);
-    cg_statement_fragments("INT ", &ignored);
-    cg_statement_fragments("INTEGER ", &ignored);
-    cg_statement_fragments("ON ", &ignored);
-    cg_statement_fragments("TEXT ", &ignored);
-    cg_statement_fragments("CAST", &ignored);
-    cg_statement_fragments("TABLE ", &ignored);
-    cg_statement_fragments("(", &ignored);
-    cg_statement_fragments(")", &ignored);
-    cg_statement_fragments("( ", &ignored);
-    cg_statement_fragments(") ", &ignored);
-    cg_statement_fragments("0", &ignored);
-    cg_statement_fragments("1", &ignored);
-    cg_statement_fragments("= ", &ignored);
-    cg_statement_fragments("__", &ignored);
-    cg_statement_fragments("NULL ", &ignored);
-    cg_statement_fragments("NULL,", &ignored);
-    cg_statement_fragments("EXISTS ", &ignored);
-    cg_statement_fragments("CREATE ", &ignored);
-    cg_statement_fragments("DROP ", &ignored);
-    cg_statement_fragments("TABLE ", &ignored);
-    cg_statement_fragments("VIEW ", &ignored);
-    cg_statement_fragments("PRIMARY ", &ignored);
-    cg_statement_fragments("IF ", &ignored);
-    cg_statement_fragments("(\n", &ignored);
+    cg_statement_pieces(", ", &ignored);
+    cg_statement_pieces("AS ", &ignored);
+    cg_statement_pieces("NOT ", &ignored);
+    cg_statement_pieces(".", &ignored);
+    cg_statement_pieces(",", &ignored);
+    cg_statement_pieces(",\n  ", &ignored);
+    cg_statement_pieces("id ", &ignored);
+    cg_statement_pieces("id,", &ignored);
+    cg_statement_pieces("KEY", &ignored);
+    cg_statement_pieces("KEY ", &ignored);
+    cg_statement_pieces("TEXT", &ignored);
+    cg_statement_pieces("LONG_", &ignored);
+    cg_statement_pieces("INT ", &ignored);
+    cg_statement_pieces("INTEGER ", &ignored);
+    cg_statement_pieces("ON ", &ignored);
+    cg_statement_pieces("TEXT ", &ignored);
+    cg_statement_pieces("CAST", &ignored);
+    cg_statement_pieces("TABLE ", &ignored);
+    cg_statement_pieces("(", &ignored);
+    cg_statement_pieces(")", &ignored);
+    cg_statement_pieces("( ", &ignored);
+    cg_statement_pieces(") ", &ignored);
+    cg_statement_pieces("0", &ignored);
+    cg_statement_pieces("1", &ignored);
+    cg_statement_pieces("= ", &ignored);
+    cg_statement_pieces("__", &ignored);
+    cg_statement_pieces("NULL ", &ignored);
+    cg_statement_pieces("NULL,", &ignored);
+    cg_statement_pieces("EXISTS ", &ignored);
+    cg_statement_pieces("CREATE ", &ignored);
+    cg_statement_pieces("DROP ", &ignored);
+    cg_statement_pieces("TABLE ", &ignored);
+    cg_statement_pieces("VIEW ", &ignored);
+    cg_statement_pieces("PRIMARY ", &ignored);
+    cg_statement_pieces("IF ", &ignored);
+    cg_statement_pieces("(\n", &ignored);
 
     CHARBUF_CLOSE(ignored);
   }
@@ -7623,8 +7918,8 @@ cql_noexport void cg_c_main(ast_node *head) {
   bprintf(&body_file, "%s", cg_fwd_ref_output->ptr);
   bprintf(&body_file, "%s", cg_constants_output->ptr);
 
-  if (cg_fragments_output->used > 1) {
-    bprintf(&body_file, "static const char _fragments_[] = \n%s;\n", cg_fragments_output->ptr);
+  if (cg_pieces_output->used > 1) {
+    bprintf(&body_file, "static const char _pieces_[] = \n%s;\n", cg_pieces_output->ptr);
   }
   bprintf(&body_file, "%s", cg_declarations_output->ptr);
 
@@ -7699,8 +7994,8 @@ cql_noexport void cg_c_init(void) {
   Contract(!string_literals);
   string_literals = symtab_new_case_sens();
 
-  Contract(!text_fragments);
-  text_fragments = symtab_new_case_sens();
+  Contract(!text_pieces);
+  text_pieces = symtab_new_case_sens();
 
   DDL_STMT_INIT(drop_table_stmt);
   DDL_STMT_INIT(drop_view_stmt);
@@ -7861,7 +8156,7 @@ cql_noexport void cg_c_cleanup() {
 
   SYMTAB_CLEANUP(named_temporaries);
   SYMTAB_CLEANUP(string_literals);
-  SYMTAB_CLEANUP(text_fragments);
+  SYMTAB_CLEANUP(text_pieces);
 
   base_fragment_name = NULL;
   exports_output = NULL;
@@ -7877,7 +8172,7 @@ cql_noexport void cg_c_cleanup() {
   rcthrown_used = false;
   rcthrown_index = 0;
   return_used = false;
-  fragment_last_offset = 0;
+  piece_last_offset = 0;
   seed_declared = false;
   stack_level = 0;
   string_literals_count = 0;

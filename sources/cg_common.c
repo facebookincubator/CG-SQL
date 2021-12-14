@@ -30,7 +30,7 @@ cql_data_defn( charbuf *_Nullable cg_constants_output );
 cql_data_defn( charbuf *_Nullable cg_declarations_output );
 cql_data_defn( charbuf *_Nullable cg_scratch_vars_output );
 cql_data_defn( charbuf *_Nullable cg_cleanup_output );
-cql_data_defn( charbuf *_Nullable cg_fragments_output );
+cql_data_defn( charbuf *_Nullable cg_pieces_output );
 
 // Prints a symbol name, along with any configured prefix, to the specified buffer.
 // Multiple CSTRs may be supplied to build the name, which will be concatenated
@@ -102,7 +102,7 @@ cql_noexport void cg_common_init(void)
   ALLOC_AND_OPEN_CHARBUF_REF(cg_declarations_output);
   ALLOC_AND_OPEN_CHARBUF_REF(cg_scratch_vars_output);
   ALLOC_AND_OPEN_CHARBUF_REF(cg_cleanup_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_fragments_output)
+  ALLOC_AND_OPEN_CHARBUF_REF(cg_pieces_output)
 }
 
 // lots of AST nodes require no action -- this guy is very good at that.
@@ -265,7 +265,6 @@ static void find_table_node(table_callbacks *callbacks, ast_node *node) {
   find_ast_str_node_callback alt_callback = NULL;
   symtab *alt_visited = NULL;
   ast_node *table_or_view_name_ast = NULL;
-
 
   if (is_ast_cte_table(node)) {
     EXTRACT_NOTNULL(cte_decl, node->left);
@@ -464,7 +463,7 @@ cql_noexport void cg_common_cleanup() {
   CLEANUP_CHARBUF_REF(cg_declarations_output);
   CLEANUP_CHARBUF_REF(cg_scratch_vars_output);
   CLEANUP_CHARBUF_REF(cg_cleanup_output);
-  CLEANUP_CHARBUF_REF(cg_fragments_output)
+  CLEANUP_CHARBUF_REF(cg_pieces_output)
 }
 
 #endif

@@ -2274,6 +2274,7 @@ int cql_main(int argc, char **argv) {
   parse_cleanup();
   gen_cleanup();
   rt_cleanup();
+  cg_java_cleanup();
 
 #ifdef CQL_AMALGAM
   // the variables need to be set back to zero so we can

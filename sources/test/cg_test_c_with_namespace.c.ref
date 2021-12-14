@@ -385,6 +385,8 @@ extern void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, o
 extern CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 x);
+extern CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_a_, "a");
@@ -15470,7 +15472,7 @@ CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_N
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
   _rc_ = cql_prepare_var(_db_, _result_stmt,
-    3,
+    3, NULL,
   "WITH "
     "shared_frag (shared_something) AS (",
   "SELECT 1234",
@@ -15478,6 +15480,345 @@ CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_N
     "SELECT shared_something "
       "FROM shared_frag"
   );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC shared_conditional (x INTEGER NOT NULL)
+BEGIN
+  IF x = 1 THEN
+    SELECT x AS x;
+  ELSE IF x = 2 THEN
+    SELECT x + x AS x;
+  ELSE
+    SELECT x + x + x AS x;
+  END IF;
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC shared_conditional_user (x INTEGER NOT NULL)
+BEGIN
+  WITH
+  foo (id) AS (SELECT x),
+  shared_conditional (x) AS (CALL shared_conditional(1))
+  SELECT bar.*
+    FROM bar
+    INNER JOIN foo ON x = 5;
+END;
+*/
+
+#define _PROC_ "shared_conditional_user"
+static int32_t shared_conditional_user_perf_index;
+
+cql_string_proc_name(shared_conditional_user_stored_procedure_name, "shared_conditional_user");
+
+typedef struct shared_conditional_user_row {
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_string_ref _Nullable name;
+} shared_conditional_user_row;
+
+cql_int32 shared_conditional_user_get_id(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+cql_string_ref _Nullable shared_conditional_user_get_name(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].name;
+}
+
+cql_bool shared_conditional_user_get_rate_is_null(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].rate.is_null;
+}
+
+cql_int64 shared_conditional_user_get_rate_value(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].rate.value;
+}
+
+cql_bool shared_conditional_user_get_type_is_null(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.is_null;
+}
+
+cql_int32 shared_conditional_user_get_type_value(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].type.value;
+}
+
+cql_bool shared_conditional_user_get_size_is_null(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].size.is_null;
+}
+
+cql_double shared_conditional_user_get_size_value(shared_conditional_user_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_conditional_user_row *data = (shared_conditional_user_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].size.value;
+}
+
+uint8_t shared_conditional_user_data_types[shared_conditional_user_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+  CQL_DATA_TYPE_STRING, // name
+  CQL_DATA_TYPE_INT64, // rate
+  CQL_DATA_TYPE_INT32, // type
+  CQL_DATA_TYPE_DOUBLE, // size
+};
+
+#define shared_conditional_user_refs_offset cql_offsetof(shared_conditional_user_row, name) // count = 1
+
+static cql_uint16 shared_conditional_user_col_offsets[] = { 5,
+  cql_offsetof(shared_conditional_user_row, id),
+  cql_offsetof(shared_conditional_user_row, name),
+  cql_offsetof(shared_conditional_user_row, rate),
+  cql_offsetof(shared_conditional_user_row, type),
+  cql_offsetof(shared_conditional_user_row, size)
+};
+
+cql_int32 shared_conditional_user_result_count(shared_conditional_user_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code shared_conditional_user_fetch_results(sqlite3 *_Nonnull _db_, shared_conditional_user_result_set_ref _Nullable *_Nonnull result_set, cql_int32 x) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_shared_conditional_user, &shared_conditional_user_perf_index);
+  cql_code rc = shared_conditional_user(_db_, &stmt, x);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = shared_conditional_user_data_types,
+    .col_offsets = shared_conditional_user_col_offsets,
+    .refs_count = 1,
+    .refs_offset = shared_conditional_user_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(shared_conditional_user_row),
+    .crc = CRC_shared_conditional_user,
+    .perf_index = &shared_conditional_user_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC shared_conditional_user (x INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 x) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_int32 _p1_x_ = 0;
+  char _preds_1[5];
+  char _vpreds_1[8];
+
+  memset(&_preds_1[0], 0, sizeof(_preds_1));
+  memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
+  _p1_x_ = 1;
+  _preds_1[0] = 1;
+  _vpreds_1[0] = 1; // pred 0 known to be 1
+  if (_p1_x_ == 1) {
+    _preds_1[1] = 1;
+    _vpreds_1[1] = 1; // pred 1 known to be 1
+  }
+  else {
+    if (_p1_x_ == 2) {
+      _preds_1[2] = 1;
+      _vpreds_1[2] = 1; // pred 2 known to be 1
+      _vpreds_1[3] = 1; // pred 2 known to be 1
+    }
+    else {
+      _preds_1[3] = 1;
+      _vpreds_1[4] = 1; // pred 3 known to be 1
+      _vpreds_1[5] = 1; // pred 3 known to be 1
+      _vpreds_1[6] = 1; // pred 3 known to be 1
+    }
+  }
+  _preds_1[4] = 1;
+  _vpreds_1[7] = 1; // pred 0 known to be 1
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    5, _preds_1,
+  "WITH "
+    "foo (id) AS (SELECT ?), "
+    "shared_conditional (x) AS (",
+  "SELECT ?",
+  "SELECT ? + ?",
+  "SELECT ? + ? + ?",
+  ") "
+    "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
+      "FROM bar "
+      "INNER JOIN foo ON ? = 5"
+  );
+  cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, x,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, x);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC nested_shared_proc (x_ INTEGER NOT NULL)
+BEGIN
+  IF x_ = 1 THEN
+    WITH
+    shared_conditional (x) AS (CALL shared_conditional(1))
+    SELECT *
+      FROM shared_conditional
+      WHERE x_ = 5;
+  ELSE
+    SELECT x_ AS x;
+  END IF;
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC nested_shared_stuff ()
+BEGIN
+  WITH
+  nested_shared_proc (x) AS (CALL nested_shared_proc(1))
+  SELECT *
+    FROM nested_shared_proc;
+END;
+*/
+
+#define _PROC_ "nested_shared_stuff"
+static int32_t nested_shared_stuff_perf_index;
+
+cql_string_proc_name(nested_shared_stuff_stored_procedure_name, "nested_shared_stuff");
+
+typedef struct nested_shared_stuff_row {
+  cql_int32 x;
+} nested_shared_stuff_row;
+
+cql_int32 nested_shared_stuff_get_x(nested_shared_stuff_result_set_ref _Nonnull result_set, cql_int32 row) {
+  nested_shared_stuff_row *data = (nested_shared_stuff_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t nested_shared_stuff_data_types[nested_shared_stuff_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 nested_shared_stuff_col_offsets[] = { 1,
+  cql_offsetof(nested_shared_stuff_row, x)
+};
+
+cql_int32 nested_shared_stuff_result_count(nested_shared_stuff_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code nested_shared_stuff_fetch_results(sqlite3 *_Nonnull _db_, nested_shared_stuff_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_nested_shared_stuff, &nested_shared_stuff_perf_index);
+  cql_code rc = nested_shared_stuff(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = nested_shared_stuff_data_types,
+    .col_offsets = nested_shared_stuff_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(nested_shared_stuff_row),
+    .crc = CRC_nested_shared_stuff,
+    .perf_index = &nested_shared_stuff_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC nested_shared_stuff () (x INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_int32 _p1_x__ = 0;
+  cql_int32 _p2_x_ = 0;
+  char _preds_1[8];
+  char _vpreds_1[8];
+
+  memset(&_preds_1[0], 0, sizeof(_preds_1));
+  memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
+  _p1_x__ = 1;
+  _preds_1[0] = 1;
+  if (_p1_x__ == 1) {
+    _preds_1[1] = 1;
+    _p2_x_ = 1;
+    if (_p2_x_ == 1) {
+      _preds_1[2] = 1;
+      _vpreds_1[0] = 1; // pred 2 known to be 1
+    }
+    else {
+      if (_p2_x_ == 2) {
+        _preds_1[3] = 1;
+        _vpreds_1[1] = 1; // pred 3 known to be 1
+        _vpreds_1[2] = 1; // pred 3 known to be 1
+      }
+      else {
+        _preds_1[4] = 1;
+        _vpreds_1[3] = 1; // pred 4 known to be 1
+        _vpreds_1[4] = 1; // pred 4 known to be 1
+        _vpreds_1[5] = 1; // pred 4 known to be 1
+      }
+    }
+    _preds_1[5] = _preds_1[1];
+    _vpreds_1[6] = _preds_1[1];
+  }
+  else {
+    _preds_1[6] = 1;
+    _vpreds_1[7] = 1; // pred 6 known to be 1
+  }
+  _preds_1[7] = 1;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    8, _preds_1,
+  "WITH "
+    "nested_shared_proc (x) AS (",
+  "WITH "
+    "shared_conditional (x) AS (",
+  "SELECT ?",
+  "SELECT ? + ?",
+  "SELECT ? + ? + ?",
+  ") "
+    "SELECT x "
+      "FROM shared_conditional "
+      "WHERE ? = 5",
+  "SELECT ?",
+  ") "
+    "SELECT x "
+      "FROM nested_shared_proc"
+  );
+  cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x__,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x__);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 

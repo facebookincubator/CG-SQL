@@ -399,7 +399,15 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0101: too few column names spe
 test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0102: too many column names specified in common table expression 'foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0440: fragments may not have an empty body 'empty_fragment'
+test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0442: shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0057: bogus_cte, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
+test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0443: shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
+test/sem_test.sql:XXXX:1: error: in cond_action : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
+test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_else_clause'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0434: shared fragments may not be called outside of a SQL statement 'a_shared_frag'
+test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0430: no actual table was provided for the table parameter 'source'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'meters' vs. 'job'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'there_is_no_such_source'
 test/sem_test.sql:XXXX:1: error: in like : CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
@@ -420,9 +428,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo 'this_is_not_even_a_proc'
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form'
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments must consist of exactly one top level statement 'test_shared_fragment_wrong_form'
 test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0208: shared fragments cannot have any out or in/out parameters 'x'
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT 'test_shared_fragment_wrong_form_not_select'
+test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0441: shared fragments may only have IF, SELECT, or WITH...SELECT at the top level 'test_shared_fragment_wrong_form_not_select'
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'current'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -761,7 +769,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end wit
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end with exactly 'SELECT * FROM core_two'
 test/sem_test.sql:XXXX:1: error: in str : CQL0253: base fragment must have only a single CTE named the same as the fragment 'bar'
 test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0253: base fragment must have only a single CTE named the same as the fragment 'err_assembly_name'
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 test/sem_test.sql:XXXX:1: error: in select_core_compound : CQL0333: all the compound operators in this CTE must be UNION ALL 'not_union_all'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0332: all extension fragments that use UNION ALL must come before those that use LEFT OUTER JOIN 'out_of_order'
 test/sem_test.sql:XXXX:1: error: in str : CQL0322: fragment parameters must be exactly '(id_ INTEGER NOT NULL)'
@@ -782,19 +790,19 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end wit
 test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
 test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0259: extension fragment CTE must select T.* from base CTE 'core'
 test/sem_test.sql:XXXX:1: error: in cte_table : CQL0266: extension fragment name conflicts with existing fragment 'plugin_wrong_nine'
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected longint; found integer) 'rate'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'name'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0330: fragment must start with exactly 'SELECT * FROM core'
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 test/sem_test.sql:XXXX:1: error: in str : CQL0264: duplicate assembly fragments of base fragment 'assembly_core'
 test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0265: assembly fragment can only have one CTE 'another_core'
 test/sem_test.sql:XXXX:1: error: in str : CQL0255: fragment name is not a previously declared base fragment 'wrong_core'
-test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0267: extension fragments of same base fragment share the same cte column 'a'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected text; found integer) 'name'

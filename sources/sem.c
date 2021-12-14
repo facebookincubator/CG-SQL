@@ -10162,7 +10162,7 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
     EXTRACT_STRING(col_name, item->left);
     sptr->names[i] = col_name;
 
-    // PENDING: CTE's are not preserving KING right now
+    // TODO: CTE's are not preserving KIND right now  T108037068
     // sptr->kinds[i] = item->left->sem->kind;  this is not the correct source of the kind
 
     item = item->right;
@@ -10179,6 +10179,218 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
   ast->sem->sptr->struct_name = name;
 
   add_cte(ast);
+}
+
+// When accumulating cte info this structure holds the various discoveries and
+// provides the callback for any per CTE actions
+typedef struct shared_cte_info {
+  void *context;
+  void (*callback)(void *context, CSTR cte_name, ast_node *cte_decl);
+
+  // information for errors detected during walk
+  ast_node *missing_else;
+  ast_node *bad_statement_form;
+  ast_node *non_select_stmt;
+} shared_cte_info;
+
+// Now we get the top level CTE tables out of the target procedure.
+// We need to scan the CTEs for entries that use LIKE, those are the table arguments
+// we will check the details those later, for now we just need the names
+// and the AST.  Note that we previously checked that any duplicate parameter
+// names were identically typed. e.g. in the below "source" must be identical
+// in both cases.
+//
+//   if bb == 1 then
+//     with source(*) like (select 1 x)
+//     select * from source;
+//   else
+//     with source(*) like (select 1 x)
+//     select * from source where x = bb;
+//   end if;
+static void sem_accumulate_cte_info(ast_node *stmt, shared_cte_info *info)
+{
+  Contract(is_ast_with_select_stmt(stmt));
+  EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
+  EXTRACT(cte_tables, with_prefix->left);
+
+  for (ast_node *ast = cte_tables; ast; ast = ast->right) {
+    EXTRACT_NOTNULL(cte_table, ast->left);
+    EXTRACT_NOTNULL(cte_decl, cte_table->left);
+    EXTRACT_ANY_NOTNULL(cte_body, cte_table->right);
+
+    if (is_ast_like(cte_body)) {
+      EXTRACT_STRING(cte_name, cte_decl->left);
+      if (info->callback) {
+        info->callback(info->context, cte_name, cte_decl);
+      }
+    }
+  }
+}
+
+// Walk a statement list inside of a shared fragment
+// in all such cases there can only be one statement in the list
+// anything else is an error and is dutifully recorded.
+static void sem_accumulate_stmt_list(ast_node *ast, shared_cte_info *info) {
+  Contract(is_ast_stmt_list(ast));
+
+  // all the statement lists must have exactly one statement
+  if (ast->right) {
+    info->bad_statement_form = ast->right;
+    return;
+  }
+
+  // note the representation of statement lists is such that they always have
+  // at least one statement, an empty statement list is represented by null
+  // statement lists not null statements.
+  EXTRACT_ANY_NOTNULL(stmt, ast->left);
+  if (is_ast_with_select_stmt(stmt)) {
+    sem_accumulate_cte_info(stmt, info);
+  }
+  else if (!is_select_stmt(stmt)) {
+    info->non_select_stmt = stmt;
+    return;
+  }
+}
+
+// The cond_action node is the predicate of an IF/ELSEIF and its statement list
+// the statement list must be non-empty.  The expression doesn't contribute
+// to the CTEs and is therefore ignored (it's checked elsewhere)
+static void sem_accumulate_cond_action(ast_node *ast, shared_cte_info *info) {
+  Contract(is_ast_cond_action(ast));
+  EXTRACT(stmt_list, ast->right);
+  if (!stmt_list) {
+    // empty statement list is not allowed
+    info->bad_statement_form = ast;
+    return;
+  }
+  sem_accumulate_stmt_list(stmt_list, info);
+}
+
+// Here we simply walk the elseif chain processing each statement list
+static void sem_accumulate_elseif_list(ast_node *ast, shared_cte_info *info) {
+  Contract(is_ast_elseif(ast));
+
+  while (ast) {
+    Contract(is_ast_elseif(ast));
+    EXTRACT(cond_action, ast->left);
+    sem_accumulate_cond_action(cond_action, info);
+    ast = ast->right;
+  }
+}
+
+// The if statement form has the main cond_action then an optional
+// elseif chain and then an optional else node.  The else node is not
+// actually optional for shared fragments so we will give an error
+// if it is absent.  Otherwise the helpers above descend into the pieces.
+// In each case we record the ast_node that should get the error if there is one.
+static void sem_accumulate_if_stmt(ast_node *ast, shared_cte_info *info) {
+  Contract(is_ast_if_stmt(ast));
+  EXTRACT_NOTNULL(cond_action, ast->left);
+  EXTRACT_NOTNULL(if_alt, ast->right);
+  EXTRACT(elseif, if_alt->left);
+  EXTRACT_NAMED(elsenode, else, if_alt->right);
+
+  sem_accumulate_cond_action(cond_action, info);
+
+  if (elseif) {
+    sem_accumulate_elseif_list(elseif, info);
+  }
+
+  if (elsenode) {
+    EXTRACT(stmt_list, elsenode->left);
+    if (!stmt_list) {
+      info->bad_statement_form = ast;
+      return;
+    }
+    sem_accumulate_stmt_list(stmt_list, info);
+  }
+  else {
+    info->missing_else = ast;
+  }
+}
+
+// The procedure is already known to be of the correct shape
+// that is, either one select, or else an if statement with one select
+// in each branch. We figure out which case we're in and then accumulate the
+// pieces using the callback to tell our caller what we found.
+static void sem_accumulate_proc_cte_info(ast_node *create_proc_stmt, shared_cte_info *info) {
+  Contract(is_ast_create_proc_stmt(create_proc_stmt));
+
+  EXTRACT_NOTNULL(proc_params_stmts, create_proc_stmt->right);
+  EXTRACT_NOTNULL(stmt_list, proc_params_stmts->right);
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+  if (is_ast_with_select_stmt(stmt)) {
+    sem_accumulate_cte_info(stmt, info);
+  }
+  else if (is_ast_if_stmt(stmt)) {
+    sem_accumulate_if_stmt(stmt, info);
+  }
+  // note, it might be a normal select, in which case there is nothing to do.
+  // a normal select has no CTE LIKE forms because it has no CTEs.
+  // We know it's one of the legal forms by the time we are here.
+}
+
+// Save the name of the first table parameter that we find, this is
+// used in a context were we just want to know that there are none
+// so if we find one that's the error.
+static void found_any_table_params_callback(void *context, CSTR name, ast_node *cte_decl) {
+  // save the first name we find
+  if (!*(CSTR *)context) {
+    *(CSTR*)context = name;
+  }
+}
+
+// Here we ensure that the called shared fragment does not need any table bindings
+// because none were provided!
+static void sem_shared_fragment_ensure_no_table_binding(
+  ast_node *call_stmt,
+  ast_node *create_proc_stmt)
+{
+  Contract(is_ast_create_proc_stmt(create_proc_stmt));
+
+  // the procedure exists, and it is not in an error state (already checked)
+  Contract(!is_error(create_proc_stmt));
+
+  // and furthermore it's got a result type, again this is already checked.
+  Contract(is_struct(create_proc_stmt->sem->sem_type));
+
+  CSTR cte_name = NULL;
+  shared_cte_info info;
+  memset(&info, 0, sizeof(info));
+  info.callback = found_any_table_params_callback;
+  info.context = &cte_name;
+
+  sem_accumulate_proc_cte_info(create_proc_stmt, &info);
+
+  if (cte_name) {
+    report_error(call_stmt, "CQL0430: no actual table was provided for the table parameter", cte_name);
+    record_error(call_stmt);
+  }
+}
+
+// Add the cte_decl to the list provided in context but de-duplicate
+// we're doing this because we will want this list to know if all of the required table parameters
+// are covered by the USING clause of the call.  We will have previously checked that
+// any duplicated table parameter names have exactly the same type.
+static void make_distinct_table_params_list_callback(void *context, CSTR cte_name, ast_node *cte_decl) {
+  list_item **head = (list_item**)context;
+
+  // check for duplicates, ignore any, we only need one copy
+  list_item *item = *head;
+  while (item) {
+    EXTRACT_NAMED_NOTNULL(decl, cte_decl, item->ast);
+    EXTRACT_STRING(existing_name, decl->left);
+    if (!Strcasecmp(existing_name, cte_name)) {
+      break;
+    }
+    item = item->next;
+  }
+
+  // duplicate not found
+  if (!item) {
+     add_item_to_list(head, cte_decl);
+  }
 }
 
 // Here we ensure that the table binding for any given shared CTE is correct
@@ -10221,34 +10433,30 @@ static void sem_shared_fragment_table_binding(
   }
 
   EXTRACT_NOTNULL(proc_params_stmts, create_proc_stmt->right);
-  EXTRACT_NOTNULL(stmt_list, proc_params_stmts->right);
-  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
 
-  if (!is_ast_with_select_stmt(stmt)) {
+  // setup to get the list of unique table parameters required for this call
+  list_item *parms_head = NULL;
+  shared_cte_info info;
+  memset(&info, 0, sizeof(info));
+  info.callback = make_distinct_table_params_list_callback;
+  info.context = &parms_head;
+
+  sem_accumulate_proc_cte_info(create_proc_stmt, &info);
+
+  if (!parms_head) {
     report_error(cte_binding_list, "CQL0429: the called procedure has no table arguments but a USING clause is present", proc_name);
     record_error(call_stmt);
     goto cleanup;
   }
 
-  // Now we get the top level CTE tables out of the target procedure.
-  // We need to scan the CTEs for entries that use LIKE, those are the table arguments
+  // We need to scan the table arguments
   // for each one of those we then need to ensure that the of the actual table is compatible
   // with the type of the formal table and that the total number of columns is a match.
   // Note that there cannot be extra columns because if there were that might create ambiguities
   // in the result.
 
-  Contract(is_ast_with_select_stmt(stmt));
-  EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
-  EXTRACT(cte_tables, with_prefix->left);
-
-  for (ast_node *ast = cte_tables; ast; ast = ast->right) {
-    EXTRACT_NOTNULL(cte_table, ast->left);
-    EXTRACT_NOTNULL(cte_decl, cte_table->left);
-    EXTRACT_ANY_NOTNULL(cte_body, cte_table->right);
-
-    if (!is_ast_like(cte_body)) {
-      continue;
-    }
+  for (list_item *it = parms_head; it; it = it->next) {
+    EXTRACT_NOTNULL(cte_decl, it->ast);
 
     EXTRACT_STRING(cte_name, cte_decl->left);
     symtab_entry *entry = symtab_find(bindings, cte_name);
@@ -10490,7 +10698,16 @@ static void sem_cte_table(ast_node *ast)  {
     }
 
     if (cte_binding_list) {
+      // if there is a binding list we have to ensure the number and type of bindings are correct
       sem_shared_fragment_table_binding(call_stmt, proc_stmt, cte_binding_list);
+      if (is_error(call_stmt)) {
+        record_error(ast);
+        return;
+      }
+    }
+    else {
+      // if there is no binding list we still have to ensure that there are no bindings required
+      sem_shared_fragment_ensure_no_table_binding(call_stmt, proc_stmt);
       if (is_error(call_stmt)) {
         record_error(ast);
         return;
@@ -15151,7 +15368,7 @@ static void sem_fragment_has_with_select_stmt(ast_node *stmt_list) {
 
 error:
   report_error(stmt_list,
-    "CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT", NULL);
+    "CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT", NULL);
   record_error(stmt_list);
 }
 
@@ -15229,6 +15446,35 @@ static void find_named_cql_attribute(ast_node *misc_attr_list, CSTR attr_name, n
   Invariant(data->ast);
 }
 
+// when we discover a table parameter we'll see if we can find it
+// in the table of names we've seen before.  If we find it, the new
+// parameter must have the exact same type as what we already have.
+typedef struct bind_equivalence_info {
+  symtab *names;
+  ast_node *bind_mismatch_error;
+} bind_equivalence_info;
+
+// Here we must verify that if we found two table parameters of the same name that they are of the
+// same exact type.  Since they have the same name there will be one table binding for the both
+// of them and so if their type is not identical then no one binding could satisfy both
+static void verify_identical_table_params_callback(void *context, CSTR name, ast_node *cte_decl) {
+  bind_equivalence_info *info = (bind_equivalence_info *)context;
+
+  symtab_entry *entry = symtab_find(info->names, name);
+
+  if (!entry) {
+    // new name, nothing to check
+    symtab_add(info->names, name, cte_decl);
+    return;
+  }
+
+  // existing name must be identical
+  sem_verify_identical_columns((ast_node*)entry->val, cte_decl, name);
+  if (is_error(cte_decl)) {
+    info->bind_mismatch_error = cte_decl;
+  }
+}
+
 // If a stored proc is marked with the shared_fragment attribute, we check for the simple
 // shared form of one select statement, with no OUT or IN/OUT args
 // The attribute should look like this:
@@ -15243,14 +15489,71 @@ static void sem_shared_fragment(ast_node *misc_attrs, ast_node *create_proc_stmt
   EXTRACT(stmt_list, proc_params_stmts->right);
   EXTRACT_STRING(proc_name, current_proc->left);
 
-  if (stmt_list->right || !is_select_stmt(stmt_list->left)) {
-    report_error(stmt_list,
-      "CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT",
-      proc_name);
+  if (stmt_list->right) {
+    report_error(stmt_list, "CQL0179: shared fragments must consist of exactly one top level statement", proc_name);
     record_error(misc_attrs);
     record_error(stmt_list);
     record_error(create_proc_stmt);
     return;
+  }
+
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+  if (!is_select_stmt(stmt) && !is_ast_if_stmt(stmt)) {
+    report_error(stmt, "CQL0441: shared fragments may only have IF, SELECT, or WITH...SELECT at the top level", proc_name);
+    record_error(misc_attrs);
+    record_error(stmt_list);
+    record_error(create_proc_stmt);
+    return;
+  }
+
+  if (is_ast_if_stmt(stmt)) {
+    shared_cte_info info;
+    bind_equivalence_info bind_info;
+    memset(&info, 0, sizeof(info));
+    memset(&bind_info, 0, sizeof(bind_info));
+
+    info.context = &bind_info;
+    info.callback = verify_identical_table_params_callback;
+    bind_info.names = symtab_new();
+
+    sem_accumulate_proc_cte_info(create_proc_stmt, &info);
+
+    symtab_delete(bind_info.names);
+
+    if (info.missing_else) {
+      report_error(info.missing_else, "CQL0442: shared fragments with conditionals must include an else clause", proc_name);
+      record_error(misc_attrs);
+      record_error(stmt_list);
+      record_error(create_proc_stmt);
+      return;
+    }
+
+    if (info.bad_statement_form) {
+      report_error(info.bad_statement_form, "CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list", proc_name);
+      record_error(misc_attrs);
+      record_error(stmt_list);
+      record_error(create_proc_stmt);
+      return;
+    }
+
+    if (info.non_select_stmt) {
+      report_error(info.non_select_stmt, "CQL0443: shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list", proc_name);
+      record_error(misc_attrs);
+      record_error(stmt_list);
+      record_error(create_proc_stmt);
+      return;
+    }
+
+    // This means specifically that we found a case where two table parameters were specified in the
+    // fragment that have the same name but are of different types
+    // error already reported in this case, we just record the failure and move on
+    if (bind_info.bind_mismatch_error) {
+      record_error(misc_attrs);
+      record_error(stmt_list);
+      record_error(create_proc_stmt);
+      return;
+    }
   }
 
   for (ast_node *ast = params; ast; ast = ast->right) {
@@ -16089,6 +16392,10 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
   ast->sem = new_sem(SEM_TYPE_OK);
 
   if (!stmt_list) {
+    if (find_proc_frag_type(ast) != FRAG_TYPE_NONE) {
+      report_error(ast, "CQL0440: fragments may not have an empty body", proc_name);
+      error = true;
+    }
     goto cleanup;
   }
 

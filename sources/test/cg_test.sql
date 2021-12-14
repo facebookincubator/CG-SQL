@@ -4838,6 +4838,139 @@ begin
   select * from shared_frag;
 end;
 
+-- used in the following test
+@attribute(cql:shared_fragment)
+create proc shared_conditional(x integer not null)
+begin
+  if x == 1 then
+    select x as x;
+  else if x == 2 then
+    select x + x as x;
+  else
+    select x + x + x as x;
+  end if;
+end;
+
+-- TEST: use a conditional shared fragment in various ways
+-- this proc forces a variable sandwich, there are
+-- variables before the conditionals inside the conditonals
+-- (see above) and after the conditionals
+-- 5 text fragments
+-- + char _preds_1[5];
+-- 8 variable usages
+-- + char _vpreds_1[8];
+-- + memset(&_preds_1[0], 0, sizeof(_preds_1));
+-- + memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
+-- control flow to figure out which predicates to enable
+-- + _p1_x_ = 1;
+-- + _preds_1[0] = 1;
+-- + _vpreds_1[0] = 1; // pred 0 known to be 1
+-- + if (_p1_x_ == 1) {
+-- +   _preds_1[1] = 1;
+-- +   _vpreds_1[1] = 1; // pred 1 known to be 1
+-- + }
+-- + else {
+-- +   if (_p1_x_ == 2) {
+-- +     _preds_1[2] = 1;
+-- +     _vpreds_1[2] = 1; // pred 2 known to be 1
+-- +     _vpreds_1[3] = 1; // pred 2 known to be 1
+-- +   }
+-- +   else {
+-- +     _preds_1[3] = 1;
+-- +     _vpreds_1[4] = 1; // pred 3 known to be 1
+-- +     _vpreds_1[5] = 1; // pred 3 known to be 1
+-- +     _vpreds_1[6] = 1; // pred 3 known to be 1
+-- +   }
+-- + }
+-- + _preds_1[4] = 1;
+-- + _vpreds_1[7] = 1; // pred 0 known to be 1
+-- + _rc_ = cql_prepare_var(_db_, _result_stmt,
+-- + 5, _preds_1,
+-- 
+-- root fragment 0 always present
+-- + "WITH "
+-- +   "foo (id) AS (SELECT ?), "
+-- +   "shared_conditional (x) AS (",
+-- 
+-- option 1 fragment 1
+-- + "SELECT ?",
+-- 
+-- option 2 fragment 2
+-- + "SELECT ? + ?",
+-- 
+-- option 3 fragment 3
+-- + "SELECT ? + ? + ?",
+-- 
+-- pop to root, fragment 4 condition same as fragment 0
+-- + ") "
+-- +   "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
+-- +     "FROM bar "
+-- +     "INNER JOIN foo ON ? = 5"
+-- 
+-- 8 variable sites, only some of which are used
+-- + cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
+create proc shared_conditional_user(x integer not null)
+begin
+  with 
+  foo(id) as (select x),
+  (call shared_conditional(1))
+  select bar.* from bar join foo on x = 5;
+end;
+
+-- used in the following test, this is silly fragment
+-- but it forces complex push and pop of variable state
+@attribute(cql:shared_fragment)
+create proc nested_shared_proc(x_ integer not null)
+begin
+  if x_ == 1 then
+    with
+    (call shared_conditional(1))
+    select * from shared_conditional where x_ == 5;
+  else
+    select x_ as x;
+  end if;
+end;
+
+-- TEST: variable arg management in a nested context
+-- + memset(&_preds_1[0], 0, sizeof(_preds_1));
+-- + memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
+-- + _p1_x__ = 1;
+-- + _preds_1[0] = 1;
+-- + if (_p1_x__ == 1) {
+-- +   _preds_1[1] = 1;
+-- +   _p2_x_ = 1;
+-- +   if (_p2_x_ == 1) {
+-- +     _preds_1[2] = 1;
+-- +     _vpreds_1[0] = 1; // pred 2 known to be 1
+-- +   }
+-- +   else {
+-- +     if (_p2_x_ == 2) {
+-- +       _preds_1[3] = 1;
+-- +       _vpreds_1[1] = 1; // pred 3 known to be 1
+-- +       _vpreds_1[2] = 1; // pred 3 known to be 1
+-- +     }
+-- +     else {
+-- +       _preds_1[4] = 1;
+-- +       _vpreds_1[3] = 1; // pred 4 known to be 1
+-- +       _vpreds_1[4] = 1; // pred 4 known to be 1
+-- +       _vpreds_1[5] = 1; // pred 4 known to be 1
+-- +     }
+-- +   }
+-- this is what's unique about this test, we popped back to the context of predicate 1
+-- +   _preds_1[5] = _preds_1[1];
+-- +   _vpreds_1[6] = _preds_1[1];
+-- + }
+-- + else {
+-- +   _preds_1[6] = 1;
+-- +   _vpreds_1[7] = 1; // pred 6 known to be 1
+-- + }
+create proc nested_shared_stuff()
+begin
+  with
+  (call nested_shared_proc(1))
+  select * from nested_shared_proc;
+end;
+
 declare const group some_constants (
   const_u = false,
   const_w = 3.5,
@@ -4860,3 +4993,4 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
+

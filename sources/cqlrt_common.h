@@ -94,6 +94,7 @@ CQL_EXPORT int cql_outstanding_refs;
 CQL_EXPORT void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull rs, cql_int32 row, cql_int32 count, ...);
 CQL_EXPORT void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, ...);
 CQL_EXPORT void cql_multibind(cql_code *_Nonnull rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, cql_int32 count, ...);
+CQL_EXPORT void cql_multibind_var(cql_code *_Nonnull rc, sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, cql_int32 count, const char *_Nullable vpreds, ...);
 CQL_EXPORT cql_code cql_best_error(cql_code rc);
 CQL_EXPORT void cql_set_encoding(uint8_t *_Nonnull data_types, cql_int32 count, cql_int32 col, cql_bool encode);
 
@@ -129,11 +130,16 @@ CQL_EXPORT void cql_set_string_ref(cql_string_ref _Nullable *_Nonnull target, cq
 CQL_EXPORT void cql_set_object_ref(cql_object_ref _Nullable *_Nonnull target, cql_object_ref _Nullable source);
 
 CQL_EXPORT cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, const char *_Nonnull sql);
-CQL_EXPORT cql_code cql_prepare_var(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, cql_int32, ...);
+
+CQL_EXPORT cql_code cql_prepare_var(sqlite3 *_Nonnull db,
+                                    sqlite3_stmt *_Nullable *_Nonnull pstmt,
+                                    cql_int32 count,
+                                    const char *_Nullable preds, ...);
+
 CQL_EXPORT cql_code cql_no_rows_stmt(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt);
 CQL_EXPORT cql_result_set_ref _Nonnull cql_no_rows_result_set(void);
 CQL_EXPORT cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql);
-CQL_EXPORT cql_code cql_exec_var(sqlite3 *_Nonnull db, cql_int32 count, ...);
+CQL_EXPORT cql_code cql_exec_var(sqlite3 *_Nonnull db, cql_int32 count, const char *_Nullable preds, ...);
 CQL_EXPORT CQL_WARN_UNUSED cql_code cql_exec_internal(sqlite3 *_Nonnull db, cql_string_ref _Nonnull str_ref);
 
 CQL_EXPORT cql_code cql_prepare_frags(sqlite3 *_Nonnull db,

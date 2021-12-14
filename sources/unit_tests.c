@@ -28,14 +28,14 @@ cql_noexport void run_unit_tests() {}
 
 cql_noexport void cg_c_init(void);
 cql_noexport void cg_c_cleanup(void);
-cql_noexport uint32_t cg_statement_fragments(CSTR in, charbuf *output);
+cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output);
 
 static bool test_frag_tricky_case() {
   options.compress = 1;
   CHARBUF_OPEN(tmp);
   cg_c_init();
   // get into a state with a single trailing space
-  uint32_t count = cg_statement_fragments("atest btest ", &tmp);
+  uint32_t count = cg_statement_pieces("atest btest ", &tmp);
   cg_c_cleanup();
   CHARBUF_CLOSE(tmp);
   
