@@ -8458,8 +8458,8 @@ to call a procedure as part of a CTE declaration.  Like so:
 
 ```sql
 WITH
-  values(v) as (call split_text('x,y,z'))
-  select * from v;
+  result(v) as (call split_text('x,y,z'))
+  select * from result;
 ```
 
 Once the fragment has been defined, the statement above could appear anywhere, and of course the
@@ -8470,8 +8470,8 @@ CREATE PROC print_parts(value TEXT)
 BEGIN
   DECLARE C CURSOR FOR
     WITH
-      values(v) as (CALL split_text('x,y,z'))
-      SELECT * from v;
+      result(v) as (CALL split_text('x,y,z'))
+      SELECT * from result;
 
   LOOP FETCH C
   BEGIN
@@ -8488,20 +8488,20 @@ extracts comma separated numbers.  We could do this:
 CREATE PROC ids_from_string(value TEXT)
 BEGIN
   WITH
-    values(v) as (CALL split_text(value))
-  SELECT CAST(v as LONG) as id from values;
+    result(v) as (CALL split_text(value))
+  SELECT CAST(v as LONG) as id from result;
 END;
 ```
 
 Now we could write:
 
-```sql 
+```sql
 CREATE PROC print_ids(value TEXT)
 BEGIN
   DECLARE C CURSOR FOR
     WITH
-      values(id) as (CALL ids_from_string('1,2,3'))
-      SELECT * from v;
+      result(id) as (CALL ids_from_string('1,2,3'))
+      SELECT * from result;
 
   LOOP FETCH C
   BEGIN
@@ -8546,29 +8546,29 @@ We can rewrite the fragment in a "generic" way like so:
 
 ```sql
 @attribute(cql:shared_fragment)
-CREATE PROC ids_from_strings()
+CREATE PROC ids_from_string_table()
 BEGIN
   WITH
-    values(v) LIKE (select nullable("x") v)
-  SELECT CAST(v as LONG) as id from values;
+    source(v) LIKE (select "x" v)
+  SELECT CAST(v as LONG) as id from source;
 END;
 ```
 
-Note the new construct for CTE definition:  inside a fragment we can use "LIKE" to define a pluggable CTE.
+Note the new construct for a CTE definition: inside a fragment we can use "LIKE" to define a pluggable CTE.
 In this case we used a `select` statement to describe the shape the fragment requires.  We could also
-have used a name `values(*) LIKE shape_name` just like we use shape names when describing cursors.  The
-name can be any existing view, table, a procedure with a result, etc.  Any name that looks like a record.
+have used a name `source(*) LIKE shape_name` just like we use shape names when describing cursors.  The
+name can be any existing view, table, a procedure with a result, etc.  Any name that describes a shape.
 
 Now when the fragment is invoked, you provide the actual data source (some table, view, or CTE) and
 that parameter takes the role of "values".  Here's a full example:
 
-```sql 
+```sql
 CREATE PROC print_ids(value TEXT)
 BEGIN
   DECLARE C CURSOR FOR
     WITH
       my_data(*) as (CALL split_text(value)),
-      my_numbers(id) as (CALL ids_from_strings() USING my_data AS values)
+      my_numbers(id) as (CALL ids_from_string_table() USING my_data AS source)
       SELECT id from my_numbers;
 
   LOOP FETCH C
@@ -8586,22 +8586,21 @@ CREATE PROC ids_from_string(value TEXT)
 BEGIN
   WITH
     tokens(v) as (CALL split_text(value))
-    ids(id) as (CALL ids_from_strings() USING tokens as values)
+    ids(id) as (CALL ids_from_string_table() USING tokens as source)
   SELECT * from ids;
 END;
 ```
 
 And actually we have a convenient name we could use for the shape we need so
-we could have used the shape syntax to define `ids_from_strings` (this
-still has to go before `ids_from_string`)
+we could have used the shape syntax to define `ids_from_string_table`.
 
 ```sql
 @attribute(cql:shared_fragment)
-CREATE PROC ids_from_strings()
+CREATE PROC ids_from_string_table()
 BEGIN
   WITH
-    values(*) LIKE split_text
-  SELECT CAST(tok as LONG) as id from values;
+    source(*) LIKE split_text
+  SELECT CAST(tok as LONG) as id from source;
 END;
 ```
 
@@ -8613,7 +8612,7 @@ open businesses matching a name from a combination of tables.  This is
 similar to what you could do with a `VIEW` plus a `WHERE` clause but:
 
 * such a system can give you well controlled combinations known to work well
-* there is no schema required, so your database open time can still be fast
+* there is no schema required, so your database load time can still be fast
 * parameterization is not limited to filtering VIEWs after the fact
 * "generic" patterns are available, allowing arbitary data sources to be filtered, validated, augmented
 * each fragment can be tested seperately with its own suite rather than only in the context of some larger thing
@@ -8642,8 +8641,8 @@ When using a fragment the following rules are enforced.
 * the provided parameters may not use nested `(SELECT ...)` expressions
   * this could easily create fragment building within fragment building which seems not worth the complexity
   * if database access is required in the parameters simply wrap it in a helper procedure
-* the optional USING clause must specify each required table parameter exactly once
-* the USING clause may not add any extra tables
+* the optional USING clause must specify each required table parameter exactly once and no other tables
+  * a fragment that requires table parameters be invoked without a USING clause
 * every actual table provided must match the column names of the corresponding table parameter
   * i.e. in `USING my_data AS values` the actual columns in `my_data` must be the same as in the `values` parameter
   * the columns need not be in the same order
@@ -8657,33 +8656,31 @@ When using a fragment the following rules are enforced.
     * all these problems are easily avoided with a simple naming convention for parameters so that real arguments never look like parameter names and parameter forwarding is apparent
     * e.g. `USING _source AS _source` makes it clear that a parameter is being forwarded and `_source` is not likely to conflict with real table or view names
 
-### Shared Fragment Futures (not yet implemented)
+Note that when shared fragments are used, the generated SQL has the text split into parts, with each fragment and its surroundings separated, therefore
+the text of shared fragments is shared(!) between usages if normal linker optimizations for text folding are enabled (common in production code).
 
-It's a bit strange to include features not in the language in a language guide but these are coming very soon (weeks from this writing) and
-they are worth mentioning now, if only to be sure that the text will have some reasonable flow in the future.  There are two things to discuss:
+### Shared Fragments with Conditionals
 
-Firstly, while it's *possible* to share the text of fragments in the current formulation, the compiler does not yet do this.  That will hopefully become
-a reality before end of 2021.  The code is designed to do this but it doesn't yet. (expect additions to the Internals Chapter 3 on code generation).
+Shared fragments use dynamic assembly of the text to do the sharing but it is also possible create alternative texts.
+There are many instances where it is desirable to not just replace parameters but use, for instance, an entirely different join sequence.
+Without shared fragments, the only way to accomplish this is to fork desired query at the topmost level (because SQLite has no internal
+possibly of "IF" conditions).  This is expensive in terms of code size and also cognitive load because the entire alternative sequences
+have to be kept carefully in sync.  Macros can help with this but then you get the usual macro maintenance problems, including poor diagnostics.
+And of course there is no possibilty to share the common parts of the text of the code if it is forked.
 
-Secondly, there is an important additional flexibility in fragments not mentioned above that will be coming once code sharing is in place.  Once
-dynamic assembly of the text is possible then it will also be possible to create alternative texts.  This is crucial because there are many instances
-where it is desirable to not just replace parameters but use an entirely different join sequence.  Today, the only way to accomplish this is to
-fork the query at the topmost level (because SQLite has no internal possibly of "IF" conditions).  This is expensive in terms of code size and
-also cognitive load because the entire alternative sequences have to be kept carefully in sync.  Macros can help with this but then you get
-the usual macro problems. And of course there is no possibilty to share the common parts of the text of the code.
-
-The idea is to allow this form:
+However, conditional shared fragments allow forms like this:
 
 ```sql
 @attribute(cql:shared_fragment)
-CREATE PROC get_filtered_things(filter TEXT)
+CREATE PROC ids_from_string(val TEXT)
 BEGIN
-  IF filter IS NOT NULL THEN
-    SELECT * FROM main_table T1
-    INNER JOIN secondary_table T2 USING(id)
-    WHERE T2.name like filter;
+  IF val IS NULL OR val IS '' THEN
+    SELECT 0 id WHERE 0; -- empty result
   ELSE
-    SELECT * FROM main_table T1;
+    WITH
+      tokens(v) as (CALL split_text(val))
+      ids(id) as (CALL ids_from_string_table() USING tokens as source)
+    SELECT * from ids;
   END IF;
 END;
 ```
@@ -8691,25 +8688,27 @@ END;
 Now when do something like:
 
 ```sql
-  my_things(*) AS (CALL get_filtered_things(filter))
+  ids(*) AS (CALL ids_from_string(str))
 ```
 
-You might get the join, or you might not, depending on if the filter was provided.  In fact the code might be entirely different between the branches
-removing unnecessary code, or swapping in a new experimental cache in your test environment, or anything like that.  The generalization is simply this:
+In this case, if the string `val` is empty then SQLite will not see the complex comma splitting code, it will see
+the trivial case `select 0 id where 0`.  The code in a conditinal fragment might be entirely different between the branches
+removing unnecessary code, or swapping in a new experimental cache in your test environment, or anything like that.
 
-* instead of just one select statement you get one "IF" statement
+The generalization is simply this:
+
+* instead of just one select statement there is one top level "IF" statement
 * each statement list of the IF must be exactly one select statement
 * there must be an ELSE clause
 * the select statements must be type compatible, just like in a normal procedure
+* any table parameters with the same name in different branches must have the same type
+  * otherwise it would be impossible to provide a single actual table for those table parameters
 
 With this additional flexibility a wide variety of SQL statements can be constructed economically and maintainably.  Importantly
 consumers of the fragments need not deal with all these various alternate possibilities but they can readily create their own
 useful combinations out of building blocks.
 
 Ultimately, from SQLite's perspective, all of these shared fragment forms result in nothing more complicated than a chain of CTE expressions.
-
-
-
 
 
 ## Appendix 1: Command Line Options
@@ -8920,7 +8919,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Nov 30 14:36:49 PST 2021
+Snapshot as of Tue Dec 14 15:47:57 PST 2021
 
 ### Operators and Literals
 
@@ -10399,7 +10398,6 @@ enforcement_options:
   | "ENCODE" "CONTEXT TYPE" "BLOB"
   | "IS TRUE"
   | "CAST"
-  | "NULL" "CHECK" "ON" "NOT" "NULL"
   ;
 
 enforce_strict_stmt:
@@ -11226,7 +11224,7 @@ SQLite user defined functions (or builtins) declared with  `declare select funct
 
 -----
 
-### CQL0090: Stored proc calls may not appear in the context of a SQL statement 'proc_name'
+### CQL0090: Stored proc calls may not appear in the context of a SQL statement 'procedure_name'
 
 While it's possible to call a CQL stored procedure as though it was a function (if it has an OUT argument as its last arg) you may not do this from inside of a SQL statement.  Just like external C functions SQLite cannot call stored procs.
 
@@ -11885,9 +11883,11 @@ In an argument list, the `LIKE` construct was used to create arguments that are 
 
 -----
 
-### CQL0179: shared fragments can consist of only one statement and it must be a SELECT or WITH..SELECT, 'proc_name'
+### CQL0179: shared fragments must consist of exactly one top level statement 'procedure_name'
 
-A shared query fragment consist of a procedure with exactly one statement and that statement is a SELECT or WITH...SELECT statement.
+Any shared fragment can have only one statement.  There are three valid forms -- IF/ELSE, WITH ... SELECT, and SELECT.
+
+This error indicates the named procedure, which is a shared fragment, has more than one statement.
 
 -----
 
@@ -12013,7 +12013,7 @@ In a `DECLARE` statement, the named variable is a global (declared outside of an
 
 -----
 
-### CQL0199: cursor requires a procedure that returns a result set via select 'proc_name'
+### CQL0199: cursor requires a procedure that returns a result set via select 'procedure_name'
 
 In a `DECLARE` statement that declares a `CURSOR FOR CALL` the procedure that is being called does not produce a result set with the `SELECT` statement.  As it has no row results it is meaningless to try to put a cursor on it.  Probably the error is due to a copy/pasta of the procedure name.
 
@@ -12165,7 +12165,7 @@ In a procedure call to the named procedure, not enough arguments were provided t
 
 -----
 
-### CQL0213: procedure had errors, can't call. 'proc_name'
+### CQL0213: procedure had errors, can't call. 'procedure_name'
 
 In a procedure call to the named procedure, the target of the call had compilation errors.  As a consequence this call cannot be checked and therefore must be marked in error, too.  Fix the errors in the named procedure.
 
@@ -12392,19 +12392,19 @@ In a `SELECT` expression like `set x := (select id from bar)` the select stateme
 
 -----
 
-### CQL0233: procedure previously declared as schema upgrade proc, it can have no args 'proc_name'
+### CQL0233: procedure previously declared as schema upgrade proc, it can have no args 'procedure_name'
 
 When authoring a schema migration procedure that was previously declared in an `@create` or `@delete` directive that procedure will be called during schema migration with no context available.  Therefore, the schema migration proc is not allowed to have any arguments.
 
 -----
 
-### CQL0234: autodrop annotation can only go on a procedure that returns a result set 'proc_name'
+### CQL0234: autodrop annotation can only go on a procedure that returns a result set 'procedure_name'
 
 The named procedure has the `autodrop` annotation (to automatically drop a temporary table) but the procedure in question doesn't return a result set so it has no need of the autodrop feature.  The purpose that that feature is to drop the indicated temporary tables once all the select results have been fetched.
 
 -----
 
-### CQL0235: too many arguments provided to procedure 'proc_name'
+### CQL0235: too many arguments provided to procedure 'procedure_name'
 
 In a `CALL` statement, or a function call, the named procedure takes fewer arguments than were provided. This error might be due to some copy/pasta going on or perhaps the argument list of the procedure/function changed to fewer items.
 To fix this, consult the argument list and adjust the call accordingly.
@@ -12439,7 +12439,7 @@ and the cursor that produced the result_set is a DML.
 
 -----
 
-### CQL0240: identity annotation can only go on a procedure that returns a result set 'proc_name'
+### CQL0240: identity annotation can only go on a procedure that returns a result set 'procedure_name'
 
 The `@attribute(cql:identity=(col1, col2,...))` form has been used to list the identity columns of a stored procedures result set.  These columns must exist in the result set and they must be unique.  In this case, the named procedure doesn't even return a result set.  Probably there is a copy/pasta going on.  The identity attribute can likely be removed.
 
@@ -12898,7 +12898,7 @@ is because the whole point of this migrator is to invoke a procedure of your cho
 
 -----
 
-### CQL0285: ad hoc schema migration directive version number changed 'proc_name'
+### CQL0285: ad hoc schema migration directive version number changed 'procedure_name'
 
 In `@schema_ad_hoc_migration` you cannot change the version number of the directive once
 it has been added to the schema because this could cause inconsistencies when upgrading.
@@ -12909,7 +12909,7 @@ going to 110% on the reactor... possible, but not recommended.
 
 -----
 
-### CQL0286: ad hoc schema migration directive was removed; this is not allowed 'proc_name'
+### CQL0286: ad hoc schema migration directive was removed; this is not allowed 'procedure_name'
 
 An `@schema_ad_hoc_migration` cannot be removed because it could cause inconsistencies on upgrade.
 
@@ -12933,7 +12933,7 @@ going to 110% on the reactor... possible, but not recommended.
 
 -----
 
-### CQL0290: fragments can only have one statement in the statement list and it must be a WITH..SELECT
+### CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 
 All of the extendable query fragment types consist of a procedure with exactly one statement and that statement is a WITH...SELECT statement.  If you have more than one statement or some other type of statement you'll get this error.
 
@@ -14212,7 +14212,7 @@ CALL some_proc(some_other_proc(t), t);
 
 ----
 
-### CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'proc_name'
+### CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'procedure_name'
 
 When creating a shared fragment you can specify "table parameters" by defining their shape like so:
 
@@ -14246,7 +14246,7 @@ my_cte(*) AS (call my_fragment(1) USING something as param1, something_else as p
 Here `param1` is supposed to take on the value of both `something` and `something_else`.  Each parameter
 may appear only once in the `USING` clause.
 
-### CQL0429: the called procedure has no table arguments but a USING clause is present 'proc_name'
+### CQL0429: the called procedure has no table arguments but a USING clause is present 'procedure_name'
 
 In a CALL clause to access a shared fragment there are table bindings but the shared fragment that
 is being called does not have any table bindings.
@@ -14365,6 +14365,92 @@ with
 
 ----
 
+### CQL0434: shared fragments may not be called outside of a SQL statement 'procedure_name'
+
+The indicated name is the name of a shared fragment, these fragments may be used inside
+of SQL code (e.g. select statements) but they have no meaning in a normal call outside
+of a SQL statement.
+
+Example:
+
+```
+@attribute(cql:shared_fragment)
+create proc my_fragment(lim integer not null)
+begin
+ select * from somewhere limit lim;
+end;
+
+call my_fragment();
+```
+
+Here `my_fragment` is being used like a normal procedure. This is not valid.  A correct
+use of a fragment might look something like this:
+
+```
+with
+  (call my_fragment())
+  select * from my_fragment;
+```
+
+----
+
+### CQL0440: fragments may not have an empty body 'procedure_name'
+
+The indicated procedure is one of the fragment types but has an empty body.
+This is not valid for any fragment type.
+
+Example:
+
+```
+@attribute(cql:shared_fragment)
+create proc my_fragment(lim integer not null)
+begin
+  /* something has to go here */
+end;
+```
+
+----
+
+### CQL0441: shared fragments may only have IF, SELECT, or  WITH...SELECT at the top level 'procedure_name'
+
+A shared fragment may consist of just one SELECT statement (including WITH...SELECT)
+or it can be an IF/ELSE statement that has a series of compatible select statements.
+There are no other valid options.
+
+
+### CQL0442: shared fragments with conditionals must include an else clause 'procedure_name'
+
+In shared fragment with conditionals (i.e. it has an IF statement at the top) the fragment
+must have an ELSE block so that it is guaranteed to create chunk of SQL text in its expansion.
+When no rows are required you can do so with something like:
+
+```
+IF ... THEN
+  ...
+ELSE
+   select 1 x, '2' y WHERE 0;
+END IF;
+```
+
+If the `ELSE` condition indicates that some join should not happen you might generate default values
+or NULLs for the join result like so:
+
+```
+IF ... THEN
+  ...
+ELSE
+  select input_stuff.*, NULL x, -1 y;
+END IF;
+```
+
+
+### CQL0443: shared fragments with conditionals must have exactly one SELECT or WITH...SELECT in each statement list 'procedure_name'
+
+In a shared fragment with conditionals the top level statement is an "IF".  All of the statement lists in
+the IF must have exactly one valid select statement.  This error indicates that a statement list has the wrong number
+or type of statement.
+
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -14377,7 +14463,7 @@ with
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Nov 30 14:36:50 PST 2021
+Snapshot as of Tue Dec 14 15:47:57 PST 2021
 
 ### Rules
 
