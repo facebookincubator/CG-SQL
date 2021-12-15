@@ -10,7 +10,7 @@ tags: [facebook, cg-sql]
 
 Shared fragments are a real game-changer for CQL.
 
-Remember, these are designed to let you write part of a query and then substitute in parameters.  So it's like a parameterized view in normal SQL terms.  But actually it's more power than that, fragments also provide features that are more like Java generics.  Let's do some examples.
+Remember, these are designed to let you write part of a query and then substitute in parameters.  So it's like a parameterized view in normal SQL terms.  But actually it's more powerful than that, fragments also provide features that are more like Java generics.  Let's do some examples.
 
 Suppose we have a procedure which looks something like this:
 
@@ -57,10 +57,9 @@ BEGIN
 END;
 ```
 
-With shared fragments you could write something like this
+With shared fragments you could write something like this:
 
 ```SQL
--- this could be moved somewhere shared, it's totally generic
 @attribute(cql:shared_fragment)
 CREATE PROC split_commas(str text)
 BEGIN
@@ -75,7 +74,6 @@ BEGIN
   select tok from splitter where tok <> '';
 END;
 
--- this could be moved somewhere shared, it's totally generic
 @attribute(cql:shared_fragment)
 CREATE PROC ids_from_string(str text)
 BEGIN
@@ -84,12 +82,12 @@ BEGIN
 END;
 ```
 
-We now have a shared fragment called "split_commas" which can be anywhere like maybe in a standard include file.  There are some immediate benefits:
+We now have a shared fragment called `split_commas` which can be anywhere like maybe in a standard include file.  There are some immediate benefits:
 
 * the fragment is compiled on its own before usage so any errors are reported in the fragment
-  * with macros you get errors when you try to use the macro and they are all charged to the line the macro appears on so it's hopeless figuring out what's wrong
+  * in contrast, with macros you get errors when you try to use the macro and they are all charged to the line the macro appears on so it's hopeless figuring out what's wrong
 * the text of the shared fragment will be the same, so it can be re-used in all locations, this can be a big binary size savings
-  * macros are pre-processed before CQL ever sees the text so it doesn't "know" it's the same code
+  * in contrast, macros are pre-processed before CQL ever sees the text so it doesn't "know" it's the same code
 * fragments compose cleanly as we'll see; and they have typed arguments
 * fragments can be independently tested outside of the context in which they appear
   * make a test context and explore the fragment, no worries about it breaking on edge cases later
@@ -99,7 +97,7 @@ The first fragment called `split_commas` does exactly what it sounds like, it ta
 
 The second fragment uses the first to split a string and then it converts all the strings to long integers.
 
-Now insted of the above we could write:
+Now instead of the above we could write:
 
 ```SQL
 #include <stringsplit.sql> /* whereever you put the fragments */
@@ -117,14 +115,14 @@ END;
 ```
 
 And of course since `ids_from_string` is somewhere shared (`stringsplit.sql`) so these fragments can be used
-all over you code and you'll only pay for the text one time.  This gives you great flexibility, very much
+all over your code and you'll only pay for the text one time.  This gives you great flexibility, very much
 like parameterized views. You can have any number of these fragments, they will share code, they compose like crazy
 and there is no schema cost!
 
 ### Generics
 
 A series of useful fragments for generating data would go a long way but there are other applications
-of fragments and you might what to operate on various data sources without hard coding them all.  This is
+of fragments and you might want to operate on various data sources without hard coding them all.  This is
 where the generic form of fragments comes in. Consider a case where you want to be able to filter `stuff`
 by say name and age.  You could create this fragment:
 
@@ -141,8 +139,8 @@ BEGIN
 END;
 ```
 
-Now imagine that we had added the shared fragment annotation to `get_stuff` (just like the above)
-we could then write
+Now imagine that we had added the shared fragment annotation to `get_stuff` (just like the above).
+We could then write the following:
 
 ```SQL
 CREATE PROC the_right_stuff(to_include_ text, to_exclude_ text, pattern_ text not null, min_age_ integer not null, max_age_ integer not null)
@@ -156,7 +154,7 @@ BEGIN
 END;
 ```
 
-Or with some sugar to forward arguments and assume the CTE name matches, more economically
+Or with some sugar to forward arguments and assume the CTE name matches, more economically:
 
 ```SQL
 CREATE PROC the_right_stuff(to_include_ text, to_exclude_ text, pattern_ text not null, min_age_ integer not null, max_age_ integer not null)
@@ -219,7 +217,7 @@ In the above if the input pattern is NULL then it is not considered, it won't be
 `source` (same name) appears in both branches and therefore must be the same type as it will be fulfilled by one actual table
 parameter.
 
-Now the above could have been achieved with something like
+Now the above could have been achieved with something like this:
 
 ```SQL
 pattern_ IS NULL OR S.name LIKE pattern_
