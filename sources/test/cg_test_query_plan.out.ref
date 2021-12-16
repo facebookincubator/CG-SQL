@@ -52,6 +52,10 @@ BEGIN
   BEGIN
   DELETE FROM t2 WHERE id > new.id;
   END;
+  CREATE TABLE C(
+    id INTEGER NOT NULL,
+    name TEXT
+  );
   CREATE TABLE sql_temp(
     id INT NOT NULL PRIMARY KEY,
     sql TEXT NOT NULL
@@ -362,6 +366,49 @@ BEGIN
   END;
 END;
 
+@attribute(cql:shared_fragment)
+CREATE PROC split_commas (str TEXT)
+BEGIN
+WITH
+splitter (tok, rest) AS (SELECT '', IFNULL(nullable('1') || ',', '')
+UNION ALL
+SELECT substr(rest, 1, instr(rest, ',') - 1), substr(rest, instr(rest, ',') + 1)
+  FROM splitter
+  WHERE rest <> '')
+SELECT tok
+  FROM splitter
+  WHERE tok <> '';
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC ids_from_string (str TEXT)
+BEGIN
+WITH
+toks (tok) AS (CALL split_commas(nullable('1')))
+SELECT CAST(tok AS LONG_INT) AS id
+  FROM toks;
+END;
+
+CREATE PROC populate_query_plan_19()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "WITH\\nI (id) AS (CALL ids_from_string('1')),\\nE (id) AS (CALL ids_from_string('1'))\\nSELECT C.*\\n  FROM C\\n  WHERE C.id IN (SELECT *\\n  FROM I) AND C.id NOT IN (SELECT *\\n  FROM E)";
+  INSERT INTO sql_temp(id, sql) VALUES(19, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  I (id) AS (CALL ids_from_string('1')),
+  E (id) AS (CALL ids_from_string('1'))
+  SELECT C.*
+    FROM C
+    WHERE C.id IN (SELECT *
+    FROM I) AND C.id NOT IN (SELECT *
+    FROM E);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(19, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
 
 CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN
@@ -658,6 +705,13 @@ BEGIN
     CALL printf("failed populating query 18\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_19();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 19\n");
+    THROW;
+  END CATCH;
   CALL printf("[\n");
   CALL print_query_violation();
   CALL printf("[\n");
@@ -681,6 +735,7 @@ BEGIN
   CALL print_query_plan(16);
   CALL print_query_plan(17);
   CALL print_query_plan(18);
+  CALL print_query_plan(19);
   CALL printf("[]\n");
   CALL printf("]\n");
   CALL printf("],\n");

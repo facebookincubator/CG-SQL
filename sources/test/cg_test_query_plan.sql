@@ -46,6 +46,10 @@
 -- +1  INSERT OR IGNORE INTO no_table_scan(table_name)
 -- +1  INSERT OR IGNORE INTO table_scan_alert
 -- + SELECT ifnull(nullable(1), 42) AS nullable_result;
+-- + CREATE PROC split_commas (str text)
+-- + CREATE PROC ids_from_string (str text)
+-- + I (id) AS (CALL ids_from_string('1')),
+-- + E (id) AS (CALL ids_from_string('1'))
 -- - Error
 @attribute(cql:no_table_scan)
 create table t1(id int primary key, name text);
@@ -182,4 +186,39 @@ begin
   -- analysis of this would fail if `a` were replaced with a value of a nonnull
   -- type when generating the query plan
   select ifnull(a, 42) as nullable_result;
+end;
+
+create table C(
+ id integer not null,
+ name text);
+
+@attribute(cql:shared_fragment)
+CREATE PROC split_commas(str text)
+BEGIN
+  WITH splitter(tok, rest) AS (
+    SELECT '', IFNULL(str || ',', '')
+    UNION ALL
+    SELECT
+      substr(rest, 1, instr(rest, ',') - 1),
+      substr(rest, instr(rest, ',') + 1)
+    FROM splitter
+    WHERE rest <> '')
+  SELECT tok FROM splitter WHERE tok <> '';
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC ids_from_string(str text)
+BEGIN
+  WITH toks(tok) AS (CALL split_commas(str))
+  SELECT CAST(tok AS LONG) AS id FROM toks;
+END;
+
+CREATE PROC use_shared(inc_ text not null, exc_ text not null)
+begin
+  WITH
+  I(id) as (call ids_from_string(inc_)),
+  E(id) as (call ids_from_string(exc_))
+  select C.* from C
+  where C.id in (select * from I)
+  and C.id not in (select * from E);
 end;

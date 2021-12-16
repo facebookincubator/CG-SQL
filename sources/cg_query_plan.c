@@ -165,13 +165,22 @@ static void cg_qp_ok_table_scan_callback(
 // The code in this function collect all the tables of "ok_table_scan" attr
 // and associate them with the proc name and the statement ids in the proc.
 //
-// e.g: With the info below now avaialable we can now figure out wheter or
+// e.g: With the info below now available we can now figure out wheter or
 // an alert of scan table can be made on a particular statement id.
 // stmt(id) <-> proc_name <-> table_name (ok_table_scan)
 static void cg_qp_create_proc_stmt(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(current_procedure_name == NULL);
   Contract(current_ok_table_scan == NULL);
+
+  uint32_t frag_type = find_proc_frag_type(ast);
+  if (frag_type == FRAG_TYPE_SHARED) {
+    bprintf(query_plans, "@attribute(cql:shared_fragment)\n");
+    gen_set_output_buffer(query_plans);
+    gen_statement_with_callbacks(ast, cg_qp_callbacks);
+    bprintf(query_plans, ";\n\n");
+    return;
+  }
 
   CHARBUF_OPEN(ok_table_scan_buf);
   current_ok_table_scan = &ok_table_scan_buf;
