@@ -128,7 +128,10 @@ by say name and age.  You could create this fragment:
 
 ```SQL
 @attribute(cql:shared_fragment)
-CREATE PROC filter_stuff(pattern_ text not null, min_age_ integer not null, max_age_ integer not null)
+CREATE PROC filter_stuff(
+  pattern_ text not null,
+  min_age_ integer not null,
+  max_age_ integer not null)
 BEGIN
   WITH
     source(*) LIKE stuff
@@ -143,11 +146,17 @@ Now imagine that we had added the shared fragment annotation to `get_stuff` (jus
 We could then write the following:
 
 ```SQL
-CREATE PROC the_right_stuff(to_include_ text, to_exclude_ text, pattern_ text not null, min_age_ integer not null, max_age_ integer not null)
+CREATE PROC the_right_stuff(
+  to_include_ text,
+  to_exclude_ text,
+  pattern_ text not null,
+  min_age_ integer not null,
+  max_age_ integer not null)
 BEGIN
   WITH
     get_stuff(*) AS (call get_stuff(to_include_, to_exclude_)),
-    filter_stuff(*) AS (call filter_stuff(pattern_, min_age_, max_age_) using get_stuff as source)
+    filter_stuff(*) AS (call filter_stuff(pattern_, min_age_, max_age_)
+      using get_stuff as source)
   SELECT * from filter_stuff S
   ORDER BY name
   LIMIT 5;
@@ -157,7 +166,12 @@ END;
 Or with some sugar to forward arguments and assume the CTE name matches, more economically:
 
 ```SQL
-CREATE PROC the_right_stuff(to_include_ text, to_exclude_ text, pattern_ text not null, min_age_ integer not null, max_age_ integer not null)
+CREATE PROC the_right_stuff(
+  to_include_ text,
+  to_exclude_ text,
+  pattern_ text not null,
+  min_age_ integer not null,
+  max_age_ integer not null)
 BEGIN
   WITH
     (call get_stuff(*)),
@@ -175,7 +189,10 @@ In this example `filter_stuff` doesn't know where its data will be coming from, 
 to a compatible data source of your choice. For example, this would also be legal:
 
 ```SQL
-CREATE PROC almost_the_right_stuff(pattern_ text not null, min_age_ integer not null, max_age_ integer not null)
+CREATE PROC almost_the_right_stuff(
+  pattern_ text not null,
+  min_age_ integer not null,
+  max_age_ integer not null)
 BEGIN
   WITH
     (call filter_stuff(*) using stuff as source)
@@ -194,7 +211,10 @@ some of the possibilities.
 
 ```SQL
 @attribute(cql:shared_fragment)
-CREATE PROC filter_stuff(pattern_ text, min_age_ integer not null, max_age_ integer not null)
+CREATE PROC filter_stuff(
+  pattern_ text,
+  min_age_ integer not null,
+  max_age_ integer not null)
 BEGIN
   IF pattern_ IS NOT NULL THEN
     WITH
@@ -228,7 +248,10 @@ with your constraints.  Consider something like this hypothetical:
 
 ```SQL
 @attribute(cql:shared_fragment)
-CREATE PROC filter_stuff(pattern_ text, min_age_ integer not null, max_age_ integer not null)
+CREATE PROC filter_stuff(
+  pattern_ text,
+  min_age_ integer not null,
+  max_age_ integer not null)
 BEGIN
   IF pattern_ IS NOT NULL THEN
     WITH
@@ -256,7 +279,10 @@ transform would be more complex.
 
 ```SQL
 @attribute(cql:shared_fragment)
-CREATE PROC get_stuff(to_include_ text, to_exclude_ text, schema_v2 bool not null)
+CREATE PROC get_stuff(
+  to_include_ text,
+  to_exclude_ text,
+  schema_v2 bool not null)
 BEGIN
   IF schema_v2 THEN
     WITH
