@@ -161,7 +161,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_TVF              _64(0x400000000) // set if and only table node is a table valued function
 #define SEM_TYPE_IMPLICIT         _64(0x800000000) // set if and only the variable was declare implicitly (via declare out)
 #define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) // set if proc calls an out union proc for a result
-#define SEM_TYPE_FLAGS           _64(0x1FFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_ALIAS           _64(0x2000000000) // set only for aliases of a select when analyzing its where clause
+#define SEM_TYPE_FLAGS           _64(0x3FFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002

@@ -54,7 +54,7 @@ begin
           select substr(str, 1, instr(str, '$') - 1), substr(str, instr(str, '$') + 1)
         from split
         where str != '')
-      select trim(line) line from split where line != '';
+      select line from (select trim(line) line from split) where line != '';
 
     -- some standard indenting, very simple
     let indent := 0;

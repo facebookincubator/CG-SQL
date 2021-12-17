@@ -427,7 +427,7 @@ insert into foo(id)
 -- + {select_from_etc}: ok
 -- + {select_where}
 -- - error:
-select 10 as T where T = 1;
+select 10 as T where 1;
 
 -- TEST: select where with a column specified
 -- + {select_stmt}: err
@@ -436,6 +436,100 @@ select 10 as T where T = 1;
 -- + error: % name not found 'c'
 -- + Error
 select c where 1;
+
+-- TEST: a WHERE clause can refer to the FROM
+-- + {select_stmt}: select: { id: integer notnull }
+-- + {opt_where}: bool notnull
+-- - Error
+select * from foo where id > 1000;
+
+-- TEST: a WHERE clause cannot refer to the SELECT list
+-- + {select_stmt}: err
+-- + {opt_where}: err
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'x'
+-- + Error
+select id as x from foo where x > 1000;
+
+-- TEST: a GROUP BY clause cannot refer to the SELECT list
+-- + {select_stmt}: err
+-- + {opt_groupby}: err
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
+-- + Error
+select id, name as y from bar group by y having count(name) > 10;
+
+-- TEST: a HAVING clause cannot refer to the SELECT list
+-- + {select_stmt}: err
+-- + {opt_having}: err
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
+-- + Error
+select id, name as y from bar group by name having count(y) > 10;
+
+-- TEST: a WINDOW clause cannot refer to the SELECT list
+-- + {select_stmt}: err
+-- + {opt_select_window}: err
+-- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
+-- + Error
+select id, name as y, row_number() over w
+from bar
+window w as (order by y);
+
+-- TEST: a WHERE clause cannot refer to the FROM if what it refers to in the
+-- FROM shadows an alias in the SELECT list
+-- + {select_stmt}: err
+-- + {opt_where}: err
+-- + error: % must use qualified form to avoid ambiguity with alias 'name'
+-- + Error
+select id as name from bar where name like "%foo%";
+
+-- TEST: using a qualified reference avoids the error above
+-- + {select_stmt}: select: { name: integer notnull }
+-- + {opt_where}: bool
+-- - Error
+select id as name from bar where bar.name like "%foo%";
+
+-- TEST: a WHERE clause cannot refer to the FROM if what it refers to in the
+-- FROM shadows an alias in any enclosing SELECT list
+-- + {select_stmt}: err
+-- + {opt_where}: err
+-- + error: % must use qualified form to avoid ambiguity with alias 'name'
+-- + Error
+select id as name
+from bar
+where id > (select count(rate) from bar where name like "%foo%");
+
+-- TEST: again, using a qualified reference avoids the error above
+-- + {select_stmt}: select: { name: integer notnull }
+-- + {opt_where}: bool
+-- - Error
+select id as name
+from bar
+where id > (select count(rate) from bar where bar.name like "%foo%");
+
+-- TEST: a GROUP BY clause cannot refer to the FROM if what it refers to in the
+-- FROM shadows an alias in any enclosing SELECT list
+-- + {select_stmt}: err
+-- + {opt_groupby}: err
+-- + error: % must use qualified form to avoid ambiguity with alias 'name'
+-- + Error
+select id as name, name from bar group by name having count(name) > 10;
+
+-- TEST: a HAVING clause cannot refer to the FROM if what it refers to in the
+-- FROM shadows an alias in any enclosing SELECT list
+-- + {select_stmt}: err
+-- + {opt_having}: err
+-- + error: % must use qualified form to avoid ambiguity with alias 'name'
+-- + Error
+select id as name, name from bar group by name having count(name) > 10;
+
+-- TEST: a WINDOW clause cannot refer to the FROM if what it refers to in the
+-- FROM shadows an alias in any enclosing SELECT list
+-- + {select_stmt}: err
+-- + {opt_select_window}: err
+-- + error: % must use qualified form to avoid ambiguity with alias 'name'
+-- + Error
+select id as name, name, row_number() over w
+from bar
+window w as (order by name);
 
 -- TEST: select * from bogus table doesn't give more errors
 -- + error: % table/view not defined 'goo'
@@ -2911,7 +3005,7 @@ set X := (select avg(null) from foo);
 -- TEST: assign select where statement to nullable variable
 -- + {assign}: X: integer variable
 -- - error:
-set X := (select X*10 as v where v = 1);
+set X := (select X*10 as v where 1);
 
 -- TEST: assign select where statement to not null variable
 -- + {assign}: X_not_null: integer notnull variable
@@ -8104,12 +8198,6 @@ set X := 3.0 & 2;
 -- +1 error:
 set X := ~3.0;
 
--- TEST: try to access a column by its select alias in the later portions of the select
--- + {select_stmt}: select: { a: integer notnull, b: integer notnull }
--- + {name b}: b: integer notnull
--- - error:
-select 1 a, 2 b from (select 1) as T where b = 2;
-
 -- TEST: use column aliases in ORDER BY statement
 -- + {create_proc_stmt}: select: { bar_id: integer notnull } dml_proc
 -- + {name bar_id}: bar_id: integer notnull
@@ -8135,16 +8223,6 @@ end;
 
 -- TEST: fake stories table for test case stolen from the real schema
 create table stories(media_id long);
-
--- TEST: ensure that the column alias is used as the second choice compared to a column name
--- This won't compile correctly if the binding is wrong, the int will be compared to a string
--- + {select_stmt}: select: { media_id: text notnull }
--- + {name media_id}: media_id: longint
--- - {name media_id}: media_id: text notnull
--- - error:
-SELECT 'xyzzy' AS media_id
-FROM stories
-WHERE media_id = 123;
 
 -- TEST: basic delete trigger
 -- + CREATE TEMP TRIGGER IF NOT EXISTS trigger1
@@ -17857,19 +17935,6 @@ begin
   select xn + xn as yn, yn as yn0 from tnull where xn is not null;
 end;
 
--- TEST: WHERE clauses only see aliases if not shadowed by a column in the FROM
--- clause. We must only improve an alias, therefore, if it is not shadowed.
--- + {create_proc_stmt}: select: { yn: integer, zn: integer notnull } dml_proc
--- - error:
-create proc aliases_are_improved_if_not_shadowed_by_a_column_in_from()
-begin
-  select
-    xn as yn, -- shadowed; don't improve it
-    xn as zn  -- not shadowed; improve it
-  from tnull
-  where yn is not null and zn is not null;
-end;
-
 -- TEST: We do not improve a result column merely because a variable with the
 -- same name is improved in an enclosing scope.
 -- + {create_proc_stmt}: select: { xn: integer, yn: integer } dml_proc
@@ -17881,21 +17946,6 @@ begin
   select * from tnull;
 end;
 
--- TEST: Due to the circularity in SELECT that SQLite allows between a WHERE
--- clause and an expression list, we have to analyze expression lists with
--- improvements from WHEREs clauses before analyzing the WHEREs clauses
--- themselves. In doing so, we may attempt to improve an identifier in a WHERE
--- clause that is unbound. This test exists to make sure we don't crash and do
--- eventually flag the error after analyzing the expression list.
--- + {select_expr}: xn: integer
--- + {opt_where}: err
--- + error: % name not found 'zn'
--- +1 error:
-create proc where_clauses_with_unbound_identifiers_do_not_crash()
-begin
-  select xn from tnull where zn is not null;
-end;
-
 -- TEST: Improvements work on the result of joins.
 -- + {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
 -- - error:
@@ -17905,10 +17955,10 @@ begin
   from tnull
   inner join another_table_with_nullables
   on tnull.xn = another_table_with_nullables.xn
-  where xn0 is not null;
+  where tnull.xn is not null;
 end;
 
--- TEST: TODO: Improvements do not yet work for ON clauses.
+-- TEST: Improvements do not work for ON clauses.
 -- + {create_proc_stmt}: select: { xn0: integer } dml_proc
 -- - error:
 create proc improvements_do_not_work_for_on_clauses()

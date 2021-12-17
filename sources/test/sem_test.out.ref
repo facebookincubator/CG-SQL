@@ -1653,7 +1653,7 @@ test/sem_test.sql:XXXX:1: error: in table_star : CQL0055: all columns in the sel
 The statement ending at line XXXX
 
 SELECT 10 AS T
-  WHERE T = 1;
+  WHERE 1;
 
   {select_stmt}: select: { T: integer notnull }
   | {select_core_list}: select: { T: integer notnull }
@@ -1666,10 +1666,8 @@ SELECT 10 AS T
   |     |     | {name T}
   |     | {select_from_etc}: ok
   |       | {select_where}
-  |         | {opt_where}: bool notnull
-  |         | | {eq}: bool notnull
-  |         |   | {name T}: T: integer notnull
-  |         |   | {int 1}: integer notnull
+  |         | {opt_where}: integer notnull
+  |         | | {int 1}: integer notnull
   |         | {select_groupby}
   |           | {select_having}
   | {select_orderby}
@@ -1692,10 +1690,537 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'c'
   |     |   | {name c}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
-  |         | {opt_where}
-  |         | | {int 1}
+  |         | {opt_where}: integer notnull
+  |         | | {int 1}: integer notnull
   |         | {select_groupby}
   |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+  WHERE id > 1000;
+
+  {select_stmt}: select: { id: integer notnull }
+  | {select_core_list}: select: { id: integer notnull }
+  | | {select_core}: select: { id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull }
+  |     | | {star}: select: { id: integer notnull }
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {opt_where}: bool notnull
+  |         | | {gt}: bool notnull
+  |         |   | {name id}: id: integer notnull
+  |         |   | {int 1000}: integer notnull
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS x
+  FROM foo
+  WHERE x > 1000;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'x'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     |   | {name id}
+  |     |   | {opt_as_alias}
+  |     |     | {name x}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {opt_where}: err
+  |         | | {gt}: err
+  |         |   | {name x}: err
+  |         |   | {int 1000}: integer notnull
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id, name AS y
+  FROM bar
+  GROUP BY y
+  HAVING count(name) > 10;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     | | | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |     | {name name}
+  |     |     | {opt_as_alias}
+  |     |       | {name y}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {opt_groupby}: err
+  |           | | {groupby_list}: err
+  |           |   | {groupby_item}
+  |           |     | {name y}: err
+  |           | {select_having}
+  |             | {opt_having}: bool notnull
+  |               | {gt}: bool notnull
+  |                 | {call}: integer notnull
+  |                 | | {name count}: integer notnull
+  |                 | | {call_arg_list}
+  |                 |   | {call_filter_clause}
+  |                 |   | {arg_list}: ok
+  |                 |     | {name name}: name: text
+  |                 | {int 10}: integer notnull
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id, name AS y
+  FROM bar
+  GROUP BY name
+  HAVING count(y) > 10;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     | | | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |     | {name name}
+  |     |     | {opt_as_alias}
+  |     |       | {name y}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {opt_groupby}: ok
+  |           | | {groupby_list}: ok
+  |           |   | {groupby_item}
+  |           |     | {name name}: name: text
+  |           | {select_having}
+  |             | {opt_having}: err
+  |               | {gt}: err
+  |                 | {call}: err
+  |                 | | {name count}
+  |                 | | {call_arg_list}
+  |                 |   | {call_filter_clause}
+  |                 |   | {arg_list}: err
+  |                 |     | {name y}: err
+  |                 | {int 10}: integer notnull
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id, name AS y, 
+  row_number() OVER w
+  FROM bar
+  WINDOW 
+    w AS (ORDER BY y);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     | | | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |   | | {name name}
+  |     |   | | {opt_as_alias}
+  |     |   |   | {name y}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}
+  |     |       | {window_func_inv}
+  |     |         | {call}
+  |     |         | | {name row_number}
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         | {name w}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  |             | {opt_select_window}: err
+  |               | {window_clause}: err
+  |                 | {window_name_defn_list}
+  |                   | {window_name_defn}: err
+  |                     | {name w}
+  |                     | {window_defn}: err
+  |                       | {window_defn_orderby}
+  |                         | {opt_orderby}: err
+  |                           | {groupby_list}: err
+  |                             | {groupby_item}
+  |                               | {name y}: err
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS name
+  FROM bar
+  WHERE name LIKE "%foo%";
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     |   | {name id}
+  |     |   | {opt_as_alias}
+  |     |     | {name name}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {opt_where}: err
+  |         | | {like}: err
+  |         |   | {name name}: err
+  |         |   | {strlit '%foo%'}: text notnull
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS name
+  FROM bar
+  WHERE bar.name LIKE "%foo%";
+
+  {select_stmt}: select: { name: integer notnull }
+  | {select_core_list}: select: { name: integer notnull }
+  | | {select_core}: select: { name: integer notnull }
+  |   | {select_expr_list_con}: select: { name: integer notnull }
+  |     | {select_expr_list}: select: { name: integer notnull }
+  |     | | {select_expr}: name: integer notnull
+  |     |   | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name name}
+  |     | {select_from_etc}: TABLE { bar: bar }
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {opt_where}: bool
+  |         | | {like}: bool
+  |         |   | {dot}: name: text
+  |         |   | | {name bar}
+  |         |   | | {name name}
+  |         |   | {strlit '%foo%'}: text notnull
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS name
+  FROM bar
+  WHERE id > ( SELECT count(rate)
+  FROM bar
+  WHERE name LIKE "%foo%" );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     |   | {name id}
+  |     |   | {opt_as_alias}
+  |     |     | {name name}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {opt_where}: err
+  |         | | {gt}: err
+  |         |   | {name id}: id: integer notnull
+  |         |   | {select_stmt}: err
+  |         |     | {select_core_list}: err
+  |         |     | | {select_core}: err
+  |         |     |   | {select_expr_list_con}: err
+  |         |     |     | {select_expr_list}: err
+  |         |     |     | | {select_expr}
+  |         |     |     |   | {call}
+  |         |     |     |     | {name count}
+  |         |     |     |     | {call_arg_list}
+  |         |     |     |       | {call_filter_clause}
+  |         |     |     |       | {arg_list}
+  |         |     |     |         | {name rate}
+  |         |     |     | {select_from_etc}: err
+  |         |     |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |         |     |       | | {table_or_subquery}: TABLE { bar: bar }
+  |         |     |       |   | {name bar}: TABLE { bar: bar }
+  |         |     |       | {select_where}
+  |         |     |         | {opt_where}: err
+  |         |     |         | | {like}: err
+  |         |     |         |   | {name name}: err
+  |         |     |         |   | {strlit '%foo%'}: text notnull
+  |         |     |         | {select_groupby}
+  |         |     |           | {select_having}
+  |         |     | {select_orderby}
+  |         |       | {select_limit}
+  |         |         | {select_offset}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS name
+  FROM bar
+  WHERE id > ( SELECT count(rate)
+  FROM bar
+  WHERE bar.name LIKE "%foo%" );
+
+  {select_stmt}: select: { name: integer notnull }
+  | {select_core_list}: select: { name: integer notnull }
+  | | {select_core}: select: { name: integer notnull }
+  |   | {select_expr_list_con}: select: { name: integer notnull }
+  |     | {select_expr_list}: select: { name: integer notnull }
+  |     | | {select_expr}: name: integer notnull
+  |     |   | {name id}: id: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name name}
+  |     | {select_from_etc}: TABLE { bar: bar }
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {opt_where}: bool notnull
+  |         | | {gt}: bool notnull
+  |         |   | {name id}: id: integer notnull
+  |         |   | {select_stmt}: _anon: integer notnull
+  |         |     | {select_core_list}: select: { _anon: integer notnull }
+  |         |     | | {select_core}: select: { _anon: integer notnull }
+  |         |     |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |         |     |     | {select_expr_list}: select: { _anon: integer notnull }
+  |         |     |     | | {select_expr}: integer notnull
+  |         |     |     |   | {call}: integer notnull
+  |         |     |     |     | {name count}: integer notnull
+  |         |     |     |     | {call_arg_list}
+  |         |     |     |       | {call_filter_clause}
+  |         |     |     |       | {arg_list}: ok
+  |         |     |     |         | {name rate}: rate: longint
+  |         |     |     | {select_from_etc}: TABLE { bar: bar }
+  |         |     |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |         |     |       | | {table_or_subquery}: TABLE { bar: bar }
+  |         |     |       |   | {name bar}: TABLE { bar: bar }
+  |         |     |       | {select_where}
+  |         |     |         | {opt_where}: bool
+  |         |     |         | | {like}: bool
+  |         |     |         |   | {dot}: name: text
+  |         |     |         |   | | {name bar}
+  |         |     |         |   | | {name name}
+  |         |     |         |   | {strlit '%foo%'}: text notnull
+  |         |     |         | {select_groupby}
+  |         |     |           | {select_having}
+  |         |     | {select_orderby}
+  |         |       | {select_limit}
+  |         |         | {select_offset}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS name, name
+  FROM bar
+  GROUP BY name
+  HAVING count(name) > 10;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
+test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     | | | {name id}
+  |     | | | {opt_as_alias}
+  |     | |   | {name name}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |     | {name name}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {opt_groupby}: err
+  |           | | {groupby_list}: err
+  |           |   | {groupby_item}
+  |           |     | {name name}: err
+  |           | {select_having}
+  |             | {opt_having}: err
+  |               | {gt}: err
+  |                 | {call}: err
+  |                 | | {name count}
+  |                 | | {call_arg_list}
+  |                 |   | {call_filter_clause}
+  |                 |   | {arg_list}: err
+  |                 |     | {name name}: err
+  |                 | {int 10}: integer notnull
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS name, name
+  FROM bar
+  GROUP BY name
+  HAVING count(name) > 10;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
+test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     | | | {name id}
+  |     | | | {opt_as_alias}
+  |     | |   | {name name}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |     | {name name}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {opt_groupby}: err
+  |           | | {groupby_list}: err
+  |           |   | {groupby_item}
+  |           |     | {name name}: err
+  |           | {select_having}
+  |             | {opt_having}: err
+  |               | {gt}: err
+  |                 | {call}: err
+  |                 | | {name count}
+  |                 | | {call_arg_list}
+  |                 |   | {call_filter_clause}
+  |                 |   | {arg_list}: err
+  |                 |     | {name name}: err
+  |                 | {int 10}: integer notnull
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id AS name, name, 
+  row_number() OVER w
+  FROM bar
+  WINDOW 
+    w AS (ORDER BY name);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     | | | {name id}
+  |     | | | {opt_as_alias}
+  |     | |   | {name name}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |   | | {name name}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}
+  |     |       | {window_func_inv}
+  |     |         | {call}
+  |     |         | | {name row_number}
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         | {name w}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { bar: bar }
+  |       | | {table_or_subquery}: TABLE { bar: bar }
+  |       |   | {name bar}: TABLE { bar: bar }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  |             | {opt_select_window}: err
+  |               | {window_clause}: err
+  |                 | {window_name_defn_list}
+  |                   | {window_name_defn}: err
+  |                     | {name w}
+  |                     | {window_defn}: err
+  |                       | {window_defn_orderby}
+  |                         | {opt_orderby}: err
+  |                           | {groupby_list}: err
+  |                             | {groupby_item}
+  |                               | {name name}: err
   | {select_orderby}
     | {select_limit}
       | {select_offset}
@@ -3078,7 +3603,7 @@ test/sem_test.sql:XXXX:1: error: in opt_having : CQL0015: expected numeric expre
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {star}: select: { id: integer notnull }
+  |     | | {star}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -5490,8 +6015,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -9644,7 +10169,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument must be numeric 'avg
 The statement ending at line XXXX
 
 SET X := ( SELECT X * 10 AS v
-  WHERE v = 1 );
+  WHERE 1 );
 
   {assign}: X: integer variable
   | {name X}: X: integer variable
@@ -9661,10 +10186,8 @@ SET X := ( SELECT X * 10 AS v
     |     |     | {name v}
     |     | {select_from_etc}: ok
     |       | {select_where}
-    |         | {opt_where}: bool
-    |         | | {eq}: bool
-    |         |   | {name v}: v: integer
-    |         |   | {int 1}: integer notnull
+    |         | {opt_where}: integer notnull
+    |         | | {int 1}: integer notnull
     |         | {select_groupby}
     |           | {select_having}
     | {select_orderby}
@@ -10643,7 +11166,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {star}: select: { id: integer notnull }
+  |     | | {star}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -10877,7 +11400,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {star}: select: { id: integer notnull }
+  |     | | {star}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -10923,7 +11446,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {star}: select: { id: integer notnull }
+  |     | | {star}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -12588,10 +13111,10 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0084: second argument must be a st
   |       |   | {name bar}: TABLE { bar: bar }
   |       | {select_where}
   |         | {select_groupby}
-  |           | {opt_groupby}
-  |           | | {groupby_list}
+  |           | {opt_groupby}: ok
+  |           | | {groupby_list}: ok
   |           |   | {groupby_item}
-  |           |     | {name id}
+  |           |     | {name id}: id: integer notnull
   |           | {select_having}
   | {select_orderby}
     | {select_limit}
@@ -12624,10 +13147,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |       |   | {name bar}: TABLE { bar: bar }
   |       | {select_where}
   |         | {select_groupby}
-  |           | {opt_groupby}
-  |           | | {groupby_list}
+  |           | {opt_groupby}: ok
+  |           | | {groupby_list}: ok
   |           |   | {groupby_item}
-  |           |     | {name id}
+  |           |     | {name id}: id: integer notnull
   |           | {select_having}
   | {select_orderby}
     | {select_limit}
@@ -12666,10 +13189,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |       |   | {name bar}: TABLE { bar: bar }
   |       | {select_where}
   |         | {select_groupby}
-  |           | {opt_groupby}
-  |           | | {groupby_list}
+  |           | {opt_groupby}: ok
+  |           | | {groupby_list}: ok
   |           |   | {groupby_item}
-  |           |     | {name id}
+  |           |     | {name id}: id: integer notnull
   |           | {select_having}
   | {select_orderby}
     | {select_limit}
@@ -12688,8 +13211,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { bar: bar }
   |       | | {table_or_subquery}: TABLE { bar: bar }
@@ -14153,8 +14676,8 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0232: nested select express
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -14203,8 +14726,8 @@ test/sem_test.sql:XXXX:1: error: in in_pred : CQL0012: incompatible types in exp
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -14295,8 +14818,8 @@ test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expr
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -30185,56 +30708,6 @@ test/sem_test.sql:XXXX:1: error: in tilde : CQL0001: operands must be an integer
 
 The statement ending at line XXXX
 
-SELECT 1 AS a, 2 AS b
-  FROM (SELECT 1) AS T
-  WHERE b = 2;
-
-  {select_stmt}: select: { a: integer notnull, b: integer notnull }
-  | {select_core_list}: select: { a: integer notnull, b: integer notnull }
-  | | {select_core}: select: { a: integer notnull, b: integer notnull }
-  |   | {select_expr_list_con}: select: { a: integer notnull, b: integer notnull }
-  |     | {select_expr_list}: select: { a: integer notnull, b: integer notnull }
-  |     | | {select_expr}: a: integer notnull
-  |     | | | {int 1}: integer notnull
-  |     | | | {opt_as_alias}
-  |     | |   | {name a}
-  |     | | {select_expr_list}
-  |     |   | {select_expr}: b: integer notnull
-  |     |     | {int 2}: integer notnull
-  |     |     | {opt_as_alias}
-  |     |       | {name b}
-  |     | {select_from_etc}: TABLE { T: select }
-  |       | {table_or_subquery_list}: TABLE { T: select }
-  |       | | {table_or_subquery}: TABLE { T: select }
-  |       |   | {select_stmt}: select: { _anon: integer notnull }
-  |       |   | | {select_core_list}: select: { _anon: integer notnull }
-  |       |   | | | {select_core}: select: { _anon: integer notnull }
-  |       |   | |   | {select_expr_list_con}: select: { _anon: integer notnull }
-  |       |   | |     | {select_expr_list}: select: { _anon: integer notnull }
-  |       |   | |     | | {select_expr}: integer notnull
-  |       |   | |     |   | {int 1}: integer notnull
-  |       |   | |     | {select_from_etc}: ok
-  |       |   | |       | {select_where}
-  |       |   | |         | {select_groupby}
-  |       |   | |           | {select_having}
-  |       |   | | {select_orderby}
-  |       |   |   | {select_limit}
-  |       |   |     | {select_offset}
-  |       |   | {opt_as_alias}
-  |       |     | {name T}
-  |       | {select_where}
-  |         | {opt_where}: bool notnull
-  |         | | {eq}: bool notnull
-  |         |   | {name b}: b: integer notnull
-  |         |   | {int 2}: integer notnull
-  |         | {select_groupby}
-  |           | {select_having}
-  | {select_orderby}
-    | {select_limit}
-      | {select_offset}
-
-The statement ending at line XXXX
-
 CREATE PROC simple_alias_order_by ()
 BEGIN
   SELECT id AS bar_id
@@ -30353,36 +30826,6 @@ CREATE TABLE stories(
         | {col_def_name_type}
           | {name media_id}
           | {type_long}: longint
-
-The statement ending at line XXXX
-
-SELECT 'xyzzy' AS media_id
-  FROM stories
-  WHERE media_id = 123;
-
-  {select_stmt}: select: { media_id: text notnull }
-  | {select_core_list}: select: { media_id: text notnull }
-  | | {select_core}: select: { media_id: text notnull }
-  |   | {select_expr_list_con}: select: { media_id: text notnull }
-  |     | {select_expr_list}: select: { media_id: text notnull }
-  |     | | {select_expr}: media_id: text notnull
-  |     |   | {strlit 'xyzzy'}: text notnull
-  |     |   | {opt_as_alias}
-  |     |     | {name media_id}
-  |     | {select_from_etc}: TABLE { stories: stories }
-  |       | {table_or_subquery_list}: TABLE { stories: stories }
-  |       | | {table_or_subquery}: TABLE { stories: stories }
-  |       |   | {name stories}: TABLE { stories: stories }
-  |       | {select_where}
-  |         | {opt_where}: bool
-  |         | | {eq}: bool
-  |         |   | {name media_id}: media_id: longint
-  |         |   | {int 123}: integer notnull
-  |         | {select_groupby}
-  |           | {select_having}
-  | {select_orderby}
-    | {select_limit}
-      | {select_offset}
 
 The statement ending at line XXXX
 
@@ -45131,8 +45574,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0395: table valued functions may n
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: integer notnull
-  |     |   | {int 1}: integer notnull
+  |     | | {select_expr}
+  |     |   | {int 1}
   |     | {select_from_etc}: err
   |       | {select_where}
   |         | {opt_where}: err
@@ -46787,8 +47230,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
           |       | | {select_core}: err
           |       |   | {select_expr_list_con}: err
           |       |     | {select_expr_list}: err
-          |       |     | | {select_expr}: id: integer notnull
-          |       |     |   | {name id}: id: integer notnull
+          |       |     | | {select_expr}
+          |       |     |   | {name id}
           |       |     | {select_from_etc}: err
           |       |       | {table_or_subquery_list}: TABLE { data: data }
           |       |       | | {table_or_subquery}: TABLE { data: data }
@@ -49516,8 +49959,8 @@ test/sem_test.sql:XXXX:1: error: in window_func_inv : CQL0294: Window function i
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: integer notnull
-  |     |   | {int 1}: integer notnull
+  |     | | {select_expr}
+  |     |   | {int 1}
   |     | {select_from_etc}: err
   |       | {select_where}
   |         | {opt_where}: err
@@ -49683,16 +50126,16 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     | | | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     | | | {name id}
   |     | | {select_expr_list}
-  |     |   | {select_expr}: integer notnull
-  |     |     | {window_func_inv}: integer notnull
-  |     |       | {call}: integer notnull
-  |     |       | | {name row_number}: integer notnull
+  |     |   | {select_expr}
+  |     |     | {window_func_inv}
+  |     |       | {call}
+  |     |       | | {name row_number}
   |     |       | | {call_arg_list}
   |     |       |   | {call_filter_clause}
-  |     |       | {name win}: ok
+  |     |       | {name win}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -49729,8 +50172,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0296: Window name definition is not
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -50459,8 +50902,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -51103,8 +51546,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -51212,8 +51655,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer notnull
-  |     |   | {name id}: id: integer notnull
+  |     | | {select_expr}
+  |     |   | {name id}
   |     | {select_from_etc}: err
   |       | {table_or_subquery_list}: TABLE { foo: foo }
   |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -71033,52 +71476,6 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC aliases_are_improved_if_not_shadowed_by_a_column_in_from ()
-BEGIN
-  SELECT xn AS yn, xn AS zn
-    FROM tnull
-    WHERE yn IS NOT NULL AND zn IS NOT NULL;
-END;
-
-  {create_proc_stmt}: select: { yn: integer, zn: integer notnull } dml_proc
-  | {name aliases_are_improved_if_not_shadowed_by_a_column_in_from}: select: { yn: integer, zn: integer notnull } dml_proc
-  | {proc_params_stmts}
-    | {stmt_list}: ok
-      | {select_stmt}: select: { yn: integer, zn: integer notnull }
-        | {select_core_list}: select: { yn: integer, zn: integer notnull }
-        | | {select_core}: select: { yn: integer, zn: integer notnull }
-        |   | {select_expr_list_con}: select: { yn: integer, zn: integer notnull }
-        |     | {select_expr_list}: select: { yn: integer, zn: integer notnull }
-        |     | | {select_expr}: yn: integer
-        |     | | | {name xn}: xn: integer
-        |     | | | {opt_as_alias}
-        |     | |   | {name yn}
-        |     | | {select_expr_list}
-        |     |   | {select_expr}: zn: integer
-        |     |     | {name xn}: xn: integer
-        |     |     | {opt_as_alias}
-        |     |       | {name zn}
-        |     | {select_from_etc}: TABLE { tnull: tnull }
-        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
-        |       | | {table_or_subquery}: TABLE { tnull: tnull }
-        |       |   | {name tnull}: TABLE { tnull: tnull }
-        |       | {select_where}
-        |         | {opt_where}: bool notnull
-        |         | | {and}: bool notnull
-        |         |   | {is_not}: bool notnull
-        |         |   | | {name yn}: yn: integer
-        |         |   | | {null}: null
-        |         |   | {is_not}: bool notnull
-        |         |     | {name zn}: zn: integer
-        |         |     | {null}: null
-        |         | {select_groupby}
-        |           | {select_having}
-        | {select_orderby}
-          | {select_limit}
-            | {select_offset}
-
-The statement ending at line XXXX
-
 CREATE PROC local_variable_improvements_do_not_affect_result_columns ()
 BEGIN
   DECLARE xn INTEGER;
@@ -71124,49 +71521,12 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC where_clauses_with_unbound_identifiers_do_not_crash ()
-BEGIN
-  SELECT xn
-    FROM tnull
-    WHERE zn IS NOT NULL;
-END;
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'zn'
-
-  {create_proc_stmt}: err
-  | {name where_clauses_with_unbound_identifiers_do_not_crash}: err
-  | {proc_params_stmts}
-    | {stmt_list}: err
-      | {select_stmt}: err
-        | {select_core_list}: err
-        | | {select_core}: err
-        |   | {select_expr_list_con}: err
-        |     | {select_expr_list}: err
-        |     | | {select_expr}: xn: integer
-        |     |   | {name xn}: xn: integer
-        |     | {select_from_etc}: err
-        |       | {table_or_subquery_list}: TABLE { tnull: tnull }
-        |       | | {table_or_subquery}: TABLE { tnull: tnull }
-        |       |   | {name tnull}: TABLE { tnull: tnull }
-        |       | {select_where}
-        |         | {opt_where}: err
-        |         | | {is_not}: err
-        |         |   | {name zn}: err
-        |         |   | {null}: null
-        |         | {select_groupby}
-        |           | {select_having}
-        | {select_orderby}
-          | {select_limit}
-            | {select_offset}
-
-The statement ending at line XXXX
-
 CREATE PROC improvements_work_on_join_results ()
 BEGIN
   SELECT tnull.xn AS xn0
     FROM tnull
     INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn
-    WHERE xn0 IS NOT NULL;
+    WHERE tnull.xn IS NOT NULL;
 END;
 
   {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
@@ -71178,10 +71538,15 @@ END;
         | | {select_core}: select: { xn0: integer notnull }
         |   | {select_expr_list_con}: select: { xn0: integer notnull }
         |     | {select_expr_list}: select: { xn0: integer notnull }
-        |     | | {select_expr}: xn0: integer
-        |     |   | {dot}: xn: integer
-        |     |   | | {name tnull}
-        |     |   | | {name xn}
+        |     | | {select_expr}: xn0: integer notnull
+        |     |   | {call}: xn: integer notnull
+        |     |   | | {name cql_inferred_notnull}: xn: integer notnull
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {dot}: xn: integer inferred_notnull
+        |     |   |       | {name tnull}
+        |     |   |       | {name xn}
         |     |   | {opt_as_alias}
         |     |     | {name xn0}
         |     | {select_from_etc}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
@@ -71206,7 +71571,9 @@ END;
         |       | {select_where}
         |         | {opt_where}: bool notnull
         |         | | {is_not}: bool notnull
-        |         |   | {name xn0}: xn0: integer
+        |         |   | {dot}: xn: integer
+        |         |   | | {name tnull}
+        |         |   | | {name xn}
         |         |   | {null}: null
         |         | {select_groupby}
         |           | {select_having}
