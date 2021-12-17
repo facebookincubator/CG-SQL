@@ -4181,14 +4181,30 @@ end;
 declare proc out2_proc(x integer, out y integer not null, out z integer not null);
 
 -- TEST: implicit declare including re-use
--- + void out_decl_test_3(cql_nullable_int32 x) {
+-- + void out_decl_test(cql_nullable_int32 x) {
 -- + cql_int32 u = 0;
 -- + cql_int32 v = 0;
 -- +2 out2_proc(x, &u, &v);
-create proc out_decl_test_3(x integer)
+create proc out_decl_test(x integer)
 begin
   declare out call out2_proc(x, u, v);
   declare out call out2_proc(x, u, v);
+end;
+
+-- TEST: implicit declare within a loop; this is a different case because
+-- sem_declare_out_call_stmt has to take care to retain the SEM_TYPE_IMPLICIT
+-- flags appropriately during loop reanalysis
+-- + void out_decl_loop_test(cql_nullable_int32 x) {
+-- + cql_int32 u = 0;
+-- + cql_int32 v = 0;
+-- +2 out2_proc(x, &u, &v);
+create proc out_decl_loop_test(x integer)
+begin
+  while 1
+  begin
+    declare out call out2_proc(x, u, v);
+    declare out call out2_proc(x, u, v);
+  end;
 end;
 
 -- TEST: most binary operations involving a null-typed argument result in null
@@ -4993,4 +5009,3 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
-

@@ -12556,21 +12556,49 @@ DECLARE PROC out2_proc (x INTEGER, OUT y INTEGER NOT NULL, OUT z INTEGER NOT NUL
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_decl_test_3 (x INTEGER)
+CREATE PROC out_decl_test (x INTEGER)
 BEGIN
   DECLARE OUT CALL out2_proc(x, u, v);
   DECLARE OUT CALL out2_proc(x, u, v);
 END;
 */
 
-#define _PROC_ "out_decl_test_3"
-// export: DECLARE PROC out_decl_test_3 (x INTEGER);
-void out_decl_test_3(cql_nullable_int32 x) {
+#define _PROC_ "out_decl_test"
+// export: DECLARE PROC out_decl_test (x INTEGER);
+void out_decl_test(cql_nullable_int32 x) {
   cql_int32 u = 0;
   cql_int32 v = 0;
 
   out2_proc(x, &u, &v);
   out2_proc(x, &u, &v);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC out_decl_loop_test (x INTEGER)
+BEGIN
+  WHILE 1
+  BEGIN
+    DECLARE OUT CALL out2_proc(x, u, v);
+    DECLARE OUT CALL out2_proc(x, u, v);
+  END;
+END;
+*/
+
+#define _PROC_ "out_decl_loop_test"
+// export: DECLARE PROC out_decl_loop_test (x INTEGER);
+void out_decl_loop_test(cql_nullable_int32 x) {
+  cql_int32 u = 0;
+  cql_int32 v = 0;
+
+  for (;;) {
+  if (!(1)) break;
+    out2_proc(x, &u, &v);
+    out2_proc(x, &u, &v);
+  }
 
 }
 #undef _PROC_

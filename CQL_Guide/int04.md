@@ -112,7 +112,7 @@ First let's look at the shell script:
 semantic_test() {
   echo '--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST'
   echo running semantic analysis test
-  if ! sem_check --sem --print --dev --in "${TEST_DIR}/sem_test.sql" >"${OUT_DIR}/sem_test.out" 2>"${OUT_DIR}/sem_test.err"
+  if ! sem_check --sem --ast --dev --in "${TEST_DIR}/sem_test.sql" >"${OUT_DIR}/sem_test.out" 2>"${OUT_DIR}/sem_test.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/sem_test.err"

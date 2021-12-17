@@ -116,6 +116,17 @@ typedef struct global_notnull_improvement_item {
   struct global_notnull_improvement_item *next;
 } global_notnull_improvement_item;
 
+// The analysis of loops like LOOP and WHILE is done in two passes. First, we
+// analyze the loop to conservatively figure out every improvement that the loop
+// could possibly unset. After that, then we reanalyze it with said improvements
+// unset to ensure that everything is safe. See `sem_stmt_list_within_loop` for
+// more information on why this is necessary.
+typedef enum {
+  LOOP_ANALYSIS_STATE_NONE,
+  LOOP_ANALYSIS_STATE_ANALYZE,
+  LOOP_ANALYSIS_STATE_REANALYZE
+} loop_analysis_state;
+
 // If a function has been registered via `FUNC_INIT`, its associated analysis
 // function must conform to the type `sem_func`. When called, its argument list
 // will have already been analyzed and verified to be free of errors.
@@ -129,8 +140,9 @@ typedef void sem_func(ast_node *ast, uint32_t arg_count);
 typedef void sem_special_func(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
 
 // forward references for mutual recursion cases
-static void sem_stmt_list(ast_node *root);
-static void sem_stmt_list_in_current_flow_context(ast_node *root);
+static void sem_stmt_list(ast_node *ast);
+static void sem_stmt_list_in_current_flow_context(ast_node *ast);
+static void sem_stmt_list_within_loop(ast_node *ast);
 static void sem_select(ast_node *node);
 static void sem_select_core_list(ast_node *ast);
 static void sem_query_parts(ast_node *node);
@@ -356,8 +368,8 @@ static bool_t validating_previous_schema;
 // The curernt annonation target in create proc statement
 static CSTR annotation_target;
 
-// This is true if we are analyzing a call to `cql_inferred_notnull`. This can
-// happen for three reasons:
+// True if we are analyzing a call to `cql_inferred_notnull`. This can happen
+// for three reasons:
 //
 // * We just did a rewrite that produced a `cql_inferred_notnull` call and now
 //   we're computing its type.
@@ -369,11 +381,27 @@ static CSTR annotation_target;
 // want to rewrite again.
 static bool_t is_analyzing_notnull_rewrite;
 
-// This keeps track of all global variables that may currently be improved to be
-// NOT NULL. We need this because we must un-improve all such variables after
-// every procedure call (because we don't do interprocedural analysis and cannot
-// know which globals may have been set to NULL).
+// Keeps track of all global variables that may currently be improved to be NOT
+// NULL. We need this because we must un-improve all such variables after every
+// procedure call (because we don't do interprocedural analysis and cannot know
+// which globals may have been set to NULL).
 static global_notnull_improvement_item *global_notnull_improvements;
+
+// Keeps tracks of the current loop analysis state. If this is equal to
+// `LOOP_ANALYSIS_STATE_ANALYZE`, we are analyzing with a non-final set of
+// improvements. This is useful for two reasons:
+//
+// 1. Procedures that perform rewrites based on improvements (e.g.,
+//    `sem_resolve_id_expr`) can use this to verify whether a rewrite is safe to
+//    perform (`LOOP_ANALYSIS_STATE_NONE` or `LOOP_ANALYSIS_STATE_REANALYZE`) or
+//    whether they should wait because they do not yet have definitive
+//    information (`LOOP_ANALYSIS_STATE_ANALYZE`).
+//
+// 2. Analyses that would otherwise fail if called during reanalysis (e.g.,
+//    `sem_verify_legal_variable_name`) can use this to check whether the
+//    current state is `LOOP_ANALYSIS_STATE_REANALYZE` and adjust their
+//    behaviors accordingly.
+static loop_analysis_state current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
 
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
@@ -4695,7 +4723,7 @@ static sem_t type_with_finalized_nullability_improvement(sem_t type) {
   if (type & SEM_TYPE_INFERRED_NOTNULL) {
     // Upgrade the inferred nonnull type so it has a proper NOT NULL type.
     type |= SEM_TYPE_NOTNULL;
-    // Prevent this from propagating needlessly to keep --print clean.
+    // Prevent this from propagating needlessly to keep --ast clean.
     type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
   }
 
@@ -5715,6 +5743,23 @@ static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
     return;
   }
 
+  if (current_loop_analysis_state == LOOP_ANALYSIS_STATE_ANALYZE) {
+    // We're inside of a loop that we're going going to analyze again. If we
+    // were to rewrite now, we could rewrite something to be nonnull that we'll
+    // later find out is actually nullable.
+    //
+    // To avoid ending up with a bogus call to `cql_inferred_notnull`, we skip
+    // the rewrite and optimistically make it nonnull directly. This poses no
+    // problems for codegen if we turn out to be right because we'll perform the
+    // rewrite as usual during the next stage of loop analysis, and it poses no
+    // problems for semantic analysis if we're wrong because we'll catch the
+    // error on the next phase.
+    ast->sem->sem_type |= SEM_TYPE_NOTNULL;
+    // Prevent this from propagating needlessly to keep --ast clean.
+    ast->sem->sem_type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
+    return;
+  }
+
   // If we've made it here, it's safe and appropriate to do the rewrite.
   rewrite_nullable_to_notnull(ast);
 }
@@ -5935,7 +5980,7 @@ cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
   // `else_expr`; that would be incorrect, because if `else_expr` ends up being
   // evaluated, none of the THEN expressions within `case_list` could have been
   // evaluated.
-  FLOW_PUSH_CONTEXT_BRANCH_SET();
+  FLOW_PUSH_CONTEXT_BRANCH_GROUP();
 
   sem_case_list(case_list, !!expr, sem_type_required_for_when, kind_required_for_when, is_iif);
   if (is_error(case_list)) {
@@ -5946,7 +5991,7 @@ cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
   sem_sensitive |= sensitive_flag(case_list->sem->sem_type);
 
   if (else_expr) {
-    flow_set_context_branch_set_has_else(true);
+    flow_set_context_branch_group_has_else(true);
     FLOW_PUSH_CONTEXT_BRANCH();
     sem_expr(else_expr);
     FLOW_POP_CONTEXT_BRANCH();
@@ -5984,7 +6029,7 @@ cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
   connector->sem = ast->sem;
 
 cleanup:
-  FLOW_POP_CONTEXT_BRANCH_SET();
+  FLOW_POP_CONTEXT_BRANCH_GROUP();
   return;
 
 error:
@@ -7074,7 +7119,7 @@ static void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_co
   // This compiles to nothing for SQLite so we can allow all contexts.
   sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_FLAGS);
   Invariant(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
-  // Prevent this from propagating needlessly to keep --print clean.
+  // Prevent this from propagating needlessly to keep --ast clean.
   ast->sem->sem_type &= u64_not(SEM_TYPE_INFERRED_NOTNULL);
 }
 
@@ -12564,7 +12609,7 @@ static void sem_if_stmt(ast_node *ast) {
   // outer context holds all of the negative improvements that result from the
   // knowledge that, if a given branch's statements are being evaluated, all
   // previous branches' conditions must have been false.
-  FLOW_PUSH_CONTEXT_BRANCH_SET();
+  FLOW_PUSH_CONTEXT_BRANCH_GROUP();
 
   // IF [cond_action]
   sem_cond_action(cond_action);
@@ -12585,7 +12630,7 @@ static void sem_if_stmt(ast_node *ast) {
 
   if (elsenode) {
     // ELSE [stmt_list]
-    flow_set_context_branch_set_has_else(true);
+    flow_set_context_branch_group_has_else(true);
     EXTRACT(stmt_list, elsenode->left);
     if (stmt_list) {
       FLOW_PUSH_CONTEXT_BRANCH();
@@ -12606,7 +12651,7 @@ static void sem_if_stmt(ast_node *ast) {
   // END IF
 
 cleanup:
-  FLOW_POP_CONTEXT_BRANCH_SET();
+  FLOW_POP_CONTEXT_BRANCH_GROUP();
 
   if (is_error(ast)) {
     return;
@@ -17149,9 +17194,13 @@ static void sem_declare_proc_stmt(ast_node *ast) {
 //  * scopes do not nest in CQL so any local is the same anywhere no matter
 //    where it appears, it can be used any point later.  This could be changed.
 static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name) {
-  if (symtab_find(current_variables, name)) {
-    report_error(variable, "CQL0197: duplicate variable name in the same scope", name);
-    return false;
+  // Do not erroneously warn about duplicate variables if we're reanalyzing
+  // a statement list within a loop.
+  if (current_loop_analysis_state != LOOP_ANALYSIS_STATE_REANALYZE) {
+    if (symtab_find(current_variables, name)) {
+      report_error(variable, "CQL0197: duplicate variable name in the same scope", name);
+      return false;
+    }
   }
 
   // global variables can't conflict with table names, not even deleted table names
@@ -18024,7 +18073,7 @@ static void sem_while_stmt(ast_node *ast) {
   if (stmt_list) {
     loop_depth++;
 
-    sem_stmt_list(stmt_list);
+    sem_stmt_list_within_loop(stmt_list);
 
     loop_depth--;
 
@@ -18057,7 +18106,7 @@ static void sem_loop_stmt(ast_node *ast) {
   if (stmt_list) {
     loop_depth++;
 
-    sem_stmt_list(stmt_list);
+    sem_stmt_list_within_loop(stmt_list);
 
     loop_depth--;
 
@@ -19211,13 +19260,40 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
 
     EXTRACT_ANY_NOTNULL(arg, expr_list->left);
 
-    if (!is_ast_str(arg)) {
+    if (!is_id(arg)) {
       report_error(arg, "CQL0207: expected a variable name for out argument", param->sem->name);
       record_error(ast);
       return;
     }
 
     EXTRACT_STRING(var_name, arg);
+
+    if (arg->sem && arg->sem->sem_type & SEM_TYPE_IMPLICIT) {
+      // If we're here, we must be reanalyzing a statement list as the implicit
+      // flag is already set on `arg`.
+      Invariant(current_loop_analysis_state == LOOP_ANALYSIS_STATE_REANALYZE);
+      // We also must have already made a variable for this argument.
+      symtab_entry *entry = symtab_find(current_variables, var_name);
+      Invariant(entry);
+      // That variable doesn't have the implicit flag set because we pulled it
+      // off later in this function during the first loop analysis pass.
+      ast_node *variable = entry->val;
+      Invariant(!(variable->sem->sem_type & SEM_TYPE_IMPLICIT));
+      // However, if it doesn't have it, we'll run into an issue when we call
+      // `sem_call_stmt` below. When the type of `arg` would eventually looked
+      // up during that call in `sem_resolve_id_expr`, the variable would
+      // already be in scope (*without* the implicit flag set), its type would
+      // be written into `arg`, and the implicit flag would be effectively
+      // removed from `arg`. We'd then fail to emit the required variable
+      // declaration during codegen due to the lack of the flag.
+      //
+      // The fix is to simply put the implicit flag back onto the variable
+      // itself. Doing this allows the remainder of this function to work as it
+      // did during the first loop analysis pass: It'll be on the variable for
+      // `sem_call_stmt`, then we'll pull it back off at the end.
+      variable->sem->sem_type |= SEM_TYPE_IMPLICIT;
+      continue;
+    }
 
     if (!symtab_find(current_variables, var_name)) {
       sem_t sem_type_var = param->sem->sem_type;
@@ -19436,6 +19512,76 @@ static void sem_stmt_list(ast_node *head) {
   sem_stmt_list_in_current_flow_context(head);
 
   FLOW_POP_CONTEXT_NORMAL();
+}
+
+// Like `sem_stmt_list`, but specifically for lists of statements within loops
+// (e.g., WHILE and LOOP).
+static void sem_stmt_list_within_loop(ast_node *head) {
+  loop_analysis_state saved_loop_analysis_state = current_loop_analysis_state;
+  bool_t is_top_level_loop = false;
+
+recurse:
+  switch (current_loop_analysis_state) {
+    case LOOP_ANALYSIS_STATE_NONE:
+      is_top_level_loop = true;
+      current_loop_analysis_state = LOOP_ANALYSIS_STATE_ANALYZE;
+      // Save a stack frame and avoid implicit fallthrough.
+      goto recurse;
+    case LOOP_ANALYSIS_STATE_ANALYZE: {
+      // Analyze the statement list within a jump context. The jump context
+      // ensures that any improvements in effect before the loop which are unset
+      // within the loop, then re-set later in the loop, are re-unset after the
+      // loop. See `_flow_pop_context_jump` for an example of why this is
+      // necessary.
+      FLOW_PUSH_CONTEXT_JUMP();
+      sem_stmt_list_in_current_flow_context(head);
+      FLOW_POP_CONTEXT_JUMP();
+      if (is_error(head)) {
+        goto cleanup;
+      }
+      // We only want to perform reanalysis if this is a top-level loop. Doing
+      // it for every loop would not only result in a lot of unnecessary work,
+      // it would also cause problems for other parts of the code that need to
+      // have the final set of improvements to do their job properly (e.g.,
+      // `sem_resolve_id_expr`) -- we cannot have the final set of improvements
+      // for a particular loop until all the preceding portions of all enclosing
+      // loops also have their final sets.
+      if (is_top_level_loop) {
+        current_loop_analysis_state = LOOP_ANALYSIS_STATE_REANALYZE;
+        goto recurse;
+      }
+      break;
+    }
+    case LOOP_ANALYSIS_STATE_REANALYZE: {
+      // Analyze the statement list again. This is necessary so that any
+      // un-improvements via statements later in the loop can appropriately
+      // negatively affect statements earlier in the loop should evaluation of
+      // the loop repeat. If we didn't do this, code such as the following would
+      // not result in an error:
+      //
+      //   DECLARE x INT;
+      //   SET x := 1;
+      //   WHILE some_condition
+      //   BEGIN
+      //     CALL requires_int_notnull(x);
+      //     SET x := NULL;
+      //   END;
+      //
+      // NOTE: We create another jump context here, but a normal context would
+      // work just as well because any improvements in effect before the loop that
+      // needed to be unset to ensure safety were already unset above.
+      FLOW_PUSH_CONTEXT_JUMP();
+      sem_stmt_list_in_current_flow_context(head);
+      FLOW_POP_CONTEXT_JUMP();
+      if (is_error(head)) {
+        goto cleanup;
+      }
+      break;
+    }
+  }
+
+cleanup:
+  current_loop_analysis_state = saved_loop_analysis_state;
 }
 
 // Expression type for current proc literal
@@ -21188,6 +21334,7 @@ cql_noexport void sem_cleanup() {
   local_types = NULL;
   is_analyzing_notnull_rewrite = false;
   global_notnull_improvements = NULL;
+  current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
 }
 
 #endif

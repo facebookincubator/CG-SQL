@@ -1241,6 +1241,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'fo
 test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'some_undefined_variable'
+test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
 test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
 test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
 test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'

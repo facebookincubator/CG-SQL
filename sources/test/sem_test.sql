@@ -18707,6 +18707,179 @@ begin
   let x3 := a;
 end;
 
+-- Used in the following tests.
+declare proc requires_int_notnull(a int not null);
+
+-- TEST: Improvements that are unset within a loop affect all preceding
+-- statements within the loop.
+-- + {create_proc_stmt}: err
+-- + {name x0}: x0: integer notnull variable
+-- + {name y0}: y0: integer notnull variable
+-- + {call_stmt}: err
+-- + {name x1}: x1: integer variable
+-- + {name y1}: y1: integer variable
+-- + {name x2}: x2: integer notnull variable
+-- + {name y2}: y2: integer variable
+-- + {name x3}: x3: integer variable
+-- + {name y3}: y3: integer variable
+-- + {name x4}: x4: integer notnull variable
+-- + {name y4}: y4: integer notnull variable
+-- + {name x5}: x5: integer variable
+-- + {name y5}: y5: integer notnull variable
+-- + {name x6}: x6: integer variable
+-- + {name y6}: y6: integer notnull variable
+-- + error: % cannot assign/copy possibly null expression to not null target 'a'
+create proc unimprovements_in_loops_affect_earlier_statements()
+begin
+  declare a int;
+  declare b int;
+
+  set a := 1;
+  set b := 1;
+
+  let x0 := a; -- nonnull
+  let y0 := b; -- nonnull
+
+  while 0
+  begin
+    call requires_int_notnull(a); -- correctly flagged as an error
+    let x1 := a; -- nullable
+    let y1 := b; -- nullable
+    set a := null; -- makes x1 nullable
+    while 0
+    begin
+      set a := 1; -- makes x2 nonnull
+      set b := null; -- makes y1 nullable
+      let x2 := a; -- notnull
+      let y2 := b; -- nullable
+    end;
+  end;
+
+  let x3 := a; -- nullable
+  let y3 := b; -- nullable
+
+  set a := 1;
+  set b := 1;
+
+  let x4 := a; -- nonnull
+  let y4 := b; -- nonnull
+
+  declare foo cursor for select 1 bar;
+  loop fetch foo
+  begin
+    let x5 := a; -- nullable
+    let y5 := b; -- nonnull
+    set a := null;
+  end;
+
+  let x6 := a; -- nullable
+  let y6 := b; -- nonnull
+end;
+
+-- TEST: It is not safe to consider a statement list within a loop neutral with
+-- respect to some existing improvement if an unset to that improvement occurred
+-- anywhere within the loop due to the possible presence of a CONTINUE or LEAVE
+-- statement. Since only branch groups can pair up unsets and sets to discover
+-- neutrality at the moment, we do the bulk of the test within an IF.
+-- + {name x0}: x0: integer notnull variable
+-- + {name y0}: y0: integer notnull variable
+-- + {name x1}: x1: integer notnull variable
+-- + {name y1}: y1: integer variable
+-- + {name x2}: x2: integer variable
+-- + {name y2}: y2: integer variable
+-- + {name x3}: x3: integer notnull variable
+-- + {name y3}: y3: integer notnull variable
+-- + {name x4}: x4: integer variable
+-- + {name y4}: y4: integer notnull variable
+-- + {name z}: z: integer notnull variable
+-- - error:
+create proc loops_keep_all_unsets_and_ignore_all_sets()
+begin
+  declare a int;
+  declare b int;
+
+  set a := 1;
+  set b := 1;
+
+  while 0
+  begin
+    set a := 1; -- re-set this so it's not unset due to reanalysis
+    set b := 1; -- re-set this so it's not unset due to reanalysis
+    let x0 := a; -- nonnull
+    let y0 := b; -- nonnull
+    -- use an if/else to make sure we're safe in the presence of effect merging
+    if 0 then
+      set a := null; -- makes x2 nullable, but not x1 as the IF is neutral
+      if 0 then
+        leave;
+      end if;
+      set a := 1; -- does not make the whole loop neutral with respect to a
+      while 0
+      begin
+        if 0 then
+          set b := null; -- makes y1 nullable despite no leave/continue
+          set b := 1;
+        else
+          set b := 1;
+        end if;
+      end;
+    else
+      set a := 1;
+      set b := 1;
+    end if;
+    let x1 := a; -- nonnull due to the merged effects being neutral
+    let y1 := b; -- unfortunately nullable because of our conservative analysis
+  end;
+
+  let x2 := a; -- nullable despite the neutral IF as required for safety
+  let y2 := b; -- nullable
+
+  set a := 1;
+  set b := 1;
+
+  let x3 := a; -- nonnull
+  let y3 := b; -- nonnull
+
+  declare foo cursor for select 1 bar;
+  loop fetch foo
+  begin
+    if 0 then
+      set a := null;
+      if 0 then
+        leave;
+      end if;
+      set a := 1;
+    else
+      set b := 1;
+    end if;
+  end;
+
+  let x4 := a; -- nullable
+  let y4 := b; -- nonnull
+
+  declare c int;
+
+  -- proc savepoints cannot (yet) propagate improvements upwards, so we have to
+  -- set this here in order for z to be nonnull later
+  set c := 1; 
+
+  -- note the different behavior from LOOP and WHILE here
+  proc savepoint
+  begin
+    if 0 then
+      set c := null; -- if this were a WHILE, it would make z nullable
+      if 0 then
+        rollback return; -- safely ignored
+      end if;
+      set c := 1;
+    else
+      -- do nothing; neutral
+    end if;
+  end;
+
+  let z := c; -- safely considered nonnull despite the set to null
+end;
+
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- NOT is weaker than +, parens stay even though this is a special case
 -- the parens could be elided becuse it's on the right of the +

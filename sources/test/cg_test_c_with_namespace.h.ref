@@ -3125,7 +3125,10 @@ extern CQL_WARN_UNUSED cql_code try_catch_rc(sqlite3 *_Nonnull _db_);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern void out_decl_test_3(cql_nullable_int32 x);
+extern void out_decl_test(cql_nullable_int32 x);
+
+// The statement ending at line XXXX
+extern void out_decl_loop_test(cql_nullable_int32 x);
 
 // The statement ending at line XXXX
 extern void binary_ops_with_null(void);
