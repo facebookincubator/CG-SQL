@@ -9,10 +9,6 @@
 
 #include "flow.h"
 
-// TODO: Remove after nullability code is migrated.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-
 // Indicates whether a history item resulted from setting a flag or unsetting a
 // flag. The values associated with each enum case allow a series of deltas to
 // be totalled up to determine an overall effect when popping a branch set.
@@ -120,6 +116,10 @@ static int history_item_comparator(const void *a, const void *b) {
     return 1;
   }
 
+
+  // TODO: We currently only deal with one type of flag, so these are
+  // temporarily disabled for the sake of code coverage.
+#if 0
   if (item_a->flag < item_b->flag) {
     return -1;
   }
@@ -127,6 +127,7 @@ static int history_item_comparator(const void *a, const void *b) {
   if (item_a->flag > item_b->flag) {
     return 1;
   }
+#endif
 
   return 0;
 }
@@ -471,5 +472,3 @@ cql_noexport void _flow_pop_context_branch() {
 
   current_context = current_context->parent;
 }
-
-#pragma clang diagnostic pop

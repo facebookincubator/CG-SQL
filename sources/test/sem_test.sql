@@ -18436,19 +18436,19 @@ end;
 -- + {let_stmt}: z5: integer variable
 -- + {let_stmt}: x6: integer variable
 -- + {let_stmt}: y6: integer variable
--- + {let_stmt}: z6: integer variable
+-- + {let_stmt}: z6: integer notnull variable
 -- + {let_stmt}: x7: integer notnull variable
 -- + {let_stmt}: y7: integer notnull variable
 -- + {let_stmt}: z7: integer notnull variable
 -- + {let_stmt}: x8: integer variable
 -- + {let_stmt}: y8: integer variable
--- + {let_stmt}: z8: integer variable
+-- + {let_stmt}: z8: integer notnull variable
 -- + {let_stmt}: x9: integer notnull variable
 -- + {let_stmt}: y9: integer notnull variable
 -- + {let_stmt}: z9: integer notnull variable
 -- + {let_stmt}: x10: integer variable
 -- + {let_stmt}: y10: integer variable
--- + {let_stmt}: z10: integer variable
+-- + {let_stmt}: z10: integer notnull variable
 -- - error:
 create proc nested_unimprovements_do_not_negatively_affect_later_branches()
 begin
@@ -18501,7 +18501,7 @@ begin
       end if;
       let x6 := a; -- nullable due to previous set in this statement list
       let y6 := b; -- nullable due to previous set in previous branch
-      let z6 := c; -- nullable due to previous set in previous branch
+      let z6 := c; -- nonnull due to all previous branches being neutral
     else
       let x7 := a; -- nonnull due to guard despite previous set
       let y7 := b; -- nonnull due to guard despite previous set
@@ -18509,7 +18509,7 @@ begin
     end if;
     let x8 := a; -- nullable due to previous set in previous branch
     let y8 := b; -- nullable due to previous set in previous branch
-    let z8 := c; -- nullable due to previous set in previous branch
+    let z8 := c; -- nonnull due to all previous branches being neutral
   else
     let x9 := a; -- nonnull due to guard despite previous set
     let y9 := b; -- nonnull due to guard despite previous set
@@ -18518,7 +18518,7 @@ begin
 
   let x10 := a; -- nullable due to previous set in previous branch
   let y10 := b; -- nullable due to previous set in previous branch
-  let z10 := c; -- nullable due to previous set in previous branch
+  let z10 := c; -- nonnull due to all previous branches being neutral
 end;
 
 -- TEST: Reverting improvements and un-improvements restores the original state.
@@ -18602,6 +18602,109 @@ begin
   let y5 := b; -- nullable because of set
   let z5 := c; -- nullable because of set
   let w5 := d; -- nullable as statement list in which it was improved is over
+end;
+
+-- TEST: Un-improving and re-improving the nullability of a variable within the
+-- same branch does not prevent it from remaining improved.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer notnull variable
+-- + {let_stmt}: x2: integer variable
+-- - error:
+create proc unimproving_and_reimproving_is_neutral()
+begin
+  declare a int;
+
+  set a := 42;
+
+  -- nonnull
+  let x0 := a;
+
+  if 0 then
+    -- multiple sets to NULL have no additional effect
+    set a := null;
+    set a := null;
+    set a := 100;
+  else if 0 then
+    -- multiple re-improvements can still be neutral
+    set a := null;
+    set a := 100;
+    set a := null;
+    set a := 100;
+  else
+    set a := 100;
+  end if;
+
+  -- nonnull
+  let x1 := a;
+
+  if 0 then
+    set a := 100;
+  else if 0 then
+    -- this branch is not neutral
+    set a := null;
+  else
+    set a := 100;
+  end if;
+
+  -- nullable
+  let x2 := a;
+end;
+
+-- TEST: If all branches improve the same variable, it is improved after the IF
+-- so long as there is an ELSE branch.
+-- + {let_stmt}: x0: integer notnull variable
+-- + {let_stmt}: x1: integer variable
+-- + {let_stmt}: x2: integer variable
+-- + {let_stmt}: x3: integer variable
+-- - error:
+create proc all_branches_improving_including_else_results_in_an_improvement()
+begin
+  declare a int;
+  
+  if 0 then
+    set a := 42;
+  else if 0 then
+    set a := null;
+    -- nested all-branch improvements propagate upwards
+    if 0 then
+      set a := 42;
+    else
+      set a := null;
+      set a := 42;
+    end if;
+  else if 0 then
+    set a := 42;
+  else
+    set a := null;
+    set a := null;
+    set a := 42;
+  end if;
+
+  -- nonnull
+  let x0 := a;
+
+  set a := null;
+
+  -- nullable
+  let x1 := a;
+
+  -- no else
+  if 0 then
+    set a := 42;
+  end if;
+
+  -- nullable
+  let x2 := a;
+
+  -- no else
+  if 0 then
+    set a := 42;
+  else if 0 then
+    set a := 42;
+  end if;
+
+  -- nullable
+  let x3 := a;
 end;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
