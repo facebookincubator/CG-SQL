@@ -36,6 +36,7 @@ process_headers() {
   cat "rewrite.h"
   cat "rt.h"
   cat "printf.h"
+  cat "flow.h"
 
   process_extra_h_files
 }
@@ -58,6 +59,7 @@ process_c_files() {
   cat "crc64xz.c"
   cat "encoders.c"
   cat "eval.c"
+  cat "flow.c"
   cat "gen_sql.c"
   cat "list.c"
   cat "minipool.c"

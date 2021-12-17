@@ -1142,6 +1142,11 @@ cql_noexport bool_t is_foreign_key(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_FK);
 }
 
+// Returns true if exactly one flag bit is set, else false.
+cql_noexport bool_t is_single_flag(sem_t sem_type) {
+  return sem_type & SEM_TYPE_FLAGS && !(sem_type & (sem_type - 1));
+}
+
 // Strips out all the flag bits and gives you the base/core type.
 cql_noexport sem_t core_type_of(sem_t sem_type) {
   return sem_type & SEM_TYPE_CORE;
