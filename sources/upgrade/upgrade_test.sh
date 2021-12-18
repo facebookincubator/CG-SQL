@@ -26,17 +26,6 @@ do
   fi
 done
 
-diff_exit() {
-  if ! colordiff "${TEST_DIR}/$1.ref" "${OUT_DIR}/$1"
-  then
-    echo "When running: diff" "$@"
-    echo "The above differences were detected. If these are expected then run ok.sh to proceed."
-    echo "Don't just run ok.sh to make the error go away; you have to really understand the diff first!"
-    echo " "
-    exit 1
-  fi
-}
-
 set_exclusive() {
   if [ $1 -eq 4 ]; then
     exclusive="--schema_exclusive"
@@ -97,7 +86,7 @@ do
     exit 1
   fi
 
-  diff_exit "upgrade_schema_v$i.out"
+  on_diff_exit "upgrade_schema_v$i.out"
 done
 
 # now we'll try various previous schema combos with the current upgrader to make sure the work

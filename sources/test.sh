@@ -26,8 +26,13 @@ do
      CQL=${OUT_DIR}/cql_amalgam
      shift 1
      USE_AMALGAM=1
+  elif [ "$1" == "--non_interactive" ]
+  then
+    # shellcheck disable=SC2034
+    NON_INTERACTIVE=1
+    shift 1
   else
-     echo "Usage: test.sh [--coverage] [--use_amalgam]"
+     echo "Usage: test.sh [--coverage] [--use_amalgam] [--non_interactive]"
      exit 1
   fi
 done

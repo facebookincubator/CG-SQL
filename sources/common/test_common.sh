@@ -6,12 +6,6 @@
 
 MAKE_ARGS="${MAKE_COVERAGE_ARGS}"
 
-failed() {
-  echo '--------------------------------- FAILED'
-  make_clean_msg
-  exit 1
-}
-
 do_make() {
   if [ "${MAKE_ARGS}" == "" ]
   then
@@ -1495,13 +1489,9 @@ signatures_test() {
   then
     echo "signatures found in reference files, this is never valid."
     echo "change the test logic so that it validates the presence of the signature which then strips it."
-    echo "it's likely that one of those validations is missing which caused ok.sh to put a signature into a .ref file."
+    echo "it's likely that one of those validations is missing which caused a signature to be copied into a .ref file."
     failed
   fi
-}
-
-make_clean_msg() {
-  echo "To clean artifacts: make clean"
 }
 
 if ! building

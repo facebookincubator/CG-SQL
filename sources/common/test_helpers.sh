@@ -4,6 +4,16 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+failed() {
+  echo '--------------------------------- FAILED'
+  make_clean_msg
+  exit 1
+}
+
+make_clean_msg() {
+  echo "To clean artifacts: make clean"
+}
+
 colordiff() {
   diff \
           --old-line-format=$'\e[0;31m< %l\e[0m
@@ -47,11 +57,24 @@ __on_diff_exit() {
   normalize_lines "$2"
   if ! colordiff "$1" "$2"
   then
-    echo "When running: diff" "$@"
-    echo "The above differences were detected. If these are expected then run ok.sh to proceed."
-    echo "Don't just run ok.sh to make the error go away; you have to really understand the diff first!"
-    echo " "
-    failed
+    # --non-interactive forces interactive mode off. If the environment is not actually interactive
+    # (connected to a terminal for both output and input), interactive mode is also disabled.
+    if [ "$NON_INTERACTIVE" == 1 ] || [ ! -t 0 ] || [ ! -t 1 ];
+    then
+      echo "When running: diff $*"
+      echo "The above differences were detected. If these are expected then run ok.sh to proceed."
+      echo "Don't just run ok.sh to make the error go away; you have to really understand the diff first!"
+      echo " "
+      failed
+    else
+      read -rp "When running: diff $*
+The above differences were detected. Is this expected?
+Don't just accept to make the error go away; you have to really understand the diff first! (y/N) " ANS
+      case $ANS in
+        [Yy]* ) cp "$2" "$1" 2>/dev/null;;
+        * ) echo " "; failed
+      esac
+    fi
   fi
 }
 
