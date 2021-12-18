@@ -74512,6 +74512,80 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC try_keeps_all_unsets_and_ignores_all_sets ()
+BEGIN
+  DECLARE a INTEGER;
+  SET a := 1;
+  BEGIN TRY
+    IF 0 THEN
+      SET a := NULL;
+      IF 0 THEN
+        THROW;
+      END IF;
+      SET a := 1;
+    ELSE
+    END IF;
+    LET x0 := a;
+  END TRY;
+  BEGIN CATCH
+    LET x1 := a;
+    SET a := 1;
+  END CATCH;
+  LET x2 := a;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name try_keeps_all_unsets_and_ignores_all_sets}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {assign}: a: integer variable
+      | | {name a}: a: integer variable
+      | | {int 1}: integer notnull
+      | {trycatch_stmt}: ok
+      | | {stmt_list}: ok
+      | | | {if_stmt}: integer notnull
+      | | | | {cond_action}: integer notnull
+      | | | | | {int 0}: integer notnull
+      | | | | | {stmt_list}: ok
+      | | | |   | {assign}: a: integer variable
+      | | | |   | | {name a}: a: integer variable
+      | | | |   | | {null}: null
+      | | | |   | {if_stmt}: integer notnull
+      | | | |   | | {cond_action}: integer notnull
+      | | | |   | | | {int 0}: integer notnull
+      | | | |   | | | {stmt_list}: ok
+      | | | |   | |   | {throw_stmt}: ok
+      | | | |   | | {if_alt}: ok
+      | | | |   | {assign}: a: integer variable
+      | | | |     | {name a}: a: integer variable
+      | | | |     | {int 1}: integer notnull
+      | | | | {if_alt}: ok
+      | | |   | {else}: ok
+      | | | {let_stmt}: x0: integer notnull variable
+      | |   | {name x0}: x0: integer notnull variable
+      | |   | {call}: a: integer notnull variable
+      | |     | {name cql_inferred_notnull}: a: integer notnull variable
+      | |     | {call_arg_list}
+      | |       | {call_filter_clause}
+      | |       | {arg_list}: ok
+      | |         | {name a}: a: integer inferred_notnull variable
+      | | {stmt_list}: ok
+      |   | {let_stmt}: x1: integer variable
+      |   | | {name x1}: x1: integer variable
+      |   | | {name a}: a: integer variable
+      |   | {assign}: a: integer variable
+      |     | {name a}: a: integer variable
+      |     | {int 1}: integer notnull
+      | {let_stmt}: x2: integer variable
+        | {name x2}: x2: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
 SELECT 1 + (NOT 2 IS NULL);
 
 test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'

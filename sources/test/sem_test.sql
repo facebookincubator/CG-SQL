@@ -18880,6 +18880,40 @@ begin
   let z := c; -- safely considered nonnull despite the set to null
 end;
 
+-- TEST: Unimprovements anywhere in a TRY negatively affect all statements after
+-- the TRY.
+-- + {name x0}: x0: integer notnull variable
+-- + {name x1}: x1: integer variable
+-- + {name x2}: x2: integer variable
+-- - error:
+create proc try_keeps_all_unsets_and_ignores_all_sets()
+begin
+  declare a int;
+
+  set a := 1;
+
+  begin try
+    -- use an if/else to make sure we're safe in the presence of effect merging
+    if 0 then
+      set a := null;
+      if 0 then
+        throw; -- makes x1 and x2 nullable
+      end if;
+      set a := 1;
+      -- neutral
+    else
+      -- do nothing; neutral
+    end if;
+    let x0 := a; -- safely considered nonnull
+  end try;
+  begin catch
+    let x1 := a; -- nullable
+    set a := 1; -- does not allow for improving x2 (at least for now)
+  end catch;
+
+  let x2 := a; -- nullable
+end;
+
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- NOT is weaker than +, parens stay even though this is a special case
 -- the parens could be elided becuse it's on the right of the +

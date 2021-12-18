@@ -18901,19 +18901,46 @@ static void sem_trycatch_stmt(ast_node *ast) {
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
 
   if (try_list) {
-   sem_stmt_list(try_list);
-   if (is_error(try_list)) {
-     record_error(ast);
-     return;
+    // We assume any statement within the try can throw. Using a jump context
+    // keeps things safe in the presence of code like the following:
+    //
+    //   DECLARE x INT;
+    //   SET x := 42;
+    //   BEGIN TRY
+    //     IF some_condition THEN
+    //       SET x := NULL;
+    //       IF another_condition THEN
+    //         THROW;
+    //       END IF;
+    //       SET x := 100; -- may never happen
+    //     ELSE
+    //       -- do nothing; neutral for x
+    //     END IF;
+    //     -- x is still nonnull here as the outer IF was neutral for x
+    //   END TRY;
+    //   BEGIN CATCH
+    //     -- x must be nullable here as the final SET may have not occurred
+    //   END CATCH;
+    //   -- x must also be nullable here
+    //
+    // If we did not use a jump context, x would be nonnull after the TRY
+    // because the set to NULL was neutralized by the subsequent set to 100 in
+    // the same branch.
+    FLOW_PUSH_CONTEXT_JUMP();
+    sem_stmt_list_in_current_flow_context(try_list);
+    FLOW_POP_CONTEXT_JUMP();
+    if (is_error(try_list)) {
+      record_error(ast);
+      return;
     }
   }
 
   if (catch_list) {
-   sem_stmt_list(catch_list);
-   if (is_error(catch_list)) {
-     record_error(ast);
-     return;
-   }
+    sem_stmt_list(catch_list);
+    if (is_error(catch_list)) {
+      record_error(ast);
+      return;
+    }
   }
 
   record_ok(ast);
