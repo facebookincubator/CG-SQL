@@ -18926,6 +18926,75 @@ begin
   let x := a; -- nonnull
 end;
 
+-- TEST: Branches of a SWITCH are analyzed independently with respect to improvements.
+-- + {name x0}: x0: integer notnull variable
+-- + {name x1}: x1: integer notnull variable
+-- + {name x2}: x2: integer variable
+-- - error:
+create proc switch_branches_are_independent_for_improvements()
+begin
+  declare a int;
+
+  set a := 1;
+
+  switch 0
+  when 1 then
+    set a := null;
+  when 2 then
+    let x0 := a; -- nonnull despite previous set
+    set a := null;
+  else
+    let x1 := a; -- nonnull despite previous set
+  end;
+
+  let x2 := a; -- nullable
+end;
+
+-- TEST: If all branches of a SWITCH make the same improvement, it persists
+-- after the SWITCH, but only if an ELSE or ALL VALUES is present.
+-- + {name x}: x: integer notnull variable
+-- + {name y}: y: integer notnull variable
+-- + {name z}: z: integer variable
+-- - error:
+create proc switch_improvements_can_persist()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  -- has an ELSE
+  switch 0
+  when 1 then
+    set a := 1;
+  when 2 then
+    set a := 1;
+  else
+    set a := 1;
+  end;
+
+  -- has ALL VALUES
+  switch three_things.zero all values
+  when three_things.zero then
+    set b := 1;
+  when three_things.one then
+    set b := 1;
+  when three_things.two then
+    set b := 1;
+  end;
+
+  -- has neither
+  switch 0
+  when 1 then
+    set c := 1;
+  when 2 then
+    set c := 1;
+  end;
+
+  let x := a; -- nonnull
+  let y := b; -- nonnull
+  let z := c; -- nullable
+end;
+
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- NOT is weaker than +, parens stay even though this is a special case
 -- the parens could be elided becuse it's on the right of the +

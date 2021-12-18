@@ -5991,7 +5991,7 @@ cql_noexport void sem_case(ast_node *ast, bool_t is_iif) {
   sem_sensitive |= sensitive_flag(case_list->sem->sem_type);
 
   if (else_expr) {
-    flow_set_context_branch_group_has_else(true);
+    flow_set_context_branch_group_covers_all_cases(true);
     FLOW_PUSH_CONTEXT_BRANCH();
     sem_expr(else_expr);
     FLOW_POP_CONTEXT_BRANCH();
@@ -12630,7 +12630,7 @@ static void sem_if_stmt(ast_node *ast) {
 
   if (elsenode) {
     // ELSE [stmt_list]
-    flow_set_context_branch_group_has_else(true);
+    flow_set_context_branch_group_covers_all_cases(true);
     EXTRACT(stmt_list, elsenode->left);
     if (stmt_list) {
       FLOW_PUSH_CONTEXT_BRANCH();
@@ -17927,45 +17927,67 @@ static void sem_switch_cases(ast_node *ast, ast_node *expr, bool_t all_values) {
 
   ast_node *head = ast;
   int32_t stmt_lists = 0;
+  bool_t has_else = false;
+
+  // We push a new branch group for two reasons:
+  //
+  // 1. It allows each branch of the SWITCH to be analyzed independently with
+  //    respect to improvements.
+  //
+  // 2. If every branch makes the same improvement and an ELSE branch or ALL
+  //    VALUES is present, we can retain the improvement after the SWITCH.
+  FLOW_PUSH_CONTEXT_BRANCH_GROUP();
 
   while (ast) {
-     EXTRACT_NOTNULL(connector, ast->left);
-     EXTRACT(stmt_list, connector->right);
+    EXTRACT_NOTNULL(connector, ast->left);
+    EXTRACT(stmt_list, connector->right);
 
-     // first check for expression list, this is a WHEN x,y,z THEN clause
-     if (connector->left) {
-       EXTRACT_NOTNULL(expr_list, connector->left);
+    bool_t branch_error = false;
 
-       sem_switch_expr_list(expr_list, core_type, case_buffer);
-       if (is_error(expr_list)) {
-         record_error(head);
-         goto cleanup;
-       }
-     }
-     else {
-       // no expr list corresponds to the else case
-       Invariant(ast != head);  // 'else' is never first!
-       Invariant(!ast->right);  // 'else' is always last!
-       Invariant(stmt_list);    // 'else' always has a statement list
+    FLOW_PUSH_CONTEXT_BRANCH();
 
-       if (all_values) {
-         report_error(ast, "CQL0383: switch ... ALL VALUES is useless with an ELSE clause", NULL);
-         record_error(head);
-         goto cleanup;
-       }
-     }
+    // first check for expression list, this is a WHEN x,y,z THEN clause
+    if (connector->left) {
+      EXTRACT_NOTNULL(expr_list, connector->left);
 
-     // no stmt list corresponds to WHEN ... THEN NOTHING
-     if (stmt_list) {
-       stmt_lists++;
-       sem_stmt_list(stmt_list);
-       if (is_error(stmt_list)) {
-         record_error(head);
-         goto cleanup;
-       }
-     }
+      sem_switch_expr_list(expr_list, core_type, case_buffer);
+      if (is_error(expr_list)) {
+        record_error(head);
+        branch_error = true;
+      }
+    }
+    else {
+      // no expr list corresponds to the else case
+      Invariant(ast != head);  // 'else' is never first!
+      Invariant(!ast->right);  // 'else' is always last!
+      Invariant(stmt_list);    // 'else' always has a statement list
 
-     ast = ast->right;
+      has_else = true;
+
+      if (all_values) {
+        report_error(ast, "CQL0383: switch ... ALL VALUES is useless with an ELSE clause", NULL);
+        record_error(head);
+        branch_error = true;
+      }
+    }
+
+    // no stmt list corresponds to WHEN ... THEN NOTHING
+    if (!branch_error && stmt_list) {
+      stmt_lists++;
+      sem_stmt_list_in_current_flow_context(stmt_list);
+      if (is_error(stmt_list)) {
+        record_error(head);
+        branch_error = true;
+      }
+    }
+
+    FLOW_POP_CONTEXT_BRANCH();
+
+    if (branch_error) {
+      goto cleanup;
+    }
+
+    ast = ast->right;
   }
 
   if (stmt_lists == 0) {
@@ -17996,11 +18018,15 @@ static void sem_switch_cases(ast_node *ast, ast_node *expr, bool_t all_values) {
       record_error(head);
       goto cleanup;
     }
+    flow_set_context_branch_group_covers_all_cases(true);
+  } else {
+    flow_set_context_branch_group_covers_all_cases(has_else);
   }
 
   record_ok(head);
 
 cleanup:
+  FLOW_POP_CONTEXT_BRANCH_GROUP();
   BYTEBUF_CLEANUP(case_buffer);
 }
 

@@ -89,9 +89,9 @@ typedef struct flow_context {
       // branch group.
       uint32_t subcontext_count;
 
-      // `true` if the branch group includes (or will include) an ELSE or other
-      // type of catch-all branch.
-      bool_t has_else;
+      // `true` if the branch group includes (or will include) a catch-all
+      // branch (e.g., ELSE) or otherwise covers all possible cases.
+      bool_t covers_all_cases;
     } branch_group;
 
     // Only used when `kind` is `FLOW_CONTEXT_KIND_JUMP`.
@@ -387,7 +387,7 @@ cql_noexport void _flow_push_context_branch_group() {
 
   current_context->branch_group.branch_histories = NULL;
   current_context->branch_group.subcontext_count = 0;
-  current_context->branch_group.has_else = false;
+  current_context->branch_group.covers_all_cases = false;
 }
 
 // Merges the effects of the branches of the current branch group context for a
@@ -424,14 +424,13 @@ static void merge_effects(sem_t *type, sem_t flag, int32_t delta_sum) {
   // `subcontext_count`.
   Invariant(abs(delta_sum) <= subcontext_count);
 
-  // Indicates whether or not there was a catch-all branch.
-  bool_t has_else = current_context->branch_group.has_else;
+  // Indicates whether or not the branches cover all possible cases.
+  bool_t covers_all_cases = current_context->branch_group.covers_all_cases;
 
-  if (has_else && delta_sum == subcontext_count) {
-    // There is a catch-all branch and the `delta_sum` is equal to the number of
-    // branches. This means the branches cover all possibilities and every
-    // branch made the same improvement, so we can consider the entire branch
-    // set to have made the improvement.
+  if (covers_all_cases && delta_sum == subcontext_count) {
+    // The branches cover all possible cases and `delta_sum` is equal to the
+    // number of branches (which means every branch made the same improvement),
+    // so we can consider the entire branch group to have made the improvement.
     flow_set_flag_for_type(flag, type);
   } else if (delta_sum < 0) {
     // The delta sum is negative, so at least one of the branches unset the
@@ -459,12 +458,12 @@ static void merge_effects(sem_t *type, sem_t flag, int32_t delta_sum) {
 }
 
 // Records whether or not the current branch group context has a catch-all
-// branch.
-cql_noexport void flow_set_context_branch_group_has_else(bool_t has_else) {
+// branch or otherwise covers all possible cases.
+cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_all_cases) {
   Contract(current_context);
   Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
-  current_context->branch_group.has_else = has_else;
+  current_context->branch_group.covers_all_cases = covers_all_cases;
 }
 
 // Pops the current branch group, calculating the total effect of all of its

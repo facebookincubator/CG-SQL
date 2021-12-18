@@ -74618,6 +74618,222 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC switch_branches_are_independent_for_improvements ()
+BEGIN
+  DECLARE a INTEGER;
+  SET a := 1;
+  SWITCH 0
+    WHEN 1 THEN
+      SET a := NULL;
+    WHEN 2 THEN
+      LET x0 := a;
+      SET a := NULL;
+    ELSE
+      LET x1 := a;
+  END;
+  LET x2 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name switch_branches_are_independent_for_improvements}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {assign}: a: integer variable
+      | | {name a}: a: integer variable
+      | | {int 1}: integer notnull
+      | {switch_stmt}: ok
+      | | {int 0}
+      | | {switch_body}
+      |   | {int 0}: integer notnull
+      |   | {switch_case}: ok
+      |     | {connector}
+      |     | | {expr_list}: ok
+      |     | | | {int 1}: integer notnull
+      |     | | {stmt_list}: ok
+      |     |   | {assign}: a: integer variable
+      |     |     | {name a}: a: integer variable
+      |     |     | {null}: null
+      |     | {switch_case}
+      |       | {connector}
+      |       | | {expr_list}: ok
+      |       | | | {int 2}: integer notnull
+      |       | | {stmt_list}: ok
+      |       |   | {let_stmt}: x0: integer notnull variable
+      |       |   | | {name x0}: x0: integer notnull variable
+      |       |   | | {call}: a: integer notnull variable
+      |       |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+      |       |   |   | {call_arg_list}
+      |       |   |     | {call_filter_clause}
+      |       |   |     | {arg_list}: ok
+      |       |   |       | {name a}: a: integer inferred_notnull variable
+      |       |   | {assign}: a: integer variable
+      |       |     | {name a}: a: integer variable
+      |       |     | {null}: null
+      |       | {switch_case}
+      |         | {connector}
+      |           | {stmt_list}: ok
+      |             | {let_stmt}: x1: integer notnull variable
+      |               | {name x1}: x1: integer notnull variable
+      |               | {call}: a: integer notnull variable
+      |                 | {name cql_inferred_notnull}: a: integer notnull variable
+      |                 | {call_arg_list}
+      |                   | {call_filter_clause}
+      |                   | {arg_list}: ok
+      |                     | {name a}: a: integer inferred_notnull variable
+      | {let_stmt}: x2: integer variable
+        | {name x2}: x2: integer variable
+        | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC switch_improvements_can_persist ()
+BEGIN
+  DECLARE a INTEGER;
+  DECLARE b INTEGER;
+  DECLARE c INTEGER;
+  SWITCH 0
+    WHEN 1 THEN
+      SET a := 1;
+    WHEN 2 THEN
+      SET a := 1;
+    ELSE
+      SET a := 1;
+  END;
+  SWITCH 0 ALL VALUES
+    WHEN 0 THEN
+      SET b := 1;
+    WHEN 1 THEN
+      SET b := 1;
+    WHEN 2 THEN
+      SET b := 1;
+  END;
+  SWITCH 0
+    WHEN 1 THEN
+      SET c := 1;
+    WHEN 2 THEN
+      SET c := 1;
+  END;
+  LET x := a;
+  LET y := b;
+  LET z := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name switch_improvements_can_persist}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c: integer variable
+      | | | {name c}: c: integer variable
+      | | {type_int}: integer
+      | {switch_stmt}: ok
+      | | {int 0}
+      | | {switch_body}
+      |   | {int 0}: integer notnull
+      |   | {switch_case}: ok
+      |     | {connector}
+      |     | | {expr_list}: ok
+      |     | | | {int 1}: integer notnull
+      |     | | {stmt_list}: ok
+      |     |   | {assign}: a: integer variable
+      |     |     | {name a}: a: integer variable
+      |     |     | {int 1}: integer notnull
+      |     | {switch_case}
+      |       | {connector}
+      |       | | {expr_list}: ok
+      |       | | | {int 2}: integer notnull
+      |       | | {stmt_list}: ok
+      |       |   | {assign}: a: integer variable
+      |       |     | {name a}: a: integer variable
+      |       |     | {int 1}: integer notnull
+      |       | {switch_case}
+      |         | {connector}
+      |           | {stmt_list}: ok
+      |             | {assign}: a: integer variable
+      |               | {name a}: a: integer variable
+      |               | {int 1}: integer notnull
+      | {switch_stmt}: ok
+      | | {int 1}
+      | | {switch_body}
+      |   | {int 0}: integer<three_things> notnull
+      |   | {switch_case}: ok
+      |     | {connector}
+      |     | | {expr_list}: ok
+      |     | | | {int 0}: integer<three_things> notnull
+      |     | | {stmt_list}: ok
+      |     |   | {assign}: b: integer variable
+      |     |     | {name b}: b: integer variable
+      |     |     | {int 1}: integer notnull
+      |     | {switch_case}
+      |       | {connector}
+      |       | | {expr_list}: ok
+      |       | | | {int 1}: integer<three_things> notnull
+      |       | | {stmt_list}: ok
+      |       |   | {assign}: b: integer variable
+      |       |     | {name b}: b: integer variable
+      |       |     | {int 1}: integer notnull
+      |       | {switch_case}
+      |         | {connector}
+      |           | {expr_list}: ok
+      |           | | {int 2}: integer<three_things> notnull
+      |           | {stmt_list}: ok
+      |             | {assign}: b: integer variable
+      |               | {name b}: b: integer variable
+      |               | {int 1}: integer notnull
+      | {switch_stmt}: ok
+      | | {int 0}
+      | | {switch_body}
+      |   | {int 0}: integer notnull
+      |   | {switch_case}: ok
+      |     | {connector}
+      |     | | {expr_list}: ok
+      |     | | | {int 1}: integer notnull
+      |     | | {stmt_list}: ok
+      |     |   | {assign}: c: integer variable
+      |     |     | {name c}: c: integer variable
+      |     |     | {int 1}: integer notnull
+      |     | {switch_case}
+      |       | {connector}
+      |         | {expr_list}: ok
+      |         | | {int 2}: integer notnull
+      |         | {stmt_list}: ok
+      |           | {assign}: c: integer variable
+      |             | {name c}: c: integer variable
+      |             | {int 1}: integer notnull
+      | {let_stmt}: x: integer notnull variable
+      | | {name x}: x: integer notnull variable
+      | | {call}: a: integer notnull variable
+      |   | {name cql_inferred_notnull}: a: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name a}: a: integer inferred_notnull variable
+      | {let_stmt}: y: integer notnull variable
+      | | {name y}: y: integer notnull variable
+      | | {call}: b: integer notnull variable
+      |   | {name cql_inferred_notnull}: b: integer notnull variable
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name b}: b: integer inferred_notnull variable
+      | {let_stmt}: z: integer variable
+        | {name z}: z: integer variable
+        | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
 SELECT 1 + (NOT 2 IS NULL);
 
 test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'

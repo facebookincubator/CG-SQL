@@ -63,11 +63,11 @@ cql_noexport void flow_set_flag_for_type(sem_t flag, sem_t *type);
 // set or if a flow context is not in effect.
 cql_noexport void flow_unset_flag_for_type(sem_t flag, sem_t *type);
 
-// Indicates that the current branch group context will (or does) contain an
-// "else" branch or some other type of catch-all branch. This must only be
+// Indicates that the current branch group context will (or does) contain a
+// catch-all branch or otherwise covers all possible cases. This must only be
 // called while the current flow context is a branch group context. If this is
-// not called, it will be assumed that such a branch is not present.
-cql_noexport void flow_set_context_branch_group_has_else(bool_t has_else);
+// not called, it will be assumed that all cases are not covered.
+cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_all_cases);
 
 cql_noexport void _flow_push_context_normal();
 cql_noexport void _flow_pop_context_normal();
