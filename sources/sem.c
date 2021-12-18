@@ -18881,7 +18881,11 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 
   if (stmt_list) {
    in_proc_savepoint = true;
-   sem_stmt_list(stmt_list);
+   // We avoid making a new context here so that any improvements made within
+   // the statement list will persist after the end of the PROC SAVEPOINT
+   // statement. This is safe because we enter it unconditionally and because
+   // the only way to jump out early is to jump out of the entire procedure.
+   sem_stmt_list_in_current_flow_context(stmt_list);
    in_proc_savepoint = false;
 
    if (is_error(stmt_list)) {

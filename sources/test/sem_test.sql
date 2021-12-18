@@ -18859,10 +18859,6 @@ begin
 
   declare c int;
 
-  -- proc savepoints cannot (yet) propagate improvements upwards, so we have to
-  -- set this here in order for z to be nonnull later
-  set c := 1; 
-
   -- note the different behavior from LOOP and WHILE here
   proc savepoint
   begin
@@ -18912,6 +18908,22 @@ begin
   end catch;
 
   let x2 := a; -- nullable
+end;
+
+-- TEST: Improvements made within a PROC SAVEPOINT statement persist.
+-- + {name x}: x: integer notnull variable
+-- - error:
+create proc proc_savepoint_improvements_persist()
+begin
+  declare a int;
+
+  proc savepoint 
+  begin
+    set a := 1;
+    rollback return;
+  end;
+
+  let x := a; -- nonnull
 end;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
