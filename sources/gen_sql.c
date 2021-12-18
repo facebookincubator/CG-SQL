@@ -69,6 +69,7 @@ static void gen_expr_names(ast_node *ast);
 static void gen_opt_where(ast_node *ast);
 static void gen_conflict_clause(ast_node *ast);
 static void gen_call_stmt(ast_node *ast);
+static void gen_shared_cte(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -1511,6 +1512,11 @@ static void gen_table_or_subquery(ast_node *ast) {
     gen_select_stmt(factor);
     gen_printf(")");
   }
+  else if (is_ast_shared_cte(factor)) {
+    gen_printf("(");
+    gen_shared_cte(factor);
+    gen_printf(")");
+  }
   else if (is_ast_table_function(factor)) {
     EXTRACT_STRING(name, factor->left);
     EXTRACT(arg_list, factor->right);
@@ -1876,6 +1882,26 @@ static void gen_cte_binding_list(ast_node *ast) {
   }
 }
 
+static void gen_shared_cte(ast_node *ast) {
+  Contract(is_ast_shared_cte(ast));
+  bool_t has_cte_procs_callback = gen_callbacks && gen_callbacks->cte_proc_callback;
+  bool_t handled = false;
+
+  if (has_cte_procs_callback) {
+    handled = gen_callbacks->cte_proc_callback(ast, gen_callbacks->cte_proc_context, output);
+  }
+
+  if (!handled) {
+    EXTRACT_NOTNULL(call_stmt, ast->left);
+    EXTRACT(cte_binding_list, ast->right);
+    gen_call_stmt(call_stmt);
+    if (cte_binding_list) {
+      gen_printf(" USING ");
+      gen_cte_binding_list(cte_binding_list);
+    }
+  }
+}
+
 static void gen_cte_table(ast_node *ast)  {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
@@ -1898,22 +1924,7 @@ static void gen_cte_table(ast_node *ast)  {
 
   gen_printf(" AS (");
   if (is_ast_shared_cte(cte_body)) {
-    bool_t has_cte_procs_callback = gen_callbacks && gen_callbacks->cte_proc_callback;
-    bool_t handled = false;
-
-    if (has_cte_procs_callback) {
-      handled = gen_callbacks->cte_proc_callback(cte_body, gen_callbacks->cte_proc_context, output);
-    }
-
-    if (!handled) {
-      EXTRACT_NOTNULL(call_stmt, cte_body->left);
-      EXTRACT(cte_binding_list, cte_body->right);
-      gen_call_stmt(call_stmt);
-      if (cte_binding_list) {
-        gen_printf(" USING ");
-        gen_cte_binding_list(cte_binding_list);
-      }
-    }
+    gen_shared_cte(cte_body);
   }
   else {
     // the only other alternative is the select statement form

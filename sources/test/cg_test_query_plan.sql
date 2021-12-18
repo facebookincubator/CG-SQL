@@ -196,14 +196,14 @@ create table C(
 CREATE PROC split_commas(str text)
 BEGIN
   WITH splitter(tok, rest) AS (
-    SELECT '', IFNULL(str || ',', '')
+    SELECT "", IFNULL(str || ",", "")
     UNION ALL
     SELECT
-      substr(rest, 1, instr(rest, ',') - 1),
-      substr(rest, instr(rest, ',') + 1)
+      substr(rest, 1, instr(rest, ",") - 1),
+      substr(rest, instr(rest, ",") + 1)
     FROM splitter
-    WHERE rest <> '')
-  SELECT tok FROM splitter WHERE tok <> '';
+    WHERE rest <> "")
+  SELECT tok FROM splitter WHERE tok <> "";
 END;
 
 @attribute(cql:shared_fragment)

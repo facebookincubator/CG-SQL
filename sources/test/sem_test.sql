@@ -4982,6 +4982,17 @@ begin
   select 1 x, 2 y, 3.0 z;
 end;
 
+-- TEST: use the fragment in a nested select : easiest option
+-- + {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- - error:
+select * from (call a_shared_frag(1, 2));
+
+-- TEST: use the fragment in a nested select : easiest option but with error
+-- + {shared_cte}: err
+-- + error: % too few arguments provided to procedure 'a_shared_frag'
+-- +1 error:
+select * from (call a_shared_frag());
+
 -- TEST: create a conditional fragment with no else
 -- + {create_proc_stmt}: err
 -- + error: % shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
@@ -5327,7 +5338,7 @@ select * from foo;
 
 -- TEST: the call form must call a shared fragment
 -- + {with_select_stmt}: err
--- + error: % a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
+-- + error: % a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
 -- +1 error:
 with foo(*) as (call return_with_attr())
 select * from foo;

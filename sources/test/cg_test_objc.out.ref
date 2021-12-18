@@ -3752,6 +3752,39 @@ static inline BOOL CGBNestedSharedStuffRowEqual(CGBNestedSharedStuff *resultSet1
   return CGCNestedSharedStuffRowEqual(CGCNestedSharedStuffFromCGBNestedSharedStuff(resultSet1), row1, CGCNestedSharedStuffFromCGBNestedSharedStuff(resultSet2), row2);
 }
 
+@class CGBUseNestedSelectSharedFragForm;
+
+static inline CGBUseNestedSelectSharedFragForm *CGBUseNestedSelectSharedFragFormFromCGCUseNestedSelectSharedFragForm(CGCUseNestedSelectSharedFragFormResultSetRef resultSet)
+{
+  return (__bridge CGBUseNestedSelectSharedFragForm *)resultSet;
+}
+
+static inline CGCUseNestedSelectSharedFragFormResultSetRef CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(CGBUseNestedSelectSharedFragForm *resultSet)
+{
+  return (__bridge CGCUseNestedSelectSharedFragFormResultSetRef)resultSet;
+}
+
+static inline int32_t CGBUseNestedSelectSharedFragFormGetX(CGBUseNestedSelectSharedFragForm *resultSet, int32_t row)
+{
+  CGCUseNestedSelectSharedFragFormResultSetRef cResultSet = CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet);
+  return CGCUseNestedSelectSharedFragFormGetX(cResultSet, row);
+}
+
+static inline int32_t CGBUseNestedSelectSharedFragFormResultCount(CGBUseNestedSelectSharedFragForm *resultSet)
+{
+  return CGCUseNestedSelectSharedFragFormResultCount(CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet));
+}
+
+static inline NSUInteger CGBUseNestedSelectSharedFragFormRowHash(CGBUseNestedSelectSharedFragForm *resultSet, int32_t row)
+{
+  return CGCUseNestedSelectSharedFragFormRowHash(CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet), row);
+}
+
+static inline BOOL CGBUseNestedSelectSharedFragFormRowEqual(CGBUseNestedSelectSharedFragForm *resultSet1, int32_t row1, CGBUseNestedSelectSharedFragForm *resultSet2, int32_t row2)
+{
+  return CGCUseNestedSelectSharedFragFormRowEqual(CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet1), row1, CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet2), row2);
+}
+
 @class CGBFragTest;
 
 static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)

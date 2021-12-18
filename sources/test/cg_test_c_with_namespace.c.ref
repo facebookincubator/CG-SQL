@@ -387,6 +387,8 @@ extern CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull 
 extern CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 x);
 extern CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+// static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_2_b_, "b");
 cql_string_literal(_literal_3_a_, "a");
@@ -15711,7 +15713,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:shared_fragment)
 CREATE PROC nested_shared_proc (x_ INTEGER NOT NULL)
 BEGIN
-  IF x_ = 1 THEN
+  IF x_ <= 5 THEN
     WITH
     shared_conditional (x) AS (CALL shared_conditional(1))
     SELECT *
@@ -15792,7 +15794,7 @@ CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stm
   memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
   _p1_x__ = 1;
   _preds_1[0] = 1;
-  if (_p1_x__ == 1) {
+  if (_p1_x__ <= 5) {
     _preds_1[1] = 1;
     _p2_x_ = 1;
     if (_p2_x_ == 1) {
@@ -15847,6 +15849,173 @@ CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stm
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x__,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x__);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_nested_select_shared_frag_form ()
+BEGIN
+  SELECT *
+    FROM (CALL nested_shared_proc(1));
+END;
+*/
+
+#define _PROC_ "use_nested_select_shared_frag_form"
+static int32_t use_nested_select_shared_frag_form_perf_index;
+
+cql_string_proc_name(use_nested_select_shared_frag_form_stored_procedure_name, "use_nested_select_shared_frag_form");
+
+typedef struct use_nested_select_shared_frag_form_row {
+  cql_int32 x;
+} use_nested_select_shared_frag_form_row;
+
+cql_int32 use_nested_select_shared_frag_form_get_x(use_nested_select_shared_frag_form_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_nested_select_shared_frag_form_row *data = (use_nested_select_shared_frag_form_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+uint8_t use_nested_select_shared_frag_form_data_types[use_nested_select_shared_frag_form_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+};
+
+static cql_uint16 use_nested_select_shared_frag_form_col_offsets[] = { 1,
+  cql_offsetof(use_nested_select_shared_frag_form_row, x)
+};
+
+cql_int32 use_nested_select_shared_frag_form_result_count(use_nested_select_shared_frag_form_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form_fetch_results(sqlite3 *_Nonnull _db_, use_nested_select_shared_frag_form_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_use_nested_select_shared_frag_form, &use_nested_select_shared_frag_form_perf_index);
+  cql_code rc = use_nested_select_shared_frag_form(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = use_nested_select_shared_frag_form_data_types,
+    .col_offsets = use_nested_select_shared_frag_form_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(use_nested_select_shared_frag_form_row),
+    .crc = CRC_use_nested_select_shared_frag_form,
+    .perf_index = &use_nested_select_shared_frag_form_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC use_nested_select_shared_frag_form () (x INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_int32 _p1_x__ = 0;
+  cql_int32 _p2_x_ = 0;
+  char _preds_1[10];
+  char _vpreds_1[8];
+
+  memset(&_preds_1[0], 0, sizeof(_preds_1));
+  memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
+  _p1_x__ = 1;
+  _preds_1[0] = 1;
+  _preds_1[1] = 1;
+  if (_p1_x__ <= 5) {
+    _preds_1[2] = 1;
+    _p2_x_ = 1;
+    if (_p2_x_ == 1) {
+      _preds_1[3] = 1;
+      _vpreds_1[0] = 1; // pred 3 known to be 1
+    }
+    else {
+      if (_p2_x_ == 2) {
+        _preds_1[4] = 1;
+        _vpreds_1[1] = 1; // pred 4 known to be 1
+        _vpreds_1[2] = 1; // pred 4 known to be 1
+      }
+      else {
+        _preds_1[5] = 1;
+        _vpreds_1[3] = 1; // pred 5 known to be 1
+        _vpreds_1[4] = 1; // pred 5 known to be 1
+        _vpreds_1[5] = 1; // pred 5 known to be 1
+      }
+    }
+    _preds_1[6] = _preds_1[2];
+    _vpreds_1[6] = _preds_1[2];
+  }
+  else {
+    _preds_1[7] = 1;
+    _vpreds_1[7] = 1; // pred 7 known to be 1
+  }
+  _preds_1[8] = 1;
+  _preds_1[9] = 1;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    10, _preds_1,
+  "SELECT x "
+      "FROM (",
+  "WITH _ns_(x) AS (",
+  "WITH "
+    "shared_conditional (x) AS (",
+  "SELECT ?",
+  "SELECT ? + ?",
+  "SELECT ? + ? + ?",
+  ") "
+    "SELECT x "
+      "FROM shared_conditional "
+      "WHERE ? = 5",
+  "SELECT ?",
+  ") SELECT * FROM _ns_",
+  ")"
+  );
+  cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p2_x_,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x__,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _p1_x__);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC simple_shared_frag ()
+BEGIN
+  SELECT *
+    FROM (CALL shared_frag());
+END;
+*/
+
+#define _PROC_ "simple_shared_frag"
+// private: DECLARE PROC simple_shared_frag () (shared_something INTEGER NOT NULL);
+static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    5, NULL,
+  "SELECT shared_something "
+      "FROM (",
+  "WITH _ns_(shared_something) AS (",
+  "SELECT 1234",
+  ") SELECT * FROM _ns_",
+  ")"
+  );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 

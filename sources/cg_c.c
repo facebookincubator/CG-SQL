@@ -4533,6 +4533,30 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 
   cg_emit_one_frag(buffer);
 
+  // we need the column names for our select 
+  // we'll accomplish this by generating a CTE wrapper
+  // the column names are were already in the original text but
+  // we want to minify those out, we could turn off alias minification here
+  // but if we did that then we couldn't share the text of the fragment
+  // so instead we make a wrapper that has exatly the column names we need
+
+  bool_t is_nested_select = is_ast_table_or_subquery(cte_body->parent);
+
+  CHARBUF_OPEN(wrapper);
+  if (is_nested_select) {
+    // this ensures that all the columns of the select are correctly named
+    bprintf(&wrapper, "WITH _ns_(");
+
+    sem_struct *sptr = cte_body->sem->sptr;
+
+    for (int32_t i = 0; i < sptr->count; i++) {
+      bprintf(&wrapper, "%s%s", i == 0 ? "": ", ", sptr->names[i]);
+    }
+
+    bprintf(&wrapper, ") AS (");
+    cg_emit_one_frag(&wrapper);
+  }
+
   if (is_ast_if_stmt(stmt)) {
     EXTRACT_NOTNULL(cond_action, stmt->left);
     EXTRACT_NOTNULL(if_alt, stmt->right);
@@ -4545,6 +4569,13 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   else {
     cg_fragment_stmt(stmt, buffer);
   }
+
+  if (is_nested_select) {
+    bprintf(&wrapper, ") SELECT * FROM _ns_");
+    cg_emit_one_frag(&wrapper);
+  }
+
+  CHARBUF_CLOSE(wrapper);
 
   symtab_delete(proc_arg_aliases);
   symtab_delete(proc_cte_aliases);

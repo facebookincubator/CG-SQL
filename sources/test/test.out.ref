@@ -1634,6 +1634,9 @@ SELECT *
   FROM bar,
 tar;
 
+SELECT *
+  FROM (CALL foo() USING stuff AS source);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

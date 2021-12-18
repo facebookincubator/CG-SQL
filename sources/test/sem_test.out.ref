@@ -18664,6 +18664,60 @@ END;
 
 The statement ending at line XXXX
 
+SELECT *
+  FROM (CALL a_shared_frag(1, 2));
+
+  {select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+  | {select_core_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+  | | {select_core}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+  |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+  |     | | {star}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+  |     | {select_from_etc}: TABLE { select: select }
+  |       | {table_or_subquery_list}: TABLE { select: select }
+  |       | | {table_or_subquery}: TABLE { select: select }
+  |       |   | {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |     | {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |       | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |       | {expr_list}: ok
+  |       |         | {int 1}: integer notnull
+  |       |         | {expr_list}
+  |       |           | {int 2}: integer notnull
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM (CALL a_shared_frag());
+
+test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provided to procedure 'a_shared_frag'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: err
+  |       | | {table_or_subquery}: err
+  |       |   | {shared_cte}: err
+  |       |     | {call_stmt}: err
+  |       |       | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:shared_fragment)
 CREATE PROC bogus_conditional_no_else ()
 BEGIN
@@ -19208,7 +19262,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0430: no actual table was pro
   |     | {cte_decl}
   |     | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |     | | {star}
-  |     | {shared_cte}
+  |     | {shared_cte}: err
   |       | {call_stmt}: err
   |         | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {expr_list}: ok
@@ -19370,7 +19424,7 @@ SELECT *
   |     |   | {name id}
   |     |   | {name_list}
   |     |     | {name name}
-  |     | {shared_cte}
+  |     | {shared_cte}: select: { id: integer<job>, name: text } dml_proc
   |       | {call_stmt}: select: { id: integer<job>, name: text } dml_proc
   |       | | {name shared_frag3}: select: { id: integer<job>, name: text } dml_proc
   |       | {cte_binding_list}
@@ -19410,7 +19464,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
   |     | {cte_decl}
   |     | | {name data}
   |     | | {star}
-  |     | {shared_cte}
+  |     | {shared_cte}: err
   |       | {call_stmt}: err
   |       | | {name shared_frag3}: select: { id: integer<job>, name: text } dml_proc
   |       | {cte_binding_list}
@@ -19640,7 +19694,7 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: the called proce
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -19721,7 +19775,7 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0430: no actual table 
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -19802,7 +19856,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0428: duplicate binding of table in
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -19887,7 +19941,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0431: an actual table was provided 
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -19972,7 +20026,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'bogus
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -20060,7 +20114,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0432: the table provided must have 
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -20141,7 +20195,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0433: The table argument 'source' r
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -20222,7 +20276,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
   |       | {cte_decl}
   |       | | {name x}
   |       | | {star}
-  |       | {shared_cte}
+  |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
@@ -20493,7 +20547,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
   |     |   | {name id}
   |     |   | {name_list}
   |     |     | {name id}
-  |     | {shared_cte}
+  |     | {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       | {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {expr_list}: ok
@@ -20705,7 +20759,7 @@ SELECT *
   |     |     | {name y}
   |     |     | {name_list}
   |     |       | {name z}
-  |     | {shared_cte}
+  |     | {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       | {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {expr_list}: ok
@@ -20736,7 +20790,7 @@ foo (*) AS (CALL return_with_attr())
 SELECT *
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
+test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
 
   {with_select_stmt}: err
   | {with}
@@ -20745,7 +20799,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside a CTE
   |     | {cte_decl}
   |     | | {name foo}
   |     | | {star}
-  |     | {shared_cte}
+  |     | {shared_cte}: err
   |       | {call_stmt}: ok
   |         | {name return_with_attr}: ok
   | {select_stmt}
@@ -20781,7 +20835,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared pro
   |     | {cte_decl}
   |     | | {name foo}
   |     | | {star}
-  |     | {shared_cte}
+  |     | {shared_cte}: err
   |       | {call_stmt}: err
   |         | {name this_is_not_even_a_proc}
   | {select_stmt}
@@ -78438,7 +78492,7 @@ END;
         |     | | {name D}
         |     | | {name_list}
         |     |   | {name id}
-        |     | {shared_cte}
+        |     | {shared_cte}: select: { id: integer notnull } dml_proc
         |       | {call_stmt}: select: { id: integer notnull } dml_proc
         |       | | {name conditional_frag}: select: { id: integer notnull } dml_proc
         |       | | {expr_list}: ok

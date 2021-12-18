@@ -10,6 +10,13 @@
 -- use this for both normal eval and SQLite eval
 #define EXPECT_SQL_TOO(x) EXPECT(x); EXPECT((select x))
 
+/* Useful code for getting more verbose errors
+@echo c,"#undef cql_error_trace\n";
+@echo c,'#define cql_error_trace() \
+   fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))';
+@echo c,"\n\n";
+*/
+
 BEGIN_SUITE()
 
 declare function blob_from_string(str text @sensitive) create blob not null;
@@ -4003,6 +4010,35 @@ BEGIN_TEST(conditional_fragment)
   fetch E;
   EXPECT(not E);
 END_TEST(conditional_fragment)
+
+BEGIN_TEST(conditional_fragment_no_with)
+  declare C cursor for select * from (call conditional_values(1));
+
+  fetch C;
+  EXPECT(C.id = 1);
+  EXPECT(C.t = 'x');
+  fetch C;
+  EXPECT(not C);
+
+  declare D cursor for select * from (call conditional_values(2));
+
+  fetch D;
+  EXPECT(D.id = 2);
+  EXPECT(D.t = 'y');
+  fetch D;
+  EXPECT(not D);
+
+  declare E cursor for select * from (call conditional_values(3));
+
+  fetch E;
+  EXPECT(E.id = 3);
+  EXPECT(E.t = 'u');
+  fetch E;
+  EXPECT(E.id = 4);
+  EXPECT(E.t = 'v');
+  fetch E;
+  EXPECT(not E);
+END_TEST(conditional_fragment_no_with)
 
 @attribute(cql:shared_fragment)
 create proc skip_notnulls(

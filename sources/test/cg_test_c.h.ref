@@ -3444,6 +3444,30 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+#define CRC_use_nested_select_shared_frag_form 3669535294304321366L
+
+extern cql_string_ref _Nonnull use_nested_select_shared_frag_form_stored_procedure_name;
+
+#define use_nested_select_shared_frag_form_data_types_count 1
+
+#ifndef result_set_type_decl_use_nested_select_shared_frag_form_result_set
+#define result_set_type_decl_use_nested_select_shared_frag_form_result_set 1
+cql_result_set_type_decl(use_nested_select_shared_frag_form_result_set, use_nested_select_shared_frag_form_result_set_ref);
+#endif
+extern cql_int32 use_nested_select_shared_frag_form_get_x(use_nested_select_shared_frag_form_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 use_nested_select_shared_frag_form_result_count(use_nested_select_shared_frag_form_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form_fetch_results(sqlite3 *_Nonnull _db_, use_nested_select_shared_frag_form_result_set_ref _Nullable *_Nonnull result_set);
+#define use_nested_select_shared_frag_form_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define use_nested_select_shared_frag_form_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 #ifndef const_group_some_constants_defined

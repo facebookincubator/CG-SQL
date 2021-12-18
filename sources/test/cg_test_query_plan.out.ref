@@ -370,14 +370,14 @@ END;
 CREATE PROC split_commas (str TEXT)
 BEGIN
 WITH
-splitter (tok, rest) AS (SELECT '', IFNULL(nullable('1') || ',', '')
+splitter (tok, rest) AS (SELECT "", IFNULL(nullable('1') || ",", "")
 UNION ALL
-SELECT substr(rest, 1, instr(rest, ',') - 1), substr(rest, instr(rest, ',') + 1)
+SELECT substr(rest, 1, instr(rest, ",") - 1), substr(rest, instr(rest, ",") + 1)
   FROM splitter
-  WHERE rest <> '')
+  WHERE rest <> "")
 SELECT tok
   FROM splitter
-  WHERE tok <> '';
+  WHERE tok <> "";
 END;
 
 @attribute(cql:shared_fragment)

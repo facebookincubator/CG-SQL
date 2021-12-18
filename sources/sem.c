@@ -202,6 +202,7 @@ static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
 static void reset_enforcements(void);
 static uint32_t sem_with_depth(void);
 static ast_node *sem_find_table(CSTR name, ast_node *ast_error);
+static void sem_shared_cte(ast_node *cte_body);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -332,6 +333,9 @@ static bool_t has_dml;
 
 // If the current proc is a shared fragment
 static bool_t in_shared_fragment;
+
+// If we are current processing the use of a shared fragment
+static bool_t in_shared_fragment_call;
 
 // If the current context is a trigger statement list
 static bool_t in_trigger;
@@ -8889,6 +8893,19 @@ static void sem_table_or_subquery(ast_node *ast) {
     ast->sem->jptr = sem_join_from_sem_struct(factor->sem->sptr);
     alias_target = &ast->sem->jptr->names[0];
   }
+  else if (is_ast_shared_cte(factor)) {
+    // [CALL shared_fragment ...]
+    sem_shared_cte(factor);
+
+    if (is_error(factor)) {
+      record_error(ast);
+      return;
+    }
+
+    ast->sem = new_sem(SEM_TYPE_JOIN);
+    ast->sem->jptr = sem_join_from_sem_struct(factor->sem->sptr);
+    alias_target = &ast->sem->jptr->names[0];
+  }
   else if (is_ast_table_function(factor)) {
     sem_table_function(factor);
 
@@ -10498,6 +10515,58 @@ cleanup:
   symtab_delete(formals);
 }
 
+// We've found a shared fragment call site, process the fragment
+static void sem_shared_cte(ast_node *cte_body) {
+  EXTRACT_NOTNULL(call_stmt, cte_body->left);
+  EXTRACT(cte_binding_list, cte_body->right);
+
+  bool_t in_shared_fragment_call_saved = in_shared_fragment_call;
+  in_shared_fragment_call = true;
+
+  // The semantic info for this kind of call looks just like any other
+  // we use the helper directly because this is not a loose call statement
+  // but there is no cursor.  We don't want the procedure we are in (if any)
+  // to become a result-set procedure.
+  sem_call_stmt_opt_cursor(call_stmt, NULL);
+  if (is_error(call_stmt)) {
+    record_error(cte_body);
+    goto cleanup;
+  }
+
+  // check if we are calling a shared fragment
+  EXTRACT_ANY_NOTNULL(proc_name_ast, call_stmt->left);
+  EXTRACT_STRING(proc_name, proc_name_ast);
+  ast_node *proc_stmt = find_proc(proc_name);
+  uint32_t frag_type = find_proc_frag_type(proc_stmt);
+  if (frag_type != FRAG_TYPE_SHARED) {
+    report_error(proc_name_ast, "CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
+    record_error(cte_body);
+    goto cleanup;
+  }
+
+  if (cte_binding_list) {
+    // if there is a binding list we have to ensure the number and type of bindings are correct
+    sem_shared_fragment_table_binding(call_stmt, proc_stmt, cte_binding_list);
+    if (is_error(call_stmt)) {
+      record_error(cte_body);
+      goto cleanup;
+    }
+  }
+  else {
+    // if there is no binding list we still have to ensure that there are no bindings required
+    sem_shared_fragment_ensure_no_table_binding(call_stmt, proc_stmt);
+    if (is_error(call_stmt)) {
+      record_error(cte_body);
+      goto cleanup;
+    }
+  }
+
+  cte_body->sem = call_stmt->sem;
+
+cleanup:
+  in_shared_fragment_call = in_shared_fragment_call_saved;
+}
+
 // Here we process the CTE and the select it is associated with:
 //  * analyze the select
 //    * if it is compound analyze only the first part of the union;
@@ -10597,49 +10666,14 @@ static void sem_cte_table(ast_node *ast)  {
     cte_decl->sem->sptr->semtypes = select_stmt->sem->sptr->semtypes;
   }
   else if (is_ast_shared_cte(cte_body)) {
-    EXTRACT_NOTNULL(call_stmt, cte_body->left);
-    EXTRACT(cte_binding_list, cte_body->right);
-
-    // The semantic info for this kind of call looks just like any other
-    // we use the helper directly because this is not a loose call statement
-    // but there is no cursor.  We don't want the procedure we are in (if any)
-    // to become a result-set procedure.
-    sem_call_stmt_opt_cursor(call_stmt, NULL);
-    if (is_error(call_stmt)) {
+    sem_shared_cte(cte_body);
+    if (is_error(cte_body)) {
       record_error(ast);
       return;
-    }
-
-    // check if we are calling a shared fragment
-    EXTRACT_ANY_NOTNULL(proc_name_ast, call_stmt->left);
-    EXTRACT_STRING(proc_name, proc_name_ast);
-    ast_node *proc_stmt = find_proc(proc_name);
-    uint32_t frag_type = find_proc_frag_type(proc_stmt);
-    if (frag_type != FRAG_TYPE_SHARED) {
-      report_error(proc_name_ast, "CQL0224: a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
-      record_error(ast);
-      return;
-    }
-
-    if (cte_binding_list) {
-      // if there is a binding list we have to ensure the number and type of bindings are correct
-      sem_shared_fragment_table_binding(call_stmt, proc_stmt, cte_binding_list);
-      if (is_error(call_stmt)) {
-        record_error(ast);
-        return;
-      }
-    }
-    else {
-      // if there is no binding list we still have to ensure that there are no bindings required
-      sem_shared_fragment_ensure_no_table_binding(call_stmt, proc_stmt);
-      if (is_error(call_stmt)) {
-        record_error(ast);
-        return;
-      }
     }
 
     // now process the declaration using the types from call
-    sem_cte_decl(cte_decl, call_stmt);
+    sem_cte_decl(cte_decl, cte_body);
     if (is_error(cte_decl)) {
       record_error(ast);
       return;
@@ -18577,7 +18611,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   }
 
   if (proc_stmt && is_struct(proc_stmt->sem->sem_type)) {
-    if (!cursor_name && !current_proc && !cte_cur) {
+    if (!cursor_name && !current_proc && !in_shared_fragment_call) {
       report_error(ast, "CQL0214: procedures with results can only be called using a cursor in global context", name);
       record_error(ast);
       return;
@@ -21368,6 +21402,7 @@ cql_noexport void sem_cleanup() {
   current_upsert_table_ast = NULL;
   current_variables = NULL;  // this is either locals or globals, freed above
   has_dml = false;
+  in_shared_fragment_call = false;
   in_trigger = false;
   in_switch = false;
   in_upsert = false;

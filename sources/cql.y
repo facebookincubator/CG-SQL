@@ -243,7 +243,7 @@ static void cql_reset_globals(void);
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
 %type <aval> insert_stmt with_insert_stmt insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names expr_name
-%type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl
+%type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl shared_cte
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
 %type <aval> select_stmt_no_with select_core_list
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
@@ -1049,14 +1049,14 @@ cte_decl:
   | name '(' '*' ')'  { $cte_decl = new_ast_cte_decl($name, new_ast_star()); }
   ;
 
+shared_cte:
+  call_stmt { $shared_cte = new_ast_shared_cte($call_stmt, NULL); }
+  | call_stmt USING cte_binding_list { $shared_cte = new_ast_shared_cte($call_stmt, $cte_binding_list); }
+  ;
+
 cte_table:
   cte_decl AS '(' select_stmt ')'  { $cte_table = new_ast_cte_table($cte_decl, $select_stmt); }
-  | cte_decl AS '(' call_stmt ')' {
-      ast_node *shared_cte = new_ast_shared_cte($call_stmt, NULL);
-      $cte_table = new_ast_cte_table($cte_decl, shared_cte); }
-  | cte_decl AS '(' call_stmt USING cte_binding_list ')' {
-      ast_node *shared_cte = new_ast_shared_cte($call_stmt, $cte_binding_list);
-      $cte_table = new_ast_cte_table($cte_decl, shared_cte); }
+  | cte_decl AS '(' shared_cte')' { $cte_table = new_ast_cte_table($cte_decl, $shared_cte); }
   | '(' call_stmt ')' {
       ast_node *name = $call_stmt->left;
       ast_node *cte_decl =  new_ast_cte_decl(name, new_ast_star());
@@ -1382,6 +1382,7 @@ join_target_list[result]:
 table_or_subquery:
   name opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($name, $opt_as_alias); }
   | '(' select_stmt ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($select_stmt, $opt_as_alias); }
+  | '(' shared_cte ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
   | table_function opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($table_function, $opt_as_alias); }
   | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
   ;
