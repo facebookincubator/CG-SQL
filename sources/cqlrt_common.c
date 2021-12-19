@@ -64,10 +64,10 @@ cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pst
 }
 
 // create a single string from the varargs and count provided
-static char *_Nonnull cql_vconcat(cql_int32 count, const char *_Nullable preds, va_list args) {
+static char *_Nonnull cql_vconcat(cql_int32 count, const char *_Nullable preds, va_list *_Nonnull args) {
   va_list pass1, pass2;
-  va_copy(pass1, args);
-  va_copy(pass2, args);
+  va_copy(pass1, *args);
+  va_copy(pass2, *args);
 
   cql_int32 bytes = 0;
 
@@ -111,7 +111,7 @@ cql_code cql_prepare_var(
   cql_finalize_stmt(pstmt);
   va_list args;
   va_start(args, preds);
-  char *sql = cql_vconcat(count, preds, args);
+  char *sql = cql_vconcat(count, preds, &args);
   cql_code result = cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
   va_end(args);
   free(sql);
@@ -131,7 +131,7 @@ cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql) {
 cql_code cql_exec_var(sqlite3 *_Nonnull db, cql_int32 count, const char *_Nullable preds,...) {
   va_list args;
   va_start(args, preds);
-  char *sql = cql_vconcat(count, preds, args);
+  char *sql = cql_vconcat(count, preds, &args);
   cql_code result = cql_sqlite3_exec(db, sql);
   va_end(args);
   free(sql);
@@ -635,40 +635,40 @@ int cql_compat_sqlite3_strlike(
 
 // If there is no row available we can use this helper to ensure that
 // the output data is put into a known state.
-static void cql_multinull(cql_int32 count, va_list args) {
+static void cql_multinull(cql_int32 count, va_list *_Nonnull args) {
   for (cql_int32 column = 0; column < count; column++) {
-    cql_int32 type = va_arg(args, cql_int32);
+    cql_int32 type = va_arg(*args, cql_int32);
     cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
     if (type & CQL_DATA_TYPE_NOT_NULL) {
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
-          cql_int32 *int32_data = va_arg(args, cql_int32 *);
+          cql_int32 *int32_data = va_arg(*args, cql_int32 *);
           *int32_data = 0;
           break;
         }
         case CQL_DATA_TYPE_INT64: {
-          cql_int64 *int64_data = va_arg(args, cql_int64 *);
+          cql_int64 *int64_data = va_arg(*args, cql_int64 *);
           *int64_data = 0;
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
-          cql_double *double_data = va_arg(args, cql_double *);
+          cql_double *double_data = va_arg(*args, cql_double *);
           *double_data = 0;
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
-          cql_bool *bool_data = va_arg(args, cql_bool *);
+          cql_bool *bool_data = va_arg(*args, cql_bool *);
           *bool_data = 0;
           break;
         }
         case CQL_DATA_TYPE_STRING: {
-          cql_string_ref *str_ref = va_arg(args, cql_string_ref *);
+          cql_string_ref *str_ref = va_arg(*args, cql_string_ref *);
           cql_set_string_ref(str_ref, NULL);
           break;
         }
         case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref *blob_ref = va_arg(args, cql_blob_ref *);
+          cql_blob_ref *blob_ref = va_arg(*args, cql_blob_ref *);
           cql_set_blob_ref(blob_ref, NULL);
           break;
         }
@@ -677,32 +677,32 @@ static void cql_multinull(cql_int32 count, va_list args) {
     else {
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
-          cql_nullable_int32 *_Nonnull int32p = va_arg(args, cql_nullable_int32 *_Nonnull);
+          cql_nullable_int32 *_Nonnull int32p = va_arg(*args, cql_nullable_int32 *_Nonnull);
           cql_set_null(*int32p);
           break;
         }
         case CQL_DATA_TYPE_INT64: {
-          cql_nullable_int64 *_Nonnull int64p = va_arg(args, cql_nullable_int64 *_Nonnull);
+          cql_nullable_int64 *_Nonnull int64p = va_arg(*args, cql_nullable_int64 *_Nonnull);
           cql_set_null(*int64p);
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
-          cql_nullable_double *_Nonnull doublep = va_arg(args, cql_nullable_double *_Nonnull);
+          cql_nullable_double *_Nonnull doublep = va_arg(*args, cql_nullable_double *_Nonnull);
           cql_set_null(*doublep);
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
-          cql_nullable_bool *_Nonnull boolp = va_arg(args, cql_nullable_bool *_Nonnull);
+          cql_nullable_bool *_Nonnull boolp = va_arg(*args, cql_nullable_bool *_Nonnull);
           cql_set_null(*boolp);
           break;
         }
         case CQL_DATA_TYPE_STRING: {
-          cql_string_ref *str_ref = va_arg(args, cql_string_ref *);
+          cql_string_ref *str_ref = va_arg(*args, cql_string_ref *);
           cql_set_string_ref(str_ref, NULL);
           break;
         }
         case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref *blob_ref = va_arg(args, cql_blob_ref *);
+          cql_blob_ref *blob_ref = va_arg(*args, cql_blob_ref *);
           cql_set_blob_ref(blob_ref, NULL);
           break;
         }
@@ -904,7 +904,8 @@ void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, 
   va_start(args, count);
 
   if (rc != SQLITE_ROW) {
-    cql_multinull(count, args);
+    cql_multinull(count, &args);
+    va_end(args);
     return;
   }
 
@@ -951,7 +952,8 @@ void cql_copyoutrow(
   cql_int32 row_count = cql_result_set_get_count(result_set);
 
   if (row >= row_count || row < 0) {
-    cql_multinull(count, args);
+    cql_multinull(count, &args);
+    va_end(args);
     return;
   }
 
@@ -1137,57 +1139,57 @@ void cql_copyoutrow(
 
 // This is just the helper to ignore the indicated arg
 // because the predicates array tell us it is to be skipped
-static void cql_skip_arg(cql_int32 type, va_list args)
+static void cql_skip_arg(cql_int32 type, va_list *_Nonnull args)
 {
   cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
   if (type & CQL_DATA_TYPE_NOT_NULL) {
     switch (core_data_type) {
       case CQL_DATA_TYPE_INT32:
-        (void)va_arg(args, cql_int32);
+        (void)va_arg(*args, cql_int32);
         break;
       case CQL_DATA_TYPE_INT64:
-        (void)va_arg(args, cql_int64);
+        (void)va_arg(*args, cql_int64);
         break;
       case CQL_DATA_TYPE_DOUBLE:
-        (void)va_arg(args, cql_double);
+        (void)va_arg(*args, cql_double);
         break;
       case CQL_DATA_TYPE_BOOL:
-        (void)va_arg(args, cql_int32);
+        (void)va_arg(*args, cql_int32);
         break;
       case CQL_DATA_TYPE_STRING:
-        (void)va_arg(args, cql_string_ref);
+        (void)va_arg(*args, cql_string_ref);
         break;
       case CQL_DATA_TYPE_BLOB:
-        (void)va_arg(args, cql_blob_ref);
+        (void)va_arg(*args, cql_blob_ref);
         break;
       case CQL_DATA_TYPE_OBJECT:
-        (void)va_arg(args, cql_object_ref);
+        (void)va_arg(*args, cql_object_ref);
         break;
     }
   }
   else {
     switch (core_data_type) {
       case CQL_DATA_TYPE_INT32:
-        (void)va_arg(args, const cql_nullable_int32 *_Nonnull);
+        (void)va_arg(*args, const cql_nullable_int32 *_Nonnull);
         break;
       case CQL_DATA_TYPE_INT64:
-        (void)va_arg(args, const cql_nullable_int64 *_Nonnull);
+        (void)va_arg(*args, const cql_nullable_int64 *_Nonnull);
         break;
       case CQL_DATA_TYPE_DOUBLE:
-        (void)va_arg(args, const cql_nullable_double *_Nonnull);
+        (void)va_arg(*args, const cql_nullable_double *_Nonnull);
         break;
       case CQL_DATA_TYPE_BOOL:
-        (void)va_arg(args, const cql_nullable_bool *_Nonnull);
+        (void)va_arg(*args, const cql_nullable_bool *_Nonnull);
         break;
       case CQL_DATA_TYPE_STRING:
-        (void)va_arg(args, cql_string_ref);
+        (void)va_arg(*args, cql_string_ref);
         break;
       case CQL_DATA_TYPE_BLOB:
-        (void)va_arg(args, cql_blob_ref);
+        (void)va_arg(*args, cql_blob_ref);
         break;
       case CQL_DATA_TYPE_OBJECT:
-        (void)va_arg(args, cql_object_ref);
+        (void)va_arg(*args, cql_object_ref);
         break;
     }
   }
@@ -1203,13 +1205,13 @@ static void cql_multibind_v(
   sqlite3_stmt *_Nullable *_Nonnull pstmt,
   cql_int32 count,
   const char *_Nullable vpreds,
-  va_list args)
+  va_list *_Nonnull args)
 {
   cql_int32 column = 1;
 
   for (cql_int32 i = 0; *prc == SQLITE_OK && i < count; i++) {
     cql_contract(pstmt && *pstmt);
-    cql_int32 type = va_arg(args, cql_int32);
+    cql_int32 type = va_arg(*args, cql_int32);
     cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
     if (vpreds && !vpreds[i]) {
@@ -1220,31 +1222,31 @@ static void cql_multibind_v(
     if (type & CQL_DATA_TYPE_NOT_NULL) {
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
-          cql_int32 int32_data = va_arg(args, cql_int32);
+          cql_int32 int32_data = va_arg(*args, cql_int32);
           *prc = sqlite3_bind_int(*pstmt, column, int32_data);
           column++;
           break;
         }
         case CQL_DATA_TYPE_INT64: {
-          cql_int64 int64_data = va_arg(args, cql_int64);
+          cql_int64 int64_data = va_arg(*args, cql_int64);
           *prc = sqlite3_bind_int64(*pstmt, column, int64_data);
           column++;
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
-          cql_double double_data = va_arg(args, cql_double);
+          cql_double double_data = va_arg(*args, cql_double);
           *prc = sqlite3_bind_double(*pstmt, column, double_data);
           column++;
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
-          cql_bool bool_data = !!(cql_bool)va_arg(args, cql_int32);
+          cql_bool bool_data = !!(cql_bool)va_arg(*args, cql_int32);
           *prc = sqlite3_bind_int(*pstmt, column, bool_data);
           column++;
           break;
         }
         case CQL_DATA_TYPE_STRING: {
-          cql_string_ref str_ref = va_arg(args, cql_string_ref);
+          cql_string_ref str_ref = va_arg(*args, cql_string_ref);
           cql_alloc_cstr(temp, str_ref);
           *prc = sqlite3_bind_text(*pstmt, column, temp, -1, SQLITE_TRANSIENT);
           cql_free_cstr(temp, str_ref);
@@ -1252,7 +1254,7 @@ static void cql_multibind_v(
           break;
         }
         case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref blob_ref = va_arg(args, cql_blob_ref);
+          cql_blob_ref blob_ref = va_arg(*args, cql_blob_ref);
           const void *bytes = cql_get_blob_bytes(blob_ref);
           cql_uint32 size = cql_get_blob_size(blob_ref);
           *prc = sqlite3_bind_blob(*pstmt, column, bytes, size, SQLITE_TRANSIENT);
@@ -1260,7 +1262,7 @@ static void cql_multibind_v(
           break;
         }
         case CQL_DATA_TYPE_OBJECT: {
-          cql_object_ref obj_ref = va_arg(args, cql_object_ref);
+          cql_object_ref obj_ref = va_arg(*args, cql_object_ref);
           *prc = sqlite3_bind_int64(*pstmt, column, (int64_t)obj_ref);
           column++;
           break;
@@ -1270,35 +1272,35 @@ static void cql_multibind_v(
     else {
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
-          const cql_nullable_int32 *_Nonnull int32p = va_arg(args, const cql_nullable_int32 *_Nonnull);
+          const cql_nullable_int32 *_Nonnull int32p = va_arg(*args, const cql_nullable_int32 *_Nonnull);
           *prc = int32p->is_null ? sqlite3_bind_null(*pstmt, column) :
                                    sqlite3_bind_int(*pstmt, column, int32p->value);
           column++;
           break;
         }
         case CQL_DATA_TYPE_INT64: {
-          const cql_nullable_int64 *_Nonnull int64p = va_arg(args, const cql_nullable_int64 *_Nonnull);
+          const cql_nullable_int64 *_Nonnull int64p = va_arg(*args, const cql_nullable_int64 *_Nonnull);
           *prc =int64p->is_null ? sqlite3_bind_null(*pstmt, column) :
                                   sqlite3_bind_int64(*pstmt, column, int64p->value);
           column++;
           break;
         }
         case CQL_DATA_TYPE_DOUBLE: {
-          const cql_nullable_double *_Nonnull doublep = va_arg(args, const cql_nullable_double *_Nonnull);
+          const cql_nullable_double *_Nonnull doublep = va_arg(*args, const cql_nullable_double *_Nonnull);
           *prc = doublep->is_null ? sqlite3_bind_null(*pstmt, column) :
                                     sqlite3_bind_double(*pstmt, column, doublep->value);
           column++;
           break;
         }
         case CQL_DATA_TYPE_BOOL: {
-          const cql_nullable_bool *_Nonnull boolp = va_arg(args, const cql_nullable_bool *_Nonnull);
+          const cql_nullable_bool *_Nonnull boolp = va_arg(*args, const cql_nullable_bool *_Nonnull);
           *prc =boolp->is_null ? sqlite3_bind_null(*pstmt, column) :
                                  sqlite3_bind_int(*pstmt, column, !!boolp->value);
           column++;
           break;
         }
         case CQL_DATA_TYPE_STRING: {
-          cql_string_ref _Nullable nullable_str_ref = va_arg(args, cql_string_ref);
+          cql_string_ref _Nullable nullable_str_ref = va_arg(*args, cql_string_ref);
           if (!nullable_str_ref) {
             *prc = sqlite3_bind_null(*pstmt, column);
           }
@@ -1311,7 +1313,7 @@ static void cql_multibind_v(
           break;
         }
         case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref _Nullable nullable_blob_ref = va_arg(args, cql_blob_ref);
+          cql_blob_ref _Nullable nullable_blob_ref = va_arg(*args, cql_blob_ref);
           if (!nullable_blob_ref) {
             *prc = sqlite3_bind_null(*pstmt, column);
           }
@@ -1324,7 +1326,7 @@ static void cql_multibind_v(
           break;
         }
         case CQL_DATA_TYPE_OBJECT: {
-          cql_object_ref _Nullable nullable_obj_ref = va_arg(args, cql_object_ref);
+          cql_object_ref _Nullable nullable_obj_ref = va_arg(*args, cql_object_ref);
           *prc = sqlite3_bind_int64(*pstmt, column, (int64_t)nullable_obj_ref);
           column++;
           break;
@@ -1344,7 +1346,7 @@ void cql_multibind(
 {
   va_list args;
   va_start(args, count);
-  cql_multibind_v(prc, db, pstmt, count, NULL, args);
+  cql_multibind_v(prc, db, pstmt, count, NULL, &args);
   va_end(args);
 }
 
@@ -1358,7 +1360,7 @@ void cql_multibind_var(
 {
   va_list args;
   va_start(args, vpreds);
-  cql_multibind_v(prc, db, pstmt, count, vpreds, args);
+  cql_multibind_v(prc, db, pstmt, count, vpreds, &args);
   va_end(args);
 }
 
