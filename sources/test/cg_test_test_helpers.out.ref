@@ -993,6 +993,11 @@ BEGIN
   CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
 END;
 
+CREATE PROC test_sample_proc19_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_sample_proc19_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
@@ -1002,6 +1007,11 @@ END;
 CREATE PROC test_sample_proc19_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Baa;
+END;
+
+CREATE PROC test_sample_proc19_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_sample_proc19_read_Baa()
@@ -1743,6 +1753,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_sample_proc26_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_sample_proc26_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(-0.1, '1') @dummy_seed(123);
@@ -1752,6 +1767,11 @@ END;
 CREATE PROC test_sample_proc26_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
+END;
+
+CREATE PROC test_sample_proc26_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_sample_proc26_read_dbl_table()
@@ -1774,6 +1794,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_sample_proc27_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_sample_proc27_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO experiment_value(config, logging_id, type, param, value) VALUES('rtc_overlayconfig_exampleconfig', '1234', 9223372036854775807, 'enabled', '0') @dummy_seed(123);
@@ -1783,6 +1808,11 @@ END;
 CREATE PROC test_sample_proc27_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS experiment_value;
+END;
+
+CREATE PROC test_sample_proc27_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_sample_proc27_read_experiment_value()
@@ -1864,6 +1894,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_sample_proc29_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_sample_proc29_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(123);
@@ -1873,6 +1908,11 @@ END;
 CREATE PROC test_sample_proc29_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
+END;
+
+CREATE PROC test_sample_proc29_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_sample_proc29_read_dbl_table()
@@ -2135,6 +2175,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_no_long_to_conversion_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_no_long_to_conversion_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO t5(id) VALUES(1) @dummy_seed(123);
@@ -2147,6 +2192,11 @@ CREATE PROC test_no_long_to_conversion_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS t6;
   DROP TABLE IF EXISTS t5;
+END;
+
+CREATE PROC test_no_long_to_conversion_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_no_long_to_conversion_read_t5()
@@ -2190,6 +2240,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_self_ref_proc_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_self_ref_proc_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, NULL) @dummy_seed(123);
@@ -2199,6 +2254,11 @@ END;
 CREATE PROC test_self_ref_proc_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table;
+END;
+
+CREATE PROC test_self_ref_proc_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_self_ref_proc_read_self_ref_table()
@@ -2219,6 +2279,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_self_ref_proc_no_data_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_self_ref_proc_no_data_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, 1) @dummy_seed(123);
@@ -2228,6 +2293,11 @@ END;
 CREATE PROC test_self_ref_proc_no_data_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table;
+END;
+
+CREATE PROC test_self_ref_proc_no_data_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_self_ref_proc_no_data_read_self_ref_table()
@@ -2247,6 +2317,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_self_ref_proc2_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_self_ref_proc2_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, NULL) @dummy_seed(123);
@@ -2256,6 +2331,11 @@ END;
 CREATE PROC test_self_ref_proc2_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table2;
+END;
+
+CREATE PROC test_self_ref_proc2_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_self_ref_proc2_read_self_ref_table2()
@@ -2275,6 +2355,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_self_ref_proc2_no_data_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_self_ref_proc2_no_data_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, 1) @dummy_seed(123);
@@ -2284,6 +2369,11 @@ END;
 CREATE PROC test_self_ref_proc2_no_data_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table2;
+END;
+
+CREATE PROC test_self_ref_proc2_no_data_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_self_ref_proc2_no_data_read_self_ref_table2()
@@ -2306,6 +2396,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_test_too_many_row_in_child_table_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_test_too_many_row_in_child_table_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO test1(id) VALUES(1) @dummy_seed(123);
@@ -2320,6 +2415,11 @@ CREATE PROC test_test_too_many_row_in_child_table_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS test2;
   DROP TABLE IF EXISTS test1;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_test_too_many_row_in_child_table_read_test1()
@@ -2347,6 +2447,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_test_too_many_row_in_child_table_2_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_test_too_many_row_in_child_table_2_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO test1(id) VALUES(90) @dummy_seed(123);
@@ -2363,6 +2468,11 @@ CREATE PROC test_test_too_many_row_in_child_table_2_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS test2;
   DROP TABLE IF EXISTS test1;
+END;
+
+CREATE PROC test_test_too_many_row_in_child_table_2_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_test_too_many_row_in_child_table_2_read_test1()
@@ -2386,9 +2496,19 @@ BEGIN
   );
 END;
 
+CREATE PROC test_test_virtual_table_proc_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_test_virtual_table_proc_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS basic_virtual;
+END;
+
+CREATE PROC test_test_virtual_table_proc_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_test_virtual_table_proc_read_basic_virtual()
@@ -2407,6 +2527,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_test_blob_primary_key_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_test_blob_primary_key_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
@@ -2416,6 +2541,11 @@ END;
 CREATE PROC test_test_blob_primary_key_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS blob_primary_key;
+END;
+
+CREATE PROC test_test_blob_primary_key_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_test_blob_primary_key_read_blob_primary_key()
@@ -2439,6 +2569,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_test_child_blob_primary_key_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_test_child_blob_primary_key_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
@@ -2451,6 +2586,11 @@ CREATE PROC test_test_child_blob_primary_key_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS child_blob_primary_key;
   DROP TABLE IF EXISTS blob_primary_key;
+END;
+
+CREATE PROC test_test_child_blob_primary_key_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_test_child_blob_primary_key_read_blob_primary_key()
@@ -2479,6 +2619,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_test_blob_literal_in_dummy_test_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_test_blob_literal_in_dummy_test_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(X'90') @dummy_seed(123);
@@ -2491,6 +2636,11 @@ CREATE PROC test_test_blob_literal_in_dummy_test_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS child_blob_primary_key;
   DROP TABLE IF EXISTS blob_primary_key;
+END;
+
+CREATE PROC test_test_blob_literal_in_dummy_test_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_test_blob_literal_in_dummy_test_read_blob_primary_key()
@@ -2519,6 +2669,11 @@ BEGIN
   );
 END;
 
+CREATE PROC test_test_frags_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
 CREATE PROC test_test_frags_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
@@ -2531,6 +2686,11 @@ CREATE PROC test_test_frags_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS child_blob_primary_key;
   DROP TABLE IF EXISTS blob_primary_key;
+END;
+
+CREATE PROC test_test_frags_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
 END;
 
 CREATE PROC test_test_frags_read_blob_primary_key()

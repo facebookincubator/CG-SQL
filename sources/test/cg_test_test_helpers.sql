@@ -587,7 +587,7 @@ END;
 -- + CREATE PROC test_sample_proc29_create_tables()
 -- - CREATE TABLE IF NOT EXISTS Aaa
 -- + CREATE TABLE IF NOT EXISTS dbl_table
--- - CREATE PROC test_sample_proc29_create_triggers()
+-- _ CREATE PROC test_sample_proc29_create_triggers()
 -- - CREATE TRIGGER triggerAaa
 -- + CREATE PROC test_sample_proc29_populate_tables()
 -- - INSERT OR IGNORE INTO Aaa
@@ -595,7 +595,7 @@ END;
 -- + CREATE PROC test_sample_proc29_drop_tables()
 -- - DROP TABLE IF EXISTS Aaa;
 -- + DROP TABLE IF EXISTS dbl_table;
--- - CREATE PROC test_sample_proc29_drop_triggers()
+-- + CREATE PROC test_sample_proc29_drop_triggers()
 -- - DROP TRIGGER IF EXISTS triggerAaa
 -- + CREATE PROC test_sample_proc29_read_dbl_table()
 @attribute(cql:autotest=(dummy_test))

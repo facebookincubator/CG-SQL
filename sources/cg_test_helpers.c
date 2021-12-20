@@ -221,7 +221,7 @@ static void found_table_or_view(CSTR _Nonnull table_or_view_name, ast_node *_Non
 
     // This callback is invoked exactly once per table/view by the walker so we already know we
     // have to add the item to the list, we don't need to keep our own state.
-  
+
     // note by now we've already visited and added things inside us so our dependencies are already in the list
     if (is_ast_create_view_stmt(table_or_view)) {
       add_item_to_list(&info->found_views, table_or_view);
@@ -778,13 +778,21 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   //    of the desire end state, it isn't transactions to be applied.
   //
   // 2. We want to give the engineer control of if/when the triggers are applied.
-  if (gen_create_triggers->used > 1) {
-    bprintf(cg_th_procs, "\n");
-    bprintf(cg_th_procs, "CREATE PROC test_%s_create_triggers()\n", proc_name);
-    bprintf(cg_th_procs, "BEGIN\n");
-    bindent(cg_th_procs, gen_create_triggers, 2);
-    bprintf(cg_th_procs, "END;\n");
+  //
+  // We create the create/drop triggers helpers even for procs that don't use any
+  // tables with triggers. Otherwise callsites might have to change when triggers
+  // are added/removed from the schema.
+  if (gen_drop_triggers->used <= 1) {
+    // Similarly, to avoid the procs signature changing based on triggers being
+    // added/removed we use the below snippet to force the procedure to use the
+    // db-using signature, even if no triggers are actually created.
+    bprintf(gen_create_triggers, "IF @rc THEN END IF;\n");
   }
+  bprintf(cg_th_procs, "\n");
+  bprintf(cg_th_procs, "CREATE PROC test_%s_create_triggers()\n", proc_name);
+  bprintf(cg_th_procs, "BEGIN\n");
+  bindent(cg_th_procs, gen_create_triggers, 2);
+  bprintf(cg_th_procs, "END;\n");
 
   // populate tables proc
   if (gen_populate_tables.used > 1) {
@@ -803,13 +811,14 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   bprintf(cg_th_procs, "END;\n");
 
   // drop trigger proc
-  if (gen_drop_triggers->used > 1) {
-    bprintf(cg_th_procs, "\n");
-    bprintf(cg_th_procs, "CREATE PROC test_%s_drop_triggers()\n", proc_name);
-    bprintf(cg_th_procs, "BEGIN\n");
-    bindent(cg_th_procs, gen_drop_triggers, 2);
-    bprintf(cg_th_procs, "END;\n");
+  if (gen_drop_triggers->used <= 1) {
+    bprintf(gen_drop_triggers, "IF @rc THEN END IF;\n");
   }
+  bprintf(cg_th_procs, "\n");
+  bprintf(cg_th_procs, "CREATE PROC test_%s_drop_triggers()\n", proc_name);
+  bprintf(cg_th_procs, "BEGIN\n");
+  bindent(cg_th_procs, gen_drop_triggers, 2);
+  bprintf(cg_th_procs, "END;\n");
 
   // read tables procedures
   bprintf(cg_th_procs, "%s", gen_read_tables.ptr);
