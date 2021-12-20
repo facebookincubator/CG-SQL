@@ -215,7 +215,7 @@ test/sem_test.sql:XXXX:1: error: in throw_stmt : CQL0308: statement should be th
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'arg1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bar'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'T'
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.id'
 test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly null expression to not null target 'int_nn'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'arg1'
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'arg2'
@@ -636,7 +636,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'decl1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in declare_cursor_like_select : CQL0197: duplicate variable name in the same scope 'X'
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'T1.rowid'
 test/sem_test.sql:XXXX:1: error: in str : CQL0066: identifier is ambiguous 'rowid'
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 test/sem_test.sql:XXXX:1: error: in str : CQL0154: table in update statement does not exist 'This_Table_Does_Not_Exist'
@@ -681,8 +681,8 @@ test/sem_test.sql:XXXX:1: error: in match : CQL0044: operator may only appear in
 test/sem_test.sql:XXXX:1: error: in regexp : CQL0044: operator may only appear in the context of a SQL statement 'REGEXP'
 test/sem_test.sql:XXXX:1: error: in bin_and : CQL0001: operands must be an integer type, not real '&'
 test/sem_test.sql:XXXX:1: error: in tilde : CQL0001: operands must be an integer type, not real '~'
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'new.id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CREATE TRIGGER trigger3
   INSTEAD OF UPDATE ON ViewShape
@@ -704,7 +704,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0136: trigger already exists 'trigg
 test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 'a'
 test/sem_test.sql:XXXX:1: error: in str : CQL0138: a trigger on a view must be the INSTEAD OF form 'ViewShape'
 test/sem_test.sql:XXXX:1: error: in str : CQL0137: table/view not found 'no_such_table_dude'
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0113: trigger in drop statement was not declared 'this_trigger_does_not_exist'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0107: delete version can't be <= create version 'retro_deleted_table'
 test/sem_test.sql:XXXX:1: error: in raise : CQL0092: RAISE may only be used in a trigger statement
@@ -719,7 +719,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0077: encountered arg known to be n
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'name'
 test/sem_test.sql:XXXX:1: error: in add : CQL0398: A compound select cannot be ordered by the result of an expression
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'a_key_'
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'a_key_'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'b.a_key_'
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'X'

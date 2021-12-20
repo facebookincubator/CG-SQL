@@ -5710,6 +5710,10 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
     }
   }
 
+  if (scope) {
+     name = dup_printf("%s.%s", scope, name);
+  }
+
   report_resolve_error(ast, "CQL0069: name not found", name);
   record_resolve_error(ast);
 }

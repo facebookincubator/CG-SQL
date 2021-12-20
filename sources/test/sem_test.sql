@@ -2605,7 +2605,7 @@ select id, rate from (select * from bar);
 select foo.id from foo;
 
 -- TEST: error: try to use the table name as its scope after aliasing
--- + error: in dot % name not found 'id'
+-- + error: in dot % name not found 'foo.id'
 -- + {select_from_etc}: TABLE { T1: foo }
 -- + {dot}: err
 -- + {select_stmt}: err
@@ -7446,7 +7446,7 @@ select T1.rowid from foo T1, bar T2;
 
 -- TEST: name not unique, not found
 -- + {select_stmt}: err
--- + error: % name not found 'rowid'
+-- + error: % name not found 'T1.rowid'
 -- +1 error:
 select T1.rowid from foo T2, foo T3;
 
@@ -8259,7 +8259,7 @@ end;
 -- +   BEFORE DELETE ON bar
 -- +   WHEN new.id = 3
 -- + {create_trigger_stmt}: err
--- + error: % name not found 'id'
+-- + error: % name not found 'new.id'
 -- +1 error:
 create trigger trigger1a
   before delete on bar
@@ -8288,7 +8288,7 @@ end;
 -- +   AFTER INSERT ON bar
 -- +   WHEN old.id = 3
 -- + {create_trigger_stmt}: err
--- + error: % name not found 'id'
+-- + error: % name not found 'old.id'
 -- +1 error:
 create trigger trigger2a
   after insert on bar
@@ -8383,7 +8383,7 @@ end;
 -- + {create_trigger_stmt}: err
 -- + {stmt_list}: err
 -- + {select_stmt}: err
--- + error: % name not found 'id'
+-- + error: % name not found 'old.id'
 -- + Error
 create trigger trigger4d
   before insert on bar
@@ -8897,7 +8897,7 @@ offset 3;
 -- TEST: compound select name lookup using something other than the select list (explicit)
 -- + {opt_orderby}: err
 -- + ORDER BY b.a_key_;
--- + error: % name not found 'a_key_'
+-- + error: % name not found 'b.a_key_'
 -- +1 error:
 select a.key_, a.sort_key
   from a

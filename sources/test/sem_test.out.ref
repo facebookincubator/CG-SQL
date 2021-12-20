@@ -8743,7 +8743,7 @@ The statement ending at line XXXX
 SELECT foo.id
   FROM foo AS T1;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.id'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -27769,7 +27769,7 @@ SELECT T1.rowid
   FROM foo AS T2,
 foo AS T3;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'T1.rowid'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -30937,7 +30937,7 @@ BEGIN
   DELETE FROM bar WHERE rate > id;
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'new.id'
 
   {create_trigger_stmt}: err
   | {int 0}
@@ -31009,7 +31009,7 @@ BEGIN
   DELETE FROM bar WHERE rate > id;
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
 
   {create_trigger_stmt}: err
   | {int 0}
@@ -31453,7 +31453,7 @@ BEGIN
   SELECT old.id;
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
 
   {create_trigger_stmt}: err
   | {int 0}
@@ -33605,7 +33605,7 @@ SELECT b.key_, b.sort_key
   INNER JOIN b ON b.a_key_ = a.key_
 ORDER BY b.a_key_;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'a_key_'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'b.a_key_'
 
   {select_stmt}: err
   | {select_core_list}: UNION ALL: { key_: integer notnull, sort_key: integer notnull }
