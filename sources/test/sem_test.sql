@@ -4854,39 +4854,39 @@ select const(cast(x as real));
 -- TEST: with expression, duplicate columnms
 -- + error: % duplicate name in list 'a'
 -- +1 error:
-with foo(a, a) as (select 1,2)
+with some_cte(a, a) as (select 1,2)
 select 1;
 
 -- TEST: with expression, duplicate cte name
--- + error: % duplicate common table name 'foo'
+-- + error: % duplicate common table name 'some_cte'
 -- +1 error:
 with
- foo(a, b) as (select 1,2),
- foo(a, b) as (select 1,2)
+ some_cte(a, b) as (select 1,2),
+ some_cte(a, b) as (select 1,2)
 select 1;
 
 -- TEST: with expression, too few columns
--- + error: % too few column names specified in common table expression 'foo'
+-- + error: % too few column names specified in common table expression 'some_cte'
 -- +1 error:
-with foo(a) as (select 1,2)
+with some_cte(a) as (select 1,2)
 select 1;
 
 -- TEST: with expression, too few columns
--- + error: % too many column names specified in common table expression 'foo'
+-- + error: % too many column names specified in common table expression 'some_cte'
 -- +1 error:
-with foo(a, b, c) as (select 1,2)
+with some_cte(a, b, c) as (select 1,2)
 select 1;
 
 -- TEST: with expression, broken inner select
 -- + error: % string operand not allowed in 'NOT'
 -- +1 error:
-with foo(a) as (select not 'x')
+with some_cte(a) as (select not 'x')
 select 1;
 
 -- TEST: with expression, broken inner select
 -- + error: % string operand not allowed in 'NOT'
 -- +1 error:
-with foo(a) as (select 1)
+with some_cte(a) as (select 1)
 select not 'x';
 
 -- TEST: basic with expression
@@ -4904,8 +4904,8 @@ select a, b from some_cte;
 -- WARNING easily broken do not change this test especially not nullability
 -- + {with_select_stmt}: select: { a: integer }
 -- + {cte_tables}: ok
--- + {cte_table}: foo: { a: integer }
--- + {cte_decl}: foo: { a: integer }
+-- + {cte_table}: some_cte: { a: integer }
+-- + {cte_decl}: some_cte: { a: integer }
 -- + {select_stmt}: union_all: { x: integer }
 -- + {select_core}: select: { x: integer notnull }
 -- + {select_core}: select: { x: null }
@@ -4917,8 +4917,8 @@ select a, b from some_cte;
 -- WARNING easily broken do not change this test especially not nullability
 -- WARNING easily broken do not change this test especially not nullability
 with
-  foo(a) as (select 1 x union all select null x)
-  select * from foo;
+  some_cte(a) as (select 1 x union all select null x)
+  select * from some_cte;
 
 -- TEST: nested CTE -- note scoping
 -- - error:
@@ -4949,8 +4949,8 @@ select current from cnt;
 -- + {with_select_stmt}: select: { x: real notnull, y: real notnull }
 -- - error:
 with
-  foo(*) as (select 1 u, 2 v),
-  bar(*) as (
+  some_cte(*) as (select 1 u, 2 v),
+  another_cte(*) as (
     with baz(*) as (
       select 2.0 x, 3.0 y
     union all
@@ -4958,7 +4958,78 @@ with
     limit 5)
     select * from baz
  )
-select * from bar join foo;
+select * from another_cte join some_cte;
+
+-- TEST: a CTE may not shadow an existing table
+-- + {with_select_stmt}: err
+-- + {cte_tables}: err
+-- + {cte_table}: err
+-- + {cte_decl}: err
+-- + error: % common table name shadows previously declared table or view 'foo'
+-- +1 error:
+with
+  foo(*) as (select 1 x)
+select * from foo;
+
+-- TEST: a CTE may not shadow an existing view
+-- + {with_select_stmt}: err
+-- + {cte_tables}: err
+-- + {cte_table}: err
+-- + {cte_decl}: err
+-- + error: % common table name shadows previously declared table or view 'MyView'
+-- +1 error:
+with
+  MyView(*) as (select 1 x)
+select * from MyView;
+
+-- TEST: a CTE within a shared fragment may not shadow an existing table or
+-- view; this applies to all procs, not just those that are shared fragments
+-- + {stmt_and_attr}: err
+-- + {create_proc_stmt}: err
+-- +2 {with_select_stmt}: err
+-- +2 {cte_tables}: err
+-- +2 {cte_table}: err
+-- +2 {cte_decl}: err
+-- + error: % common table name shadows previously declared table or view 'foo'
+-- + error: % common table name shadows previously declared table or view 'MyView'
+-- +2 error:
+@attribute(cql:shared_fragment)
+create proc shadows_an_existing_table()
+begin
+  with
+    -- applies to the LIKE form as well
+    foo(*) like (select 1 x)
+  select * from foo;
+  with
+    MyView(*) as (select 1 x)
+  select * from MyView;
+end;
+
+-- TEST: a CTE within a shared fragment may be given the name of a table or view
+-- that has yet to be defined; this applies to all procs, not just those that
+-- are shared fragments
+-- + {stmt_and_attr}: ok
+-- + {create_proc_stmt}: select: { x: integer notnull } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc does_not_shadow_an_existing_table()
+begin
+  with
+    table_not_yet_defined(*) as (select 1 x)
+  select * from table_not_yet_defined;
+end;
+
+-- used in the following test
+-- - error:
+create table table_not_yet_defined(y text);
+
+-- TEST: a shared fragment containing a CTE of the same name as a now-defined
+-- table is okay to use
+-- + {with_select_stmt}: select: { x: integer notnull }
+-- - error:
+with
+  (call does_not_shadow_an_existing_table())
+select * from does_not_shadow_an_existing_table;
 
 -- TEST: empty fragments are invalid for all fragment types
 -- + {create_proc_stmt}: err
@@ -5193,8 +5264,8 @@ end;
 -- + error: % the called procedure has no table arguments but a USING clause is present 'a_shared_frag'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, 3.0 z),
-  x(*) AS (call a_shared_frag(1, 2) USING bar as foo)
+  some_cte(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call a_shared_frag(1, 2) USING some_cte as foo)
   select * from x;
 
 -- TEST: try to use the shared fragment with a table arg but don't provide the arg
@@ -5202,8 +5273,8 @@ with
 -- + error: % no actual table was provided for the table parameter 'source'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, 3.0 z),
-  x(*) AS (call shared_frag2(1, 2) USING bar as foo)
+  some_cte(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call shared_frag2(1, 2) USING some_cte as foo)
   select * from x;
 
 -- TEST: try to use the shared fragment with a table arg but have duplicate arg names
@@ -5211,7 +5282,7 @@ with
 -- + error: % duplicate binding of table in CALL/USING clause 'bar'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, 3.0 z),
+  some_cte(*) as (select 1 x, 2 y, 3.0 z),
   x(*) AS (call shared_frag2(1, 2) USING source as bar, source as bar)
   select * from x;
 
@@ -5220,8 +5291,8 @@ with
 -- + error: % an actual table was provided for a table parameter that does not exist 'bogus'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, 3.0 z),
-  x(*) AS (call shared_frag2(1, 2) USING bar as source, bar as bogus)
+  some_cte(*) as (select 1 x, 2 y, 3.0 z),
+  x(*) AS (call shared_frag2(1, 2) USING some_cte as source, some_cte as bogus)
   select * from x;
 
 -- TEST: try to use the shared fragment with a table arg that isn't actually a table
@@ -5229,41 +5300,41 @@ with
 -- + error: % table/view not defined 'bogus'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, 3.0 z),
+  some_cte(*) as (select 1 x, 2 y, 3.0 z),
   x(*) AS (call shared_frag2(1, 2) USING bogus as source)
   select * from x;
 
 -- TEST: try to use the shared fragment with a table arg that has the wrong arg count
 -- + {with_select_stmt}: err
--- + {name bar}: bar: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
+-- + {name some_cte}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
--- + error: % the table provided must have the same number of columns as the table parameter 'bar'
+-- + error: % the table provided must have the same number of columns as the table parameter 'some_cte'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, 3.0 z, 4 u),
-  x(*) AS (call shared_frag2(1, 2) USING bar as source)
+  some_cte(*) as (select 1 x, 2 y, 3.0 z, 4 u),
+  x(*) AS (call shared_frag2(1, 2) USING some_cte as source)
   select * from x;
 
 -- TEST: try to use the shared fragment with a table arg that is missing a column
 -- + {with_select_stmt}: err
--- + {name bar}: bar: { x: integer notnull, y: integer notnull, w: real notnull }
+-- + {name some_cte}: some_cte: { x: integer notnull, y: integer notnull, w: real notnull }
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
--- + error: % The table argument 'source' requires column 'z' but it is missing in provided table 'bar'
+-- + error: % The table argument 'source' requires column 'z' but it is missing in provided table 'some_cte'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, 3.0 w),
-  x(*) AS (call shared_frag2(1, 2) USING bar as source)
+  some_cte(*) as (select 1 x, 2 y, 3.0 w),
+  x(*) AS (call shared_frag2(1, 2) USING some_cte as source)
   select * from x;
 
 -- TEST: try to use the shared fragment with a table arg that is of the wrong type
 -- + {with_select_stmt}: err
--- + {name bar}: err
+-- + {name some_cte}: err
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + error: % incompatible types in expression 'z'
 -- +1 error:
 with 
-  bar(*) as (select 1 x, 2 y, '3.0' z),
-  x(*) AS (call shared_frag2(1, 2) USING bar as source)
+  some_cte(*) as (select 1 x, 2 y, '3.0' z),
+  x(*) AS (call shared_frag2(1, 2) USING some_cte as source)
   select * from x;
 
 -- TEST: try to use LIKE in a procedure that is a shared fragment but not at the top level
@@ -5306,49 +5377,49 @@ end;
 -- + {with_select_stmt}: err
 -- + error: % duplicate name in list 'id'
 -- +1 error:
-with foo(id, id) as (call a_shared_frag(1,2))
-select * from foo;
+with some_cte(id, id) as (call a_shared_frag(1,2))
+select * from some_cte;
 
 -- TEST: use the general form of the with CTE but with an error
 -- + {with_select_stmt}: err
 -- + error: % duplicate name in list 'goo'
 -- +1 error:
-with foo(*) as (
+with some_cte(*) as (
   with garbonzo(goo, goo) as (select 1 x, 2 y)
   select * from garbonzo)
-select * from foo;
+select * from some_cte;
 
 -- TEST: use the general form of the with CTE but with an error in the outer cte_decl
 -- + {with_select_stmt}: err
 -- + error: % duplicate name in list 'goo'
 -- +1 error:
-with foo(goo, goo) as (
+with some_cte(goo, goo) as (
   with garbonzo(*) as (select 1 x, 2 y)
   select * from garbonzo)
-select * from foo;
+select * from some_cte;
 
 -- TEST: use the shared fragment, simple correct case
 -- + {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + {cte_tables}: ok
--- + {cte_table}: foo: { x: integer notnull, y: integer notnull, z: real notnull }
+-- + {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
-with foo(*) as (call a_shared_frag(1,2))
-select * from foo;
+with some_cte(*) as (call a_shared_frag(1,2))
+select * from some_cte;
 
 -- TEST: the call form must call a shared fragment
 -- + {with_select_stmt}: err
 -- + error: % a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
 -- +1 error:
-with foo(*) as (call return_with_attr())
-select * from foo;
+with some_cte(*) as (call return_with_attr())
+select * from some_cte;
 
 -- TEST: the call form must make a valid call
 -- + {with_select_stmt}: err
 -- + error: % calls to undeclared procedures are forbidden; declaration missing or typo 'this_is_not_even_a_proc'
 -- +1 error:
-with foo(*) as (call this_is_not_even_a_proc())
-select * from foo;
+with some_cte(*) as (call this_is_not_even_a_proc())
+select * from some_cte;
 
 -- TEST: shared_fragment attribute (correct usage, has with clause)
 -- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
@@ -12765,18 +12836,18 @@ update cursor X(one) from values (2);
 -- TEST -- CTE * rewrite
 -- This is just sugar so all we have to do is verify that we
 -- did the rewrite correctly
--- + foo (a, b, c) AS (SELECT 1 AS a, 'b' AS b, 3.0 AS c)
+-- + some_cte (a, b, c) AS (SELECT 1 AS a, 'b' AS b, 3.0 AS c)
 -- + {with_select_stmt}: select: { a: integer notnull, b: text notnull, c: real notnull }
 -- - error:
-with foo(*) as (select 1 a, 'b' b, 3.0 c)
-  select * from foo;
+with some_cte(*) as (select 1 a, 'b' b, 3.0 c)
+  select * from some_cte;
 
 -- TEST -- CTE * rewrite but some columns were anonymous
 -- + {with_select_stmt}: err
 -- + error: % all columns in the select must have a name
 -- +1 error:
-with foo(*) as (select 1)
-  select * from foo;
+with some_cte(*) as (select 1)
+  select * from some_cte;
 
 -- we never actully make this table, we just use its shape
 create temp table foo_data (
@@ -18061,8 +18132,8 @@ create proc improvements_work_within_ctes()
 begin
   declare a int;
   if a is not null then
-    with recursive foo(b) as (select a)
-    select b from foo;
+    with recursive some_cte(b) as (select a)
+    select b from some_cte;
   end if;
 end;
 

@@ -1580,12 +1580,17 @@ static void add_table_or_view(ast_node *ast) {
   symtab_add(tables, ast->sem->sptr->struct_name, ast);
 }
 
-// Validate whether or not an object is usable with a schema region. The object
-// can only be a table, view, trigger or index.
+// Validates whether or not an object is usable within the current schema
+// region. The object can only be a table, view, trigger or index. If not valid,
+// reports an error using `err_target` and `msg`, if present.
 static bool_t sem_validate_object_ast_in_current_region(CSTR name,
                                              ast_node *table_ast,
                                              ast_node *err_target,
                                              CSTR msg) {
+  Contract(name);
+  Contract(table_ast);
+  Contract(err_target && msg || !err_target && !msg);
+
   // We're in a non-region therefore no validation needed because non-region stmt
   // can reference schema in any region.
   if (!current_region) {
@@ -1597,17 +1602,19 @@ static bool_t sem_validate_object_ast_in_current_region(CSTR name,
     Invariant(current_region_image);
     if (!symtab_find(current_region_image, table_ast->sem->region)) {
       // The target region is not accessible from this region
-      CHARBUF_OPEN(err_msg);
-      bprintf(&err_msg, "%s (object is in schema region '%s' not accessible from region '%s')",
-        msg,
-        table_ast->sem->region,
-        current_region);
-      report_error(err_target, err_msg.ptr, name);
-      CHARBUF_CLOSE(err_msg);
+      if (err_target) {
+        CHARBUF_OPEN(err_msg);
+        bprintf(&err_msg, "%s (object is in schema region '%s' not accessible from region '%s')",
+          msg,
+          table_ast->sem->region,
+          current_region);
+        report_error(err_target, err_msg.ptr, name);
+        CHARBUF_CLOSE(err_msg);
+      }
       return false;
     }
   }
-  else {
+  else if (err_target) {
     CHARBUF_OPEN(err_msg);
     bprintf(&err_msg, "%s (while in schema region '%s', accessing an object that isn't in a region is invalid)",
       msg,
@@ -1620,17 +1627,28 @@ static bool_t sem_validate_object_ast_in_current_region(CSTR name,
   return true;
 }
 
-// only clients that want to ensure no conflict of names (deleted or no) use this version
+// Only clients that want to ensure no conflict of names (whether deleted or
+// not) use this version.
 ast_node *find_table_or_view_even_deleted(CSTR name) {
+  Contract(name);
+
   symtab_entry *entry = symtab_find(tables, name);
+
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// returns the node only if it exists and is not restricted by the schema region.
+// Returns the node only if it exists and is not restricted by the schema
+// region. If not found, reports an error using `err_target` and `msg`, if
+// present.
 static ast_node *find_usable_table_or_view_even_deleted(CSTR name, ast_node *err_target, CSTR msg) {
+  Contract(name);
+  Contract(err_target && msg || !err_target && !msg);
+
   ast_node *table_ast = find_table_or_view_even_deleted(name);
   if (!table_ast) {
-    report_error(err_target, msg, name);
+    if (err_target) {
+      report_error(err_target, msg, name);
+    }
     return NULL;
   }
 
@@ -1641,42 +1659,58 @@ static ast_node *find_usable_table_or_view_even_deleted(CSTR name, ast_node *err
   return table_ast;
 }
 
-// returns the node only if the table is not deleted, most clients use this
+// Returns the node only if the table is not deleted; most clients use this. If
+// not found, reports an error using `err_target` and `msg`, if present.
 static ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_node *err_target, CSTR msg) {
-  ast_node *table_ast = find_usable_table_or_view_even_deleted(name, err_target, msg);
+  Contract(name);
+  Contract(err_target && msg || !err_target && !msg);
 
+  ast_node *table_ast = find_usable_table_or_view_even_deleted(name, err_target, msg);
   if (!table_ast) {
     return NULL;
   }
 
-  // Check for views first, if this is a migraiton script the view will be a stub so we don't
-  // want to look at it it too deeply.  It's just there so we can produce this error
+  // Check for views first. If this is a migration script, the view will be a
+  // stub so we don't want to look at it it too deeply: It's just there so we
+  // can produce this error.
   if (schema_upgrade_version > 0 && !is_ast_create_table_stmt(table_ast)) {
     // views may not be accessed in a migration script
-    CHARBUF_OPEN(err_msg);
-    bprintf(&err_msg, "%s (view hidden in migration script)", msg);
-    report_error(err_target, err_msg.ptr, name);
-    CHARBUF_CLOSE(err_msg);
+    Invariant(is_ast_create_view_stmt(table_ast));
+    if (err_target) {
+      CHARBUF_OPEN(err_msg);
+      bprintf(&err_msg, "%s (view hidden in migration script)", msg);
+      report_error(err_target, err_msg.ptr, name);
+      CHARBUF_CLOSE(err_msg);
+    }
     return NULL;
   }
 
   if (is_deleted(table_ast->sem->sem_type)) {
-    CHARBUF_OPEN(err_msg);
-
-    if (schema_upgrade_version > 0) {
-      bprintf(&err_msg, "%s (not visible in schema version %d)", msg, schema_upgrade_version);
+    if (err_target) {
+      CHARBUF_OPEN(err_msg);
+      if (schema_upgrade_version > 0) {
+        bprintf(&err_msg, "%s (not visible in schema version %d)", msg, schema_upgrade_version);
+      }
+      else {
+        bprintf(&err_msg, "%s (hidden by @delete)", msg);
+      }
+      report_error(err_target, err_msg.ptr, name);
+      CHARBUF_CLOSE(err_msg);
     }
-    else {
-      bprintf(&err_msg, "%s (hidden by @delete)", msg);
-    }
-
-    report_error(err_target, err_msg.ptr, name);
-    CHARBUF_CLOSE(err_msg);
-
     return NULL;
   }
 
   return table_ast;
+}
+
+// Like `find_usable_and_not_deleted_table_or_view`, but merely returns true if
+// there is such a table, else false: No errors are reported. This can be used
+// to check whether or not a to-be-introduced name will shadow something that is
+// already in scope and usable.
+static bool_t is_usable_and_not_deleted_table_or_view(CSTR name) {
+  Contract(name);
+
+  return !!find_usable_and_not_deleted_table_or_view(name, NULL, NULL);
 }
 
 static void add_cte(ast_node *ast) {
@@ -10074,6 +10108,12 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
 
   if (find_cte(name)) {
     report_error(ast, "CQL0100: duplicate common table name", name);
+    record_error(ast);
+    return;
+  }
+
+  if (is_usable_and_not_deleted_table_or_view(name)) {
+    report_error(ast, "CQL0437: common table name shadows previously declared table or view", name);
     record_error(ast);
     return;
   }

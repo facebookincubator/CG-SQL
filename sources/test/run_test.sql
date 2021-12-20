@@ -1178,12 +1178,12 @@ begin
 end;
 
 BEGIN_TEST(complex_nested_selects)
-  create table data(id int, val int);
+  create table vals(id int, val int);
   create table codes(id int, code int);
 
-  insert into data values(1, 100);
-  insert into data values(2, 200);
-  insert into data values(3, 300);
+  insert into vals values(1, 100);
+  insert into vals values(2, 200);
+  insert into vals values(3, 300);
 
   insert into codes values(1, 1000);
   insert into codes values(1, 1001);
@@ -1192,7 +1192,7 @@ BEGIN_TEST(complex_nested_selects)
   insert into codes values(2, 2001);
   insert into codes values(3, 3000);
 
-  declare c1 cursor for select id from data as T1 where exists (select * from codes as T2 where T1.id == T2.id and T2.code % 1000 == 1);
+  declare c1 cursor for select id from vals as T1 where exists (select * from codes as T2 where T1.id == T2.id and T2.code % 1000 == 1);
 
   declare id_ integer;
   declare count_ integer;
@@ -1203,7 +1203,7 @@ BEGIN_TEST(complex_nested_selects)
 
   declare c2 cursor for
     select id, (select count(*) from codes T2 where T2.id = T1.id) as code_count
-    from data T1
+    from vals T1
     where val >= 7;
   loop fetch c2 into id_, count_
   begin
@@ -3977,8 +3977,8 @@ end;
 
 BEGIN_TEST(conditional_fragment)
   declare C cursor for 
-    with x(*) as (call conditional_values(1))
-    select * from x;
+    with some_cte(*) as (call conditional_values(1))
+    select * from some_cte;
 
   fetch C;
 
@@ -3988,8 +3988,8 @@ BEGIN_TEST(conditional_fragment)
   EXPECT(not C);
 
   declare D cursor for 
-    with x(*) as (call conditional_values(2))
-  select * from x;
+    with some_cte(*) as (call conditional_values(2))
+  select * from some_cte;
 
   fetch D;
   EXPECT(D.id = 2);
@@ -3998,8 +3998,8 @@ BEGIN_TEST(conditional_fragment)
   EXPECT(not D);
 
   declare E cursor for 
-    with x(*) as (call conditional_values(3))
-  select * from x;
+    with some_cte(*) as (call conditional_values(3))
+  select * from some_cte;
 
   fetch E;
   EXPECT(E.id = 3);
@@ -4076,8 +4076,8 @@ BEGIN_TEST(skip_notnulls)
   set _bl := blob_from_string('hi');
 
   declare C cursor for 
-    with x(*) as (call skip_notnulls(123, false, 1L, 2.3, 'x', _bl, _set))
-    select * from x;
+    with some_cte(*) as (call skip_notnulls(123, false, 1L, 2.3, 'x', _bl, _set))
+    select * from some_cte;
 
   fetch C;
   EXPECT(C.result == 123);
@@ -4121,8 +4121,8 @@ BEGIN_TEST(skip_nullables)
   set _bl := blob_from_string('hi');
 
   declare C cursor for 
-    with x(*) as (call skip_nullables(456, false, 1L, 2.3, 'x', _bl, _set))
-    select * from x;
+    with some_cte(*) as (call skip_nullables(456, false, 1L, 2.3, 'x', _bl, _set))
+    select * from some_cte;
 
   fetch C;
   EXPECT(C.result == 456);
@@ -4180,4 +4180,3 @@ end;
 @echo c,"#define cql_error_trace()\n";
 
 @emit_enums;
-

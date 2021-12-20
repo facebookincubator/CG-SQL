@@ -121,17 +121,17 @@ delete from t1
 
 -- [WITH ... DELETE] stmt
 with
-  t4(name) as (
+  some_cte(name) as (
     select t2.name from t2 inner join t3 using(id)
   )
-  delete from t1 where name not in (select * from t4);
+  delete from t1 where name not in (select * from some_cte);
 
 -- INSERT stmt
 insert into t1 select * from t2 union all select * from t3;
 
 -- [WITH... INSERT] stmt
-with a(id, name) as (select 1, 'x')
-insert into t1 select * from a;
+with some_cte(id, name) as (select 1, 'x')
+insert into t1 select * from some_cte;
 
 -- BEGIN stmt
 begin transaction;
@@ -156,10 +156,10 @@ drop trigger if exists my_trigger;
 
 -- [WITH ... SELECT] stmt
 with
-  t4(name) as (
+  some_cte(name) as (
     select t2.name from t2 inner join t3 using(id)
   )
-  select * from t4;
+  select * from some_cte;
 
 -- Object type in stmt
 -- + SELECT array_num_at(ptr(cast('1' as object)), id) AS idx

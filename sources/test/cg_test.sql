@@ -2474,13 +2474,13 @@ END;
 -- + _seed_ = 1337;
 -- + _rc_ = cql_exec(_db_,
 -- + "WITH "
--- + "foo (id) AS (SELECT 1 AS id) "
+-- + "some_cte (id) AS (SELECT 1 AS id) "
 -- + "INSERT INTO bar(id) VALUES(ifnull(( SELECT id "
--- + "FROM foo ), 0))");
+-- + "FROM some_cte ), 0))");
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-with foo(id) as (select 1 id)
+with some_cte(id) as (select 1 id)
 insert into bar(id)
-values (ifnull((select id from foo), 0))
+values (ifnull((select id from some_cte), 0))
 @dummy_seed(1337);
 
 -- TEST: codegen upsert with a seed
@@ -4905,7 +4905,7 @@ end;
 -- 
 -- root fragment 0 always present
 -- + "WITH "
--- +   "foo (id) AS (SELECT ?), "
+-- +   "some_cte (id) AS (SELECT ?), "
 -- +   "shared_conditional (x) AS (",
 -- 
 -- option 1 fragment 1
@@ -4921,16 +4921,16 @@ end;
 -- + ") "
 -- +   "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
 -- +     "FROM bar "
--- +     "INNER JOIN foo ON ? = 5"
+-- +     "INNER JOIN some_cte ON ? = 5"
 -- 
 -- 8 variable sites, only some of which are used
 -- + cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
 create proc shared_conditional_user(x integer not null)
 begin
   with 
-  foo(id) as (select x),
+  some_cte(id) as (select x),
   (call shared_conditional(1))
-  select bar.* from bar join foo on x = 5;
+  select bar.* from bar join some_cte on x = 5;
 end;
 
 -- used in the following test, this is silly fragment

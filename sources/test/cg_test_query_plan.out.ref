@@ -163,15 +163,15 @@ END;
 CREATE PROC populate_query_plan_5()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nt4 (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nDELETE FROM t1 WHERE name NOT IN (SELECT *\\n  FROM t4)";
+  SET stmt := "WITH\\nsome_cte (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nDELETE FROM t1 WHERE name NOT IN (SELECT *\\n  FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(5, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
-  t4 (name) AS (SELECT t2.name
+  some_cte (name) AS (SELECT t2.name
     FROM t2
     INNER JOIN t3 USING (id))
   DELETE FROM t1 WHERE name NOT IN (SELECT *
-    FROM t4);
+    FROM some_cte);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(5, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -198,13 +198,13 @@ END;
 CREATE PROC populate_query_plan_7()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\na (id, name) AS (SELECT 1, 'x')\\nINSERT INTO t1(id, name) SELECT *\\n  FROM a";
+  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT 1, 'x')\\nINSERT INTO t1(id, name) SELECT *\\n  FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(7, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
-  a (id, name) AS (SELECT 1, 'x')
+  some_cte (id, name) AS (SELECT 1, 'x')
   INSERT INTO t1(id, name) SELECT *
-    FROM a;
+    FROM some_cte;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(7, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -294,15 +294,15 @@ END;
 CREATE PROC populate_query_plan_14()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nt4 (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nSELECT *\\n  FROM t4";
+  SET stmt := "WITH\\nsome_cte (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nSELECT *\\n  FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(14, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
-  t4 (name) AS (SELECT t2.name
+  some_cte (name) AS (SELECT t2.name
     FROM t2
     INNER JOIN t3 USING (id))
   SELECT *
-    FROM t4;
+    FROM some_cte;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(14, C.iselectid, C.iorder, C.ifrom, C.zdetail);

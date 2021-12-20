@@ -17762,7 +17762,7 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
 The statement ending at line XXXX
 
 WITH
-foo (a, a) AS (SELECT 1, 2)
+some_cte (a, a) AS (SELECT 1, 2)
 SELECT 1;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'a'
@@ -17772,7 +17772,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'a'
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}: err
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name a}
   |     |   | {name_list}
@@ -17812,18 +17812,18 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'a'
 The statement ending at line XXXX
 
 WITH
-foo (a, b) AS (SELECT 1, 2),
-foo (a, b) AS (SELECT 1, 2)
+some_cte (a, b) AS (SELECT 1, 2),
+some_cte (a, b) AS (SELECT 1, 2)
 SELECT 1;
 
-test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0100: duplicate common table name 'foo'
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0100: duplicate common table name 'some_cte'
 
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: foo: { a: integer notnull, b: integer notnull }
-  |   | | {cte_decl}: foo: { a: integer notnull, b: integer notnull }
-  |   | | | {name foo}
+  |   | {cte_table}: some_cte: { a: integer notnull, b: integer notnull }
+  |   | | {cte_decl}: some_cte: { a: integer notnull, b: integer notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name a}
   |   | |   | {name_list}
@@ -17848,7 +17848,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0100: duplicate common table n
   |   | {cte_tables}: err
   |     | {cte_table}: err
   |       | {cte_decl}: err
-  |       | | {name foo}
+  |       | | {name some_cte}
   |       | | {name_list}
   |       |   | {name a}
   |       |   | {name_list}
@@ -17888,17 +17888,17 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0100: duplicate common table n
 The statement ending at line XXXX
 
 WITH
-foo (a) AS (SELECT 1, 2)
+some_cte (a) AS (SELECT 1, 2)
 SELECT 1;
 
-test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0101: too few column names specified in common table expression 'foo'
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0101: too few column names specified in common table expression 'some_cte'
 
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}: err
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name a}
   |     | {select_stmt}
@@ -17936,17 +17936,17 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0101: too few column names spe
 The statement ending at line XXXX
 
 WITH
-foo (a, b, c) AS (SELECT 1, 2)
+some_cte (a, b, c) AS (SELECT 1, 2)
 SELECT 1;
 
-test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0102: too many column names specified in common table expression 'foo'
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0102: too many column names specified in common table expression 'some_cte'
 
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}: err
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name a}
   |     |   | {name_list}
@@ -17988,7 +17988,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0102: too many column names sp
 The statement ending at line XXXX
 
 WITH
-foo (a) AS (SELECT NOT 'x')
+some_cte (a) AS (SELECT NOT 'x')
 SELECT 1;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -17998,7 +17998,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name a}
   |     | {select_stmt}
@@ -18034,7 +18034,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 WITH
-foo (a) AS (SELECT 1)
+some_cte (a) AS (SELECT 1)
 SELECT NOT 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -18042,9 +18042,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: foo: { a: integer notnull }
-  |     | {cte_decl}: foo: { a: integer notnull }
-  |     | | {name foo}
+  |   | {cte_table}: some_cte: { a: integer notnull }
+  |     | {cte_decl}: some_cte: { a: integer notnull }
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name a}
   |     | {select_stmt}: select: { _anon: integer notnull }
@@ -18135,18 +18135,18 @@ SELECT a, b
 The statement ending at line XXXX
 
 WITH
-foo (a) AS (SELECT 1 AS x
+some_cte (a) AS (SELECT 1 AS x
 UNION ALL
 SELECT NULL AS x)
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
   {with_select_stmt}: select: { a: integer }
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: foo: { a: integer }
-  |     | {cte_decl}: foo: { a: integer }
-  |     | | {name foo}
+  |   | {cte_table}: some_cte: { a: integer }
+  |     | {cte_decl}: some_cte: { a: integer }
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name a}
   |     | {select_stmt}: UNION ALL: { x: integer }
@@ -18185,10 +18185,10 @@ SELECT *
     |   | {select_expr_list_con}: select: { a: integer }
     |     | {select_expr_list}: select: { a: integer }
     |     | | {star}: select: { a: integer }
-    |     | {select_from_etc}: TABLE { foo: foo }
-    |       | {table_or_subquery_list}: TABLE { foo: foo }
-    |       | | {table_or_subquery}: TABLE { foo: foo }
-    |       |   | {name foo}: TABLE { foo: foo }
+    |     | {select_from_etc}: TABLE { some_cte: some_cte }
+    |       | {table_or_subquery_list}: TABLE { some_cte: some_cte }
+    |       | | {table_or_subquery}: TABLE { some_cte: some_cte }
+    |       |   | {name some_cte}: TABLE { some_cte: some_cte }
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -18448,8 +18448,8 @@ SELECT current
 The statement ending at line XXXX
 
 WITH
-foo (u, v) AS (SELECT 1 AS u, 2 AS v),
-bar (x, y) AS (WITH
+some_cte (u, v) AS (SELECT 1 AS u, 2 AS v),
+another_cte (x, y) AS (WITH
 baz (x, y) AS (SELECT 2.0 AS x, 3.0 AS y
 UNION ALL
 SELECT *
@@ -18458,15 +18458,15 @@ LIMIT 5)
 SELECT *
   FROM baz)
 SELECT *
-  FROM bar
-  INNER JOIN foo;
+  FROM another_cte
+  INNER JOIN some_cte;
 
   {with_select_stmt}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: foo: { u: integer notnull, v: integer notnull }
-  |   | | {cte_decl}: foo: { u: integer notnull, v: integer notnull }
-  |   | | | {name foo}
+  |   | {cte_table}: some_cte: { u: integer notnull, v: integer notnull }
+  |   | | {cte_decl}: some_cte: { u: integer notnull, v: integer notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name u}
   |   | |   | {name_list}
@@ -18493,9 +18493,9 @@ SELECT *
   |   |     | {select_limit}
   |   |       | {select_offset}
   |   | {cte_tables}
-  |     | {cte_table}: bar: { x: real notnull, y: real notnull }
-  |       | {cte_decl}: bar: { x: real notnull, y: real notnull }
-  |       | | {name bar}
+  |     | {cte_table}: another_cte: { x: real notnull, y: real notnull }
+  |       | {cte_decl}: another_cte: { x: real notnull, y: real notnull }
+  |       | | {name another_cte}
   |       | | {name_list}
   |       |   | {name x}
   |       |   | {name_list}
@@ -18569,16 +18569,337 @@ SELECT *
     |   | {select_expr_list_con}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
     |     | {select_expr_list}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
     |     | | {star}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
-    |     | {select_from_etc}: JOIN { bar: bar, foo: foo }
-    |       | {join_clause}: JOIN { bar: bar, foo: foo }
-    |       | | {table_or_subquery}: TABLE { bar: bar }
-    |       | | | {name bar}: TABLE { bar: bar }
+    |     | {select_from_etc}: JOIN { another_cte: another_cte, some_cte: some_cte }
+    |       | {join_clause}: JOIN { another_cte: another_cte, some_cte: some_cte }
+    |       | | {table_or_subquery}: TABLE { another_cte: another_cte }
+    |       | | | {name another_cte}: TABLE { another_cte: another_cte }
     |       | | {join_target_list}
-    |       |   | {join_target}: JOIN { bar: bar, foo: foo }
+    |       |   | {join_target}: JOIN { another_cte: another_cte, some_cte: some_cte }
     |       |     | {int 1}
     |       |     | {table_join}
-    |       |       | {table_or_subquery}: TABLE { foo: foo }
-    |       |         | {name foo}: TABLE { foo: foo }
+    |       |       | {table_or_subquery}: TABLE { some_cte: some_cte }
+    |       |         | {name some_cte}: TABLE { some_cte: some_cte }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+foo (*) AS (SELECT 1 AS x)
+SELECT *
+  FROM foo;
+
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadows previously declared table or view 'foo'
+
+  {with_select_stmt}: err
+  | {with}
+  | | {cte_tables}: err
+  |   | {cte_table}: err
+  |     | {cte_decl}: err
+  |     | | {name foo}
+  |     | | {star}
+  |     | {select_stmt}
+  |       | {select_core_list}
+  |       | | {select_core}: select: { x: integer notnull }
+  |       |   | {select_expr_list_con}: select: { x: integer notnull }
+  |       |     | {select_expr_list}: select: { x: integer notnull }
+  |       |     | | {select_expr}: x: integer notnull
+  |       |     |   | {int 1}: integer notnull
+  |       |     |   | {opt_as_alias}
+  |       |     |     | {name x}
+  |       |     | {select_from_etc}: ok
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+MyView (*) AS (SELECT 1 AS x)
+SELECT *
+  FROM MyView;
+
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadows previously declared table or view 'MyView'
+
+  {with_select_stmt}: err
+  | {with}
+  | | {cte_tables}: err
+  |   | {cte_table}: err
+  |     | {cte_decl}: err
+  |     | | {name MyView}
+  |     | | {star}
+  |     | {select_stmt}
+  |       | {select_core_list}
+  |       | | {select_core}: select: { x: integer notnull }
+  |       |   | {select_expr_list_con}: select: { x: integer notnull }
+  |       |     | {select_expr_list}: select: { x: integer notnull }
+  |       |     | | {select_expr}: x: integer notnull
+  |       |     |   | {int 1}: integer notnull
+  |       |     |   | {opt_as_alias}
+  |       |     |     | {name x}
+  |       |     | {select_from_etc}: ok
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name MyView}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC shadows_an_existing_table ()
+BEGIN
+  WITH
+  foo (*) LIKE (SELECT 1 AS x)
+  SELECT *
+    FROM foo;
+  WITH
+  MyView (*) AS (SELECT 1 AS x)
+  SELECT *
+    FROM MyView;
+END;
+
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadows previously declared table or view 'foo'
+test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadows previously declared table or view 'MyView'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name shadows_an_existing_table}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {with_select_stmt}: err
+        | | {with}
+        | | | {cte_tables}: err
+        | |   | {cte_table}: err
+        | |     | {cte_decl}: err
+        | |     | | {name foo}
+        | |     | | {star}
+        | |     | {like}
+        | |       | {select_stmt}
+        | |         | {select_core_list}
+        | |         | | {select_core}: select: { x: integer notnull }
+        | |         |   | {select_expr_list_con}: select: { x: integer notnull }
+        | |         |     | {select_expr_list}: select: { x: integer notnull }
+        | |         |     | | {select_expr}: x: integer notnull
+        | |         |     |   | {int 1}: integer notnull
+        | |         |     |   | {opt_as_alias}
+        | |         |     |     | {name x}
+        | |         |     | {select_from_etc}: ok
+        | |         |       | {select_where}
+        | |         |         | {select_groupby}
+        | |         |           | {select_having}
+        | |         | {select_orderby}
+        | |           | {select_limit}
+        | |             | {select_offset}
+        | | {select_stmt}
+        |   | {select_core_list}
+        |   | | {select_core}
+        |   |   | {select_expr_list_con}
+        |   |     | {select_expr_list}
+        |   |     | | {star}
+        |   |     | {select_from_etc}
+        |   |       | {table_or_subquery_list}
+        |   |       | | {table_or_subquery}
+        |   |       |   | {name foo}
+        |   |       | {select_where}
+        |   |         | {select_groupby}
+        |   |           | {select_having}
+        |   | {select_orderby}
+        |     | {select_limit}
+        |       | {select_offset}
+        | {with_select_stmt}: err
+          | {with}
+          | | {cte_tables}: err
+          |   | {cte_table}: err
+          |     | {cte_decl}: err
+          |     | | {name MyView}
+          |     | | {star}
+          |     | {select_stmt}
+          |       | {select_core_list}
+          |       | | {select_core}: select: { x: integer notnull }
+          |       |   | {select_expr_list_con}: select: { x: integer notnull }
+          |       |     | {select_expr_list}: select: { x: integer notnull }
+          |       |     | | {select_expr}: x: integer notnull
+          |       |     |   | {int 1}: integer notnull
+          |       |     |   | {opt_as_alias}
+          |       |     |     | {name x}
+          |       |     | {select_from_etc}: ok
+          |       |       | {select_where}
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {select_stmt}
+            | {select_core_list}
+            | | {select_core}
+            |   | {select_expr_list_con}
+            |     | {select_expr_list}
+            |     | | {star}
+            |     | {select_from_etc}
+            |       | {table_or_subquery_list}
+            |       | | {table_or_subquery}
+            |       |   | {name MyView}
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC does_not_shadow_an_existing_table ()
+BEGIN
+  WITH
+  table_not_yet_defined (x) AS (SELECT 1 AS x)
+  SELECT *
+    FROM table_not_yet_defined;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name does_not_shadow_an_existing_table}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: table_not_yet_defined: { x: integer notnull }
+          |     | {cte_decl}: table_not_yet_defined: { x: integer notnull }
+          |     | | {name table_not_yet_defined}
+          |     | | {name_list}
+          |     |   | {name x}
+          |     | {select_stmt}: select: { x: integer notnull }
+          |       | {select_core_list}: select: { x: integer notnull }
+          |       | | {select_core}: select: { x: integer notnull }
+          |       |   | {select_expr_list_con}: select: { x: integer notnull }
+          |       |     | {select_expr_list}: select: { x: integer notnull }
+          |       |     | | {select_expr}: x: integer notnull
+          |       |     |   | {int 1}: integer notnull
+          |       |     |   | {opt_as_alias}
+          |       |     |     | {name x}
+          |       |     | {select_from_etc}: ok
+          |       |       | {select_where}
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {star}: select: { x: integer notnull }
+            |     | {select_from_etc}: TABLE { table_not_yet_defined: table_not_yet_defined }
+            |       | {table_or_subquery_list}: TABLE { table_not_yet_defined: table_not_yet_defined }
+            |       | | {table_or_subquery}: TABLE { table_not_yet_defined: table_not_yet_defined }
+            |       |   | {name table_not_yet_defined}: TABLE { table_not_yet_defined: table_not_yet_defined }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE table_not_yet_defined(
+  y TEXT
+);
+
+  {create_table_stmt}: table_not_yet_defined: { y: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name table_not_yet_defined}
+  | {col_key_list}
+    | {col_def}: y: text
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name y}
+          | {type_text}: text
+
+The statement ending at line XXXX
+
+WITH
+does_not_shadow_an_existing_table (x) AS (CALL does_not_shadow_an_existing_table())
+SELECT *
+  FROM does_not_shadow_an_existing_table;
+
+  {with_select_stmt}: select: { x: integer notnull }
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: does_not_shadow_an_existing_table: { x: integer notnull }
+  |     | {cte_decl}: does_not_shadow_an_existing_table: { x: integer notnull }
+  |     | | {name does_not_shadow_an_existing_table}: select: { x: integer notnull } dml_proc
+  |     | | {name_list}
+  |     |   | {name x}
+  |     | {shared_cte}: select: { x: integer notnull } dml_proc
+  |       | {call_stmt}: select: { x: integer notnull } dml_proc
+  |         | {name does_not_shadow_an_existing_table}: select: { x: integer notnull } dml_proc
+  | {select_stmt}: select: { x: integer notnull }
+    | {select_core_list}: select: { x: integer notnull }
+    | | {select_core}: select: { x: integer notnull }
+    |   | {select_expr_list_con}: select: { x: integer notnull }
+    |     | {select_expr_list}: select: { x: integer notnull }
+    |     | | {star}: select: { x: integer notnull }
+    |     | {select_from_etc}: TABLE { does_not_shadow_an_existing_table: does_not_shadow_an_existing_table }
+    |       | {table_or_subquery_list}: TABLE { does_not_shadow_an_existing_table: does_not_shadow_an_existing_table }
+    |       | | {table_or_subquery}: TABLE { does_not_shadow_an_existing_table: does_not_shadow_an_existing_table }
+    |       |   | {name does_not_shadow_an_existing_table}: TABLE { does_not_shadow_an_existing_table: does_not_shadow_an_existing_table }
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -19644,8 +19965,8 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0427: the LIKE CTE form may only b
 The statement ending at line XXXX
 
 WITH
-bar (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
-x (*) AS (CALL a_shared_frag(1, 2) USING bar AS foo)
+some_cte (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
+x (*) AS (CALL a_shared_frag(1, 2) USING some_cte AS foo)
 SELECT *
   FROM x;
 
@@ -19654,9 +19975,9 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: the called proce
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -19703,7 +20024,7 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: the called proce
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
-  |             | {name bar}
+  |             | {name some_cte}
   |             | {name foo}
   | {select_stmt}
     | {select_core_list}
@@ -19725,8 +20046,8 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: the called proce
 The statement ending at line XXXX
 
 WITH
-bar (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
-x (*) AS (CALL shared_frag2(1, 2) USING bar AS foo)
+some_cte (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
+x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS foo)
 SELECT *
   FROM x;
 
@@ -19735,9 +20056,9 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0430: no actual table 
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -19784,7 +20105,7 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0430: no actual table 
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
-  |             | {name bar}
+  |             | {name some_cte}
   |             | {name foo}
   | {select_stmt}
     | {select_core_list}
@@ -19806,7 +20127,7 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0430: no actual table 
 The statement ending at line XXXX
 
 WITH
-bar (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
+some_cte (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
 x (*) AS (CALL shared_frag2(1, 2) USING source AS bar, source AS bar)
 SELECT *
   FROM x;
@@ -19816,9 +20137,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0428: duplicate binding of table in
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -19891,8 +20212,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0428: duplicate binding of table in
 The statement ending at line XXXX
 
 WITH
-bar (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
-x (*) AS (CALL shared_frag2(1, 2) USING bar AS source, bar AS bogus)
+some_cte (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
+x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source, some_cte AS bogus)
 SELECT *
   FROM x;
 
@@ -19901,9 +20222,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0431: an actual table was provided 
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -19950,11 +20271,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0431: an actual table was provided 
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
-  |           | | {name bar}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
+  |           | | {name some_cte}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
   |           | | {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
   |           | {cte_binding_list}
   |             | {cte_binding}
-  |               | {name bar}
+  |               | {name some_cte}
   |               | {name bogus}
   | {select_stmt}
     | {select_core_list}
@@ -19976,7 +20297,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0431: an actual table was provided 
 The statement ending at line XXXX
 
 WITH
-bar (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
+some_cte (x, y, z) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z),
 x (*) AS (CALL shared_frag2(1, 2) USING bogus AS source)
 SELECT *
   FROM x;
@@ -19986,9 +20307,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'bogus
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, z: real notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -20057,19 +20378,19 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'bogus
 The statement ending at line XXXX
 
 WITH
-bar (x, y, z, u) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z, 4 AS u),
-x (*) AS (CALL shared_frag2(1, 2) USING bar AS source)
+some_cte (x, y, z, u) AS (SELECT 1 AS x, 2 AS y, 3.0 AS z, 4 AS u),
+x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0432: the table provided must have the same number of columns as the table parameter 'bar'
+test/sem_test.sql:XXXX:1: error: in str : CQL0432: the table provided must have the same number of columns as the table parameter 'some_cte'
 
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -20123,7 +20444,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0432: the table provided must have 
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
-  |             | {name bar}: bar: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
+  |             | {name some_cte}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
   |             | {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
   | {select_stmt}
     | {select_core_list}
@@ -20145,19 +20466,19 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0432: the table provided must have 
 The statement ending at line XXXX
 
 WITH
-bar (x, y, w) AS (SELECT 1 AS x, 2 AS y, 3.0 AS w),
-x (*) AS (CALL shared_frag2(1, 2) USING bar AS source)
+some_cte (x, y, w) AS (SELECT 1 AS x, 2 AS y, 3.0 AS w),
+x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0433: The table argument 'source' requires column 'z' but it is missing in provided table 'bar'
+test/sem_test.sql:XXXX:1: error: in str : CQL0433: The table argument 'source' requires column 'z' but it is missing in provided table 'some_cte'
 
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, w: real notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, w: real notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, w: real notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, w: real notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -20204,7 +20525,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0433: The table argument 'source' r
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
-  |             | {name bar}: bar: { x: integer notnull, y: integer notnull, w: real notnull }
+  |             | {name some_cte}: some_cte: { x: integer notnull, y: integer notnull, w: real notnull }
   |             | {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
   | {select_stmt}
     | {select_core_list}
@@ -20226,8 +20547,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0433: The table argument 'source' r
 The statement ending at line XXXX
 
 WITH
-bar (x, y, z) AS (SELECT 1 AS x, 2 AS y, '3.0' AS z),
-x (*) AS (CALL shared_frag2(1, 2) USING bar AS source)
+some_cte (x, y, z) AS (SELECT 1 AS x, 2 AS y, '3.0' AS z),
+x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
@@ -20236,9 +20557,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
   {with_select_stmt}: err
   | {with}
   | | {cte_tables}: err
-  |   | {cte_table}: bar: { x: integer notnull, y: integer notnull, z: text notnull }
-  |   | | {cte_decl}: bar: { x: integer notnull, y: integer notnull, z: text notnull }
-  |   | | | {name bar}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: text notnull }
+  |   | | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: text notnull }
+  |   | | | {name some_cte}
   |   | | | {name_list}
   |   | |   | {name x}
   |   | |   | {name_list}
@@ -20285,7 +20606,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
-  |             | {name bar}: err
+  |             | {name some_cte}: err
   |             | {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
   | {select_stmt}
     | {select_core_list}
@@ -20531,9 +20852,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
 The statement ending at line XXXX
 
 WITH
-foo (id, id) AS (CALL a_shared_frag(1, 2))
+some_cte (id, id) AS (CALL a_shared_frag(1, 2))
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
 
@@ -20542,7 +20863,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}: err
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name id}
   |     |   | {name_list}
@@ -20563,7 +20884,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
     |     | {select_from_etc}
     |       | {table_or_subquery_list}
     |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |       |   | {name some_cte}
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -20574,12 +20895,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
 The statement ending at line XXXX
 
 WITH
-foo (*) AS (WITH
+some_cte (*) AS (WITH
 garbonzo (goo, goo) AS (SELECT 1 AS x, 2 AS y)
 SELECT *
   FROM garbonzo)
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
 
@@ -20588,7 +20909,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {star}
   |     | {with_select_stmt}: err
   |       | {with}
@@ -20646,7 +20967,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
     |     | {select_from_etc}
     |       | {table_or_subquery_list}
     |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |       |   | {name some_cte}
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -20657,12 +20978,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
 The statement ending at line XXXX
 
 WITH
-foo (goo, goo) AS (WITH
+some_cte (goo, goo) AS (WITH
 garbonzo (x, y) AS (SELECT 1 AS x, 2 AS y)
 SELECT *
   FROM garbonzo)
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
 
@@ -20671,7 +20992,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}: err
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name goo}
   |     |   | {name_list}
@@ -20732,7 +21053,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
     |     | {select_from_etc}
     |       | {table_or_subquery_list}
     |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |       |   | {name some_cte}
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -20743,16 +21064,16 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'goo'
 The statement ending at line XXXX
 
 WITH
-foo (x, y, z) AS (CALL a_shared_frag(1, 2))
+some_cte (x, y, z) AS (CALL a_shared_frag(1, 2))
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
   {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: foo: { x: integer notnull, y: integer notnull, z: real notnull }
-  |     | {cte_decl}: foo: { x: integer notnull, y: integer notnull, z: real notnull }
-  |     | | {name foo}
+  |   | {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |     | {cte_decl}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name x}
   |     |   | {name_list}
@@ -20772,10 +21093,10 @@ SELECT *
     |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
     |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
     |     | | {star}: select: { x: integer notnull, y: integer notnull, z: real notnull }
-    |     | {select_from_etc}: TABLE { foo: foo }
-    |       | {table_or_subquery_list}: TABLE { foo: foo }
-    |       | | {table_or_subquery}: TABLE { foo: foo }
-    |       |   | {name foo}: TABLE { foo: foo }
+    |     | {select_from_etc}: TABLE { some_cte: some_cte }
+    |       | {table_or_subquery_list}: TABLE { some_cte: some_cte }
+    |       | | {table_or_subquery}: TABLE { some_cte: some_cte }
+    |       |   | {name some_cte}: TABLE { some_cte: some_cte }
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -20786,9 +21107,9 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-foo (*) AS (CALL return_with_attr())
+some_cte (*) AS (CALL return_with_attr())
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'return_with_attr'
 
@@ -20797,7 +21118,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL m
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {star}
   |     | {shared_cte}: err
   |       | {call_stmt}: ok
@@ -20811,7 +21132,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL m
     |     | {select_from_etc}
     |       | {table_or_subquery_list}
     |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |       |   | {name some_cte}
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -20822,9 +21143,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0224: a CALL statement inside SQL m
 The statement ending at line XXXX
 
 WITH
-foo (*) AS (CALL this_is_not_even_a_proc())
+some_cte (*) AS (CALL this_is_not_even_a_proc())
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared procedures are forbidden; declaration missing or typo 'this_is_not_even_a_proc'
 
@@ -20833,7 +21154,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared pro
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {star}
   |     | {shared_cte}: err
   |       | {call_stmt}: err
@@ -20847,7 +21168,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared pro
     |     | {select_from_etc}
     |       | {table_or_subquery_list}
     |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |       |   | {name some_cte}
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -52311,16 +52632,16 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
 The statement ending at line XXXX
 
 WITH
-foo (a, b, c) AS (SELECT 1 AS a, 'b' AS b, 3.0 AS c)
+some_cte (a, b, c) AS (SELECT 1 AS a, 'b' AS b, 3.0 AS c)
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
   {with_select_stmt}: select: { a: integer notnull, b: text notnull, c: real notnull }
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: foo: { a: integer notnull, b: text notnull, c: real notnull }
-  |     | {cte_decl}: foo: { a: integer notnull, b: text notnull, c: real notnull }
-  |     | | {name foo}
+  |   | {cte_table}: some_cte: { a: integer notnull, b: text notnull, c: real notnull }
+  |     | {cte_decl}: some_cte: { a: integer notnull, b: text notnull, c: real notnull }
+  |     | | {name some_cte}
   |     | | {name_list}
   |     |   | {name a}
   |     |   | {name_list}
@@ -52359,10 +52680,10 @@ SELECT *
     |   | {select_expr_list_con}: select: { a: integer notnull, b: text notnull, c: real notnull }
     |     | {select_expr_list}: select: { a: integer notnull, b: text notnull, c: real notnull }
     |     | | {star}: select: { a: integer notnull, b: text notnull, c: real notnull }
-    |     | {select_from_etc}: TABLE { foo: foo }
-    |       | {table_or_subquery_list}: TABLE { foo: foo }
-    |       | | {table_or_subquery}: TABLE { foo: foo }
-    |       |   | {name foo}: TABLE { foo: foo }
+    |     | {select_from_etc}: TABLE { some_cte: some_cte }
+    |       | {table_or_subquery_list}: TABLE { some_cte: some_cte }
+    |       | | {table_or_subquery}: TABLE { some_cte: some_cte }
+    |       |   | {name some_cte}: TABLE { some_cte: some_cte }
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -52373,9 +52694,9 @@ SELECT *
 The statement ending at line XXXX
 
 WITH
-foo (*) AS (SELECT 1)
+some_cte (*) AS (SELECT 1)
 SELECT *
-  FROM foo;
+  FROM some_cte;
 
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0055: all columns in the select must have a name
 
@@ -52384,7 +52705,7 @@ test/sem_test.sql:XXXX:1: error: in select_core : CQL0055: all columns in the se
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}: err
-  |     | | {name foo}
+  |     | | {name some_cte}
   |     | | {star}
   |     | {select_stmt}
   |       | {select_core_list}
@@ -52409,7 +52730,7 @@ test/sem_test.sql:XXXX:1: error: in select_core : CQL0055: all columns in the se
     |     | {select_from_etc}
     |       | {table_or_subquery_list}
     |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |       |   | {name some_cte}
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -71981,9 +72302,9 @@ BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
     WITH RECURSIVE
-    foo (b) AS (SELECT a)
+    some_cte (b) AS (SELECT a)
     SELECT b
-      FROM foo;
+      FROM some_cte;
   END IF;
 END;
 
@@ -72004,9 +72325,9 @@ END;
         |   | {with_select_stmt}: select: { b: integer notnull }
         |     | {with_recursive}
         |     | | {cte_tables}: ok
-        |     |   | {cte_table}: foo: { b: integer notnull variable }
-        |     |     | {cte_decl}: foo: { b: integer notnull variable }
-        |     |     | | {name foo}
+        |     |   | {cte_table}: some_cte: { b: integer notnull variable }
+        |     |     | {cte_decl}: some_cte: { b: integer notnull variable }
+        |     |     | | {name some_cte}
         |     |     | | {name_list}
         |     |     |   | {name b}
         |     |     | {select_stmt}: select: { a: integer notnull variable }
@@ -72035,10 +72356,10 @@ END;
         |       |     | {select_expr_list}: select: { b: integer notnull }
         |       |     | | {select_expr}: b: integer notnull
         |       |     |   | {name b}: b: integer notnull
-        |       |     | {select_from_etc}: TABLE { foo: foo }
-        |       |       | {table_or_subquery_list}: TABLE { foo: foo }
-        |       |       | | {table_or_subquery}: TABLE { foo: foo }
-        |       |       |   | {name foo}: TABLE { foo: foo }
+        |       |     | {select_from_etc}: TABLE { some_cte: some_cte }
+        |       |       | {table_or_subquery_list}: TABLE { some_cte: some_cte }
+        |       |       | | {table_or_subquery}: TABLE { some_cte: some_cte }
+        |       |       |   | {name some_cte}: TABLE { some_cte: some_cte }
         |       |       | {select_where}
         |       |         | {select_groupby}
         |       |           | {select_having}

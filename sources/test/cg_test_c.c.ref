@@ -15541,11 +15541,11 @@ END;
 CREATE PROC shared_conditional_user (x INTEGER NOT NULL)
 BEGIN
   WITH
-  foo (id) AS (SELECT x),
+  some_cte (id) AS (SELECT x),
   shared_conditional (x) AS (CALL shared_conditional(1))
   SELECT bar.*
     FROM bar
-    INNER JOIN foo ON x = 5;
+    INNER JOIN some_cte ON x = 5;
 END;
 */
 
@@ -15679,7 +15679,7 @@ CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3
   _rc_ = cql_prepare_var(_db_, _result_stmt,
     5, _preds_1,
   "WITH "
-    "foo (id) AS (SELECT ?), "
+    "some_cte (id) AS (SELECT ?), "
     "shared_conditional (x) AS (",
   "SELECT ?",
   "SELECT ? + ?",
@@ -15687,7 +15687,7 @@ CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3
   ") "
     "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
       "FROM bar "
-      "INNER JOIN foo ON ? = 5"
+      "INNER JOIN some_cte ON ? = 5"
   );
   cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, x,
@@ -17826,16 +17826,16 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
 
   /*
   WITH
-  foo (id) AS (SELECT 1 AS id)
+  some_cte (id) AS (SELECT 1 AS id)
   INSERT INTO bar(id) VALUES(ifnull(( SELECT id
-    FROM foo ), 0)) @DUMMY_SEED(1337);
+    FROM some_cte ), 0)) @DUMMY_SEED(1337);
   */
   _seed_ = 1337;
   _rc_ = cql_exec(_db_,
     "WITH "
-    "foo (id) AS (SELECT 1 AS id) "
+    "some_cte (id) AS (SELECT 1 AS id) "
     "INSERT INTO bar(id) VALUES(ifnull(( SELECT id "
-      "FROM foo ), 0))");
+      "FROM some_cte ), 0))");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
   // The statement ending at line XXXX
