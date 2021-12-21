@@ -11,6 +11,7 @@
 cql_noexport void cg_schema_main(ast_node *head) {}
 cql_noexport void cg_schema_upgrade_main(ast_node *head) {}
 cql_noexport void cg_schema_sqlite_main(ast_node *head) {}
+cql_noexport void cg_schema_facet_checker_main(ast_node *head) {}
 
 #else
 
@@ -1139,6 +1140,43 @@ static llint_t cg_schema_compute_crc(
   CHARBUF_CLOSE(all_schema);
 
   return schema_crc;
+}
+
+// Main entry point for schema facet checker code generation.
+cql_noexport void cg_schema_facet_checker_main(ast_node *head) {
+  Contract(options.file_names_count == 1);
+
+  cql_exit_on_semantic_errors(head);
+  exit_on_no_global_proc();
+
+  schema_annotation* notes;
+  size_t schema_items_count;
+  recreate_annotation* recreates;
+  size_t recreate_items_count;
+  int32_t max_schema_version;
+  llint_t schema_crc = cg_schema_compute_crc(
+     &notes,
+     &schema_items_count,
+     &recreates,
+     &recreate_items_count,
+     &max_schema_version);
+
+  CHARBUF_OPEN(main);
+
+  cg_schema_facet_checker_helpers(&main);
+
+  bprintf(&main, "CREATE PROCEDURE %s_facet_check()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "  -- Fetch the last known schema CRC. Fail if it's out of date. --\n");
+  bprintf(&main, "  DECLARE OUT CALL %s_cql_get_facet_version('cql_schema_crc', schema_crc);\n\n", global_proc_name);
+  bprintf(&main, "  IF schema_crc <> %lld THEN\n", (llint_t)schema_crc);
+  bprintf(&main, "    THROW;\n");
+  bprintf(&main, "  END IF;\n");
+  bprintf(&main, "END;\n\n");
+
+  cql_write_file(options.file_names[0], main.ptr);
+
+  CHARBUF_CLOSE(main);
 }
 
 // Main entry point for schema upgrade code-gen.

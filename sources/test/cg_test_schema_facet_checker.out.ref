@@ -1,0 +1,27 @@
+-- facets table declaration --
+CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG INTEGER NOT NULL
+);
+
+-- helper proc for getting the schema version of a facet
+CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
+BEGIN
+  BEGIN TRY
+    SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);
+  END TRY;
+  BEGIN CATCH
+    SET _version := -1;
+  END CATCH;
+END;
+
+CREATE PROCEDURE test_facet_check()
+BEGIN
+  -- Fetch the last known schema CRC. Fail if it's out of date. --
+  DECLARE OUT CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
+
+  IF schema_crc <> -6360627252302701852 THEN
+    THROW;
+  END IF;
+END;
+

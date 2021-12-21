@@ -12,3 +12,4 @@
 cql_noexport void cg_schema_main(struct ast_node *root);
 cql_noexport void cg_schema_upgrade_main(struct ast_node *root);
 cql_noexport void cg_schema_sqlite_main(struct ast_node *root);
+cql_noexport void cg_schema_facet_checker_main(ast_node *head);
