@@ -248,6 +248,17 @@ CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
   version LONG INTEGER NOT NULL
 );
 
+-- helper proc for getting the schema version of a facet
+CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
+BEGIN
+  BEGIN TRY
+    SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);
+  END TRY;
+  BEGIN CATCH
+    SET _version := -1;
+  END CATCH;
+END;
+
 -- saved facets table declaration --
 CREATE TEMP TABLE test_cql_schema_facets_saved(
   facet TEXT NOT NULL PRIMARY KEY,
@@ -288,17 +299,6 @@ END;
 CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES(_facet, _version);
-END;
-
--- helper proc for getting the schema version of a facet
-CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
-BEGIN
-  BEGIN TRY
-    SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);
-  END TRY;
-  BEGIN CATCH
-    SET _version := -1;
-  END CATCH;
 END;
 
 -- helper proc for getting the schema version CRC for a version index

@@ -169,13 +169,33 @@ static bool_t cg_schema_force_if_not_exists(ast_node *ast, void *context, charbu
   return true;
 }
 
-// Emit the helper procedures for the upgrade
-static void cg_schema_helpers(charbuf *decls) {
+// Emit table definitions and procedures required solely to check whether an upgrade is needed
+static void cg_schema_facet_checker_helpers(charbuf *decls) {
   bprintf(decls, "-- facets table declaration --\n");
   bprintf(decls, "CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
   bprintf(decls, "  facet TEXT NOT NULL PRIMARY KEY,\n");
   bprintf(decls, "  version LONG INTEGER NOT NULL\n");
   bprintf(decls, ");\n\n");
+
+  // Note this procedure has to handle the case where the table doesn't exist yet for retro-version validation
+  // (this happens in test code so it's validated)
+  // We still use the IF NOTHING -1 pattern so that it doesn't produce spurious errors when there is no row, that's not an error.
+
+  bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
+  bprintf(decls, "CREATE PROCEDURE %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
+  bprintf(decls, "BEGIN\n");
+  bprintf(decls, "  BEGIN TRY\n");
+  bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);\n", global_proc_name);
+  bprintf(decls, "  END TRY;\n");
+  bprintf(decls, "  BEGIN CATCH\n");
+  bprintf(decls, "    SET _version := -1;\n"); // this is here to handle the case where the table doesn't exist
+  bprintf(decls, "  END CATCH;\n");
+  bprintf(decls, "END;\n\n");
+}
+
+// Emit the helper procedures for the upgrade
+static void cg_schema_helpers(charbuf *decls) {
+  cg_schema_facet_checker_helpers(decls);
 
   bprintf(decls, "-- saved facets table declaration --\n");
   bprintf(decls, "CREATE TEMP TABLE %s_cql_schema_facets_saved(\n", global_proc_name);
@@ -217,21 +237,6 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "CREATE PROCEDURE %s_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  INSERT OR REPLACE INTO %s_cql_schema_facets (facet, version) VALUES(_facet, _version);\n", global_proc_name);
-  bprintf(decls, "END;\n\n");
-
-  // Note this procedure has to handle the case where the table doesn't exist yet for retro-version validation
-  // (this happens in test code so it's validated)
-  // We stil use the IF NOTHING -1 pattern so that it doesn't produce suprious errors when there is no row, that's not an error.
-
-  bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
-  bprintf(decls, "CREATE PROCEDURE %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
-  bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  BEGIN TRY\n");
-  bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);\n", global_proc_name);
-  bprintf(decls, "  END TRY;\n");
-  bprintf(decls, "  BEGIN CATCH\n");
-  bprintf(decls, "    SET _version := -1;\n"); // this is here to handle the case where the table doesn't exist
-  bprintf(decls, "  END CATCH;\n");
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for getting the schema version CRC for a version index\n");
@@ -1095,34 +1100,33 @@ static void cg_schema_manage_recreate_tables(
   CHARBUF_CLOSE(recreate);
 }
 
-// Main entry point for schema upgrade code-gen.
-cql_noexport void cg_schema_upgrade_main(ast_node *head) {
-  Contract(options.file_names_count == 1);
-
-  cql_exit_on_semantic_errors(head);
-  exit_on_no_global_proc();
-
+static llint_t cg_schema_compute_crc(
+    schema_annotation** notes,
+    size_t* schema_items_count,
+    recreate_annotation** recreates,
+    size_t* recreate_items_count,
+    int32_t* max_schema_version) {
   // first sort the schema annotations according to version, type etc.
   // we want to process these in an orderly fashion and the upgrade rules
   // are nothing like the declared order.
   void *base = schema_annotations->ptr;
   size_t schema_items_size = sizeof(schema_annotation);
-  size_t schema_items_count = schema_annotations->used / schema_items_size;
-  schema_annotation *notes = (schema_annotation*)base;
-  int32_t max_schema_version = 0;
-  if (schema_items_count) {
-     qsort(base, schema_items_count, schema_items_size, annotation_comparator);
-     max_schema_version = notes[schema_items_count - 1].version;
+  *schema_items_count = schema_annotations->used / schema_items_size;
+  *notes = (schema_annotation*)base;
+  *max_schema_version = 0;
+  if (*schema_items_count) {
+     qsort(base, *schema_items_count, schema_items_size, annotation_comparator);
+     *max_schema_version = (*notes)[*schema_items_count - 1].version;
   }
 
   // likewise, @recreate annotations, in the correct upgrade order (see comparator)
   base = recreate_annotations->ptr;
   size_t recreate_items_size = sizeof(recreate_annotation);
-  size_t recreate_items_count = recreate_annotations->used / recreate_items_size;
-  if (recreate_items_count) {
-    qsort(base, recreate_items_count, recreate_items_size, recreate_comparator);
+  *recreate_items_count = recreate_annotations->used / recreate_items_size;
+  if (*recreate_items_count) {
+    qsort(base, *recreate_items_count, recreate_items_size, recreate_comparator);
   }
-  recreate_annotation *recreates = (recreate_annotation *)base;
+  *recreates = (recreate_annotation *)base;
 
   CHARBUF_OPEN(all_schema);
   // emit canonicalized schema for everything we will upgrade
@@ -1133,6 +1137,28 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   llint_t schema_crc = (llint_t)crc_charbuf(&all_schema);
 
   CHARBUF_CLOSE(all_schema);
+
+  return schema_crc;
+}
+
+// Main entry point for schema upgrade code-gen.
+cql_noexport void cg_schema_upgrade_main(ast_node *head) {
+  Contract(options.file_names_count == 1);
+
+  cql_exit_on_semantic_errors(head);
+  exit_on_no_global_proc();
+
+  schema_annotation* notes;
+  size_t schema_items_count;
+  recreate_annotation* recreates;
+  size_t recreate_items_count;
+  int32_t max_schema_version;
+  llint_t schema_crc = cg_schema_compute_crc(
+     &notes,
+     &schema_items_count,
+     &recreates,
+     &recreate_items_count,
+     &max_schema_version);
 
   CHARBUF_OPEN(preamble);
   CHARBUF_OPEN(main);
