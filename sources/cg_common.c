@@ -267,7 +267,6 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
   ast_node *table_or_view_name_ast = NULL;
 
   if (is_ast_cte_table(node)) {
-    EXTRACT_NOTNULL(cte_decl, node->left);
     EXTRACT_ANY_NOTNULL(cte_body, node->right);
 
     // this is a proxy node, it doesn't contribute anything
@@ -275,7 +274,8 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     if (is_ast_like(cte_body)) {
       return;
     }
-
+  }
+  else if (is_ast_shared_cte(node)) {
     // if we're on a shared CTE usage, then we recurse into the CALL and
     // we recurse into the binding list.  The CALL should not be handled
     // like a normal procedure call, the body is inlined.  Note that the
@@ -283,28 +283,26 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     // downstream -- this isn't a normal call that might be invisible to us
     // we *must* have the fragment because we're talking about a semantically
     // valid shared cte binding.
-    if (is_ast_shared_cte(cte_body)) {
-      EXTRACT_NOTNULL(call_stmt, cte_body->left);
-      EXTRACT(cte_binding_list, cte_body->right);
 
-      EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
-      EXTRACT_STRING(name, name_ast);
-      ast_node *proc = find_proc(name);
-      if (proc) {
-        // Look through the proc definition for tables. Just call through recursively.
-        continue_find_table_node(callbacks, proc);
-      }
+    EXTRACT_NOTNULL(call_stmt, node->left);
+    EXTRACT(cte_binding_list, node->right);
 
-      if (cte_binding_list) {
-        continue_find_table_node(callbacks, cte_binding_list);
-      }
-
-      // no further recursion is needed
-      return;
+    EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+    EXTRACT_STRING(name, name_ast);
+    ast_node *proc = find_proc(name);
+    if (proc) {
+      // Look through the proc definition for tables. Just call through recursively.
+      continue_find_table_node(callbacks, proc);
     }
-  }
 
-  if (is_ast_declare_cursor_like_select(node)) {
+    if (cte_binding_list) {
+      continue_find_table_node(callbacks, cte_binding_list);
+    }
+
+    // no further recursion is needed
+    return;
+  }
+  else if (is_ast_declare_cursor_like_select(node)) {
     // There is a select in this declaration but it doesn't really run, it's just type info
     // so that doesn't count.  So we don't recurse here.
     return;

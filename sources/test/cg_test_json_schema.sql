@@ -1341,7 +1341,6 @@ begin
   select id from foo;
 end;
 
-
 -- TEST: verify that we dive into the contents of the called shared fragment
 -- the shared fragment uses Foo;  source and control do not appear but
 -- are instead replaced by T1 and T2.  T6 was used in the main procedure
@@ -1351,11 +1350,28 @@ end;
 -- + "definedInFile" : "cg_test_json_schema.sql",
 -- + "fromTables" : [ "Foo", "T1", "T2", "T6" ],
 -- + "usesTables" : [ "Foo", "T1", "T2", "T6" ],
--- - "statement" : % WITH shared
+-- - "statement" :
 create proc shared_frag_user()
 begin
   with shared(*) as (call shared_frag_proc() using T1 as source, T2 as control)
   select * from shared
+  union all
+  select id from T6;
+end;
+
+-- TEST: verify that we dive into the contents of the called shared fragment
+-- the shared fragment uses Foo; source and control do not appear but
+-- are instead replaced by T1 and T2; T6 was used in the main procedure;
+-- this has to be in the general section because of arg rewriting so
+-- it will not emit a "statement" attribute like the simple form does
+-- + "name" : "shared_frag_user_nested_select",
+-- + "definedInFile" : "cg_test_json_schema.sql",
+-- + "fromTables" : [ "Foo", "T1", "T2", "T6" ],
+-- + "usesTables" : [ "Foo", "T1", "T2", "T6" ],
+-- - "statement" :
+create proc shared_frag_user_nested_select()
+begin
+  select * from (call shared_frag_proc() using T1 as source, T2 as control)
   union all
   select id from T6;
 end;
