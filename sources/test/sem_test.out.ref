@@ -78843,3 +78843,794 @@ END;
             | {select_limit}
               | {select_offset}
 
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC fragtest_0_0 ()
+BEGIN
+  WITH
+  source (x) LIKE (SELECT 1 AS x),
+  possible_conflict (x) AS (SELECT *
+    FROM source)
+  SELECT *
+    FROM possible_conflict;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name fragtest_0_0}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: source: { x: integer notnull }
+          |   | | {cte_decl}: source: { x: integer notnull }
+          |   | | | {name source}
+          |   | | | {name_list}
+          |   | |   | {name x}
+          |   | | {like}
+          |   |   | {select_stmt}: select: { x: integer notnull }
+          |   |     | {select_core_list}: select: { x: integer notnull }
+          |   |     | | {select_core}: select: { x: integer notnull }
+          |   |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |   |     |     | {select_expr_list}: select: { x: integer notnull }
+          |   |     |     | | {select_expr}: x: integer notnull
+          |   |     |     |   | {int 1}: integer notnull
+          |   |     |     |   | {opt_as_alias}
+          |   |     |     |     | {name x}
+          |   |     |     | {select_from_etc}: ok
+          |   |     |       | {select_where}
+          |   |     |         | {select_groupby}
+          |   |     |           | {select_having}
+          |   |     | {select_orderby}
+          |   |       | {select_limit}
+          |   |         | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: possible_conflict: { x: integer notnull }
+          |       | {cte_decl}: possible_conflict: { x: integer notnull }
+          |       | | {name possible_conflict}
+          |       | | {name_list}
+          |       |   | {name x}
+          |       | {select_stmt}: select: { x: integer notnull }
+          |         | {select_core_list}: select: { x: integer notnull }
+          |         | | {select_core}: select: { x: integer notnull }
+          |         |   | {select_expr_list_con}: select: { x: integer notnull }
+          |         |     | {select_expr_list}: select: { x: integer notnull }
+          |         |     | | {star}: select: { x: integer notnull }
+          |         |     | {select_from_etc}: TABLE { source: source }
+          |         |       | {table_or_subquery_list}: TABLE { source: source }
+          |         |       | | {table_or_subquery}: TABLE { source: source }
+          |         |       |   | {name source}: TABLE { source: source }
+          |         |       | {select_where}
+          |         |         | {select_groupby}
+          |         |           | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {star}: select: { x: integer notnull }
+            |     | {select_from_etc}: TABLE { possible_conflict: possible_conflict }
+            |       | {table_or_subquery_list}: TABLE { possible_conflict: possible_conflict }
+            |       | | {table_or_subquery}: TABLE { possible_conflict: possible_conflict }
+            |       |   | {name possible_conflict}: TABLE { possible_conflict: possible_conflict }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC fragtest_0_1 ()
+BEGIN
+  WITH
+  source (x) LIKE (SELECT 1 AS x),
+  fragtest_0_0 (x) AS (CALL fragtest_0_0() USING source AS source)
+  SELECT *
+    FROM fragtest_0_0;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name fragtest_0_1}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: source: { x: integer notnull }
+          |   | | {cte_decl}: source: { x: integer notnull }
+          |   | | | {name source}
+          |   | | | {name_list}
+          |   | |   | {name x}
+          |   | | {like}
+          |   |   | {select_stmt}: select: { x: integer notnull }
+          |   |     | {select_core_list}: select: { x: integer notnull }
+          |   |     | | {select_core}: select: { x: integer notnull }
+          |   |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |   |     |     | {select_expr_list}: select: { x: integer notnull }
+          |   |     |     | | {select_expr}: x: integer notnull
+          |   |     |     |   | {int 1}: integer notnull
+          |   |     |     |   | {opt_as_alias}
+          |   |     |     |     | {name x}
+          |   |     |     | {select_from_etc}: ok
+          |   |     |       | {select_where}
+          |   |     |         | {select_groupby}
+          |   |     |           | {select_having}
+          |   |     | {select_orderby}
+          |   |       | {select_limit}
+          |   |         | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: fragtest_0_0: { x: integer notnull }
+          |       | {cte_decl}: fragtest_0_0: { x: integer notnull }
+          |       | | {name fragtest_0_0}: select: { x: integer notnull } dml_proc
+          |       | | {name_list}
+          |       |   | {name x}
+          |       | {shared_cte}: select: { x: integer notnull } dml_proc
+          |         | {call_stmt}: select: { x: integer notnull } dml_proc
+          |         | | {name fragtest_0_0}: select: { x: integer notnull } dml_proc
+          |         | {cte_binding_list}
+          |           | {cte_binding}
+          |             | {name source}: source: { x: integer notnull }
+          |             | {name source}: source: { x: integer notnull }
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {star}: select: { x: integer notnull }
+            |     | {select_from_etc}: TABLE { fragtest_0_0: fragtest_0_0 }
+            |       | {table_or_subquery_list}: TABLE { fragtest_0_0: fragtest_0_0 }
+            |       | | {table_or_subquery}: TABLE { fragtest_0_0: fragtest_0_0 }
+            |       |   | {name fragtest_0_0}: TABLE { fragtest_0_0: fragtest_0_0 }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC fragtest_0_2 ()
+BEGIN
+  WITH
+  source (x) LIKE (SELECT 1 AS x),
+  fragtest_0_1 (x) AS (CALL fragtest_0_1() USING source AS source)
+  SELECT *
+    FROM fragtest_0_1;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name fragtest_0_2}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: source: { x: integer notnull }
+          |   | | {cte_decl}: source: { x: integer notnull }
+          |   | | | {name source}
+          |   | | | {name_list}
+          |   | |   | {name x}
+          |   | | {like}
+          |   |   | {select_stmt}: select: { x: integer notnull }
+          |   |     | {select_core_list}: select: { x: integer notnull }
+          |   |     | | {select_core}: select: { x: integer notnull }
+          |   |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |   |     |     | {select_expr_list}: select: { x: integer notnull }
+          |   |     |     | | {select_expr}: x: integer notnull
+          |   |     |     |   | {int 1}: integer notnull
+          |   |     |     |   | {opt_as_alias}
+          |   |     |     |     | {name x}
+          |   |     |     | {select_from_etc}: ok
+          |   |     |       | {select_where}
+          |   |     |         | {select_groupby}
+          |   |     |           | {select_having}
+          |   |     | {select_orderby}
+          |   |       | {select_limit}
+          |   |         | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: fragtest_0_1: { x: integer notnull }
+          |       | {cte_decl}: fragtest_0_1: { x: integer notnull }
+          |       | | {name fragtest_0_1}: select: { x: integer notnull } dml_proc
+          |       | | {name_list}
+          |       |   | {name x}
+          |       | {shared_cte}: select: { x: integer notnull } dml_proc
+          |         | {call_stmt}: select: { x: integer notnull } dml_proc
+          |         | | {name fragtest_0_1}: select: { x: integer notnull } dml_proc
+          |         | {cte_binding_list}
+          |           | {cte_binding}
+          |             | {name source}: source: { x: integer notnull }
+          |             | {name source}: source: { x: integer notnull }
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {star}: select: { x: integer notnull }
+            |     | {select_from_etc}: TABLE { fragtest_0_1: fragtest_0_1 }
+            |       | {table_or_subquery_list}: TABLE { fragtest_0_1: fragtest_0_1 }
+            |       | | {table_or_subquery}: TABLE { fragtest_0_1: fragtest_0_1 }
+            |       |   | {name fragtest_0_1}: TABLE { fragtest_0_1: fragtest_0_1 }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+possible_conflict (x) AS (SELECT 1 AS x)
+SELECT *
+  FROM (CALL fragtest_0_2() USING possible_conflict AS source);
+
+test/sem_test.sql:XXXX:1: error: in cte_binding : CQL0444: this use of the named shared fragment is not legal because of a name conflict 'fragtest_0_2'
+Procedure 'fragtest_0_0' has a different CTE that is also named 'possible_conflict'
+The above originated from CALL fragtest_0_0 USING possible_conflict AS source
+The above originated from CALL fragtest_0_1 USING possible_conflict AS source
+The above originated from CALL fragtest_0_2 USING possible_conflict AS source
+
+
+  {with_select_stmt}: err
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: possible_conflict: { x: integer notnull }
+  |     | {cte_decl}: possible_conflict: { x: integer notnull }
+  |     | | {name possible_conflict}
+  |     | | {name_list}
+  |     |   | {name x}
+  |     | {select_stmt}: select: { x: integer notnull }
+  |       | {select_core_list}: select: { x: integer notnull }
+  |       | | {select_core}: select: { x: integer notnull }
+  |       |   | {select_expr_list_con}: select: { x: integer notnull }
+  |       |     | {select_expr_list}: select: { x: integer notnull }
+  |       |     | | {select_expr}: x: integer notnull
+  |       |     |   | {int 1}: integer notnull
+  |       |     |   | {opt_as_alias}
+  |       |     |     | {name x}
+  |       |     | {select_from_etc}: ok
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {star}
+    |     | {select_from_etc}: err
+    |       | {table_or_subquery_list}: err
+    |       | | {table_or_subquery}: err
+    |       |   | {shared_cte}: err
+    |       |     | {call_stmt}: err
+    |       |     | | {name fragtest_0_2}: select: { x: integer notnull } dml_proc
+    |       |     | {cte_binding_list}
+    |       |       | {cte_binding}
+    |       |         | {name possible_conflict}: possible_conflict: { x: integer notnull }
+    |       |         | {name source}: source: { x: integer notnull }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+source (x) AS (SELECT 1 AS x)
+SELECT *
+  FROM (CALL fragtest_0_2() USING source AS source);
+
+  {with_select_stmt}: select: { x: integer notnull }
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: source: { x: integer notnull }
+  |     | {cte_decl}: source: { x: integer notnull }
+  |     | | {name source}
+  |     | | {name_list}
+  |     |   | {name x}
+  |     | {select_stmt}: select: { x: integer notnull }
+  |       | {select_core_list}: select: { x: integer notnull }
+  |       | | {select_core}: select: { x: integer notnull }
+  |       |   | {select_expr_list_con}: select: { x: integer notnull }
+  |       |     | {select_expr_list}: select: { x: integer notnull }
+  |       |     | | {select_expr}: x: integer notnull
+  |       |     |   | {int 1}: integer notnull
+  |       |     |   | {opt_as_alias}
+  |       |     |     | {name x}
+  |       |     | {select_from_etc}: ok
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}: select: { x: integer notnull }
+    | {select_core_list}: select: { x: integer notnull }
+    | | {select_core}: select: { x: integer notnull }
+    |   | {select_expr_list_con}: select: { x: integer notnull }
+    |     | {select_expr_list}: select: { x: integer notnull }
+    |     | | {star}: select: { x: integer notnull }
+    |     | {select_from_etc}: TABLE { select: select }
+    |       | {table_or_subquery_list}: TABLE { select: select }
+    |       | | {table_or_subquery}: TABLE { select: select }
+    |       |   | {shared_cte}: select: { x: integer notnull } dml_proc
+    |       |     | {call_stmt}: select: { x: integer notnull } dml_proc
+    |       |     | | {name fragtest_0_2}: select: { x: integer notnull } dml_proc
+    |       |     | {cte_binding_list}
+    |       |       | {cte_binding}
+    |       |         | {name source}: source: { x: integer notnull }
+    |       |         | {name source}: source: { x: integer notnull }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC fragtest_1_0 ()
+BEGIN
+  WITH
+  source (x) LIKE (SELECT 1 AS x),
+  possible_conflict (x) AS (SELECT *
+    FROM source)
+  SELECT *
+    FROM possible_conflict;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: source: { x: integer notnull }
+          |   | | {cte_decl}: source: { x: integer notnull }
+          |   | | | {name source}
+          |   | | | {name_list}
+          |   | |   | {name x}
+          |   | | {like}
+          |   |   | {select_stmt}: select: { x: integer notnull }
+          |   |     | {select_core_list}: select: { x: integer notnull }
+          |   |     | | {select_core}: select: { x: integer notnull }
+          |   |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |   |     |     | {select_expr_list}: select: { x: integer notnull }
+          |   |     |     | | {select_expr}: x: integer notnull
+          |   |     |     |   | {int 1}: integer notnull
+          |   |     |     |   | {opt_as_alias}
+          |   |     |     |     | {name x}
+          |   |     |     | {select_from_etc}: ok
+          |   |     |       | {select_where}
+          |   |     |         | {select_groupby}
+          |   |     |           | {select_having}
+          |   |     | {select_orderby}
+          |   |       | {select_limit}
+          |   |         | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: possible_conflict: { x: integer notnull }
+          |       | {cte_decl}: possible_conflict: { x: integer notnull }
+          |       | | {name possible_conflict}
+          |       | | {name_list}
+          |       |   | {name x}
+          |       | {select_stmt}: select: { x: integer notnull }
+          |         | {select_core_list}: select: { x: integer notnull }
+          |         | | {select_core}: select: { x: integer notnull }
+          |         |   | {select_expr_list_con}: select: { x: integer notnull }
+          |         |     | {select_expr_list}: select: { x: integer notnull }
+          |         |     | | {star}: select: { x: integer notnull }
+          |         |     | {select_from_etc}: TABLE { source: source }
+          |         |       | {table_or_subquery_list}: TABLE { source: source }
+          |         |       | | {table_or_subquery}: TABLE { source: source }
+          |         |       |   | {name source}: TABLE { source: source }
+          |         |       | {select_where}
+          |         |         | {select_groupby}
+          |         |           | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {star}: select: { x: integer notnull }
+            |     | {select_from_etc}: TABLE { possible_conflict: possible_conflict }
+            |       | {table_or_subquery_list}: TABLE { possible_conflict: possible_conflict }
+            |       | | {table_or_subquery}: TABLE { possible_conflict: possible_conflict }
+            |       |   | {name possible_conflict}: TABLE { possible_conflict: possible_conflict }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC fragtest_1_1 ()
+BEGIN
+  WITH
+  possible_conflict (x) AS (SELECT 1 AS x),
+  fragtest_1_0 (*) AS (CALL fragtest_1_0() USING possible_conflict AS source)
+  SELECT *
+    FROM fragtest_1_0;
+END;
+
+test/sem_test.sql:XXXX:1: error: in cte_binding : CQL0444: this use of the named shared fragment is not legal because of a name conflict 'fragtest_1_0'
+Procedure 'fragtest_1_0' has a different CTE that is also named 'possible_conflict'
+The above originated from CALL fragtest_1_0 USING possible_conflict AS source
+
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name fragtest_1_1}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {with_select_stmt}: err
+          | {with}
+          | | {cte_tables}: err
+          |   | {cte_table}: possible_conflict: { x: integer notnull }
+          |   | | {cte_decl}: possible_conflict: { x: integer notnull }
+          |   | | | {name possible_conflict}
+          |   | | | {name_list}
+          |   | |   | {name x}
+          |   | | {select_stmt}: select: { x: integer notnull }
+          |   |   | {select_core_list}: select: { x: integer notnull }
+          |   |   | | {select_core}: select: { x: integer notnull }
+          |   |   |   | {select_expr_list_con}: select: { x: integer notnull }
+          |   |   |     | {select_expr_list}: select: { x: integer notnull }
+          |   |   |     | | {select_expr}: x: integer notnull
+          |   |   |     |   | {int 1}: integer notnull
+          |   |   |     |   | {opt_as_alias}
+          |   |   |     |     | {name x}
+          |   |   |     | {select_from_etc}: ok
+          |   |   |       | {select_where}
+          |   |   |         | {select_groupby}
+          |   |   |           | {select_having}
+          |   |   | {select_orderby}
+          |   |     | {select_limit}
+          |   |       | {select_offset}
+          |   | {cte_tables}: err
+          |     | {cte_table}: err
+          |       | {cte_decl}
+          |       | | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+          |       | | {star}
+          |       | {shared_cte}: err
+          |         | {call_stmt}: err
+          |         | | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+          |         | {cte_binding_list}
+          |           | {cte_binding}
+          |             | {name possible_conflict}: possible_conflict: { x: integer notnull }
+          |             | {name source}: source: { x: integer notnull }
+          | {select_stmt}
+            | {select_core_list}
+            | | {select_core}
+            |   | {select_expr_list_con}
+            |     | {select_expr_list}
+            |     | | {star}
+            |     | {select_from_etc}
+            |       | {table_or_subquery_list}
+            |       | | {table_or_subquery}
+            |       |   | {name fragtest_1_0}
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC fragtest_2_0 ()
+BEGIN
+  WITH
+  possible_conflict (x) AS (SELECT 1 AS x)
+  SELECT *
+    FROM possible_conflict;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name fragtest_2_0}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: possible_conflict: { x: integer notnull }
+          |     | {cte_decl}: possible_conflict: { x: integer notnull }
+          |     | | {name possible_conflict}
+          |     | | {name_list}
+          |     |   | {name x}
+          |     | {select_stmt}: select: { x: integer notnull }
+          |       | {select_core_list}: select: { x: integer notnull }
+          |       | | {select_core}: select: { x: integer notnull }
+          |       |   | {select_expr_list_con}: select: { x: integer notnull }
+          |       |     | {select_expr_list}: select: { x: integer notnull }
+          |       |     | | {select_expr}: x: integer notnull
+          |       |     |   | {int 1}: integer notnull
+          |       |     |   | {opt_as_alias}
+          |       |     |     | {name x}
+          |       |     | {select_from_etc}: ok
+          |       |       | {select_where}
+          |       |         | {select_groupby}
+          |       |           | {select_having}
+          |       | {select_orderby}
+          |         | {select_limit}
+          |           | {select_offset}
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {star}: select: { x: integer notnull }
+            |     | {select_from_etc}: TABLE { possible_conflict: possible_conflict }
+            |       | {table_or_subquery_list}: TABLE { possible_conflict: possible_conflict }
+            |       | | {table_or_subquery}: TABLE { possible_conflict: possible_conflict }
+            |       |   | {name possible_conflict}: TABLE { possible_conflict: possible_conflict }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC fragtest_2_1 ()
+BEGIN
+  WITH
+  source (x) LIKE (SELECT 1 AS x),
+  fragtest_2_0 (x) AS (CALL fragtest_2_0())
+  SELECT source.x
+    FROM source
+    INNER JOIN fragtest_2_0;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name fragtest_2_1}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: source: { x: integer notnull }
+          |   | | {cte_decl}: source: { x: integer notnull }
+          |   | | | {name source}
+          |   | | | {name_list}
+          |   | |   | {name x}
+          |   | | {like}
+          |   |   | {select_stmt}: select: { x: integer notnull }
+          |   |     | {select_core_list}: select: { x: integer notnull }
+          |   |     | | {select_core}: select: { x: integer notnull }
+          |   |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |   |     |     | {select_expr_list}: select: { x: integer notnull }
+          |   |     |     | | {select_expr}: x: integer notnull
+          |   |     |     |   | {int 1}: integer notnull
+          |   |     |     |   | {opt_as_alias}
+          |   |     |     |     | {name x}
+          |   |     |     | {select_from_etc}: ok
+          |   |     |       | {select_where}
+          |   |     |         | {select_groupby}
+          |   |     |           | {select_having}
+          |   |     | {select_orderby}
+          |   |       | {select_limit}
+          |   |         | {select_offset}
+          |   | {cte_tables}
+          |     | {cte_table}: fragtest_2_0: { x: integer notnull }
+          |       | {cte_decl}: fragtest_2_0: { x: integer notnull }
+          |       | | {name fragtest_2_0}: select: { x: integer notnull } dml_proc
+          |       | | {name_list}
+          |       |   | {name x}
+          |       | {shared_cte}: select: { x: integer notnull } dml_proc
+          |         | {call_stmt}: select: { x: integer notnull } dml_proc
+          |           | {name fragtest_2_0}: select: { x: integer notnull } dml_proc
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {select_expr}: x: integer notnull
+            |     |   | {dot}: x: integer notnull
+            |     |     | {name source}
+            |     |     | {name x}
+            |     | {select_from_etc}: JOIN { source: source, fragtest_2_0: fragtest_2_0 }
+            |       | {join_clause}: JOIN { source: source, fragtest_2_0: fragtest_2_0 }
+            |       | | {table_or_subquery}: TABLE { source: source }
+            |       | | | {name source}: TABLE { source: source }
+            |       | | {join_target_list}
+            |       |   | {join_target}: JOIN { source: source, fragtest_2_0: fragtest_2_0 }
+            |       |     | {int 1}
+            |       |     | {table_join}
+            |       |       | {table_or_subquery}: TABLE { fragtest_2_0: fragtest_2_0 }
+            |       |         | {name fragtest_2_0}: TABLE { fragtest_2_0: fragtest_2_0 }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+possible_conflict (x) AS (SELECT 1 AS x)
+SELECT *
+  FROM (CALL fragtest_2_1() USING possible_conflict AS source);
+
+  {with_select_stmt}: select: { x: integer notnull }
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: possible_conflict: { x: integer notnull }
+  |     | {cte_decl}: possible_conflict: { x: integer notnull }
+  |     | | {name possible_conflict}
+  |     | | {name_list}
+  |     |   | {name x}
+  |     | {select_stmt}: select: { x: integer notnull }
+  |       | {select_core_list}: select: { x: integer notnull }
+  |       | | {select_core}: select: { x: integer notnull }
+  |       |   | {select_expr_list_con}: select: { x: integer notnull }
+  |       |     | {select_expr_list}: select: { x: integer notnull }
+  |       |     | | {select_expr}: x: integer notnull
+  |       |     |   | {int 1}: integer notnull
+  |       |     |   | {opt_as_alias}
+  |       |     |     | {name x}
+  |       |     | {select_from_etc}: ok
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}: select: { x: integer notnull }
+    | {select_core_list}: select: { x: integer notnull }
+    | | {select_core}: select: { x: integer notnull }
+    |   | {select_expr_list_con}: select: { x: integer notnull }
+    |     | {select_expr_list}: select: { x: integer notnull }
+    |     | | {star}: select: { x: integer notnull }
+    |     | {select_from_etc}: TABLE { select: select }
+    |       | {table_or_subquery_list}: TABLE { select: select }
+    |       | | {table_or_subquery}: TABLE { select: select }
+    |       |   | {shared_cte}: select: { x: integer notnull } dml_proc
+    |       |     | {call_stmt}: select: { x: integer notnull } dml_proc
+    |       |     | | {name fragtest_2_1}: select: { x: integer notnull } dml_proc
+    |       |     | {cte_binding_list}
+    |       |       | {cte_binding}
+    |       |         | {name possible_conflict}: possible_conflict: { x: integer notnull }
+    |       |         | {name source}: source: { x: integer notnull }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC frag_not_really_a_conflict ()
+BEGIN
+  WITH
+  possible_conflict (x) LIKE (SELECT 1 AS x)
+  SELECT *
+    FROM (CALL fragtest_1_0() USING possible_conflict AS source);
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name frag_not_really_a_conflict}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {with_select_stmt}: select: { x: integer notnull }
+          | {with}
+          | | {cte_tables}: ok
+          |   | {cte_table}: possible_conflict: { x: integer notnull }
+          |     | {cte_decl}: possible_conflict: { x: integer notnull }
+          |     | | {name possible_conflict}
+          |     | | {name_list}
+          |     |   | {name x}
+          |     | {like}
+          |       | {select_stmt}: select: { x: integer notnull }
+          |         | {select_core_list}: select: { x: integer notnull }
+          |         | | {select_core}: select: { x: integer notnull }
+          |         |   | {select_expr_list_con}: select: { x: integer notnull }
+          |         |     | {select_expr_list}: select: { x: integer notnull }
+          |         |     | | {select_expr}: x: integer notnull
+          |         |     |   | {int 1}: integer notnull
+          |         |     |   | {opt_as_alias}
+          |         |     |     | {name x}
+          |         |     | {select_from_etc}: ok
+          |         |       | {select_where}
+          |         |         | {select_groupby}
+          |         |           | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {select_offset}
+          | {select_stmt}: select: { x: integer notnull }
+            | {select_core_list}: select: { x: integer notnull }
+            | | {select_core}: select: { x: integer notnull }
+            |   | {select_expr_list_con}: select: { x: integer notnull }
+            |     | {select_expr_list}: select: { x: integer notnull }
+            |     | | {star}: select: { x: integer notnull }
+            |     | {select_from_etc}: TABLE { select: select }
+            |       | {table_or_subquery_list}: TABLE { select: select }
+            |       | | {table_or_subquery}: TABLE { select: select }
+            |       |   | {shared_cte}: select: { x: integer notnull } dml_proc
+            |       |     | {call_stmt}: select: { x: integer notnull } dml_proc
+            |       |     | | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+            |       |     | {cte_binding_list}
+            |       |       | {cte_binding}
+            |       |         | {name possible_conflict}: possible_conflict: { x: integer notnull }
+            |       |         | {name source}: source: { x: integer notnull }
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+

@@ -1316,4 +1316,14 @@ The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_const_stmt : CQL0356: const definitions do not match 'foo'
 test/sem_test.sql:XXXX:1: error: in str : CQL0358: declared constants must be top level 'err5'
 test/sem_test.sql:XXXX:1: error: in str : CQL0169: constant group not found 'not_found'
+test/sem_test.sql:XXXX:1: error: in cte_binding : CQL0444: this use of the named shared fragment is not legal because of a name conflict 'fragtest_0_2'
+Procedure 'fragtest_0_0' has a different CTE that is also named 'possible_conflict'
+The above originated from CALL fragtest_0_0 USING possible_conflict AS source
+The above originated from CALL fragtest_0_1 USING possible_conflict AS source
+The above originated from CALL fragtest_0_2 USING possible_conflict AS source
+
+test/sem_test.sql:XXXX:1: error: in cte_binding : CQL0444: this use of the named shared fragment is not legal because of a name conflict 'fragtest_1_0'
+Procedure 'fragtest_1_0' has a different CTE that is also named 'possible_conflict'
+The above originated from CALL fragtest_1_0 USING possible_conflict AS source
+
 semantic errors present; no code gen.

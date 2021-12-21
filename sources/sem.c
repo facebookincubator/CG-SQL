@@ -537,6 +537,15 @@ static pending_table_validation *pending_table_validations_head;
 
 static void sem_validate_fk_attr(pending_table_validation *pending);
 
+// for verifying that a particular shared fragment call does not cause name conflicts inside the fragment
+typedef struct binding_info {
+  CSTR actual;
+  CSTR formal;
+  CSTR proc;
+  CSTR proc_calling;
+  charbuf *err;
+} binding_info;
+
 // If a foreign key in a table is self-referencing (i.e. T references T)
 // then we have to defer the validation until we're done with the table and
 // have compute all the types of all the columns.  So store the data so we can
@@ -9565,7 +9574,7 @@ static void sem_select_expr_list_con(ast_node *ast) {
   bool_t error = false;
   sem_t sem_sensitive = 0;
   sem_join *from_jptr = NULL;
-  
+
   // Analyze the FROM portion (if it exists).
   sem_select_from(select_from_etc);
   error = is_error(select_from_etc);
@@ -10378,6 +10387,117 @@ static void make_distinct_table_params_list_callback(void *context, CSTR cte_nam
   }
 }
 
+
+// This is a recursive check for any embedded CTEs that have names that will conflict with a given binding
+// this can get quite complicated.  Here's an example:
+//
+// @attribute(cql:shared_fragment)
+// create proc too()
+// begin
+//  with
+//    source(*) like (select 1 x),
+//    foo(*) as (select * from source)
+//    select * from foo;
+// end;
+//
+// @attribute(cql:shared_fragment)
+// create proc goo()
+// begin
+//  with
+//    source(*) like (select 1 x),
+//    (call too() using source as source)
+//    select * from too;
+// end;
+//
+// with foo(*) as (select 1 x)
+//   select * from (call goo() using foo as source);
+//
+// here the call to "goo" must fail because it tries to bind "foo" as source
+// and there is a "foo" inside of "too". This is a problem because "goo" calls "too"
+// and forwards its "source" formal to too.
+//
+// To find these we have to recursively walk procedure bindings to get to the deepest
+// shared fragment.  Note that we don't have to walk where there is no binding
+// nor do we have to walk if the binding does not forward an argument that is provided
+// externally.
+cql_noexport void sem_check_bound_cte_name_conflict(ast_node *node, binding_info *info) {
+  if (is_ast_cte_table(node)) {
+    EXTRACT_NOTNULL(cte_decl, node->left);
+    EXTRACT_ANY_NOTNULL(cte_body, node->right);
+
+    // this is a proxy node, it isn't a source of conflicts
+    // this name will be replaced, it's even ok if the arg name matches the formal name
+    if (is_ast_like(cte_body)) {
+      return;
+    }
+
+    EXTRACT_STRING(cte_name, cte_decl->left);
+
+    if (!Strcasecmp(cte_name, info->actual)) {
+      bprintf(info->err, "Procedure '%s' has a different CTE that is also named '%s'\n", info->proc, info->actual);
+      bprintf(info->err, "The above originated from CALL %s USING %s AS %s\n", info->proc, info->actual, info->formal);
+      return;
+    }
+  }
+
+  if (is_ast_cte_binding(node)) {
+    EXTRACT_STRING(actual, node->left);
+    EXTRACT_STRING(formal, node->right);
+
+    // if we are forwarding the table parameter then we have to analyze what's under us.
+    // for this analysis we don't use the formal name since that name is itself replaced
+    if (!Strcasecmp(info->formal, actual)) {
+      binding_info new;
+      new.err = info->err;
+      new.proc = info->proc_calling;
+      new.proc_calling = NULL;
+      new.actual = info->actual;
+      new.formal = formal;
+
+      ast_node *proc_ast = find_proc(new.proc);
+      Invariant(proc_ast);
+
+      sem_check_bound_cte_name_conflict(proc_ast, &new);
+
+      if (info->err->used > 1) {
+         bprintf(info->err, "The above originated from CALL %s USING %s AS %s\n", info->proc, info->actual, info->formal);
+      }
+    }
+
+    // nothing underneath a cte_binding anyway, so either it's an error or we're done, either way.
+    return;
+  }
+
+  // declare the new info in case we need it
+  // this has to be outside of the test below so it survives that block
+  binding_info new_info;
+
+  // if we're on a shared CTE usage, then we recurse into the CALL
+  if (is_ast_shared_cte(node)) {
+    EXTRACT_NOTNULL(call_stmt, node->left);
+    EXTRACT(cte_binding_list, node->right);
+
+    EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+    EXTRACT_STRING(name, name_ast);
+
+    new_info = *info;
+    new_info.proc_calling = name;
+
+    // we're going to recurse with the new info, the calling target is populated now
+    info = &new_info;
+  }
+
+  // Recurse left and right if there are nodes and no errors already
+
+  if (info->err->used == 1 && ast_has_left(node)) {
+    sem_check_bound_cte_name_conflict(node->left, info);
+  }
+
+  if (info->err->used == 1 && ast_has_right(node)) {
+    sem_check_bound_cte_name_conflict(node->right, info);
+  }
+}
+
 // Here we ensure that the table binding for any given shared CTE is correct
 // This means that the number of table args has to match and the provided names
 // have to exist and be compatible with the table parameters. There can be no
@@ -10390,6 +10510,8 @@ static void sem_shared_fragment_table_binding(
   Contract(is_ast_call_stmt(call_stmt));
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
   Contract(is_ast_cte_binding_list(cte_binding_list));
+
+  CHARBUF_OPEN(tmp);
 
   // the procedure exists, and it is not in an error state (already checked)
   Contract(!is_error(create_proc_stmt));
@@ -10551,7 +10673,55 @@ static void sem_shared_fragment_table_binding(
     }
   }
 
+  for (item = cte_binding_list ; item; item = item->right) {
+    EXTRACT_NOTNULL(cte_binding, item->left);
+    EXTRACT_STRING(actual, cte_binding->left);
+    EXTRACT_STRING(formal, cte_binding->right);
+
+    binding_info bind_info;
+    bind_info.err = &tmp;
+    bind_info.proc = proc_name;
+    bind_info.proc_calling = NULL;
+    bind_info.actual = actual;
+    bind_info.formal = formal;
+
+    ast_node *cte_decl = find_cte(actual);
+
+    // if the actual name is not a cte (i.e. it's a global) then it can't conflict
+    // because any CTE in our subtree is not allowed to conflict with any global name
+    if (!cte_decl) {
+      continue;
+    }
+
+    EXTRACT_NOTNULL(cte_table, cte_decl->parent);
+    EXTRACT_ANY_NOTNULL(cte_body, cte_table->right);
+
+    // If this CTE declares a table parameter then this binding  will be checked when we invoke this
+    // shared fragment and an actual value is provided.  It would be meaningless to check if the name of the
+    // formal causes a conflict, that name won't be used unless the actual happens to match
+    // the formal.  In any case it is the actual parameter that matters.  We have to be in a shared fragment
+    // or the like form would be illegal in the first place and we wouldn't be here.
+    if (is_ast_like(cte_body)) {
+      continue;
+    }
+
+    sem_check_bound_cte_name_conflict(create_proc_stmt, &bind_info);
+
+    if (tmp.used > 1) {
+      CSTR err_msg =
+        dup_printf("CQL0444: this use of the named shared fragment is not legal because of a name conflict '%s'\n%s",
+          proc_name,
+          tmp.ptr);
+      report_error(cte_binding, err_msg, NULL);
+      record_error(call_stmt);
+      goto cleanup;
+    }
+  }
+
+
 cleanup:
+  CHARBUF_CLOSE(tmp);
+
   if (cols) {
     symtab_delete(cols);
   }
@@ -21513,3 +21683,4 @@ cql_data_defn( bytebuf *recreate_annotations );
 
 // any table or group can have an action
 cql_data_defn( symtab *ad_hoc_recreate_actions );
+

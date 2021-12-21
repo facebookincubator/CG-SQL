@@ -19918,3 +19918,126 @@ begin
   with D(*) AS (call conditional_frag(1) using foo as source, foo as source2)
   select * from D;
 end;
+
+-- TEST: base fragment that uses possible_conflict, this will later cause conflicts
+-- no issues with just this
+-- - error:
+@attribute(cql:shared_fragment)
+create proc fragtest_0_0()
+begin
+ with
+   source(*) like (select 1 x),
+   possible_conflict(*) as (select * from source)
+ select * from possible_conflict;
+end;
+
+-- TEST: base fragment that uses inner frag 0, this will later cause conflicts
+-- no issues with just this
+-- - error:
+@attribute(cql:shared_fragment)
+create proc fragtest_0_1()
+begin
+ with
+   source(*) like (select 1 x),
+   (call fragtest_0_0() using source as source)
+ select * from fragtest_0_0;
+end;
+
+-- TEST: base fragment that uses inner frag 1, this will later cause conflicts
+-- no issues with just this
+-- - error:
+@attribute(cql:shared_fragment)
+create proc fragtest_0_2()
+begin
+ with
+   source(*) like (select 1 x),
+   (call fragtest_0_1() using source as source)
+ select * from fragtest_0_1;
+end;
+
+-- TEST: try to use fragtest_0_2 with 'possible_conflict' as the source -> error
+-- this is going to fail because possible_conflict is already used deep inside this function
+-- + error: % this use of the named shared fragment is not legal because of a name conflict 'fragtest_0_2'
+-- + Procedure 'fragtest_0_0' has a different CTE that is also named 'possible_conflict'
+-- + The above originated from CALL fragtest_0_0 USING possible_conflict AS source
+-- + The above originated from CALL fragtest_0_1 USING possible_conflict AS source
+-- + The above originated from CALL fragtest_0_2 USING possible_conflict AS source
+-- +1 error:
+with possible_conflict(*) as (select 1 x)
+  select * from (call fragtest_0_2() using possible_conflict as source);
+
+-- TEST: using the same fragment with a different name is fine, even if the name matches the formal name
+-- + {with_select_stmt}: select: { x: integer notnull }
+-- - error:
+with source(*) as (select 1 x)
+  select * from (call fragtest_0_2() using source as source);
+
+-- TEST: a base fragment that is perfectly legal
+-- - error:
+@attribute(cql:shared_fragment)
+create proc fragtest_1_0()
+begin
+ with
+   source(*) like (select 1 x),
+   possible_conflict(*) as (select * from source)
+ select * from possible_conflict;
+end;
+
+-- TEST: this shared fragment includes a call that conflicts, we don't even have to use it
+-- we already know it's wrong
+-- + error: % this use of the named shared fragment is not legal because of a name conflict 'fragtest_1_0'
+-- + Procedure 'fragtest_1_0' has a different CTE that is also named 'possible_conflict'
+-- + The above originated from CALL fragtest_1_0 USING possible_conflict AS source
+-- +1 error:
+@attribute(cql:shared_fragment)
+create proc fragtest_1_1()
+begin
+ with
+   possible_conflict(*) as (select 1 x),
+   (call fragtest_1_0() using possible_conflict as source)
+ select * from fragtest_1_0;
+end;
+
+-- TEST: here 'possible_conflict' won't conflict because it is entirely local
+-- setting this up the select ahead
+-- - error:
+@attribute(cql:shared_fragment)
+create proc fragtest_2_0()
+begin
+ with
+   possible_conflict(*) as (select 1 x)
+ select * from possible_conflict;
+end;
+
+-- TEST: we're going to use a fragment with possible_conflict but it's entirely local
+-- that will not cause any issues
+-- +  {create_proc_stmt}: select: { x: integer notnull } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc fragtest_2_1()
+begin
+ with
+   source(*) like (select 1 x),
+   (call fragtest_2_0())
+ select source.x from source join fragtest_2_0;
+end;
+
+-- TEST: now we create a nested call chain, this will bring in fragtest2_0 but
+-- it will not do so in a way that creates a conflict.  possible_conflict will
+-- stop in fragtest_2_1 and that one is not ambiguous with the one in fragtest2_0
+-- + {with_select_stmt}: select: { x: integer notnull }
+-- - error:
+with possible_conflict(*) as (select 1 x)
+  select * from (call fragtest_2_1() using possible_conflict as source);
+
+-- TEST: use fragtest2_0 in such a way that the formal parameter name would conflict
+-- but it doesn't count as a conflict because it's just the formal name
+-- + {with_select_stmt}: select: { x: integer notnull }
+-- - error:
+@attribute(cql:shared_fragment)
+create proc frag_not_really_a_conflict()
+begin
+ with
+   possible_conflict(*) like (select 1 x)
+ select * from (call fragtest_1_0() using possible_conflict as source);
+end;
