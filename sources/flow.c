@@ -85,9 +85,8 @@ typedef struct flow_context {
       // within the branch group.
       flow_history branch_histories;
 
-      // The number of subcontexts (i.e., branches) created directly within the
-      // branch group.
-      uint32_t subcontext_count;
+      // The number of branches directly within the branch group.
+      uint32_t branch_count;
 
       // `true` if the branch group includes (or will include) a catch-all
       // branch (e.g., ELSE) or otherwise covers all possible cases.
@@ -386,7 +385,7 @@ cql_noexport void _flow_push_context_branch_group() {
   push_context_with_kind(FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
   current_context->branch_group.branch_histories = NULL;
-  current_context->branch_group.subcontext_count = 0;
+  current_context->branch_group.branch_count = 0;
   current_context->branch_group.covers_all_cases = false;
 }
 
@@ -402,7 +401,7 @@ cql_noexport void _flow_push_context_branch_group() {
 static void merge_effects(sem_t *type, sem_t flag, int32_t delta_sum) {
   Contract(current_context);
   Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
-  Contract(current_context->branch_group.subcontext_count > 0);
+  Contract(current_context->branch_group.branch_count > 0);
   Contract(type);
   Contract(is_single_flag(flag));
 
@@ -414,20 +413,17 @@ static void merge_effects(sem_t *type, sem_t flag, int32_t delta_sum) {
   // began set otherwise no branches could have unset it.
   Invariant(delta_sum >= 0 || *type & flag);
 
-  // `subcontext_count` is effectively the total number of branches within the
-  // current branch context, including any sort of "else" or catch-all branch,
-  // if present.
-  uint32_t subcontext_count = current_context->branch_group.subcontext_count;
+  uint32_t branch_count = current_context->branch_group.branch_count;
 
-  // If all branches set a flag, `delta_sum` will equal `subcontext_count`.
+  // If all branches set a flag, `delta_sum` will equal `branch_count`.
   // Likewise, if all branches unset it, `abs(delta_sum)` will equal
-  // `subcontext_count`.
-  Invariant(abs(delta_sum) <= subcontext_count);
+  // `branch_count`.
+  Invariant(abs(delta_sum) <= branch_count);
 
   // Indicates whether or not the branches cover all possible cases.
   bool_t covers_all_cases = current_context->branch_group.covers_all_cases;
 
-  if (covers_all_cases && delta_sum == subcontext_count) {
+  if (covers_all_cases && delta_sum == branch_count) {
     // The branches cover all possible cases and `delta_sum` is equal to the
     // number of branches (which means every branch made the same improvement),
     // so we can consider the entire branch group to have made the improvement.
@@ -439,8 +435,8 @@ static void merge_effects(sem_t *type, sem_t flag, int32_t delta_sum) {
     flow_unset_flag_for_type(flag, type);
   } else {
     // If `delta_sum` is 0, that means all branches were neutral with respect to
-    // the flag. If `delta_sum` is positive, but less than `subcontext_count`,
-    // that means some branches improved it and the rest were netural. Since all
+    // the flag. If `delta_sum` is positive, but less than `branch_count`, that
+    // means some branches improved it and the rest were netural. Since all
     // branches were at least neutral, it's safe to do nothing here and allow
     // things to remain as they are.
     //
@@ -464,6 +460,16 @@ cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_a
   Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
   current_context->branch_group.covers_all_cases = covers_all_cases;
+}
+
+// Records the presence of an empty branch within the branch group. This is
+// equivalent to calling `_flow_push_context_branch` immediately followed by
+// `_flow_pop_context_branch` and exists only for the sake of convenience.
+cql_noexport void flow_context_branch_group_add_empty_branch() {
+  Contract(current_context);
+  Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
+
+  current_context->branch_group.branch_count++;
 }
 
 // Pops the current branch group, calculating the total effect of all of its
@@ -536,9 +542,9 @@ cql_noexport void _flow_push_context_branch() {
   append_history(&branch_group_history, current_context->parent->branch_group.branch_histories);
   current_context->parent->branch_group.branch_histories = branch_group_history;
 
-  // Increment the subcontext count of the parent branch group so that it can be
+  // Increment the branch count of the parent branch group so that it can be
   // later compared against delta sums.
-  current_context->parent->branch_group.subcontext_count++;
+  current_context->parent->branch_group.branch_count++;
 }
 
 // Pop a branch context, reverting the history within it such that it will be as

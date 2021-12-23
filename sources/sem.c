@@ -12769,12 +12769,15 @@ static void sem_cond_action(ast_node *ast) {
       record_error(ast);
       return;
     }
-    // If a later branch will be taken, `expr` must be false. Add its negative
-    // improvements to the context created in `sem_if_stmt` so that all later
-    // branches will be improved by the OR-linked spine of IS NULL checks in
-    // `expr`.
-    sem_set_notnull_improvements_for_false_condition(expr);
+  } else {
+    flow_context_branch_group_add_empty_branch();
   }
+
+  // If a later branch will be taken, `expr` must be false. Add its negative
+  // improvements to the context created in `sem_if_stmt` so that all later
+  // branches will be improved by the OR-linked spine of IS NULL checks in
+  // `expr`.
+  sem_set_notnull_improvements_for_false_condition(expr);
 
   ast->sem = expr->sem;
 }
@@ -12889,6 +12892,8 @@ static void sem_if_stmt(ast_node *ast) {
         record_error(if_alt);
         goto error;
       }
+    } else {
+      flow_context_branch_group_add_empty_branch();
     }
     record_ok(elsenode);
   }

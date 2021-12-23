@@ -18941,6 +18941,8 @@ begin
 
   declare c int;
 
+  set c := 1;
+
   -- note the different behavior from LOOP and WHILE here
   proc savepoint
   begin
@@ -19075,6 +19077,86 @@ begin
   let x := a; -- nonnull
   let y := b; -- nonnull
   let z := c; -- nullable
+end;
+
+-- TEST: An empty branch in an IF or SWITCH prevents the IF or SWITCH from
+-- persisting any improvements.
+-- + {name x0}: x0: integer variable
+-- + {name x1}: x1: integer variable
+-- + {name x2}: x2: integer variable
+-- + {name x3}: x3: integer variable
+-- + {name x4}: x4: integer variable
+-- + {name x5}: x5: integer variable
+-- - error:
+create proc empty_branches_prevent_persisting_improvements()
+begin
+  declare a int;
+
+  if 0 then
+    -- empty
+  else if 0 then
+    set a := 1;
+  else
+    set a := 1;
+  end if;
+
+  let x0 := a;
+
+  if 0 then
+    set a := 1;
+  else if 0 then
+    -- empty
+  else
+    set a := 1;
+  end if;
+
+  let x1 := a;
+
+  if 0 then
+    set a := 1;
+  else if 0 then
+    set a := 1;
+  else
+    -- empty
+  end if;
+
+  let x2 := a;
+
+  switch 0
+  when 1 then
+    -- empty
+    leave;
+  when 2 then
+    set a := 1;
+  else
+    set a := 1;
+  end;
+
+  let x3 := a;
+
+  switch 0
+  when 1 then
+    set a := 1;
+  when 2 then
+    set a := 1;
+  else
+    -- empty
+    leave;
+  end;
+
+  let x4 := a;
+
+  switch three_things.zero all values
+  when three_things.zero then
+    -- empty
+    leave;
+  when three_things.one then
+    set a := 1;
+  when three_things.two then
+    set a := 1;
+  end;
+
+  let x5 := a;
 end;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse

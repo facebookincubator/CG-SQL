@@ -30,7 +30,9 @@
   _flow_pop_context_branch_group();
 
 // Pushes a branch context. This must only be used within a branch group context
-// and must be used for all branches within it.
+// and must be used for all branches within it. (For empty branches with no
+// statements, one may use `flow_context_branch_group_add_empty_branch` instead
+// of pushing and immediately popping a new branch context.)
 #define FLOW_PUSH_CONTEXT_BRANCH() \
   void *flow_context_branch; \
   _flow_push_context_branch();
@@ -68,6 +70,11 @@ cql_noexport void flow_unset_flag_for_type(sem_t flag, sem_t *type);
 // called while the current flow context is a branch group context. If this is
 // not called, it will be assumed that all cases are not covered.
 cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_all_cases);
+
+// Adds an empty branch to the current branch group context. It is equivalent to
+// `FLOW_PUSH_CONTEXT_BRANCH` immediately followed by `FLOW_POP_CONTEXT_BRANCH`
+// and exists only for the sake of convenience.
+cql_noexport void flow_context_branch_group_add_empty_branch();
 
 cql_noexport void _flow_push_context_normal();
 cql_noexport void _flow_pop_context_normal();

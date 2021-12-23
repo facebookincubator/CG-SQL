@@ -74653,6 +74653,7 @@ BEGIN
   LET x4 := a;
   LET y4 := b;
   DECLARE c INTEGER;
+  SET c := 1;
   PROC SAVEPOINT
   BEGIN
     IF 0 THEN
@@ -74852,6 +74853,9 @@ END;
       | | {name_list}: c: integer variable
       | | | {name c}: c: integer variable
       | | {type_int}: integer
+      | {assign}: c: integer variable
+      | | {name c}: c: integer variable
+      | | {int 1}: integer notnull
       | {proc_savepoint_stmt}: ok
       | | {stmt_list}: ok
       |   | {if_stmt}: integer notnull
@@ -75206,6 +75210,210 @@ END;
       | {let_stmt}: z: integer variable
         | {name z}: z: integer variable
         | {name c}: c: integer variable
+
+The statement ending at line XXXX
+
+CREATE PROC empty_branches_prevent_persisting_improvements ()
+BEGIN
+  DECLARE a INTEGER;
+  IF 0 THEN
+  ELSE IF 0 THEN
+    SET a := 1;
+  ELSE
+    SET a := 1;
+  END IF;
+  LET x0 := a;
+  IF 0 THEN
+    SET a := 1;
+  ELSE IF 0 THEN
+  ELSE
+    SET a := 1;
+  END IF;
+  LET x1 := a;
+  IF 0 THEN
+    SET a := 1;
+  ELSE IF 0 THEN
+    SET a := 1;
+  ELSE
+  END IF;
+  LET x2 := a;
+  SWITCH 0
+    WHEN 1 THEN
+      LEAVE;
+    WHEN 2 THEN
+      SET a := 1;
+    ELSE
+      SET a := 1;
+  END;
+  LET x3 := a;
+  SWITCH 0
+    WHEN 1 THEN
+      SET a := 1;
+    WHEN 2 THEN
+      SET a := 1;
+    ELSE
+      LEAVE;
+  END;
+  LET x4 := a;
+  SWITCH 0 ALL VALUES
+    WHEN 0 THEN
+      LEAVE;
+    WHEN 1 THEN
+      SET a := 1;
+    WHEN 2 THEN
+      SET a := 1;
+  END;
+  LET x5 := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name empty_branches_prevent_persisting_improvements}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: a: integer variable
+      | | | {name a}: a: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: integer notnull
+      |   | | {cond_action}: integer notnull
+      |   |   | {int 0}: integer notnull
+      |   |   | {stmt_list}: ok
+      |   |     | {assign}: a: integer variable
+      |   |       | {name a}: a: integer variable
+      |   |       | {int 1}: integer notnull
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {assign}: a: integer variable
+      |         | {name a}: a: integer variable
+      |         | {int 1}: integer notnull
+      | {let_stmt}: x0: integer variable
+      | | {name x0}: x0: integer variable
+      | | {name a}: a: integer variable
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable
+      | |     | {name a}: a: integer variable
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: integer notnull
+      |   | | {cond_action}: integer notnull
+      |   |   | {int 0}: integer notnull
+      |   | {else}: ok
+      |     | {stmt_list}: ok
+      |       | {assign}: a: integer variable
+      |         | {name a}: a: integer variable
+      |         | {int 1}: integer notnull
+      | {let_stmt}: x1: integer variable
+      | | {name x1}: x1: integer variable
+      | | {name a}: a: integer variable
+      | {if_stmt}: integer notnull
+      | | {cond_action}: integer notnull
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: ok
+      | |   | {assign}: a: integer variable
+      | |     | {name a}: a: integer variable
+      | |     | {int 1}: integer notnull
+      | | {if_alt}: ok
+      |   | {elseif}: integer notnull
+      |   | | {cond_action}: integer notnull
+      |   |   | {int 0}: integer notnull
+      |   |   | {stmt_list}: ok
+      |   |     | {assign}: a: integer variable
+      |   |       | {name a}: a: integer variable
+      |   |       | {int 1}: integer notnull
+      |   | {else}: ok
+      | {let_stmt}: x2: integer variable
+      | | {name x2}: x2: integer variable
+      | | {name a}: a: integer variable
+      | {switch_stmt}: ok
+      | | {int 0}
+      | | {switch_body}
+      |   | {int 0}: integer notnull
+      |   | {switch_case}: ok
+      |     | {connector}
+      |     | | {expr_list}: ok
+      |     | | | {int 1}: integer notnull
+      |     | | {stmt_list}: ok
+      |     |   | {leave_stmt}: ok
+      |     | {switch_case}
+      |       | {connector}
+      |       | | {expr_list}: ok
+      |       | | | {int 2}: integer notnull
+      |       | | {stmt_list}: ok
+      |       |   | {assign}: a: integer variable
+      |       |     | {name a}: a: integer variable
+      |       |     | {int 1}: integer notnull
+      |       | {switch_case}
+      |         | {connector}
+      |           | {stmt_list}: ok
+      |             | {assign}: a: integer variable
+      |               | {name a}: a: integer variable
+      |               | {int 1}: integer notnull
+      | {let_stmt}: x3: integer variable
+      | | {name x3}: x3: integer variable
+      | | {name a}: a: integer variable
+      | {switch_stmt}: ok
+      | | {int 0}
+      | | {switch_body}
+      |   | {int 0}: integer notnull
+      |   | {switch_case}: ok
+      |     | {connector}
+      |     | | {expr_list}: ok
+      |     | | | {int 1}: integer notnull
+      |     | | {stmt_list}: ok
+      |     |   | {assign}: a: integer variable
+      |     |     | {name a}: a: integer variable
+      |     |     | {int 1}: integer notnull
+      |     | {switch_case}
+      |       | {connector}
+      |       | | {expr_list}: ok
+      |       | | | {int 2}: integer notnull
+      |       | | {stmt_list}: ok
+      |       |   | {assign}: a: integer variable
+      |       |     | {name a}: a: integer variable
+      |       |     | {int 1}: integer notnull
+      |       | {switch_case}
+      |         | {connector}
+      |           | {stmt_list}: ok
+      |             | {leave_stmt}: ok
+      | {let_stmt}: x4: integer variable
+      | | {name x4}: x4: integer variable
+      | | {name a}: a: integer variable
+      | {switch_stmt}: ok
+      | | {int 1}
+      | | {switch_body}
+      |   | {int 0}: integer<three_things> notnull
+      |   | {switch_case}: ok
+      |     | {connector}
+      |     | | {expr_list}: ok
+      |     | | | {int 0}: integer<three_things> notnull
+      |     | | {stmt_list}: ok
+      |     |   | {leave_stmt}: ok
+      |     | {switch_case}
+      |       | {connector}
+      |       | | {expr_list}: ok
+      |       | | | {int 1}: integer<three_things> notnull
+      |       | | {stmt_list}: ok
+      |       |   | {assign}: a: integer variable
+      |       |     | {name a}: a: integer variable
+      |       |     | {int 1}: integer notnull
+      |       | {switch_case}
+      |         | {connector}
+      |           | {expr_list}: ok
+      |           | | {int 2}: integer<three_things> notnull
+      |           | {stmt_list}: ok
+      |             | {assign}: a: integer variable
+      |               | {name a}: a: integer variable
+      |               | {int 1}: integer notnull
+      | {let_stmt}: x5: integer variable
+        | {name x5}: x5: integer variable
+        | {name a}: a: integer variable
 
 The statement ending at line XXXX
 

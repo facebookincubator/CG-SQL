@@ -48,6 +48,12 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --rt json_schema
   produces JSON output suitable for consumption by downstream codegen tools
   requires one output file (foo.json)
+--rt query_plan
+  produces a set of helper procedures that create a query plan for every DML statement in the input
+  requires one output file (foo_queryplans.sql)
+--rt udf
+  generates stub implementations of all UDFs needed in the input, for use with --rt query_plan
+  requires two output files (udfs.h, udfs.c)
 
 --include_regions a b c
   the indicated regions will be declared;
@@ -81,6 +87,7 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --generate_exports
   requires another output file to --cg; it contains the procedure declarations for the input
   used with --rt c
---generate_type_getters  emits rowset accessors using shared type getters instead of individual functions
+--generate_type_getters
+  emits rowset accessors using shared type getters instead of individual functions
   this makes them more interoperable if they share columns
   used with --rt c
