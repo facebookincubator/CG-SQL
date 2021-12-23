@@ -20155,3 +20155,12 @@ begin
    possible_conflict(*) like (select 1 x)
  select * from (call fragtest_1_0() using possible_conflict as source);
 end;
+
+-- TEST: test doc comments being rewritten as attributes
+-- + @ATTRIBUTE(cql:doc_comment="/** This is a doc comment */")
+-- + CREATE PROC doc_comment_proc ()
+-- - error:
+/** This is a doc comment */
+create proc doc_comment_proc()
+begin
+end;

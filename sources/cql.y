@@ -76,6 +76,7 @@ static ast_node *file_literal(ast_node *);
 static void cql_exit_on_parse_errors();
 static void parse_cleanup();
 static void cql_usage();
+static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
@@ -376,7 +377,7 @@ stmt_list[result]:
   ;
 
 stmt:
-  misc_attrs any_stmt  { $stmt = $misc_attrs ? new_ast_stmt_and_attr($misc_attrs, $any_stmt) : $any_stmt; }
+  misc_attrs any_stmt  { $stmt = make_statement_node($misc_attrs, $any_stmt); }
   ;
 
 any_stmt:
@@ -2590,4 +2591,30 @@ static void cql_usage() {
     "  this makes them more interoperable if they share columns\n"
     "  used with --rt c\n"
     );
+}
+
+static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt)
+{
+  // This is the equivalent of:
+  //
+  // misc_attrs any_stmt  { $stmt = $misc_attrs ? new_ast_stmt_and_attr($misc_attrs, $any_stmt) : $any_stmt; }
+
+  // Add the most recent doc comment (if any) to any table/view/proc
+  if (is_ast_create_proc_stmt(any_stmt) ||
+      is_ast_create_view_stmt(any_stmt) ||
+      is_ast_create_table_stmt(any_stmt)) {
+    CSTR comment = get_last_doc_comment();
+    if (comment) {
+       ast_node *misc_attr_key = new_ast_dot(new_ast_str("cql"), new_ast_str("doc_comment"));
+       ast_node *misc_attr = new_ast_misc_attr(misc_attr_key, new_ast_str(comment));
+       misc_attrs = new_ast_misc_attrs(misc_attr, misc_attrs);
+    }
+  }
+
+  if (misc_attrs) {
+     return new_ast_stmt_and_attr(misc_attrs, any_stmt);
+  }
+  else {
+     return any_stmt;
+  }
 }

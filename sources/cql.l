@@ -15,15 +15,26 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <cql.h>
+#include <charbuf.h>
+#include <encoders.h>
 
 void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
 int fileno(FILE *);
+static CSTR last_doc_comment = NULL;
 
 // the lexer has unused functions and implicit conversions, not easily removed
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wconversion"
+
+cql_noexport CSTR get_last_doc_comment() {
+  CSTR result = last_doc_comment;
+  last_doc_comment = NULL;
+  return result;
+}
+
 %}
 
 stop [^A-Z_0-9]
@@ -278,11 +289,28 @@ X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
 ^\ *#line\ {d}+\ \"[^"]*\".* { line_directive(yytext); }
 
 "/*"                         { // sqlite supports C style comments... ignore those
+                               CHARBUF_OPEN(tmp);
                                int c1 = 0, c2 = input();
+                               bool_t save_comment = false;
+                               if (c2 == '!' || c2 == '*') {
+                                 save_comment = true;
+                                 bputc(&tmp, '/');
+                                 bputc(&tmp, '*');
+                               }
                                for (;;) {
                                  if (c2 == EOF) break;
+                                 if (save_comment) {
+                                   bputc(&tmp, c2);
+                                 }
                                  if (c1 == '*' && c2 == '/') break;
                                  c1 = c2;
                                  c2 = input();
                                }
+                               if (save_comment) {
+                                 CHARBUF_OPEN(strlit);
+                                 cg_encode_c_string_literal(tmp.ptr, &strlit);
+                                 last_doc_comment = Strdup(strlit.ptr);
+                                 CHARBUF_CLOSE(strlit);
+                               }
+                               CHARBUF_CLOSE(tmp);
                              }

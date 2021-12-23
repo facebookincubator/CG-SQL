@@ -616,3 +616,5 @@ cql_export void cql_emit_error(const char *err);
 cql_export void cql_emit_output(const char *out);
 
 cql_data_decl( char *current_file );
+
+cql_noexport CSTR get_last_doc_comment();

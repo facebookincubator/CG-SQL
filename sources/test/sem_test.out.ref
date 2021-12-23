@@ -79916,3 +79916,21 @@ END;
               | {select_limit}
                 | {select_offset}
 
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:doc_comment="/** This is a doc comment */")
+CREATE PROC doc_comment_proc ()
+BEGIN
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name doc_comment}
+  |   | {name "/** This is a doc comment */"}: ok
+  | {create_proc_stmt}: ok
+    | {name doc_comment_proc}: ok
+    | {proc_params_stmts}
+
