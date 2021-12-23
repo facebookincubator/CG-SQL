@@ -76,6 +76,18 @@ cql_noexport void flow_set_context_branch_group_covers_all_cases(bool_t covers_a
 // and exists only for the sake of convenience.
 cql_noexport void flow_context_branch_group_add_empty_branch();
 
+// Records the fact that the current context *always* jumps until the end of the
+// nearest enclosing jump context (if any) or any statement thereafter. If this
+// is called when no jump context is in effect, it is assumed that the jump is
+// to a statement beyond all current contexts (as is the case with a RETURN, or
+// with a THROW with no enclosing TRY block).
+//
+// This function can be used in any context, but it only has an effect when the
+// current context is a branch context. When the current context is a branch
+// context, recording the fact that the branch always jumps may allow additional
+// improvements to persist after the end of the enclosing branch group.
+cql_noexport void flow_set_context_always_jumps(bool_t always_jumps);
+
 cql_noexport void _flow_push_context_normal();
 cql_noexport void _flow_pop_context_normal();
 cql_noexport void _flow_push_context_branch_group();

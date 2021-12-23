@@ -19726,6 +19726,10 @@ cql_noexport void sem_one_stmt(ast_node *stmt) {
     error_capture = NULL;
   }
 
+  if (is_control_stmt(stmt)) {
+    flow_set_context_always_jumps(true);
+  }
+
   CHARBUF_CLOSE(errbuf);
 }
 

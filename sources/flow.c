@@ -79,6 +79,13 @@ typedef struct flow_context {
   flow_history history;
 
   union {
+    // Only used when `kind` is `FLOW_CONTEXT_KIND_BRANCH`.
+    struct {
+      // `true` when the branch always jumps to the end of an enclosing jump
+      // context or some statement beyond it.
+      bool_t always_jumps;
+    } branch;
+
     // Only used when `kind` is `FLOW_CONTEXT_KIND_BRANCH_GROUP`.
     struct {
       // The concatenated histories of all of the branches created directly
@@ -514,6 +521,8 @@ cql_noexport void _flow_push_context_branch() {
 
   push_context_with_kind(FLOW_CONTEXT_KIND_BRANCH);
 
+  current_context->branch.always_jumps = false;
+
   // Clone the current history of (typically negative) improvements within the
   // branch group itself and add it to the accumulated history of its branches.
   // The reason we do this is so that we can calculate the correct delta sum
@@ -547,6 +556,20 @@ cql_noexport void _flow_push_context_branch() {
   current_context->parent->branch_group.branch_count++;
 }
 
+// Sets whether or not the current context always jumps to the end of the
+// nearest enclosing jump context or some statement beyond it.
+cql_noexport void flow_set_context_always_jumps(bool_t always_jumps) {
+  Contract(current_context);
+
+  if (current_context->kind != FLOW_CONTEXT_KIND_BRANCH) {
+    // Knowledge that the current context always jumps is only useful if the
+    // current context is a branch context.
+    return;
+  } 
+
+  current_context->branch.always_jumps = always_jumps;
+}
+
 // Pop a branch context, reverting the history within it such that it will be as
 // though nothing ever happened.
 cql_noexport void _flow_pop_context_branch() {
@@ -571,10 +594,55 @@ cql_noexport void _flow_pop_context_branch() {
     }
   }
 
-  // Add the history of the branch to the total set of branch histories for the
-  // current branch group.
-  append_history(&current_context->history, current_context->parent->branch_group.branch_histories);
-  current_context->parent->branch_group.branch_histories = current_context->history;
+  if (current_context->branch.always_jumps) {
+    // Since the current context always jumps, we actually do not want to count
+    // it as a branch at all when merging effects. By simply eliding the branch,
+    // an improvement that is merely set in all branches that do not always jump
+    // is sufficient for the improvement to persist after the branch group ends
+    // (assuming the branches cover all possible cases).
+    //
+    // By discarding the branch, we technically do a bit worse in one case: If
+    // *all* branches always jump and the branches cover all possibilities, no
+    // improvements will persist after the branch group ends because all
+    // branches will have been elided. This is not a problem in practice,
+    // however, since if all branches jump and the branches cover all cases, no
+    // code could execute until after the end of the nearest enclosing jump
+    // context, and no improvements set within a jump context are allowed to
+    // persist beyond it anyway.
+    //
+    // NOTE: Discarding the branch now is not the same as the branch never
+    // having existed. The reason for this is that any improvements unset within
+    // the branch have already been added to the nearest enclosing jump context
+    // and will remain there to be re-unset later. This must be the case
+    // because, even though we know this context always jumps, we do not know at
+    // what point it might jump, and so we must remain sufficiently pessimistic.
+    //
+    // NOTE: We could do better by keeping a separate count of the number of
+    // branches that always jump. If we did that, when popping a branch group,
+    // if the number of branches that always jumped equaled the total number of
+    // branches, then the branch group could itself be considered to always jump
+    // and we could propagate that knowledge upwards. This would allow us to
+    // handle cases like the following:
+    //
+    //   DECLARE x INT;
+    //   IF 0 THEN
+    //     IF 0 THEN
+    //       THROW;
+    //     ELSE
+    //       RETURN;
+    //     END IF;
+    //     -- the fact that this always jumps is presently not understood
+    //   ELSE
+    //     SET x := 1;
+    //   END IF;
+    //   -- x could be safely considered nonnull here
+    current_context->parent->branch_group.branch_count--;
+  } else {
+    // Add the history of the branch to the total set of branch histories for
+    // the current branch group.
+    append_history(&current_context->history, current_context->parent->branch_group.branch_histories);
+    current_context->parent->branch_group.branch_histories = current_context->history;
+  }
 
   current_context = current_context->parent;
 }

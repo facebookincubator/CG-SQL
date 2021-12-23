@@ -19079,14 +19079,11 @@ begin
   let z := c; -- nullable
 end;
 
--- TEST: An empty branch in an IF or SWITCH prevents the IF or SWITCH from
--- persisting any improvements.
+-- TEST: An empty branch in an IF prevents the IF from persisting any
+-- improvements.
 -- + {name x0}: x0: integer variable
 -- + {name x1}: x1: integer variable
 -- + {name x2}: x2: integer variable
--- + {name x3}: x3: integer variable
--- + {name x4}: x4: integer variable
--- + {name x5}: x5: integer variable
 -- - error:
 create proc empty_branches_prevent_persisting_improvements()
 begin
@@ -19121,42 +19118,77 @@ begin
   end if;
 
   let x2 := a;
+end;
 
-  switch 0
-  when 1 then
-    -- empty
-    leave;
-  when 2 then
+-- TEST: Improvements take control statements into account in order to allow
+-- additional improvements to persist.
+-- + {name x0}: x0: integer notnull variable
+-- + {name x1}: x1: integer notnull variable
+-- + {name x2}: x2: integer variable
+-- + {name x3}: x3: integer variable
+-- - error:
+create proc improvements_account_for_control_statements()
+begin
+  declare a int;
+
+  -- basic case
+  if 0 then
     set a := 1;
   else
-    set a := 1;
+    throw;
+  end if;
+
+  let x0 := a; -- nonnull
+
+  set a := null;
+
+  -- complex case
+  while 0
+  begin
+    if 0 then
+      if 0 then
+        set a := null;
+        set a := 1;
+      else if 0 then
+        throw;
+      else if 0 then
+        return;
+      else
+        set a := 1;
+      end if;
+    else if 0 then
+      leave;
+    else if 0 then
+      if 0 then
+        continue;
+      else
+        set a := null;
+        set a := null;
+        set a := 1;
+      end if;
+    else
+      set a := null;
+      continue;
+    end if;
+
+    let x1 := a; -- nonnull as all non-improving paths jump beyond the loop
   end;
 
-  let x3 := a;
+  let x2 := a; -- nullable as the loop may have never run
 
-  switch 0
-  when 1 then
-    set a := 1;
-  when 2 then
-    set a := 1;
+  -- we-could-do-better-here case
+  if 0 then
+    if 0 then
+      throw; -- jumps
+    else
+      return; -- also jumps
+    end if;
+    -- this context is not yet considered to always jump, but it does
   else
-    -- empty
-    leave;
-  end;
-
-  let x4 := a;
-
-  switch three_things.zero all values
-  when three_things.zero then
-    -- empty
-    leave;
-  when three_things.one then
     set a := 1;
-  when three_things.two then
-    set a := 1;
-  end;
+  end if;
 
-  let x5 := a;
+  let x3 := a; -- nullable for now, but this may change in the future
 end;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
