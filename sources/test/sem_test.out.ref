@@ -8911,7 +8911,7 @@ The statement ending at line XXXX
 
 CALL proc_with_output(1, 2, X);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for out argument 'arg2'
+test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for OUT or INOUT argument 'arg2'
 
   {call_stmt}: err
   | {name proc_with_output}: ok
@@ -8926,7 +8926,7 @@ The statement ending at line XXXX
 
 CALL proc_with_output(1, X, 3);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for out argument 'arg3'
+test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for OUT or INOUT argument 'arg3'
 
   {call_stmt}: err
   | {name proc_with_output}: ok
@@ -9070,7 +9070,7 @@ BEGIN
   CALL test_proc3(c);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0207: expected a variable name for out argument 'arg1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0207: expected a variable name for OUT or INOUT argument 'arg1'
 
   {create_proc_stmt}: err
   | {name cursors_cannot_be_used_as_out_args}: err
@@ -9106,7 +9106,7 @@ BEGIN
   CALL test_proc3(-1);
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0207: expected a variable name for out argument 'arg1'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0207: expected a variable name for OUT or INOUT argument 'arg1'
 
   {create_proc_stmt}: err
   | {name enum_cases_cannot_be_used_as_out_args}: err
@@ -15295,14 +15295,16 @@ LET sens_one := sensitive(1);
 
 The statement ending at line XXXX
 
-DECLARE sens_notnull TEXT NOT NULL @SENSITIVE;
+LET sens_notnull := sensitive("some text");
 
-  {declare_vars_type}: text notnull sensitive
-  | {name_list}: sens_notnull: text notnull variable sensitive
-  | | {name sens_notnull}: sens_notnull: text notnull variable sensitive
-  | {sensitive_attr}: text notnull sensitive
-    | {notnull}: text notnull
-      | {type_text}: text
+  {let_stmt}: sens_notnull: text notnull variable sensitive
+  | {name sens_notnull}: sens_notnull: text notnull variable sensitive
+  | {call}: text notnull sensitive
+    | {name sensitive}: text notnull sensitive
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'some text'}: text notnull
 
 The statement ending at line XXXX
 
@@ -22732,8 +22734,8 @@ The statement ending at line XXXX
 DECLARE not_null_object OBJECT NOT NULL;
 
   {declare_vars_type}: object notnull
-  | {name_list}: not_null_object: object notnull variable
-  | | {name not_null_object}: not_null_object: object notnull variable
+  | {name_list}: not_null_object: object notnull variable init_required
+  | | {name not_null_object}: not_null_object: object notnull variable init_required
   | {notnull}: object notnull
     | {type_object}: object
 
@@ -22741,8 +22743,8 @@ The statement ending at line XXXX
 
 SET not_null_object := ifnull_crash(obj_var);
 
-  {assign}: not_null_object: object notnull variable
-  | {name not_null_object}: not_null_object: object notnull variable
+  {assign}: not_null_object: object notnull variable init_required
+  | {name not_null_object}: not_null_object: object notnull variable init_required
   | {call}: obj_var: object notnull variable
     | {name ifnull_crash}: obj_var: object notnull variable
     | {call_arg_list}
@@ -22754,8 +22756,8 @@ The statement ending at line XXXX
 
 SET not_null_object := ifnull_crash(obj_var);
 
-  {assign}: not_null_object: object notnull variable
-  | {name not_null_object}: not_null_object: object notnull variable
+  {assign}: not_null_object: object notnull variable init_required
+  | {name not_null_object}: not_null_object: object notnull variable init_required
   | {call}: obj_var: object notnull variable
     | {name ifnull_crash}: obj_var: object notnull variable
     | {call_arg_list}
@@ -22767,8 +22769,8 @@ The statement ending at line XXXX
 
 SET not_null_object := ifnull_throw(obj_var);
 
-  {assign}: not_null_object: object notnull variable
-  | {name not_null_object}: not_null_object: object notnull variable
+  {assign}: not_null_object: object notnull variable init_required
+  | {name not_null_object}: not_null_object: object notnull variable init_required
   | {call}: obj_var: object notnull variable
     | {name ifnull_throw}: obj_var: object notnull variable
     | {call_arg_list}
@@ -22811,7 +22813,7 @@ SET not_null_object := ifnull_crash(not_null_object);
 test/sem_test.sql:XXXX:1: error: in str : CQL0344: argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
 
   {assign}: err
-  | {name not_null_object}: not_null_object: object notnull variable
+  | {name not_null_object}: not_null_object: object notnull variable init_required
   | {call}: err
     | {name ifnull_crash}
     | {call_arg_list}
@@ -22826,7 +22828,7 @@ SET not_null_object := ifnull_crash(NULL);
 test/sem_test.sql:XXXX:1: error: in null : CQL0344: argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
 
   {assign}: err
-  | {name not_null_object}: not_null_object: object notnull variable
+  | {name not_null_object}: not_null_object: object notnull variable init_required
   | {call}: err
     | {name ifnull_crash}
     | {call_arg_list}
@@ -22841,7 +22843,7 @@ SET not_null_object := ifnull_crash(1, 7);
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'ifnull_crash'
 
   {assign}: err
-  | {name not_null_object}: not_null_object: object notnull variable
+  | {name not_null_object}: not_null_object: object notnull variable init_required
   | {call}: err
     | {name ifnull_crash}: err
     | {call_arg_list}
@@ -22858,7 +22860,7 @@ SET not_null_object := ( SELECT ifnull_crash(1) );
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'ifnull_crash'
 
   {assign}: err
-  | {name not_null_object}: not_null_object: object notnull variable
+  | {name not_null_object}: not_null_object: object notnull variable init_required
   | {select_stmt}: err
     | {select_core_list}: err
     | | {select_core}: err
@@ -63551,8 +63553,8 @@ The statement ending at line XXXX
 DECLARE adding_notnull TEXT @SENSITIVE NOT NULL;
 
   {declare_vars_type}: text notnull sensitive
-  | {name_list}: adding_notnull: text notnull variable sensitive
-  | | {name adding_notnull}: adding_notnull: text notnull variable sensitive
+  | {name_list}: adding_notnull: text notnull variable init_required sensitive
+  | | {name adding_notnull}: adding_notnull: text notnull variable init_required sensitive
   | {notnull}: text notnull sensitive
     | {sensitive_attr}: text sensitive
       | {type_text}: text
@@ -63599,8 +63601,8 @@ The statement ending at line XXXX
 DECLARE nn_var_sens TEXT NOT NULL @SENSITIVE;
 
   {declare_vars_type}: text notnull sensitive
-  | {name_list}: nn_var_sens: text notnull variable sensitive
-  | | {name nn_var_sens}: nn_var_sens: text notnull variable sensitive
+  | {name_list}: nn_var_sens: text notnull variable init_required sensitive
+  | | {name nn_var_sens}: nn_var_sens: text notnull variable init_required sensitive
   | {sensitive_attr}: text notnull sensitive
     | {notnull}: text notnull
       | {type_text}: text
@@ -68598,7 +68600,7 @@ BEGIN
   DECLARE OUT CALL out2_proc(x, 1 + 3, v);
 END;
 
-test/sem_test.sql:XXXX:1: error: in add : CQL0207: expected a variable name for out argument 'y'
+test/sem_test.sql:XXXX:1: error: in add : CQL0207: expected a variable name for OUT or INOUT argument 'y'
 
   {create_proc_stmt}: err
   | {name out_decl_test_2}: err
@@ -69058,10 +69060,10 @@ DECLARE PROC proc_as_func (IN transport_key_ TEXT, OUT code_ TEXT NOT NULL @SENS
       |   | {name transport_key_}: transport_key_: text variable in
       |   | {type_text}: text
       | {params}
-        | {param}: code_: text notnull variable out sensitive
+        | {param}: code_: text notnull variable init_required out sensitive
           | {out}
-          | {param_detail}: code_: text notnull variable out sensitive
-            | {name code_}: code_: text notnull variable out sensitive
+          | {param_detail}: code_: text notnull variable init_required out sensitive
+            | {name code_}: code_: text notnull variable init_required out sensitive
             | {sensitive_attr}: text notnull sensitive
               | {notnull}: text notnull
                 | {type_text}: text
@@ -75488,6 +75490,870 @@ END;
       | {let_stmt}: x3: integer variable
         | {name x3}: x3: integer variable
         | {name a}: a: integer variable
+
+The statement ending at line XXXX
+
+DECLARE PROC requires_inout_text_notnull (INOUT t TEXT NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name requires_inout_text_notnull}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: t: text notnull variable in out
+        | {inout}
+        | {param_detail}: t: text notnull variable in out
+          | {name t}: t: text notnull variable in out
+          | {notnull}: text notnull
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE PROC requires_inout_blob_notnull (INOUT t BLOB NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name requires_inout_blob_notnull}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: t: blob notnull variable in out
+        | {inout}
+        | {param_detail}: t: blob notnull variable in out
+          | {name t}: t: blob notnull variable in out
+          | {notnull}: blob notnull
+            | {type_blob}: blob
+
+The statement ending at line XXXX
+
+DECLARE PROC requires_inout_object_notnull (INOUT t OBJECT NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name requires_inout_object_notnull}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: t: object notnull variable in out
+        | {inout}
+        | {param_detail}: t: object notnull variable in out
+          | {name t}: t: object notnull variable in out
+          | {notnull}: object notnull
+            | {type_object}: object
+
+The statement ending at line XXXX
+
+CREATE PROC initialization_is_required_for_nonnull_reference_types ()
+BEGIN
+  DECLARE a TEXT NOT NULL;
+  DECLARE b BLOB NOT NULL;
+  DECLARE c OBJECT NOT NULL;
+  LET dummy := a;
+  LET dummy := b;
+  LET dummy := c;
+  CALL requires_inout_text_notnull(a);
+  CALL requires_inout_blob_notnull(b);
+  CALL requires_inout_object_notnull(c);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'a'
+test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'b'
+test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'c'
+test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'a'
+test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'b'
+test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before initialization 'c'
+
+  {create_proc_stmt}: err
+  | {name initialization_is_required_for_nonnull_reference_types}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: text notnull
+      | | {name_list}: a: text notnull variable init_required
+      | | | {name a}: a: text notnull variable init_required
+      | | {notnull}: text notnull
+      |   | {type_text}: text
+      | {declare_vars_type}: blob notnull
+      | | {name_list}: b: blob notnull variable init_required
+      | | | {name b}: b: blob notnull variable init_required
+      | | {notnull}: blob notnull
+      |   | {type_blob}: blob
+      | {declare_vars_type}: object notnull
+      | | {name_list}: c: object notnull variable init_required
+      | | | {name c}: c: object notnull variable init_required
+      | | {notnull}: object notnull
+      |   | {type_object}: object
+      | {let_stmt}: err
+      | | {name dummy}
+      | | {name a}: err
+      | {let_stmt}: err
+      | | {name dummy}
+      | | {name b}: err
+      | {let_stmt}: err
+      | | {name dummy}
+      | | {name c}: err
+      | {call_stmt}: err
+      | | {name requires_inout_text_notnull}: ok
+      | | {expr_list}: ok
+      |   | {name a}: err
+      | {call_stmt}: err
+      | | {name requires_inout_blob_notnull}: ok
+      | | {expr_list}: ok
+      |   | {name b}: err
+      | {call_stmt}: err
+        | {name requires_inout_object_notnull}: ok
+        | {expr_list}: ok
+          | {name c}: err
+
+The statement ending at line XXXX
+
+CREATE PROC initialization_is_not_required_for_nullable_reference_types ()
+BEGIN
+  DECLARE a TEXT;
+  DECLARE b BLOB;
+  DECLARE c OBJECT;
+  LET x := a;
+  LET y := b;
+  LET z := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name initialization_is_not_required_for_nullable_reference_types}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text
+      | | {name_list}: a: text variable
+      | | | {name a}: a: text variable
+      | | {type_text}: text
+      | {declare_vars_type}: blob
+      | | {name_list}: b: blob variable
+      | | | {name b}: b: blob variable
+      | | {type_blob}: blob
+      | {declare_vars_type}: object
+      | | {name_list}: c: object variable
+      | | | {name c}: c: object variable
+      | | {type_object}: object
+      | {let_stmt}: x: text variable
+      | | {name x}: x: text variable
+      | | {name a}: a: text variable
+      | {let_stmt}: y: blob variable
+      | | {name y}: y: blob variable
+      | | {name b}: b: blob variable
+      | {let_stmt}: z: object variable
+        | {name z}: z: object variable
+        | {name c}: c: object variable
+
+The statement ending at line XXXX
+
+CREATE PROC initialization_is_not_required_for_non_reference_types ()
+BEGIN
+  DECLARE a BOOL NOT NULL;
+  DECLARE b INTEGER NOT NULL;
+  DECLARE c LONG_INT NOT NULL;
+  LET x := a;
+  LET y := b;
+  LET z := c;
+END;
+
+  {create_proc_stmt}: ok
+  | {name initialization_is_not_required_for_non_reference_types}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: bool notnull
+      | | {name_list}: a: bool notnull variable
+      | | | {name a}: a: bool notnull variable
+      | | {notnull}: bool notnull
+      |   | {type_bool}: bool
+      | {declare_vars_type}: integer notnull
+      | | {name_list}: b: integer notnull variable
+      | | | {name b}: b: integer notnull variable
+      | | {notnull}: integer notnull
+      |   | {type_int}: integer
+      | {declare_vars_type}: longint notnull
+      | | {name_list}: c: longint notnull variable
+      | | | {name c}: c: longint notnull variable
+      | | {notnull}: longint notnull
+      |   | {type_long}: longint
+      | {let_stmt}: x: bool notnull variable
+      | | {name x}: x: bool notnull variable
+      | | {name a}: a: bool notnull variable
+      | {let_stmt}: y: integer notnull variable
+      | | {name y}: y: integer notnull variable
+      | | {name b}: b: integer notnull variable
+      | {let_stmt}: z: longint notnull variable
+        | {name z}: z: longint notnull variable
+        | {name c}: c: longint notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC set_can_initialize ()
+BEGIN
+  DECLARE a TEXT NOT NULL;
+  SET a := "text";
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name set_can_initialize}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text notnull
+      | | {name_list}: a: text notnull variable init_required
+      | | | {name a}: a: text notnull variable init_required
+      | | {notnull}: text notnull
+      |   | {type_text}: text
+      | {assign}: a: text notnull variable init_required
+      | | {name a}: a: text notnull variable init_required
+      | | {strlit 'text'}: text notnull
+      | {let_stmt}: x: text notnull variable
+        | {name x}: x: text notnull variable
+        | {name a}: a: text notnull variable
+
+The statement ending at line XXXX
+
+DECLARE PROC requires_out_text_notnull (OUT t TEXT NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name requires_out_text_notnull}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: t: text notnull variable init_required out
+        | {out}
+        | {param_detail}: t: text notnull variable init_required out
+          | {name t}: t: text notnull variable init_required out
+          | {notnull}: text notnull
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE PROC out_arg_uses_can_initialize ()
+BEGIN
+  DECLARE a TEXT NOT NULL;
+  CALL requires_out_text_notnull(a);
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok
+  | {name out_arg_uses_can_initialize}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text notnull
+      | | {name_list}: a: text notnull variable init_required
+      | | | {name a}: a: text notnull variable init_required
+      | | {notnull}: text notnull
+      |   | {type_text}: text
+      | {call_stmt}: ok
+      | | {name requires_out_text_notnull}: ok
+      | | {expr_list}: ok
+      |   | {name a}: a: text notnull variable init_required
+      | {let_stmt}: x: text notnull variable
+        | {name x}: x: text notnull variable
+        | {name a}: a: text notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC fetch_into_initializes ()
+BEGIN
+  DECLARE a TEXT NOT NULL;
+  DECLARE foo CURSOR FOR SELECT "text" AS bar;
+  FETCH foo INTO a;
+  LET x := a;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name fetch_into_initializes}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text notnull
+      | | {name_list}: a: text notnull variable init_required
+      | | | {name a}: a: text notnull variable init_required
+      | | {notnull}: text notnull
+      |   | {type_text}: text
+      | {declare_cursor}: foo: select: { bar: text notnull } variable dml_proc
+      | | {name foo}: foo: select: { bar: text notnull } variable dml_proc
+      | | {select_stmt}: select: { bar: text notnull }
+      |   | {select_core_list}: select: { bar: text notnull }
+      |   | | {select_core}: select: { bar: text notnull }
+      |   |   | {select_expr_list_con}: select: { bar: text notnull }
+      |   |     | {select_expr_list}: select: { bar: text notnull }
+      |   |     | | {select_expr}: bar: text notnull
+      |   |     |   | {strlit 'text'}: text notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name bar}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: foo: select: { bar: text notnull } variable dml_proc
+      | | {name foo}: foo: select: { bar: text notnull } variable dml_proc
+      | | {name_list}
+      |   | {name a}: a: text notnull variable init_required
+      | {let_stmt}: x: text notnull variable
+        | {name x}: x: text notnull variable
+        | {name a}: a: text notnull variable
+
+The statement ending at line XXXX
+
+CREATE PROC nonnull_reference_out_args_require_initialization (OUT a TEXT NOT NULL)
+BEGIN
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
+
+  {create_proc_stmt}: err
+  | {name nonnull_reference_out_args_require_initialization}: err
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: text notnull variable init_required out
+        | {out}
+        | {param_detail}: a: text notnull variable init_required out
+          | {name a}: a: text notnull variable init_required out
+          | {notnull}: text notnull
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE PROC out_arg_initialization_directly_in_proc_works (OUT a TEXT NOT NULL)
+BEGIN
+  SET a := "text";
+END;
+
+  {create_proc_stmt}: ok
+  | {name out_arg_initialization_directly_in_proc_works}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text notnull variable init_required out
+    |   | {out}
+    |   | {param_detail}: a: text notnull variable init_required out
+    |     | {name a}: a: text notnull variable init_required out
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {assign}: a: text notnull variable init_required out
+        | {name a}: a: text notnull variable init_required out
+        | {strlit 'text'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC out_args_must_be_initialized_before_return (OUT a TEXT NOT NULL)
+BEGIN
+  IF 0 THEN
+    RETURN;
+  END IF;
+  SET a := "text";
+END;
+
+test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
+
+  {create_proc_stmt}: err
+  | {name out_args_must_be_initialized_before_return}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text notnull variable init_required out
+    |   | {out}
+    |   | {param_detail}: a: text notnull variable init_required out
+    |     | {name a}: a: text notnull variable init_required out
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: err
+      | {if_stmt}: err
+      | | {cond_action}: err
+      | | | {int 0}: integer notnull
+      | | | {stmt_list}: err
+      | |   | {return_stmt}: err
+      | | {if_alt}
+      | {assign}: a: text notnull variable init_required out
+        | {name a}: a: text notnull variable init_required out
+        | {strlit 'text'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC out_args_can_be_initialized_in_branches (OUT a TEXT NOT NULL)
+BEGIN
+  IF 0 THEN
+    SET a := "text";
+  ELSE IF 0 THEN
+    SET a := "text";
+  ELSE
+    IF 0 THEN
+      IF 0 THEN
+        SET a := "text";
+      ELSE
+        IF 0 THEN
+          SET a := "text";
+        ELSE
+          SWITCH 0
+            WHEN 0 THEN
+              SET a := "text";
+            WHEN 1 THEN
+              IF 0 THEN
+                SET a := "text";
+              ELSE
+                SET a := "text";
+              END IF;
+            ELSE
+              SET a := "text";
+          END;
+        END IF;
+      END IF;
+    ELSE
+      SET a := "text";
+    END IF;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name out_args_can_be_initialized_in_branches}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text notnull variable init_required out
+    |   | {out}
+    |   | {param_detail}: a: text notnull variable init_required out
+    |     | {name a}: a: text notnull variable init_required out
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {if_stmt}: integer notnull
+        | {cond_action}: integer notnull
+        | | {int 0}: integer notnull
+        | | {stmt_list}: ok
+        |   | {assign}: a: text notnull variable init_required out
+        |     | {name a}: a: text notnull variable init_required out
+        |     | {strlit 'text'}: text notnull
+        | {if_alt}: ok
+          | {elseif}: integer notnull
+          | | {cond_action}: integer notnull
+          |   | {int 0}: integer notnull
+          |   | {stmt_list}: ok
+          |     | {assign}: a: text notnull variable init_required out
+          |       | {name a}: a: text notnull variable init_required out
+          |       | {strlit 'text'}: text notnull
+          | {else}: ok
+            | {stmt_list}: ok
+              | {if_stmt}: integer notnull
+                | {cond_action}: integer notnull
+                | | {int 0}: integer notnull
+                | | {stmt_list}: ok
+                |   | {if_stmt}: integer notnull
+                |     | {cond_action}: integer notnull
+                |     | | {int 0}: integer notnull
+                |     | | {stmt_list}: ok
+                |     |   | {assign}: a: text notnull variable init_required out
+                |     |     | {name a}: a: text notnull variable init_required out
+                |     |     | {strlit 'text'}: text notnull
+                |     | {if_alt}: ok
+                |       | {else}: ok
+                |         | {stmt_list}: ok
+                |           | {if_stmt}: integer notnull
+                |             | {cond_action}: integer notnull
+                |             | | {int 0}: integer notnull
+                |             | | {stmt_list}: ok
+                |             |   | {assign}: a: text notnull variable init_required out
+                |             |     | {name a}: a: text notnull variable init_required out
+                |             |     | {strlit 'text'}: text notnull
+                |             | {if_alt}: ok
+                |               | {else}: ok
+                |                 | {stmt_list}: ok
+                |                   | {switch_stmt}: ok
+                |                     | {int 0}
+                |                     | {switch_body}
+                |                       | {int 0}: integer notnull
+                |                       | {switch_case}: ok
+                |                         | {connector}
+                |                         | | {expr_list}: ok
+                |                         | | | {int 0}: integer notnull
+                |                         | | {stmt_list}: ok
+                |                         |   | {assign}: a: text notnull variable init_required out
+                |                         |     | {name a}: a: text notnull variable init_required out
+                |                         |     | {strlit 'text'}: text notnull
+                |                         | {switch_case}
+                |                           | {connector}
+                |                           | | {expr_list}: ok
+                |                           | | | {int 1}: integer notnull
+                |                           | | {stmt_list}: ok
+                |                           |   | {if_stmt}: integer notnull
+                |                           |     | {cond_action}: integer notnull
+                |                           |     | | {int 0}: integer notnull
+                |                           |     | | {stmt_list}: ok
+                |                           |     |   | {assign}: a: text notnull variable init_required out
+                |                           |     |     | {name a}: a: text notnull variable init_required out
+                |                           |     |     | {strlit 'text'}: text notnull
+                |                           |     | {if_alt}: ok
+                |                           |       | {else}: ok
+                |                           |         | {stmt_list}: ok
+                |                           |           | {assign}: a: text notnull variable init_required out
+                |                           |             | {name a}: a: text notnull variable init_required out
+                |                           |             | {strlit 'text'}: text notnull
+                |                           | {switch_case}
+                |                             | {connector}
+                |                               | {stmt_list}: ok
+                |                                 | {assign}: a: text notnull variable init_required out
+                |                                   | {name a}: a: text notnull variable init_required out
+                |                                   | {strlit 'text'}: text notnull
+                | {if_alt}: ok
+                  | {else}: ok
+                    | {stmt_list}: ok
+                      | {assign}: a: text notnull variable init_required out
+                        | {name a}: a: text notnull variable init_required out
+                        | {strlit 'text'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC out_arg_initialization_in_branches_must_cover_all_cases (OUT a TEXT NOT NULL)
+BEGIN
+  IF 0 THEN
+    SET a := "text";
+  ELSE IF 0 THEN
+    SET a := "text";
+  ELSE
+    IF 0 THEN
+      IF 0 THEN
+        SET a := "text";
+      ELSE
+        IF 0 THEN
+          SET a := "text";
+        ELSE
+          SWITCH 0
+            WHEN 0 THEN
+              SET a := "text";
+            WHEN 1 THEN
+              IF 0 THEN
+              ELSE
+                SET a := "text";
+              END IF;
+            ELSE
+              SET a := "text";
+          END;
+        END IF;
+      END IF;
+    ELSE
+      SET a := "text";
+    END IF;
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
+
+  {create_proc_stmt}: err
+  | {name out_arg_initialization_in_branches_must_cover_all_cases}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text notnull variable init_required out
+    |   | {out}
+    |   | {param_detail}: a: text notnull variable init_required out
+    |     | {name a}: a: text notnull variable init_required out
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {if_stmt}: integer notnull
+        | {cond_action}: integer notnull
+        | | {int 0}: integer notnull
+        | | {stmt_list}: ok
+        |   | {assign}: a: text notnull variable init_required out
+        |     | {name a}: a: text notnull variable init_required out
+        |     | {strlit 'text'}: text notnull
+        | {if_alt}: ok
+          | {elseif}: integer notnull
+          | | {cond_action}: integer notnull
+          |   | {int 0}: integer notnull
+          |   | {stmt_list}: ok
+          |     | {assign}: a: text notnull variable init_required out
+          |       | {name a}: a: text notnull variable init_required out
+          |       | {strlit 'text'}: text notnull
+          | {else}: ok
+            | {stmt_list}: ok
+              | {if_stmt}: integer notnull
+                | {cond_action}: integer notnull
+                | | {int 0}: integer notnull
+                | | {stmt_list}: ok
+                |   | {if_stmt}: integer notnull
+                |     | {cond_action}: integer notnull
+                |     | | {int 0}: integer notnull
+                |     | | {stmt_list}: ok
+                |     |   | {assign}: a: text notnull variable init_required out
+                |     |     | {name a}: a: text notnull variable init_required out
+                |     |     | {strlit 'text'}: text notnull
+                |     | {if_alt}: ok
+                |       | {else}: ok
+                |         | {stmt_list}: ok
+                |           | {if_stmt}: integer notnull
+                |             | {cond_action}: integer notnull
+                |             | | {int 0}: integer notnull
+                |             | | {stmt_list}: ok
+                |             |   | {assign}: a: text notnull variable init_required out
+                |             |     | {name a}: a: text notnull variable init_required out
+                |             |     | {strlit 'text'}: text notnull
+                |             | {if_alt}: ok
+                |               | {else}: ok
+                |                 | {stmt_list}: ok
+                |                   | {switch_stmt}: ok
+                |                     | {int 0}
+                |                     | {switch_body}
+                |                       | {int 0}: integer notnull
+                |                       | {switch_case}: ok
+                |                         | {connector}
+                |                         | | {expr_list}: ok
+                |                         | | | {int 0}: integer notnull
+                |                         | | {stmt_list}: ok
+                |                         |   | {assign}: a: text notnull variable init_required out
+                |                         |     | {name a}: a: text notnull variable init_required out
+                |                         |     | {strlit 'text'}: text notnull
+                |                         | {switch_case}
+                |                           | {connector}
+                |                           | | {expr_list}: ok
+                |                           | | | {int 1}: integer notnull
+                |                           | | {stmt_list}: ok
+                |                           |   | {if_stmt}: integer notnull
+                |                           |     | {cond_action}: integer notnull
+                |                           |     | | {int 0}: integer notnull
+                |                           |     | {if_alt}: ok
+                |                           |       | {else}: ok
+                |                           |         | {stmt_list}: ok
+                |                           |           | {assign}: a: text notnull variable init_required out
+                |                           |             | {name a}: a: text notnull variable init_required out
+                |                           |             | {strlit 'text'}: text notnull
+                |                           | {switch_case}
+                |                             | {connector}
+                |                               | {stmt_list}: ok
+                |                                 | {assign}: a: text notnull variable init_required out
+                |                                   | {name a}: a: text notnull variable init_required out
+                |                                   | {strlit 'text'}: text notnull
+                | {if_alt}: ok
+                  | {else}: ok
+                    | {stmt_list}: ok
+                      | {assign}: a: text notnull variable init_required out
+                        | {name a}: a: text notnull variable init_required out
+                        | {strlit 'text'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC forwarding_procs_handle_initialization (OUT t TEXT NOT NULL)
+BEGIN
+  CALL requires_out_text_notnull(t);
+END;
+
+  {create_proc_stmt}: ok
+  | {name forwarding_procs_handle_initialization}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: t: text notnull variable init_required out
+    |   | {out}
+    |   | {param_detail}: t: text notnull variable init_required out
+    |     | {name t}: t: text notnull variable init_required out
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+        | {name requires_out_text_notnull}: ok
+        | {expr_list}: ok
+          | {dot}: t: text notnull variable init_required out
+            | {name ARGUMENTS}
+            | {name t}
+
+The statement ending at line XXXX
+
+CREATE PROC forwarding_procs_handle_initialization_named (OUT bundle_t TEXT NOT NULL)
+BEGIN
+  CALL requires_out_text_notnull(bundle.t);
+END;
+
+  {create_proc_stmt}: ok
+  | {name forwarding_procs_handle_initialization_named}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: bundle_t: text notnull variable init_required out
+    |   | {out}
+    |   | {param_detail}: bundle_t: text notnull variable init_required out
+    |     | {name bundle_t}: bundle_t: text notnull variable init_required out
+    |     | {notnull}: text notnull
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+        | {name requires_out_text_notnull}: ok
+        | {expr_list}: ok
+          | {dot}: bundle_t: text notnull variable init_required out
+            | {name bundle}
+            | {name t}
+
+The statement ending at line XXXX
+
+CREATE PROC try_blocks_can_successfully_verify_initialization (OUT a TEXT NOT NULL, OUT rc INTEGER NOT NULL)
+BEGIN
+  SET rc := 0;
+  @ATTRIBUTE(cql:try_is_proc_body)
+  @ATTRIBUTE(some_other_attribute)
+  BEGIN TRY
+    SET a := "text";
+  END TRY;
+  BEGIN CATCH
+    SET rc := 1;
+  END CATCH;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name try_blocks_can_successfully_verify_initialization}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text notnull variable init_required out
+    | | | {out}
+    | | | {param_detail}: a: text notnull variable init_required out
+    | |   | {name a}: a: text notnull variable init_required out
+    | |   | {notnull}: text notnull
+    | |     | {type_text}: text
+    | | {params}
+    |   | {param}: rc: integer notnull variable out
+    |     | {out}
+    |     | {param_detail}: rc: integer notnull variable out
+    |       | {name rc}: rc: integer notnull variable out
+    |       | {notnull}: integer notnull
+    |         | {type_int}: integer
+    | {stmt_list}: ok
+      | {assign}: rc: integer notnull variable out
+      | | {name rc}: rc: integer notnull variable out
+      | | {int 0}: integer notnull
+      | {stmt_and_attr}: ok
+        | {misc_attrs}: ok
+        | | {misc_attr}
+        | | | {dot}
+        | |   | {name cql}
+        | |   | {name try_is_proc_body}
+        | | {misc_attrs}
+        |   | {misc_attr}
+        |     | {name some_other_attribute}
+        | {trycatch_stmt}: ok
+          | {stmt_list}: ok
+          | | {assign}: a: text notnull variable init_required out
+          |   | {name a}: a: text notnull variable init_required out
+          |   | {strlit 'text'}: text notnull
+          | {stmt_list}: ok
+            | {assign}: rc: integer notnull variable out
+              | {name rc}: rc: integer notnull variable out
+              | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC try_blocks_can_fail_to_verify_initialization (OUT a TEXT NOT NULL, OUT rc INTEGER NOT NULL)
+BEGIN
+  SET rc := 0;
+  @ATTRIBUTE(some_other_attribute)
+  @ATTRIBUTE(cql:try_is_proc_body)
+  BEGIN TRY
+  END TRY;
+  BEGIN CATCH
+    SET rc := 1;
+  END CATCH;
+  SET a := "text";
+END;
+
+test/sem_test.sql:XXXX:1: error: in trycatch_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
+
+  {create_proc_stmt}: err
+  | {name try_blocks_can_fail_to_verify_initialization}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a: text notnull variable init_required out
+    | | | {out}
+    | | | {param_detail}: a: text notnull variable init_required out
+    | |   | {name a}: a: text notnull variable init_required out
+    | |   | {notnull}: text notnull
+    | |     | {type_text}: text
+    | | {params}
+    |   | {param}: rc: integer notnull variable out
+    |     | {out}
+    |     | {param_detail}: rc: integer notnull variable out
+    |       | {name rc}: rc: integer notnull variable out
+    |       | {notnull}: integer notnull
+    |         | {type_int}: integer
+    | {stmt_list}: err
+      | {assign}: rc: integer notnull variable out
+      | | {name rc}: rc: integer notnull variable out
+      | | {int 0}: integer notnull
+      | {stmt_and_attr}: err
+      | | {misc_attrs}: ok
+      | | | {misc_attr}
+      | | | | {name some_other_attribute}
+      | | | {misc_attrs}
+      | |   | {misc_attr}
+      | |     | {dot}
+      | |       | {name cql}
+      | |       | {name try_is_proc_body}
+      | | {trycatch_stmt}: err
+      |   | {stmt_list}
+      |     | {assign}
+      |       | {name rc}
+      |       | {int 1}
+      | {assign}: a: text notnull variable init_required out
+        | {name a}: a: text notnull variable init_required out
+        | {strlit 'text'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC try_is_proc_body_may_only_appear_once ()
+BEGIN
+  @ATTRIBUTE(cql:try_is_proc_body)
+  BEGIN TRY
+  END TRY;
+  BEGIN CATCH
+  END CATCH;
+  @ATTRIBUTE(cql:try_is_proc_body)
+  BEGIN TRY
+  END TRY;
+  BEGIN CATCH
+  END CATCH;
+END;
+
+test/sem_test.sql:XXXX:1: error: in trycatch_stmt : CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
+
+  {create_proc_stmt}: err
+  | {name try_is_proc_body_may_only_appear_once}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {stmt_and_attr}: ok
+      | | {misc_attrs}: ok
+      | | | {misc_attr}
+      | |   | {dot}
+      | |     | {name cql}
+      | |     | {name try_is_proc_body}
+      | | {trycatch_stmt}: ok
+      | {stmt_and_attr}: err
+        | {misc_attrs}: ok
+        | | {misc_attr}
+        |   | {dot}
+        |     | {name cql}
+        |     | {name try_is_proc_body}
+        | {trycatch_stmt}: err
+
+The statement ending at line XXXX
+
+CREATE PROC try_is_proc_body_accepts_no_values ()
+BEGIN
+  @ATTRIBUTE(cql:try_is_proc_body=(foo))
+  BEGIN TRY
+  END TRY;
+  BEGIN CATCH
+  END CATCH;
+END;
+
+test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0445: @attribute(cql:try_is_proc_body) accepts no values
+
+  {create_proc_stmt}: err
+  | {name try_is_proc_body_accepts_no_values}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {stmt_and_attr}: err
+        | {misc_attrs}: ok
+        | | {misc_attr}
+        |   | {dot}
+        |   | | {name cql}
+        |   | | {name try_is_proc_body}
+        |   | {misc_attr_value_list}: ok
+        |     | {name foo}: ok
+        | {trycatch_stmt}: err
 
 The statement ending at line XXXX
 

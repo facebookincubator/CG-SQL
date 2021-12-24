@@ -344,6 +344,7 @@ end;
 -- +  "binding" : "inout",
 create proc with_complex_args(out pattern text not null, inout arg real)
 begin
+  set pattern := "text";
   select 1 a;
 end;
 

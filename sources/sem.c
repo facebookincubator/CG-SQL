@@ -369,7 +369,7 @@ static uint32_t current_expr_context;
 // If we have started validating previous schema this will be true
 static bool_t validating_previous_schema;
 
-// The curernt annonation target in create proc statement
+// The current annonation target in create proc statement
 static CSTR annotation_target;
 
 // True if we are analyzing a call to `cql_inferred_notnull`. This can happen
@@ -406,6 +406,15 @@ static global_notnull_improvement_item *global_notnull_improvements;
 //    current state is `LOOP_ANALYSIS_STATE_REANALYZE` and adjust their
 //    behaviors accordingly.
 static loop_analysis_state current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
+
+// True if the procedure currently being analyzed contains a TRY block that has
+// been annotated with @attribute(cql:try_is_proc_body). Such an annotation
+// implies that, conceptually, the main logic of the procedure exists entirely
+// within the TRY block; any surrounding code typically exists only for the
+// purpose of atypical error reporting or logging.
+//
+// See `sem_find_ast_misc_attr_trycatch_is_proc_body_callback` for context.
+static bool_t current_proc_contains_try_is_proc_body;
 
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
@@ -1938,7 +1947,14 @@ static void get_sem_core(sem_t sem_type, charbuf *out) {
 // For debug/test output, prettyprint the flags
 static void get_sem_flags(sem_t sem_type, charbuf *out) {
   // This is never present in the AST itself.
-  Contract(sem_type != SEM_TYPE_ALIAS);
+  Contract(!(sem_type & SEM_TYPE_ALIAS));
+
+  // This is never present in the AST after a top-level statement has been
+  // analyzed: All initialization improvements on variables and parameters are
+  // unset by then, and, unlike `SEM_TYPE_INFERRED_NOTNULL`, there is no
+  // equivalent of cql_inferred_notnull that would benefit from leaving it on
+  // expressions.
+  Contract(!(sem_type & SEM_TYPE_INIT_COMPLETE));
 
   if (sem_type & SEM_TYPE_INFERRED_NOTNULL) {
     bprintf(out, " inferred_notnull");
@@ -1948,6 +1964,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_VARIABLE) {
     bprintf(out, " variable");
+  }
+  if (sem_type & SEM_TYPE_INIT_REQUIRED) {
+    bprintf(out, " init_required");
   }
   if (sem_type & SEM_TYPE_HAS_DEFAULT) {
     bprintf(out, " has_default");
@@ -5773,6 +5792,28 @@ static void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
   sem_resolve_id_with_type(ast, name, scope, &type);
 }
 
+// Checks that the variable provided has been initialized, if required. As this
+// is to be used only for *references* to a previously declared variable, the
+// combination of flags indicating a completed initialization, if present, will
+// be removed as they serve no purpose outside of declarations.
+static void sem_variable_referenced_is_initialized_if_required(ast_node *ast) {
+  Contract(is_id_or_dot(ast));
+  Contract(ast->sem);
+  Contract(is_variable(ast->sem->sem_type));
+
+  sem_t sem_type = ast->sem->sem_type;
+
+  if (sem_type & SEM_TYPE_INIT_REQUIRED && !(sem_type & SEM_TYPE_INIT_COMPLETE)) {
+    report_error(ast, "CQL0438: variable possibly used before initialization", ast->sem->name);
+    record_error(ast);
+    return;
+  }
+
+  // `SEM_TYPE_INIT_COMPLETE` and `SEM_TYPE_INIT_REQUIRED` are only useful on
+  // declarations. We can remove these to avoid noise in the --ast output.
+  ast->sem->sem_type &= sem_not(SEM_TYPE_INIT_REQUIRED | SEM_TYPE_INIT_COMPLETE);
+}
+
 // Like `sem_resolve_id`, but specific to expression contexts (where nullability
 // improvements are applicable).
 static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
@@ -5781,6 +5822,18 @@ static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
 
   // Perform resolution, as for ids and dots outside of expressions.
   sem_resolve_id(ast, name, scope);
+  if (is_error(ast)) {
+    return;
+  }
+
+  if (is_variable(ast->sem->sem_type)) {
+    // The name/scope pair refers to a variable. Ensure that it has been
+    // appropriately initialized before use.
+    sem_variable_referenced_is_initialized_if_required(ast);
+    if (is_error(ast)) {
+      return;
+    }
+  }
 
   if (is_analyzing_notnull_rewrite) {
     // If we're analyzing the product of a rewrite and we're already inside of a
@@ -12782,6 +12835,21 @@ static void sem_cond_action(ast_node *ast) {
   ast->sem = expr->sem;
 }
 
+// Enables an initialization improvement for a variable, if possible. 
+static void sem_set_initialization_improved(CSTR name, CSTR scope) {
+  Contract(name);
+
+  sem_t *type = find_mutable_type(name, scope);
+  Contract(type);
+  Contract(is_variable(SEM_TYPE_VARIABLE));
+
+  if (!(*type & SEM_TYPE_INIT_REQUIRED) || *type & SEM_TYPE_INIT_COMPLETE) {
+    return;
+  }
+
+  flow_set_flag_for_type(SEM_TYPE_INIT_COMPLETE, type);
+}
+
 // This is the list of else-ifs, which is to say a linked list of
 // conditional actions (see above).  We just walk the list and
 // decorate each piece accordingly, if anything goes wrong mark the
@@ -14544,6 +14612,8 @@ static void sem_assign(ast_node *ast) {
   } else {
     sem_unset_notnull_improved(name, NULL);
   }
+
+  sem_set_initialization_improved(name, NULL);
 }
 
 static void sem_let_stmt(ast_node *ast) {
@@ -14606,6 +14676,30 @@ static sem_t sem_opt_inout(ast_node *ast) {
   }
 }
 
+// Returns true if the `sem_t` of a variable indicates that initialization
+// should be required before the value is used (except when passed as an OUT
+// argument), else false.
+static bool_t variable_should_require_initialization(sem_t sem_type) {
+  Contract(is_variable(sem_type));
+
+  // For now, we only require initialization in the case of nonnull reference
+  // types as they presently have no sensible default and will be NULL absent
+  // initialization.
+  return is_not_nullable(sem_type) && is_ref_type(sem_type);
+}
+
+// Returns true if the given `sem_t` of a parameter indicates that
+// initialization should be required before the procedure returns, else false.
+static bool_t param_should_require_initialization(sem_t sem_type) {
+  if (is_in_parameter(sem_type)) {
+    // Arguments passed for IN and INOUT parameters must have already been
+    // initialized by the caller.
+    return false;
+  }
+
+  return variable_should_require_initialization(sem_type);
+}
+
 // A single a proc parameter, it gets its semantic type by the helper
 // for the type of a variable.  The main thing that needs to be done here
 // is to ensure the name doesn't conflict, and record it as a new local.
@@ -14623,13 +14717,26 @@ static void sem_param(ast_node *ast) {
     return;
   }
 
-  sem_t param_flags = sem_opt_inout(opt_inout) | SEM_TYPE_VARIABLE;
   sem_data_type_var(data_type);
   if (is_error(data_type)) {
     record_error(ast);
     return;
   }
-  ast->sem = param_detail->sem = name_ast->sem = new_sem(data_type->sem->sem_type | param_flags);
+
+  sem_t sem_type = data_type->sem->sem_type;
+  sem_type |= SEM_TYPE_VARIABLE;
+  sem_type |= sem_opt_inout(opt_inout);
+
+  // We set this even if `current_proc` is NULL (i.e., we set it for the DECLARE
+  // PROC and DECLARE FUNCTION forms, not just CREATE PROC). The reason for
+  // doing this is so that any later parameter declarations that refer to the
+  // current procedure using LIKE...ARGUMENTS will have this flag set
+  // appropriately.
+  if (param_should_require_initialization(sem_type)) {
+    sem_type |= SEM_TYPE_INIT_REQUIRED;
+  }
+
+  ast->sem = param_detail->sem = name_ast->sem = new_sem(sem_type);
 
   // [name]
   ast->sem->name = name;
@@ -16364,6 +16471,111 @@ error:
   record_error(create_proc_stmt);
 }
 
+// Returns true if all parameters of the current procedure that require
+// initialization have been initialized, else false. Any errors that occur will
+// be reported as occurring at the location of `error_ast`.
+static bool_t sem_validate_current_proc_params_are_initialized(ast_node *error_ast) {
+  Contract(current_proc);
+  Contract(error_ast);
+
+  bool_t error = false;
+
+  // At the moment, `find_mutable_type` returns different `sem_t` pointers
+  // depending on how an argument from an argument bundle is referenced. As a
+  // result, if you improve 'some_bundle_x', 'some_bundle.x' will not be
+  // improved, and vice versa. (This applies to all forms of improvements, not
+  // just initialization improvements.)
+  //
+  // This is generally not a problem, but it causes an issue in cases like the
+  // following:
+  //
+  //   DECLARE PROC p0(OUT x TEXT NOT NULL);
+  //   CREATE PROC p1(bundle LIKE p0 ARGUMENTS);
+  //   BEGIN
+  //     CALL p0(FROM bundle);
+  //   END;
+  //
+  // In the above example, we improve 'bundle.x' via the call. However, when we
+  // iterate over the params below, 'bundle_x' will not be improved.
+  //
+  // To work around this, we create a symbol table that maps names like
+  // 'bundle_x' to pointers to types in the appropriate argument bundles. Before
+  // reporting an error below due to something lacking initialization, we check
+  // to see if the name came from an argument bundle, and, if it did, we then
+  // check the type from there instead. As a result, initialization of either
+  // 'bundle_x' or 'bundle.x' will work.
+  //
+  // This is *extremely* ugly and this workaround must not linger. A possible
+  // near-future fix might involve settling on a single syntactic form for
+  // referring to argument bundles. Another option might be to keep a table like
+  // this globally for the current proc and to have `sem_resolve_id_with_type`
+  // use it to always set the same `sem_t *` regardless of the form used.
+  symtab *param_names_to_bundle_types = symtab_new();
+
+  // Iterate over the entire `arg_bundles` symbol table.
+  for (uint32_t i = 0; i < arg_bundles->capacity; i++) {
+    CSTR bundle_name = arg_bundles->payload[i].sym;
+    if (!bundle_name) {
+      // No key/value pair is present at this location.
+      continue;
+    }
+    ast_node *ast = arg_bundles->payload[i].val;
+    // The value is always the name of the bundle with a `sem_node` containing a
+    // `sem_struct` holding the information about the bundle's parameters.
+    Invariant(is_ast_str(ast));
+    Invariant(ast->sem);
+    Invariant(!Strcasecmp(bundle_name, ast->sem->name));
+    Invariant(ast->sem->sptr);
+    sem_struct *sptr = ast->sem->sptr;
+    for (uint32_t j = 0; j < sptr->count; j++) {
+      CSTR field_name = sptr->names[j];
+      // Add the non-dot version of the name to `param_names_to_bundle_types`
+      // with the value being a pointer to the type in the argument bundle. 
+      symtab_add(
+        param_names_to_bundle_types,
+        dup_printf("%s_%s", bundle_name, field_name),
+        (void *)&sptr->semtypes[j]
+      );
+    }
+  }
+
+  // Check the parameters to ensure all have been initialized.
+  ast_node *params = get_proc_params(current_proc);
+  for (ast_node *param_item = params; param_item; param_item = param_item->right) {
+    EXTRACT_NOTNULL(param, param_item->left);
+    sem_t sem_type = param->sem->sem_type;
+    if (sem_type & SEM_TYPE_INIT_REQUIRED && !(sem_type & SEM_TYPE_INIT_COMPLETE)) {
+      // The parameter required initialization but it is not initialized. We
+      // might still be okay if the parameter name is the non-dot version of
+      // something from an argument bundle.
+      EXTRACT_NOTNULL(param_detail, param->right);
+      EXTRACT_STRING(name, param_detail->left);
+      symtab_entry *entry = symtab_find(param_names_to_bundle_types, param->sem->name);
+      sem_t *type = entry ? entry->val : NULL;
+      bool_t is_init_complete = false;
+      if (type) {
+        // The parameter is, in fact, the non-dot version of something from an
+        // argument bundle. If the type in the argument bundle indicates that
+        // initialization was completed, we're good.
+        Invariant(*type & SEM_TYPE_INIT_REQUIRED);
+        is_init_complete = !!(*type & SEM_TYPE_INIT_COMPLETE);
+      }
+      if (!is_init_complete) {
+        // Either the parameter did not correspond to anything in an argument
+        // bundle or it simply wasn't initialized in all cases.
+        report_error(error_ast, "CQL0439: nonnull reference OUT parameter possibly not always initialized", name);
+        error = true;
+        goto cleanup;
+      }
+    }
+  }
+
+cleanup:
+  symtab_delete(param_names_to_bundle_types);
+
+  return !error;
+}
+
 // Used for sem_create_proc_stmt() only.
 // Here we run the sem analysis for params and stmt_list of the create_proc_stmt ast node.
 // Since assembly fragment processing will change the ast tree struct, this procedure
@@ -16384,22 +16596,25 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
   }
 
   int32_t saved_between_count = between_count;
-  bool_t error = false;
   has_dml = 0;
   current_variables = locals = symtab_new();
   arg_bundles = symtab_new();
   between_count = 0;
   in_proc_savepoint = false;
 
+  // We push a normal context for all of the statements within the procedure. We
+  // do this here rather than simply using `sem_stmt_list` below so that we can
+  // verify all of the procedure's parameters have been appropriately
+  // initialized before the initialization improvements are unset.
+  FLOW_PUSH_CONTEXT_NORMAL();
+
   // we process the parameter list even if there are no statements
   if (params) {
     bytebuf *args_info = symtab_ensure_bytebuf(proc_arg_info, proc_name);
     sem_params(params, args_info);
-    error = is_error(params);
-  }
-
-  if (error) {
-    goto cleanup;
+    if (is_error(params)) {
+      goto error;
+    }
   }
 
   // We have to mark the thing as ok here because it could be called
@@ -16410,34 +16625,56 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
   if (!stmt_list) {
     if (find_proc_frag_type(ast) != FRAG_TYPE_NONE) {
       report_error(ast, "CQL0440: fragments may not have an empty body", proc_name);
-      error = true;
+      goto error;
     }
-    goto cleanup;
+  } else {
+    // BEGIN [stmt_list] END
+    //
+    // We avoid pushing a new context so that any initialization improvements
+    // are still in effect when we later validate that all parameters have been
+    // appropriately initialized.
+    sem_stmt_list_in_current_flow_context(stmt_list);
+    if (is_error(stmt_list)) {
+      goto error;
+    }
+    if (has_dml) {
+      Invariant(ast->sem);
+      ast->sem->sem_type |= SEM_TYPE_DML_PROC;
+    }
   }
 
-  Contract(is_ast_stmt_list(stmt_list));
-
-  // BEGIN [stmt_list] END
-  sem_stmt_list(stmt_list);
-
-  if (has_dml) {
-   Invariant(ast->sem);
-   ast->sem->sem_type |= SEM_TYPE_DML_PROC;
+  if (current_proc_contains_try_is_proc_body) {
+    // This procedure contains a TRY block that should be treated as the main
+    // body of the procedure. Parameter initialization has already been checked
+    // accordingly within `sem_trycatch_stmt`.
+    //
+    // Checking it again here, which we do not do, could very well fail. In
+    // fact, not enforcing initialization here is half of the utility of the
+    // "cql:try_is_proc_body" attribute at present. (The other half, of course,
+    // is that `sem_trycatch_stmt` *does* enforce it.)
+  } else {
+    // Verify that all parameters have been appropriately initialized using the
+    // end of the procedure for error reporting. This is the common case.
+    if (!sem_validate_current_proc_params_are_initialized(ast)) {
+      goto error;
+    }
   }
-
-  error = is_error(stmt_list);
 
 cleanup:
+  FLOW_POP_CONTEXT_NORMAL();
   symtab_delete(locals);
   symtab_delete(arg_bundles);
   locals = NULL;
   arg_bundles = NULL;
   current_variables = globals;
   between_count = saved_between_count;
+  current_proc_contains_try_is_proc_body = false;
 
-  if (error) {
-    record_error(ast);
-  }
+  return;
+
+error:
+  record_error(ast);
+  goto cleanup;
 }
 
 // Helper function to validate that ok_table_scan attribution is semantically correctly.
@@ -17500,6 +17737,9 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
     }
 
     variable->sem = ast->sem = new_sem(sem_type | SEM_TYPE_VARIABLE);
+    if (variable_should_require_initialization(variable->sem->sem_type)) {
+      variable->sem->sem_type |= SEM_TYPE_INIT_REQUIRED;
+    }
     variable->sem->name = name;
     variable->sem->kind = data_type->sem->kind;
     symtab_add(current_variables, name, variable);
@@ -18450,10 +18690,10 @@ static bool_t sem_verify_no_duplicate_regions(ast_node *region_list) {
   return sem_verify_no_duplicate_names_func(region_list, name_from_region_list_node);
 }
 
-// Verify that an expression passed as the out argument for a call is a valid
-// variable. If it is not, report an error indicating for what parameter such a
-// variable was expected.
-static void sem_arg_out(ast_node *arg, CSTR param_name) {
+// Verifies that an expression passed as an OUT or INOUT argument for a call is
+// the name of a valid variable. If it is not, reports an error indicating for
+// which parameter such a name was expected.
+static void sem_validate_arg_is_name_of_existing_variable(ast_node *arg, CSTR param_name) {
   if (!is_id_or_dot(arg)) {
     goto error;
   }
@@ -18476,17 +18716,51 @@ static void sem_arg_out(ast_node *arg, CSTR param_name) {
     goto error;
   }
 
-  // If `arg` is being passed for an OUT parameter of a nullable type, it could
-  // be set to NULL. Even if `arg` is being passed for an OUT parameter of a NOT
-  // NULL type, however, there's no guarantee that the callee will actually set
-  // it. We, therefore, need to un-improve it unconditionally.
-  sem_unset_notnull_improved(name, scope);
-
   return;
 
 error:
-  report_error(arg, "CQL0207: expected a variable name for out argument", param_name);
+  report_error(arg, "CQL0207: expected a variable name for OUT or INOUT argument", param_name);
   record_error(arg);
+}
+
+
+// Analyzes an argument passed for an OUT or INOUT parameter by verifying that
+// it is a valid variable and that it has been initialized (if necessary), and
+// then sets appropriate improvements.
+static void sem_arg_for_out_param(ast_node *arg, ast_node *param) {
+  Contract(arg);
+  Contract(is_ast_param(param));
+
+  sem_validate_arg_is_name_of_existing_variable(arg, param->sem->name);
+  if (is_error(arg)) {
+    return;
+  }
+
+  // Check to see if `arg` is being passed as an INOUT argument.
+  if (is_in_parameter(param->sem->sem_type)) {
+    // The caller is responsible for the initialization of arguments passed for
+    // INOUT parameters. We already checked that we have a variable above, so
+    // now we just need to verify that it has been appropriately initialized.
+    sem_variable_referenced_is_initialized_if_required(arg);
+    if (is_error(arg)) {
+      return;
+    }
+  }
+
+  EXTRACT_NAME_AND_SCOPE(arg);
+
+  // If `arg` is being passed for an OUT parameter of a nullable type, it could
+  // be set to NULL; if it is being passed for an OUT parameter of a nonnull
+  // type, then the name/scope pair must refer to a declared-nonnull type (which
+  // can be neither improved nor unimproved), and so there is no harm in calling
+  // this.
+  sem_unset_notnull_improved(name, scope);
+
+  // The callee will initialize the variable during its execution (unless the
+  // callee throws, in which case all execution will either effectively stop
+  // or a TRY block in the caller or further up the stack will safely bound
+  // the initialization improvement).
+  sem_set_initialization_improved(name, scope);
 }
 
 // Given an argument that (typically) has not yet been checked and a formal
@@ -18502,9 +18776,7 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   // As a first step, we check the argument itself.
 
   if (is_out_parameter(sem_type_param)) {
-    // In the case of an OUT or IN OUT parameter, we only want to allow a
-    // reference to an existing variable.
-    sem_arg_out(arg, param->sem->name);
+    sem_arg_for_out_param(arg, param);
     if (is_error(arg)) {
       return false;
     }
@@ -18979,8 +19251,32 @@ static void sem_fetch_stmt(ast_node *ast) {
       return;
     }
 
-    // This may once again be NULL.
+    // For the time being, unlike SET, we do not allow FETCH INTO to both unset
+    // and set nullability improvements because we do not yet have a way of
+    // enforcing that the programmer verified that the fetch itself was
+    // successful. If it did set nullability improvements, code like the
+    // following would erroneously report a redundant IS NOT NULL check which
+    // might then encourage the programmer to remove the IS NOT NULL check
+    // rather than add the appropriate has-row check:
+    //
+    //   DECLARE x TEXT;
+    //   FETCH cursor_with_text_notnull_column INTO x;
+    //   -- an error would be issued here due to IS NOT NULL, but x CAN be null!
+    //   IF x IS NOT NULL THEN 
+    //     ...
+    //   END IF;
+    //
+    // This will be revisited once CQL has added a notion of has-row
+    // improvements for cursors.
     sem_unset_notnull_improved(name, NULL);
+
+    // Even though the fetch may have failed, we optimistically consider the
+    // variable to have been initialized. In essence, this is no different from
+    // fetching into an auto cursor and then using SET to initialize a variable
+    // by setting it to the value of one of the cursor's fields (even though the
+    // fetch could have failed), which we also allow. Again, this will be
+    // revisited in the future once has-row improvements have been added.
+    sem_set_initialization_improved(name, NULL);
   }
 
   if (icol != cols || item) {
@@ -19100,6 +19396,13 @@ static void sem_return_common(ast_node *ast) {
   // for sure in a statement now due to the above
   Invariant(current_proc);
 
+  // Since this is a potential exit point of the current procedure, all
+  // parameters requiring initialization should have been initialized by now.
+  if (!sem_validate_current_proc_params_are_initialized(ast)) {
+    record_error(ast);
+    return;
+  }
+
   sem_last_statement_in_block(ast);
 }
 
@@ -19176,6 +19479,107 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
   record_ok(ast);
 }
 
+// If @attribute(cql:try_is_proc_body) is present, performs additional analysis
+// using the try/catch AST provided as `context` such that the statement list of
+// the TRY is treated as though it were the main body of the procedure. In
+// particular, it ensures that all parameters of the current procedure have been
+// initialized by the end of the TRY and prevents `sem_inside_create_proc_stmt`
+// from later doing the same at the end of the procedure.
+//
+// The reason why @attribute(cql:try_is_proc_body) is needed is that users, for
+// various reasons, sometimes need to wrap certain stored procedures in a
+// try/catch such that custom error handling or logging can be implemented. In
+// doing so, however, they break our assumptions about things like
+// initialization of OUT parameters: We normally enforce that parameters must be
+// initialized by the end of a procedure, but, if the procedure is wrapped in a
+// try/catch so that the CATCH can help perform some custom error reporting
+// (e.g., log the error and then rethrow the exception), any initialization
+// improvements made in the TRY will be unset at the end of the procedure.
+//
+// A somewhat contrived example use case for this is as follows:
+//
+//   #define LOGGING_PROC_BEGIN \
+//     BEGIN \
+//       LET error_in_try := FALSE; \
+//       @attribute(cql:try_is_proc_body) \
+//       BEGIN TRY
+//
+//   #define LOGGING_PROC_END \
+//       END TRY; \
+//       BEGIN CATCH \
+//         SET error_in_try := TRUE; \
+//       END CATCH; \
+//       IF error_in_try THEN \
+//         CALL some_proc_that_logs_and_rethrows(__FILE__, __LINE__); \
+//       END IF; \
+//     END
+//
+//   CREATE PROC some_proc(OUT x TEXT NOT NULL)
+//   LOGGING_PROC_BEGIN
+//     IF some_condition THEN
+//       SET x := some_value;
+//     ELSE
+//       SET x := get_another_value_or_throw()
+//     END IF;
+//   LOGGING_PROC_END;
+//
+// As can be seen above, the main part of the procedure does, in fact, always
+// initialize x unless an exception occurs -- and, if it does, the handling
+// within LOGGING_PROC_END will take care of it. Our normal analyses cannot
+// understand that though. By giving programmers a way to explicitly indicate
+// that this pattern is in effect, we can know to ensure that x is initialized
+// within what is, conceptually, the main body of the procedure (i.e., the TRY)
+// and then not worry about it later on.
+//
+// NOTE: It is very possible to misuse @attribute(cql:try_is_proc_body) such
+// that parameter initialization checking becomes useless. There is nothing we
+// can do about that here: We must simply assume the programmer has used it
+// appropriately.
+void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(
+  CSTR _Nullable misc_attr_prefix,
+  CSTR _Nonnull misc_attr_name,
+  ast_node *_Nullable ast_misc_attr_value_list,
+  void *_Nullable context)
+{
+  Contract(misc_attr_name);
+  Contract(is_ast_trycatch_stmt(context));
+
+  if (!misc_attr_prefix || Strcasecmp(misc_attr_prefix, "cql") || Strcasecmp(misc_attr_name, "try_is_proc_body")) {
+    return;
+  }
+
+  ast_node *ast = context;
+
+  if (ast_misc_attr_value_list) {
+    report_error(ast_misc_attr_value_list, "CQL0445: @attribute(cql:try_is_proc_body) accepts no values", NULL);
+    record_error(ast);
+    return;
+  }
+
+  if (current_proc_contains_try_is_proc_body) {
+    report_error(
+      context,
+      "CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure",
+      NULL
+    );
+    record_error(ast);
+    return;
+  }
+
+  // Set this so `sem_inside_create_proc_stmt` knows not to perform the
+  // initialization check later on.
+  current_proc_contains_try_is_proc_body = true;
+
+  // Use the end of the TRY block for error reporting if it has any statements,
+  // else just use the whole block since we have nothing better.
+  EXTRACT_NAMED(try_list, stmt_list, ast->left);
+  if (!sem_validate_current_proc_params_are_initialized(try_list ? try_list : ast)) {
+    record_error(ast);
+    return;
+  }
+
+  record_ok(ast);
+}
 
 // No analysis needed here other than that the two statement lists are ok.
 static void sem_trycatch_stmt(ast_node *ast) {
@@ -19183,47 +19587,60 @@ static void sem_trycatch_stmt(ast_node *ast) {
   EXTRACT_NAMED(try_list, stmt_list, ast->left);
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
 
+  bool_t error = false;
+
+  // We assume any statement within the TRY can throw. Using a jump context
+  // keeps things safe in the presence of code like the following:
+  //
+  //   DECLARE x INT;
+  //   SET x := 42;
+  //   BEGIN TRY
+  //     IF some_condition THEN
+  //       SET x := NULL;
+  //       IF another_condition THEN
+  //         THROW;
+  //       END IF;
+  //       SET x := 100; -- may never happen
+  //     ELSE
+  //       -- do nothing; neutral for x
+  //     END IF;
+  //     -- x is still nonnull here as the outer IF was neutral for x
+  //   END TRY;
+  //   BEGIN CATCH
+  //     -- x must be nullable here as the final SET may have not occurred
+  //   END CATCH;
+  //   -- x must also be nullable here
+  //
+  // If we did not use a jump context, x would be nonnull after the TRY because
+  // the set to NULL was neutralized by the subsequent set to 100 in the same
+  // branch.
+  FLOW_PUSH_CONTEXT_JUMP();
+
   if (try_list) {
-    // We assume any statement within the try can throw. Using a jump context
-    // keeps things safe in the presence of code like the following:
-    //
-    //   DECLARE x INT;
-    //   SET x := 42;
-    //   BEGIN TRY
-    //     IF some_condition THEN
-    //       SET x := NULL;
-    //       IF another_condition THEN
-    //         THROW;
-    //       END IF;
-    //       SET x := 100; -- may never happen
-    //     ELSE
-    //       -- do nothing; neutral for x
-    //     END IF;
-    //     -- x is still nonnull here as the outer IF was neutral for x
-    //   END TRY;
-    //   BEGIN CATCH
-    //     -- x must be nullable here as the final SET may have not occurred
-    //   END CATCH;
-    //   -- x must also be nullable here
-    //
-    // If we did not use a jump context, x would be nonnull after the TRY
-    // because the set to NULL was neutralized by the subsequent set to 100 in
-    // the same branch.
-    FLOW_PUSH_CONTEXT_JUMP();
     sem_stmt_list_in_current_flow_context(try_list);
-    FLOW_POP_CONTEXT_JUMP();
-    if (is_error(try_list)) {
-      record_error(ast);
-      return;
+    error = is_error(try_list);
+  }
+
+  if (!error) {
+    EXTRACT_MISC_ATTRS(ast, misc_attrs);
+    if (misc_attrs) {
+      // If the "cql:try_is_proc_body" attribute is set, we need to check it as
+      // though it were the true body of the procedure.
+      find_misc_attrs(misc_attrs, sem_find_ast_misc_attr_trycatch_is_proc_body_callback, ast);
+      error = is_error(ast);
     }
   }
 
-  if (catch_list) {
+  FLOW_POP_CONTEXT_JUMP();
+
+  if (!error && catch_list) {
     sem_stmt_list(catch_list);
-    if (is_error(catch_list)) {
-      record_error(ast);
-      return;
-    }
+    error = is_error(catch_list);
+  }
+
+  if (error) {
+    record_error(ast);
+    return;
   }
 
   record_ok(ast);
@@ -19571,7 +19988,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
     EXTRACT_ANY_NOTNULL(arg, expr_list->left);
 
     if (!is_id(arg)) {
-      report_error(arg, "CQL0207: expected a variable name for out argument", param->sem->name);
+      report_error(arg, "CQL0207: expected a variable name for OUT or INOUT argument", param->sem->name);
       record_error(ast);
       return;
     }
@@ -21650,6 +22067,7 @@ cql_noexport void sem_cleanup() {
   is_analyzing_notnull_rewrite = false;
   global_notnull_improvements = NULL;
   current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
+  current_proc_contains_try_is_proc_body = false;
 }
 
 #endif
@@ -21692,4 +22110,3 @@ cql_data_defn( bytebuf *recreate_annotations );
 
 // any table or group can have an action
 cql_data_defn( symtab *ad_hoc_recreate_actions );
-

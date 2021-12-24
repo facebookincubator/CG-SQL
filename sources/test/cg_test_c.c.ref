@@ -389,28 +389,29 @@ extern CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, 
 extern CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 // static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-cql_string_literal(_literal_1_This_is_a_test_, "This is a \" \\ test '' \n \" ");
-cql_string_literal(_literal_2_b_, "b");
-cql_string_literal(_literal_3_a_, "a");
-cql_string_literal(_literal_4_c_, "c");
-cql_string_literal(_literal_5_x_, "x");
-cql_string_literal(_literal_6_before_echo_echo_test, "before echo");
-cql_string_literal(_literal_7_after_echo_echo_test, "after echo");
-cql_string_literal(_literal_8_Testing_c_literal, "\"Testing\" \\''");
-cql_string_literal(_literal_9_bar_fetch_to_cursor_from_cursor, "bar");
-cql_string_literal(_literal_10_y_, "y");
-cql_string_literal(_literal_11_, "");
-cql_string_literal(_literal_12_garbonzo_, "garbonzo");
-cql_string_literal(_literal_13_T_various_lets, "T");
-cql_string_literal(_literal_14_NT_various_lets, "NT");
-cql_string_literal(_literal_15_ST_various_lets, "ST");
-cql_string_literal(_literal_16_foo_binary_ops_with_null, "foo");
-cql_string_literal(_literal_17_null_BigFormat, "null");
-cql_string_literal(_literal_18_arguments_are_evaluated_left_to_right, "1");
-cql_string_literal(_literal_19_arguments_are_evaluated_left_to_right, "2");
-cql_string_literal(_literal_20_arguments_are_evaluated_left_to_right, "3");
-cql_string_literal(_literal_21_arguments_are_evaluated_left_to_right, "4");
-cql_string_literal(_literal_22_hello_sensitive_function_is_a_no_op, "hello");
+cql_string_literal(_literal_1_text_, "text");
+cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
+cql_string_literal(_literal_3_b_, "b");
+cql_string_literal(_literal_4_a_, "a");
+cql_string_literal(_literal_5_c_, "c");
+cql_string_literal(_literal_6_x_, "x");
+cql_string_literal(_literal_7_before_echo_echo_test, "before echo");
+cql_string_literal(_literal_8_after_echo_echo_test, "after echo");
+cql_string_literal(_literal_9_Testing_c_literal, "\"Testing\" \\''");
+cql_string_literal(_literal_10_bar_fetch_to_cursor_from_cursor, "bar");
+cql_string_literal(_literal_11_y_, "y");
+cql_string_literal(_literal_12_, "");
+cql_string_literal(_literal_13_garbonzo_, "garbonzo");
+cql_string_literal(_literal_14_T_various_lets, "T");
+cql_string_literal(_literal_15_NT_various_lets, "NT");
+cql_string_literal(_literal_16_ST_various_lets, "ST");
+cql_string_literal(_literal_17_foo_binary_ops_with_null, "foo");
+cql_string_literal(_literal_18_null_BigFormat, "null");
+cql_string_literal(_literal_19_arguments_are_evaluated_left_to_right, "1");
+cql_string_literal(_literal_20_arguments_are_evaluated_left_to_right, "2");
+cql_string_literal(_literal_21_arguments_are_evaluated_left_to_right, "3");
+cql_string_literal(_literal_22_arguments_are_evaluated_left_to_right, "4");
+cql_string_literal(_literal_23_hello_sensitive_function_is_a_no_op, "hello");
 
 // The statement ending at line XXXX
 
@@ -2444,9 +2445,9 @@ END;
 void echo_test(void) {
   cql_string_ref s = NULL;
 
-  cql_set_string_ref(&s, _literal_6_before_echo_echo_test);
+  cql_set_string_ref(&s, _literal_7_before_echo_echo_test);
   #define ECHO_TEST 1
-  cql_set_string_ref(&s, _literal_7_after_echo_echo_test);
+  cql_set_string_ref(&s, _literal_8_after_echo_echo_test);
 
   cql_string_release(s);
 }
@@ -2767,7 +2768,7 @@ void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
   cql_contract_argument_notnull((void *)foo, 1);
 
   *(void **)foo = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*foo, _literal_5_x_);
+  cql_set_string_ref(&*foo, _literal_6_x_);
 
 }
 #undef _PROC_
@@ -2792,7 +2793,7 @@ void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
   cql_string_ref bar = NULL;
 
   *(void **)foo = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*foo, _literal_5_x_);
+  cql_set_string_ref(&*foo, _literal_6_x_);
   cql_set_string_ref(&*foo, NULL);
   proc_with_out_arg(foo);
   cql_set_string_ref(&bar, NULL);
@@ -3390,7 +3391,7 @@ void c_literal(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
   *(void **)x = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*x, _literal_8_Testing_c_literal);
+  cql_set_string_ref(&*x, _literal_9_Testing_c_literal);
 
 }
 #undef _PROC_
@@ -4267,7 +4268,7 @@ void fetch_to_cursor_from_cursor(fetch_to_cursor_from_cursor_row *_Nonnull _resu
 
   C0._has_row_ = 1;
   C0.A = 2;
-  cql_set_string_ref(&C0.B, _literal_9_bar_fetch_to_cursor_from_cursor);
+  cql_set_string_ref(&C0.B, _literal_10_bar_fetch_to_cursor_from_cursor);
   C1._has_row_ = 1;
   C1.A = C0.A;
   cql_set_string_ref(&C1.B, C0.B);
@@ -4996,8 +4997,8 @@ void is_test(void) {
   cql_set_null(j);
 
   b = 1 == 1;
-  b = cql_string_equal(_literal_5_x_, _literal_5_x_);
-  b = cql_string_equal(_literal_5_x_, _literal_10_y_);
+  b = cql_string_equal(_literal_6_x_, _literal_6_x_);
+  b = cql_string_equal(_literal_6_x_, _literal_11_y_);
   b = !!(1 + (3 == 4));
   cql_set_notnull(i, 1);
   cql_set_notnull(j, 2);
@@ -5060,8 +5061,8 @@ void is_not_test(void) {
   cql_set_null(j);
 
   b = 1 != 1;
-  b = !cql_string_equal(_literal_5_x_, _literal_5_x_);
-  b = !cql_string_equal(_literal_5_x_, _literal_10_y_);
+  b = !cql_string_equal(_literal_6_x_, _literal_6_x_);
+  b = !cql_string_equal(_literal_6_x_, _literal_11_y_);
   b = !!(1 + (3 != 4));
   cql_set_notnull(i, 1);
   cql_set_notnull(j, 2);
@@ -6402,7 +6403,7 @@ void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnul
   cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
   C._has_row_ = 1;
   C.x = 1;
-  cql_set_string_ref(&C.y, _literal_10_y_);
+  cql_set_string_ref(&C.y, _literal_11_y_);
   cql_retain_row(C);
   if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
   cql_retain_row(C);
@@ -12477,15 +12478,15 @@ void various_lets(void) {
   r = 1.0;
   i = 1;
   l = _64(1);
-  cql_set_string_ref(&t, _literal_13_T_various_lets);
+  cql_set_string_ref(&t, _literal_14_T_various_lets);
   cql_set_notnull(nl, (~_64(2)));
   cql_set_notnull(ni, (2 + 2));
   cql_set_notnull(nr, 2.0);
-  cql_set_string_ref(&nt, _literal_14_NT_various_lets);
+  cql_set_string_ref(&nt, _literal_15_NT_various_lets);
   sl = (~_64(3));
   si = (3 + 3);
   sr = 3.0;
-  cql_set_string_ref(&st, _literal_15_ST_various_lets);
+  cql_set_string_ref(&st, _literal_16_ST_various_lets);
 
   cql_string_release(t);
   cql_string_release(nt);
@@ -12876,6 +12877,7 @@ void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_) {
 /*
 CREATE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL)
 BEGIN
+  SET l := "text";
 END;
 */
 
@@ -12898,6 +12900,7 @@ void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nulla
   *j = 0; // set out arg to non-garbage
   *(void **)k = NULL; // set out arg to non-garbage
   *(void **)l = NULL; // set out arg to non-garbage
+  cql_set_string_ref(&*l, _literal_1_text_);
 
 }
 #undef _PROC_
@@ -13709,7 +13712,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     {
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_1, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_1, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13722,7 +13725,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_2, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_2, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13735,7 +13738,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f3) {
-        cql_set_string_ref(&_tmp_text_3, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_3, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13750,7 +13753,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f4) {
-        cql_set_string_ref(&_tmp_text_4, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_4, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13765,7 +13768,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f5) {
-        cql_set_string_ref(&_tmp_text_5, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_5, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13780,7 +13783,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f6) {
-        cql_set_string_ref(&_tmp_text_6, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_6, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13795,7 +13798,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f7.is_null) {
-        cql_set_string_ref(&_tmp_text_7, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_7, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13808,7 +13811,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_8, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_8, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13821,7 +13824,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_9, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_9, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13834,7 +13837,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_10, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_10, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13847,7 +13850,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_11, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_11, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13860,7 +13863,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f12) {
-        cql_set_string_ref(&_tmp_text_12, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_12, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13875,7 +13878,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_13, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_13, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13888,7 +13891,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f14.is_null) {
-        cql_set_string_ref(&_tmp_text_14, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_14, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13901,7 +13904,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f15.is_null) {
-        cql_set_string_ref(&_tmp_text_15, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_15, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13914,7 +13917,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_16, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_16, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13927,7 +13930,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_17, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_17, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13940,7 +13943,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f18) {
-        cql_set_string_ref(&_tmp_text_18, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_18, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13955,7 +13958,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f19.is_null) {
-        cql_set_string_ref(&_tmp_text_19, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_19, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13968,7 +13971,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f20) {
-        cql_set_string_ref(&_tmp_text_20, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_20, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13983,7 +13986,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f21.is_null) {
-        cql_set_string_ref(&_tmp_text_21, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_21, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -13996,7 +13999,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f22) {
-        cql_set_string_ref(&_tmp_text_22, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_22, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14011,7 +14014,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f23.is_null) {
-        cql_set_string_ref(&_tmp_text_23, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_23, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14024,7 +14027,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_24, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_24, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14037,7 +14040,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f25) {
-        cql_set_string_ref(&_tmp_text_25, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_25, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14052,7 +14055,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_26, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_26, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14065,7 +14068,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_27, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_27, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14078,7 +14081,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_28, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_28, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14091,7 +14094,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f29) {
-        cql_set_string_ref(&_tmp_text_29, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_29, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14106,7 +14109,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f30) {
-        cql_set_string_ref(&_tmp_text_30, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_30, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14121,7 +14124,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f31) {
-        cql_set_string_ref(&_tmp_text_31, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_31, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14136,7 +14139,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f32.is_null) {
-        cql_set_string_ref(&_tmp_text_32, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_32, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14149,7 +14152,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f33.is_null) {
-        cql_set_string_ref(&_tmp_text_33, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_33, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14162,7 +14165,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f34.is_null) {
-        cql_set_string_ref(&_tmp_text_34, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_34, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14175,7 +14178,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f35) {
-        cql_set_string_ref(&_tmp_text_35, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_35, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14190,7 +14193,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f36) {
-        cql_set_string_ref(&_tmp_text_36, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_36, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14205,7 +14208,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_37, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_37, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14218,7 +14221,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f39.is_null) {
-        cql_set_string_ref(&_tmp_text_38, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_38, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14231,7 +14234,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f40.is_null) {
-        cql_set_string_ref(&_tmp_text_39, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_39, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14244,7 +14247,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_40, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_40, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14257,7 +14260,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f42) {
-        cql_set_string_ref(&_tmp_text_41, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_41, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14272,7 +14275,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f43) {
-        cql_set_string_ref(&_tmp_text_42, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_42, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14287,7 +14290,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f44.is_null) {
-        cql_set_string_ref(&_tmp_text_43, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_43, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14300,7 +14303,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_44, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_44, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14313,7 +14316,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f46.is_null) {
-        cql_set_string_ref(&_tmp_text_45, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_45, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14326,7 +14329,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_46, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_46, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14339,7 +14342,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f48) {
-        cql_set_string_ref(&_tmp_text_47, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_47, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14354,7 +14357,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f49.is_null) {
-        cql_set_string_ref(&_tmp_text_48, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_48, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14367,7 +14370,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f50) {
-        cql_set_string_ref(&_tmp_text_49, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_49, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14382,7 +14385,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f51) {
-        cql_set_string_ref(&_tmp_text_50, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_50, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14397,7 +14400,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f52.is_null) {
-        cql_set_string_ref(&_tmp_text_51, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_51, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14410,7 +14413,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_52, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_52, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14423,7 +14426,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f54) {
-        cql_set_string_ref(&_tmp_text_53, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_53, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14438,7 +14441,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_54, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_54, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14451,7 +14454,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_55, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_55, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14464,7 +14467,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f57) {
-        cql_set_string_ref(&_tmp_text_56, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_56, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14479,7 +14482,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f58) {
-        cql_set_string_ref(&_tmp_text_57, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_57, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14494,7 +14497,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f59.is_null) {
-        cql_set_string_ref(&_tmp_text_58, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_58, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14507,7 +14510,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f60) {
-        cql_set_string_ref(&_tmp_text_59, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_59, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14522,7 +14525,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f61.is_null) {
-        cql_set_string_ref(&_tmp_text_60, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_60, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14535,7 +14538,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f62.is_null) {
-        cql_set_string_ref(&_tmp_text_61, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_61, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14548,7 +14551,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f63.is_null) {
-        cql_set_string_ref(&_tmp_text_62, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_62, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14561,7 +14564,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f64.is_null) {
-        cql_set_string_ref(&_tmp_text_63, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_63, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14574,7 +14577,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_64, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_64, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14587,7 +14590,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_65, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_65, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14600,7 +14603,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (0) {
-        cql_set_string_ref(&_tmp_text_66, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_66, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14613,7 +14616,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f68.is_null) {
-        cql_set_string_ref(&_tmp_text_67, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_67, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14626,7 +14629,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (!C.f69) {
-        cql_set_string_ref(&_tmp_text_68, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_68, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14641,7 +14644,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f70.is_null) {
-        cql_set_string_ref(&_tmp_text_69, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_69, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14654,7 +14657,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f71.is_null) {
-        cql_set_string_ref(&_tmp_text_70, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_70, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14667,7 +14670,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f72.is_null) {
-        cql_set_string_ref(&_tmp_text_71, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_71, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14680,7 +14683,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f73.is_null) {
-        cql_set_string_ref(&_tmp_text_72, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_72, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14693,7 +14696,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f74.is_null) {
-        cql_set_string_ref(&_tmp_text_73, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_73, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -14706,7 +14709,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
     } while (0);
     do {
       if (C.f75.is_null) {
-        cql_set_string_ref(&_tmp_text_74, _literal_17_null_BigFormat);
+        cql_set_string_ref(&_tmp_text_74, _literal_18_null_BigFormat);
         break;
       }
       {
@@ -15004,6 +15007,7 @@ void ltor_proc_int(cql_nullable_int32 a, cql_nullable_int32 b, cql_nullable_int3
 /*
 CREATE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL)
 BEGIN
+  SET c := "text";
 END;
 */
 
@@ -15015,6 +15019,7 @@ void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull 
   cql_contract_argument_notnull((void *)c, 3);
 
   *(void **)c = NULL; // set out arg to non-garbage
+  cql_set_string_ref(&*c, _literal_1_text_);
 
 }
 #undef _PROC_
@@ -15092,15 +15097,15 @@ void arguments_are_evaluated_left_to_right(void) {
   ltor_proc_int(_tmp_n_int_3, _tmp_n_int_4, &_tmp_n_int_2);
   ltor_proc_int(_tmp_n_int_1, _tmp_n_int_2, &b);
   cql_set_string_ref(&_tmp_text_1, NULL);
-  ltor_proc_text_not_null(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right, &_tmp_text_1);
+  ltor_proc_text_not_null(_literal_19_arguments_are_evaluated_left_to_right, _literal_20_arguments_are_evaluated_left_to_right, &_tmp_text_1);
   cql_set_string_ref(&_tmp_text_2, NULL);
-  ltor_proc_text_not_null(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right, &_tmp_text_2);
+  ltor_proc_text_not_null(_literal_21_arguments_are_evaluated_left_to_right, _literal_22_arguments_are_evaluated_left_to_right, &_tmp_text_2);
   cql_set_string_ref(&c, NULL);
   ltor_proc_text_not_null(_tmp_text_1, _tmp_text_2, &c);
   cql_set_string_ref(&_tmp_n_text_1, NULL);
-  ltor_proc_text(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right, &_tmp_n_text_1);
+  ltor_proc_text(_literal_19_arguments_are_evaluated_left_to_right, _literal_20_arguments_are_evaluated_left_to_right, &_tmp_n_text_1);
   cql_set_string_ref(&_tmp_n_text_2, NULL);
-  ltor_proc_text(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right, &_tmp_n_text_2);
+  ltor_proc_text(_literal_21_arguments_are_evaluated_left_to_right, _literal_22_arguments_are_evaluated_left_to_right, &_tmp_n_text_2);
   cql_set_string_ref(&d, NULL);
   ltor_proc_text(_tmp_n_text_1, _tmp_n_text_2, &d);
   _tmp_int_1 = ltor_func_int_not_null(1, 2);
@@ -15113,11 +15118,11 @@ void arguments_are_evaluated_left_to_right(void) {
   cql_set_notnull(_tmp_n_int_4, 4);
   _tmp_n_int_2 = ltor_func_int(_tmp_n_int_3, _tmp_n_int_4);
   f = ltor_func_int(_tmp_n_int_1, _tmp_n_int_2);
-  cql_set_string_ref(&_tmp_text_1, ltor_func_text_not_null(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right));
-  cql_set_string_ref(&_tmp_text_2, ltor_func_text_not_null(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&_tmp_text_1, ltor_func_text_not_null(_literal_19_arguments_are_evaluated_left_to_right, _literal_20_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&_tmp_text_2, ltor_func_text_not_null(_literal_21_arguments_are_evaluated_left_to_right, _literal_22_arguments_are_evaluated_left_to_right));
   cql_set_string_ref(&g, ltor_func_text_not_null(_tmp_text_1, _tmp_text_2));
-  cql_set_string_ref(&_tmp_n_text_1, ltor_func_text(_literal_18_arguments_are_evaluated_left_to_right, _literal_19_arguments_are_evaluated_left_to_right));
-  cql_set_string_ref(&_tmp_n_text_2, ltor_func_text(_literal_20_arguments_are_evaluated_left_to_right, _literal_21_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&_tmp_n_text_1, ltor_func_text(_literal_19_arguments_are_evaluated_left_to_right, _literal_20_arguments_are_evaluated_left_to_right));
+  cql_set_string_ref(&_tmp_n_text_2, ltor_func_text(_literal_21_arguments_are_evaluated_left_to_right, _literal_22_arguments_are_evaluated_left_to_right));
   cql_set_string_ref(&h, ltor_func_text(_tmp_n_text_1, _tmp_n_text_2));
 
   cql_string_release(c);
@@ -15307,7 +15312,7 @@ CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull _db_, s
   *_result_stmt = NULL;
   cql_string_ref x = NULL;
 
-  cql_set_string_ref(&x, _literal_22_hello_sensitive_function_is_a_no_op);
+  cql_set_string_ref(&x, _literal_23_hello_sensitive_function_is_a_no_op);
   _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT 'hello'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16081,6 +16086,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
+  SET t2 := "text";
+  */
+  cql_set_string_ref(&t2, _literal_1_text_);
+
+  // The statement ending at line XXXX
+
+  /*
   SET i2 := 1;
   */
   i2 = 1;
@@ -16251,7 +16263,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET t2 := "This is a \" \\ test '' \n \" ";
   */
-  cql_set_string_ref(&t2, _literal_1_This_is_a_test_);
+  cql_set_string_ref(&t2, _literal_2_This_is_a_test_);
 
   // The statement ending at line XXXX
 
@@ -16886,16 +16898,16 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET b2 := BETWEEN REWRITE _between_6_ := 'b' CHECK (_between_6_ >= 'a' AND _between_6_ <= 'c');
   */
-  cql_set_string_ref(&_between_6_, _literal_2_b_);
-  b2 = cql_string_compare(_between_6_, _literal_3_a_) >= 0 && cql_string_compare(_between_6_, _literal_4_c_) <= 0;
+  cql_set_string_ref(&_between_6_, _literal_3_b_);
+  b2 = cql_string_compare(_between_6_, _literal_4_a_) >= 0 && cql_string_compare(_between_6_, _literal_5_c_) <= 0;
 
   // The statement ending at line XXXX
 
   /*
   SET b0_nullable := BETWEEN REWRITE _between_7_ := 'b' CHECK (_between_7_ >= 'a' AND _between_7_ <= t0_nullable);
   */
-  cql_set_string_ref(&_between_7_, _literal_2_b_);
-  if (!(cql_string_compare(_between_7_, _literal_3_a_) >= 0)) {
+  cql_set_string_ref(&_between_7_, _literal_3_b_);
+  if (!(cql_string_compare(_between_7_, _literal_4_a_) >= 0)) {
     cql_set_notnull(_tmp_n_bool_0, 0);
   }
   else {
@@ -16914,13 +16926,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET b0_nullable := BETWEEN REWRITE _between_8_ := 'b' CHECK (_between_8_ >= t0_nullable AND _between_8_ <= 'c');
   */
-  cql_set_string_ref(&_between_8_, _literal_2_b_);
+  cql_set_string_ref(&_between_8_, _literal_3_b_);
   cql_combine_nullables(_tmp_n_bool_1, !_between_8_, !t0_nullable, cql_string_compare(_between_8_, t0_nullable) >= 0);
   if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
     cql_set_notnull(_tmp_n_bool_0, 0);
   }
   else {
-    if (!(cql_string_compare(_between_8_, _literal_4_c_) <= 0)) {
+    if (!(cql_string_compare(_between_8_, _literal_5_c_) <= 0)) {
       cql_set_notnull(_tmp_n_bool_0, 0);
     }
     else {
@@ -16934,13 +16946,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET b0_nullable := BETWEEN REWRITE _between_9_ := 'b' CHECK (_between_9_ >= NULL AND _between_9_ <= 'c');
   */
-  cql_set_string_ref(&_between_9_, _literal_2_b_);
+  cql_set_string_ref(&_between_9_, _literal_3_b_);
   cql_set_null(_tmp_n_bool_1);
   if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
     cql_set_notnull(_tmp_n_bool_0, 0);
   }
   else {
-    if (!(cql_string_compare(_between_9_, _literal_4_c_) <= 0)) {
+    if (!(cql_string_compare(_between_9_, _literal_5_c_) <= 0)) {
       cql_set_notnull(_tmp_n_bool_0, 0);
     }
     else {
@@ -16954,16 +16966,16 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET b2 := BETWEEN REWRITE _between_10_ := 'b' CHECK (_between_10_ < 'a' OR _between_10_ > 'c');
   */
-  cql_set_string_ref(&_between_10_, _literal_2_b_);
-  b2 = cql_string_compare(_between_10_, _literal_3_a_) < 0 || cql_string_compare(_between_10_, _literal_4_c_) > 0;
+  cql_set_string_ref(&_between_10_, _literal_3_b_);
+  b2 = cql_string_compare(_between_10_, _literal_4_a_) < 0 || cql_string_compare(_between_10_, _literal_5_c_) > 0;
 
   // The statement ending at line XXXX
 
   /*
   SET b0_nullable := BETWEEN REWRITE _between_11_ := 'b' CHECK (_between_11_ < 'a' OR _between_11_ > t0_nullable);
   */
-  cql_set_string_ref(&_between_11_, _literal_2_b_);
-  if (cql_string_compare(_between_11_, _literal_3_a_) < 0) {
+  cql_set_string_ref(&_between_11_, _literal_3_b_);
+  if (cql_string_compare(_between_11_, _literal_4_a_) < 0) {
     cql_set_notnull(_tmp_n_bool_0, 1);
   }
   else {
@@ -16982,13 +16994,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET b0_nullable := BETWEEN REWRITE _between_12_ := 'b' CHECK (_between_12_ < t0_nullable OR _between_12_ > 'c');
   */
-  cql_set_string_ref(&_between_12_, _literal_2_b_);
+  cql_set_string_ref(&_between_12_, _literal_3_b_);
   cql_combine_nullables(_tmp_n_bool_1, !_between_12_, !t0_nullable, cql_string_compare(_between_12_, t0_nullable) < 0);
   if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
     cql_set_notnull(_tmp_n_bool_0, 1);
   }
   else {
-    if (cql_string_compare(_between_12_, _literal_4_c_) > 0) {
+    if (cql_string_compare(_between_12_, _literal_5_c_) > 0) {
       cql_set_notnull(_tmp_n_bool_0, 1);
     }
     else {
@@ -17002,13 +17014,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET b0_nullable := BETWEEN REWRITE _between_13_ := 'b' CHECK (_between_13_ < NULL OR _between_13_ > 'c');
   */
-  cql_set_string_ref(&_between_13_, _literal_2_b_);
+  cql_set_string_ref(&_between_13_, _literal_3_b_);
   cql_set_null(_tmp_n_bool_1);
   if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
     cql_set_notnull(_tmp_n_bool_0, 1);
   }
   else {
-    if (cql_string_compare(_between_13_, _literal_4_c_) > 0) {
+    if (cql_string_compare(_between_13_, _literal_5_c_) > 0) {
       cql_set_notnull(_tmp_n_bool_0, 1);
     }
     else {
@@ -17105,7 +17117,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET S := 'x';
   */
-  cql_set_string_ref(&s, _literal_5_x_);
+  cql_set_string_ref(&s, _literal_6_x_);
 
   // The statement ending at line XXXX
 
@@ -17139,6 +17151,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET obj_var := NULL;
   */
   cql_set_object_ref(&obj_var, NULL);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET obj_var2 := obj_notnull_func();
+  */
+  cql_set_object_ref(&obj_var2, obj_notnull_func());
 
   // The statement ending at line XXXX
 
@@ -17413,6 +17432,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
+  SET blob_var2 := blob_notnull_func();
+  */
+  cql_set_blob_ref(&blob_var2, blob_notnull_func());
+
+  // The statement ending at line XXXX
+
+  /*
   SET blob_var := NULL;
   */
   cql_set_blob_ref(&blob_var, NULL);
@@ -17624,6 +17650,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
+  SET blob_var_notnull := blob_notnull_func();
+  */
+  cql_set_blob_ref(&blob_var_notnull, blob_notnull_func());
+
+  // The statement ending at line XXXX
+
+  /*
   INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
   */
   _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -17729,14 +17762,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := 'x' LIKE 'y';
   */
-  i2 = cql_string_like(_literal_5_x_, _literal_10_y_) == 0;
+  i2 = cql_string_like(_literal_6_x_, _literal_11_y_) == 0;
 
   // The statement ending at line XXXX
 
   /*
   SET i2 := 'x' NOT LIKE 'y';
   */
-  i2 = cql_string_like(_literal_5_x_, _literal_10_y_) != 0;
+  i2 = cql_string_like(_literal_6_x_, _literal_11_y_) != 0;
 
   // The statement ending at line XXXX
 
@@ -18201,7 +18234,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_string_ref(&t0_nullable, _tmp_n_text_1);
   }
   else {
-    cql_set_string_ref(&t0_nullable, _literal_11_);
+    cql_set_string_ref(&t0_nullable, _literal_12_);
   }
   cql_finalize_stmt(&_temp_stmt);
 
@@ -18221,7 +18254,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
   }
   if (_rc_ == SQLITE_DONE || !_tmp_n_text_1) {
-    cql_set_string_ref(&t2, _literal_12_garbonzo_);
+    cql_set_string_ref(&t2, _literal_13_garbonzo_);
   } else { 
     cql_set_string_ref(&t2, _tmp_n_text_1);
   }

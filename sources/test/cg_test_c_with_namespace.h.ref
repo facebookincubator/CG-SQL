@@ -96,6 +96,8 @@ extern cql_string_ref _Nonnull t2;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_nullable_int32 side_effect1(void);
 
 // The statement ending at line XXXX
@@ -629,6 +631,11 @@ extern cql_object_ref _Nullable obj_var;
 extern cql_object_ref _Nonnull obj_var2;
 
 // The statement ending at line XXXX
+extern cql_object_ref _Nonnull obj_notnull_func(void);
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 
@@ -785,6 +792,11 @@ extern cql_blob_ref _Nullable blob_var;
 extern cql_blob_ref _Nonnull blob_var2;
 
 // The statement ending at line XXXX
+extern cql_blob_ref _Nonnull blob_notnull_func(void);
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 
@@ -833,6 +845,8 @@ extern cql_blob_ref _Nullable blob_func_create(void);
 
 // The statement ending at line XXXX
 extern cql_blob_ref _Nonnull blob_var_notnull;
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 

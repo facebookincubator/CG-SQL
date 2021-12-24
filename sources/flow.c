@@ -173,10 +173,12 @@ static int history_item_comparator(const void *a, const void *b) {
     return 1;
   }
 
-
-  // TODO: We currently only deal with one type of flag, so these are
-  // temporarily disabled for the sake of code coverage.
 #if 0
+  // We'll never enter either of these branches because, at the moment, there
+  // are only two types of improvements, and no type can have both its
+  // nullability improved and its initialization improved: Only nonnull types
+  // may require initialization, and only nullable types may have improved
+  // nullability. This is, therefore, disabled for the sake of code coverage.
   if (item_a->flag < item_b->flag) {
     return -1;
   }
@@ -184,6 +186,9 @@ static int history_item_comparator(const void *a, const void *b) {
   if (item_a->flag > item_b->flag) {
     return 1;
   }
+#else
+  // Until additional improvement types are added, this will always be true.
+  Invariant(item_a->flag == item_b->flag);
 #endif
 
   return 0;

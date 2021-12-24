@@ -2999,6 +2999,8 @@
 
     CREATE PROC with_complex_args (OUT pattern TEXT NOT NULL, INOUT arg REAL)
     BEGIN
+    SET pattern := "text";
+
     SELECT 1 AS a;
     END
 

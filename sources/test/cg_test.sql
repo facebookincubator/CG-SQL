@@ -43,6 +43,9 @@ declare l2 long integer not null;
 declare b2 bool not null;
 declare t2 text not null;
 
+-- initialize for later use
+set t2 := "text";
+
 -- TEST: assign eveything not null
 -- Note: semantic analysis verifies no chance of
 --       assigning nullable to not nullable
@@ -619,13 +622,13 @@ set i0_nullable := i1_nullable not in (1, 2, null, b0_nullable);
 
 -- TEST: between with strings
 -- + SET b2 := BETWEEN REWRITE _between_6_ := 'b' CHECK (_between_6_ >= 'a' AND _between_6_ <= 'c');
--- + cql_set_string_ref(&_between_6_, _literal_2_b_);
+-- + cql_set_string_ref(&_between_6_, _literal_%_b_);
 -- + b2 = cql_string_compare(_between_6_, _literal_%_a_) >= 0 && cql_string_compare(_between_6_, _literal_%_c_) <= 0;
 set b2 := 'b' between 'a' and 'c';
 
 -- TEST: between with nullable strings right
 -- + SET b0_nullable := BETWEEN REWRITE _between_7_ := 'b' CHECK (_between_7_ >= 'a' AND _between_7_ <= t0_nullable);
--- + cql_set_string_ref(&_between_7_, _literal_2_b_);
+-- + cql_set_string_ref(&_between_7_, _literal_%_b_);
 -- + if (!(cql_string_compare(_between_7_, _literal_%_a_) >= 0)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
 -- + }
@@ -643,7 +646,7 @@ set b0_nullable := 'b' between 'a' and t0_nullable;
 
 -- TEST: between with nullable strings left
 -- + SET b0_nullable := BETWEEN REWRITE _between_8_ := 'b' CHECK (_between_8_ >= t0_nullable AND _between_8_ <= 'c');
--- + cql_set_string_ref(&_between_8_, _literal_2_b_);
+-- + cql_set_string_ref(&_between_8_, _literal_%_b_);
 -- + cql_combine_nullables(_tmp_n_bool_1, !_between_8_, !t0_nullable, cql_string_compare(_between_8_, t0_nullable) >= 0);
 -- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
@@ -661,7 +664,7 @@ set b0_nullable := 'b' between t0_nullable and 'c';
 
 -- TEST: between with nullable strings null operand
 -- + SET b0_nullable := BETWEEN REWRITE _between_9_ := 'b' CHECK (_between_9_ >= NULL AND _between_9_ <= 'c');
--- + cql_set_string_ref(&_between_9_, _literal_2_b_);
+-- + cql_set_string_ref(&_between_9_, _literal_%_b_);
 -- + cql_set_null(_tmp_n_bool_1);
 -- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
@@ -679,13 +682,13 @@ set b0_nullable := 'b' between null and 'c';
 
 -- TEST: not between with strings
 -- + SET b2 := BETWEEN REWRITE _between_10_ := 'b' CHECK (_between_10_ < 'a' OR _between_10_ > 'c');
--- + cql_set_string_ref(&_between_10_, _literal_2_b_);
+-- + cql_set_string_ref(&_between_10_, _literal_%_b_);
 -- + b2 = cql_string_compare(_between_10_, _literal_%_a_) < 0 || cql_string_compare(_between_10_, _literal_%_c_) > 0;
 set b2 := 'b' not between 'a' and 'c';
 
 -- TEST: not between with nullable strings right
 -- + SET b0_nullable := BETWEEN REWRITE _between_11_ := 'b' CHECK (_between_11_ < 'a' OR _between_11_ > t0_nullable);
--- + cql_set_string_ref(&_between_11_, _literal_2_b_);
+-- + cql_set_string_ref(&_between_11_, _literal_%_b_);
 -- + if (cql_string_compare(_between_11_, _literal_%_a_) < 0) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
 -- + }
@@ -703,7 +706,7 @@ set b0_nullable := 'b' not between 'a' and t0_nullable;
 
 -- TEST: not between with nullable strings left
 -- + SET b0_nullable := BETWEEN REWRITE _between_12_ := 'b' CHECK (_between_12_ < t0_nullable OR _between_12_ > 'c');
--- + cql_set_string_ref(&_between_12_, _literal_2_b_);
+-- + cql_set_string_ref(&_between_12_, _literal_%_b_);
 -- + cql_combine_nullables(_tmp_n_bool_1, !_between_12_, !t0_nullable, cql_string_compare(_between_12_, t0_nullable) < 0);
 -- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
@@ -1067,6 +1070,11 @@ set obj_var := null;
 -- + cql_object_ref obj_var2 = NULL;
 declare obj_var2 object not null;
 
+declare function obj_notnull_func() object not null;
+
+-- initialize for later use
+set obj_var2 := obj_notnull_func();
+
 -- TEST: assign var to object variable
 -- + cql_set_object_ref(&obj_var, obj_var2);
 set obj_var := obj_var2;
@@ -1357,6 +1365,11 @@ declare blob_var blob;
 -- + cql_blob_ref blob_var2 = NULL;
 declare blob_var2 blob not null;
 
+declare function blob_notnull_func() blob not null;
+
+-- initialize for later use
+set blob_var2 := blob_notnull_func();
+
 -- TEST: assign null to blob variable
 -- + cql_set_blob_ref(&blob_var, NULL);
 set blob_var := null;
@@ -1466,6 +1479,9 @@ set blob_var := (select b_notnull from blob_table where blob_id = 1);
 
 -- some not null blob object we can use
 declare blob_var_notnull blob not null;
+
+-- initialize for later use
+set blob_var_notnull := blob_notnull_func();
 
 -- TEST: bind a nullable blob and a not null blob
 -- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
@@ -3863,7 +3879,7 @@ set i2 := (select type from bar if nothing or null -1);
 -- +   cql_set_string_ref(&t0_nullable, _tmp_n_text_1);
 -- + }
 -- + else {
--- +   cql_set_string_ref(&t0_nullable, _literal_11_);
+-- +   cql_set_string_ref(&t0_nullable, _literal_%_);
 -- + }
 set t0_nullable := (select name from bar if nothing "");
 
@@ -3873,7 +3889,7 @@ set t0_nullable := (select name from bar if nothing "");
 -- +   cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
 -- + }
 -- + if (_rc_ == SQLITE_DONE || !_tmp_n_text_1) {
--- +   cql_set_string_ref(&t2, _literal_12_garbonzo_);
+-- +   cql_set_string_ref(&t2, _literal_%_garbonzo_);
 -- + } else {
 -- +   cql_set_string_ref(&t2, _tmp_n_text_1);
 -- + }
@@ -4335,6 +4351,7 @@ create proc exercise_contracts(
   inout p text not null,
 )
 begin
+  set l := "text";
 end;
 
 -- TEST: Contracts should be emitted for public procs
@@ -4636,7 +4653,7 @@ SET abs_val_nullable := abs(null);
 -- Used in the following test.
 create proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) begin end;
 create proc ltor_proc_int(a int, b int, out c int) begin end;
-create proc ltor_proc_text_not_null(a text not null, b text not null, out c text not null) begin end;
+create proc ltor_proc_text_not_null(a text not null, b text not null, out c text not null) begin set c := "text"; end;
 create proc ltor_proc_text(a text, b text, out c text) begin end;
 declare function ltor_func_int_not_null(a int not null, b int not null) int not null;
 declare function ltor_func_int(a int, b int) int;
@@ -4731,7 +4748,7 @@ end;
 
 -- TEST: The `sensitive` function is a no-op and never appears in the C output.
 -- + cql_string_ref x = NULL;
--- + cql_set_string_ref(&x, _literal_22_hello_sensitive_function_is_a_no_op);
+-- + cql_set_string_ref(&x, _literal_%_hello_sensitive_function_is_a_no_op);
 -- + _rc_ = cql_prepare(_db_, _result_stmt,
 -- + "SELECT 'hello'");
 create proc sensitive_function_is_a_no_op()

@@ -162,7 +162,9 @@ typedef struct schema_annotation {
 #define SEM_TYPE_IMPLICIT         _64(0x800000000) // set if and only the variable was declare implicitly (via declare out)
 #define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) // set if proc calls an out union proc for a result
 #define SEM_TYPE_ALIAS           _64(0x2000000000) // set only for aliases of a select when analyzing its where clause
-#define SEM_TYPE_FLAGS           _64(0x3FFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_INIT_REQUIRED   _64(0x4000000000) // set for variables that require initialization before use
+#define SEM_TYPE_INIT_COMPLETE   _64(0x8000000000) // set when SEM_TYPE_INIT_REQUIRED is present to indicate initialization
+#define SEM_TYPE_FLAGS           _64(0xFFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002

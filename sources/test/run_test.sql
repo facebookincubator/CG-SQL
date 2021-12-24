@@ -4174,6 +4174,9 @@ create proc proc_with_notnull_args(
   inout l text not null,
 )
 begin
+  set c := "text";
+  set d := "text";
+  set j := "text";
 end;
 
 @echo c,"#undef cql_error_trace\n";

@@ -2690,13 +2690,13 @@ begin
 end;
 
 -- TEST: can't use an integer for inout arg
--- + error: % expected a variable name for out argument 'arg2'
+-- + error: % expected a variable name for OUT or INOUT argument 'arg2'
 -- + {call_stmt}: err
 -- +1 error:
 call proc_with_output(1, 2, X);
 
 -- TEST: can't use an integer for out arg
--- + error: % expected a variable name for out argument 'arg3'
+-- + error: % expected a variable name for OUT or INOUT argument 'arg3'
 -- + {call_stmt}: err
 -- +1 error:
 call proc_with_output(1, X, 3);
@@ -2756,7 +2756,7 @@ call proc_with_output(X, Y, X);
 call proc_with_output(1 + X, Y, X);
 
 -- TEST: Cursors cannot be passed as OUT arguments.
--- + error: % expected a variable name for out argument 'arg1'
+-- + error: % expected a variable name for OUT or INOUT argument 'arg1'
 -- +1 error:
 create procedure cursors_cannot_be_used_as_out_args()
 begin
@@ -2765,7 +2765,7 @@ begin
 end;
 
 -- TEST: Enum cases cannot be passed as OUT arguments.
--- + error: % expected a variable name for out argument 'arg1'
+-- + error: % expected a variable name for OUT or INOUT argument 'arg1'
 -- +1 error:
 create procedure enum_cases_cannot_be_used_as_out_args()
 begin
@@ -4180,7 +4180,7 @@ select sensitive(1) x;
 let sens_one := sensitive(1);
 
 -- helper variable
-declare sens_notnull text not null @sensitive;
+let sens_notnull := sensitive("some text");
 
 -- TEST: ensure nullable() doesn't strip the sensitive bit
 -- notnull is gone, sensitive stays
@@ -15552,7 +15552,7 @@ declare redundant_sensitive my_type @sensitive;
 -- verify the rewrite and also the type info
 -- + DECLARE adding_notnull TEXT @SENSITIVE NOT NULL;
 -- + {declare_vars_type}: text notnull sensitive
--- + {name_list}: adding_notnull: text notnull variable sensitive
+-- + {name_list}: adding_notnull: text notnull variable init_required sensitive
 -- - error:
 declare adding_notnull my_type not null;
 
@@ -15577,7 +15577,7 @@ declare nn_var_redundant text_nn not null @sensitive;
 
 -- TEST: ok to add @sensitive
 -- + {declare_vars_type}: text notnull sensitive
--- + {name_list}: nn_var_sens: text notnull variable sensitive
+-- + {name_list}: nn_var_sens: text notnull variable init_required sensitive
 -- - error:
 declare nn_var_sens text_nn @sensitive;
 
@@ -17210,7 +17210,7 @@ declare out call out2_proc(1, u, u);
 
 -- TEST: non-variable out arg in declare out
 -- + {declare_out_call_stmt}: err
--- + error: % expected a variable name for out argument 'y'
+-- + error: % expected a variable name for OUT or INOUT argument 'y'
 create proc out_decl_test_2(x integer)
 begin
   declare out call out2_proc(x, 1+3, v);
@@ -17334,7 +17334,7 @@ create table bogus_builtin_migrator_placement (
 
 -- TEST: test sensitive flag on out param in declare proc using transaction
 -- + {declare_proc_stmt}: ok dml_proc
--- + {param}: code_: text notnull variable out sensitive
+-- + {param}: code_: text notnull variable init_required out sensitive
 -- - error:
 DECLARE PROC proc_as_func(IN transport_key_ TEXT, OUT code_ TEXT NOT NULL @sensitive) USING TRANSACTION;
 
@@ -19189,6 +19189,324 @@ begin
   end if;
 
   let x3 := a; -- nullable for now, but this may change in the future
+end;
+
+-- Used in the following test.
+declare proc requires_inout_text_notnull(inout t text not null);
+
+-- Used in the following test.
+declare proc requires_inout_blob_notnull(inout t blob not null);
+
+-- Used in the following test.
+declare proc requires_inout_object_notnull(inout t object not null);
+
+-- TEST: Variables of a nonnull reference type must be initialized before use,
+-- both when used within expressions and when passed as INOUT arguments.
+-- + {create_proc_stmt}: err
+-- + {name a}: a: text notnull variable init_required
+-- + {name b}: b: blob notnull variable init_required
+-- + {name c}: c: object notnull variable init_required
+-- +3 {let_stmt}: err
+-- +3 {call_stmt}: err
+-- +2 error: % variable possibly used before initialization 'a'
+-- +2 error: % variable possibly used before initialization 'b'
+-- +2 error: % variable possibly used before initialization 'c'
+create proc initialization_is_required_for_nonnull_reference_types()
+begin
+  declare a text not null;
+  declare b blob not null;
+  declare c object not null;
+
+  -- expression case
+  let dummy := a;
+  let dummy := b;
+  let dummy := c;
+
+  -- INOUT arg case
+  call requires_inout_text_notnull(a);
+  call requires_inout_blob_notnull(b);
+  call requires_inout_object_notnull(c);
+end;
+
+-- TEST: Variables of a nullable reference type need not be initialized before
+-- use.
+-- + {name a}: a: text variable
+-- + {name b}: b: blob variable
+-- + {name c}: c: object variable
+-- + {name x}: x: text variable
+-- + {name y}: y: blob variable
+-- + {name z}: z: object variable
+-- - error:
+create proc initialization_is_not_required_for_nullable_reference_types()
+begin
+  declare a text;
+  declare b blob;
+  declare c object;
+
+  let x := a;
+  let y := b;
+  let z := c;
+end;
+
+-- TEST: Variables of a non-reference type need not be initialized before use.
+-- + {name a}: a: bool notnull variable
+-- + {name b}: b: integer notnull variable
+-- + {name c}: c: longint notnull variable
+-- + {name x}: x: bool notnull variable
+-- + {name y}: y: integer notnull variable
+-- + {name z}: z: longint notnull variable
+-- - error:
+create proc initialization_is_not_required_for_non_reference_types()
+begin
+  declare a bool not null;
+  declare b int not null;
+  declare c long not null;
+
+  let x := a;
+  let y := b;
+  let z := c;
+end;
+
+-- TEST: A SET statement initializes a variable.
+-- + {name a}: a: text notnull variable init_required
+-- + {name x}: x: text notnull variable
+-- - error;
+create proc set_can_initialize()
+begin
+  declare a text not null;
+  set a := "text";
+  let x := a;
+end;
+
+-- Used in the following test.
+declare proc requires_out_text_notnull(out t text not null);
+
+-- TEST: Passing a variable as an OUT argument (but not an INOUT argument)
+-- initializes it.
+-- + {name a}: a: text notnull variable init_required
+-- + {name x}: x: text notnull variable
+-- - error;
+create proc out_arg_uses_can_initialize()
+begin
+  declare a text not null;
+  call requires_out_text_notnull(a);
+  let x := a;
+end;
+
+-- TEST: Fetching into a variable initializes it.
+-- + {name a}: a: text notnull variable init_required
+-- + {name x}: x: text notnull variable
+-- - error:
+create proc fetch_into_initializes()
+begin
+  declare a text not null;
+  declare foo cursor for select "text" bar;
+  fetch foo into a;
+  let x := a;
+end;
+
+-- TEST: Initialization of OUT args is required before the end of the procedure.
+-- + {create_proc_stmt}: err
+-- + {param}: a: text notnull variable init_required out
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
+-- +1 error:
+create proc nonnull_reference_out_args_require_initialization(out a text not null)
+begin
+end;
+
+-- TEST: Initialization of OUT args directly in the proc statement list works.
+-- + {param}: a: text notnull variable init_required out
+-- - error:
+create proc out_arg_initialization_directly_in_proc_works(out a text not null)
+begin
+  set a := "text";
+end;
+
+-- TEST: Initialization must be complete before all returns.
+-- + {create_proc_stmt}: err
+-- + {param}: a: text notnull variable init_required out
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
+-- +1 error:
+create proc out_args_must_be_initialized_before_return(out a text not null)
+begin
+  if 0 then
+    return;
+  end if;
+  set a := "text";
+end;
+
+-- TEST: Initialization of OUT args can be done within IF and SWITCH branches.
+-- + {name a}: a: text notnull variable init_required
+-- - error:
+create proc out_args_can_be_initialized_in_branches(out a text not null)
+begin
+  if 0 then
+    set a := "text";
+  else if 0 then
+    set a := "text";
+  else
+    if 0 then
+      if 0 then
+        set a := "text";
+      else
+        if 0 then
+          set a := "text";
+        else
+          switch 0
+          when 0 then
+            set a := "text";
+          when 1 then
+            if 0 then
+              set a := "text";
+            else
+              set a := "text";
+            end if;
+          else
+            set a := "text";
+          end;
+        end if;
+      end if;
+    else
+      set a := "text";
+    end if;
+  end if;
+end;
+
+-- TEST: Initialization of OUT args can be done within IF and SWITCH branches,
+-- but all cases must be covered.
+-- + {create_proc_stmt}: err
+-- + {name a}: a: text notnull variable init_required
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
+-- +1 error:
+create proc out_arg_initialization_in_branches_must_cover_all_cases(out a text not null)
+begin
+  if 0 then
+    set a := "text";
+  else if 0 then
+    set a := "text";
+  else
+    if 0 then
+      if 0 then
+        set a := "text";
+      else
+        if 0 then
+          set a := "text";
+        else
+          switch 0
+          when 0 then
+            set a := "text";
+          when 1 then
+            if 0 then
+              -- this case has not been covered
+            else
+              set a := "text";
+            end if;
+          else
+            set a := "text";
+          end;
+        end if;
+      end if;
+    else
+      set a := "text";
+    end if;
+  end if;
+end;
+
+-- TEST: Forwarding procs handle initialization improvements correctly.
+-- + {create_proc_stmt}: ok
+-- + {param}: t: text notnull variable init_required out
+-- - error:
+create proc forwarding_procs_handle_initialization(like requires_out_text_notnull arguments)
+begin
+  call requires_out_text_notnull(from arguments);
+end;
+
+-- TEST: Forwarding procs using named bundles handle initialization improvements
+-- correctly. This case exercises the workaround present in
+-- sem_validate_current_proc_params_are_initialized.
+-- + {create_proc_stmt}: ok
+-- + {param}: bundle_t: text notnull variable init_required out
+-- - error:
+create proc forwarding_procs_handle_initialization_named(bundle like requires_out_text_notnull arguments)
+begin
+  call requires_out_text_notnull(from bundle);
+end;
+
+-- TEST: TRY blocks can be treated as the top level of a proc for the purposes
+-- of initialization, if annotated.
+-- + {create_proc_stmt}: ok dml_proc
+-- + {assign}: a: text notnull variable init_required out
+-- - error:
+create proc try_blocks_can_successfully_verify_initialization(out a text not null, out rc int not null)
+begin
+  set rc := 0;
+  @attribute(cql:try_is_proc_body)
+  @attribute(some_other_attribute)
+  begin try
+    -- we're okay because it's initialized in the TRY...
+    set a := "text";
+  end try;
+  begin catch
+    set rc := 1;
+  end catch;
+  -- ...even though it's not always initialized in the proc
+end;
+
+-- TEST: try_is_proc_body catches parameter initialization errors in the TRY.
+-- + {create_proc_stmt}: err
+-- + {stmt_and_attr}: err
+-- + {trycatch_stmt}: err
+-- + error: % nonnull reference OUT parameter possibly not always initialized 'a'
+-- +1 error:
+create proc try_blocks_can_fail_to_verify_initialization(out a text not null, out rc int not null)
+begin
+  set rc := 0;
+  @attribute(some_other_attribute)
+  @attribute(cql:try_is_proc_body)
+  begin try
+    -- `a` is not initialized soon enough so we get an error...
+  end try;
+  begin catch
+    set rc := 1;
+  end catch;
+  -- ...even though it's always initialized in the proc
+  set a := "text";
+end;
+
+
+-- TEST: try_is_proc_body may only appear once.
+-- + {create_proc_stmt}: err
+-- + {stmt_and_attr}: err
+-- + {trycatch_stmt}: err
+-- + error: % @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
+-- +1 error:
+create proc try_is_proc_body_may_only_appear_once()
+begin
+  @attribute(cql:try_is_proc_body)
+  begin try
+  end try;
+  begin catch
+  end catch;
+  @attribute(cql:try_is_proc_body)
+  begin try
+  end try;
+  begin catch
+  end catch;
+end;
+
+-- TEST: try_is_proc_body accepts no values.
+-- + {create_proc_stmt}: err
+-- + {stmt_and_attr}: err
+-- + {trycatch_stmt}: err
+-- + error: % @attribute(cql:try_is_proc_body) accepts no values
+-- +1 error:
+create proc try_is_proc_body_accepts_no_values()
+begin
+  @attribute(cql:try_is_proc_body=(foo))
+  begin try
+  end try;
+  begin catch
+  end catch;
 end;
 
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
