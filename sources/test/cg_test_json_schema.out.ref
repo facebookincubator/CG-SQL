@@ -2632,6 +2632,30 @@
       ],
       "statement" : "SELECT id, name FROM Foo",
       "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE PROC high_bit_escapes ()
+    BEGIN
+    SELECT "\xa1\xa2" AS t;
+    END
+
+    {
+      "name" : "high_bit_escapes",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "projection" : [
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "SELECT '\u00a1\u00a2' AS t",
+      "statementArgs" : [  ]
     }
   ],
   "inserts" : [

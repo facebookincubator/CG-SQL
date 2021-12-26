@@ -1376,3 +1376,12 @@ begin
   union all
   select id from T6;
 end;
+
+-- TEST: these are not valid characters in a JSON string, they have to be escaped
+-- + "statement" : "SELECT '\u00a1\u00a2' AS t"
+-- + SELECT "\xa1\xa2" AS t;
+-- + "name" : "high_bit_escapes",
+create proc high_bit_escapes()
+begin
+  select "\xa1\xa2" t;
+end;
