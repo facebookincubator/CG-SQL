@@ -1,10 +1,8 @@
-#!/usr/local/bin/python3
-#
-# Copyright (c) Meta Platforms, Inc. and its affiliates.
+#!/usr/bin/env python3
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-#
 
 
 # cqljson.py -> converts CQL JSON format into various useful outputs
@@ -26,7 +24,7 @@ import json
 import sys
 
 
-def Usage():
+def usage():
     print(
         (
             "Usage:\n"
@@ -35,13 +33,13 @@ def Usage():
             "   creates a .dot file for a table diagram\n"
             "\n"
             "--region_diagram input.json > regions.dot\n"
-            "   creates a .dot file for a region  diagram\n"
+            "   creates a .dot file for a region diagram\n"
             "\n"
             "--erd input.json tables... > erd.dot\n"
             "   creates a .dot file for an ER diagram\n"
             "\n"
             "--sql input.json > inputdb.sql\n"
-            "   creates a .sql file for a databae with the schema info\n"
+            "   creates a .sql file for a database with the schema info\n"
             "\n"
             "To create a CQL JSON file you can start with any CQL, but\n"
             "probably a file with most or all of your schema is the best\n"
@@ -54,7 +52,7 @@ def Usage():
     )
 
 
-# First we look up all the tables and make a dictionary so we can find them by name
+# First we look up all the tables and make a dictionary so we can find them by name,
 # then we walk the list of table arguments, and for each table:
 #   * make a dictionary that contains the PK columns
 #   * make a dictionary that contains the FK columns
@@ -63,10 +61,10 @@ def Usage():
 #     * we walk the columns twice
 #       * the first time we emit just the pk columns
 #       * then we emit a spacer row "---"
-#       * the second time we emit all the non pk columns
+#       * the second time we emit all the non-PK columns
 #     * for each emitted column we emit the name, type, and PK/FK status
 #       * if the column is not null the type is bold
-#       * the pk and fk dictionaries are used to emit the PK/FK info
+#       * the PK and FK dictionaries are used to emit the PK/FK info
 #   * we walk the foreign keys and emit a link foo -> bar for each referenced table
 def emit_erd():
     if len(sys.argv) < 4:
@@ -141,12 +139,12 @@ def emit_erd():
 # any table that is connected to any other table is included in the main part
 #  * this part is connected to "root"
 # any tables that are connected to nothing are linked to "orphans"
-#  * this keeps them from cloggin the main diagram
+#  * this keeps them from clogging the main diagram
 # we compute the "connected" set by walking all foreign keys for all tables
-#  * any table that is the source or target of an fk is marked "connected"
+#  * any table that is the source or target of an FK is marked "connected"
 #
 # The main diagram begins by walking all tables
-#  * for each table we emit a text only shape
+#  * for each table we emit a text-only shape
 #  * for each table we emit a link that follows its foreign keys
 #  * if there are no foreign keys we emit a link to "root" or "orphans"
 #    * any not connected table gets a link to "orphans"
@@ -234,7 +232,7 @@ def emit_region_diagram(jfile):
 # This generates the schema we need for our sql output
 # Note that this is pretty normalized, so if you want counts
 # and so forth you have to do them the usual way for
-# normalized tables.  Its done this way for simplicity
+# normalized tables.  It's done this way for simplicity
 # and because data volumes are expected to be low and
 # also if you really needed any denorms, you can make them
 # yourself very easily starting from this.  All of this
@@ -242,7 +240,7 @@ def emit_region_diagram(jfile):
 # for tables, columns, PKs, FKs, and regions. But not all
 # the fields are present (e.g. column sensitivity is absent).
 # This could easily be made more complete but the essential
-# metadata is here.  At least enough to ask important questions
+# metadata is here; at least enough to ask important questions
 # about usage and to study the metadata to find possible
 # consolidations and stuff like that.
 def emit_schema():
@@ -285,7 +283,7 @@ def emit_schema():
     )
 
 
-# For any chunk of JSON that has the "dependencies" sub block
+# For any chunk of JSON that has the "dependencies" sub-block
 # (see CQL JSON docs) we emit the table dependency info
 # by following the "usesTables" data.  Note that per docs
 # this entry is not optional!
@@ -300,13 +298,13 @@ def emit_tabledep(section):
 # This walks the various JSON chunks and emits them into the equivalent table:
 # * first we walk the tables, this populates:
 #   * one row in the tables table (t_name, region)
-#   * one row per column in the columns table (t_name, c_name, type, not null)
-#   * one row per primary key column in the pks table (t_name, c_name)
-#   * we enumerate the fks, given each a name like fk1, fk2, etc.
-#     * emit one row per fk per column  (fk_name, t_name, ref_table, fk_col, ref_col)
+#   * one row per column in the columns table (t_name, c_name, c_type, c_notnull)
+#   * one row per primary key column in the pks table (t_name, pkcol)
+#   * we enumerate the FKs, giving each a name like fk1, fk2, etc. (fk{ifk})
+#     * emit one row per FK per column (fk{ifk}, t_name, reftable, fkcol, fkref)
 #  * next walk the regions
 #     * emit one row per region in the region table
-#     * emit one row per dependency to region_deps table (region, parent)
+#     * emit one row per dependency to region_deps table (r_name, rparent)
 #  * we use emit_tabledep for each chunk of procedures that has dependencies
 #     * this is "queries", "inserts", "updates", "deletes", "general", and "generalInserts"
 #     * see the CQL JSON docs for the meaning of each of these sections
@@ -365,7 +363,7 @@ def emit_sql(jfile):
 # here we are just going to decode the arguments
 
 if len(sys.argv) < 3:
-    Usage()
+    usage()
     exit(0)
 
 if sys.argv[1] == "--table_diagram":
@@ -385,4 +383,5 @@ if sys.argv[1] == "--sql":
     emit_sql(sys.argv[2])
     exit(0)
 
-Usage()
+if __name__ == "__main__":
+    usage()
