@@ -414,21 +414,32 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     bprintf(h, "}\n");
   }
 
+  CG_CHARBUF_OPEN_SYM(cgs_result_count, name, "_result_count");
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(result_count, rt->impl_symbol_prefix, name, "_result_count");
+
   bprintf(h,
-          "\nstatic inline %s %sResultCount(%s *resultSet)\n",
+          "\nstatic inline %s %s(%s *resultSet)\n",
           rt->cql_int32,
-          objc_name.ptr,
+          cgs_result_count.ptr,
           objc_result_set_name.ptr);
+
+
   bprintf(h, "{\n");
-  bprintf(h, "  return %sResultCount(%s(resultSet));\n", c_name.ptr, c_convert.ptr);
+  bprintf(h, "  return %s(%s(resultSet));\n", result_count.ptr, c_convert.ptr);
   bprintf(h, "}\n");
+
+  CHARBUF_CLOSE(result_count);
+  CHARBUF_CLOSE(cgs_result_count);
+
+  CG_CHARBUF_OPEN_SYM(cgs_copy_func_name, name, "_copy");
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(copy_func_name, rt->impl_symbol_prefix, name, "_copy");
 
   bool_t generate_copy = misc_attrs && exists_attribute_str(misc_attrs, "generate_copy");
   if (generate_copy) {
     bprintf(h,
-            "\nstatic inline %s *%sCopy(%s *resultSet",
+            "\nstatic inline %s *%s(%s *resultSet",
             objc_result_set_name.ptr,
-            objc_name.ptr,
+            cgs_copy_func_name.ptr,
             objc_result_set_name.ptr);
     if (!out_stmt_proc) {
       bprintf(h,
@@ -440,8 +451,8 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     bprintf(h, "{\n");
     bprintf(h, "  %s copy;\n", c_result_set_ref.ptr);
     bprintf(h,
-            "  %sCopy(%s(resultSet), &copy%s);\n",
-            c_name.ptr,
+            "  %s(%s(resultSet), &copy%s);\n",
+            copy_func_name.ptr,
             c_convert.ptr,
             out_stmt_proc ? "" : ", from, count");
     bprintf(h, "  %s(copy);\n", rt->cql_result_set_note_ownership_transferred);
@@ -449,11 +460,21 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     bprintf(h, "}\n");
   }
 
+  CHARBUF_CLOSE(copy_func_name);
+  CHARBUF_CLOSE(cgs_copy_func_name);
+
+  CSTR opt_row = out_stmt_proc ? "" : "_row";
+  CG_CHARBUF_OPEN_SYM(cgs_hash_func_name, name, opt_row, "_hash");
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(hash_func_name, rt->impl_symbol_prefix, name, opt_row, "_hash");
+  CG_CHARBUF_OPEN_SYM(cgs_eq_func_name, name, opt_row, "_equal");
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(eq_func_name, rt->impl_symbol_prefix, name, opt_row, "_equal");
+
   if (!is_ext) {
+
+
     bprintf(h,
-            "\nstatic inline NSUInteger %s%sHash(%s *resultSet",
-            objc_name.ptr,
-            out_stmt_proc ? "" : "Row",
+            "\nstatic inline NSUInteger %s(%s *resultSet",
+            cgs_hash_func_name.ptr,
             objc_name.ptr);
     if (!out_stmt_proc) {
       bprintf(h, ", %s row", rt->cql_int32);
@@ -461,17 +482,15 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     bprintf(h, ")\n");
     bprintf(h, "{\n");
     bprintf(h,
-            "  return %s%sHash(%s(resultSet)%s);\n",
-            c_name.ptr,
-            out_stmt_proc ? "" : "Row",
+            "  return %s(%s(resultSet)%s);\n",
+            hash_func_name.ptr,
             c_convert.ptr,
             out_stmt_proc ? "" : ", row");
     bprintf(h, "}\n");
 
     bprintf(h,
-            "\nstatic inline BOOL %s%sEqual(%s *resultSet1",
-            objc_name.ptr,
-            out_stmt_proc ? "" : "Row",
+            "\nstatic inline BOOL %s(%s *resultSet1",
+            cgs_eq_func_name.ptr,
             objc_name.ptr);
     if (!out_stmt_proc) {
       bprintf(h, ", %s row1", rt->cql_int32);
@@ -483,15 +502,20 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     bprintf(h, ")\n");
     bprintf(h, "{\n");
     bprintf(h,
-            "  return %s%sEqual(%s(resultSet1)%s, %s(resultSet2)%s);\n",
-            c_name.ptr,
-            out_stmt_proc ? "" : "Row",
+            "  return %s(%s(resultSet1)%s, %s(resultSet2)%s);\n",
+            eq_func_name.ptr,
             c_convert.ptr,
             out_stmt_proc ? "" : ", row1",
             c_convert.ptr,
             out_stmt_proc ? "" : ", row2");
     bprintf(h, "}\n");
   }
+
+  CHARBUF_CLOSE(eq_func_name);
+  CHARBUF_CLOSE(cgs_eq_func_name);
+  CHARBUF_CLOSE(hash_func_name);
+  CHARBUF_CLOSE(cgs_hash_func_name);
+
 
   CHARBUF_CLOSE(objc_class_name);
   CHARBUF_CLOSE(c_convert);

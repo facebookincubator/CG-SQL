@@ -194,9 +194,6 @@ typedef struct rtdata {
   // Provides a chance to add some extra definitions to the result set type, specify if extra stuff needed.
   bool_t (*result_set_type_decl_extra)(struct charbuf *output, CSTR sym, CSTR ref);
 
-  // prefix for custom object
-  const char *object_prefix;
-
   // Prefix for public symbol.
   const char *symbol_prefix;
 
