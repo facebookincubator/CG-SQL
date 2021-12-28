@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Dec 16 13:37:12 PST 2021
+Snapshot as of Sun Dec 26 10:25:27 PST 2021
 
 ### Operators and Literals
 
@@ -704,10 +704,14 @@ cte_decl:
   | name '(' '*' ')'
   ;
 
+shared_cte:
+  call_stmt
+  | call_stmt "USING" cte_binding_list
+  ;
+
 cte_table:
   cte_decl "AS" '(' select_stmt ')'
-  | cte_decl "AS" '(' call_stmt ')'
-  | cte_decl "AS" '(' call_stmt "USING" cte_binding_list ')'
+  | cte_decl "AS" '(' shared_cte')'
   | '(' call_stmt ')'
   | '(' call_stmt "USING" cte_binding_list ')'
   | cte_decl "LIKE" '(' select_stmt ')'
@@ -981,6 +985,7 @@ join_target_list:
 table_or_subquery:
   name opt_as_alias
   | '(' select_stmt ')' opt_as_alias
+  | '(' shared_cte ')' opt_as_alias
   | table_function opt_as_alias
   | '(' query_parts ')'
   ;

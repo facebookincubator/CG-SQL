@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Dec 16 13:37:12 2021
+// Snapshot as of Sun Dec 26 10:25:27 2021
 
 
 const PREC = {
@@ -121,7 +121,8 @@ module.exports = grammar({
     call_expr_list: $ => choice($.call_expr, seq($.call_expr, ',', $.call_expr_list)),
     cte_tables: $ => choice($.cte_table, seq($.cte_table, ',', $.cte_tables)),
     cte_decl: $ => choice(seq($.name, '(', $.name_list, ')'), seq($.name, '(', '*', ')')),
-    cte_table: $ => choice(seq($.cte_decl, $.AS, '(', $.select_stmt, ')'), seq($.cte_decl, $.AS, '(', $.call_stmt, ')'), seq($.cte_decl, $.AS, '(', $.call_stmt, $.USING, $.cte_binding_list, ')'), seq('(', $.call_stmt, ')'), seq('(', $.call_stmt, $.USING, $.cte_binding_list, ')'), seq($.cte_decl, $.LIKE, '(', $.select_stmt, ')'), seq($.cte_decl, $.LIKE, $.name)),
+    shared_cte: $ => choice($.call_stmt, seq($.call_stmt, $.USING, $.cte_binding_list)),
+    cte_table: $ => choice(seq($.cte_decl, $.AS, '(', $.select_stmt, ')'), seq($.cte_decl, $.AS, '(', $.shared_cte, ')'), seq('(', $.call_stmt, ')'), seq('(', $.call_stmt, $.USING, $.cte_binding_list, ')'), seq($.cte_decl, $.LIKE, '(', $.select_stmt, ')'), seq($.cte_decl, $.LIKE, $.name)),
     with_prefix: $ => choice(seq($.WITH, $.cte_tables), seq($.WITH, $.RECURSIVE, $.cte_tables)),
     with_select_stmt: $ => seq($.with_prefix, $.select_stmt_no_with),
     select_stmt: $ => choice($.with_select_stmt, $.select_stmt_no_with),
@@ -180,7 +181,7 @@ module.exports = grammar({
     table_or_subquery_list: $ => choice($.table_or_subquery, seq($.table_or_subquery, ',', $.table_or_subquery_list)),
     join_clause: $ => seq($.table_or_subquery, $.join_target_list),
     join_target_list: $ => choice($.join_target, seq($.join_target, $.join_target_list)),
-    table_or_subquery: $ => choice(seq($.name, optional($.opt_as_alias)), seq('(', $.select_stmt, ')', optional($.opt_as_alias)), seq($.table_function, optional($.opt_as_alias)), seq('(', $.query_parts, ')')),
+    table_or_subquery: $ => choice(seq($.name, optional($.opt_as_alias)), seq('(', $.select_stmt, ')', optional($.opt_as_alias)), seq('(', $.shared_cte, ')', optional($.opt_as_alias)), seq($.table_function, optional($.opt_as_alias)), seq('(', $.query_parts, ')')),
     join_type: $ => choice($.LEFT, $.RIGHT, seq($.LEFT, $.OUTER), seq($.RIGHT, $.OUTER), $.INNER, $.CROSS),
     join_target: $ => prec.left(seq(optional($.join_type), $.JOIN, $.table_or_subquery, optional($.opt_join_cond))),
     opt_join_cond: $ => $.join_cond,

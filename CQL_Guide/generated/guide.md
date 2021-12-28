@@ -8908,6 +8908,16 @@ These are the various outputs the compiler can produce.
 * the JSON includes a definition of the various entities in the input
 * see the section on JSON output for details
 
+#### --rt query_plan
+* produces CQL output which can be re-compiled by CQL as normal input
+* the output consists of a set of procedures that will emit all query plans for the DML that was in the input
+* see `--rt udf` for additional info
+
+#### --rt udf
+* produces stub UDF implementations for all UDFS that were seen in the input
+* this output is suitable for use with `--rt query_plan` so that SQL with UDFs will run in a simple context
+* requires two output files (e.g. udfs.h and udfs.c)
+
 
 
 ## Appendix 2: CQL Grammar
@@ -8921,7 +8931,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Dec 16 13:37:12 PST 2021
+Snapshot as of Sun Dec 26 10:25:27 PST 2021
 
 ### Operators and Literals
 
@@ -9612,10 +9622,14 @@ cte_decl:
   | name '(' '*' ')'
   ;
 
+shared_cte:
+  call_stmt
+  | call_stmt "USING" cte_binding_list
+  ;
+
 cte_table:
   cte_decl "AS" '(' select_stmt ')'
-  | cte_decl "AS" '(' call_stmt ')'
-  | cte_decl "AS" '(' call_stmt "USING" cte_binding_list ')'
+  | cte_decl "AS" '(' shared_cte')'
   | '(' call_stmt ')'
   | '(' call_stmt "USING" cte_binding_list ')'
   | cte_decl "LIKE" '(' select_stmt ')'
@@ -9889,6 +9903,7 @@ join_target_list:
 table_or_subquery:
   name opt_as_alias
   | '(' select_stmt ')' opt_as_alias
+  | '(' shared_cte ')' opt_as_alias
   | table_function opt_as_alias
   | '(' query_parts ')'
   ;
@@ -12081,7 +12096,7 @@ The indicated name was duplicated in such a context.
 
 -----
 
-### CQL0207: proc out parameter: formal cannot be fulfilled by non-variable 'param_name'
+### CQL0207: expected a variable name for OUT or INOUT argument 'param_name'
 
 In a procedure call, the indicated parameter of the procedure is an OUT or INOUT parameter but the call site doesn't have a variable in that position in the argument list.
 
@@ -12290,7 +12305,7 @@ out C;
 
 -----
 
-### CQL0224: a CALL statement inside a CTE may call only a shared fragment i.e. @attribute(cql:shared_fragment)
+### CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment)
 
 Inside of a WITH clause you can create a CTE by calling a shared fragment like so:
 
@@ -12298,6 +12313,12 @@ Inside of a WITH clause you can create a CTE by calling a shared fragment like s
 WITH
   my_shared_something(*) AS (CALL shared_proc(5))
 SELECT * from my shared_something;
+```
+
+or you can use a nested select expression like
+
+```
+ SELECT * FROM (CALL shared_proc(5)) as T;
 ```
 
 However `shared_proc` must define a shareable fragment, like so:
@@ -14396,6 +14417,82 @@ with
 
 ----
 
+### CQL0435: must use qualified form to avoid ambiguity with alias 'column'
+
+In a SQLite `SELECT` expression, `WHERE`, `GROUP BY`, `HAVING`, and `WINDOW`
+clauses see the columns of the `FROM` clause before they see any aliases in the
+expression list. For example, assuming some table `t` has columns `x` and `y`,
+the following two expressions are equivalent:
+
+```
+SELECT x AS y FROM t WHERE y > 100
+SELECT x AS y FROM t WHERE t.y > 100
+```
+
+In the first expression, the use of `y > 100` makes it seem as though the `y`
+referred to could be the `y` resulting from `x as y` in the expression list, but
+that is not the case. To avoid such confusion, CQL requires the use of the
+qualified form `t.y > 100` instead.
+
+----
+
+### CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause
+
+Unlike many databases (e.g., PostgreSQL and SQL Server), SQLite allows the
+aliases of a `SELECT` expression list to be referenced from clauses that are
+evaluated _before_ the expression list. It does this by replacing all such alias
+references with the expressions to which they are equivalent. For example,
+assuming `t` does _not_ have a column `x`, the following two expressions are
+equivalent:
+
+```
+SELECT a + b AS x FROM t WHERE x > 100
+SELECT a + b AS x FROM t WHERE a + b > 100
+```
+
+This can be convenient, but it is also error-prone. As mentioned above, the
+above equivalency only holds if `x` is _not_ a column in `t`: If `x` _is_ a
+column in `t`, the `WHERE` clause would be equivalent to `t.x > 100` instead,
+and there would be no syntactically obvious way to know this without first
+manually determining all of the columns present in `t`.
+
+To avoid such confusion, CQL disallows referencing expression list aliases from
+`WHERE`, `GROUP BY`, `HAVING`, and `WINDOW` clauses altogether. Instead, one
+should simply use the expression to which the alias is equivalent (as is done in
+the second example above).
+
+----
+
+### CQL0437: common table name shadows previously declared table or view 'name'
+
+The name of a common table expression may not shadow a previously declared table
+or view. To rectify the problem, simply use a different name.
+
+----
+
+### CQL0438: variable possibly used before initialization 'name'
+
+The variable indicated must be initialized before it is used because it is of
+a reference type (`BLOB`, `OBJECT`, or `TEXT`) that is also `NOT NULL`.
+
+CQL is usually smart enough to issue this error only in cases where
+initialization is truly lacking. Be sure to verify that the variable will be
+initialized before it is used for all possible code paths.
+
+----
+
+### CQL0439: nonnull reference OUT parameter possibly not always initialized 'name'
+
+The parameter indicated must be initialized before the procedure returns because
+it is of a reference type (`BLOB`, `OBJECT`, or `TEXT`) that is also `NOT NULL`.
+
+CQL is usually smart enough to issue this error only in cases where
+initialization is truly lacking. Be sure to verify that the parameter will be
+initialized both before the end of the procedure and before all cases of
+`RETURN` and `ROLLBACK RETURN`. (Initialization before `THROW` is not required.)
+
+----
+
 ### CQL0440: fragments may not have an empty body 'procedure_name'
 
 The indicated procedure is one of the fragment types but has an empty body.
@@ -14453,6 +14550,39 @@ the IF must have exactly one valid select statement.  This error indicates that 
 or type of statement.
 
 
+### CQL0444: this use of the named shared fragment is not legal because of name conflict 'procedure_name'
+
+This error will be followed by additional diagnostic information about the call chain that is problematic.  For instance:
+
+```
+Procedure innermost has a different CTE that is also named foo
+The above originated from CALL inner USING foo AS source
+The above originated from CALL middle USING foo AS source
+The above originated from CALL outer USING foo AS source
+```
+
+This indicates that you are trying to call `outer` which in turn calls `middle` which in turn called `inner`.  The conflict
+happened when the `foo` parameter was passed in to `inner` because it already has a CTE named `foo` that means something else.
+
+The way to fix this problem is to rename the CTE in probably the outermost call as that is likely the one you control.
+Renaming it in the innermost procedure might also be wise if that procedure is using a common name likely to conflict.
+
+It is wise to name the CTEs in shared fragments such that they are unlikely to eclipse outer CTEs that will be needed as table parameters.
+
+
+### CQL0445: @attribute(cql:try_is_proc_body) accepts no values
+
+The attribute `cql:try_is_proc_body` cannot be used with any values (e.g.,
+`cql:try_is_proc_body=(...)`).
+
+
+### CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
+
+The purpose of `cql:try_is_proc_body` is to indicate that a particular `TRY`
+block contains what should be considered to be the true body of the procedure.
+As it makes no sense for a procedure to have multiple bodies,
+`cql:try_is_proc_body` must appear only once within any given procedure.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -14465,7 +14595,7 @@ or type of statement.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Dec 16 13:37:13 PST 2021
+Snapshot as of Sun Dec 26 10:25:28 PST 2021
 
 ### Rules
 
@@ -16311,7 +16441,8 @@ These statements almost never appear in normal procedures and generally should b
 is to have one or more files declare all the schema you need and then let CQL create a schema upgrader for you.  This means you'll
 never manually drop tables or indices etc.  The `create` declarations with their annotations will totally drive the schema.
 
-Any ad hoc DDL is usually a very bad sign.
+Any ad hoc DDL is usually a very bad sign.  Test code is an obvious exception to this as it often does setup and teardown
+of schema to set up things for the test.
 
 ### Ad Hoc Migrations
 
@@ -16428,7 +16559,7 @@ purpose if nothing else is serviceable.
 * `OPEN`
 
 The `OPEN` statement is a no-op, SQLite has no such notion.  It was included because it is present in `MYSQL` and other variants and its inclusion can
-easy readability sometimes.  But it does nothing.   The `CLOSE` statement is normally not necessary because all cursors are closed at the end of the
+ease readability sometimes.  But it does nothing.   The `CLOSE` statement is normally not necessary because all cursors are closed at the end of the
 procedure they are declared in (unless they are boxed, see below).  You only need `CLOSE` if you want to close a global cursor (which has no scope)
 or if you want to close a local cursor "sooner" because waiting to the end of the procedure might be a very long time.  Using close more than once
 is safe, the second and later close operations do nothing.
@@ -16573,7 +16704,7 @@ These are your bread and butter and they will appear all over.  One tip: Use the
 
 To understand what kinds of things you can reasonably do with fragments, really you
 just have to understand the things that you can do with common table expressions or
-CTEs.  For those that don't know the formal this, CTEs are the things you declare
+CTEs.  For those who don't know, CTEs are the things you declare
 in the WITH clause of a SELECT statement.  They're kind of like local views.  Well,
 actually, they are exactly like local views.
 
@@ -16615,8 +16746,9 @@ QUERY PLAN
 \--SEARCH TABLE B USING INTEGER PRIMARY KEY (rowid=?)
 ```
 
-OK as we can see A is not constrained so it has to be scanned but B isn't scanned,
-we use its primary key for the join.  This is the most common kind of join.
+OK as we can see `A` is not constrained so it has to be scanned but `B` isn't scanned,
+we use its primary key for the join.  This is the most common kind of join: a search
+based on a key of the table you are joining to.
 
 Let's make it a bit more realistic.
 
@@ -16630,10 +16762,11 @@ QUERY PLAN
 |--SEARCH TABLE B USING INTEGER PRIMARY KEY (rowid=?)
 \--SEARCH TABLE A USING INTEGER PRIMARY KEY (rowid=?)
 ```
-Now A is constrained by the where clause so we can use its index and then use the B index.
-So we get a nice economical join from A to B and no scans at all.
 
-Now suppose we try this with some CTE replacements for A and B.  Does this make it worse?
+Now `A` is constrained by the `WHERE` clause so we can use its index and then use the `B` index.
+So we get a nice economical join from `A` to `B` and no scans at all.
+
+Now suppose we try this with some CTE replacements for `A` and `B`.  Does this make it worse?
 
 ```sql
 explain query plan
@@ -16650,7 +16783,7 @@ QUERY PLAN
 ```
 
 The answer is a resounding no.  The CTE `AA` was not materialized it was expanded in place,
-as was the CTE `BB`. We get *exactly* the same query plan.  Now this means that the
+as was the CTE `BB`.  We get *exactly* the same query plan.  Now this means that the
 inner expressions like `select * from A` could have been fragments such as:
 
 ```sql
@@ -16676,7 +16809,7 @@ where A_.id = 5;
 ```
 
 *Note:* I'll use the convention that `A_` is the fragment proc that could have generated the CTE `AA`,
-like wise with `B_` and so forth.
+likewise with `B_` and so forth.
 
 The above will expand into exactly what we had before and hence will have the exactly
 same good query plan.  Of course this is totally goofy, why make a fragment like that --
@@ -16744,7 +16877,7 @@ QUERY PLAN
 \--SEARCH TABLE B USING INTEGER PRIMARY KEY (rowid=?)
 ```
 
-Note that here when get 3 joins.  Now a pretty cool thing happened here -- even though the expression
+Note that here we get 3 joins.  Now a pretty cool thing happened here -- even though the expression
 for `BB` does not include a `WHERE` clause SQLite has figured out the `AA.id` being 5 forces `A.id` to be 5
 which in turn gives a constraint on `BB`. Nice job SQLite.  If it hadn't been able to figure that out
 then the expansion of `BB` would have resulted in a table scan.
@@ -16752,7 +16885,7 @@ then the expansion of `BB` would have resulted in a table scan.
 Still, 3 joins is bad when we only need 2 joins to do the job.  What happened?  Well, when we did
 the original fragments with extensions and stuff we saw this same pattern in fragment code.
 Basically the fragment for `BB` isn't just doing the `B` things it's restarting from `A` and doing its
-own join to get B. This results in a wasted join.  And it might result in a lot of work on the `A` table
+own join to get `B`. This results in a wasted join.  And it might result in a lot of work on the `A` table
 as well if the filtering was more complex and couldn't be perfectly inferred.
 
 You might think, "oh, no problem, I can save this, I'll just refer to `AA` instead of `A` in the second query."
@@ -16827,7 +16960,7 @@ select * from AB_ where AB_.id = 5;
 ```
 
 For brevity I didn't include the possibility of using IF and such.  Another option
-that makes the same good query plan.  We can generalize AB_ so that it doesn't know
+that makes the same good query plan.  We can generalize `AB_` so that it doesn't know
 where the base data is coming from and can be used in more cases.
 
 
@@ -16906,10 +17039,10 @@ A better pattern might be this:
 explain query plan
 with
   AA(id, this) as (select * from A),
-  BB(id, this, that) as (select AA.*, B.that from AA left join B on B.id = AA.id),
-  CC(id, this, that, other) as (select BB.*, C.other from BB left join C on C.id = BB.id)
-select * from CC
-where CC.id = 5;
+  AB(id, this, that) as (select AA.*, B.that from AA left join B on B.id = AA.id),
+  ABC(id, this, that, other) as (select AB.*, C.other from AB left join C on C.id = AB.id)
+select * from ABC
+where ABC.id = 5;
 
 QUERY PLAN
 |--SEARCH TABLE A USING INTEGER PRIMARY KEY (rowid=?)
@@ -16918,24 +17051,24 @@ QUERY PLAN
 ```
 
 Here we've just extended the chain.  With shared fragments you could easily build an
-`AB_` proc as before and then build an `ABC_` proc either by calling AB_ directly or by
-having a table parameter that is LIKE AB_.
+`AB_` proc as before and then build an `ABC_` proc either by calling `AB_` directly or by
+having a table parameter that is `LIKE AB_`.
 
 Both cases will give you a great plan.
 
 So the most important things are:
 
-* Avoid forking the chain of CTEs/fragments, a straight chain works create.
+* Avoid forking the chain of CTEs/fragments, a straight chain works great.
 * Avoid re-joining to tables, even unconstrained CTEs result in great plans if they don't have to be materialized.
 * If you do need to fork in your CTE chain, because of your desired shape, be sure to move as many filters as you can further upstream so that by the time you materialize only a very small number of rows need to be materialiized.
 
 These few rules will go far in helping you to create shapes.
 
 One last thing, without shared fragments, if you wanted to create a large 10 way join or something you had to type that
-join into your file and it would be very much in your face.  Now that join might be hidden from you in a nice easy to
-use fragment.  Which you might then decide you want to use 3 times... And now with a tiny amount of code you have 30 joins.
+join into your file and it would be very much in your face.  Now that join might be hidden from you in a nice easy-to-use
+fragment.  Which you might then decide you want to use 3 times... And now with a tiny amount of code you have 30 joins.
 
-The thing is shared fragments make it easy to generate a lot of SQL.  It's not bad that shared fragments make things easy
+The thing is shared fragments make it easy to generate a lot of SQL.  It's not bad that shared fragments make things easy,
 but with great power comes great responsibility, so give a care as to what it is you are assembling.  Understanding
 your fragments, especially any big ones, will help you to create great code.
 
