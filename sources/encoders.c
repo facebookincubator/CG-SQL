@@ -114,7 +114,8 @@ cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output)
     case '\r':  bputc(output, backslash); bputc(output, 'r'); break;
     case '\t':  bputc(output, backslash); bputc(output, 't'); break;
     default  :
-      if (c > 0 && c < 32) {
+      // note: 0x80 - 0xff will be negative and are hence covered by this test
+      if (c < 32) {
         uint32_t ch = (uint32_t)c;
         ch &= 0xff;
         bprintf(output, "\\u00");
