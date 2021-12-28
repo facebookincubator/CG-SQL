@@ -6,106 +6,106 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class CGBAssemblyCore;
+@class CGS_assembly_core;
 
-static inline CGCAssemblyCoreResultSetRef CGCExtensionFragmentOneFromCGBExtensionFragmentOne(CGBAssemblyCore *resultSet)
+static inline assembly_core_result_set_ref extension_fragment_one_from_CGS_extension_fragment_one(CGS_assembly_core *resultSet)
 {
-  return (__bridge CGCAssemblyCoreResultSetRef)resultSet;
+  return (__bridge assembly_core_result_set_ref)resultSet;
 }
 
-static inline int32_t CGBExtensionFragmentOneGetX(CGBAssemblyCore *resultSet, int32_t row)
+static inline int32_t CGS_extension_fragment_one_get_x(CGS_assembly_core *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCExtensionFragmentOneFromCGBExtensionFragmentOne(resultSet);
-  return CGCExtensionFragmentOneGetX(cResultSet, row);
+  assembly_core_result_set_ref cResultSet = extension_fragment_one_from_CGS_extension_fragment_one(resultSet);
+  return extension_fragment_one_get_x(cResultSet, row);
 }
 
-static inline NSString *_Nullable CGBExtensionFragmentOneGetY(CGBAssemblyCore *resultSet, int32_t row)
+static inline NSString *_Nullable CGS_extension_fragment_one_get_y(CGS_assembly_core *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCExtensionFragmentOneFromCGBExtensionFragmentOne(resultSet);
-  return (__bridge NSString *)CGCExtensionFragmentOneGetY(cResultSet, row);
+  assembly_core_result_set_ref cResultSet = extension_fragment_one_from_CGS_extension_fragment_one(resultSet);
+  return (__bridge NSString *)extension_fragment_one_get_y(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable CGBExtensionFragmentOneGetZ(CGBAssemblyCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGS_extension_fragment_one_get_z(CGS_assembly_core *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCExtensionFragmentOneFromCGBExtensionFragmentOne(resultSet);
-  return CGCExtensionFragmentOneGetZIsNull(cResultSet, row) ? nil : @(CGCExtensionFragmentOneGetZValue(cResultSet, row));
+  assembly_core_result_set_ref cResultSet = extension_fragment_one_from_CGS_extension_fragment_one(resultSet);
+  return extension_fragment_one_get_z_is_null(cResultSet, row) ? nil : @(extension_fragment_one_get_z_value(cResultSet, row));
 }
 
-static inline int32_t CGBExtensionFragmentOneResultCount(CGBAssemblyCore *resultSet)
+static inline int32_t CGS_extension_fragment_one_result_count(CGS_assembly_core *resultSet)
 {
-  return CGCExtensionFragmentOneResultCount(CGCExtensionFragmentOneFromCGBExtensionFragmentOne(resultSet));
+  return extension_fragment_one_result_count(extension_fragment_one_from_CGS_extension_fragment_one(resultSet));
 }
 
-@class CGBAssemblyCore;
+@class CGS_assembly_core;
 
-static inline CGCAssemblyCoreResultSetRef CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(CGBAssemblyCore *resultSet)
+static inline assembly_core_result_set_ref extension_fragment_two_from_CGS_extension_fragment_two(CGS_assembly_core *resultSet)
 {
-  return (__bridge CGCAssemblyCoreResultSetRef)resultSet;
+  return (__bridge assembly_core_result_set_ref)resultSet;
 }
 
-static inline int32_t CGBExtensionFragmentTwoGetX(CGBAssemblyCore *resultSet, int32_t row)
+static inline int32_t CGS_extension_fragment_two_get_x(CGS_assembly_core *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(resultSet);
-  return CGCExtensionFragmentTwoGetX(cResultSet, row);
+  assembly_core_result_set_ref cResultSet = extension_fragment_two_from_CGS_extension_fragment_two(resultSet);
+  return extension_fragment_two_get_x(cResultSet, row);
 }
 
-static inline NSString *_Nullable CGBExtensionFragmentTwoGetY(CGBAssemblyCore *resultSet, int32_t row)
+static inline NSString *_Nullable CGS_extension_fragment_two_get_y(CGS_assembly_core *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(resultSet);
-  return (__bridge NSString *)CGCExtensionFragmentTwoGetY(cResultSet, row);
+  assembly_core_result_set_ref cResultSet = extension_fragment_two_from_CGS_extension_fragment_two(resultSet);
+  return (__bridge NSString *)extension_fragment_two_get_y(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable CGBExtensionFragmentTwoGetZ(CGBAssemblyCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGS_extension_fragment_two_get_z(CGS_assembly_core *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(resultSet);
-  return CGCExtensionFragmentTwoGetZIsNull(cResultSet, row) ? nil : @(CGCExtensionFragmentTwoGetZValue(cResultSet, row));
+  assembly_core_result_set_ref cResultSet = extension_fragment_two_from_CGS_extension_fragment_two(resultSet);
+  return extension_fragment_two_get_z_is_null(cResultSet, row) ? nil : @(extension_fragment_two_get_z_value(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable CGBExtensionFragmentTwoGetFlag(CGBAssemblyCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGS_extension_fragment_two_get_flag(CGS_assembly_core *resultSet, int32_t row)
 {
-  CGCAssemblyCoreResultSetRef cResultSet = CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(resultSet);
-  return CGCExtensionFragmentTwoGetFlagIsNull(cResultSet, row) ? nil : @(CGCExtensionFragmentTwoGetFlagValue(cResultSet, row));
+  assembly_core_result_set_ref cResultSet = extension_fragment_two_from_CGS_extension_fragment_two(resultSet);
+  return extension_fragment_two_get_flag_is_null(cResultSet, row) ? nil : @(extension_fragment_two_get_flag_value(cResultSet, row));
 }
 
-static inline int32_t CGBExtensionFragmentTwoResultCount(CGBAssemblyCore *resultSet)
+static inline int32_t CGS_extension_fragment_two_result_count(CGS_assembly_core *resultSet)
 {
-  return CGCExtensionFragmentTwoResultCount(CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(resultSet));
+  return extension_fragment_two_result_count(extension_fragment_two_from_CGS_extension_fragment_two(resultSet));
 }
 
-@class CGBAssemblyNonCore;
+@class CGS_assembly_non_core;
 
-static inline CGCAssemblyNonCoreResultSetRef CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(CGBAssemblyNonCore *resultSet)
+static inline assembly_non_core_result_set_ref extension_fragment_three_from_CGS_extension_fragment_three(CGS_assembly_non_core *resultSet)
 {
-  return (__bridge CGCAssemblyNonCoreResultSetRef)resultSet;
+  return (__bridge assembly_non_core_result_set_ref)resultSet;
 }
 
-static inline NSString *CGBExtensionFragmentThreeGetA(CGBAssemblyNonCore *resultSet, int32_t row)
+static inline NSString *CGS_extension_fragment_three_get_a(CGS_assembly_non_core *resultSet, int32_t row)
 {
-  CGCAssemblyNonCoreResultSetRef cResultSet = CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(resultSet);
-  return (__bridge NSString *)CGCExtensionFragmentThreeGetA(cResultSet, row);
+  assembly_non_core_result_set_ref cResultSet = extension_fragment_three_from_CGS_extension_fragment_three(resultSet);
+  return (__bridge NSString *)extension_fragment_three_get_a(cResultSet, row);
 }
 
-static inline NSString *_Nullable CGBExtensionFragmentThreeGetB(CGBAssemblyNonCore *resultSet, int32_t row)
+static inline NSString *_Nullable CGS_extension_fragment_three_get_b(CGS_assembly_non_core *resultSet, int32_t row)
 {
-  CGCAssemblyNonCoreResultSetRef cResultSet = CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(resultSet);
-  return (__bridge NSString *)CGCExtensionFragmentThreeGetB(cResultSet, row);
+  assembly_non_core_result_set_ref cResultSet = extension_fragment_three_from_CGS_extension_fragment_three(resultSet);
+  return (__bridge NSString *)extension_fragment_three_get_b(cResultSet, row);
 }
 
-static inline NSNumber *_Nullable CGBExtensionFragmentThreeGetC(CGBAssemblyNonCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGS_extension_fragment_three_get_c(CGS_assembly_non_core *resultSet, int32_t row)
 {
-  CGCAssemblyNonCoreResultSetRef cResultSet = CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(resultSet);
-  return CGCExtensionFragmentThreeGetCIsNull(cResultSet, row) ? nil : @(CGCExtensionFragmentThreeGetCValue(cResultSet, row));
+  assembly_non_core_result_set_ref cResultSet = extension_fragment_three_from_CGS_extension_fragment_three(resultSet);
+  return extension_fragment_three_get_c_is_null(cResultSet, row) ? nil : @(extension_fragment_three_get_c_value(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable CGBExtensionFragmentThreeGetD(CGBAssemblyNonCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGS_extension_fragment_three_get_d(CGS_assembly_non_core *resultSet, int32_t row)
 {
-  CGCAssemblyNonCoreResultSetRef cResultSet = CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(resultSet);
-  return CGCExtensionFragmentThreeGetDIsNull(cResultSet, row) ? nil : @(CGCExtensionFragmentThreeGetDValue(cResultSet, row));
+  assembly_non_core_result_set_ref cResultSet = extension_fragment_three_from_CGS_extension_fragment_three(resultSet);
+  return extension_fragment_three_get_d_is_null(cResultSet, row) ? nil : @(extension_fragment_three_get_d_value(cResultSet, row));
 }
 
-static inline int32_t CGBExtensionFragmentThreeResultCount(CGBAssemblyNonCore *resultSet)
+static inline int32_t CGS_extension_fragment_three_result_count(CGS_assembly_non_core *resultSet)
 {
-  return CGCExtensionFragmentThreeResultCount(CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(resultSet));
+  return extension_fragment_three_result_count(extension_fragment_three_from_CGS_extension_fragment_three(resultSet));
 }
 
 NS_ASSUME_NONNULL_END
