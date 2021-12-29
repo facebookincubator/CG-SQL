@@ -19509,6 +19509,23 @@ begin
   end catch;
 end;
 
+-- TEST: Improvements can be set for names using the dot syntax even when the
+-- scopes of the names shadow a global variable.
+-- + {name x_}: x_: integer notnull variable
+-- + {dot}: X_id: integer inferred_notnull variable in
+-- + {name y_}: y_: integer notnull variable
+-- + {dot}: Y.id: integer inferred_notnull variable
+-- - error:
+create proc improvements_work_for_dots_that_shadow_globals(X like some_proc arguments)
+begin
+  declare Y cursor for select nullable(1) id;
+  fetch Y;
+  if X.id is not null and Y.id is not null then
+    let x_ := X.id;
+    let y_ := Y.id;
+  end if;
+end;
+
 -- TEST: order of operations, verifying gen_sql agrees with tree parse
 -- NOT is weaker than +, parens stay even though this is a special case
 -- the parens could be elided becuse it's on the right of the +

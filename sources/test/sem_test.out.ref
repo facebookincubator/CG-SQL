@@ -76357,6 +76357,111 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0445: @attribute(c
 
 The statement ending at line XXXX
 
+CREATE PROC improvements_work_for_dots_that_shadow_globals (X_id INTEGER, X_t TEXT, X_t1 TEXT NOT NULL, X_b BLOB, OUT X_x INTEGER NOT NULL)
+BEGIN
+  DECLARE Y CURSOR FOR SELECT nullable(1) AS id;
+  FETCH Y;
+  IF X.id IS NOT NULL AND Y.id IS NOT NULL THEN
+    LET x_ := X.id;
+    LET y_ := Y.id;
+  END IF;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name improvements_work_for_dots_that_shadow_globals}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: X_id: integer variable in
+    | | | {param_detail}: X_id: integer variable in
+    | |   | {name X_id}: X_id: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: X_t: text variable in
+    |   | | {param_detail}: X_t: text variable in
+    |   |   | {name X_t}: X_t: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: X_t1: text notnull variable in
+    |     | | {param_detail}: X_t1: text notnull variable in
+    |     |   | {name X_t1}: X_t1: text notnull variable in
+    |     |   | {notnull}: text notnull
+    |     |     | {type_text}: text
+    |     | {params}
+    |       | {param}: X_b: blob variable in
+    |       | | {param_detail}: X_b: blob variable in
+    |       |   | {name X_b}: X_b: blob variable in
+    |       |   | {type_blob}: blob
+    |       | {params}
+    |         | {param}: X_x: integer notnull variable out
+    |           | {out}
+    |           | {param_detail}: X_x: integer notnull variable out
+    |             | {name X_x}: X_x: integer notnull variable out
+    |             | {notnull}: integer notnull
+    |               | {type_int}: integer
+    | {stmt_list}: ok
+      | {declare_cursor}: Y: select: { id: integer } variable dml_proc
+      | | {name Y}: Y: select: { id: integer } variable dml_proc shape_storage
+      | | {select_stmt}: select: { id: integer }
+      |   | {select_core_list}: select: { id: integer }
+      |   | | {select_core}: select: { id: integer }
+      |   |   | {select_expr_list_con}: select: { id: integer }
+      |   |     | {select_expr_list}: select: { id: integer }
+      |   |     | | {select_expr}: id: integer
+      |   |     |   | {call}: integer
+      |   |     |   | | {name nullable}: integer
+      |   |     |   | | {call_arg_list}
+      |   |     |   |   | {call_filter_clause}
+      |   |     |   |   | {arg_list}: ok
+      |   |     |   |     | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name id}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: Y: select: { id: integer } variable dml_proc shape_storage
+      | | {name Y}: Y: select: { id: integer } variable dml_proc shape_storage
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {dot}: X_id: integer variable in
+        | | | | | {name X}
+        | | | | | {name id}
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {dot}: Y.id: integer variable
+        | |   | | {name Y}
+        | |   | | {name id}
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x_: integer notnull variable
+        |   | | {name x_}: x_: integer notnull variable
+        |   | | {call}: X_id: integer notnull variable in
+        |   |   | {name cql_inferred_notnull}: X_id: integer notnull variable in
+        |   |   | {call_arg_list}
+        |   |     | {call_filter_clause}
+        |   |     | {arg_list}: ok
+        |   |       | {dot}: X_id: integer inferred_notnull variable in
+        |   |         | {name X}
+        |   |         | {name id}
+        |   | {let_stmt}: y_: integer notnull variable
+        |     | {name y_}: y_: integer notnull variable
+        |     | {call}: Y.id: integer notnull variable
+        |       | {name cql_inferred_notnull}: Y.id: integer notnull variable
+        |       | {call_arg_list}
+        |         | {call_filter_clause}
+        |         | {arg_list}: ok
+        |           | {dot}: Y.id: integer inferred_notnull variable
+        |             | {name Y}
+        |             | {name id}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
 SELECT 1 + (NOT 2 IS NULL);
 
 test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'

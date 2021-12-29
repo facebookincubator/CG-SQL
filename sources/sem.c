@@ -191,8 +191,6 @@ static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
 static void sem_verify_no_anon_columns(ast_node *ast);
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
 static sem_t *find_mutable_type(CSTR name, CSTR scope);
-static sem_t *find_mutable_type_for_global_variable(CSTR name);
-static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_name);
 static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 static void sem_set_notnull_improved(CSTR name, CSTR scope);
 static void sem_unset_notnull_improved(CSTR name, CSTR scope);
@@ -5880,31 +5878,78 @@ static sem_t *find_mutable_type(CSTR name, CSTR scope) {
   return type;
 }
 
-// Like `find_mutable_type`, but restricted to global variables only.
-static sem_t *find_mutable_type_for_global_variable(CSTR name) {
-  symtab_entry *entry = symtab_find(globals, name);
-  if (!entry) {
-    return NULL;
-  }
+// Like `find_mutable_type`, but sets `is_global` to true if the name/scope pair
+// refers to either a global variable or the field of a global auto cursor
+// (i.e., anything that is both global and mutable).
+static sem_t *find_mutable_type_and_global_status(CSTR name, CSTR scope, bool_t *is_global) {
+  Contract(name);
+  Contract(is_global);
 
-  ast_node *variable = entry->val;
-  Invariant(is_variable(variable->sem->sem_type));
+  *is_global = false;
 
-  return &variable->sem->sem_type;
-}
-
-// Like `find_mutable_type`, but restricted to global auto cursor fields only.
-static sem_t *find_mutable_type_for_global_cursor_field(CSTR name, CSTR cursor_name) {
-  symtab_entry *entry = symtab_find(globals, cursor_name);
-  if (!entry) {
-    return NULL;
-  }
-
-  ast_node *cursor = entry->val;
-  Invariant(is_cursor(cursor->sem->sem_type));
-
+  // First, we perform resolution as we normally would.
   sem_t *type = NULL;
-  sem_resolve_cursor_field(NULL, cursor, name, &type);
+  sem_resolve_id_with_type(NULL, name, scope, &type);
+
+  // This function is presently only used for setting nullability improvements.
+  // Given that nullability improvements are only set after an expression or
+  // statement has been analyzed successfully, and given that there exists no
+  // nullable type for which `sem_resolve_id_with_type` will ever fail to set a
+  // type pointer -- the things for which it can fail, e.g., enum cases, all
+  // have nonnull types -- we must have `type`. Should this ever change, it
+  // would be appropriate to return here when `type` is NULL: We only do not do
+  // that now for the sake of maintaining code coverage.
+  Invariant(type);
+
+  // Resolving was successful. Now, we need to check whether or not it resolved
+  // to either a global variable or a field of a global auto cursor.
+  if (scope) {
+    // We have a name and a scope: The name/scope pair might refer to a global
+    // auto cursor field.
+    symtab_entry *entry = symtab_find(globals, scope);
+    if (!entry) {
+      // `scope` does not appear in globals, so we know this cannot be the
+      // global case.
+      return type;
+    }
+
+    ast_node *ast = entry->val;
+
+    if (!is_cursor(ast->sem->sem_type)) {
+      // We found something in `globals` that supports dot syntax, but it's not
+      // a cursor. It must be the case that `scope` refers to something that
+      // both shadows the name in `globals` and also supports dot syntax (e.g.,
+      // a local cursor or an argument bundle).
+      return type;
+    }
+
+    // There is global cursor named `scope`. We resolve `name` as though it were
+    // one of its fields, then compare that resolution to the one above to
+    // determine whether the name/scope pair refers to a field of the global
+    // auto cursor (the equal case) or whether it refers to something that
+    // shadows it (the non-equal case).
+    sem_t *global_type = NULL;
+    sem_resolve_cursor_field(NULL, ast, name, &global_type);
+
+    *is_global = type == global_type;
+  }
+  else {
+    // We only have a name: The name might refer to a global variable.
+    symtab_entry *entry = symtab_find(globals, name);
+    if (!entry) {
+      // `name` does not appear in globals, so we know this cannot be the global
+      // case.
+      return type;
+    }
+
+    ast_node *ast = entry->val;
+
+    // There is a global variable named `name`. Now, we just need to compare the
+    // address of its `sem_t` to what we resolved above to determine whether
+    // `name` refers to the global variable (the equal case) or whether it
+    // refers to something that shadows it (the non-equal case).
+    *is_global = type == &ast->sem->sem_type;
+  }
 
   return type;
 }
@@ -12651,7 +12696,9 @@ static bool_t sem_is_notnull_improved(CSTR name, CSTR scope) {
 static void sem_set_notnull_improved(CSTR name, CSTR scope) {
   Contract(name);
 
-  sem_t *type = find_mutable_type(name, scope);
+  bool_t is_global = false;
+
+  sem_t *type = find_mutable_type_and_global_status(name, scope, &is_global);
   Contract(type);
 
   // There's no need to proceed if this is a NOT NULL type or if it is a
@@ -12663,16 +12710,6 @@ static void sem_set_notnull_improved(CSTR name, CSTR scope) {
   // We keep track of globals as we need to un-improve all of them after every
   // procedure call. We need to do this due to the assumption that the procedure
   // could have set any number of globals to null.
-  bool_t is_global;
-  if (scope) {
-    // There is nothing else mutable at a global scope with a qualified
-    // identifier except for cursor fields, so we don't need to check for
-    // anything else.
-    is_global = type == find_mutable_type_for_global_cursor_field(name, scope);
-  } else {
-    is_global = type == find_mutable_type_for_global_variable(name);
-  }
-
   if (is_global) {
     // Since this is a global, record it as such.
     global_notnull_improvement_item *global_item = _ast_pool_new(global_notnull_improvement_item);
