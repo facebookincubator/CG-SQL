@@ -13,7 +13,7 @@ awk <json.txt 'BEGIN {FS="\n"; RS=""} {gsub("\n","",$0); print }' | \
  sed -e 's/:/ ::= /' -e's/;$//' -e 's/  */ /g' -e 's/$/ /' |
  grep -v '^BOOL_LITERAL' | \
  sed -f json_replacements.txt >json_grammar.txt
- 
+
 echo "railroad diagram format in json_grammar.txt (paste into https://www.bottlecaps.de/rr/ui)"
 
 cat <<EOF >json_grammar.md

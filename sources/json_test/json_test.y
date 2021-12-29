@@ -1,12 +1,12 @@
 /*
- * Copyright (c) Meta Platforms, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 // In case there is any doubt, 'json_test.y' is included in the license as well as
-// the code bision generates from it.
+// the code bison generates from it.
 
 %{
 
