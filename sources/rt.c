@@ -11,9 +11,10 @@
 #define RT_AUTOGEN(x) x " @" "generated S" "ignedSource<<deadbeef8badf00ddefec8edfacefeed>>\n"
 #define RT_SIGNSRC(x) x " @" "generated S" "ignedSource<<deadbeef8badf00ddefec8edfacefeed>>\n"
 
-#define RT_OBJC_PREFIX "CGO"
-#define RT_SYM_PREFIX "CGB"
-#define RT_IMPL_SYMBOL_PREFIX "CGC"
+#define RT_SYM_PREFIX "CGS_"
+#define RT_STRING_ENCODE "cql_string_ref_encode"
+#define RT_IMPL_SYMBOL_PREFIX ""
+#define RT_OBJC_CASE cg_symbol_case_snake
 
 #define RT_SHOULD_GENERATE_COPY NULL
 #define RT_REGISTER_PROC_NAME NULL
