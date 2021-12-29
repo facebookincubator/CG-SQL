@@ -55610,7 +55610,7 @@ END;
           | {strlit '%s
 '}: text notnull
           | {expr_list}
-            | {dot}: x_id: integer variable
+            | {dot}: x_id: integer variable in
               | {name x}
               | {name id}
 
@@ -61498,7 +61498,7 @@ END;
     | {stmt_list}: ok
       | {let_stmt}: u: integer<integer_things> notnull variable
       | | {name u}: u: integer<integer_things> notnull variable
-      | | {dot}: b_x: integer<integer_things> notnull variable
+      | | {dot}: b_x: integer<integer_things> notnull variable in
       |   | {name b}
       |   | {name x}
       | {let_stmt}: v: integer<integer_things> notnull variable
@@ -62215,7 +62215,7 @@ END;
             | | {name_list}
             |   | {name a}: a: integer
             | {insert_list}
-              | {dot}: a2_c: integer variable
+              | {dot}: a2_c: integer variable in
                 | {name a2}
                 | {name c}
 
@@ -62259,7 +62259,7 @@ END;
             | | {name_list}
             |   | {name a}: a: integer
             | {insert_list}
-              | {dot}: a2_c: integer variable
+              | {dot}: a2_c: integer variable in
                 | {name a2}
                 | {name c}
 
@@ -62303,7 +62303,7 @@ END;
             | | {name_list}
             |   | {name a}: a: integer
             | {insert_list}
-              | {dot}: a2_c: integer variable
+              | {dot}: a2_c: integer variable in
                 | {name a2}
                 | {name c}
 
@@ -62349,11 +62349,11 @@ END;
             |   | {name_list}
             |     | {name b}: b: text
             | {insert_list}
-              | {dot}: a1_a: integer variable
+              | {dot}: a1_a: integer variable in
               | | {name a1}
               | | {name a}
               | {insert_list}
-                | {dot}: a1_b: text variable
+                | {dot}: a1_b: text variable in
                   | {name a1}
                   | {name b}
 
@@ -62451,11 +62451,11 @@ END;
             |   | {name_list}
             |     | {name a}: a: integer
             | {insert_list}
-              | {dot}: a1_b: text variable
+              | {dot}: a1_b: text variable in
               | | {name a1}
               | | {name b}
               | {insert_list}
-                | {dot}: a1_a: integer variable
+                | {dot}: a1_a: integer variable in
                   | {name a1}
                   | {name a}
 
@@ -62501,11 +62501,11 @@ END;
             |   | {name_list}
             |     | {name b}: b: text
             | {insert_list}
-              | {dot}: a2_c: integer variable
+              | {dot}: a2_c: integer variable in
               | | {name a2}
               | | {name c}
               | {insert_list}
-                | {dot}: a2_d: text variable
+                | {dot}: a2_d: text variable in
                   | {name a2}
                   | {name d}
 
@@ -62659,11 +62659,11 @@ END;
             |   | {name_list}
             |     | {name b}: b: text
             | {insert_list}
-              | {dot}: a2_c: integer variable
+              | {dot}: a2_c: integer variable in
               | | {name a2}
               | | {name c}
               | {insert_list}
-                | {dot}: a2_d: text variable
+                | {dot}: a2_d: text variable in
                   | {name a2}
                   | {name d}
 
@@ -62713,11 +62713,11 @@ END;
             |   | {name_list}
             |     | {name b}: b: text
             | {insert_list}
-              | {dot}: a1_a: integer variable
+              | {dot}: a1_a: integer variable in
               | | {name a1}
               | | {name a}
               | {insert_list}
-                | {dot}: a1_b: text variable
+                | {dot}: a1_b: text variable in
                   | {name a1}
                   | {name b}
 
@@ -62767,7 +62767,7 @@ END;
             |   | {name_list}
             |     | {name b}: b: text
             | {insert_list}
-              | {dot}: a1_a: integer variable
+              | {dot}: a1_a: integer variable in
               | | {name a1}
               | | {name a}
               | {insert_list}
@@ -62818,11 +62818,11 @@ END;
           |   | {name_list}
           |     | {name b}: b: text
           | {insert_list}
-            | {dot}: a1_a: integer variable
+            | {dot}: a1_a: integer variable in
             | | {name a1}
             | | {name a}
             | {insert_list}
-              | {dot}: a1_b: text variable
+              | {dot}: a1_b: text variable in
                 | {name a1}
                 | {name b}
 
@@ -62869,7 +62869,7 @@ END;
           | | {name_list}
           |   | {name a}: a: integer
           | {insert_list}
-            | {dot}: a2_c: integer variable
+            | {dot}: a2_c: integer variable in
               | {name a2}
               | {name c}
 
@@ -62918,11 +62918,11 @@ END;
           |   | {name_list}
           |     | {name b}: b: text
           | {insert_list}
-            | {dot}: a2_c: integer variable
+            | {dot}: a2_c: integer variable in
             | | {name a2}
             | | {name c}
             | {insert_list}
-              | {dot}: a2_d: text variable
+              | {dot}: a2_d: text variable in
                 | {name a2}
                 | {name d}
 
@@ -62971,11 +62971,11 @@ END;
           |   | {name_list}
           |     | {name b}: b: text
           | {insert_list}
-            | {dot}: a2_c: integer variable
+            | {dot}: a2_c: integer variable in
             | | {name a2}
             | | {name c}
             | {insert_list}
-              | {dot}: a2_d: text variable
+              | {dot}: a2_d: text variable in
                 | {name a2}
                 | {name d}
 
@@ -72271,19 +72271,19 @@ END;
       | {if_stmt}: bool notnull
         | {cond_action}: bool notnull
         | | {is_not}: bool notnull
-        | | | {dot}: args_a: integer variable
+        | | | {dot}: args_a: integer variable in
         | | | | {name args}
         | | | | {name a}
         | | | {null}: null
         | | {stmt_list}: ok
         |   | {let_stmt}: x0: integer notnull variable
         |   | | {name x0}: x0: integer notnull variable
-        |   | | {call}: args_a: integer notnull variable
-        |   |   | {name cql_inferred_notnull}: args_a: integer notnull variable
+        |   | | {call}: args_a: integer notnull variable in
+        |   |   | {name cql_inferred_notnull}: args_a: integer notnull variable in
         |   |   | {call_arg_list}
         |   |     | {call_filter_clause}
         |   |     | {arg_list}: ok
-        |   |       | {dot}: args_a: integer inferred_notnull variable
+        |   |       | {dot}: args_a: integer inferred_notnull variable in
         |   |         | {name args}
         |   |         | {name a}
         |   | {declare_value_cursor}: c: select: { a: integer } variable shape_storage value_cursor
@@ -76458,6 +76458,177 @@ END;
         |           | {dot}: Y.id: integer inferred_notnull variable
         |             | {name Y}
         |             | {name id}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+DECLARE PROC requires_out_text_notnull_and_int (OUT a TEXT NOT NULL, b INTEGER);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name requires_out_text_notnull_and_int}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: text notnull variable init_required out
+      | | {out}
+      | | {param_detail}: a: text notnull variable init_required out
+      |   | {name a}: a: text notnull variable init_required out
+      |   | {notnull}: text notnull
+      |     | {type_text}: text
+      | {params}
+        | {param}: b: integer variable in
+          | {param_detail}: b: integer variable in
+            | {name b}: b: integer variable in
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE PROC requires_text_notnull (a TEXT NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name requires_text_notnull}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: a: text notnull variable in
+        | {param_detail}: a: text notnull variable in
+          | {name a}: a: text notnull variable in
+          | {notnull}: text notnull
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE PROC dot_form_and_underscore_form_are_equivalent (OUT b0_a TEXT NOT NULL, b0_b INTEGER, OUT b1_a TEXT NOT NULL, b1_b INTEGER)
+BEGIN
+  CALL requires_out_text_notnull_and_int(b0.a, b0.b);
+  SET b1_a := "text";
+  CALL requires_text_notnull(b0.a);
+  CALL requires_text_notnull(b0_a);
+  CALL requires_text_notnull(b1.a);
+  CALL requires_text_notnull(b1_a);
+  IF b0.b IS NOT NULL AND b1_b IS NOT NULL THEN
+    CALL requires_int_notnull(b0.b);
+    CALL requires_int_notnull(b0_b);
+    CALL requires_int_notnull(b1.b);
+    CALL requires_int_notnull(b1_b);
+  END IF;
+END;
+
+  {create_proc_stmt}: ok
+  | {name dot_form_and_underscore_form_are_equivalent}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: b0_a: text notnull variable init_required out
+    | | | {out}
+    | | | {param_detail}: b0_a: text notnull variable init_required out
+    | |   | {name b0_a}: b0_a: text notnull variable init_required out
+    | |   | {notnull}: text notnull
+    | |     | {type_text}: text
+    | | {params}
+    |   | {param}: b0_b: integer variable in
+    |   | | {param_detail}: b0_b: integer variable in
+    |   |   | {name b0_b}: b0_b: integer variable in
+    |   |   | {type_int}: integer
+    |   | {params}
+    |     | {param}: b1_a: text notnull variable init_required out
+    |     | | {out}
+    |     | | {param_detail}: b1_a: text notnull variable init_required out
+    |     |   | {name b1_a}: b1_a: text notnull variable init_required out
+    |     |   | {notnull}: text notnull
+    |     |     | {type_text}: text
+    |     | {params}
+    |       | {param}: b1_b: integer variable in
+    |         | {param_detail}: b1_b: integer variable in
+    |           | {name b1_b}: b1_b: integer variable in
+    |           | {type_int}: integer
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+      | | {name requires_out_text_notnull_and_int}: ok
+      | | {expr_list}: ok
+      |   | {dot}: b0_a: text notnull variable init_required out
+      |   | | {name b0}
+      |   | | {name a}
+      |   | {expr_list}
+      |     | {dot}: b0_b: integer variable in
+      |       | {name b0}
+      |       | {name b}
+      | {assign}: b1_a: text notnull variable init_required out
+      | | {name b1_a}: b1_a: text notnull variable init_required out
+      | | {strlit 'text'}: text notnull
+      | {call_stmt}: ok
+      | | {name requires_text_notnull}: ok
+      | | {expr_list}: ok
+      |   | {dot}: b0_a: text notnull variable out
+      |     | {name b0}
+      |     | {name a}
+      | {call_stmt}: ok
+      | | {name requires_text_notnull}: ok
+      | | {expr_list}: ok
+      |   | {name b0_a}: b0_a: text notnull variable out
+      | {call_stmt}: ok
+      | | {name requires_text_notnull}: ok
+      | | {expr_list}: ok
+      |   | {dot}: b1_a: text notnull variable out
+      |     | {name b1}
+      |     | {name a}
+      | {call_stmt}: ok
+      | | {name requires_text_notnull}: ok
+      | | {expr_list}: ok
+      |   | {name b1_a}: b1_a: text notnull variable out
+      | {if_stmt}: bool notnull
+        | {cond_action}: bool notnull
+        | | {and}: bool notnull
+        | | | {is_not}: bool notnull
+        | | | | {dot}: b0_b: integer variable in
+        | | | | | {name b0}
+        | | | | | {name b}
+        | | | | {null}: null
+        | | | {is_not}: bool notnull
+        | |   | {name b1_b}: b1_b: integer variable in
+        | |   | {null}: null
+        | | {stmt_list}: ok
+        |   | {call_stmt}: ok
+        |   | | {name requires_int_notnull}: ok
+        |   | | {expr_list}: ok
+        |   |   | {call}: b0_b: integer notnull variable in
+        |   |     | {name cql_inferred_notnull}: b0_b: integer notnull variable in
+        |   |     | {call_arg_list}
+        |   |       | {call_filter_clause}
+        |   |       | {arg_list}: ok
+        |   |         | {dot}: b0_b: integer inferred_notnull variable in
+        |   |           | {name b0}
+        |   |           | {name b}
+        |   | {call_stmt}: ok
+        |   | | {name requires_int_notnull}: ok
+        |   | | {expr_list}: ok
+        |   |   | {call}: b0_b: integer notnull variable in
+        |   |     | {name cql_inferred_notnull}: b0_b: integer notnull variable in
+        |   |     | {call_arg_list}
+        |   |       | {call_filter_clause}
+        |   |       | {arg_list}: ok
+        |   |         | {name b0_b}: b0_b: integer inferred_notnull variable in
+        |   | {call_stmt}: ok
+        |   | | {name requires_int_notnull}: ok
+        |   | | {expr_list}: ok
+        |   |   | {call}: b1_b: integer notnull variable in
+        |   |     | {name cql_inferred_notnull}: b1_b: integer notnull variable in
+        |   |     | {call_arg_list}
+        |   |       | {call_filter_clause}
+        |   |       | {arg_list}: ok
+        |   |         | {dot}: b1_b: integer inferred_notnull variable in
+        |   |           | {name b1}
+        |   |           | {name b}
+        |   | {call_stmt}: ok
+        |     | {name requires_int_notnull}: ok
+        |     | {expr_list}: ok
+        |       | {call}: b1_b: integer notnull variable in
+        |         | {name cql_inferred_notnull}: b1_b: integer notnull variable in
+        |         | {call_arg_list}
+        |           | {call_filter_clause}
+        |           | {arg_list}: ok
+        |             | {name b1_b}: b1_b: integer inferred_notnull variable in
         | {if_alt}: ok
 
 The statement ending at line XXXX

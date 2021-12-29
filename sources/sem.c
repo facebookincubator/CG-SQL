@@ -5697,12 +5697,27 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
 
   for (int32_t i = 0; i < sptr->count; i++) {
     if (!Strcasecmp(sptr->names[i], name)) {
-      if (ast) {
-        ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
-        ast->sem->name = dup_printf("%s_%s", shape->sem->name, sptr->names[i]);
-        ast->sem->kind = sptr->kinds[i];
-      }
-      *type_ptr = &sptr->semtypes[i];
+      // We found the dot form of the name (e.g., 'bundle.foo') in the argument
+      // bundle. The underscore version of the name (e.g., 'bundle_foo')
+      // therefore must exist in `locals`: We always create both versions of the
+      // name, and the local is not allowed to be redefined.
+      //
+      // It's important that we set the same `sem_t` pointer for both the dot
+      // form and the underscore-separated form of references to parameters
+      // within argument bundles. If we didn't, `find_mutable_type` would be
+      // less useful: Getting up the type pointer for the dot form of the name
+      // and setting an improvement on it wouldn't affect the underscore form,
+      // and vice versa.
+      //
+      // The easiest way to set the same type pointer for both is to simply
+      // resolve the underscore form.
+      CHARBUF_OPEN(underscore_name);
+      bprintf(&underscore_name, "%s_%s", scope, name);
+      sem_resolve result = sem_try_resolve_variable(ast, underscore_name.ptr, NULL, type_ptr);
+      CHARBUF_CLOSE(underscore_name);
+
+      Invariant(result == SEM_RESOLVE_STOP);
+
       return SEM_RESOLVE_STOP;
     }
   }
@@ -16517,102 +16532,20 @@ static bool_t sem_validate_current_proc_params_are_initialized(ast_node *error_a
   Contract(current_proc);
   Contract(error_ast);
 
-  bool_t error = false;
-
-  // At the moment, `find_mutable_type` returns different `sem_t` pointers
-  // depending on how an argument from an argument bundle is referenced. As a
-  // result, if you improve 'some_bundle_x', 'some_bundle.x' will not be
-  // improved, and vice versa. (This applies to all forms of improvements, not
-  // just initialization improvements.)
-  //
-  // This is generally not a problem, but it causes an issue in cases like the
-  // following:
-  //
-  //   DECLARE PROC p0(OUT x TEXT NOT NULL);
-  //   CREATE PROC p1(bundle LIKE p0 ARGUMENTS);
-  //   BEGIN
-  //     CALL p0(FROM bundle);
-  //   END;
-  //
-  // In the above example, we improve 'bundle.x' via the call. However, when we
-  // iterate over the params below, 'bundle_x' will not be improved.
-  //
-  // To work around this, we create a symbol table that maps names like
-  // 'bundle_x' to pointers to types in the appropriate argument bundles. Before
-  // reporting an error below due to something lacking initialization, we check
-  // to see if the name came from an argument bundle, and, if it did, we then
-  // check the type from there instead. As a result, initialization of either
-  // 'bundle_x' or 'bundle.x' will work.
-  //
-  // This is *extremely* ugly and this workaround must not linger. A possible
-  // near-future fix might involve settling on a single syntactic form for
-  // referring to argument bundles. Another option might be to keep a table like
-  // this globally for the current proc and to have `sem_resolve_id_with_type`
-  // use it to always set the same `sem_t *` regardless of the form used.
-  symtab *param_names_to_bundle_types = symtab_new();
-
-  // Iterate over the entire `arg_bundles` symbol table.
-  for (uint32_t i = 0; i < arg_bundles->capacity; i++) {
-    CSTR bundle_name = arg_bundles->payload[i].sym;
-    if (!bundle_name) {
-      // No key/value pair is present at this location.
-      continue;
-    }
-    ast_node *ast = arg_bundles->payload[i].val;
-    // The value is always the name of the bundle with a `sem_node` containing a
-    // `sem_struct` holding the information about the bundle's parameters.
-    Invariant(is_ast_str(ast));
-    Invariant(ast->sem);
-    Invariant(!Strcasecmp(bundle_name, ast->sem->name));
-    Invariant(ast->sem->sptr);
-    sem_struct *sptr = ast->sem->sptr;
-    for (uint32_t j = 0; j < sptr->count; j++) {
-      CSTR field_name = sptr->names[j];
-      // Add the non-dot version of the name to `param_names_to_bundle_types`
-      // with the value being a pointer to the type in the argument bundle. 
-      symtab_add(
-        param_names_to_bundle_types,
-        dup_printf("%s_%s", bundle_name, field_name),
-        (void *)&sptr->semtypes[j]
-      );
-    }
-  }
-
   // Check the parameters to ensure all have been initialized.
   ast_node *params = get_proc_params(current_proc);
   for (ast_node *param_item = params; param_item; param_item = param_item->right) {
     EXTRACT_NOTNULL(param, param_item->left);
     sem_t sem_type = param->sem->sem_type;
     if (sem_type & SEM_TYPE_INIT_REQUIRED && !(sem_type & SEM_TYPE_INIT_COMPLETE)) {
-      // The parameter required initialization but it is not initialized. We
-      // might still be okay if the parameter name is the non-dot version of
-      // something from an argument bundle.
       EXTRACT_NOTNULL(param_detail, param->right);
       EXTRACT_STRING(name, param_detail->left);
-      symtab_entry *entry = symtab_find(param_names_to_bundle_types, param->sem->name);
-      sem_t *type = entry ? entry->val : NULL;
-      bool_t is_init_complete = false;
-      if (type) {
-        // The parameter is, in fact, the non-dot version of something from an
-        // argument bundle. If the type in the argument bundle indicates that
-        // initialization was completed, we're good.
-        Invariant(*type & SEM_TYPE_INIT_REQUIRED);
-        is_init_complete = !!(*type & SEM_TYPE_INIT_COMPLETE);
-      }
-      if (!is_init_complete) {
-        // Either the parameter did not correspond to anything in an argument
-        // bundle or it simply wasn't initialized in all cases.
-        report_error(error_ast, "CQL0439: nonnull reference OUT parameter possibly not always initialized", name);
-        error = true;
-        goto cleanup;
-      }
+      report_error(error_ast, "CQL0439: nonnull reference OUT parameter possibly not always initialized", name);
+      return false;
     }
   }
 
-cleanup:
-  symtab_delete(param_names_to_bundle_types);
-
-  return !error;
+  return true;
 }
 
 // Used for sem_create_proc_stmt() only.

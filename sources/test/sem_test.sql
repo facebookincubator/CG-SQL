@@ -13483,7 +13483,7 @@ declare proc _stuff5() (like _stuff1, like _stuff1);
 declare proc _stuff6() (x like _stuff1, y like _stuff1);
 
 -- TEST: access shape args using dot notation
--- + {dot}: x_id: integer variable
+-- + {dot}: x_id: integer variable in
 create proc using_like_shape(x like _stuff1)
 begin
   call printf("%s\n", x.id);
@@ -19422,8 +19422,7 @@ begin
 end;
 
 -- TEST: Forwarding procs using named bundles handle initialization improvements
--- correctly. This case exercises the workaround present in
--- sem_validate_current_proc_params_are_initialized.
+-- correctly.
 -- + {create_proc_stmt}: ok
 -- + {param}: bundle_t: text notnull variable init_required out
 -- - error:
@@ -19472,7 +19471,6 @@ begin
   -- ...even though it's always initialized in the proc
   set a := "text";
 end;
-
 
 -- TEST: try_is_proc_body may only appear once.
 -- + {create_proc_stmt}: err
@@ -19523,6 +19521,45 @@ begin
   if X.id is not null and Y.id is not null then
     let x_ := X.id;
     let y_ := Y.id;
+  end if;
+end;
+
+-- Used in the following test.
+declare proc requires_out_text_notnull_and_int(out a text not null, b int);
+
+-- Used in the following test.
+declare proc requires_text_notnull(a text not null);
+
+-- TEST: Improvements set on one form of a name from an argument bundle affect
+-- the other form.
+-- + {create_proc_stmt}: ok
+-- + {dot}: b0_a: text notnull variable out
+-- + {name b0_a}: b0_a: text notnull variable out
+-- + {dot}: b1_a: text notnull variable out
+-- + {name b1_a}: b1_a: text notnull variable out
+-- + {dot}: b0_b: integer inferred_notnull variable in
+-- + {name b0_b}: b0_b: integer inferred_notnull variable in
+-- + {dot}: b1_b: integer inferred_notnull variable in
+-- + {name b1_b}: b1_b: integer inferred_notnull variable in
+-- - error:
+create proc dot_form_and_underscore_form_are_equivalent(
+  b0 like requires_out_text_notnull_and_int arguments,
+  b1 like requires_out_text_notnull_and_int arguments)
+begin
+  -- Either form works for initialization.
+  call requires_out_text_notnull_and_int(from b0); -- rewrites to dot form
+  set b1_a := "text";
+  call requires_text_notnull(b0.a);
+  call requires_text_notnull(b0_a);
+  call requires_text_notnull(b1.a);
+  call requires_text_notnull(b1_a);
+
+  -- Either form works for nullability.
+  if b0.b is not null and b1_b is not null then
+    call requires_int_notnull(b0.b);
+    call requires_int_notnull(b0_b);
+    call requires_int_notnull(b1.b);
+    call requires_int_notnull(b1_b);
   end if;
 end;
 
