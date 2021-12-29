@@ -13993,14 +13993,16 @@ static void sem_upsert_stmt(ast_node *stmt) {
 
   stmt->sem = insert_stmt->sem;
   record_ok(upsert_update);
-  goto cleanup;
-
-error:
-  record_error(stmt);
 
 cleanup:
   in_upsert = 0;
   current_upsert_table_ast = NULL;
+
+  return;
+
+error:
+  record_error(stmt);
+  goto cleanup;
 }
 
 // Top level WITH-INSERT form -- create the CTE context and then process
