@@ -360,28 +360,22 @@ def emit_sql(jfile):
         emit_tabledep(data["general"])
 
 
-# here we are just going to decode the arguments
+def main():
+    # here we are just going to decode the arguments
+    if len(sys.argv) < 3:
+        usage()
+    elif sys.argv[1] == "--table_diagram":
+        emit_table_diagram(sys.argv[2])
+    elif sys.argv[1] == "--region_diagram":
+        emit_region_diagram(sys.argv[2])
+    elif sys.argv[1] == "--erd":
+        emit_erd()
+    elif sys.argv[1] == "--sql":
+        emit_schema()
+        emit_sql(sys.argv[2])
+    else:
+        usage()
 
-if len(sys.argv) < 3:
-    usage()
-    exit(0)
-
-if sys.argv[1] == "--table_diagram":
-    emit_table_diagram(sys.argv[2])
-    exit(0)
-
-if sys.argv[1] == "--region_diagram":
-    emit_region_diagram(sys.argv[2])
-    exit(0)
-
-if sys.argv[1] == "--erd":
-    emit_erd()
-    exit(0)
-
-if sys.argv[1] == "--sql":
-    emit_schema()
-    emit_sql(sys.argv[2])
-    exit(0)
 
 if __name__ == "__main__":
-    usage()
+    main()
