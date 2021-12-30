@@ -10,13 +10,14 @@ See `CQL_Guide/guide.html` for the language summary.
 
 With requirements met (see below)
 
+Set your current directory to the CG/SQL `sources` directory, wherever that may be, then:
+
 ```
 make clean
 make
 ```
 
 This puts the result in `out/cql`
-
 
 ### Requirements
 The default bison and flex on Mac are quite old.  You'll need to replace them. The Build
@@ -75,6 +76,10 @@ This will build and run the test suite
 Does the same thing but it tests the built amalgam rather than the normal build
 
 ## Code Coverage
+
+NOTE: Due to issues that we don't currently understand, `gcovr` on macOS with the latest XCode tools is not working.
+Consequently, the following script fails on macOS.  See https://github.com/facebookincubator/CG-SQL/issues/92 for
+a more complete discussion.  The problem doesn't seem to have anything to do with CG/SQL per se, but there it is...
 
 ```
 ./cov.sh
