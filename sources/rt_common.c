@@ -135,6 +135,36 @@ static rtdata rt_objc = {
   .cql_result_set_note_ownership_transferred = "cql_result_set_note_ownership_transferred",
 };
 
+// this lets us test the OSS version of the objc gen even if the build is configured differently by default
+static rtdata rt_objc_mit = {
+  .name = "objc_mit",
+  .code_generator = &cg_objc_main,
+  .required_file_names_count = 1,
+  // note the @ is split from the generated so that tools don't think this is a generated file
+  .header_prefix =
+    "#pragma once\n\n"
+    "#import <Foundation/Foundation.h>\n",
+  .header_wrapper_begin = "\nNS_ASSUME_NONNULL_BEGIN\n",
+  .header_wrapper_end = "\nNS_ASSUME_NONNULL_END\n",
+  .symbol_case = cg_symbol_case_snake,
+  .generate_type_getters = 1,
+  .generate_equality_macros = 1,
+  .symbol_prefix = "CGS_",
+  .impl_symbol_prefix = "",
+  .cql_hash_code = "NSUInteger",
+  .cql_bool = "BOOL",
+  .cql_int32 = "int32_t",
+  .cql_int64 = "int64_t",
+  .cql_double = "double",
+  .cql_code = "int",
+  .cql_blob_ref = "NSData *",
+  .cql_object_ref = "NSObject *",
+  .cql_string_ref = "NSString *",
+  .cql_string_ref_encode = "cql_string_ref_encode",
+  .cql_string_ref_encode_include = "",
+  .cql_result_set_note_ownership_transferred = "cql_result_set_note_ownership_transferred",
+};
+
 static rtdata rt_java = {
   .name = "java",
   .code_generator = &cg_java_main,
@@ -280,6 +310,7 @@ static rtdata rt_udf = {
 static rtdata *(rt_all[]) = {
   &rt_c,
   &rt_objc,
+  &rt_objc_mit,
   &rt_java,
   &rt_schema_upgrade,
   &rt_schema_sqlite,
