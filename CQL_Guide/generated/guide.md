@@ -1,7 +1,7 @@
 <!--- @generated -->
 ## Chapter 1: Introduction
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -32,6 +32,9 @@ mode with the fewest runtime dependencies allowed for illustration.
 The "Hello World" program rendered in CQL looks like this:
 
 ```sql
+-- needed to allow vararg calls to C functions
+declare procedure printf no check;
+
 create proc hello()
 begin
   call printf("Hello, world\n");
@@ -99,9 +102,9 @@ A number of things are going on even in this simple program that are worth discu
 * since nobody used a database we didn't need to initialize one.
 * since there are no actual uses of SQLite we didn't need to provide that library
 * for the same reason we didn't need to include a reference to the CQL runtime
-* the function `printf` was not declared, so attempting to `call` it creates a regular C call using whatever arguments are provided, in this case a string
-* the `printf` function is declared in `stdio.h` which is pulled in by `cqlrt.h`, which appears in `hello.c`, so it will be available to call
-* CQL allows string literal with double quotes, those literals may have most C escape sequences in them, so the "\n" bit works
+* the function `printf` was declared "no check", so calling it creates a regular C call using whatever arguments are provided, in this case a string
+* the `printf` function is declared in `stdio.h` which is pulled in by `cqlrt.h`, which appears in `hello.c`, so it will be available to call in the generated C code
+* CQL allows string literals with double quotes, those literals may have most C escape sequences in them, so the "\n" bit works
   * Normal SQL string literals (also supported) use single quotes and do not allow, or need escape characters other than `''` to mean one single quote
 
 All of these facts put together mean that the normal simple linkage rules result in an executable that prints
@@ -112,6 +115,9 @@ the string "Hello, world" and then a newline.
 Borrowing once again from examples in "The C Programming Language", it's possible to do significant control flow in CQL without reference to databases.  The following program illustrates a variety of concepts:
 
 ```sql
+-- needed to allow vararg calls to C functions
+declare procedure printf no check;
+
 -- print a conversion table  for temperatures from 0 to 300
 create proc conversions()
 begin
@@ -245,7 +251,7 @@ The above causes the C compiler to invoke only the pre-processor `-E` and to tre
 
 ## Chapter 2: Using Data
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -260,6 +266,9 @@ on the meaning of the SQL statements used here if you are new to SQL.
 Suppose we have the following program:
 
 ```sql
+-- needed to allow vararg calls to C functions
+declare procedure printf no check;
+
 create table my_data(t text not null);
 
 create proc hello()
@@ -288,6 +297,8 @@ A new minimal `main` program might look something like this:
 ```C
 #include <stdlib.h>
 #include <sqlite3.h>
+
+#include "hello.h"
 
 int main(int argc, char **argv)
 {
@@ -343,6 +354,9 @@ created when the procedure is executed.
 We need to change our program a tiny bit.
 
 ```sql
+-- needed to allow vararg calls to C functions
+declare procedure printf no check;
+
 create proc hello()
 begin
   create table my_data(t text not null);
@@ -459,7 +473,10 @@ Note we've used the single quote syntax here for no good reason other than illus
 sequences here so either form would do the job. Importantly, the string literal will not create a string object as before
 but the text variable `t` is of course a string reference.  Before it can be used in a call to an un-declared function it
 must be converted into a temporary C string.  This might require allocation in general, that allocation is automatically
-managed.  Note that by default CQL assumes that calls to unknown C functions should be emitted as written.  In this way you can use `printf` even though CQL knows nothing about it.
+managed.
+
+Also, note that CQL assumes that calls to "no check" functions should be emitted as written.  In this way you can use
+`printf` even though CQL knows nothing about it.
 
 Lastly we have:
 
@@ -481,6 +498,8 @@ In order to read data with reasonable flexibility, we need a more powerful const
 Let's change our example again and start using some database features.
 
 ```sql
+declare procedure printf no check;
+
 create proc hello()
 begin
   create table my_data(
@@ -537,9 +556,12 @@ We've created a non-scalar variable `C`, a cursor over the indicated result set.
   end;
 ```
 
-This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error).  The `FETCH` construct allows you to specify target variables, but if you do not do so, then a synthetic structure is
+This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error).
+The `FETCH` construct allows you to specify target variables, but if you do not do so, then a synthetic structure is
 automatically created to capture the projection of the `select`.  In this case the columns are `pos` and `txt`.
-The automatically created storage exactly matches the type of the columns in the select list which could itself be tricky to calculate if the `select` is complex.  In this case the `select` is quite simple and the columns of the result directly match the schema for `my_data`.  An integer and a string reference.  Both not null.
+The automatically created storage exactly matches the type of the columns in the select list which could itself be tricky to calculate
+if the `select` is complex.  In this case the `select` is quite simple and the columns of the result directly match the schema for `my_data`.
+An integer and a string reference.  Both not null.
 
 
 ```sql
@@ -583,6 +605,9 @@ we have defined above.
 
 
 ```sql
+-- needed to allow vararg calls to C functions
+declare procedure printf no check;
+
 create proc mandelbrot()
 begin
   -- this is basically one giant select statement
@@ -601,7 +626,7 @@ begin
         -- the next point is always iter +1, same (x,y) and the next iteration of z^2 + c
         select iter+1 iter, cx, cy, x*x-y*y + cx x, 2.0*x*y + cy y from m
         -- stop condition, the point has escaped OR iteration count > 28
-        where (x*x + y*y) < 4.0 and iter < 28
+        where (m.x*m.x + m.y*m.y) < 4.0 and m.iter < 28
       ),
       m2(iter, cx, cy) as (
        -- find the last iteration for any given point to get that count
@@ -656,10 +681,12 @@ Which probably doesn't come up very often but it does illustrate several things:
  * `WITH RECURSIVE` actually provides a full lambda calculus so arbitrary computation is possible
  * You can use `WITH RECURSIVE` to create table expressions that are sequences of numbers easily, with no reference to any real data
 
+Note: A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
+
 
 ## Chapter 3: Expressions, Literals, Nullability, Sensitivity
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2058,7 +2085,7 @@ cql_cleanup:
 
 ## Chapter 4: Procedures, Functions, and Control Flow
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2145,6 +2172,8 @@ end;
 What follows is a simple procedure that counts down its input argument.
 
 ```sql
+declare procedure printf no check;
+
 create proc looper(x integer not null)
 begin
   while x > 0
@@ -2159,6 +2188,8 @@ The `WHILE` loop has additional keywords that can be used within it to better co
 loop might look like this:
 
 ```sql
+declare procedure printf no check;
+
 create proc looper(x integer not null)
 begin
   while 1
@@ -2289,6 +2320,8 @@ This example illustrates catching an error from some DML, and recovering rather 
 This is the common "upsert" pattern (insert or update)
 
 ```sql
+declare procedure printf no check;
+
 create procedure upsert_foo(id_ integer, t_ text)
 begin
   begin try
@@ -2407,7 +2440,7 @@ This feature is really only syntatic sugar for the "awkward" form above, but it 
 
 ## Chapter 5: Types of Cursors, OUT and OUT UNION, and FETCH flavors
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3264,16 +3297,16 @@ Boxing isn’t the usual pattern at all and returning cursors in a box, while po
 
 ## Chapter 6: Calling Procedures Defined Elsewhere
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-CQL generally doesn't see the whole world in one compilation.  
+CQL generally doesn't see the whole world in one compilation.
 In this way it's a lot more like say the C compiler than it is like say Java
 or C# or something like that.  This means several things:
 
-* You don't have to tell CQL about all your schema in all your files, 
+* You don't have to tell CQL about all your schema in all your files,
 so particular stored procs can be more encapsulated
 * You can have different databases mounted in different places and CQL
 won't care; you provide the database connection to the stored procedures when you call them, and that database is assumed to have the tables declared in this translation unit
@@ -3294,7 +3327,7 @@ the sections below.
 DECLARE PROCEDURE foo(id integer, out name text not null);
 ```
 
-This introduces the symbol name without providing the body.  
+This introduces the symbol name without providing the body.
 This has important variations.
 
 ### Procedures that use the database
@@ -3303,7 +3336,7 @@ This has important variations.
 DECLARE PROCEDURE foo(id integer, out name text not null) USING TRANSACTION;
 ```
 
-Most procedures you write will use SQLite in some fashion, 
+Most procedures you write will use SQLite in some fashion,
 maybe a `select` or something.  The `USING TRANSACTION` annotation indicates that
 the proc in question uses the database and therefore the generated code
 will need a database connection in-argument and it will return a SQLite error code.
@@ -3314,16 +3347,16 @@ If the procedure in question is going to use `select` or `call` to create a resu
 the type of that result set has to be declared.  An example might look like this:
 
 ```sql
-DECLARE PROC with_result_set () (id INTEGER NOT NULL, 
-                                 name TEXT, 
-                                 rate LONG INTEGER, 
-                                 type INTEGER, 
+DECLARE PROC with_result_set () (id INTEGER NOT NULL,
+                                 name TEXT,
+                                 rate LONG INTEGER,
+                                 type INTEGER,
                                  size REAL);
 ```
 
-This says that the procedure takes no arguments (other than the implicit database 
+This says that the procedure takes no arguments (other than the implicit database
 connection) and it has an implicit out-argument that can be read to get a result
-set with the indicated columns: id, name, rate, type, and size.  
+set with the indicated columns: id, name, rate, type, and size.
 This form implies `USING TRANSACTION`.
 
 ### Procedures that return a single row with a value cursor
@@ -3332,25 +3365,25 @@ If the procedure emits a cursor with the `OUT` statement to produce a single
 row then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL, 
-                                     name TEXT, 
-                                     rate LONG INTEGER, 
-                                     type INTEGER, 
+DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL,
+                                     name TEXT,
+                                     rate LONG INTEGER,
+                                     type INTEGER,
                                      size REAL);
 ```
 
 This form can have `USING TRANSACTION`  or not, since it is possible to emit a row with a value cursor and never use the database.  See the previous chapter for details on the `OUT` statement.
 
-### Procedures that return a full result set 
+### Procedures that return a full result set
 
 If the procedure emits many rows with the `OUT UNION` statement to produce a full result set
 then it can be declared as follows:
 
 ```sql
-DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL, 
-                                     name TEXT, 
-                                     rate LONG INTEGER, 
-                                     type INTEGER, 
+DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL,
+                                     name TEXT,
+                                     rate LONG INTEGER,
+                                     type INTEGER,
                                      size REAL);
 ```
 
@@ -3364,11 +3397,11 @@ by adding something like `--generate_exports` to the command line. This will req
 That file can then be used with `#include` when you combine the C pre-processor
 with CQL as is normally done.
 
-Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export 
+Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export
 the stored procedure declarations from the translation units.  Of course those
 exported symbols are what you then import in some other module.  Sometimes this
 output file is called `foo_imports.sql` because those exports are of course exactly
-what you need to import `foo`.  You can use whatever convention you like of course, 
+what you need to import `foo`.  You can use whatever convention you like of course,
 CQL doesn't care.  The full command line might look something like this:
 
 ```
@@ -3400,21 +3433,21 @@ DECLARE PROC make_view () USING TRANSACTION;
 
 DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 
-DECLARE PROC complex_return () 
-  (_bool BOOL NOT NULL, 
-   _integer INTEGER NOT NULL, 
-   _longint LONG INTEGER NOT NULL, 
-   _real REAL NOT NULL, 
-   _text TEXT NOT NULL, 
+DECLARE PROC complex_return ()
+  (_bool BOOL NOT NULL,
+   _integer INTEGER NOT NULL,
+   _longint LONG INTEGER NOT NULL,
+   _real REAL NOT NULL,
+   _text TEXT NOT NULL,
    _nullable_bool BOOL);
 
 DECLARE PROC outint_nullable (
-  OUT output INTEGER, 
+  OUT output INTEGER,
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
 DECLARE PROC outint_notnull (
-  OUT output INTEGER NOT NULL, 
+  OUT output INTEGER NOT NULL,
   OUT result BOOL NOT NULL)
 USING TRANSACTION;
 
@@ -3434,15 +3467,15 @@ generated C to demystify all this.  There is a very straightforward conversion.
 void test(cql_int32 i);
 
 void out_test(
-  cql_int32 *_Nonnull i, 
+  cql_int32 *_Nonnull i,
   cql_nullable_int32 *_Nonnull ii);
 
 cql_code outparm_test(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   cql_int32 *_Nonnull foo);
 
 cql_code select_from_view_fetch_results(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   select_from_view_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code make_view(sqlite3 *_Nonnull _db_);
@@ -3450,25 +3483,25 @@ cql_code make_view(sqlite3 *_Nonnull _db_);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b);
 
 cql_code complex_return_fetch_results(
-  sqlite3 *_Nonnull _db_, 
+  sqlite3 *_Nonnull _db_,
   complex_return_result_set_ref _Nullable *_Nonnull result_set);
 
 cql_code outint_nullable(
-  sqlite3 *_Nonnull _db_, 
-  cql_nullable_int32 *_Nonnull output, 
+  sqlite3 *_Nonnull _db_,
+  cql_nullable_int32 *_Nonnull output,
   cql_bool *_Nonnull result);
 
 cql_code outint_notnull(
-  sqlite3 *_Nonnull _db_, 
-  cql_int32 *_Nonnull output, 
+  sqlite3 *_Nonnull _db_,
+  cql_int32 *_Nonnull output,
   cql_bool *_Nonnull result);
 
 void obj_proc(
   cql_object_ref _Nullable *_Nonnull an_object);
 
 cql_code insert_values(
-  sqlite3 *_Nonnull _db_, 
-  cql_int32 id_, 
+  sqlite3 *_Nonnull _db_,
+  cql_int32 id_,
   cql_nullable_int32 type_);
 ```
 
@@ -3535,13 +3568,13 @@ as long as they are not recombined with SQLite statements.
 
 ## Chapter 7: CQL Result Sets
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the 
-result set features of CQL is to create a C interface to SQLite data.  Because of this 
+Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the
+result set features of CQL is to create a C interface to SQLite data.  Because of this
 there are a lot of essential details that require looking carefully at the generated C code.  Appendix 2
 covers this code in even more detail but here it makes sense to at least talk about the interface.
 
@@ -3557,7 +3590,7 @@ end;
 ```
 
 We've created a simple data reader, this CQL code will cause the compiler to
-generated helper functions to read the data and materialize a result set.  
+generated helper functions to read the data and materialize a result set.
 
 Let's look at the public interface of that result set now considering the most essential pieces.
 
@@ -3570,17 +3603,17 @@ cql_result_set_type_decl(
 
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set, 
+   read_foo_result_set_ref  _Nonnull result_set,
    cql_int32 row);
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref
   _Nonnull result_set);
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
-  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
+  read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_);
 #define read_foo_row_hash(result_set, row) \
   cql_result_set_get_meta((cql_result_set_ref)(result_set))->\
@@ -3595,16 +3628,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1)) \
 Let's consider some of these individually now
 ```C
 cql_result_set_type_decl(
-  read_foo_result_set, 
+  read_foo_result_set,
   read_foo_result_set_ref);
 ```
-This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.  
+This declares the data type for `read_foo_result_set` and the associated object reference `read_foo_result_set_ref`.
 As it turns out the underlying data type for all result sets is the same, only the shape of the data varies.
 
 
 ```C
-extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_, 
-  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
+extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
+  read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_);
 ```
 The result set fetcher method gives you a `read_foo_result_set_ref` if it succeeds.  It accepts the `id_` argument which it
@@ -3614,27 +3647,27 @@ This method is the main public entry point for result sets.
 Once you have a result set, you can read values out of it.
 
 ```C
-extern cql_int32 read_foo_result_count(read_foo_result_set_ref 
+extern cql_int32 read_foo_result_count(read_foo_result_set_ref
   _Nonnull result_set);
 ```
-That function tells you how many rows are in the result set.  
+That function tells you how many rows are in the result set.
 
 For each row you can use any of the row readers:
 
 ```C
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
-extern cql_bool read_foo_get_b_value(read_foo_result_set_ref 
+extern cql_bool read_foo_get_b_value(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
 extern cql_string_ref _Nullable read_foo_get_t(
-   read_foo_result_set_ref  _Nonnull result_set, 
+   read_foo_result_set_ref  _Nonnull result_set,
    cql_int32 row);
 ```
 
 These let you read the `id` of a particular row, and get a `cql_int32` or you can read the nullable boolean,
-using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value` 
+using the `read_foo_get_b_is_null` function first to see if the boolean is null and then `read_foo_get_b_value`
 to get the value.  Finally the string can be accessed with `read_foo_get_t`.  As you can see there is a
 simple naming convention for each of the field readers.
 
@@ -3643,14 +3676,14 @@ Note:  The compiler has runtime arrays that control naming conventions as well a
 Finally, also part of the public interface, are these macros:
 
 ```C
-#define read_foo_row_hash(result_set, row) 
+#define read_foo_row_hash(result_set, row)
 #define read_foo_row_equal(rs1, row1, rs2, row2)
 ```
 
-These use the CQL runtime to hash a row or compare two rows from identical result 
-set types.  Metadata included in the result set allows general purpose code to work for 
+These use the CQL runtime to hash a row or compare two rows from identical result
+set types.  Metadata included in the result set allows general purpose code to work for
 every result set.  Based on configuration, result set copying methods can also
-be generated.   When you're done with a result set you can use the `cql_release(...)` 
+be generated.   When you're done with a result set you can use the `cql_release(...)`
 method to free the memory.
 
 Importantly, all of the rows from the query in the stored procedure are materialized
@@ -3661,7 +3694,7 @@ The code that actually creates the result set starting from the prepared stateme
 The essential parts are:
 
 
-First, a constant array that holds the data types for each column. 
+First, a constant array that holds the data types for each column.
 
 ```
 uint8_t read_foo_data_types[read_foo_data_types_count] = {
@@ -3690,18 +3723,18 @@ static cql_uint16 read_foo_col_offsets[] = { 3,
 
 Using the above we can now write this fetcher
 ```
-CQL_WARN_UNUSED cql_code 
+CQL_WARN_UNUSED cql_code
 read_foo_fetch_results(
-  sqlite3 *_Nonnull _db_, 
-  read_foo_result_set_ref _Nullable *_Nonnull result_set, 
-  cql_int32 id_) 
+  sqlite3 *_Nonnull _db_,
+  read_foo_result_set_ref _Nullable *_Nonnull result_set,
+  cql_int32 id_)
 {
   sqlite3_stmt *stmt = NULL;
   cql_profile_start(CRC_read_foo, &read_foo_perf_index);
-  
+
   // we call the original procedure, it gives us a prepared statement
   cql_code rc = read_foo(_db_, &stmt, id_);
-  
+
   // this is everything you need to know to fetch the result
   cql_fetch_info info = {
     .rc = rc,
@@ -3715,7 +3748,7 @@ read_foo_fetch_results(
     .crc = CRC_read_foo,
     .perf_index = &read_foo_perf_index,
   };
-  
+
   // this function does all the work, it cleans up if .rc is an error code.
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
@@ -3745,7 +3778,7 @@ begin
 end;
 ```
 
-In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.  
+In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.
 
 Virtually all the code pieces to do this already exist for normal result sets.  The important parts of the output code look like this in your generated C.
 
@@ -3762,30 +3795,101 @@ We need to be able to copy the cursor into the buffer and retain any internal re
 
 ```
 // This bit is what you get when you "out union" a cursor "C"
-// first we +1 any references in the cursor then we copy its bits 
+// first we +1 any references in the cursor then we copy its bits
 cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
 ```
 
-Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set. 
+Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set.
 ```
-cql_results_from_data(_rc_, 
-                      &_rows_, 
-                      &some_integers_info, 
+cql_results_from_data(_rc_,
+                      &_rows_,
+                      &some_integers_info,
                       (cql_result_set_ref *)_result_set_);
 ```
-The operations here are basically the same ones that will happen inside of the standard helper 
-`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have 
+The operations here are basically the same ones that will happen inside of the standard helper
+`cql_fetch_all_results`, the difference is of course that you write the loop manually and therefore have
 full control of the rows as they go in to the result set.
 
 In short, the overhead is pretty low.  What you’re left with is pretty much the base cost of your algorithm.  The cost here is very similar to what it would be for any other thing that make rows.
 
 Of course, if you make a million rows, well, that would burn a lot of memory.
 
+### A Working Example
+
+Here's a fairly simple example illustrating some of these concepts including the reading of rowsets.
+
+```sql
+-- hello.sql:
+
+create proc hello()
+begin
+
+  create table my_data(
+    pos integer not null primary key,
+    txt text not null
+  );
+
+  insert into my_data values(2, 'World');
+  insert into my_data values(0, 'Hello');
+  insert into my_data values(1, 'There');
+
+  select * from my_data order by pos;
+end;
+```
+
+And this main code to open the database and access the procedure:
+
+```C
+// main.c
+
+#include <stdlib.h>
+#include <sqlite3.h>
+
+#include "hello.h"
+
+int main(int argc, char **argv)
+{
+  sqlite3 *db;
+  int rc = sqlite3_open(":memory:", &db);
+  if (rc != SQLITE_OK) {
+    exit(1); /* not exactly world class error handling but that isn't the point */
+  }
+  hello_result_set_ref result_set;
+  rc = hello_fetch_results(db, &result_set);
+  if (rc != SQLITE_OK) {
+    printf("error: %d\n", rc);
+    exit(2);
+  }
+
+  cql_int32 result_count = hello_result_count(result_set);
+
+  for(cql_int32 row = 0; row < result_count; row++) {
+    cql_string_ref text = hello_get_txt(result_set, row);
+    cql_alloc_cstr(ctext, text);
+    printf("%d: %s\n", row, ctext);
+    cql_free_cstr(ctext, text);
+  }
+  cql_result_set_release(result_set);
+
+  sqlite3_close(db);
+}
+```
+
+From these pieces you can make a working example like so:
+
+```sh
+# ${cgsql} refers to the root directory of the CG-SQL sources
+#
+cql --in hello.sql --cg hello.h hello.c
+cc -o hello -I ${cgsql}/sources main.c hello.c ${cgsql}/sources/cqlrt.c -lsqlite3
+./hello
+```
+
 
 ## Chapter 8: Functions
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -3983,7 +4087,7 @@ binding object variables, so passing memory addresses is the best we can do on a
 
 ## Chapter 9: Statements Summary and Error Checking
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -4843,7 +4947,7 @@ In fact, only the `select *` form could possibly be different, so in most cases 
 
 ## Chapter 10: Schema Management Features
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5993,7 +6097,7 @@ So, in summary, to get true privacy first make whatever logical regions you like
 
 ## Chapter 11: Previous Schema Validation
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -6075,7 +6179,7 @@ the declared schema.  Which means the `--rt schema` result type will not see it.
 operation like so:
 
 ```bash
-cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema 
+cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema
 ```
 
 The above command will generate the schema in new_previous_schema and, if this command succeeds, it's safe to replace the existing
@@ -6084,7 +6188,7 @@ The above command will generate the schema in new_previous_schema and, if this c
 NOTE: you can bootstrap the above by leaving off the `@previous_schema` and what follows to get your first previous schema from the command above.
 
 Now as, you can imagine, comparing against the previous schema allows many more kinds of errors to be discovered.
-What follows is a large chuck of the CQL tests for this area taken from the test files themselves.  
+What follows is a large chuck of the CQL tests for this area taken from the test files themselves.
 For easy visibility I have brought each fragment of current and previous schema close to each other
 and I show the errors that are reported.  We start with a valid fragment and go from there.
 
@@ -6334,7 +6438,7 @@ Table became a TEMP table, there is no way to generate an alter statement for th
 ```sql
 create table t_new_table_ok(a int not null, b int) @create(6);
 -------
--- no previous version 
+-- no previous version
 ```
 No errors here, properly created new table.
 
@@ -6342,7 +6446,7 @@ No errors here, properly created new table.
 ```sql
 create table t_new_table_no_annotation(a int not null, b int);
 -------
--- no previous version 
+-- no previous version
 
 Error at sem_test_prev.sql:85 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_no_annotation'
@@ -6353,7 +6457,7 @@ This table was added with no annotation.  It has to have an @create and be at le
 ```sql
 create table t_new_table_stale_annotation(a int not null, b int) @create(2);
 -------
--- no previous version 
+-- no previous version
 
 Error at sem_test_prev.sql:91 : in create_table_stmt : new table must be added with
 @create(6) or later 't_new_table_stale_annotation'
@@ -6557,7 +6661,7 @@ NOTE: in addition to these errors, there are many more that do not require the p
 
 ## Chapter 12: Testability Features
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -7114,7 +7218,7 @@ is often desirable.  And the maintenance is not too bad.  You just use the `use_
 
 ## Chapter 13: JSON Output
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8071,7 +8175,7 @@ NOTE: `@ATTRIBUTE` can be applied any number of times to the entities here, incl
 
 ## Chapter 14: CQL Query Fragments
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8715,7 +8819,7 @@ See Appendix 8 for an extensive section on best practices around fragments and c
 
 ## Appendix 1: Command Line Options
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8920,9 +9024,172 @@ These are the various outputs the compiler can produce.
 
 
 
+## Appendix 10: CQL Working Example
+<!---
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
+This is a working example that shows all of the basic DML statements and the call patterns
+to access them. The code also includes the various helpers you can use to convert C types to
+CQL types.
+
+#### `todo.sql`
+
+```SQL
+-- This is a simple schema for keep track of tasks and whether they are done
+
+-- this serves to both declare the table and create the schema
+create proc todo_create_tables()
+begin
+
+  create table if not exists tasks(
+    description text not null,
+    done bool default false not null
+  );
+
+end;
+
+-- adds a new not-done task
+create proc todo_add(task TEXT NOT null)
+begin
+  insert into tasks values(task, false);
+end;
+
+-- gets the tasks in inserted order
+create proc todo_tasks()
+begin
+  select rowid, description, done from tasks order by rowid;
+end;
+
+-- updates a given task by rowid
+create proc todo_setdone_(rowid_ integer not null, done_ bool not null)
+begin
+  update tasks set done = done_ where rowid == rowid_;
+end;
+
+-- deletes a given task by rowid
+create proc todo_delete(rowid_ integer not null)
+begin
+  delete from tasks where rowid == rowid_;
+end;
+```
+
+#### `main.c`
+
+```C
+#include <stdlib.h>
+#include <sqlite3.h>
+
+#include "todo.h"
+
+int main(int argc, char **argv)
+{
+  /* Note: not exactly world class error handling but that isn't the point */
+
+
+  // create a db
+  sqlite3 *db;
+  int rc = sqlite3_open(":memory:", &db);
+  if (rc != SQLITE_OK) {
+    exit(1);
+  }
+
+  // make schema if needed (it always will be here because memory databases begin empty
+  rc = todo_create_tables(db);
+   if (rc != SQLITE_OK) {
+    exit(2);
+  }
+
+  // add some tasks
+  const char * const default_tasks[] = {
+    "Buy milk",
+    "Walk dog",
+    "Write code"
+  };
+
+  for (int i = 0; i < 3; i++) {
+    // note we make a string reference from a c string here
+    cql_string_ref dtask = cql_string_ref_new(default_tasks[i]);
+    rc = todo_add(db, dtask);
+    cql_string_release(dtask); // and then dispose of the reference
+    if (rc != SQLITE_OK) {
+      exit(3);
+    }
+  }
+
+  // mark a task as done
+  rc = todo_setdone_(db, 1, true);
+  if (rc != SQLITE_OK) {
+    exit(4);
+  }
+
+  // delete a row in the middle, rowid = 2
+  rc = todo_delete(db, 2);
+  if (rc != SQLITE_OK) {
+    exit(5);
+  }
+
+  // select out some results
+  todo_tasks_result_set_ref result_set;
+  rc = todo_tasks_fetch_results(db, &result_set);
+  if (rc != SQLITE_OK) {
+    printf("error: %d\n", rc);
+    exit(2);
+  }
+
+  // get result count
+  cql_int32 result_count = todo_tasks_result_count(result_set);
+
+  // loop to print
+  for(cql_int32 row = 0; row < result_count; row++) {
+    // note "get" semantics mean that a ref count is not added
+    // if you want to keep the string you must "retain" it
+    cql_string_ref text = todo_tasks_get_description(result_set, row);
+    cql_bool done = todo_tasks_get_done(result_set, row);
+    cql_int32 rowid = todo_tasks_get_rowid(result_set, row);
+
+    // convert to c string format
+    cql_alloc_cstr(ctext, text);
+    printf("%d: rowid:%d %s (%s)\n",
+      row, rowid, ctext, done ? "done" : "not done");
+    cql_free_cstr(ctext, text);
+  }
+
+  // done with results, free the lot
+  cql_result_set_release(result_set);
+
+  // and close the database
+  sqlite3_close(db);
+}
+```
+
+### Build Steps
+
+```sh
+# ${cgsql} refers to the root of the CG/SQL repo
+% cql --in todo.sql --cg todo.h todo.c
+% cc -o todo -I${cqsql}/sources main.c todo.c ${cgsql}/sources/cqlrt.c -lsqlite3
+```
+
+### Results
+
+Note that rowid 2 has been deleted, the leading number is the index in
+the result set. The rowid is of course the database rowid.
+
+```
+% ./todo
+0: rowid:1 Buy milk (done)
+1: rowid:3 Write code (not done)
+```
+
+
+
 ## Appendix 2: CQL Grammar
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -8931,7 +9198,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Dec 26 10:25:27 PST 2021
+Snapshot as of Wed Dec 29 15:45:33 PST 2021
 
 ### Operators and Literals
 
@@ -10443,7 +10710,7 @@ enforce_pop_stmt:
 
 ## Appendix 3: Control Directives
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -10538,7 +10805,7 @@ The complete list (as of this writing) is:
 
 ## Appendix 4: CQL Error Codes
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -14587,7 +14854,7 @@ As it makes no sense for a procedure to have multiple bodies,
 
 ## Appendix 5: JSON Schema Grammar
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -14595,7 +14862,7 @@ As it makes no sense for a procedure to have multiple bodies,
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Dec 26 10:25:28 PST 2021
+Snapshot as of Wed Dec 29 15:45:34 PST 2021
 
 ### Rules
 
@@ -15281,7 +15548,7 @@ ad_hoc_migration: '{'
 
 ## Appendix 6: CQL In 20 Minutes
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -15416,9 +15683,11 @@ null <> null --> null
  * 2. Simple Variables
  *********************************************************/
 
--- CQL can call simple libc methods with no declaration
+-- CQL can call simple libc methods with a no-check declaration
 -- we'll need this for later examples so we can do something
 -- with our expressions (i.e. print them)
+declare procedure printf no check;
+
 call printf("I'm CQL. Nice to meet you!\n");
 
 -- variables are declared with DECLARE
@@ -16141,7 +16410,7 @@ If you've read this far you know more than most now.  :)
 
 ## Appendix 7: CQL Anti-patterns
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -16411,7 +16680,7 @@ Better:
 
 ## Appendix 8: CQL Best Practices
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -17076,7 +17345,7 @@ your fragments, especially any big ones, will help you to create great code.
 
 ## Appendix 9: Using the CQL Amalgam
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -17263,7 +17532,7 @@ however you deem appropriate.
 // "#define cql_emit_output your_method" and then your method will
 // get the data instead. This will be whatever output the
 // compiler would have emitted to to stdout.  This is usually
-// reformated CQL or semantic trees and such -- not the normal 
+// reformated CQL or semantic trees and such -- not the normal
 // compiler output.
 //
 // You must copy the memory if you intend to keep it. "data" will
@@ -17335,12 +17604,12 @@ for the data to be written.  You can then store those compilation results howeve
 // You must copy the memory if you intend to keep it. "data" will
 // be freed.
 
-// Note: you *may* use cql_cleanup_and_exit to force a failure 
+// Note: you *may* use cql_cleanup_and_exit to force a failure
 // from within this API.  That's a normal failure mode that is
 // well-tested.
 
 void cql_write_file(
-  const char *_Nonnull file_name, 
+  const char *_Nonnull file_name,
   const char *_Nonnull data)
 {
   FILE *file = cql_open_file_for_write(file_name);

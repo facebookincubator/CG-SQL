@@ -240,7 +240,7 @@ grammar = ",\n    ".join(
 
 print(
     "/**\n"
-    " * Copyright (c) Meta Platforms, Inc. and its affiliates.\n"
+    " * Copyright (c) Meta Platforms, Inc. and affiliates.\n"
     " *\n"
     " * This source code is licensed under the MIT license found in the\n"
     " * LICENSE file in the root directory of this source tree.\n"

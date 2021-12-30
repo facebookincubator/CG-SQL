@@ -1,7 +1,7 @@
 <!--- @generated -->
 ## Part 1: Lexing, Parsing, and the AST
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -747,7 +747,7 @@ it's very normal to paste the extraction code from a `gen_` function into a new/
 
 ## Part 2: Semantic Analysis
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -2034,14 +2034,299 @@ All the mini-resolvers are similarly structured, generically:
 Some of the mini-resolvers have quite a few steps, but any one mini-resolver is only about a screenful of code
 and it does one job.
 
+### Flow Analysis
+
+CQL implements a basic form of control flow analysis in "flow.c". The header
+"flow.h" exposes a small set of primitives used by "sem.c" during semantic
+analysis.
+
+Flow analysis in CQL involves two important concepts: **flow contexts** and
+**improvements**. These are rather entangled concepts—one is useless without the
+other—and so the approach to describing them here will alternate between giving
+a bit of background on one and then the other, with a greater level of detail
+about the specific types of improvements being supplied later on.
+
+A flow context is used, in essence, to create a boundary around a portion of a
+user's program. At the moment, there are four types of contexts.
+
+The first type of context is called, rather boringly, a **normal** context.
+Normal contexts are used for portions of a user's code that may be entered
+conditionally. A good example of this is in `SELECT` expressions: When a `WHERE`
+clause is present, the expression list is only evaluated when the `WHERE` clause
+is true. If we look at `sem_select_expr_list_con`, we can get an idea of how
+this works in terms of flow contexts:
+
+```c
+static void sem_select_expr_list_con(ast_node *ast) {
+  ...
+  // Analyze the FROM portion (if it exists).
+  sem_select_from(select_from_etc);
+  error = is_error(select_from_etc);
+
+  // Push a flow context to contain improvements made via the WHERE clause that
+  // will be in effect for the SELECT expression list.
+  FLOW_PUSH_CONTEXT_NORMAL();
+
+  if (!error) {
+    ...
+    sem_sensitive = sem_select_where_etc(select_from_etc);
+    ...
+    sem_set_notnull_improvements_for_true_condition(where_expr);
+    ...
+  }
+  ...
+  if (!error) {
+    ...
+    sem_select_expr_list(select_expr_list);
+    ...
+  }
+  ...
+  FLOW_POP_CONTEXT_NORMAL();
+  ...
+}
+```
+
+While very much simplified above, it can be seen that the steps are essentially
+as follows:
+
+1. Analyze the `FROM` clause.
+2. Push a new normal context.
+3. Analyze the `WHERE` clause.
+4. Set improvements given the `WHERE` clause (ultimately by calling
+   `flow_set_flag_for_type`); we'll come back to this part shortly.
+5. Analyze the expression list with the improvements from the `WHERE` in effect.
+6. Pop the context, un-setting the improvements from the `WHERE`.
+
+This, of course, only begins to make sense once one understands what we mean by
+improvements.
+
+CQL, at the moment, supports two forms of improvements: nullability improvements
+and initialization improvements. Both of these will be discussed in more detail
+later, but the basic idea is that an improvement upgrades the type of some value
+within a particular flow context. For example, in the expression `SELECT x + x
+FROM t WHERE x IS NOT NULL`, we can reason that `x + x` can safely be given a
+nonnull type because of the `WHERE` clause. This is exactly what we do in
+`sem_select_expr_list_con`: We make a context to hold the improvements that may
+come from the `WHERE`, analyze the `WHERE`, set the appropriate improvements
+given the `WHERE`, analyze the expression list, and then pop the context to
+unset the improvements (as they must not affect any enclosing expressions).
+
+In addition to normal contexts, there are also **branch contexts** and **branch
+group contexts**. These two context types are designed to work together for
+handling `IF`, `CASE`, `IIF`, `SWITCH`, et cetera.
+
+Like normal contexts, branch contexts assume that they are entered when some
+condition is true. The difference is that branch contexts lie within a branch
+group context, and branch groups know that *at most* one branch of a given set
+of branches will be entered. A great example of this can be found in
+`sem_if_stmt`:
+
+```c
+static void sem_if_stmt(ast_node *ast) {
+  ...
+  // Each branch gets its own flow context in `sem_cond_action` where its
+  // condition is known to be true. We also create one more context for the
+  // entire set of branches. In addition to grouping the branches together, this
+  // outer context holds all of the negative improvements that result from the
+  // knowledge that, if a given branch's statements are being evaluated, all
+  // previous branches' conditions must have been false.
+  FLOW_PUSH_CONTEXT_BRANCH_GROUP();
+
+  // IF [cond_action]
+  sem_cond_action(cond_action);
+  ...
+  if (elseif) {
+    sem_elseif_list(elseif);
+    ...
+  }
+  ...
+  if (elsenode) {
+    // ELSE [stmt_list]
+    flow_set_context_branch_group_covers_all_cases(true);
+    EXTRACT(stmt_list, elsenode->left);
+    if (stmt_list) {
+      FLOW_PUSH_CONTEXT_BRANCH();
+      sem_stmt_list_in_current_flow_context(stmt_list);
+      FLOW_POP_CONTEXT_BRANCH();
+      ...
+    } else {
+      flow_context_branch_group_add_empty_branch();
+    }
+    record_ok(elsenode);
+  }
+  ...
+  FLOW_POP_CONTEXT_BRANCH_GROUP();
+  ...
+}
+```
+
+It's instructive to look at `sem_cond_action` as well:
+
+```c
+static void sem_cond_action(ast_node *ast) {
+  ...
+  // [expr] THEN stmt_list
+  sem_expr(expr);
+  ...
+  if (stmt_list) {
+    FLOW_PUSH_CONTEXT_BRANCH();
+    // Add improvements for `stmt_list` where `expr` must be true.
+    sem_set_notnull_improvements_for_true_condition(expr);
+    sem_stmt_list_in_current_flow_context(stmt_list);
+    FLOW_POP_CONTEXT_BRANCH();
+    ...
+  } else {
+    flow_context_branch_group_add_empty_branch();
+  }
+
+  // If a later branch will be taken, `expr` must be false. Add its negative
+  // improvements to the context created in `sem_if_stmt` so that all later
+  // branches will be improved by the OR-linked spine of IS NULL checks in
+  // `expr`.
+  sem_set_notnull_improvements_for_false_condition(expr);
+  ...
+}
+```
+
+Putting all of this together, we can see that the basic steps for analyzing an
+`IF` statement are as follows:
+
+1. Push a new branch group context to hold all of the branch contexts that are
+   to come.
+2. Analyze the condition in the `IF condition THEN` portion of the statement.
+3. Push a new branch context to hold the nullability improvements from the
+   condition (e.g., in `IF x IS NOT NULL THEN`, we can improve `x` to have a
+   nonnull type in the statement list after the `THEN`).
+4. Set the improvements.
+5. Anaylze the statement list after the `THEN`.
+6. Pop the branch context.
+7. Set the *negative* improvements resulting from the knowledge that `condition`
+   *must have been false* if the previous branch wasn't entered (e.g., in `IF y
+   IS NULL THEN`, we know that `y` must be nonnull from just after the end of
+   the branch until the end of the current branch group).
+8. Repeat for the `ELSE IF` and `ELSE` branches (if any).
+9. Pop the branch group context.
+
+What makes all of this work are the following:
+
+* When a branch context is popped, it *resets all improvements* such that they
+  become exactly what they were before the branch was analyzed. This is done to
+  reflect the fact that, because at most one branch will be entered, neither
+  adding improvements (via `flow_set_flag_for_type`) nor removing existing
+  improvements (via `flow_unset_flag_for_type`) in a branch should affect any of
+  the other branches in the group.
+
+* When a branch group context is popped, it *merges* the effects of all of its
+  branches. This is a key step that allows CQL to retain an improvement after a
+  branch group is popped whenever the same improvement is made within every one
+  of its branches *and* when the branches given cover all possible cases (which
+  is indicated by the call to `flow_set_context_branch_group_covers_all_cases`
+  in the code above).
+
+The final type of context is called a **jump context**. Jump contexts are a
+maximally pessimistic form of context that assume every improvement that might
+be unset within them will be unset and that every improvement that might be set
+within them will not be set. Jump contexts are used to make semantic analysis
+safe in the possible presence of control flow statements like `CONTINUE`,
+`LEAVE`, and `THROW`, and so jump contexts are used for the analysis of
+statements like `LOOP`, `WHILE`, and `TRY`. Take the following line-numbered
+code as an example:
+
+```sql
+001  DECLARE x TEXT;
+002  SET x := "foo";
+003  WHILE some_condition
+004  BEGIN
+005    IF another_condition THEN
+006      SET x := NULL;
+007      IF yet_another_condition THEN
+008        LEAVE;
+009      END IF;
+010      SET x := "bar";
+011    ELSE
+012      -- do nothing
+013    END IF;
+014  END;
+015  CALL requires_text_notnull(x);
+```
+
+Here, even though the outer `IF` makes no change overall to the nullability
+improvement to `x` from line 2—it unsets it on line 6 and then re-sets it on
+line 10 and the `ELSE` does nothing—there is no guarantee that line 10 will ever
+be evaluated because we may jump straight from line 8 to line 15. As a result,
+it is necessary that `x` be un-improved after the `WHILE` loop; a normal context
+would not accomplish this, but a jump context does. See the comments within
+`_flow_push_context_branch` for additional discussion.
+
+While jump contexts are necessary for the safety of improvements in the presence
+of loops, they are not sufficient: It's actually necessary to analyze loops
+*twice*. This is because execution of a loop might repeat, and so a statement
+that results in the unsetting of an improvement later in a loop must affect
+improvements earlier in that loop. For example:
+
+```sql
+DECLARE x INT;
+SET x := 1;
+WHILE some_condition
+BEGIN
+  -- okay on the first analysis pass, but not the second
+  CALL requires_int_notnull(x);
+  -- must negatively affect the call on the line above
+  SET x := NULL;
+END;
+```
+
+Semantic analysis keeps track of whether or not it is currently reanalyzing the
+statement list of a loop via the `current_loop_analysis_state` variable:
+
+```c
+// The analysis of loops like LOOP and WHILE is done in two passes. First, we
+// analyze the loop to conservatively figure out every improvement that the loop
+// could possibly unset. After that, then we reanalyze it with said improvements
+// unset to ensure that everything is safe. See `sem_stmt_list_within_loop` for
+// more information on why this is necessary.
+typedef enum {
+  LOOP_ANALYSIS_STATE_NONE,
+  LOOP_ANALYSIS_STATE_ANALYZE,
+  LOOP_ANALYSIS_STATE_REANALYZE
+} loop_analysis_state;
+
+...
+
+// Keeps tracks of the current loop analysis state. If this is equal to
+// `LOOP_ANALYSIS_STATE_ANALYZE`, we are analyzing with a non-final set of
+// improvements. This is useful for two reasons:
+//
+// 1. Procedures that perform rewrites based on improvements (e.g.,
+//    `sem_resolve_id_expr`) can use this to verify whether a rewrite is safe to
+//    perform (`LOOP_ANALYSIS_STATE_NONE` or `LOOP_ANALYSIS_STATE_REANALYZE`) or
+//    whether they should wait because they do not yet have definitive
+//    information (`LOOP_ANALYSIS_STATE_ANALYZE`).
+//
+// 2. Analyses that would otherwise fail if called during reanalysis (e.g.,
+//    `sem_verify_legal_variable_name`) can use this to check whether the
+//    current state is `LOOP_ANALYSIS_STATE_REANALYZE` and adjust their
+//    behaviors accordingly.
+static loop_analysis_state current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
+```
+
+As indicated in the first comment above, the comments within
+`sem_stmt_list_within_loop` go into further detail.
+
+At this point, we've only scratched the surface of control flow analysis in CQL.
+Fortunately, the files "flow.h" and "flow.c" are heavily commented and can be
+studied to deepen one's understanding.
+
 ### Nullability Improvements
 
-Via a form of occurrence typing, CQL has the ability to determine that, due to a
-prior conditional check, a nullable variable or cursor field cannot be null
-within a particular context, and CQL will improve its type therein accordingly.
+Via a form of occurrence typing (also known as flow typing), CQL has the ability
+to determine that, due to a prior conditional check, a nullable variable or
+cursor field cannot be null within a particular context, and CQL will improve
+its type in that context.
 
 Unlike most forms of semantic analysis performed by CQL, the analysis for
-nullability improvements makes heavy use of the `find_mutable_type` function:
+nullability improvements, as is the case for all types of improvements, makes
+heavy use of the `find_mutable_type` function:
 
 ```c
 // Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
@@ -2057,7 +2342,8 @@ allows us to mutate that environment by virtue of the fact that it returns a
 pointer to the type of the binding, not merely the type itself.
 
 By using `find_mutable_type` to get a type pointer and toggling the
-`SEM_TYPE_INFERRED_NOTNULL` flag, the procedures `sem_set_notnull_improved` and
+`SEM_TYPE_INFERRED_NOTNULL` flag via `flow_set_flag_for_type` and
+`flow_unset_flag_for_type`, the procedures `sem_set_notnull_improved` and
 `sem_unset_notnull_improved` are able to record that a nullable identifier or
 cursor field is either temporarily nonnull or no longer nonnull respectively:
 
@@ -2092,258 +2378,16 @@ all currently active improvements would involve re-implementing all of the
 scoping rules of the language. By using `find_mutable_type`, we can simply
 piggyback on the existing name resolution logic and avoid all of these issues.
 
-A nullability improvement is always created within a particular context. When an
-improvement is added via `sem_set_notnull_improved`, a record of that
+A nullability improvement is always created within a particular flow context.
+When an improvement is added via `sem_set_notnull_improved`, a record of that
 improvement is recorded in the current context. When that context ends, that
-record is used to allow `sem_unset_notnull_improved` to remove the improvement.
-It is also the case that `sem_unset_notnull_improved` may remove an improvement
-before a context has ended due to a SET, FETCH, or call to a procedure or
-function with an OUT argument resulting in the improvement no longer being safe.
-The common type of context is defined as follows:
-
-```c
-// A list node holding the `sem_t *` for a nullability improvement. These are
-// used both for un-setting improvements when the scope of an improvement ends
-// and for keeping track of improvements that require special treatment (i.e.,
-// improvements of globals must be unset at every CALL).
-typedef struct notnull_improvement_context_item {
-  sem_t *type;
-  struct notnull_improvement_context_item *next;
-} notnull_improvement_context_item;
-
-// A `notnull_improvement_context` is simply a list of context items.
-typedef notnull_improvement_context_item *notnull_improvement_context;
-```
-
-Contexts are not always quite so simple as a collection of improvements to unset
-when they end, however. That is because there are two types of contexts: the
-"normal", non-contingent contexts of which we just spoke, and contingent
-contexts. Whereas non-contingent contexts are merely a simple collection of
-improvements to later unset, contingent contexts record both improvements made
-via `sem_set_notnull_improved` _and_ improvements removed via
-`sem_unset_notnull_improved`. When a contingent context ends, it plays back all
-of the improvements and un-improvements made in reverse, performing the opposite
-of what originally occurred at each step. The result of this is to restore the
-state of the world to what it was before the context was entered. This reversal
-is essential for allowing us to analyze each branch of an IF or CASE
-independently such that any SET, FETCH, or OUT arguments in one branch do not
-negatively affect all later branches. Contingent contexts (also known as
-histories) hold the same data as non-contingent contexts, but they also have an
-extra piece of information that indicates which type of action was performed:
-
-```c
-// Indicates whether an improvement was set or unset within a
-// `notnull_improvement_history_item`.
-typedef enum {
-  NOTNULL_IMPROVEMENT_DELTA_WAS_SET,
-  NOTNULL_IMPROVEMENT_DELTA_WAS_UNSET,
-} notnull_improvement_delta;
-
-// A list node used to record a nullability improvement or un-improvement. These
-// can be later replayed in the order opposite of that in which they originally
-// occurred with the converse action being taken at each step, thus restoring
-// the original state of the world before any improvements or un-improvements
-// were made. In essence, they are nothing more than a
-// `notnull_improvement_context_item` with a `notnull_improvement_delta`.
-typedef struct notnull_improvement_history_item {
-  sem_t *type;
-  notnull_improvement_delta delta;
-  struct notnull_improvement_history_item *next;
-} notnull_improvement_history_item;
-
-// A `notnull_improvement_history` is simply a list of history items.
-typedef notnull_improvement_history_item *notnull_improvement_history;
-```
-
-Both non-contingent and contingent contexts are pushed and popped via pairs of
-macros:
-
-```c
-// Pushes a new context for nullability improvements. All improvements set while
-// the context is active will be unset at the corresponding
-// `POP_NOTNULL_IMPROVEMENT_CONTEXT`.
-#define PUSH_NOTNULL_IMPROVEMENT_CONTEXT() ...
-
-// Un-sets all improvements made within the current context and reverts to the
-// previous context.
-#define POP_NOTNULL_IMPROVEMENT_CONTEXT() ...
-
-// Similar to `PUSH_NOTNULL_IMPROVEMENT_CONTEXT`, but used for contexts that
-// will only be entered at runtime if some condition is true. This is used for
-// each branch in an IF (and soon CASE and IIF) to allow any improvements and
-// un-improvements made within to be reverted, and the original state of the
-// world restored, before checking the next branch. This must only be used when
-// the current context is not contingent; see
-// `is_current_notnull_improvement_context_contingent`.
-#define PUSH_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() ...
-
-// Pops the current contingent improvement context, reverting all improvements
-// and un-improvements made within, and reverts to the previous context. Should
-// no contingent contexts remain after the pop, an invariant enforces that
-// `current_notnull_improvement_history` is NULL (which must be the case because
-// we never record history when a contingent context is not in effect).
-#define POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT() ...
-```
-
-In the case of `POP_NOTNULL_IMPROVEMENT_CONTEXT`, it calls
-`sem_unset_notnull_improvements_in_context` to unset all improvements within the
-context that is ending; in the case of
-`POP_CONTINGENT_NOTNULL_IMPROVEMENT_CONTEXT`, it calls
-`sem_revert_notnull_improvement_history` to revert them:
-
-```c
-// Unsets nonnull improvements for all items in the list provided.
-static void sem_unset_notnull_improvements_in_context(notnull_improvement_context context);
-
-// Given a history, play it back in reverse, performing the opposite of what
-// originally occurred at each step. The result will be the state of the world
-// before any of the improvements and un-improvements were made. For any
-// previous un-improvement that is re-improved by the reversal, that
-// re-improvement will be recorded in the current nonnull improvement context so
-// that it can be re-unimproved when said context is eventually popped.
-//
-// An example of a full timeline might look like this:
-//
-//   1. A nonnull improvement context is pushed while some variable x is
-//      presently improved.
-//   2. A contingent nonnull improvement context is pushed.
-//   3. Some variable x is unimproved due to it being set to null.
-//   4. The contingent nonnull improvement context is popped and x is restored
-//      to its previous improved state, bringing us back to the state of the
-//      world as it was in step 1.
-//   5. Additional contingent contexts are pushed and popped.
-//   6. The improvement context pushed in step 1 is popped, and x is again
-//      unimproved because it was unimproved in step 3 within the inner
-//      contingent context pushed in step 2.
-static void sem_revert_notnull_improvement_history(notnull_improvement_history history);
-```
-
-As can be seen in the comments for the macros, a contingent context must only
-ever be created within a non-contingent context. The reason for this restriction
-is mainly that doing otherwise would not serve any purpose. The comment for
-`is_current_notnull_improvement_context_contingent` explains:
-
-```c
-// Tracks whether or not the current nonnull improvement context, if any, is
-// contingent (i.e., may or may not be entered depending upon the truth of some
-// condition). The sole reason for tracking this is to be able to assert that a
-// contingent context is not pushed when the current context is already
-// contingent. The reason for asserting this is that contingent contexts are
-// meant to be used for branches within a conditional (e.g., the 'x', 'y', and
-// 'z' statement lists in 'IF cond THEN x ELSE IF y ELSE z END IF') and should
-// always be within a non-contingent context that encapsulates the entire set of
-// branches (as that context gathers all of the un-improvements that result
-// within any of the branches so that re-improvements resulting from history
-// reverts can be un-set appropriately when the non-contingent context is
-// eventually popped).
-static bool_t is_current_notnull_improvement_context_contingent = false;
-```
-
-As with other PUSH- and POP-style macros in "sem.c", global variables keep track
-of the current contexts and the pushing and popping happens via temporarily
-saving a current context on the stack and later restoring it. The two types of
-contexts are held in the following globals:
-
-```c
-// This is the context into which any nonnull improvements made will be
-// recorded. Each context holds all of the improvements that were made while it
-// was the current context, not just those that are still in effect. For
-// example, if a particular improvement is unset due to a SET or FETCH, it will
-// remain in whichever context was the current context when it was first set.
-// This is okay because the goal of maintaining contexts is merely to be able to
-// unset all improvements within a given context when it ends.
-static notnull_improvement_context current_notnull_improvement_context;
-
-// This is the history into which all nonnull improvements *and* un-improvements
-// made will be recorded when `contingent_notnull_improvement_context_depth` is
-// greater than zero (i.e., whenever a contingent improvement context is in
-// effect). It is used to restore the state of the world to what it was at the
-// moment the current contingent improvement context was pushed.
-static notnull_improvement_history_item *current_notnull_improvement_history;
-```
-
-As an optimization, we avoid recording improvements and un-improvements in
-`current_notnull_improvement_history` when there is no contingent context
-currently in effect:
-
-```c
-// Tracks how many contingent notnull improvement contexts are currently in
-// effect. This allows us the optimization of not recording items into the
-// history when `contingent_notnull_improvement_context_depth` is 0 as they
-// would not be of any future use.
-static uint32_t contingent_notnull_improvement_context_depth = 0;
-```
-
-Maintaining accurate histories is critical for
-`sem_revert_notnull_improvement_history` to work correctly. It all ultimately
-boils down to always using `sem_set_notnull_improved` and
-`sem_unset_notnull_improved` to set and unset improvements, but it's essential
-to understand how things actually play out in practice as the comment within
-`sem_unset_notnull_improvements_in_context` explains; feel free to skip over
-this for now if it's overwhelming:
-
-```c
-// Is it very important that we only unset improvements that are currently
-// set. Doing otherwise would result in an invalid history, and reverting
-// said invalid history would result in things being re-improved
-// inappropriately. Suppose we have this code:
-//
-//   IF b IS NULL RETURN;
-//   -- 'b' is nonnull here
-//   IF ... THEN
-//     IF a IS NOT NULL THEN
-//       -- 'a' is nonnull here due to the condition
-//       SET b := NULL;
-//     END IF;
-//     -- 'a' is un-improved here because the THEN branch above ended
-//     -- 'b' is nullable here because it was un-improved at the above SET
-//   ELSE
-//     -- 'a' is nullable here as its un-improvement was not reverted
-//     -- 'b' is nonnull here as its un-improvement was reverted
-//   END IF;
-//   -- 'b' is nullable here due to the SET
-//
-// At the end of the outer THEN branch, both 'a' and 'b' will have been
-// un-improved, the former at the end of the inner THEN branch, and the
-// latter by the SET. Within the ELSE branch though, it is critical that we
-// re-improve 'b' (because it was already improved at the start of the outer
-// IF), yet even more critical that we not re-improve 'a' (because it was
-// not already improved at the start of the previous branch, and so
-// re-improving it would be unsafe).
-//
-// The timeline above plays out as follows:
-//
-//   01. 'b' is improved in initial context C0.
-//   02. Context C1 is pushed for the outer IF.
-//   03. Contingent context C2 is pushed for the outer THEN.
-//   04. Context C3 is pushed for the inner IF.
-//   05. Contingent context C4 is pushed for the inner THEN.
-//   06. 'a' is improved due to the condition which generates a history item
-//       in C4 and a context item in C3.
-//   07. 'b' is un-improved due to the SET which generates a history item in
-//       C4.
-//   08. Contingent context C4 is reverted, un-improving 'a' and
-//       re-improving 'b' (which generates a context item in C3).
-//   09. Context C3 is unset, with the context item added in step 06 for 'a'
-//       being ignored (as 'a' is already unset) and the context item added
-//       in step 08 for 'b' resulting in 'b' being unset (which generates a
-//       history item in C2).
-//   10. Contingent context C2 is reverted, re-re-improving 'b' (which
-//       generates a context item in C1) due to the history item generated
-//       by C3 in step 09.
-//   11. Contingent context C5 is pushed for the ELSE.
-//   12. Contingent context C5 is reverted for the ELSE, to no effect.
-//   13. Context C1 is popped, re-un-improving 'b' due to the context item
-//       generated by C2 in step 10.
-//
-// Suppose, however, that we generated a history item in C2 by unsetting 'a'
-// (which was already unset) in step 09. This would've caused 'a' to be
-// re-improved in step 10 which would've caused it to be nonnull in the
-// ELSE, which is unsafe.
-```
+same record is used to remove the improvement. It is also the case that
+`sem_unset_notnull_improved` may be used to remove an improvement before a
+context has ended due to a `SET`, `FETCH`, or call to a procedure or function
+with an `OUT` argument resulting in the improvement no longer being safe.
 
 Improvements can introduced into the current context via
-`sem_set_notnull_improved` directly (when a variable is SET to a value of a
+`sem_set_notnull_improved` directly (when a variable is `SET` to a value of a
 nonnull type), but more commonly they are introduced via one of the following
 two functions:
 
@@ -2394,15 +2438,22 @@ END IF;
 Global variables in CQL require special treatment when it comes to nullability
 improvements. This is because any procedure call could potentially mutate any
 number of global variables, and so all currently improved globals must be
-un-improved at every such call. The following context keeps track of which
-global variables are currently improved:
+un-improved at every such call. The following list keeps track of which global
+variables are currently improved:
 
 ```c
-// This keeps track of all global variables that may currently be improved to be
-// NOT NULL. We need this because we must un-improve all such variables after
-// every procedure call (because we don't do interprocedural analysis and cannot
-// know which globals may have been set to NULL).
-static notnull_improvement_context global_notnull_improvement_context;
+typedef struct global_notnull_improvement_item {
+  sem_t *type;
+  struct global_notnull_improvement_item *next;
+} global_notnull_improvement_item;
+
+...
+
+// Keeps track of all global variables that may currently be improved to be NOT
+// NULL. We need this because we must un-improve all such variables after every
+// procedure call (because we don't do interprocedural analysis and cannot know
+// which globals may have been set to NULL).
+static global_notnull_improvement_item *global_notnull_improvements;
 ```
 
 The fact that we don't do interprocedural analysis (as the comment above
@@ -2511,14 +2562,86 @@ fill in any gaps:
 bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 void sem_set_notnull_improved(CSTR name, CSTR scope);
 void sem_unset_notnull_improved(CSTR name, CSTR scope);
-void sem_unset_notnull_improvements_in_context(notnull_improvement_context context);
-void sem_revert_notnull_improvement_history(notnull_improvement_history history);
-void sem_set_notnull_improvements_for_true_condition(ast_node *expr);
+void sem_unset_global_notnull_improvements();
+void sem_set_notnull_improvements_for_true_condition(ast_node *ast);
 void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
 void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate)
 void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast);
 ```
 
+### Initialization Improvements
+
+Compared to nullability improvements, initialization improvements are relatively
+simple.
+
+The idea behind initialization improvements is that, if one declares a variable
+of a reference type (`BLOB`, `OBJECT`, or `TEXT`) that is also `NOT NULL`, it is
+not safe to use the variable until it has been given a value. For example:
+
+```sql
+DECLARE x TEXT NOT NULL;
+
+IF some_condition THEN
+  SET x := some_text_notnull_value;
+  -- `x` is safe to use here
+ELSE
+  -- `x` is NOT safe to use here (it might be uninitialized)
+END IF;
+
+-- `x` is NOT safe to use here either (it might be uninitialized)
+```
+
+As with nullability improvements, initialization improvements rely heavily on
+flow contexts. The function `sem_set_initialization_improved`, similarly to
+`sem_set_notnull_improved` for nullability, is used to enable an initialization
+improvement. (There is nothing analogous to `sem_unset_notnull_improved` for
+initialization because nothing can ever be uninitialized once it has been given
+a value.)
+
+Unlike nullability improvements, initialization improvements use *two* flags:
+`SEM_TYPE_INIT_REQUIRED` and `SEM_TYPE_INIT_COMPLETE`. Rather than assuming
+everything is uninitalized by default and requiring the presence of some
+`SEM_TYPE_INITIALIZED` flag before anything can be used, we explicitly tag
+things that are not initialized but need to be with `SEM_TYPE_INIT_REQUIRED` and
+later tag them with `SEM_TYPE_INIT_COMPLETE` once they've been initialized.
+Doing it this way has two benefits:
+
+1. It reduces the amount of noise in the AST output significantly: Code like
+   `LET x := 10;` can remain `{let_stmt}: x: integer notnull variable` in the
+   AST without the need of the extra noise of some `initialized` flag.
+
+2. More importantly, it means we only have to deal with initialization in a tiny
+   portion of "sem.c". For example, we must handle it in `sem_declare_vars_type`
+   to add the `SEM_TYPE_INIT_REQUIRED` flag and in `sem_assign` to add
+   `SEM_TYPE_INIT_COMPLETE`, but `sem_let_stmt` can remain blissfully ignorant
+   of initialization altogether.
+
+There are only three places in which a variable may be initialized: `sem_assign`
+(as mentioned), `sem_fetch_stmt` (for the `FETCH...INTO` form), and
+`sem_arg_for_out_param` (as passing a variable to a procedure requiring an `OUT`
+argument of a `NOT NULL` type can initialize it).
+
+Regarding `sem_arg_for_out_param`, we can only set initialization improvements
+when a variable is passed as an `OUT` argument because we require that all
+procedures initialize all of their `OUT` parameters of a nonnull reference type.
+This is handled in two places:
+
+1. In `sem_param`, we set the `SEM_TYPE_INIT_REQUIRED` flag when
+   `param_should_require_initialization` is true.
+
+2. In `sem_validate_current_proc_params_are_initialized`, which is called both
+   after analyzing the statement list of a procedure and for each return
+   statement within the procedure, we ensure that `SEM_TYPE_INIT_COMPLETE` is
+   present on all parameters that have `SEM_TYPE_INIT_REQUIRED`.
+
+There is only one wrinkle in all of this: the `cql:try_is_proc_body` attribute.
+If `cql:try_is_proc_body` is present on a `TRY` statement, we call
+`sem_validate_current_proc_params_are_initialized` at the end of the `TRY` and
+*not* at the end of the procedure. The rationale for this is explained
+thoroughly in the comments for
+`sem_find_ast_misc_attr_trycatch_is_proc_body_callback`.
+
+That's all there is to it: "flow.c" does most of the hard work for us.
 
 ### Structure types and the notion of Shapes
 
@@ -3069,7 +3192,7 @@ This isn't everything but it should leave you well armed to begin your own explo
 
 ## Part 3: C Code Generation
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -5907,7 +6030,7 @@ and `cqlrt_common.c`.  Good luck in your personal exploration!
 
 ## Part 4: Testing
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -6683,7 +6806,7 @@ such baby tests are needed.
 
 ## Part 5: CQL Runtime
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -7072,7 +7195,7 @@ implement some of the APIs as macros...
 
 ## Part 6: Schema Management
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -7729,7 +7852,7 @@ of the basic principles is helpful before diving into the source code.
 
 ## Part 7: JSON Generation
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -7751,7 +7874,7 @@ JSON generator works. It is structured very much like the other code generators 
 to produce a JSON file.  It's call the "JSON Schema" because most of the content is a description
 of the database schema in JSON form.  As such it's almost entirely just a simple walk of the AST
 in the correct order.  The only really tricky bit is the extra dependency analysis on the AST.
-This allows us to emit usage information in the output for downstream tools to use as needed.  
+This allows us to emit usage information in the output for downstream tools to use as needed.
 
 We'll cover these topics:
 
@@ -8005,7 +8128,7 @@ This means that the normal validator will be able to find comments in the test f
 and associate them with json parts.  The testing strategies are discussed in
 [Part 4]((https://cgsql.dev/cql-guide/int04).
 
-In addition, while in test mode, we also emit the original statement that caused 
+In addition, while in test mode, we also emit the original statement that caused
 this JSON fragment to be created. This allows the test patterns to cross check
 the input and output and also makes the test output more readable for humans.
 
@@ -8024,7 +8147,7 @@ and generally come directly from the AST.
   bprintf(output, "{\n");
 
   bool_t is_deleted = ast->sem->delete_version > 0;
-  
+
   BEGIN_INDENT(view, 2);
   bprintf(output, "\"name\" : \"%s\"", name);
   bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
@@ -8040,7 +8163,7 @@ and generally come directly from the AST.
   END_INDENT(view);
   bprintf(output, "\n}\n");
   i++;
-}  
+}
 ```
 
 This part of the output is the simplest
@@ -8053,8 +8176,8 @@ This part of the output is the simplest
   * `crc_stmt` computes the CRC by echoing the statement into a scratch buffer and then running the CRC algorithm on that buffer
 * note the ",\n" pattern, this pattern is used because sometimes there are optional parts and using a leading ",\n" makes it clear which part is supposed to emit the comma
   * it turns out getting the commas right is one of the greater annoyances of JSON output
-* emit "isTemp" 
-* emit "isDeleted" 
+* emit "isTemp"
+* emit "isDeleted"
 * if the view is deleted, emit "deletedVersion"
 * if there is a migration procedure on the `@delete` attribute emit that as well
   * `cg_json_deleted_migration_proc` scans the attribute list for `@delete` attribute and emits the procedure name on that attribute if there is one
@@ -8079,7 +8202,7 @@ The next fragment emits two optional pieces that are present in many types of ob
     * the view's region
     * the "deployment region" of that region if any (regions are contained in deployable groups)
     * see [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) for more info on regions and deployment regions
-    
+
 * if there are any miscellaneous attributes they are emitted
   * we'll use `cg_json_misc_attrs` as our general formatting example when we get to that
 
@@ -8188,7 +8311,7 @@ The rest of the helpers  manage the commas in the (nested) lists:
 * `END_LIST` : emits a blank line if anything went into the list
   * this puts us in the write place to put an end marker such as ']' or '}'
 
-So reviewing this bit of code, 
+So reviewing this bit of code,
  * emit the attribute name and start the array "["
  * we start indenting
  * we start a list
@@ -8213,8 +8336,8 @@ in it needs to be emitted.  When that happens a call like this is used:
 
 ```C
 cg_pretty_quote_plaintext(
-    sql.ptr, 
-    output, 
+    sql.ptr,
+    output,
     PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
 ```
 
@@ -8291,9 +8414,9 @@ And an example callback:
 // a character buffer.  We look it up, create it if not present, and write into it.
 // We also write into the buffer for the current proc which came in with the context.
 static void cg_found_view(
-  CSTR view_name, 
-  ast_node* table_ast, 
-  void* pvContext) 
+  CSTR view_name,
+  ast_node* table_ast,
+  void* pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
@@ -8385,11 +8508,11 @@ Almost all the other operations work similarly:
  * `alt_callback` is called but only if
  * `alt_visited` doesn't already have the symbol
 
-The exception to the above is the processing that's done for procedure calls. 
+The exception to the above is the processing that's done for procedure calls.
 We've actually only talked about table dependencies so far but, additionally,
 any procedure includes dependencies on the procedures it calls.
 
-If a procedure call is found then `callbacks->callback_proc` is used and 
+If a procedure call is found then `callbacks->callback_proc` is used and
 `callbacks->visited_proc` verifies that there are no duplicates.  So much
 the same except the names are procedure names.
 
@@ -8403,7 +8526,7 @@ However, when a view is encountered, the code does follow into the view body
 and recursively reports what the view uses. This means that the reported tables
 do include any tables that were used indirectly via views.
 
-Finally, any CTEs that are used will not be reported because 
+Finally, any CTEs that are used will not be reported because
 `find_table_or_view_even_deleted` will fail for a CTE.  However the body
 of the CTE is processed so while the CTE name does not appear, what the
 CTE uses does appear, just like any other table usage.
@@ -8413,7 +8536,7 @@ CTE uses does appear, just like any other table usage.
 The extra test output is simply a reverse index:  a mapping that goes
 from any table to the procedures that depend on that table.
 
-The mapping can easily be created by processing the JSON for procedures, 
+The mapping can easily be created by processing the JSON for procedures,
 each such procedure includes its dependency information.  As a result it's only
 used for additional validation.
 
@@ -8441,7 +8564,7 @@ of the basic principles is helpful before diving into the source code.
 
 ## Part 8: Test Helpers
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.

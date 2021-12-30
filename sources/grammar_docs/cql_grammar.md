@@ -4,7 +4,7 @@ title: "Appendix 2: CQL Grammar"
 sidebar_label: "Appendix 2: CQL Grammar"
 ---
 <!---
--- Copyright (c) Meta Platforms, Inc. and its affiliates.
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Dec 26 10:25:27 PST 2021
+Snapshot as of Wed Dec 29 15:45:33 PST 2021
 
 ### Operators and Literals
 
