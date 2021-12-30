@@ -11,7 +11,17 @@ do
   ( cat "$f"; echo ""; echo "" ) >>guide.tmp
 done
 
-for f in ../x*.md
+# one digit appendices first
+for f in ../x?.md
+do
+  (cat "$f"; \
+   echo ""; \
+   echo ""; \
+   echo "" ) >>guide.tmp
+done
+
+# two digit appendices second
+for f in ../x??.md
 do
   (cat "$f"; \
    echo ""; \
