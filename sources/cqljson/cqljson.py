@@ -173,7 +173,6 @@ def emit_erd(data, universe, tables):
         print("    </table>")
         print(">];")
 
-
     print("}")
 
 
