@@ -681,7 +681,9 @@ Which probably doesn't come up very often but it does illustrate several things:
  * `WITH RECURSIVE` actually provides a full lambda calculus so arbitrary computation is possible
  * You can use `WITH RECURSIVE` to create table expressions that are sequences of numbers easily, with no reference to any real data
 
-Note: A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
+Note:
+ * A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
+ * Additional demo code is available in [Appendix 10](https://cgsql.dev/cql-guide/x10).
 
 
 ## Chapter 3: Expressions, Literals, Nullability, Sensitivity
@@ -3885,6 +3887,8 @@ cql --in hello.sql --cg hello.h hello.c
 cc -o hello -I ${cgsql}/sources main.c hello.c ${cgsql}/sources/cqlrt.c -lsqlite3
 ./hello
 ```
+
+Additional demo code is available in [Appendix 10](https://cgsql.dev/cql-guide/x10).
 
 
 ## Chapter 8: Functions
@@ -9024,169 +9028,6 @@ These are the various outputs the compiler can produce.
 
 
 
-## Appendix 10: CQL Working Example
-<!---
--- Copyright (c) Meta Platforms, Inc. and affiliates.
---
--- This source code is licensed under the MIT license found in the
--- LICENSE file in the root directory of this source tree.
--->
-
-This is a working example that shows all of the basic DML statements and the call patterns
-to access them. The code also includes the various helpers you can use to convert C types to
-CQL types.
-
-#### `todo.sql`
-
-```SQL
--- This is a simple schema for keep track of tasks and whether they are done
-
--- this serves to both declare the table and create the schema
-create proc todo_create_tables()
-begin
-
-  create table if not exists tasks(
-    description text not null,
-    done bool default false not null
-  );
-
-end;
-
--- adds a new not-done task
-create proc todo_add(task TEXT NOT null)
-begin
-  insert into tasks values(task, false);
-end;
-
--- gets the tasks in inserted order
-create proc todo_tasks()
-begin
-  select rowid, description, done from tasks order by rowid;
-end;
-
--- updates a given task by rowid
-create proc todo_setdone_(rowid_ integer not null, done_ bool not null)
-begin
-  update tasks set done = done_ where rowid == rowid_;
-end;
-
--- deletes a given task by rowid
-create proc todo_delete(rowid_ integer not null)
-begin
-  delete from tasks where rowid == rowid_;
-end;
-```
-
-#### `main.c`
-
-```C
-#include <stdlib.h>
-#include <sqlite3.h>
-
-#include "todo.h"
-
-int main(int argc, char **argv)
-{
-  /* Note: not exactly world class error handling but that isn't the point */
-
-
-  // create a db
-  sqlite3 *db;
-  int rc = sqlite3_open(":memory:", &db);
-  if (rc != SQLITE_OK) {
-    exit(1);
-  }
-
-  // make schema if needed (it always will be here because memory databases begin empty
-  rc = todo_create_tables(db);
-   if (rc != SQLITE_OK) {
-    exit(2);
-  }
-
-  // add some tasks
-  const char * const default_tasks[] = {
-    "Buy milk",
-    "Walk dog",
-    "Write code"
-  };
-
-  for (int i = 0; i < 3; i++) {
-    // note we make a string reference from a c string here
-    cql_string_ref dtask = cql_string_ref_new(default_tasks[i]);
-    rc = todo_add(db, dtask);
-    cql_string_release(dtask); // and then dispose of the reference
-    if (rc != SQLITE_OK) {
-      exit(3);
-    }
-  }
-
-  // mark a task as done
-  rc = todo_setdone_(db, 1, true);
-  if (rc != SQLITE_OK) {
-    exit(4);
-  }
-
-  // delete a row in the middle, rowid = 2
-  rc = todo_delete(db, 2);
-  if (rc != SQLITE_OK) {
-    exit(5);
-  }
-
-  // select out some results
-  todo_tasks_result_set_ref result_set;
-  rc = todo_tasks_fetch_results(db, &result_set);
-  if (rc != SQLITE_OK) {
-    printf("error: %d\n", rc);
-    exit(2);
-  }
-
-  // get result count
-  cql_int32 result_count = todo_tasks_result_count(result_set);
-
-  // loop to print
-  for(cql_int32 row = 0; row < result_count; row++) {
-    // note "get" semantics mean that a ref count is not added
-    // if you want to keep the string you must "retain" it
-    cql_string_ref text = todo_tasks_get_description(result_set, row);
-    cql_bool done = todo_tasks_get_done(result_set, row);
-    cql_int32 rowid = todo_tasks_get_rowid(result_set, row);
-
-    // convert to c string format
-    cql_alloc_cstr(ctext, text);
-    printf("%d: rowid:%d %s (%s)\n",
-      row, rowid, ctext, done ? "done" : "not done");
-    cql_free_cstr(ctext, text);
-  }
-
-  // done with results, free the lot
-  cql_result_set_release(result_set);
-
-  // and close the database
-  sqlite3_close(db);
-}
-```
-
-### Build Steps
-
-```sh
-# ${cgsql} refers to the root of the CG/SQL repo
-% cql --in todo.sql --cg todo.h todo.c
-% cc -o todo -I${cqsql}/sources main.c todo.c ${cgsql}/sources/cqlrt.c -lsqlite3
-```
-
-### Results
-
-Note that rowid 2 has been deleted, the leading number is the index in
-the result set. The rowid is of course the database rowid.
-
-```
-% ./todo
-0: rowid:1 Buy milk (done)
-1: rowid:3 Write code (not done)
-```
-
-
-
 ## Appendix 2: CQL Grammar
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -9198,7 +9039,7 @@ the result set. The rowid is of course the database rowid.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Dec 29 15:45:33 PST 2021
+Snapshot as of Thu Dec 30 13:01:40 PST 2021
 
 ### Operators and Literals
 
@@ -14862,7 +14703,7 @@ As it makes no sense for a procedure to have multiple bodies,
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Dec 29 15:45:34 PST 2021
+Snapshot as of Thu Dec 30 13:01:40 PST 2021
 
 ### Rules
 
@@ -17623,6 +17464,36 @@ void cql_write_file(
 Typically you would `#define cql_write_file your_write_function` before you include the amalgam and then
 define your_write_function elsewhere in that file (before or after the amalgam is included are both fine).
 
+### Amalgam LEAN choices
+
+When you include the amalgam, you get everything by default. You may, however, only want some
+limited subset of the compiler's functions in your build.
+
+To customize the amalgam, there are a set of configuration pre-processor options.  To opt-in to
+configuration, first define `CQL_AMALGAM_LEAN`. You then have to opt-in to the various pieces
+you might want. The system is useless without the parser, so you can't remove that; but you can
+choose from the list below.
+
+The options are:
+* CQL_AMALGAM_LEAN` : enable lean mode; this must be set or you get everything
+* `CQL_AMALGAM_CG_C` : C codegen
+* `CQL_AMALGAM_CG_COMMON` : common code generator pieces
+* `CQL_AMALGAM_GEN_SQL` : the echoing features
+* `CQL_AMALGAM_JAVA` : Java code gen
+* `CQL_AMALGAM_JSON` : JSON schema output
+* `CQL_AMALGAM_OBJC` : Objective-C code gen
+* `CQL_AMALGAM_QUERY_PLAN` : the query plan creator
+* `CQL_AMALGAM_SCHEMA` : the assorted schema output types
+* `CQL_AMALGAM_SEM` : semantic analysis (needed by most things)
+* `CQL_AMALGAM_TEST_HELPERS` : test helper output
+* `CQL_AMALGAM_UDF` : the UDF stubs used by the query plan output
+* `CQL_AMALGAM_UNIT_TESTS` : some internal unit tests, pretty much needed by nobody
+
+Note that `CQL_AMALGAM_SEM` is necessary for any of the code generation
+features to work. Likewise, several generators require `CQL_AMALGAM_CG_COMMON` (e.g., C does).
+
+Pick what you want; stubs are created for what you omit to avoid linkage errors.
+
 ### Other Notes
 
 The amalgam will use malloc/calloc for its allocations and it is designed to release all memory it
@@ -17636,6 +17507,169 @@ should be cleaned up.
 The compiler can be called repeatedly with no troubles, it re-initializes on each use. The compiler is
  not multi-threaded so if there is threading you should use some mutex arrangement to keep it safe.
 A thread-safe version would require extensive modifications.
+
+
+
+## Appendix 10: CQL Working Example
+<!---
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
+This is a working example that shows all of the basic DML statements and the call patterns
+to access them. The code also includes the various helpers you can use to convert C types to
+CQL types.
+
+#### `todo.sql`
+
+```SQL
+-- This is a simple schema for keep track of tasks and whether they are done
+
+-- this serves to both declare the table and create the schema
+create proc todo_create_tables()
+begin
+
+  create table if not exists tasks(
+    description text not null,
+    done bool default false not null
+  );
+
+end;
+
+-- adds a new not-done task
+create proc todo_add(task TEXT NOT null)
+begin
+  insert into tasks values(task, false);
+end;
+
+-- gets the tasks in inserted order
+create proc todo_tasks()
+begin
+  select rowid, description, done from tasks order by rowid;
+end;
+
+-- updates a given task by rowid
+create proc todo_setdone_(rowid_ integer not null, done_ bool not null)
+begin
+  update tasks set done = done_ where rowid == rowid_;
+end;
+
+-- deletes a given task by rowid
+create proc todo_delete(rowid_ integer not null)
+begin
+  delete from tasks where rowid == rowid_;
+end;
+```
+
+#### `main.c`
+
+```C
+#include <stdlib.h>
+#include <sqlite3.h>
+
+#include "todo.h"
+
+int main(int argc, char **argv)
+{
+  /* Note: not exactly world class error handling but that isn't the point */
+
+
+  // create a db
+  sqlite3 *db;
+  int rc = sqlite3_open(":memory:", &db);
+  if (rc != SQLITE_OK) {
+    exit(1);
+  }
+
+  // make schema if needed (it always will be here because memory databases begin empty
+  rc = todo_create_tables(db);
+   if (rc != SQLITE_OK) {
+    exit(2);
+  }
+
+  // add some tasks
+  const char * const default_tasks[] = {
+    "Buy milk",
+    "Walk dog",
+    "Write code"
+  };
+
+  for (int i = 0; i < 3; i++) {
+    // note we make a string reference from a c string here
+    cql_string_ref dtask = cql_string_ref_new(default_tasks[i]);
+    rc = todo_add(db, dtask);
+    cql_string_release(dtask); // and then dispose of the reference
+    if (rc != SQLITE_OK) {
+      exit(3);
+    }
+  }
+
+  // mark a task as done
+  rc = todo_setdone_(db, 1, true);
+  if (rc != SQLITE_OK) {
+    exit(4);
+  }
+
+  // delete a row in the middle, rowid = 2
+  rc = todo_delete(db, 2);
+  if (rc != SQLITE_OK) {
+    exit(5);
+  }
+
+  // select out some results
+  todo_tasks_result_set_ref result_set;
+  rc = todo_tasks_fetch_results(db, &result_set);
+  if (rc != SQLITE_OK) {
+    printf("error: %d\n", rc);
+    exit(2);
+  }
+
+  // get result count
+  cql_int32 result_count = todo_tasks_result_count(result_set);
+
+  // loop to print
+  for (cql_int32 row = 0; row < result_count; row++) {
+    // note "get" semantics mean that a ref count is not added
+    // if you want to keep the string you must "retain" it
+    cql_string_ref text = todo_tasks_get_description(result_set, row);
+    cql_bool done = todo_tasks_get_done(result_set, row);
+    cql_int32 rowid = todo_tasks_get_rowid(result_set, row);
+
+    // convert to c string format
+    cql_alloc_cstr(ctext, text);
+    printf("%d: rowid:%d %s (%s)\n",
+      row, rowid, ctext, done ? "done" : "not done");
+    cql_free_cstr(ctext, text);
+  }
+
+  // done with results, free the lot
+  cql_result_set_release(result_set);
+
+  // and close the database
+  sqlite3_close(db);
+}
+```
+
+### Build Steps
+
+```sh
+# ${cgsql} refers to the root of the CG/SQL repo
+% cql --in todo.sql --cg todo.h todo.c
+% cc -o todo -I${cqsql}/sources main.c todo.c ${cgsql}/sources/cqlrt.c -lsqlite3
+```
+
+### Results
+
+Note that rowid 2 has been deleted, the leading number is the index in
+the result set. The rowid is of course the database rowid.
+
+```
+% ./todo
+0: rowid:1 Buy milk (done)
+1: rowid:3 Write code (not done)
+```
 
 
 

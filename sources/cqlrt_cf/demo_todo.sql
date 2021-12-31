@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 -- This is a simple schema for keep track of tasks and whether they are done
 
 -- this serves to both declare the table and create the schema

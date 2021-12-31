@@ -311,6 +311,8 @@
 <li><a href="#encoding-of-sensitive-columns">Encoding of Sensitive Columns</a></li>
 <li><a href="#boxing-statements">Boxing Statements</a></li>
 <li><a href="#the-common-headers">The Common Headers</a></li>
+<li><a href="#the-cqlrt_cf-runtime">The <code>cqlrt_cf</code> Runtime</a></li>
+<li><a href="#recap-2">Recap</a></li>
 </ul></li>
 <li><a href="#part-6-schema-management">Part 6: Schema Management</a>
 <ul>
@@ -326,7 +328,7 @@
 <li><a href="#the-schema-helpers">The Schema Helpers</a></li>
 <li><a href="#declared-upgrade-procedures">Declared Upgrade Procedures</a></li>
 <li><a href="#the-upgrading-workers">The Upgrading Workers</a></li>
-<li><a href="#recap-2">Recap</a></li>
+<li><a href="#recap-3">Recap</a></li>
 </ul></li>
 <li><a href="#part-7-json-generation">Part 7: JSON Generation</a>
 <ul>
@@ -338,7 +340,7 @@
 <li><a href="#formatting-the-json">Formatting the JSON</a></li>
 <li><a href="#dependency-analysis">Dependency Analysis</a></li>
 <li><a href="#additional-test-output">Additional Test Output</a></li>
-<li><a href="#recap-3">Recap</a></li>
+<li><a href="#recap-4">Recap</a></li>
 </ul></li>
 <li><a href="#part-8-test-helpers">Part 8: Test Helpers</a>
 <ul>
@@ -349,7 +351,7 @@
 <li><a href="#initialization">Initialization</a></li>
 <li><a href="#dummy-table-dummy-insert-dummy-select-dummy-result-set">Dummy Table, Dummy Insert, Dummy Select, Dummy Result Set</a></li>
 <li><a href="#dummy-test">Dummy Test</a></li>
-<li><a href="#recap-4">Recap</a></li>
+<li><a href="#recap-5">Recap</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -5459,6 +5461,60 @@ typedef struct cql_boxed_stmt {
 <p>Now in some cases the signature of the things you provide in <code>cqlrt.h</code> is basically fixed, so it seems like it would be easier to move the prototpyes into <code>cqlrt_common.h</code>. However, in many cases additional things are needed like <code>declspec</code> or <code>export</code> or other system specific things. The result is that <code>cqlrt.h</code> is maybe a bit more verbose that it strictly needs to be. Also some versions of cqlrt.h choose to implement some of the APIs as macros…</p>
 <div class="sourceCode" id="cb270"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb270-1"><a href="#cb270-1" aria-hidden="true" tabindex="-1"></a><span class="co">// </span><span class="al">NOTE</span><span class="co">: This must be included *after* all of the above symbols/macros.</span></span>
 <span id="cb270-2"><a href="#cb270-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;cqlrt_common.h&quot;</span></span></code></pre></div>
+<h3 id="the-cqlrt_cf-runtime">The <code>cqlrt_cf</code> Runtime</h3>
+<p>In order to use the Objective-C code-gen (<code>--rt objc</code>) you need a runtime that has reference types that are friendly to Objective-C. For this purpose we created an open-source version of such a runtime: it can be found in the <code>sources/cqlrt_cf</code> directory. This runtime is also a decent example of how much customization you can do with just a little code. Some brief notes:</p>
+<ul>
+<li>This runtime really only makes sense on macOS, iOS, or maybe some other place that Core Foundation (<code>CF</code>) exists
+<ul>
+<li>As such its build process is considerably less portable than other parts of the system</li>
+</ul></li>
+<li>The CQL reference types have been redefined so that they map to:
+<ul>
+<li><code>CFStringRef</code> (strings)</li>
+<li><code>CFTypeRef</code> (objects)</li>
+<li><code>CFDataRef</code> (blobs)</li>
+</ul></li>
+<li>The key worker functions use <code>CF</code>, e.g.
+<ul>
+<li><code>cql_ref_hash</code> maps to <code>CFHash</code></li>
+<li><code>cql_ref_equal</code> maps to <code>CFEqual</code></li>
+<li><code>cql_retain</code> uses <code>CFRetain</code> (with a null guard)</li>
+<li><code>cql_release</code> uses <code>CFRelease</code> (with a null guard)</li>
+</ul></li>
+<li>Strings use <code>CF</code> idioms, e.g.
+<ul>
+<li>string literals are created with <code>CFSTR</code></li>
+<li>C strings are created by using <code>CFStringGetCStringPtr</code> or <code>CFStringGetCString</code> when needed</li>
+</ul></li>
+</ul>
+<p>Of course, since the meaning of some primitive types has changed, the contract to the CQL generated code has changed accordingly. For instance:</p>
+<ul>
+<li>procedures compiled against this runtime expect string arguments to be <code>CFStringRef</code></li>
+<li>result sets provide <code>CFStringRef</code> values for string columns</li>
+</ul>
+<p>The consequence of this is that the Objective-C code generation <code>--rt objc</code> finds friendly contracts that it can freely convert to types like <code>NSString *</code> which results in seamless integration with the rest of an Objective-C application.</p>
+<p>Of course the downside of all this is that the <code>cqlrt_cf</code> runtime is less portable. It can only go where <code>CF</code> exists. Still, it is an interesting demonstration of the flexablity of the system.</p>
+<p>The system could be further improved by creating a custom result type (e.g. <code>--rt c_cf</code>) and using some of the result type options for the C code generation. For instance, the compiler could do these things:</p>
+<ul>
+<li>generate <code>CFStringRef foo;</code> instead of <code>cql_string_ref foo;</code> for declarations</li>
+<li>generate <code>SInt32 an_integer</code> instead of <code>cql_int32 an_integer</code></li>
+</ul>
+<p>Even though <code>cqlrt_cf</code> is already mapping <code>cql_int32</code> to something compatible with <code>CF</code>, making such changes would make the C output a little bit more <code>CF</code> idiomatic. This educational exercise could probably be completed in just a few minutes by interested readers.</p>
+<p>The <code>make.sh</code> file in the <code>sources/cqlrt_cf</code> directory illustrates how to get CQL to use this new runtime. The demo itself is a simple port of the code in <a href="https://cgsql.dev/cql-guide/x10">Appendix 10</a>.</p>
+<h3 id="recap-2">Recap</h3>
+<p>The CQL runtime, <code>cqlrt.c</code>, is intended to be replaced. The version that ships with the distribution is a simple, portable, implementation that is single threaded. Serious users of CQL will likely want to replace the default version of the runtime with something more tuned to their use case.</p>
+<p>Topics covered included:</p>
+<ul>
+<li>contract, error and tracing macros</li>
+<li>how value types are defined</li>
+<li>how reference types are defined</li>
+<li>mocking (for use in a test suite)</li>
+<li>profiling</li>
+<li>encoding of sensitive columns</li>
+<li>boxing Statements</li>
+<li>the <code>cqlrt_cf</code> runtime</li>
+</ul>
+<p>As with the other parts, no attempt was made to cover every detail. That is best done by reading the source code.</p>
 <h2 id="part-6-schema-management">Part 6: Schema Management</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -5935,7 +5991,7 @@ typedef struct cql_boxed_stmt {
 <span id="cb292-7"><a href="#cb292-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb292-8"><a href="#cb292-8" aria-hidden="true" tabindex="-1"></a>  CHARBUF_CLOSE<span class="op">(</span>output_file<span class="op">);</span></span></code></pre></div>
 <p>There is nothing left but to <code>CHARBUF_CLOSE</code> the interim buffers we created.</p>
-<h3 id="recap-2">Recap</h3>
+<h3 id="recap-3">Recap</h3>
 <p>At present <code>cg_schema.c</code> accomplishes a lot and is fairly light at only 1313 lines (at present). It is able to do so because it can leverage heavy lifting done in the semantic analysis phase and schema generation that can be done like all other SQL generation by the echoing code discussed in <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>.</p>
 <p>Topics covered included:</p>
 <ul>
@@ -6435,7 +6491,7 @@ typedef struct cql_boxed_stmt {
 <h3 id="additional-test-output">Additional Test Output</h3>
 <p>The extra test output is simply a reverse index: a mapping that goes from any table to the procedures that depend on that table.</p>
 <p>The mapping can easily be created by processing the JSON for procedures, each such procedure includes its dependency information. As a result it’s only used for additional validation.</p>
-<h3 id="recap-3">Recap</h3>
+<h3 id="recap-4">Recap</h3>
 <p>The JSON output produced by <code>cg_json_schema.c</code> is similar to other codegen output but lacks most of the complexities. It deals largely with the declared schema and the declared procedures and their parameters. Most of the output it needs to produce is well supported by the normal text emission features in the compiler and so we end up with a very straightforward walk of the AST, visiting each of the relevant kinds of nodes in order.</p>
 <p>Topics covered included:</p>
 <ul>
@@ -6897,7 +6953,7 @@ for (ast_node *values_ast = column_name_list-&gt;right;
 <p>This is enough to generate a set of insert statements for the table in question and since the fragments are generated in the table creation order the resulting insert statements will have the parent tables first so the foreign keys of later tables will be correct.</p>
 <p>This can go wrong if the manual initializations use keys that conflict with the default generation or if the manual intializations have PK conflicts or other such things. No attempt is made to sort that out. The run time errors should be clear and these are, after all, only test helpers. It’s very easy to avoid these hazards and you get a pretty clear error message if you don’t so that seems good enough.</p>
 <p>These fragments are ultimately combined to make the body of the procedure <code>test_your_proc_populate_tables</code>.</p>
-<h3 id="recap-4">Recap</h3>
+<h3 id="recap-5">Recap</h3>
 <p>The test helpers in <code>cg_test_helpers.c</code> are very simple nearly-constant templates with the exception of <code>dummy_test</code> which includes:</p>
 <ul>
 <li>table and view creation</li>

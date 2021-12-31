@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 #include <stdlib.h>
 #include <sqlite3.h>
 
@@ -71,7 +78,7 @@ int main(int argc, char **argv)
   cql_int32 result_count = CGS_todo_tasks_result_count(rs);
   
   // loop to print
-  for(cql_int32 row = 0; row < result_count; row++) {
+  for (cql_int32 row = 0; row < result_count; row++) {
     // note the usual "get" semantics, no retain here
     NSString *text = CGS_todo_tasks_get_description(rs, row);
     cql_bool done = CGS_todo_tasks_get_done(rs, row);

@@ -389,3 +389,72 @@ implement some of the APIs as macros...
 // NOTE: This must be included *after* all of the above symbols/macros.
 #include "cqlrt_common.h"
 ```
+
+### The `cqlrt_cf` Runtime
+
+In order to use the Objective-C code-gen (`--rt objc`) you need a runtime that has reference
+types that are friendly to Objective-C.  For this purpose we created an open-source
+version of such a runtime: it can be found in the `sources/cqlrt_cf` directory.
+This runtime is also a decent example of how much customization you can do with just
+a little code. Some brief notes:
+
+* This runtime really only makes sense on macOS, iOS, or maybe some other place that Core Foundation (`CF`) exists
+  * As such its build process is considerably less portable than other parts of the system
+* The CQL reference types have been redefined so that they map to:
+   * `CFStringRef` (strings)
+   * `CFTypeRef` (objects)
+   * `CFDataRef` (blobs)
+* The key worker functions use `CF`, e.g.
+   * `cql_ref_hash` maps to `CFHash`
+   * `cql_ref_equal` maps to `CFEqual`
+   * `cql_retain` uses `CFRetain` (with a null guard)
+   * `cql_release` uses `CFRelease` (with a null guard)
+* Strings use `CF` idioms, e.g.
+   * string literals are created with `CFSTR`
+   * C strings are created by using `CFStringGetCStringPtr` or `CFStringGetCString` when needed
+
+Of course, since the meaning of some primitive types has changed, the contract to the CQL generated
+code has changed accordingly.  For instance:
+
+* procedures compiled against this runtime expect string arguments to be `CFStringRef`
+* result sets provide `CFStringRef` values for string columns
+
+The consequence of this is that the Objective-C code generation `--rt objc` finds friendly
+contracts that it can freely convert to types like `NSString *` which results in
+seamless integration with the rest of an Objective-C application.
+
+Of course the downside of all this is that the `cqlrt_cf` runtime is less portable.  It can only go
+where `CF` exists.  Still, it is an interesting demonstration of the flexablity of the system.
+
+The system could be further improved by creating a custom result type (e.g. `--rt c_cf`) and using
+some of the result type options for the C code generation. For instance, the compiler could do these things:
+
+  * generate `CFStringRef foo;` instead of `cql_string_ref foo;` for declarations
+  * generate `SInt32 an_integer` instead of `cql_int32 an_integer`
+
+Even though `cqlrt_cf` is already mapping `cql_int32` to something compatible with `CF`,
+making such changes would make the C output a little bit more `CF` idiomatic. This educational
+exercise could probably be completed in just a few minutes by interested readers.
+
+The `make.sh` file in the `sources/cqlrt_cf` directory illustrates how to get CQL to use
+this new runtime.  The demo itself is a simple port of the code in [Appendix 10](https://cgsql.dev/cql-guide/x10).
+
+### Recap
+
+The CQL runtime, `cqlrt.c`, is intended to be replaced.  The version that ships with the distribution
+is a simple, portable implementation that is single threaded. Serious users of CQL will likely
+want to replace the default version of the runtime with something more tuned to their use case.
+
+Topics covered included:
+
+* contract, error, and tracing macros
+* how value types are defined
+* how reference types are defined
+* mocking (for use in a test suite)
+* profiling
+* encoding of sensitive columns
+* boxing statements
+* the `cqlrt_cf` runtime
+
+As with the other parts, no attempt was made to cover every detail.  That is
+best done by reading the source code.
