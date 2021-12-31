@@ -29,17 +29,30 @@ def usage():
         (
             "Usage:\n"
             "\n"
-            "--table_diagram input.json > tables.dot\n"
+            "--table_diagram input.json [universe]> tables.dot\n"
             "   creates a .dot file for a table diagram\n"
             "\n"
             "--region_diagram input.json > regions.dot\n"
             "   creates a .dot file for a region diagram\n"
             "\n"
-            "--erd input.json tables... > erd.dot\n"
+            "--erd input.json [universe] > erd.dot\n"
             "   creates a .dot file for an ER diagram\n"
             "\n"
             "--sql input.json > inputdb.sql\n"
             "   creates a .sql file for a database with the schema info\n"
+            "\n"
+            "The [universe] arguments can be:\n"
+            "  * nothing in which case all tables are the used\n"
+            "  * a list of targets which are processed in order\n"
+            "  * a target is:\n"
+            "    * a table name\n"
+            "    * a table name followed by +fks (e.g. foo+fks)\n"
+            "    * a table name followed by +refs (e.g. foo+refs)\n"
+            "    * a table name followed by +graph (e.g. foo+graph)\n"
+            "  * +fks: means the table and all its FK tables, transitively\n"
+            "  * +refs: means the table and all that refer to it via FK, transitively\n"
+            "  * +graphs: means the table and any table linked to it either way, transitively\n"
+            "  * a target may be prefixed with '-' indicating that pattern should be removed\n"
             "\n"
             "To create a CQL JSON file you can start with any CQL, but\n"
             "probably a file with most or all of your schema is the best\n"
@@ -50,6 +63,47 @@ def usage():
             "  dot x.dot -Tpng -o x.png\n"
         )
     )
+
+
+def add_colinfo(colinfo, col, data):
+    if col not in colinfo:
+        colinfo[col] = data
+    else:
+        colinfo[col] = colinfo[col] + "," + data
+
+
+def compute_pk(t):
+    pk = {}
+    for pkcol in t["primaryKey"]:
+        pk[pkcol] = 1
+    return pk
+
+
+def compute_colinfo(t):
+    colinfo = {}
+
+    pk = {}
+    for pkcol in t["primaryKey"]:
+        pk[pkcol] = 1
+        add_colinfo(colinfo, pkcol, "PK")
+
+    ifk = 0
+    for fktup in enumerate(t["foreignKeys"]):
+        ifk = ifk + 1
+        fkname = f"FK{ifk}"
+        fk = fktup[1]
+        for fkcol in fk["columns"]:
+            add_colinfo(colinfo, fkcol, fkname)
+
+    iuk = 0
+    for uktup in enumerate(t["uniqueKeys"]):
+        iuk = iuk + 1
+        ukname = f"UK{iuk}"
+        uk = uktup[1]
+        for ukcol in uk["columns"]:
+            add_colinfo(colinfo, ukcol, ukname)
+
+    return colinfo
 
 
 # First we look up all the tables and make a dictionary so we can find them by name,
@@ -66,73 +120,53 @@ def usage():
 #       * if the column is not null the type is bold
 #       * the PK and FK dictionaries are used to emit the PK/FK info
 #   * we walk the foreign keys and emit a link foo -> bar for each referenced table
-def emit_erd():
-    if len(sys.argv) < 4:
-        return
+def emit_erd(data, universe, tables):
+    print("digraph parse {")
+    print("rankdir=LR;")
 
-    jfile = sys.argv[2]
-    with open(jfile) as json_file:
-        data = json.load(json_file)
-        print("digraph parse {")
-        print("rankdir=LR;")
+    for t_name in universe:
+        print(f"{t_name} [")
+        print("  shape=plaintext")
+        print("  label=<")
+        print("    <table border='1' cellborder='0'>")
+        print(f"     <tr><td><b>{t_name}</b></td></tr>")
 
-        tables = {}
-        for tup in enumerate(data["tables"]):
-            t = tup[1]
-            t_name = t["name"]
-            tables[t_name] = t
+        t = tables[t_name]
+        pk = compute_pk(t)
+        colinfo = compute_colinfo(t)
 
-        for i in range(3, len(sys.argv)):
-            t_name = sys.argv[i]
-            print(f"{t_name} [")
-            print("  shape=plaintext")
-            print("  label=<")
-            print("    <table border='1' cellborder='0'>")
-            print(f"     <tr><td><b>{t_name}</b></td></tr>")
+        for dopk in range(0, 2):
+            for ctup in enumerate(t["columns"]):
+                c = ctup[1]
+                c_name = c["name"]
+                c_type = c["type"]
+                c_notnull = c["isNotNull"] == 1
 
-            t = tables[t_name]
-            pk = {}
-            for pkcol in t["primaryKey"]:
-                pk[pkcol] = 1
+                nntext1 = "<b>" if c_notnull else ""
+                nntext2 = "</b>" if c_notnull else ""
 
-            fks = {}
-            for fktup in enumerate(t["foreignKeys"]):
-                fk = fktup[1]
-                for fkcol in fk["columns"]:
-                    fks[fkcol] = 1
+                if dopk != (c_name in pk):
+                    print("<tr>")
+                    print(f"<td align='left'>{c_name}</td>")
+                    print(f"<td align='left'>{nntext1}{c_type}{nntext2}</td>")
+                    if c_name in colinfo:
+                        print(f"<td align='left'>{colinfo[c_name]}</td>")
+                    else:
+                        print("<td></td>")
+                    print("</tr>")
 
-            for dopk in range(0, 2):
-                for ctup in enumerate(t["columns"]):
-                    c = ctup[1]
-                    c_name = c["name"]
-                    c_type = c["type"]
-                    c_notnull = c["isNotNull"] == 1
+            if dopk == 0:
+                print("<tr><td align='left'>---------</td></tr>")
 
-                    pktext = "PK" if dopk == 0 else ""
-                    fktext = "FK" if c_name in fks else ""
-                    nntext1 = "<b>" if c_notnull else ""
-                    nntext2 = "</b>" if c_notnull else ""
+        print("    </table>")
+        print(">];")
 
-                    if dopk != (c_name in pk):
-                        print("<tr>")
-                        print(f"<td align='left'>{c_name}</td>")
-                        print(f"<td align='left'>{nntext1}{c_type}{nntext2}</td>")
-                        print(f"<td>{pktext}</td>")
-                        print(f"<td>{fktext}</td>")
-                        print("</tr>")
+        for fktup in enumerate(t["foreignKeys"]):
+            fk = fktup[1]
+            reftable = fk["referenceTable"]
+            print(f"{t_name} -> {reftable}")
 
-                if dopk == 0:
-                    print("<tr><td align='left'>---------</td></tr>")
-
-            print("    </table>")
-            print(">];")
-
-            for fktup in enumerate(t["foreignKeys"]):
-                fk = fktup[1]
-                reftable = fk["referenceTable"]
-                print(f"{t_name} -> {reftable}")
-
-        print("}")
+    print("}")
 
 
 # Here we emit a digraph that has all the tables
@@ -149,84 +183,89 @@ def emit_erd():
 #  * if there are no foreign keys we emit a link to "root" or "orphans"
 #    * any not connected table gets a link to "orphans"
 #
-def emit_table_diagram(jfile):
-    with open(jfile) as json_file:
-        data = json.load(json_file)
+def emit_table_diagram(data, universe, tables):
+    connected = {}
 
-        connected = {}
+    for t_name in universe:
+        t = tables[t_name]
+        for fktup in enumerate(t["foreignKeys"]):
+            fk = fktup[1]
+            reftable = fk["referenceTable"]
+            connected[t_name] = 1
+            connected[reftable] = 1
 
-        for tup in enumerate(data["tables"]):
-            t = tup[1]
-            t_name = t["name"]
+    print("digraph parse {")
+    print("rankdir=LR;")
 
-            for fktup in enumerate(t["foreignKeys"]):
-                fk = fktup[1]
-                reftable = fk["referenceTable"]
-                connected[t_name] = 1
-                connected[reftable] = 1
+    need_orphans = False
+    need_root = False
 
-        print("digraph parse {")
-        print("rankdir=LR;")
+    for t_name in universe:
+        t = tables[t_name]
+        print(f'{t_name} [label = "{t_name}" shape=plaintext]')
+
+        if len(t["foreignKeys"]) == 0:
+            if t_name in connected:
+                need_root = True
+                print(f"{t_name} -> root")
+            else:
+                need_orphans = True
+                print(f"{t_name} -> orphans")
+
+        for fktup in enumerate(t["foreignKeys"]):
+            fk = fktup[1]
+            reftable = fk["referenceTable"]
+            print(f"{t_name} -> {reftable}")
+
+    if need_orphans and need_root:
         print("{rank=same orphans root}")
 
-        for tup in enumerate(data["tables"]):
-            t = tup[1]
-            t_name = t["name"]
-            print(f'{t_name} [label = "{t_name}" shape=plaintext]')
-
-            if len(t["foreignKeys"]) == 0:
-                if t_name in connected:
-                    print(f"{t_name} -> root")
-                else:
-                    print(f"{t_name} -> orphans")
-
-            for fktup in enumerate(t["foreignKeys"]):
-                fk = fktup[1]
-                reftable = fk["referenceTable"]
-                print(f"{t_name} -> {reftable}")
-
-        print("}")
+    print("}")
 
 
 # Here we emit a digraph that has all the tables
 # This works exactly the same as "tables" except we follow
 # the dependent region link instead of the foreign key links
 # everything else is the same even "orphans" etc.
-def emit_region_diagram(jfile):
-    with open(jfile) as json_file:
-        data = json.load(json_file)
+def emit_region_diagram(data):
+    connected = {}
 
-        connected = {}
+    for tup in enumerate(data["regions"]):
+        r = tup[1]
+        r_name = r["name"]
 
-        for tup in enumerate(data["regions"]):
-            r = tup[1]
-            r_name = r["name"]
+        for rdep in enumerate(r["using"]):
+            rparent = rdep[1]
+            connected[r_name] = 1
+            connected[rparent] = 1
 
-            for rdep in enumerate(r["using"]):
-                rparent = rdep[1]
-                connected[r_name] = 1
-                connected[rparent] = 1
+    print("digraph parse {")
+    print("rankdir=LR;")
 
-        print("digraph parse {")
-        print("rankdir=LR;")
+    need_orphans = False
+    need_root = False
+
+    for tup in enumerate(data["regions"]):
+        r = tup[1]
+        r_name = r["name"]
+        print(f'{r_name} [label = "{r_name}" shape=plaintext]')
+
+        if len(r["using"]) == 0:
+            if r_name in connected:
+                need_root = True
+                print(f"{r_name} -> root")
+            else:
+                need_orphans = True
+                print(f"{r_name} -> orphans")
+
+        for rdep in enumerate(r["using"]):
+            rparent = rdep[1]
+            print(f"{r_name} -> {rparent}")
+
+    if need_orphans and need_root:
         print("{rank=same orphans root}")
 
-        for tup in enumerate(data["regions"]):
-            r = tup[1]
-            r_name = r["name"]
-            print(f'{r_name} [label = "{r_name}" shape=plaintext]')
-
-            if len(r["using"]) == 0:
-                if r_name in connected:
-                    print(f"{r_name} -> root")
-                else:
-                    print(f"{r_name} -> orphans")
-
-            for rdep in enumerate(r["using"]):
-                rparent = rdep[1]
-                print(f"{r_name} -> {rparent}")
-
-        print("}")
+    print("}")
 
 
 # This generates the schema we need for our sql output
@@ -248,7 +287,8 @@ def emit_schema():
         (
             "create table tables(\n"
             "  t_name text primary key,\n"
-            "  region text not null);\n"
+            "  region text not null,\n"
+            "  deleted bool not null);\n"
             "\n"
             "create table pks(\n"
             "  t_name text not null,\n"
@@ -309,72 +349,205 @@ def emit_tabledep(section):
 #     * this is "queries", "inserts", "updates", "deletes", "general", and "generalInserts"
 #     * see the CQL JSON docs for the meaning of each of these sections
 #       * these all have the "dependencies" block in their JSON
-def emit_sql(jfile):
-    with open(jfile) as json_file:
-        data = json.load(json_file)
-        for tup in enumerate(data["tables"]):
-            t = tup[1]
-            t_name = t["name"]
-            region = t["region"] if "region" in t else "None"
-            print(f"insert into tables values('{t_name}', '{region}');")
-            for ctup in enumerate(t["columns"]):
-                c = ctup[1]
-                c_name = c["name"]
-                c_type = c["type"]
-                c_notnull = c["isNotNull"]
+def emit_sql(data):
+    for tup in enumerate(data["tables"]):
+        t = tup[1]
+        t_name = t["name"]
+        region = t["region"] if "region" in t else "None"
+        deleted = 1 if t["isDeleted"] else "0"
+        print(f"insert into tables values('{t_name}', '{region}', {deleted});")
+        for ctup in enumerate(t["columns"]):
+            c = ctup[1]
+            c_name = c["name"]
+            c_type = c["type"]
+            c_notnull = c["isNotNull"]
+            print(
+                f"insert into columns values ('{t_name}', '{c_name}', '{c_type}', {c_notnull});"
+            )
+
+        for pkcol in t["primaryKey"]:
+            print(f"insert into pks values('{t_name}', '{pkcol}');")
+
+        ifk = 0
+        for fktup in enumerate(t["foreignKeys"]):
+            ifk = ifk + 1
+            fk = fktup[1]
+            fkcols = fk["columns"]
+            fkrefs = fk["referenceColumns"]
+            reftable = fk["referenceTable"]
+            ccols = len(fkcols)
+            for icol in range(0, ccols):
+                fkcol = fkcols[icol]
+                fkref = fkrefs[icol]
                 print(
-                    f"insert into columns values ('{t_name}', '{c_name}', '{c_type}', {c_notnull});"
+                    f"insert into fks values('fk{ifk}', '{t_name}', '{reftable}', '{fkcol}', '{fkref}');"
                 )
 
-            for pkcol in t["primaryKey"]:
-                print(f"insert into pks values('{t_name}', '{pkcol}');")
+    for tup in enumerate(data["regions"]):
+        r = tup[1]
+        r_name = r["name"]
+        print(f"insert into regions values('{r_name}');")
+        for rdep in enumerate(r["using"]):
+            rparent = rdep[1]
+            print(f"insert into region_deps values('{r_name}', '{rparent}');")
 
-            ifk = 0
-            for fktup in enumerate(t["foreignKeys"]):
-                ifk = ifk + 1
-                fk = fktup[1]
-                fkcols = fk["columns"]
-                fkrefs = fk["referenceColumns"]
-                reftable = fk["referenceTable"]
-                ccols = len(fkcols)
-                for icol in range(0, ccols):
-                    fkcol = fkcols[icol]
-                    fkref = fkrefs[icol]
-                    print(
-                        f"insert into fks values('fk{ifk}', '{t_name}', '{reftable}', '{fkcol}', '{fkref}');"
-                    )
+    emit_tabledep(data["queries"])
+    emit_tabledep(data["deletes"])
+    emit_tabledep(data["inserts"])
+    emit_tabledep(data["generalInserts"])
+    emit_tabledep(data["updates"])
+    emit_tabledep(data["general"])
 
-        for tup in enumerate(data["regions"]):
-            r = tup[1]
-            r_name = r["name"]
-            print(f"insert into regions values('{r_name}');")
-            for rdep in enumerate(r["using"]):
-                rparent = rdep[1]
-                print(f"insert into region_deps values('{r_name}', '{rparent}');")
 
-        emit_tabledep(data["queries"])
-        emit_tabledep(data["deletes"])
-        emit_tabledep(data["inserts"])
-        emit_tabledep(data["generalInserts"])
-        emit_tabledep(data["updates"])
-        emit_tabledep(data["general"])
+def get_fks(targets, tables, data, arg):
+    if arg not in tables:
+        print(f"'{arg}' not a valid table")
+        exit(1)
+
+    if arg in targets:
+        return
+
+    t = tables[arg]
+    targets[arg] = 1
+
+    for fktup in enumerate(t["foreignKeys"]):
+        fk = fktup[1]
+        reftable = fk["referenceTable"]
+        get_fks(targets, tables, data, reftable)
+
+
+def get_refs(targets, tables, data, refmap, arg):
+    if arg not in tables:
+        print(f"'{arg}' not a valid table")
+        exit(1)
+
+    if arg in targets:
+        return
+
+    targets[arg] = 1
+
+    if arg in refmap:
+        for srctable in refmap[arg]:
+            get_refs(targets, tables, data, refmap, srctable)
+
+
+def get_graph(targets, tables, data, refmap, arg):
+    if arg not in tables:
+        print(f"'{arg}' not a valid table")
+        exit(1)
+
+    if arg in targets:
+        return
+
+    t = tables[arg]
+    targets[arg] = 1
+
+    if arg in refmap:
+        for srctable in refmap[arg]:
+            get_graph(targets, tables, data, refmap, srctable)
+
+    for fktup in enumerate(t["foreignKeys"]):
+        fk = fktup[1]
+        reftable = fk["referenceTable"]
+        get_graph(targets, tables, data, refmap, reftable)
+
+
+def compute_refmap(data):
+    refmap = {}
+    for tup in enumerate(data["tables"]):
+        t = tup[1]
+        t_name = t["name"]
+        for fktup in enumerate(t["foreignKeys"]):
+            fk = fktup[1]
+            reftable = fk["referenceTable"]
+
+            # now make the reverse index
+            if reftable not in refmap:
+                refmap[reftable] = {}
+            refmap[reftable][t_name] = 1
+
+    return refmap
+
+
+def get_targets(tables, data, refmap, arg):
+    targets = {}
+    if arg.endswith("+fks"):
+        arg = arg[0:-4]
+        get_fks(targets, tables, data, arg)
+    elif arg.endswith("+refs"):
+        arg = arg[0:-5]
+        get_refs(targets, tables, data, refmap, arg)
+    elif arg.endswith("+graph"):
+        arg = arg[0:-6]
+        get_graph(targets, tables, data, refmap, arg)
+    elif arg in tables:
+        targets[arg] = 1
+    else:
+        print(f"'{arg}' not a valid table")
+        exit(1)
+    return targets
+
+
+def get_universe(tables, data):
+    universe = {}
+    # if no args, the default universe is "everything"
+    if len(sys.argv) == 3:
+        for t in tables:
+            universe[t] = 1
+    else:
+        refmap = compute_refmap(data)
+
+        for i in range(3, len(sys.argv)):
+            arg = sys.argv[i]
+            subtract = False
+            if arg[0] == "-":
+                subtract = True
+                arg = arg[1:]
+
+            targets = get_targets(tables, data, refmap, arg)
+
+            if not subtract:
+                for t_name in targets:
+                    universe[t_name] = 1
+            else:
+                for t_name in targets:
+                    if t_name in universe:
+                        del universe[t_name]
+
+    return universe
+
+
+def dispatch_option():
+    jfile = sys.argv[2]
+    with open(jfile) as json_file:
+        data = json.load(json_file)
+        tables = {}
+        for tup in enumerate(data["tables"]):
+            t = tup[1]
+            if not t["isDeleted"]:
+                t_name = t["name"]
+                tables[t_name] = t
+
+        universe = get_universe(tables, data)
+        if sys.argv[1] == "--table_diagram":
+            emit_table_diagram(data, universe, tables)
+        elif sys.argv[1] == "--region_diagram":
+            emit_region_diagram(data)
+        elif sys.argv[1] == "--erd":
+            emit_erd(data, universe, tables)
+        elif sys.argv[1] == "--sql":
+            emit_schema()
+            emit_sql(data)
+        else:
+            usage()
 
 
 def main():
     # here we are just going to decode the arguments
     if len(sys.argv) < 3:
         usage()
-    elif sys.argv[1] == "--table_diagram":
-        emit_table_diagram(sys.argv[2])
-    elif sys.argv[1] == "--region_diagram":
-        emit_region_diagram(sys.argv[2])
-    elif sys.argv[1] == "--erd":
-        emit_erd()
-    elif sys.argv[1] == "--sql":
-        emit_schema()
-        emit_sql(sys.argv[2])
     else:
-        usage()
+        dispatch_option()
 
 
 if __name__ == "__main__":
