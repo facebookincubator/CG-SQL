@@ -232,7 +232,7 @@ initializes `t`, and so CQL can update its set of facts once again:
 >     * In branch when `i IS NULL`:
 >         * In branch group:
 >             * In branch when `b`:
->                 * 't' is initialized.
+>                 * `t` is initialized.
 
 Jumping ahead a couple of lines:
 
@@ -255,9 +255,9 @@ because `t` is initialized here as well due to the `SET`:
 >     * In branch when `i IS NULL`:
 >         * In branch group:
 >             * In branch when `b`:
->                 * 't' is initialized.
+>                 * `t` is initialized.
 >             * In ELSE branch:
->                 * 't' is initialized.
+>                 * `t` is initialized.
 
 Moving ahead one more line, things get a bit more interesting:
 
@@ -286,7 +286,7 @@ leaves the branch group:
 > * `t` requires initialization.
 > * In branch group:
 >     * In branch when `i IS NULL`:
->         * 't' is initialized.
+>         * `t` is initialized.
 
 Stepping forward one line again, we reach a `RETURN`:
 
@@ -307,7 +307,7 @@ The fact that the current branch returns early is added to the set of facts:
 > * `t` requires initialization.
 > * In branch group:
 >     * In branch when `i IS NULL`:
->         * 't' is initialized.
+>         * `t` is initialized.
 >         * Returns.
 
 Moving ahead one more line, we reach the end of another branch and branch group,
@@ -348,7 +348,7 @@ we can jump ahead several lines to the next point of interest:
 > * `i` is not null.
 > * In branch group:
 >     * In branch when `i == 0`:
->         * 't' is initialized.
+>         * `t` is initialized.
 >     * In branch when `i > 0`:
 
 In the call `p2(i)`, we know that `i` was declared to have type `INTEGER` and
@@ -389,9 +389,9 @@ The fact that the branch will throw is added to the current set of facts:
 > * `i` is not null.
 > * In branch group:
 >     * In branch when `i == 0`:
->         * 't' is initialized.
+>         * `t` is initialized.
 >     * In branch when `i > 0`:
->         * 't' is initialized.
+>         * `t` is initialized.
 >     * In ELSE branch:
 >         * Throws.
 
