@@ -125,17 +125,27 @@ def emit_erd(data, universe, tables):
     print("rankdir=LR;")
 
     for t_name in universe:
+
+        t = tables[t_name]
+        pk = compute_pk(t)
+        colinfo = compute_colinfo(t)
+
+        fkports = {}
+
+        for fktup in enumerate(t["foreignKeys"]):
+            fk = fktup[1]
+            reftable = fk["referenceTable"]
+            portcol = fk["columns"][0]
+            print(f"{t_name}:{portcol} -> {reftable}")
+            fkports[portcol] = 1
+
         print(f"{t_name} [")
         print("  shape=plaintext")
         print("  label=<")
         print("    <table border='1' cellborder='0'>")
         print(f"     <tr><td><b>{t_name}</b></td></tr>")
 
-        t = tables[t_name]
-        pk = compute_pk(t)
-        colinfo = compute_colinfo(t)
-
-        for dopk in range(0, 2):
+        for not_pk_pass in range(0, 2):
             for ctup in enumerate(t["columns"]):
                 c = ctup[1]
                 c_name = c["name"]
@@ -145,26 +155,24 @@ def emit_erd(data, universe, tables):
                 nntext1 = "<b>" if c_notnull else ""
                 nntext2 = "</b>" if c_notnull else ""
 
-                if dopk != (c_name in pk):
+                fkport = f" port='{c_name}'" if c_name in fkports else ""
+
+                if not_pk_pass != (c_name in pk):
                     print("<tr>")
                     print(f"<td align='left'>{c_name}</td>")
                     print(f"<td align='left'>{nntext1}{c_type}{nntext2}</td>")
                     if c_name in colinfo:
-                        print(f"<td align='left'>{colinfo[c_name]}</td>")
+                        print(f"<td align='left'{fkport}>{colinfo[c_name]}</td>")
                     else:
                         print("<td></td>")
                     print("</tr>")
 
-            if dopk == 0:
+            if not_pk_pass == 0:
                 print("<tr><td align='left'>---------</td></tr>")
 
         print("    </table>")
         print(">];")
 
-        for fktup in enumerate(t["foreignKeys"]):
-            fk = fktup[1]
-            reftable = fk["referenceTable"]
-            print(f"{t_name} -> {reftable}")
 
     print("}")
 
