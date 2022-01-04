@@ -32,7 +32,6 @@
   {
     [self dynamicTeardown];
   }
-  [super dealloc];
 }
 
 // The two kinds of things we know how to hold.
@@ -56,7 +55,7 @@
       cql_boxed_stmt *box = (cql_boxed_stmt *)self.bytes;
 
       // note this is a no-op on null statements, and nulls stmt after finalization
-      cql_finalize_stmt(&box->stmt);  
+      cql_finalize_stmt(&box->stmt);
       break;
     }
   }
@@ -83,7 +82,7 @@ cql_result_set_ref _Nonnull cql_result_set_create(
   result_set->meta = meta;
 
   CQLHolder *holder = [[CQLHolder alloc] initWithBytes:(void *)result_set andType:CF_HELD_TYPE_RESULT_SET];
-  return (__bridge cql_result_set_ref)holder;
+  return (__bridge_retained cql_result_set_ref)holder;
 }
 
 cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt)
@@ -92,7 +91,7 @@ cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt)
   box->stmt = stmt;
 
   CQLHolder *holder = [[CQLHolder alloc] initWithBytes:(void *)box andType:CF_HELD_TYPE_BOXED_STMT];
-  return (__bridge cql_object_ref)holder;
+  return (__bridge_retained cql_object_ref)holder;
 }
 
 // For holding boxed statements.
@@ -105,7 +104,7 @@ sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref)
 }
 
 cql_result_set *_Nonnull cql_get_result_set_from_ref(cql_result_set_ref _Nonnull ref)
-{ 
+{
   CQLHolder *holder = (__bridge CQLHolder *)ref;
   cql_result_set *_Nonnull result_set = (cql_result_set *)holder.bytes;
   return result_set;

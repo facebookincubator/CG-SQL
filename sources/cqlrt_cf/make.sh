@@ -21,7 +21,7 @@ echo "building OBJC code"
 ../out/cql --in demo_todo.sql --cg demo_objc.h --rt objc_mit --objc_c_include_path demo_todo.h --cqlrt cqlrt_cf.h
 
 echo "building executable"
-cc -o demo -g -I.. -I. demo_todo.c demo_main.m cqlrt_cf.c cqlholder.m -lsqlite3 -framework Foundation
+cc -o demo -g -I.. -I. demo_todo.c demo_main.m cqlrt_cf.c cqlholder.m -lsqlite3 -framework Foundation -fobjc-arc
 
 echo "running demo"
 ./demo
