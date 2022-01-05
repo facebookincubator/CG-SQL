@@ -65,22 +65,22 @@ typedef int cql_code;
 typedef CFTypeRef cql_type_ref;
 void cql_retain(CFTypeRef _Nullable ref);
 void cql_release(CFTypeRef _Nullable ref);
-inline cql_hash_code cql_ref_hash(CFTypeRef _Nonnull ref) { return CFHash(ref); }
-inline cql_bool cql_ref_equal(CFTypeRef _Nonnull ref) { return CFEqal(ref); }
+cql_hash_code cql_ref_hash(CFTypeRef _Nonnull ref);
+cql_bool cql_ref_equal(CFTypeRef  _Nonnull r1, CFTypeRef  _Nonnull r2);
 
 // CF Blob
 typedef CFDataRef cql_blob_ref ;
-inline void cql_blob_retain(cql_blob_ref _Nullable obj) { cql_retain(obj); }
-inline void cql_blob_release(cql_blob_ref _Nullable obj) { cql_release(obj); }
-inline void* cql_get_blob_bytes(cql_blob_ref _Nonnull blob)  { return CFDataGetBytePtr(blob); }
-inline cql_int64 cql_get_blob_size(cql_blob_ref _Nonnull blob)  { return CFDataGetLength(blob); }
-inline cql_blob_ref _Nonnull cql_blob_ref_new(void *_Nonnull bytes, cql_int64 size) { return CFDataCreate(NULL, bytes, size); }
-inline cql_bool cql_blob_equal(cql_blob_ref b1, cql_blob_ref b2) { return CFEqual(b1,b2); }
+void cql_blob_retain(cql_blob_ref _Nullable obj);
+void cql_blob_release(cql_blob_ref _Nullable obj);
+void *_Nonnull cql_get_blob_bytes(cql_blob_ref _Nonnull blob);
+cql_int64 cql_get_blob_size(cql_blob_ref _Nonnull blob);
+cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull bytes, cql_int64 size);
+cql_bool cql_blob_equal(cql_blob_ref _Nonnull b1, cql_blob_ref _Nonnull b2);
 
 // CF object
 typedef CFTypeRef cql_object_ref ;
-inline void cql_objct_retain(cql_object_ref _Nullable obj) { cql_retain(obj); }
-inline void cql_object_release(cql_object_ref _Nullable obj) { cql_release(obj); }
+void cql_object_retain(cql_object_ref _Nullable obj);
+void cql_object_release(cql_object_ref _Nullable obj);
 
 #define CF_C_STRING_STACK_MAX_LENGTH 512
 
@@ -107,14 +107,12 @@ char *_Nullable cql_copy_string_to_stack_or_heap(CFStringRef _Nullable cfString,
 
 // CF String
 typedef CFStringRef cql_string_ref;
-inline void cql_string_retain(cql_string_ref _Nullable str) { cql_retain(str); }
-inline void cql_string_release(cql_string_ref _Nullable str) { cql_release(str); }
-inline cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull) { return CFStringCreateWithCString(NULL, cstr, kCFStringEncodingUTF8); }
-
-inline cql_hash_code cql_string_hash(cql_string_ref _Nonnull str) { return CFHash(str); }
-inline cql_bool cql_string_equal(cql_string_ref _Nonnull str) { return CFEqal(str); }
-inline cql_int32 cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
-   return (cql_int32)CFStringCompare(s1, s2, 0); }
+void cql_string_retain(cql_string_ref _Nullable str);
+void cql_string_release(cql_string_ref _Nullable str);
+cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
+cql_hash_code cql_string_hash(cql_string_ref _Nonnull str);
+cql_int32 cql_string_equal(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
+cql_int32 cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 
 // useful for declaring strings in C, not useful to other languages
 #define cql_alloc_cstr(cstr, str) CF_STRING_CREATE_C_STRING(cstr, str)
@@ -122,7 +120,6 @@ inline cql_int32 cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _
 #define CF_CONST_STRING(name, value) CFStringRef _Nonnull name = CFSTR(value);
 #define cql_string_literal CF_CONST_STRING
 #define cql_string_proc_name CF_CONST_STRING
-
 
 // This is the abstract holder for these items with only the C interface to get the contents
 typedef CFTypeRef CQLHolderRef;
@@ -133,7 +130,6 @@ typedef CQLHolderRef cql_boxed_stmt_ref;
 typedef struct cql_boxed_stmt {
   sqlite3_stmt *_Nullable stmt;
 } cql_boxed_stmt;
-
 
 typedef struct cql_result_set_meta {
   // release the internal memory for the rowset
