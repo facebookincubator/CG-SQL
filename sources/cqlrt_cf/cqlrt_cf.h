@@ -113,6 +113,7 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 cql_hash_code cql_string_hash(cql_string_ref _Nonnull str);
 cql_int32 cql_string_equal(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 cql_int32 cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
+cql_int32 cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 
 // useful for declaring strings in C, not useful to other languages
 #define cql_alloc_cstr(cstr, str) CF_STRING_CREATE_C_STRING(cstr, str)
