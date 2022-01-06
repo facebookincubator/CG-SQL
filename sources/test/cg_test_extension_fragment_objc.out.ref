@@ -9,6 +9,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class CGBAssemblyCore;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBAssemblyCore
+@end
+#endif
+
 static inline CGCAssemblyCoreResultSetRef CGCExtensionFragmentOneFromCGBExtensionFragmentOne(CGBAssemblyCore *resultSet)
 {
   return (__bridge CGCAssemblyCoreResultSetRef)resultSet;
@@ -38,6 +43,11 @@ static inline int32_t CGBExtensionFragmentOneResultCount(CGBAssemblyCore *result
 }
 
 @class CGBAssemblyCore;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBAssemblyCore
+@end
+#endif
 
 static inline CGCAssemblyCoreResultSetRef CGCExtensionFragmentTwoFromCGBExtensionFragmentTwo(CGBAssemblyCore *resultSet)
 {
@@ -74,6 +84,11 @@ static inline int32_t CGBExtensionFragmentTwoResultCount(CGBAssemblyCore *result
 }
 
 @class CGBAssemblyNonCore;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBAssemblyNonCore
+@end
+#endif
 
 static inline CGCAssemblyNonCoreResultSetRef CGCExtensionFragmentThreeFromCGBExtensionFragmentThree(CGBAssemblyNonCore *resultSet)
 {

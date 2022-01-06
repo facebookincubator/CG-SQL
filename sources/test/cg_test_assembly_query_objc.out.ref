@@ -9,6 +9,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class CGBAssemblyCore;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBAssemblyCore
+@end
+#endif
+
 static inline CGBAssemblyCore *CGBAssemblyCoreFromCGCAssemblyCore(CGCAssemblyCoreResultSetRef resultSet)
 {
   return (__bridge CGBAssemblyCore *)resultSet;
