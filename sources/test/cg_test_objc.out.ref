@@ -11,6 +11,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class CGBWithResultSet;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWithResultSet
+@end
+#endif
+
 static inline CGBWithResultSet *CGBWithResultSetFromCGCWithResultSet(CGCWithResultSetResultSetRef resultSet)
 {
   return (__bridge CGBWithResultSet *)resultSet;
@@ -68,6 +73,11 @@ static inline BOOL CGBWithResultSetRowEqual(CGBWithResultSet *resultSet1, int32_
 
 @class CGBSelectFromView;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSelectFromView
+@end
+#endif
+
 static inline CGBSelectFromView *CGBSelectFromViewFromCGCSelectFromView(CGCSelectFromViewResultSetRef resultSet)
 {
   return (__bridge CGBSelectFromView *)resultSet;
@@ -106,6 +116,11 @@ static inline BOOL CGBSelectFromViewRowEqual(CGBSelectFromView *resultSet1, int3
 }
 
 @class CGBGetData;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBGetData
+@end
+#endif
 
 static inline CGBGetData *CGBGetDataFromCGCGetData(CGCGetDataResultSetRef resultSet)
 {
@@ -163,6 +178,11 @@ static inline BOOL CGBGetDataRowEqual(CGBGetData *resultSet1, int32_t row1, CGBG
 }
 
 @class CGBComplexReturn;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBComplexReturn
+@end
+#endif
 
 static inline CGBComplexReturn *CGBComplexReturnFromCGCComplexReturn(CGCComplexReturnResultSetRef resultSet)
 {
@@ -227,6 +247,11 @@ static inline BOOL CGBComplexReturnRowEqual(CGBComplexReturn *resultSet1, int32_
 
 @class CGBHierarchicalQuery;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBHierarchicalQuery
+@end
+#endif
+
 static inline CGBHierarchicalQuery *CGBHierarchicalQueryFromCGCHierarchicalQuery(CGCHierarchicalQueryResultSetRef resultSet)
 {
   return (__bridge CGBHierarchicalQuery *)resultSet;
@@ -259,6 +284,11 @@ static inline BOOL CGBHierarchicalQueryRowEqual(CGBHierarchicalQuery *resultSet1
 }
 
 @class CGBHierarchicalUnmatchedQuery;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBHierarchicalUnmatchedQuery
+@end
+#endif
 
 static inline CGBHierarchicalUnmatchedQuery *CGBHierarchicalUnmatchedQueryFromCGCHierarchicalUnmatchedQuery(CGCHierarchicalUnmatchedQueryResultSetRef resultSet)
 {
@@ -293,6 +323,11 @@ static inline BOOL CGBHierarchicalUnmatchedQueryRowEqual(CGBHierarchicalUnmatche
 
 @class CGBUnionSelect;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUnionSelect
+@end
+#endif
+
 static inline CGBUnionSelect *CGBUnionSelectFromCGCUnionSelect(CGCUnionSelectResultSetRef resultSet)
 {
   return (__bridge CGBUnionSelect *)resultSet;
@@ -325,6 +360,11 @@ static inline BOOL CGBUnionSelectRowEqual(CGBUnionSelect *resultSet1, int32_t ro
 }
 
 @class CGBUnionAllSelect;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUnionAllSelect
+@end
+#endif
 
 static inline CGBUnionAllSelect *CGBUnionAllSelectFromCGCUnionAllSelect(CGCUnionAllSelectResultSetRef resultSet)
 {
@@ -359,6 +399,11 @@ static inline BOOL CGBUnionAllSelectRowEqual(CGBUnionAllSelect *resultSet1, int3
 
 @class CGBUnionAllWithNullable;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUnionAllWithNullable
+@end
+#endif
+
 static inline CGBUnionAllWithNullable *CGBUnionAllWithNullableFromCGCUnionAllWithNullable(CGCUnionAllWithNullableResultSetRef resultSet)
 {
   return (__bridge CGBUnionAllWithNullable *)resultSet;
@@ -391,6 +436,11 @@ static inline BOOL CGBUnionAllWithNullableRowEqual(CGBUnionAllWithNullable *resu
 }
 
 @class CGBWithStmt;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWithStmt
+@end
+#endif
 
 static inline CGBWithStmt *CGBWithStmtFromCGCWithStmt(CGCWithStmtResultSetRef resultSet)
 {
@@ -437,6 +487,11 @@ static inline BOOL CGBWithStmtRowEqual(CGBWithStmt *resultSet1, int32_t row1, CG
 
 @class CGBWithRecursiveStmt;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWithRecursiveStmt
+@end
+#endif
+
 static inline CGBWithRecursiveStmt *CGBWithRecursiveStmtFromCGCWithRecursiveStmt(CGCWithRecursiveStmtResultSetRef resultSet)
 {
   return (__bridge CGBWithRecursiveStmt *)resultSet;
@@ -481,6 +536,11 @@ static inline BOOL CGBWithRecursiveStmtRowEqual(CGBWithRecursiveStmt *resultSet1
 }
 
 @class CGBParentProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBParentProc
+@end
+#endif
 
 static inline CGBParentProc *CGBParentProcFromCGCParentProc(CGCParentProcResultSetRef resultSet)
 {
@@ -527,6 +587,11 @@ static inline BOOL CGBParentProcRowEqual(CGBParentProc *resultSet1, int32_t row1
 
 @class CGBParentProcChild;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBParentProcChild
+@end
+#endif
+
 static inline CGBParentProcChild *CGBParentProcChildFromCGCParentProcChild(CGCParentProcChildResultSetRef resultSet)
 {
   return (__bridge CGBParentProcChild *)resultSet;
@@ -572,6 +637,11 @@ static inline BOOL CGBParentProcChildRowEqual(CGBParentProcChild *resultSet1, in
 
 @class CGBCursorWithObject;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBCursorWithObject
+@end
+#endif
+
 static inline CGBCursorWithObject *CGBCursorWithObjectFromCGCCursorWithObject(CGCCursorWithObjectResultSetRef resultSet)
 {
   return (__bridge CGBCursorWithObject *)resultSet;
@@ -604,6 +674,11 @@ static inline BOOL CGBCursorWithObjectEqual(CGBCursorWithObject *resultSet1, CGB
 }
 
 @class CGBUsesProcForResult;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUsesProcForResult
+@end
+#endif
 
 static inline CGBUsesProcForResult *CGBUsesProcForResultFromCGCUsesProcForResult(CGCUsesProcForResultResultSetRef resultSet)
 {
@@ -662,6 +737,11 @@ static inline BOOL CGBUsesProcForResultRowEqual(CGBUsesProcForResult *resultSet1
 
 @class CGBBlobReturner;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBBlobReturner
+@end
+#endif
+
 static inline CGBBlobReturner *CGBBlobReturnerFromCGCBlobReturner(CGCBlobReturnerResultSetRef resultSet)
 {
   return (__bridge CGBBlobReturner *)resultSet;
@@ -706,6 +786,11 @@ static inline BOOL CGBBlobReturnerRowEqual(CGBBlobReturner *resultSet1, int32_t 
 }
 
 @class CGBOutCursorProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutCursorProc
+@end
+#endif
 
 static inline CGBOutCursorProc *CGBOutCursorProcFromCGCOutCursorProc(CGCOutCursorProcResultSetRef resultSet)
 {
@@ -776,6 +861,11 @@ static inline BOOL CGBOutCursorProcEqual(CGBOutCursorProc *resultSet1, CGBOutCur
 
 @class CGBThreadThemeInfoList;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBThreadThemeInfoList
+@end
+#endif
+
 static inline CGBThreadThemeInfoList *CGBThreadThemeInfoListFromCGCThreadThemeInfoList(CGCThreadThemeInfoListResultSetRef resultSet)
 {
   return (__bridge CGBThreadThemeInfoList *)resultSet;
@@ -808,6 +898,11 @@ static inline BOOL CGBThreadThemeInfoListRowEqual(CGBThreadThemeInfoList *result
 }
 
 @class CGBOutNoDb;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutNoDb
+@end
+#endif
 
 static inline CGBOutNoDb *CGBOutNoDbFromCGCOutNoDb(CGCOutNoDbResultSetRef resultSet)
 {
@@ -848,6 +943,11 @@ static inline BOOL CGBOutNoDbEqual(CGBOutNoDb *resultSet1, CGBOutNoDb *resultSet
 
 @class CGBDeclareCursorLikeCursor;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBDeclareCursorLikeCursor
+@end
+#endif
+
 static inline CGBDeclareCursorLikeCursor *CGBDeclareCursorLikeCursorFromCGCDeclareCursorLikeCursor(CGCDeclareCursorLikeCursorResultSetRef resultSet)
 {
   return (__bridge CGBDeclareCursorLikeCursor *)resultSet;
@@ -887,6 +987,11 @@ static inline BOOL CGBDeclareCursorLikeCursorEqual(CGBDeclareCursorLikeCursor *r
 
 @class CGBDeclareCursorLikeProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBDeclareCursorLikeProc
+@end
+#endif
+
 static inline CGBDeclareCursorLikeProc *CGBDeclareCursorLikeProcFromCGCDeclareCursorLikeProc(CGCDeclareCursorLikeProcResultSetRef resultSet)
 {
   return (__bridge CGBDeclareCursorLikeProc *)resultSet;
@@ -925,6 +1030,11 @@ static inline BOOL CGBDeclareCursorLikeProcEqual(CGBDeclareCursorLikeProc *resul
 }
 
 @class CGBDeclareCursorLikeTable;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBDeclareCursorLikeTable
+@end
+#endif
 
 static inline CGBDeclareCursorLikeTable *CGBDeclareCursorLikeTableFromCGCDeclareCursorLikeTable(CGCDeclareCursorLikeTableResultSetRef resultSet)
 {
@@ -983,6 +1093,11 @@ static inline BOOL CGBDeclareCursorLikeTableEqual(CGBDeclareCursorLikeTable *res
 
 @class CGBDeclareCursorLikeView;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBDeclareCursorLikeView
+@end
+#endif
+
 static inline CGBDeclareCursorLikeView *CGBDeclareCursorLikeViewFromCGCDeclareCursorLikeView(CGCDeclareCursorLikeViewResultSetRef resultSet)
 {
   return (__bridge CGBDeclareCursorLikeView *)resultSet;
@@ -1028,6 +1143,11 @@ static inline BOOL CGBDeclareCursorLikeViewEqual(CGBDeclareCursorLikeView *resul
 
 @class CGBFetchToCursorFromCursor;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBFetchToCursorFromCursor
+@end
+#endif
+
 static inline CGBFetchToCursorFromCursor *CGBFetchToCursorFromCursorFromCGCFetchToCursorFromCursor(CGCFetchToCursorFromCursorResultSetRef resultSet)
 {
   return (__bridge CGBFetchToCursorFromCursor *)resultSet;
@@ -1067,6 +1187,11 @@ static inline BOOL CGBFetchToCursorFromCursorEqual(CGBFetchToCursorFromCursor *r
 
 @class CGBOutUnionHelper;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutUnionHelper
+@end
+#endif
+
 static inline CGBOutUnionHelper *CGBOutUnionHelperFromCGCOutUnionHelper(CGCOutUnionHelperResultSetRef resultSet)
 {
   return (__bridge CGBOutUnionHelper *)resultSet;
@@ -1099,6 +1224,11 @@ static inline BOOL CGBOutUnionHelperRowEqual(CGBOutUnionHelper *resultSet1, int3
 }
 
 @class CGBOutUnionDmlHelper;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutUnionDmlHelper
+@end
+#endif
 
 static inline CGBOutUnionDmlHelper *CGBOutUnionDmlHelperFromCGCOutUnionDmlHelper(CGCOutUnionDmlHelperResultSetRef resultSet)
 {
@@ -1133,6 +1263,11 @@ static inline BOOL CGBOutUnionDmlHelperRowEqual(CGBOutUnionDmlHelper *resultSet1
 
 @class CGBForwardOutUnion;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBForwardOutUnion
+@end
+#endif
+
 static inline CGBForwardOutUnion *CGBForwardOutUnionFromCGCForwardOutUnion(CGCForwardOutUnionResultSetRef resultSet)
 {
   return (__bridge CGBForwardOutUnion *)resultSet;
@@ -1165,6 +1300,11 @@ static inline BOOL CGBForwardOutUnionRowEqual(CGBForwardOutUnion *resultSet1, in
 }
 
 @class CGBForwardOutUnionExtern;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBForwardOutUnionExtern
+@end
+#endif
 
 static inline CGBForwardOutUnionExtern *CGBForwardOutUnionExternFromCGCForwardOutUnionExtern(CGCForwardOutUnionExternResultSetRef resultSet)
 {
@@ -1199,6 +1339,11 @@ static inline BOOL CGBForwardOutUnionExternRowEqual(CGBForwardOutUnionExtern *re
 
 @class CGBForwardOutUnionDml;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBForwardOutUnionDml
+@end
+#endif
+
 static inline CGBForwardOutUnionDml *CGBForwardOutUnionDmlFromCGCForwardOutUnionDml(CGCForwardOutUnionDmlResultSetRef resultSet)
 {
   return (__bridge CGBForwardOutUnionDml *)resultSet;
@@ -1231,6 +1376,11 @@ static inline BOOL CGBForwardOutUnionDmlRowEqual(CGBForwardOutUnionDml *resultSe
 }
 
 @class CGBSimpleIdentity;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSimpleIdentity
+@end
+#endif
 
 static inline CGBSimpleIdentity *CGBSimpleIdentityFromCGCSimpleIdentity(CGCSimpleIdentityResultSetRef resultSet)
 {
@@ -1270,6 +1420,11 @@ static inline BOOL CGBSimpleIdentityRowEqual(CGBSimpleIdentity *resultSet1, int3
 }
 
 @class CGBComplexIdentity;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBComplexIdentity
+@end
+#endif
 
 static inline CGBComplexIdentity *CGBComplexIdentityFromCGCComplexIdentity(CGCComplexIdentityResultSetRef resultSet)
 {
@@ -1316,6 +1471,11 @@ static inline BOOL CGBComplexIdentityRowEqual(CGBComplexIdentity *resultSet1, in
 
 @class CGBOutCursorIdentity;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutCursorIdentity
+@end
+#endif
+
 static inline CGBOutCursorIdentity *CGBOutCursorIdentityFromCGCOutCursorIdentity(CGCOutCursorIdentityResultSetRef resultSet)
 {
   return (__bridge CGBOutCursorIdentity *)resultSet;
@@ -1354,6 +1514,11 @@ static inline BOOL CGBOutCursorIdentityEqual(CGBOutCursorIdentity *resultSet1, C
 }
 
 @class CGBRadioactiveProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBRadioactiveProc
+@end
+#endif
 
 static inline CGBRadioactiveProc *CGBRadioactiveProcFromCGCRadioactiveProc(CGCRadioactiveProcResultSetRef resultSet)
 {
@@ -1404,6 +1569,11 @@ static inline BOOL CGBRadioactiveProcRowEqual(CGBRadioactiveProc *resultSet1, in
 
 @class CGBAutodropper;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBAutodropper
+@end
+#endif
+
 static inline CGBAutodropper *CGBAutodropperFromCGCAutodropper(CGCAutodropperResultSetRef resultSet)
 {
   return (__bridge CGBAutodropper *)resultSet;
@@ -1443,6 +1613,11 @@ static inline BOOL CGBAutodropperRowEqual(CGBAutodropper *resultSet1, int32_t ro
 
 @class CGBSimpleCursorProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSimpleCursorProc
+@end
+#endif
+
 static inline CGBSimpleCursorProc *CGBSimpleCursorProcFromCGCSimpleCursorProc(CGCSimpleCursorProcResultSetRef resultSet)
 {
   return (__bridge CGBSimpleCursorProc *)resultSet;
@@ -1475,6 +1650,11 @@ static inline BOOL CGBSimpleCursorProcEqual(CGBSimpleCursorProc *resultSet1, CGB
 }
 
 @class CGBRedundantCast;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBRedundantCast
+@end
+#endif
 
 static inline CGBRedundantCast *CGBRedundantCastFromCGCRedundantCast(CGCRedundantCastResultSetRef resultSet)
 {
@@ -1515,6 +1695,11 @@ static inline BOOL CGBRedundantCastRowEqual(CGBRedundantCast *resultSet1, int32_
 
 @class CGBTopLevelSelectAliasUnused;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBTopLevelSelectAliasUnused
+@end
+#endif
+
 static inline CGBTopLevelSelectAliasUnused *CGBTopLevelSelectAliasUnusedFromCGCTopLevelSelectAliasUnused(CGCTopLevelSelectAliasUnusedResultSetRef resultSet)
 {
   return (__bridge CGBTopLevelSelectAliasUnused *)resultSet;
@@ -1553,6 +1738,11 @@ static inline BOOL CGBTopLevelSelectAliasUnusedRowEqual(CGBTopLevelSelectAliasUn
 }
 
 @class CGBTopLevelSelectAliasUsedInOrderby;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBTopLevelSelectAliasUsedInOrderby
+@end
+#endif
 
 static inline CGBTopLevelSelectAliasUsedInOrderby *CGBTopLevelSelectAliasUsedInOrderbyFromCGCTopLevelSelectAliasUsedInOrderby(CGCTopLevelSelectAliasUsedInOrderbyResultSetRef resultSet)
 {
@@ -1593,6 +1783,11 @@ static inline BOOL CGBTopLevelSelectAliasUsedInOrderbyRowEqual(CGBTopLevelSelect
 
 @class CGBOutUnionTwo;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutUnionTwo
+@end
+#endif
+
 static inline CGBOutUnionTwo *CGBOutUnionTwoFromCGCOutUnionTwo(CGCOutUnionTwoResultSetRef resultSet)
 {
   return (__bridge CGBOutUnionTwo *)resultSet;
@@ -1631,6 +1826,11 @@ static inline BOOL CGBOutUnionTwoRowEqual(CGBOutUnionTwo *resultSet1, int32_t ro
 }
 
 @class CGBOutUnionFromSelect;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutUnionFromSelect
+@end
+#endif
 
 static inline CGBOutUnionFromSelect *CGBOutUnionFromSelectFromCGCOutUnionFromSelect(CGCOutUnionFromSelectResultSetRef resultSet)
 {
@@ -1671,6 +1871,11 @@ static inline BOOL CGBOutUnionFromSelectRowEqual(CGBOutUnionFromSelect *resultSe
 
 @class CGBOutUnionValues;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutUnionValues
+@end
+#endif
+
 static inline CGBOutUnionValues *CGBOutUnionValuesFromCGCOutUnionValues(CGCOutUnionValuesResultSetRef resultSet)
 {
   return (__bridge CGBOutUnionValues *)resultSet;
@@ -1709,6 +1914,11 @@ static inline BOOL CGBOutUnionValuesRowEqual(CGBOutUnionValues *resultSet1, int3
 }
 
 @class CGBOutUnionDml;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutUnionDml
+@end
+#endif
 
 static inline CGBOutUnionDml *CGBOutUnionDmlFromCGCOutUnionDml(CGCOutUnionDmlResultSetRef resultSet)
 {
@@ -1759,6 +1969,11 @@ static inline BOOL CGBOutUnionDmlRowEqual(CGBOutUnionDml *resultSet1, int32_t ro
 
 @class CGBWindowFunctionInvocation;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindowFunctionInvocation
+@end
+#endif
+
 static inline CGBWindowFunctionInvocation *CGBWindowFunctionInvocationFromCGCWindowFunctionInvocation(CGCWindowFunctionInvocationResultSetRef resultSet)
 {
   return (__bridge CGBWindowFunctionInvocation *)resultSet;
@@ -1798,6 +2013,11 @@ static inline BOOL CGBWindowFunctionInvocationRowEqual(CGBWindowFunctionInvocati
 
 @class CGBUseReturn;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUseReturn
+@end
+#endif
+
 static inline CGBUseReturn *CGBUseReturnFromCGCUseReturn(CGCUseReturnResultSetRef resultSet)
 {
   return (__bridge CGBUseReturn *)resultSet;
@@ -1830,6 +2050,11 @@ static inline BOOL CGBUseReturnRowEqual(CGBUseReturn *resultSet1, int32_t row1, 
 }
 
 @class CGBSprocWithCopy;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSprocWithCopy
+@end
+#endif
 
 static inline CGBSprocWithCopy *CGBSprocWithCopyFromCGCSprocWithCopy(CGCSprocWithCopyResultSetRef resultSet)
 {
@@ -1895,6 +2120,11 @@ static inline BOOL CGBSprocWithCopyRowEqual(CGBSprocWithCopy *resultSet1, int32_
 }
 
 @class CGBEmitObjectWithSetters;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBEmitObjectWithSetters
+@end
+#endif
 
 static inline CGBEmitObjectWithSetters *CGBEmitObjectWithSettersFromCGCEmitObjectWithSetters(CGCEmitObjectWithSettersResultSetRef resultSet)
 {
@@ -1971,6 +2201,11 @@ static inline BOOL CGBEmitObjectWithSettersEqual(CGBEmitObjectWithSetters *resul
 
 @class CGBEmitSettersWithNullables;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBEmitSettersWithNullables
+@end
+#endif
+
 static inline CGBEmitSettersWithNullables *CGBEmitSettersWithNullablesFromCGCEmitSettersWithNullables(CGCEmitSettersWithNullablesResultSetRef resultSet)
 {
   return (__bridge CGBEmitSettersWithNullables *)resultSet;
@@ -2046,6 +2281,11 @@ static inline BOOL CGBEmitSettersWithNullablesEqual(CGBEmitSettersWithNullables 
 
 @class CGBNoOutWithSetters;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBNoOutWithSetters
+@end
+#endif
+
 static inline CGBNoOutWithSetters *CGBNoOutWithSettersFromCGCNoOutWithSetters(CGCNoOutWithSettersResultSetRef resultSet)
 {
   return (__bridge CGBNoOutWithSetters *)resultSet;
@@ -2102,6 +2342,11 @@ static inline BOOL CGBNoOutWithSettersRowEqual(CGBNoOutWithSetters *resultSet1, 
 }
 
 @class CGBVaultSensitiveWithValuesProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultSensitiveWithValuesProc
+@end
+#endif
 
 static inline CGBVaultSensitiveWithValuesProc *CGBVaultSensitiveWithValuesProcFromCGCVaultSensitiveWithValuesProc(CGCVaultSensitiveWithValuesProcResultSetRef resultSet)
 {
@@ -2164,6 +2409,11 @@ static inline BOOL CGBVaultSensitiveWithValuesProcRowEqual(CGBVaultSensitiveWith
 
 @class CGBVaultNotNullableSensitiveWithValuesProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultNotNullableSensitiveWithValuesProc
+@end
+#endif
+
 static inline CGBVaultNotNullableSensitiveWithValuesProc *CGBVaultNotNullableSensitiveWithValuesProcFromCGCVaultNotNullableSensitiveWithValuesProc(CGCVaultNotNullableSensitiveWithValuesProcResultSetRef resultSet)
 {
   return (__bridge CGBVaultNotNullableSensitiveWithValuesProc *)resultSet;
@@ -2224,6 +2474,11 @@ static inline BOOL CGBVaultNotNullableSensitiveWithValuesProcRowEqual(CGBVaultNo
 }
 
 @class CGBVaultSensitiveWithNoValuesProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultSensitiveWithNoValuesProc
+@end
+#endif
 
 static inline CGBVaultSensitiveWithNoValuesProc *CGBVaultSensitiveWithNoValuesProcFromCGCVaultSensitiveWithNoValuesProc(CGCVaultSensitiveWithNoValuesProcResultSetRef resultSet)
 {
@@ -2291,6 +2546,11 @@ static inline BOOL CGBVaultSensitiveWithNoValuesProcRowEqual(CGBVaultSensitiveWi
 
 @class CGBVaultUnionAllTableProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultUnionAllTableProc
+@end
+#endif
+
 static inline CGBVaultUnionAllTableProc *CGBVaultUnionAllTableProcFromCGCVaultUnionAllTableProc(CGCVaultUnionAllTableProcResultSetRef resultSet)
 {
   return (__bridge CGBVaultUnionAllTableProc *)resultSet;
@@ -2357,6 +2617,11 @@ static inline BOOL CGBVaultUnionAllTableProcRowEqual(CGBVaultUnionAllTableProc *
 
 @class CGBVaultAliasColumnProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultAliasColumnProc
+@end
+#endif
+
 static inline CGBVaultAliasColumnProc *CGBVaultAliasColumnProcFromCGCVaultAliasColumnProc(CGCVaultAliasColumnProcResultSetRef resultSet)
 {
   return (__bridge CGBVaultAliasColumnProc *)resultSet;
@@ -2400,6 +2665,11 @@ static inline BOOL CGBVaultAliasColumnProcRowEqual(CGBVaultAliasColumnProc *resu
 
 @class CGBVaultAliasColumnNameProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultAliasColumnNameProc
+@end
+#endif
+
 static inline CGBVaultAliasColumnNameProc *CGBVaultAliasColumnNameProcFromCGCVaultAliasColumnNameProc(CGCVaultAliasColumnNameProcResultSetRef resultSet)
 {
   return (__bridge CGBVaultAliasColumnNameProc *)resultSet;
@@ -2442,6 +2712,11 @@ static inline BOOL CGBVaultAliasColumnNameProcRowEqual(CGBVaultAliasColumnNamePr
 }
 
 @class CGBVaultSensitiveWithContextAndSensitiveColumnsProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultSensitiveWithContextAndSensitiveColumnsProc
+@end
+#endif
 
 static inline CGBVaultSensitiveWithContextAndSensitiveColumnsProc *CGBVaultSensitiveWithContextAndSensitiveColumnsProcFromCGCVaultSensitiveWithContextAndSensitiveColumnsProc(CGCVaultSensitiveWithContextAndSensitiveColumnsProcResultSetRef resultSet)
 {
@@ -2504,6 +2779,11 @@ static inline BOOL CGBVaultSensitiveWithContextAndSensitiveColumnsProcRowEqual(C
 
 @class CGBVaultSensitiveWithNoContextAndSensitiveColumnsProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultSensitiveWithNoContextAndSensitiveColumnsProc
+@end
+#endif
+
 static inline CGBVaultSensitiveWithNoContextAndSensitiveColumnsProc *CGBVaultSensitiveWithNoContextAndSensitiveColumnsProcFromCGCVaultSensitiveWithNoContextAndSensitiveColumnsProc(CGCVaultSensitiveWithNoContextAndSensitiveColumnsProcResultSetRef resultSet)
 {
   return (__bridge CGBVaultSensitiveWithNoContextAndSensitiveColumnsProc *)resultSet;
@@ -2565,6 +2845,11 @@ static inline BOOL CGBVaultSensitiveWithNoContextAndSensitiveColumnsProcRowEqual
 
 @class CGBVaultSensitiveWithContextAndNoSensitiveColumnsProc;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVaultSensitiveWithContextAndNoSensitiveColumnsProc
+@end
+#endif
+
 static inline CGBVaultSensitiveWithContextAndNoSensitiveColumnsProc *CGBVaultSensitiveWithContextAndNoSensitiveColumnsProcFromCGCVaultSensitiveWithContextAndNoSensitiveColumnsProc(CGCVaultSensitiveWithContextAndNoSensitiveColumnsProcResultSetRef resultSet)
 {
   return (__bridge CGBVaultSensitiveWithContextAndNoSensitiveColumnsProc *)resultSet;
@@ -2621,6 +2906,11 @@ static inline BOOL CGBVaultSensitiveWithContextAndNoSensitiveColumnsProcRowEqual
 
 @class CGBWindow1;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow1
+@end
+#endif
+
 static inline CGBWindow1 *CGBWindow1FromCGCWindow1(CGCWindow1ResultSetRef resultSet)
 {
   return (__bridge CGBWindow1 *)resultSet;
@@ -2665,6 +2955,11 @@ static inline BOOL CGBWindow1RowEqual(CGBWindow1 *resultSet1, int32_t row1, CGBW
 }
 
 @class CGBWindow2;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow2
+@end
+#endif
 
 static inline CGBWindow2 *CGBWindow2FromCGCWindow2(CGCWindow2ResultSetRef resultSet)
 {
@@ -2711,6 +3006,11 @@ static inline BOOL CGBWindow2RowEqual(CGBWindow2 *resultSet1, int32_t row1, CGBW
 
 @class CGBWindow3;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow3
+@end
+#endif
+
 static inline CGBWindow3 *CGBWindow3FromCGCWindow3(CGCWindow3ResultSetRef resultSet)
 {
   return (__bridge CGBWindow3 *)resultSet;
@@ -2755,6 +3055,11 @@ static inline BOOL CGBWindow3RowEqual(CGBWindow3 *resultSet1, int32_t row1, CGBW
 }
 
 @class CGBWindow4;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow4
+@end
+#endif
 
 static inline CGBWindow4 *CGBWindow4FromCGCWindow4(CGCWindow4ResultSetRef resultSet)
 {
@@ -2801,6 +3106,11 @@ static inline BOOL CGBWindow4RowEqual(CGBWindow4 *resultSet1, int32_t row1, CGBW
 
 @class CGBWindow5;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow5
+@end
+#endif
+
 static inline CGBWindow5 *CGBWindow5FromCGCWindow5(CGCWindow5ResultSetRef resultSet)
 {
   return (__bridge CGBWindow5 *)resultSet;
@@ -2845,6 +3155,11 @@ static inline BOOL CGBWindow5RowEqual(CGBWindow5 *resultSet1, int32_t row1, CGBW
 }
 
 @class CGBWindow6;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow6
+@end
+#endif
 
 static inline CGBWindow6 *CGBWindow6FromCGCWindow6(CGCWindow6ResultSetRef resultSet)
 {
@@ -2891,6 +3206,11 @@ static inline BOOL CGBWindow6RowEqual(CGBWindow6 *resultSet1, int32_t row1, CGBW
 
 @class CGBWindow7;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow7
+@end
+#endif
+
 static inline CGBWindow7 *CGBWindow7FromCGCWindow7(CGCWindow7ResultSetRef resultSet)
 {
   return (__bridge CGBWindow7 *)resultSet;
@@ -2935,6 +3255,11 @@ static inline BOOL CGBWindow7RowEqual(CGBWindow7 *resultSet1, int32_t row1, CGBW
 }
 
 @class CGBWindow8;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow8
+@end
+#endif
 
 static inline CGBWindow8 *CGBWindow8FromCGCWindow8(CGCWindow8ResultSetRef resultSet)
 {
@@ -2981,6 +3306,11 @@ static inline BOOL CGBWindow8RowEqual(CGBWindow8 *resultSet1, int32_t row1, CGBW
 
 @class CGBWindow9;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow9
+@end
+#endif
+
 static inline CGBWindow9 *CGBWindow9FromCGCWindow9(CGCWindow9ResultSetRef resultSet)
 {
   return (__bridge CGBWindow9 *)resultSet;
@@ -3025,6 +3355,11 @@ static inline BOOL CGBWindow9RowEqual(CGBWindow9 *resultSet1, int32_t row1, CGBW
 }
 
 @class CGBWindow10;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow10
+@end
+#endif
 
 static inline CGBWindow10 *CGBWindow10FromCGCWindow10(CGCWindow10ResultSetRef resultSet)
 {
@@ -3071,6 +3406,11 @@ static inline BOOL CGBWindow10RowEqual(CGBWindow10 *resultSet1, int32_t row1, CG
 
 @class CGBWindow11;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow11
+@end
+#endif
+
 static inline CGBWindow11 *CGBWindow11FromCGCWindow11(CGCWindow11ResultSetRef resultSet)
 {
   return (__bridge CGBWindow11 *)resultSet;
@@ -3115,6 +3455,11 @@ static inline BOOL CGBWindow11RowEqual(CGBWindow11 *resultSet1, int32_t row1, CG
 }
 
 @class CGBWindow12;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow12
+@end
+#endif
 
 static inline CGBWindow12 *CGBWindow12FromCGCWindow12(CGCWindow12ResultSetRef resultSet)
 {
@@ -3161,6 +3506,11 @@ static inline BOOL CGBWindow12RowEqual(CGBWindow12 *resultSet1, int32_t row1, CG
 
 @class CGBWindow13;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow13
+@end
+#endif
+
 static inline CGBWindow13 *CGBWindow13FromCGCWindow13(CGCWindow13ResultSetRef resultSet)
 {
   return (__bridge CGBWindow13 *)resultSet;
@@ -3205,6 +3555,11 @@ static inline BOOL CGBWindow13RowEqual(CGBWindow13 *resultSet1, int32_t row1, CG
 }
 
 @class CGBWindow14;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow14
+@end
+#endif
 
 static inline CGBWindow14 *CGBWindow14FromCGCWindow14(CGCWindow14ResultSetRef resultSet)
 {
@@ -3251,6 +3606,11 @@ static inline BOOL CGBWindow14RowEqual(CGBWindow14 *resultSet1, int32_t row1, CG
 
 @class CGBWindow15;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow15
+@end
+#endif
+
 static inline CGBWindow15 *CGBWindow15FromCGCWindow15(CGCWindow15ResultSetRef resultSet)
 {
   return (__bridge CGBWindow15 *)resultSet;
@@ -3295,6 +3655,11 @@ static inline BOOL CGBWindow15RowEqual(CGBWindow15 *resultSet1, int32_t row1, CG
 }
 
 @class CGBWindow16;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBWindow16
+@end
+#endif
 
 static inline CGBWindow16 *CGBWindow16FromCGCWindow16(CGCWindow16ResultSetRef resultSet)
 {
@@ -3341,6 +3706,11 @@ static inline BOOL CGBWindow16RowEqual(CGBWindow16 *resultSet1, int32_t row1, CG
 
 @class CGBVirtual1;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVirtual1
+@end
+#endif
+
 static inline CGBVirtual1 *CGBVirtual1FromCGCVirtual1(CGCVirtual1ResultSetRef resultSet)
 {
   return (__bridge CGBVirtual1 *)resultSet;
@@ -3379,6 +3749,11 @@ static inline BOOL CGBVirtual1RowEqual(CGBVirtual1 *resultSet1, int32_t row1, CG
 }
 
 @class CGBVirtual2;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBVirtual2
+@end
+#endif
 
 static inline CGBVirtual2 *CGBVirtual2FromCGCVirtual2(CGCVirtual2ResultSetRef resultSet)
 {
@@ -3419,6 +3794,11 @@ static inline BOOL CGBVirtual2RowEqual(CGBVirtual2 *resultSet1, int32_t row1, CG
 
 @class CGBOutObject;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutObject
+@end
+#endif
+
 static inline CGBOutObject *CGBOutObjectFromCGCOutObject(CGCOutObjectResultSetRef resultSet)
 {
   return (__bridge CGBOutObject *)resultSet;
@@ -3451,6 +3831,11 @@ static inline BOOL CGBOutObjectEqual(CGBOutObject *resultSet1, CGBOutObject *res
 }
 
 @class CGBResultSetProcWithContractInFetchResults;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBResultSetProcWithContractInFetchResults
+@end
+#endif
 
 static inline CGBResultSetProcWithContractInFetchResults *CGBResultSetProcWithContractInFetchResultsFromCGCResultSetProcWithContractInFetchResults(CGCResultSetProcWithContractInFetchResultsResultSetRef resultSet)
 {
@@ -3509,6 +3894,11 @@ static inline BOOL CGBResultSetProcWithContractInFetchResultsRowEqual(CGBResultS
 
 @class CGBOutProcWithContractInFetchResults;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBOutProcWithContractInFetchResults
+@end
+#endif
+
 static inline CGBOutProcWithContractInFetchResults *CGBOutProcWithContractInFetchResultsFromCGCOutProcWithContractInFetchResults(CGCOutProcWithContractInFetchResultsResultSetRef resultSet)
 {
   return (__bridge CGBOutProcWithContractInFetchResults *)resultSet;
@@ -3566,6 +3956,11 @@ static inline BOOL CGBOutProcWithContractInFetchResultsEqual(CGBOutProcWithContr
 
 @class CGBNullabilityImprovementsAreErasedForSql;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBNullabilityImprovementsAreErasedForSql
+@end
+#endif
+
 static inline CGBNullabilityImprovementsAreErasedForSql *CGBNullabilityImprovementsAreErasedForSqlFromCGCNullabilityImprovementsAreErasedForSql(CGCNullabilityImprovementsAreErasedForSqlResultSetRef resultSet)
 {
   return (__bridge CGBNullabilityImprovementsAreErasedForSql *)resultSet;
@@ -3598,6 +3993,11 @@ static inline BOOL CGBNullabilityImprovementsAreErasedForSqlRowEqual(CGBNullabil
 }
 
 @class CGBSensitiveFunctionIsANoOp;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSensitiveFunctionIsANoOp
+@end
+#endif
 
 static inline CGBSensitiveFunctionIsANoOp *CGBSensitiveFunctionIsANoOpFromCGCSensitiveFunctionIsANoOp(CGCSensitiveFunctionIsANoOpResultSetRef resultSet)
 {
@@ -3632,6 +4032,11 @@ static inline BOOL CGBSensitiveFunctionIsANoOpRowEqual(CGBSensitiveFunctionIsANo
 
 @class CGBFoo;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBFoo
+@end
+#endif
+
 static inline CGBFoo *CGBFooFromCGCFoo(CGCFooResultSetRef resultSet)
 {
   return (__bridge CGBFoo *)resultSet;
@@ -3664,6 +4069,11 @@ static inline BOOL CGBFooRowEqual(CGBFoo *resultSet1, int32_t row1, CGBFoo *resu
 }
 
 @class CGBSharedConditionalUser;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSharedConditionalUser
+@end
+#endif
 
 static inline CGBSharedConditionalUser *CGBSharedConditionalUserFromCGCSharedConditionalUser(CGCSharedConditionalUserResultSetRef resultSet)
 {
@@ -3722,6 +4132,11 @@ static inline BOOL CGBSharedConditionalUserRowEqual(CGBSharedConditionalUser *re
 
 @class CGBNestedSharedStuff;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBNestedSharedStuff
+@end
+#endif
+
 static inline CGBNestedSharedStuff *CGBNestedSharedStuffFromCGCNestedSharedStuff(CGCNestedSharedStuffResultSetRef resultSet)
 {
   return (__bridge CGBNestedSharedStuff *)resultSet;
@@ -3754,6 +4169,11 @@ static inline BOOL CGBNestedSharedStuffRowEqual(CGBNestedSharedStuff *resultSet1
 }
 
 @class CGBUseNestedSelectSharedFragForm;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUseNestedSelectSharedFragForm
+@end
+#endif
 
 static inline CGBUseNestedSelectSharedFragForm *CGBUseNestedSelectSharedFragFormFromCGCUseNestedSelectSharedFragForm(CGCUseNestedSelectSharedFragFormResultSetRef resultSet)
 {
@@ -3788,6 +4208,11 @@ static inline BOOL CGBUseNestedSelectSharedFragFormRowEqual(CGBUseNestedSelectSh
 
 @class CGBFragTest;
 
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBFragTest
+@end
+#endif
+
 static inline CGCFragTestResultSetRef CGCExtFromCGBExt(CGBFragTest *resultSet)
 {
   return (__bridge CGCFragTestResultSetRef)resultSet;
@@ -3821,6 +4246,11 @@ static inline int32_t CGBExtResultCount(CGBFragTest *resultSet)
 }
 
 @class CGBFragTest;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBFragTest
+@end
+#endif
 
 static inline CGCFragTestResultSetRef CGCExt2FromCGBExt2(CGBFragTest *resultSet)
 {

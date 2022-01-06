@@ -316,8 +316,15 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(c_convert, "", c_name.ptr, "_from_", objc_name.ptr);
 
   CG_CHARBUF_OPEN_SYM(objc_class_name, c_result_set_name);
+
   // if extension we emit the base class name
-  bprintf(h, "\n@class %s;\n", is_ext ? objc_class_name.ptr : objc_name.ptr);
+  CSTR classname = is_ext ? objc_class_name.ptr : objc_name.ptr;
+
+  bprintf(h, "\n@class %s;\n", classname);
+  bprintf(h, "\n#ifdef CQL_EMIT_OBJC_INTERFACES\n");
+  bprintf(h, "@interface %s\n", classname);
+  bprintf(h, "@end\n");
+  bprintf(h, "#endif\n");
 
   // Since the parent assembly query has already fetched the aggregated resultSet, we call to use that directly and
   // skip setting up objc and c bridging for extension fragment specific result unless otherwise
