@@ -9182,7 +9182,6 @@ any_stmt:
   | leave_stmt
   | let_stmt
   | loop_stmt
-  | open_stmt
   | out_stmt
   | out_union_stmt
   | previous_schema_stmt
@@ -10331,10 +10330,6 @@ expr_name: expr as_alias
 
 fetch_call_stmt:
   "FETCH" name opt_column_spec "FROM" call_stmt
-  ;
-
-open_stmt:
-  "OPEN" name
   ;
 
 close_stmt:
@@ -17670,6 +17665,3 @@ the result set. The rowid is of course the database rowid.
 0: rowid:1 Buy milk (done)
 1: rowid:3 Write code (not done)
 ```
-
-
-

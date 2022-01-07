@@ -331,9 +331,6 @@ begin
   update g set h=j, k=l;
 end;
 
--- simple open
-open x;
-
 -- simple close
 close y;
 
@@ -348,9 +345,6 @@ declare a, b, c int;
 
 -- simple cursor declare
 declare a cursor for select b from c;
-
--- open cursor
-open a;
 
 -- loop over cursor
 loop fetch a into b
@@ -1507,7 +1501,7 @@ select  * from foo;
 
 call foo(*);
 
-with 
+with
   (call bar(1,5) using goo as too),
   (call tar(3) using soo woo, goo too)
 select * from bar, tar;

@@ -352,8 +352,6 @@ BEGIN
   k = l;
 END;
 
-OPEN x;
-
 CLOSE y;
 
 CONTINUE;
@@ -364,8 +362,6 @@ DECLARE a, b, c INTEGER;
 
 DECLARE a CURSOR FOR SELECT b
   FROM c;
-
-OPEN a;
 
 LOOP FETCH a INTO b
 BEGIN

@@ -6997,26 +6997,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-OPEN my_cursor;
-
-  {open_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-
-The statement ending at line XXXX
-
 CLOSE my_cursor;
 
   {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-
-The statement ending at line XXXX
-
-OPEN X;
-
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
-
-  {open_stmt}: err
-  | {name X}: err
 
 The statement ending at line XXXX
 

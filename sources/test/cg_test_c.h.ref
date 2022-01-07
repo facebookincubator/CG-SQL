@@ -180,14 +180,10 @@ extern cql_double col2;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
 extern cql_int32 arg1;
 
 // The statement ending at line XXXX
 extern cql_int32 arg2;
-
-// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 

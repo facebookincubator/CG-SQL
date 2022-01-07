@@ -361,7 +361,6 @@ BEGIN_TEST(cursor_basics)
   declare col1 integer;
   declare col2 real not null;
   declare basic_cursor cursor for select 1, 2.5;
-  open basic_cursor;
   fetch basic_cursor into col1, col2;
   EXPECT(basic_cursor);
   EXPECT(col1 == 1);
@@ -378,7 +377,6 @@ BEGIN_TEST(exchange_with_cursor)
   set arg1 := 7;
   set arg2 := 11;
   declare exchange_cursor cursor for select arg2, arg1;
-  open exchange_cursor;
   fetch exchange_cursor into arg1, arg2;
   EXPECT(exchange_cursor);
   EXPECT(arg1 == 11);
@@ -457,7 +455,6 @@ BEGIN_TEST(read_mixed)
   call load_mixed();
 
   declare read_cursor cursor for select * from mixed;
-  open read_cursor;
 
   fetch read_cursor into id_, name_, code_, flag_, rate_, bl_;
   EXPECT(read_cursor);
@@ -494,7 +491,6 @@ BEGIN_TEST(mutate_mixed)
 
   update mixed set code = new_code where id = id_;
   declare updated_cursor cursor for select code from mixed where id = id_;
-  open updated_cursor;
   fetch updated_cursor into code_;
   close updated_cursor;
   EXPECT(code_ == new_code);
@@ -710,7 +706,6 @@ BEGIN_TEST(loop_fetch)
   call load_mixed();
 
   declare read_cursor cursor for select * from mixed;
-  open read_cursor;
 
   set count := 0;
   set sum := 0;
@@ -746,7 +741,6 @@ BEGIN_TEST(loop_control_flow)
   call load_more_mixed();
 
   declare read_cursor cursor for select * from mixed;
-  open read_cursor;
 
   set count := 0;
   loop fetch read_cursor into id_, name_, code_, flag_, rate_, bl_
@@ -1127,7 +1121,6 @@ BEGIN_TEST(proc_loop_fetch)
   call load_mixed();
 
   declare read_cursor cursor for call get_mixed(200);
-  open read_cursor;
 
   set count := 0;
   loop fetch read_cursor into id_, name_, code_, flag_, rate_, bl_
@@ -1217,7 +1210,6 @@ BEGIN_TEST(proc_loop_auto_fetch)
   call load_mixed();
 
   declare read_cursor cursor for call get_mixed(200);
-  open read_cursor;
 
   set count := 0;
   set sum := 0;
@@ -3888,7 +3880,7 @@ end;
 @attribute(cql:shared_fragment)
 create proc f2(pattern text, idstart int not null, idend int not null, lim int not null)
 begin
-  with 
+  with
   source(*) LIKE f1,
   data(*) as (call f1(pattern) using source as source)
   select * from data where data.id between idstart and idend
@@ -3898,13 +3890,13 @@ end;
 @attribute(cql:private)
 create proc shared_consumer()
 begin
-  with 
+  with
    source1(id, t) as (values (1100, 'x_x'), (1101, 'zz')),
    source2(id, t) as (values (4500, 'y_y'), (4501, 'zz')),
    t1(*) as (call f2('x%', 1000, 2000, 10) using source1 as source),
    t2(*) as (call f2('y%', 4000, 5000, 20) using source2 as source)
   select * from t1
-  union all 
+  union all
   select * from t2;
 end;
 
@@ -3933,7 +3925,7 @@ create table x(id integer, t text);
 BEGIN_TEST(shared_exec)
   drop table if exists x;
   create table x(id integer, t text);
-  with 
+  with
     (call get_values())
   insert into x select * from get_values;
 
@@ -3976,7 +3968,7 @@ begin
 end;
 
 BEGIN_TEST(conditional_fragment)
-  declare C cursor for 
+  declare C cursor for
     with some_cte(*) as (call conditional_values(1))
     select * from some_cte;
 
@@ -3987,7 +3979,7 @@ BEGIN_TEST(conditional_fragment)
   fetch C;
   EXPECT(not C);
 
-  declare D cursor for 
+  declare D cursor for
     with some_cte(*) as (call conditional_values(2))
   select * from some_cte;
 
@@ -3997,7 +3989,7 @@ BEGIN_TEST(conditional_fragment)
   fetch D;
   EXPECT(not D);
 
-  declare E cursor for 
+  declare E cursor for
     with some_cte(*) as (call conditional_values(3))
   select * from some_cte;
 
@@ -4075,7 +4067,7 @@ BEGIN_TEST(skip_notnulls)
   declare _bl blob not null;
   set _bl := blob_from_string('hi');
 
-  declare C cursor for 
+  declare C cursor for
     with some_cte(*) as (call skip_notnulls(123, false, 1L, 2.3, 'x', _bl, _set))
     select * from some_cte;
 
@@ -4120,7 +4112,7 @@ BEGIN_TEST(skip_nullables)
   declare _bl blob not null;
   set _bl := blob_from_string('hi');
 
-  declare C cursor for 
+  declare C cursor for
     with some_cte(*) as (call skip_nullables(456, false, 1L, 2.3, 'x', _bl, _set))
     select * from some_cte;
 

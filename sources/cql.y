@@ -285,7 +285,6 @@ static void cql_reset_globals(void);
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
-%type <aval> open_stmt
 %type <aval> out_stmt out_union_stmt
 %type <aval> previous_schema_stmt
 %type <aval> release_savepoint_stmt
@@ -428,7 +427,6 @@ any_stmt:
   | leave_stmt
   | let_stmt
   | loop_stmt
-  | open_stmt
   | out_stmt
   | out_union_stmt
   | previous_schema_stmt
@@ -1804,10 +1802,6 @@ fetch_call_stmt:
   FETCH name opt_column_spec FROM call_stmt  {
     YY_ERROR_ON_COLUMNS($opt_column_spec);  // not really allowed, see macro for details.
     $fetch_call_stmt = new_ast_fetch_call_stmt($name, $call_stmt); }
-  ;
-
-open_stmt:
-  OPEN name  { $open_stmt = new_ast_open_stmt($name); }
   ;
 
 close_stmt:

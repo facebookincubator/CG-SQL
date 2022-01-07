@@ -27,7 +27,7 @@ module.exports = grammar({
     opt_stmt_list: $ => $.stmt_list,
     stmt_list: $ => repeat1(choice(seq($.stmt, ';'), $.comment, $.line_directive, $.macro)),
     stmt: $ => seq(optional($.misc_attrs), $.any_stmt),
-    any_stmt: $ => choice($.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_const_stmt, $.declare_func_stmt, $.declare_out_call_stmt, $.declare_proc_no_check_stmt, $.declare_proc_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.emit_constants_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.guard_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.open_stmt, $.out_stmt, $.out_union_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.select_stmt, $.schema_ad_hoc_migration_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
+    any_stmt: $ => choice($.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_const_stmt, $.declare_func_stmt, $.declare_out_call_stmt, $.declare_proc_no_check_stmt, $.declare_proc_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.emit_constants_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.guard_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.out_stmt, $.out_union_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.select_stmt, $.schema_ad_hoc_migration_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
     explain_stmt: $ => seq($.EXPLAIN, optional($.opt_query_plan), $.explain_target),
     QUERY_PLAN: $ => prec.left(1, seq(CI('query'), CI('plan'))),
     opt_query_plan: $ => $.QUERY_PLAN,
@@ -244,7 +244,6 @@ module.exports = grammar({
     expr_names: $ => choice($.expr_name, seq($.expr_name, ',', $.expr_names)),
     expr_name: $ => seq($.expr, $.as_alias),
     fetch_call_stmt: $ => seq($.FETCH, $.name, optional($.opt_column_spec), $.FROM, $.call_stmt),
-    open_stmt: $ => seq($.OPEN, $.name),
     close_stmt: $ => seq($.CLOSE, $.name),
     out_stmt: $ => seq($.OUT, $.name),
     out_union_stmt: $ => seq($.OUT, $.UNION, $.name),
@@ -568,4 +567,3 @@ function preprocIf (suffix, content) {
     )
   }
 }
-

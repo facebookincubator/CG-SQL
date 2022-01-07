@@ -12887,7 +12887,7 @@ static void sem_cond_action(ast_node *ast) {
   ast->sem = expr->sem;
 }
 
-// Enables an initialization improvement for a variable, if possible. 
+// Enables an initialization improvement for a variable, if possible.
 static void sem_set_initialization_improved(CSTR name, CSTR scope) {
   Contract(name);
 
@@ -18162,7 +18162,6 @@ cql_noexport void sem_any_shape(ast_node *ast) {
 
 // Cursors appear in only a few places legally as an actual cursor;
 //  * fetch cursor [one of the fetch flavors]
-//  * open cursor
 //  * close cursor
 //  * on the left side of X.field where X is a cursor that was autofetched
 //  * on the right side of a `declare cursor C like ...` statement.
@@ -19234,7 +19233,7 @@ static void sem_fetch_stmt(ast_node *ast) {
     //   DECLARE x TEXT;
     //   FETCH cursor_with_text_notnull_column INTO x;
     //   -- an error would be issued here due to IS NOT NULL, but x CAN be null!
-    //   IF x IS NOT NULL THEN 
+    //   IF x IS NOT NULL THEN
     //     ...
     //   END IF;
     //
@@ -19716,22 +19715,6 @@ static void sem_release_savepoint_stmt(ast_node *ast) {
   }
 
   record_ok(ast);
-}
-
-// For open [cursor], we just validate that the name is in fact a cursor.
-static void sem_open_stmt(ast_node *ast) {
-  Contract(is_ast_open_stmt(ast));
-  EXTRACT_ANY_NOTNULL(cursor, ast->left);
-
-  // OPEN [name]
-
-  sem_cursor(cursor);
-  if (is_error(cursor)) {
-    record_error(ast);
-    return;
-  }
-
-  ast->sem = cursor->sem;
 }
 
 // For close [cursor], we just validate that the name is in fact a cursor.
@@ -21749,7 +21732,6 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(loop_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_call_stmt);
-  STMT_INIT(open_stmt);
   STMT_INIT(begin_trans_stmt);
   STMT_INIT(commit_trans_stmt);
   STMT_INIT(rollback_trans_stmt);

@@ -1974,22 +1974,10 @@ begin
  select not 'X';
 end;
 
--- TEST: open a valid cursor
--- - error:
--- + {open_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
-open my_cursor;
-
 -- TEST: close a valid cursor
 -- - error:
 -- + {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
 close my_cursor;
-
--- TEST: open invalid cursor
--- + error: % variable is not a cursor 'X'
--- +1 error:
--- + {open_stmt}: err
--- + {name X}: err
-open X;
 
 -- TEST: close invalid cursor
 -- + error: % variable is not a cursor 'X'
@@ -5098,8 +5086,8 @@ end;
 @attribute(cql:shared_fragment)
 create proc bogus_conditional_duplicate_cte_names()
 begin
-  /* note that these branches return the same type so the proc looks ok 
-     but it's still wrong because bogus_cte is not of the same type 
+  /* note that these branches return the same type so the proc looks ok
+     but it's still wrong because bogus_cte is not of the same type
      here we did his by ignoring bogus_cte but it doesn't matter how you arrange it;
      you might just select id out of bogus_cte or something.
    */
@@ -5219,7 +5207,7 @@ create table bad_jobstuff(id integer<meters>, name text);
 -- TEST: try to use fragment with correct type kind
 -- + {with_select_stmt}: select: { id: integer<job>, name: text }
 -- - error:
-with 
+with
   data(*) as (call shared_frag3() using jobstuff as source)
   select * from data;
 
@@ -5227,7 +5215,7 @@ with
 -- + {with_select_stmt}: err
 -- + error: % expressions of different kinds can't be mixed: 'meters' vs. 'job'
 -- +1 error:
-with 
+with
   data(*) as (call shared_frag3() using bad_jobstuff as source)
   select * from data;
 
@@ -5263,7 +5251,7 @@ end;
 -- + {with_select_stmt}: err
 -- + error: % the called procedure has no table arguments but a USING clause is present 'a_shared_frag'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, 3.0 z),
   x(*) AS (call a_shared_frag(1, 2) USING some_cte as foo)
   select * from x;
@@ -5272,7 +5260,7 @@ with
 -- + {with_select_stmt}: err
 -- + error: % no actual table was provided for the table parameter 'source'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, 3.0 z),
   x(*) AS (call shared_frag2(1, 2) USING some_cte as foo)
   select * from x;
@@ -5281,7 +5269,7 @@ with
 -- + {with_select_stmt}: err
 -- + error: % duplicate binding of table in CALL/USING clause 'bar'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, 3.0 z),
   x(*) AS (call shared_frag2(1, 2) USING source as bar, source as bar)
   select * from x;
@@ -5290,7 +5278,7 @@ with
 -- + {with_select_stmt}: err
 -- + error: % an actual table was provided for a table parameter that does not exist 'bogus'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, 3.0 z),
   x(*) AS (call shared_frag2(1, 2) USING some_cte as source, some_cte as bogus)
   select * from x;
@@ -5299,7 +5287,7 @@ with
 -- + {with_select_stmt}: err
 -- + error: % table/view not defined 'bogus'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, 3.0 z),
   x(*) AS (call shared_frag2(1, 2) USING bogus as source)
   select * from x;
@@ -5310,7 +5298,7 @@ with
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + error: % the table provided must have the same number of columns as the table parameter 'some_cte'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, 3.0 z, 4 u),
   x(*) AS (call shared_frag2(1, 2) USING some_cte as source)
   select * from x;
@@ -5321,7 +5309,7 @@ with
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + error: % The table argument 'source' requires column 'z' but it is missing in provided table 'some_cte'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, 3.0 w),
   x(*) AS (call shared_frag2(1, 2) USING some_cte as source)
   select * from x;
@@ -5332,7 +5320,7 @@ with
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + error: % incompatible types in expression 'z'
 -- +1 error:
-with 
+with
   some_cte(*) as (select 1 x, 2 y, '3.0' z),
   x(*) AS (call shared_frag2(1, 2) USING some_cte as source)
   select * from x;
@@ -18742,7 +18730,7 @@ end;
 create proc all_branches_improving_including_else_results_in_an_improvement()
 begin
   declare a int;
-  
+
   if 0 then
     set a := 42;
   else if 0 then
@@ -19001,7 +18989,7 @@ create proc proc_savepoint_improvements_persist()
 begin
   declare a int;
 
-  proc savepoint 
+  proc savepoint
   begin
     set a := 1;
     rollback return;

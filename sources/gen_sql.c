@@ -1868,7 +1868,7 @@ static void gen_cte_decl(ast_node *ast)  {
 
 static void gen_cte_binding_list(ast_node *ast) {
   Contract(is_ast_cte_binding_list(ast));
-  
+
   while (ast) {
      EXTRACT_NOTNULL(cte_binding, ast->left);
      EXTRACT_STRING(actual, cte_binding->left);
@@ -3340,13 +3340,6 @@ static void gen_trycatch_stmt(ast_node *ast) {
   gen_printf("END CATCH");
 }
 
-static void gen_open_stmt(ast_node *ast) {
-  Contract(is_ast_open_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-
-  gen_printf("OPEN %s", name);
-}
-
 static void gen_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -3775,7 +3768,6 @@ cql_noexport void gen_init() {
   STMT_INIT(loop_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_call_stmt);
-  STMT_INIT(open_stmt);
   STMT_INIT(begin_trans_stmt);
   STMT_INIT(commit_trans_stmt);
   STMT_INIT(rollback_trans_stmt);

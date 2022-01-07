@@ -163,7 +163,6 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0307: return statement shou
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0307: return statement should be in a procedure and not at the top level
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
 test/sem_test.sql:XXXX:1: error: in close_stmt : CQL0391: CLOSE cannot be used on a boxed cursor 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0151: table in delete statement does not exist 'bogus_table'
 test/sem_test.sql:XXXX:1: error: in str : CQL0152: cannot delete from a view 'MyView'

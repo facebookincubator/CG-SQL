@@ -199,7 +199,6 @@ FETCH                        { return FETCH; }
 LOOP                         { return LOOP; }
 LEAVE                        { return LEAVE; }
 CONTINUE                     { return CONTINUE; }
-OPEN                         { return OPEN; }
 CLOSE                        { return CLOSE; }
 ELSE{sp}IF/{stop}            { return ELSE_IF; }
 SAVEPOINT                    { return SAVEPOINT; }

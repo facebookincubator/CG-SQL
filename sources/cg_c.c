@@ -4533,7 +4533,7 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 
   cg_emit_one_frag(buffer);
 
-  // we need the column names for our select 
+  // we need the column names for our select
   // we'll accomplish this by generating a CTE wrapper
   // the column names are were already in the original text but
   // we want to minify those out, we could turn off alias minification here
@@ -5654,21 +5654,6 @@ static void cg_commit_return_stmt(ast_node *ast) {
 
   cg_bound_sql_statement(NULL, commit, CG_EXEC);
   cg_return_stmt(ast);
-}
-
-
-// This is a no-op in sqlite.
-// The whole rationale for this open statement statement is kind of dubious
-// it was originally added because some TSQL languages have it and we thought
-// it should be there for symmetric but it has no purpose in SQLite.  And
-// idiomatic CQL doesn't have it... We could probably just nix this at this point
-// but here it is.
-static void cg_open_stmt(ast_node *ast) {
-  Contract(is_ast_open_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-
-  // OPEN [name]
-  // there is no sqlite semantic for open, this method left empty
 }
 
 // Finalize the statement object associated with the cursor.
@@ -8110,7 +8095,6 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(fetch_values_stmt);
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(fetch_call_stmt);
-  STMT_INIT(open_stmt);
 
   STMT_INIT(close_stmt);
   STMT_INIT(out_stmt);

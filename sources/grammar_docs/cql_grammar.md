@@ -156,7 +156,6 @@ any_stmt:
   | leave_stmt
   | let_stmt
   | loop_stmt
-  | open_stmt
   | out_stmt
   | out_union_stmt
   | previous_schema_stmt
@@ -1305,10 +1304,6 @@ expr_name: expr as_alias
 
 fetch_call_stmt:
   "FETCH" name opt_column_spec "FROM" call_stmt
-  ;
-
-open_stmt:
-  "OPEN" name
   ;
 
 close_stmt:

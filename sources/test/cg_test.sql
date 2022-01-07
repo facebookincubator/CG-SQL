@@ -471,7 +471,6 @@ declare col1 integer;
 declare col2 real not null;
 -- + _rc_ = cql_prepare(_db_, &basic_cursor_stmt,
 declare basic_cursor cursor for select 1, 2.5;
-open basic_cursor;
 -- + cql_multifetch(_rc_, basic_cursor_stmt, 2,
 -- +                CQL_DATA_TYPE_INT32, &col1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_DOUBLE, &col2);
@@ -489,7 +488,6 @@ set arg2 := 11;
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg2,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, arg1);
 declare exchange_cursor cursor for select arg2, arg1;
-open exchange_cursor;
 -- + cql_multifetch(_rc_, exchange_cursor_stmt, 2,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg1,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &arg2);
@@ -4866,7 +4864,7 @@ end;
 -- +  );
 create proc foo()
 begin
-  with 
+  with
     (call shared_frag())
   select * from shared_frag;
 end;
@@ -4919,32 +4917,32 @@ end;
 -- + _vpreds_1[7] = 1; // pred 0 known to be 1
 -- + _rc_ = cql_prepare_var(_db_, _result_stmt,
 -- + 5, _preds_1,
--- 
+--
 -- root fragment 0 always present
 -- + "WITH "
 -- +   "some_cte (id) AS (SELECT ?), "
 -- +   "shared_conditional (x) AS (",
--- 
+--
 -- option 1 fragment 1
 -- + "SELECT ?",
--- 
+--
 -- option 2 fragment 2
 -- + "SELECT ? + ?",
--- 
+--
 -- option 3 fragment 3
 -- + "SELECT ? + ? + ?",
--- 
+--
 -- pop to root, fragment 4 condition same as fragment 0
 -- + ") "
 -- +   "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
 -- +     "FROM bar "
 -- +     "INNER JOIN some_cte ON ? = 5"
--- 
+--
 -- 8 variable sites, only some of which are used
 -- + cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
 create proc shared_conditional_user(x integer not null)
 begin
-  with 
+  with
   some_cte(id) as (select x),
   (call shared_conditional(1))
   select bar.* from bar join some_cte on x = 5;
