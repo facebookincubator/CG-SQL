@@ -204,6 +204,7 @@ s/[[:<:]]AT_ENFORCE_POP[[:>:]]/"@ENFORCE_POP"/g
 s/[[:<:]]AT_ENFORCE_PUSH[[:>:]]/"@ENFORCE_PUSH"/g
 s/[[:<:]]AT_ENFORCE_RESET[[:>:]]/"@ENFORCE_RESET"/g
 s/[[:<:]]AT_ENFORCE_STRICT[[:>:]]/"@ENFORCE_STRICT"/g
+s/[[:<:]]AT_EPONYMOUS[[:>:]]/"@EPONYMOUS"/g
 s/[[:<:]]AT_FILE[[:>:]]/"@FILE"/g
 s/[[:<:]]AT_PREVIOUS_SCHEMA[[:>:]]/"@PREVIOUS_SCHEMA"/g
 s/[[:<:]]AT_PROC[[:>:]]/"@PROC"/g

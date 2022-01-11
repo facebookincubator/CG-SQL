@@ -68,6 +68,8 @@ CREATE TABLE t6(
 
 CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other);
 
+CREATE VIRTUAL TABLE epon USING epon;
+
 CREATE VIRTUAL TABLE complex_virtual_table USING a_module (
   id INTEGER,
   t TEXT);

@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc -6360627252302701852
+-- schema crc -7638289707424553675
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE LONG<facet_data> not null;
@@ -111,6 +111,11 @@ CREATE TABLE t6(
 );
 
 CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+);
+
+CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
   id INTEGER @SENSITIVE,
   t TEXT
 );
@@ -487,6 +492,13 @@ BEGIN
     );
     CALL test_cql_set_facet_version('complex_virtual_table_table_crc', 5892669275896520096);
   END IF;
+  IF cql_facet_find(test_facets, 'epon_table_crc') != 7162631825357261735 THEN
+    CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
+      id INTEGER @SENSITIVE,
+      t TEXT
+    );
+    CALL test_cql_set_facet_version('epon_table_crc', 7162631825357261735);
+  END IF;
   IF cql_facet_find(test_facets, 'a_virtual_table_table_crc') != -4813907186176555661 THEN
     DROP TABLE IF EXISTS a_virtual_table;
     CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
@@ -751,7 +763,7 @@ BEGIN
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
     CALL test_cql_set_facet_version('cql_schema_version', 6);
-    CALL test_cql_set_facet_version('cql_schema_crc', -6360627252302701852);
+    CALL test_cql_set_facet_version('cql_schema_crc', -7638289707424553675);
 END;
 
 @attribute(cql:private)
@@ -784,7 +796,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> -6360627252302701852 THEN
+  IF schema_crc <> -7638289707424553675 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades();

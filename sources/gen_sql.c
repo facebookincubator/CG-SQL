@@ -2054,6 +2054,12 @@ static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist) {
   }
 }
 
+static void gen_eponymous(ast_node *ast, bool_t is_eponymous) {
+  if (!for_sqlite() && is_eponymous) {
+    gen_printf("@EPONYMOUS ");
+  }
+}
+
 static void gen_create_view_stmt(ast_node *ast) {
   Contract(is_ast_create_view_stmt(ast));
   EXTRACT_OPTION(flags, ast->left);
@@ -2197,9 +2203,11 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   EXTRACT_ANY(module_args, module_info->right);
 
   bool_t if_not_exist = !!(flags & TABLE_IF_NOT_EXISTS);
+  bool_t is_eponymous = !!(flags & VTAB_IS_EPONYMOUS);
 
   gen_printf("CREATE VIRTUAL TABLE ");
   gen_if_not_exists(ast, if_not_exist);
+  gen_eponymous(ast, is_eponymous);
   gen_printf("%s USING %s", name, module_name);
 
   if (!for_sqlite()) {

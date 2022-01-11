@@ -1374,6 +1374,11 @@ CREATE VIRTUAL TABLE foo USING bar (this, that, the_other) AS (
   t TEXT
 );
 
+CREATE VIRTUAL TABLE @EPONYMOUS foo USING bar (this, that, the_other) AS (
+  id INTEGER,
+  t TEXT
+);
+
 CREATE VIRTUAL TABLE foo USING bar AS (
   id INTEGER,
   t TEXT

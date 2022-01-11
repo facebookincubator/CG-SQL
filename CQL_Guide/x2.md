@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Dec 30 13:01:40 PST 2021
+Snapshot as of Mon Jan 10 12:59:21 PST 2022
 
 ### Operators and Literals
 
@@ -54,8 +54,8 @@ REALLIT /* floating point literal */
 "@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
 "@EMIT_ENUMS" "@END_SCHEMA_REGION" "@ENFORCE_NORMAL"
 "@ENFORCE_POP" "@ENFORCE_PUSH" "@ENFORCE_RESET"
-"@ENFORCE_STRICT" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
-"@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
+"@ENFORCE_STRICT" "@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA"
+"@PROC" "@RC" "@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
 "@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
 "@SENSITIVE" "ABORT" "ACTION" "ADD" "AFTER" "ALL" "ALTER"
 "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE" "BEGIN"
@@ -270,7 +270,7 @@ drop_trigger_stmt:
   | "DROP" "TRIGGER" name
   ;
 
-create_virtual_table_stmt: "CREATE" "VIRTUAL" "TABLE" opt_if_not_exists name
+create_virtual_table_stmt: "CREATE" "VIRTUAL" "TABLE" opt_vtab_flags name
                            "USING" name opt_module_args
                            "AS" '(' col_key_list ')' opt_delete_version_attr ;
 
@@ -296,6 +296,14 @@ opt_if_not_exists:
 opt_no_rowid:
   /* nil */
   | "WITHOUT" "ROWID"
+  ;
+
+opt_vtab_flags:
+  /* nil */
+  | "IF" "NOT" "EXISTS"
+  | "@EPONYMOUS"
+  | "@EPONYMOUS" "IF" "NOT" "EXISTS"
+  | "IF" "NOT" "EXISTS" "@EPONYMOUS"
   ;
 
 col_key_list:

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Thu Dec 30 13:01:40 2021
+// Snapshot as of Mon Jan 10 12:59:22 2022
 
 
 const PREC = {
@@ -45,12 +45,13 @@ module.exports = grammar({
     drop_view_stmt: $ => choice(seq($.DROP, $.VIEW, $.IF, $.EXISTS, $.name), seq($.DROP, $.VIEW, $.name)),
     drop_index_stmt: $ => choice(seq($.DROP, $.INDEX, $.IF, $.EXISTS, $.name), seq($.DROP, $.INDEX, $.name)),
     drop_trigger_stmt: $ => choice(seq($.DROP, $.TRIGGER, $.IF, $.EXISTS, $.name), seq($.DROP, $.TRIGGER, $.name)),
-    create_virtual_table_stmt: $ => seq($.CREATE, $.VIRTUAL, $.TABLE, optional($.opt_if_not_exists), $.name, $.USING, $.name, optional($.opt_module_args), $.AS, '(', $.col_key_list, ')', optional($.opt_delete_version_attr)),
+    create_virtual_table_stmt: $ => seq($.CREATE, $.VIRTUAL, $.TABLE, optional($.opt_vtab_flags), $.name, $.USING, $.name, optional($.opt_module_args), $.AS, '(', $.col_key_list, ')', optional($.opt_delete_version_attr)),
     opt_module_args: $ => choice(seq('(', $.misc_attr_value_list, ')'), seq('(', $.ARGUMENTS, $.FOLLOWING, ')')),
     create_table_stmt: $ => seq($.CREATE, optional($.opt_temp), $.TABLE, optional($.opt_if_not_exists), $.name, '(', $.col_key_list, ')', optional($.opt_no_rowid), optional($.version_attrs_opt_recreate)),
     opt_temp: $ => $.TEMP,
     opt_if_not_exists: $ => seq($.IF, $.NOT, $.EXISTS),
     opt_no_rowid: $ => seq($.WITHOUT, $.ROWID),
+    opt_vtab_flags: $ => choice(seq($.IF, $.NOT, $.EXISTS), $.AT_EPONYMOUS, seq($.AT_EPONYMOUS, $.IF, $.NOT, $.EXISTS), seq($.IF, $.NOT, $.EXISTS, $.AT_EPONYMOUS)),
     col_key_list: $ => choice($.col_key_def, seq($.col_key_def, ',', $.col_key_list)),
     col_key_def: $ => choice($.col_def, $.pk_def, $.fk_def, $.unq_def, $.check_def, $.shape_def),
     check_def: $ => choice(seq($.CONSTRAINT, $.name, $.CHECK, '(', $.expr, ')'), seq($.CHECK, '(', $.expr, ')')),
@@ -338,6 +339,7 @@ module.exports = grammar({
     NOT: $ => CI('not'),
     WITHOUT: $ => CI('without'),
     ROWID: $ => CI('rowid'),
+    AT_EPONYMOUS: $ => CI('@eponymous'),
     CONSTRAINT: $ => CI('constraint'),
     CHECK: $ => CI('check'),
     LIKE: $ => CI('like'),
@@ -475,7 +477,6 @@ module.exports = grammar({
     TRY: $ => CI('try'),
     CATCH: $ => CI('catch'),
     CONTINUE: $ => CI('continue'),
-    OPEN: $ => CI('open'),
     CLOSE: $ => CI('close'),
     EXCLUSIVE: $ => CI('exclusive'),
     TO: $ => CI('to'),
@@ -567,3 +568,4 @@ function preprocIf (suffix, content) {
     )
   }
 }
+

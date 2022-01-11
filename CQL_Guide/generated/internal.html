@@ -5502,16 +5502,16 @@ typedef struct cql_boxed_stmt {
 <p>Even though <code>cqlrt_cf</code> is already mapping <code>cql_int32</code> to something compatible with <code>CF</code>, making such changes would make the C output a little bit more <code>CF</code> idiomatic. This educational exercise could probably be completed in just a few minutes by interested readers.</p>
 <p>The <code>make.sh</code> file in the <code>sources/cqlrt_cf</code> directory illustrates how to get CQL to use this new runtime. The demo itself is a simple port of the code in <a href="https://cgsql.dev/cql-guide/x10">Appendix 10</a>.</p>
 <h3 id="recap-2">Recap</h3>
-<p>The CQL runtime, <code>cqlrt.c</code>, is intended to be replaced. The version that ships with the distribution is a simple, portable, implementation that is single threaded. Serious users of CQL will likely want to replace the default version of the runtime with something more tuned to their use case.</p>
+<p>The CQL runtime, <code>cqlrt.c</code>, is intended to be replaced. The version that ships with the distribution is a simple, portable implementation that is single threaded. Serious users of CQL will likely want to replace the default version of the runtime with something more tuned to their use case.</p>
 <p>Topics covered included:</p>
 <ul>
-<li>contract, error and tracing macros</li>
+<li>contract, error, and tracing macros</li>
 <li>how value types are defined</li>
 <li>how reference types are defined</li>
 <li>mocking (for use in a test suite)</li>
 <li>profiling</li>
 <li>encoding of sensitive columns</li>
-<li>boxing Statements</li>
+<li>boxing statements</li>
 <li>the <code>cqlrt_cf</code> runtime</li>
 </ul>
 <p>As with the other parts, no attempt was made to cover every detail. That is best done by reading the source code.</p>

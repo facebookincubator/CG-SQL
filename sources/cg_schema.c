@@ -982,9 +982,17 @@ static void cg_schema_manage_recreate_tables(
 
     Invariant(is_ast_create_table_stmt(ast));
 
+    bool_t is_eponymous = false;
+
     if (is_virtual_ast(ast)) {
       ast_output = ast->parent;
       Invariant(is_ast_create_virtual_table_stmt(ast_output));
+
+      EXTRACT_NOTNULL(module_info, ast_output->left);
+      EXTRACT(create_table_name_flags, ast->left);
+      EXTRACT(table_flags_attrs, create_table_name_flags->left);
+      EXTRACT_OPTION(flags, table_flags_attrs->left);
+      is_eponymous = !!(flags & VTAB_IS_EPONYMOUS);
     }
 
     if (!include_from_region(ast->sem->region, SCHEMA_TO_UPGRADE)) {
@@ -1003,8 +1011,10 @@ static void cg_schema_manage_recreate_tables(
     gen_statement_with_callbacks(ast_output, &callbacks);
     bprintf(&make_table, ";\n");
 
-    // note that this will also drop any indices that are on the table
-    bprintf(&update_tables, "    DROP TABLE IF EXISTS %s;\n", table_name);
+    if (!is_eponymous) {
+      // note that this will also drop any indices that are on the table
+      bprintf(&update_tables, "    DROP TABLE IF EXISTS %s;\n", table_name);
+    }
 
     list_item *index_list = ast->sem->index_list;
 

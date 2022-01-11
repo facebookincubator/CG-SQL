@@ -181,6 +181,12 @@ as (
   t text
 );
 
+create virtual table @eponymous epon using epon
+as (
+  id integer @sensitive,
+  t text
+);
+
 create virtual table complex_virtual_table using a_module(arguments following)
 as (
   id integer @sensitive,

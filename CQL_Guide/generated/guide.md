@@ -175,7 +175,12 @@ The size of the reference types is machine dependent, whatever the local pointer
 non-reference types use machine independent declarations like `int32_t` to get exactly the desired
 sizes in a portable fashion.
 
-All reference types are initialized to `NULL` when they are declared.
+All variables of a reference type are set to to `NULL` when they are declared,
+including those that are declared `NOT NULL`. For this reason, all nonnull
+reference variables must be initialized (i.e., assigned a value) before anything
+is allowed to read from them. This is not the case for nonnull variables of a
+non-reference type, however: They are automatically assigned an initial value of
+0, and thus may be read from at any point.
 
 The programs execution begins with three assignments:
 
@@ -410,22 +415,10 @@ Next we'll run the insert statement:
 
 This will add a single row to the table.  Note that we have again used double quotes, meaning this is a C string literal.  This is highly convenient given the escape sequences.  Normally SQLite text has the newlines directly embedded in it; that practice isn't very compiler friendly, hence the alternative.
 
-Next we declare a local variable to hold our data.
+At this point, we can read back our data:
 
 ```sql
-  declare t text not null;
-```
-
-This is a simple string reference, it will be initialized to `NULL` by default.  That's actually important;
-even though the variable is `NOT NULL` there is no reasonable default value for it other than `NULL`.
-The `NOT NULL` declaration will guard against `NULL` assignments but it will not prevent reference types
-from beginning with `NULL` as their value.  Junk would be worse and some random initialized value
-would create unnecessary cost.  This mirrors the choice the C language makes with its `_Nonnull` extensions.
-
-At this point we can read back our data.
-
-```sql
-  set t := (select * from my_data);
+  let t := (select * from my_data);
 ```
 
 This form of database reading has very limited usability but it does work for this case and it is illustrative.
@@ -1239,7 +1232,13 @@ three kinds of improvements that are possible:
   * `IF` statements, guard pattern:
 
     ```sql
-    IF a IS NULL OR c.x IS NULL RETURN;
+    IF a IS NULL RETURN;
+    -- `a` is not null here
+
+    IF c.x IS NULL THEN
+      ...
+      THROW;
+    END IF;
     -- `a` and `c.x` are not null here
     ```
 
@@ -1342,31 +1341,53 @@ There are several ways in which improvements can cease to be in effect:
   ```
 
 CQL is generally smart enough to understand the control flow of your program and
-infer nullability appropriately:
+infer nullability appropriately; here are a handful of examples:
 
   ```sql
-  IF a IS NULL RETURN;
-  -- `a` is not null here
   IF some_condition THEN
-    SET a := NULL;
-    -- `a` is nullable here
+    SET a := 42;
   ELSE
-    -- `a` is not null here despite the `SET` above
+    THROW;
   END IF;
-  -- `a` is nullable here due to the `SET` above
+  -- `a` is not null here because it must have been set to 42
+  -- if we've made it this far
   ```
 
-Nullability inference also takes CQL's left-to-right order of evaluation into
-account:
+  ```sql
+  IF some_condition THEN
+    SET a := 42;
+  ELSE
+    SET a := 100;
+  END IF;
+  -- `a` is not null here because it was set to a value of a
+  -- `NOT NULL` type in all branches and the branches cover
+  -- all of the possible cases
+  ```
 
   ```sql
-  IF a IS NULL RETURN;
-  -- `a` is not null here
-  CALL some_procedure(
-    a,-- `a` is still not null here
-    some_procedure_that_requires_an_out_argument(a),
-    a -- `a` is nullable here
-  );
+  IF a IS NOT NULL THEN
+    IF some_condition THEN
+      SET a := NULL;
+    ELSE
+      -- `a` is not null here despite the above `SET` because
+      -- CQL understands that, if we're here, the previous
+      -- branch must not have been taken
+    END IF;
+  END IF;
+  ```
+
+  ```sql
+  IF a IS NOT NULL THEN
+    WHILE some_condition
+    BEGIN
+      -- `x` is nullable here despite `a IS NOT NULL` because
+      -- `a` was set to `NULL` later in the loop and thus `x`
+      -- will be `NULL` when the loop repeats
+      LET x := a;
+      SET a := NULL;
+      ...
+    END;
+  END IF;
   ```
 
 Here are some additional details to note regarding conditions:
@@ -2100,43 +2121,63 @@ now go over some of the additional aspects we have not yet illustrated.
 Consider this procedure:
 
 ```sql
-create procedure echo (in arg1 integer not null, out arg2 integer not null)
+create procedure echo_integer(in arg1 integer not null, out arg2 integer not null)
 begin
   set arg2 := arg1;
 end;
 ```
 
-Here `arg2` has been declared `out`.  CQL out parameters are very similar to "by reference" arguments in other langauges and
-indeed they compile into a simple pointer reference in the generated C code.  One notable difference is that, in CQL, `out` parameters
-for reference types and nullable types are always set to NULL by default.  This is another way that an otherwise non-null reference
-variable can end up with a null in it.
+`arg1` has been declared `in`. This is the default: `in arg1 integer not null`
+and `arg1 integer not null` mean the exact same thing.
 
-Looking at the one line in the body of this procedure:
+`arg2`, however, has been declared `out`. When a parameter is declared using
+`out`, arguments for it are passed by reference. This is similar to by-reference
+arguments in other languages; indeed, they compile into a simple pointer
+reference in the generated C code.
+
+Given that `arg2` is passed by reference, the statement `set arg2 := arg1;`
+actually updates a variable in the caller. For example:
 
 ```sql
-  set arg2 := arg1;
+declare x int;
+echo_integer(42, x);
+-- `x` is now 42
 ```
 
-The input argument `arg1` is unconditionally stored in the output.  Note that the `in` keyword is entirely optional and does
-nothing other than perhaps add some clarity.  CQL also supports `inout` arguments which are expected to contain non-garbage values on
-entry.  If the procedure is called from CQL, the compiler will arrange for this to be true.
+It is important to note that values cannot be passed *into* a procedure via an
+`out` parameter. In fact, `out` parameters are immediately assigned a new value
+as soon as the procedure is called:
 
-* `in` arguments contain a valid value
-* `out` arguments are assumed to contain garbage and are aggressively cleared on entry
-* `inout` arguments contain a valid value
+- All nullable `out` parameters are set to `null`.
 
+- Nonnull `out` parameters of a non-reference type (e.g., `integer`, `long`,
+  `bool`, et cetera) are set to their default values (`0`, `0.0`, `false`, et
+  cetera).
 
-These invariants are very important when considering how reference types are handled.
+- Nonnull `out` parameters of a reference type (e.g., `blob`, `object`, and
+  `text`) are set to `null` as there are no default values for reference types.
+  They must, therefore, be assigned a value within the procedure so that they
+  will not be `null` when the procedure returns. CQL enforces this.
 
-* `in` reference arguments are borrowed, CQL will not further retain unless they are stored elsewhere
-* `out` reference arguments are assumed to be garbage, they are not released on entry, but instead set to NULL
-* `inout` reference arguments are assumed valid at entry
+In addition to `in` and `out` parameters, there are also `inout` parameters.
+`inout` parameters are, as one might expect, a combination of `in` and `out`
+parameters: The caller passes in a value as with `in` parameters, but the value
+is passed by reference as with `out` parameters.
 
-If CQL changes an `out` or `inout` value it first releases the existing value and then retains the new value.
-In all cases the caller will ultimately release any non-null out reference either because it was borrowed (`in`) or
-the caller now/still owns it (`inout` or `in`).
+`inout` parameters allow for code such as the following:
 
-Aggressively putting `NULL` into `out` arguments normalizes pointer handling for all `out` types.
+```sql
+create procedure double(inout arg integer not null)
+begin
+  -- note that a variable in the caller is both
+  -- read from and written to
+  set arg := arg + arg;
+end;
+
+let x := 2;
+double(x);
+-- `x` is now four
+```
 
 
 ### Procedure Calls
@@ -3761,7 +3802,7 @@ read_foo_fetch_results(
 The `out` keyword was added for writing procedures that produce a single row result set.  With that, it became possible to make any single row result you wanted, assembling it from whatever sources you needed.  That is an important
 case as single row results happen frequently and they are comparatively easy to create and pass around using C
 structures for the backing store.  However, it's not everything, there are also cases where full flexibility is needed
-while producing a standard many-row result set.  For this we have `out union` which was dicussed fully in Chapter 5.  Here we'll discuss the code generation behind that.
+while producing a standard many-row result set.  For this we have `out union` which was discussed fully in Chapter 5.  Here we'll discuss the code generation behind that.
 
 
 Here’s an example from the CQL tests:
@@ -4608,11 +4649,6 @@ We just need to ensure that `leave` is inside a `loop`, `while` or `switch`.
 
 #### The `TRY/CATCH` Statements
 No analysis needed here other than that the two statement lists are ok.
-
-#### The `OPEN` CURSOR Statement
-For open [cursor], we just validate that the name is in fact a cursor.
-`OPEN` does nothing, it is included because other dialects require it
-and it may help with familiarity.  It might be deprecated at some point.
 
 #### The `CLOSE` CURSOR Statement
 For close [cursor], we just validate that the name is in fact a cursor
@@ -9039,7 +9075,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Dec 30 13:01:40 PST 2021
+Snapshot as of Mon Jan 10 12:59:21 PST 2022
 
 ### Operators and Literals
 
@@ -9080,8 +9116,8 @@ REALLIT /* floating point literal */
 "@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
 "@EMIT_ENUMS" "@END_SCHEMA_REGION" "@ENFORCE_NORMAL"
 "@ENFORCE_POP" "@ENFORCE_PUSH" "@ENFORCE_RESET"
-"@ENFORCE_STRICT" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
-"@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
+"@ENFORCE_STRICT" "@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA"
+"@PROC" "@RC" "@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
 "@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
 "@SENSITIVE" "ABORT" "ACTION" "ADD" "AFTER" "ALL" "ALTER"
 "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE" "BEGIN"
@@ -9296,7 +9332,7 @@ drop_trigger_stmt:
   | "DROP" "TRIGGER" name
   ;
 
-create_virtual_table_stmt: "CREATE" "VIRTUAL" "TABLE" opt_if_not_exists name
+create_virtual_table_stmt: "CREATE" "VIRTUAL" "TABLE" opt_vtab_flags name
                            "USING" name opt_module_args
                            "AS" '(' col_key_list ')' opt_delete_version_attr ;
 
@@ -9322,6 +9358,14 @@ opt_if_not_exists:
 opt_no_rowid:
   /* nil */
   | "WITHOUT" "ROWID"
+  ;
+
+opt_vtab_flags:
+  /* nil */
+  | "IF" "NOT" "EXISTS"
+  | "@EPONYMOUS"
+  | "@EPONYMOUS" "IF" "NOT" "EXISTS"
+  | "IF" "NOT" "EXISTS" "@EPONYMOUS"
   ;
 
 col_key_list:
@@ -11017,7 +11061,8 @@ Likewise, if several select results are being combined with `UNION` or `UNION AL
 
 ------
 
-### CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'column'
+### CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column N: 'X' vs. 'Y'
+
 
 If a stored procedure might return one of several result sets, each of the select statements must have the same column names for its result.
 Likewise, if several select results are being combined with `UNION` or `UNION ALL` they must all have the same column names.
@@ -11030,7 +11075,7 @@ select 1 A, 2 B
 union
 select 3 A, 4 C;
 ```
-Would provoke this error.  In this case 'C' would be regarded as the offending column.
+Would provoke this error.  In this case the error would report that the problem was in column 2 and that error was 'B' vs. 'C'
 
 -----
 
@@ -14687,6 +14732,13 @@ As it makes no sense for a procedure to have multiple bodies,
 `cql:try_is_proc_body` must appear only once within any given procedure.
 
 
+### CQL0447: virtual table 'table' claims to be eponymous but its module name 'module' differs from its table name
+
+By definition eponymous virtual table have the same name as their module.  If you use the @eponymous notation
+on a virtual table then you must also make the module and table name match.
+
+
+
 
 ## Appendix 5: JSON Schema Grammar
 <!---
@@ -14698,7 +14750,7 @@ As it makes no sense for a procedure to have multiple bodies,
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Dec 30 13:01:40 PST 2021
+Snapshot as of Mon Jan 10 12:59:22 PST 2022
 
 ### Rules
 
@@ -17665,3 +17717,6 @@ the result set. The rowid is of course the database rowid.
 0: rowid:1 Buy milk (done)
 1: rowid:3 Write code (not done)
 ```
+
+
+

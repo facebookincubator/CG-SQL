@@ -20524,3 +20524,22 @@ end;
 create proc doc_comment_proc()
 begin
 end;
+
+-- TEST: semantic check of good eponymous virtual table
+-- + CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon
+-- + {create_virtual_table_stmt}: epon: { id: integer sensitive, t: text } virtual @recreate
+-- - error
+create virtual table @eponymous epon using epon
+as (
+  id integer @sensitive,
+  t text
+);
+
+-- TEST: semantic check of eponymous virtual table that doesn't have matching module name
+-- + {create_virtual_table_stmt}: err
+-- + error: % virtual table 'epony' claims to be eponymous but its module name 'epono' differs from its table name
+create virtual table @eponymous epony using epono
+as (
+  id integer @sensitive,
+  t text
+);

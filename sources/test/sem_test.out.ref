@@ -81060,3 +81060,65 @@ END;
     | {name doc_comment_proc}: ok
     | {proc_params_stmts}
 
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+);
+
+  {create_virtual_table_stmt}: epon: { id: integer sensitive, t: text } virtual @recreate
+  | {module_info}
+  | | {name epon}
+  | {create_table_stmt}: epon: { id: integer sensitive, t: text } virtual @recreate
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 4}
+    | | | {recreate_attr}
+    | | {name epon}
+    | {col_key_list}
+      | {col_def}: id: integer sensitive
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {sensitive_attr}: ok
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE VIRTUAL TABLE @EPONYMOUS epony USING epono AS (
+  id INTEGER @SENSITIVE,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0447: virtual table 'epony' claims to be eponymous but its module name 'epono' differs from its table name
+
+  {create_virtual_table_stmt}: err
+  | {module_info}
+  | | {name epono}
+  | {create_table_stmt}
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 4}
+    | | | {recreate_attr}
+    | | {name epony}
+    | {col_key_list}
+      | {col_def}
+      | | {col_def_type_attrs}
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}
+      |   | {sensitive_attr}
+      | {col_key_list}
+        | {col_def}
+          | {col_def_type_attrs}
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}
+

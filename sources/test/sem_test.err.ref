@@ -1337,4 +1337,5 @@ test/sem_test.sql:XXXX:1: error: in cte_binding : CQL0444: this use of the named
 Procedure 'fragtest_1_0' has a different CTE that is also named 'possible_conflict'
 The above originated from CALL fragtest_1_0 USING possible_conflict AS source
 
+test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0447: virtual table 'epony' claims to be eponymous but its module name 'epono' differs from its table name
 semantic errors present; no code gen.

@@ -7218,8 +7218,8 @@ a little code. Some brief notes:
 Of course, since the meaning of some primitive types has changed, the contract to the CQL generated
 code has changed accordingly.  For instance:
 
-   * procedures compiled against this runtime expect string arguments to be `CFStringRef`
-   * result sets provide `CFStringRef` values for string columns
+* procedures compiled against this runtime expect string arguments to be `CFStringRef`
+* result sets provide `CFStringRef` values for string columns
 
 The consequence of this is that the Objective-C code generation `--rt objc` finds friendly
 contracts that it can freely convert to types like `NSString *` which results in
@@ -7244,18 +7244,18 @@ this new runtime.  The demo itself is a simple port of the code in [Appendix 10]
 ### Recap
 
 The CQL runtime, `cqlrt.c`, is intended to be replaced.  The version that ships with the distribution
-is a simple, portable, implementation that is single threaded. Serious users of CQL will likely
+is a simple, portable implementation that is single threaded. Serious users of CQL will likely
 want to replace the default version of the runtime with something more tuned to their use case.
 
 Topics covered included:
 
-* contract, error and tracing macros
+* contract, error, and tracing macros
 * how value types are defined
 * how reference types are defined
 * mocking (for use in a test suite)
 * profiling
 * encoding of sensitive columns
-* boxing Statements
+* boxing statements
 * the `cqlrt_cf` runtime
 
 As with the other parts, no attempt was made to cover every detail.  That is

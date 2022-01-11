@@ -208,7 +208,7 @@ static void cql_reset_globals(void);
 %token AS CASE WHEN FROM THEN ELSE END LEFT SWITCH
 %token OUTER JOIN WHERE GROUP BY ORDER ASC
 %token DESC INNER AUTOINCREMENT DISTINCT
-%token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT
+%token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT AT_EPONYMOUS
 %token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
 %token FUNC FUNCTION PROC PROCEDURE BEGIN_ "BEGIN" OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
@@ -224,6 +224,7 @@ static void cql_reset_globals(void);
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
 %type <ival> opt_fk_options fk_options fk_on_options fk_action fk_initial_state fk_deferred_options transaction_mode conflict_clause
 %type <ival> frame_type frame_exclude join_type
+%type <ival> opt_vtab_flags
 
 %type <aval> col_key_list col_key_def col_def col_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr
@@ -542,10 +543,10 @@ drop_trigger_stmt:
   | DROP TRIGGER name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $name);  }
   ;
 
-create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_if_not_exists name[table_name]
+create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags name[table_name]
                            USING name[module_name] opt_module_args
                            AS '(' col_key_list ')' opt_delete_version_attr {
-    int flags = $opt_if_not_exists;
+    int flags = $opt_vtab_flags;
     struct ast_node *flags_node = new_ast_opt(flags);
     struct ast_node *name = $table_name;
     struct ast_node *col_key_list = $col_key_list;
@@ -587,6 +588,14 @@ opt_if_not_exists:
 opt_no_rowid:
   /* nil */  { $opt_no_rowid = 0; }
   | WITHOUT ROWID  { $opt_no_rowid = TABLE_IS_NO_ROWID; }
+  ;
+
+opt_vtab_flags:
+  /* nil */ { $opt_vtab_flags = 0; }
+  | IF NOT EXISTS  { $opt_vtab_flags = GENERIC_IF_NOT_EXISTS; }
+  | AT_EPONYMOUS { $opt_vtab_flags = VTAB_IS_EPONYMOUS; }
+  | AT_EPONYMOUS IF NOT EXISTS  { $opt_vtab_flags = VTAB_IS_EPONYMOUS | GENERIC_IF_NOT_EXISTS; }
+  | IF NOT EXISTS AT_EPONYMOUS { $opt_vtab_flags = VTAB_IS_EPONYMOUS | GENERIC_IF_NOT_EXISTS; }
   ;
 
 col_key_list[result]:

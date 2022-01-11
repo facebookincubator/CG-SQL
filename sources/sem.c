@@ -12558,8 +12558,24 @@ cleanup:
 void sem_create_virtual_table_stmt(ast_node *ast) {
   Contract(is_ast_create_virtual_table_stmt(ast));
 
-  Contract(is_ast_create_virtual_table_stmt(ast));
+  EXTRACT_NOTNULL(module_info, ast->left);
   EXTRACT_NOTNULL(create_table_stmt, ast->right);
+  EXTRACT(create_table_name_flags, create_table_stmt->left);
+  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_STRING(module_name, module_info->left);
+
+  bool_t is_eponymous = !!(flags & VTAB_IS_EPONYMOUS);
+
+  if (is_eponymous && Strcasecmp(name, module_name)) {
+    CSTR err_msg = dup_printf(
+         "CQL0447: virtual table '%s' claims to be eponymous but its module name '%s' differs from its table name",
+         name, module_name);
+    report_error(ast, err_msg, NULL);
+    record_error(ast);
+    return;
+  }
 
   sem_create_table_stmt(create_table_stmt);
   if (is_error(create_table_stmt)) {

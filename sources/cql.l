@@ -222,6 +222,7 @@ TYPE                         { return TYPE; }
 @ENFORCE_STRICT              { return AT_ENFORCE_STRICT; }
 @ENFORCE_NORMAL              { return AT_ENFORCE_NORMAL; }
 @SENSITIVE                   { return AT_SENSITIVE; }
+@EPONYMOUS                   { return AT_EPONYMOUS; }
 @DECLARE_SCHEMA_REGION       { return AT_DECLARE_SCHEMA_REGION; }
 @DECLARE_DEPLOYABLE_REGION   { return AT_DECLARE_DEPLOYABLE_REGION; }
 @BEGIN_SCHEMA_REGION         { return AT_BEGIN_SCHEMA_REGION; }
