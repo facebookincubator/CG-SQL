@@ -643,7 +643,7 @@ cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list
 
 // helper to get the fragment type of a given procedure
 cql_noexport uint32_t find_proc_frag_type(ast_node *ast) {
-  Contract(is_ast_create_proc_stmt(ast));
+  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   return find_fragment_attr_type(misc_attrs, NULL);

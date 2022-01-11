@@ -10822,7 +10822,7 @@ BEGIN
   END IF;
 END;
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'B'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 1: 'A' vs. 'B'
 
   {create_proc_stmt}: err
   | {name with_bad_names}: err
@@ -14935,7 +14935,7 @@ SELECT 1 AS A, 2 AS C
 UNION ALL
 SELECT 3 AS A, 4 AS B;
 
-test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -25919,7 +25919,7 @@ BEGIN
   OUT D;
 END;
 
-test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'C'
+test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 2: 'B' vs. 'C'
 
   {create_proc_stmt}: err
   | {name out_cursor_proc_incompat_results}: err
@@ -26950,7 +26950,7 @@ BEGIN
   OUT C;
 END;
 
-test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names 'B'
+test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 
   {create_proc_stmt}: err
   | {name fetch_from_call_to_proc_with_different_column_names}: err
@@ -42046,7 +42046,7 @@ BEGIN
     FROM test_bad_extension_fragment_union_one;
 END;
 
-test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'name'
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 4: 'name2' vs. 'name'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -58460,7 +58460,7 @@ BEGIN
   SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names 'z'
+test/sem_test.sql:XXXX:1: error: in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
 
   {create_proc_stmt}: err
   | {name cql_cursor_diff_col_compatible_cursor_with_diff_col_name}: err

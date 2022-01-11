@@ -3170,7 +3170,7 @@ begin
 end;
 
 -- TEST: this procedure will not match column names
--- + error: % in multiple select/out statements, all column names must be identical so they have unambiguous names 'B'
+-- + error: % in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 1: 'A' vs. 'B'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull }
 -- + {select_expr_list_con}: select: { B: integer notnull }
@@ -4106,7 +4106,7 @@ union all
 select 3 as A, 4 as B;
 
 -- TEST: union all with not matching columns
--- + error: % if multiple selects, all column names must be identical so they have unambiguous names 'B'
+-- + error: % if multiple selects, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 -- +1 error:
 select 1 as A, 2 as C
 union all
@@ -6835,7 +6835,7 @@ end;
 -- TEST: use non-fetched cursor for out statement
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
--- + error: % in multiple select/out statements, all column names must be identical so they have unambiguous names 'C'
+-- + error: % in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 2: 'B' vs. 'C'
 -- +1 error:
 create proc out_cursor_proc_incompat_results()
 begin
@@ -7166,7 +7166,7 @@ end;
 -- + {call_stmt}: err
 -- expected type is not marked as an error
 -- - {name C}: err
--- + error: % receiving cursor from call, all column names must be identical so they have unambiguous names 'B'
+-- + error: % receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 -- +1 error:
 create proc fetch_from_call_to_proc_with_different_column_names()
 begin
@@ -10337,7 +10337,7 @@ begin
 end;
 
 -- TEST: extension_fragment attribute (erroneous usage)
--- + error: % if multiple selects, all column names must be identical so they have unambiguous names 'name'
+-- + error: % if multiple selects, all column names must be identical so they have unambiguous names; error in column 4: 'name2' vs. 'name'
 -- + {create_proc_stmt}: err
 -- + {with_select_stmt}: err
 -- +1 error:
@@ -14238,7 +14238,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
--- + error: % in cql_cursor_diff_col, all column names must be identical so they have unambiguous names 'z'
+-- + error: % in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
 -- +1 error:
 create proc cql_cursor_diff_col_compatible_cursor_with_diff_col_name()
 begin

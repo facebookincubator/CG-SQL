@@ -256,7 +256,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0061: in multiple select/out statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0057: in multiple select/out statements, all must have the same column count
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0062: in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'B'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 1: 'A' vs. 'B'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the select must have a name
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'with_result_set'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0214: procedures with results can only be called using a cursor in global context 'with_result_set'
@@ -339,7 +339,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0232: nested select expression must return exactly one column
 test/sem_test.sql:XXXX:1: error: in in_pred : CQL0012: incompatible types in expression 'IN'
 test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expression 'NOT IN'
-test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'B'
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
@@ -599,7 +599,7 @@ test/sem_test.sql:XXXX:1: error: in not_in : CQL0078: [not] in (select ...) is o
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'QQ'
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
-test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names 'C'
+test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 2: 'B' vs. 'C'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select'
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_select_first'
 test/sem_test.sql:XXXX:1: error: in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
@@ -619,7 +619,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0090: Stored proc calls may not ap
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
-test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names 'B'
+test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
 test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -808,7 +808,7 @@ test/sem_test.sql:XXXX:1: error: in cte_table : CQL0266: extension fragment name
 test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected longint; found integer) 'rate'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
-test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names 'name'
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 4: 'name2' vs. 'name'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0330: fragment must start with exactly 'SELECT * FROM core'
 test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
@@ -1031,7 +1031,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 test/sem_test.sql:XXXX:1: error: in call : CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff_col'
-test/sem_test.sql:XXXX:1: error: in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names 'z'
+test/sem_test.sql:XXXX:1: error: in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'trim'

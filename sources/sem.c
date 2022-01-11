@@ -4985,8 +4985,11 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
 
     Invariant(col1 && col2);
     if (strcmp(col1, col2)) {
-      report_error(left, "CQL0058: if multiple selects,"
-                         " all column names must be identical so they have unambiguous names", col2);
+      CSTR err_msg = dup_printf(
+           "CQL0058: if multiple selects,"
+           " all column names must be identical so they have unambiguous names; error"
+           " in column %d: '%s' vs. '%s'", i+1, col1, col2);
+      report_error(left, err_msg, NULL);
       record_error(left);
       record_error(right);
       return NULL;
@@ -5049,8 +5052,9 @@ static void sem_verify_identical_columns(ast_node *expected, ast_node *actual, C
     if (strcmp(col1, col2)) {
       CSTR errmsg = dup_printf(
         "CQL0058: %s,"
-        " all column names must be identical so they have unambiguous names", target);
-      report_error(actual, errmsg, col2);
+        " all column names must be identical so they have unambiguous names; error"
+        " in column %d: '%s' vs. '%s'", target, i+1, col1, col2);
+      report_error(actual, errmsg, NULL);
       record_error(actual);
       return;
     }
