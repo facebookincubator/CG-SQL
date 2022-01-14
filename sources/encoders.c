@@ -176,7 +176,7 @@ static void decode_hex_escape(CSTR *pstr, charbuf *output) {
   p++; // skip the 'x'
 
   // the escape sequence is not interpreted as hex if not well formed
-  if (isxdigit(p[0]) && isxdigit(p[1])) {
+  if (Isxdigit(p[0]) && Isxdigit(p[1])) {
     char ch = (char)(hex_to_int(p[0]) * 16 + hex_to_int(p[1]));
 
     // No embedded nulls, all the strings are null terminated so this will just screw everything up.

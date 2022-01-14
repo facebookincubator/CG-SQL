@@ -22,6 +22,7 @@ cql_noexport void cg_c_cleanup() {}
 #include "bytebuf.h"
 #include "cg_common.h"
 #include "charbuf.h"
+#include "compat.h"
 #include "cql.h"
 #include "gen_sql.h"
 #include "list.h"
@@ -2227,7 +2228,7 @@ static bool_t cg_make_nice_literal_name(CSTR str, charbuf *output) {
 
   for (int32_t i = 0; str[i] && i < CQL_NICE_LITERAL_NAME_LIMIT; i++) {
     char ch = str[i];
-    if (isalpha(ch)) {
+    if (Isalpha(ch)) {
       bputc(output, ch);
       underscore = 0;
     }

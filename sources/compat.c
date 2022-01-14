@@ -17,24 +17,24 @@ cql_noexport char *_Nonnull Strdup(const char *_Nonnull s) {
 }
 
 cql_noexport int32_t Strcasecmp(const char *_Nonnull s1, const char *_Nonnull s2) {
-  const unsigned char *p1 = (const unsigned char *) s1;
-  const unsigned char *p2 = (const unsigned char *) s2;
+  const char *p1 = s1;
+  const char *p2 = s2;
   int32_t result;
   if (p1 == p2)
     return 0;
-  while ((result = tolower(*p1) - tolower(*p2++)) == 0)
+  while ((result = Tolower(*p1) - Tolower(*p2++)) == 0)
     if (*p1++ == '\0')
       break;
   return result;
 }
 
 cql_noexport int32_t Strncasecmp(const char *_Nonnull s1, const char *_Nonnull s2, size_t n) {
-  const unsigned char *p1 = (const unsigned char *) s1;
-  const unsigned char *p2 = (const unsigned char *) s2;
+  const char *p1 = s1;
+  const char *p2 = s2;
   int32_t result = 0;
 
   for (; n != 0; --n) {
-    if ((result = tolower(*p1) - tolower(*p2++)) != 0) {
+    if ((result = Tolower(*p1) - Tolower(*p2++)) != 0) {
         return result;
     }
     if (*p1++ == '\0')
@@ -49,4 +49,32 @@ cql_noexport int32_t Strendswith(const char *_Nonnull haystack, const char *_Non
 
   return (haystack_len >= needle_len) &&
          (!Strncasecmp(haystack + haystack_len - needle_len, needle, needle_len));
+}
+
+cql_noexport bool_t Islower(char c) {
+  return c >= 'a' && c <= 'z';
+}
+
+cql_noexport bool_t Isupper(char c) {
+  return c >= 'A' && c <= 'Z';
+}
+
+cql_noexport bool_t Isalpha(char c) {
+  return Islower(c) || Isupper(c);
+}
+
+cql_noexport bool_t Isdigit(char c) {
+  return c >= '0' && c <= '9';
+}
+
+cql_noexport bool_t Isxdigit(char c) {
+  return Isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
+cql_noexport char Tolower(char c) {
+  return Isupper(c) ? c + ('a' - 'A') : c;
+}
+
+cql_noexport char Toupper(char c) {
+  return Islower(c) ? c - ('a' - 'A') : c;
 }

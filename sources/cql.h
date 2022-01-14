@@ -36,7 +36,6 @@
 #include "diags.h"
 
 #include <assert.h>
-#include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -55,10 +54,10 @@
 
 #endif
 
-#include "compat.h"
-
 typedef uint8_t bool_t;
 typedef long long int llint_t;
+
+#include "compat.h"
 
 #define u32_not(x) ((uint32_t)(~(x)))
 #define u64_not(x) ((uint64_t)(~(x)))
