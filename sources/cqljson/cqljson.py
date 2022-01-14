@@ -407,10 +407,11 @@ def emit_sql(data):
 
 
 def get_fks(targets, tables, data, arg):
+    # skips deleted tables
     if arg not in tables:
-        print(f"'{arg}' not a valid table")
-        exit(1)
+        return
 
+    # skips tables already visited
     if arg in targets:
         return
 
@@ -424,10 +425,11 @@ def get_fks(targets, tables, data, arg):
 
 
 def get_refs(targets, tables, data, refmap, arg):
+    # skips deleted tables
     if arg not in tables:
-        print(f"'{arg}' not a valid table")
-        exit(1)
+        return
 
+    # skips tables already visited
     if arg in targets:
         return
 
@@ -439,10 +441,11 @@ def get_refs(targets, tables, data, refmap, arg):
 
 
 def get_graph(targets, tables, data, refmap, arg):
+    # skips deleted tables
     if arg not in tables:
-        print(f"'{arg}' not a valid table")
-        exit(1)
+        return
 
+    # skips tables already visited
     if arg in targets:
         return
 
@@ -480,12 +483,21 @@ def get_targets(tables, data, refmap, arg):
     targets = {}
     if arg.endswith("+fks"):
         arg = arg[0:-4]
+        if arg not in tables:
+            print(f"'{arg}' not a valid table")
+            exit(1)
         get_fks(targets, tables, data, arg)
     elif arg.endswith("+refs"):
         arg = arg[0:-5]
+        if arg not in tables:
+            print(f"'{arg}' not a valid table")
+            exit(1)
         get_refs(targets, tables, data, refmap, arg)
     elif arg.endswith("+graph"):
         arg = arg[0:-6]
+        if arg not in tables:
+            print(f"'{arg}' not a valid table")
+            exit(1)
         get_graph(targets, tables, data, refmap, arg)
     elif arg in tables:
         targets[arg] = 1
