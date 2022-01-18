@@ -23608,7 +23608,7 @@ test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0228: schem
 
 The statement ending at line XXXX
 
-ALTER TABLE bar ADD COLUMN name TEXT @CREATE(1, foo);
+ALTER TABLE bar ADD COLUMN name TEXT @CREATE(1, bar_upgrader);
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0145: version annotations not valid in alter statement 'name'
 
@@ -23622,7 +23622,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0145: version annotations not v
       | {create_attr}: ok
         | {version_annotation}
           | {int 1}
-          | {name foo}
+          | {name bar_upgrader}
 
 The statement ending at line XXXX
 
@@ -49314,11 +49314,76 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+DECLARE PROC MyAdHocMigration (x INTEGER);
+
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC MyAdHocMigration () USING TRANSACTION
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC MyAdHocMigration (x INTEGER)
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'MyAdHocMigration'
+
+  {declare_proc_stmt}: err
+  | {proc_name_type}
+  | | {name MyAdHocMigration}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: integer variable in
+        | {param_detail}: x: integer variable in
+          | {name x}: x: integer variable in
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE PROC InvalidAdHocMigration (y INTEGER);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name InvalidAdHocMigration}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: y: integer variable in
+        | {param_detail}: y: integer variable in
+          | {name y}: y: integer variable in
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION(5, InvalidAdHocMigration);
+
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC InvalidAdHocMigration (y INTEGER)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC InvalidAdHocMigration () USING TRANSACTION
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'InvalidAdHocMigration'
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {version_annotation}
+    | {int 5}
+    | {name InvalidAdHocMigration}
+
+The statement ending at line XXXX
+
 @SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(group_foo, proc_bar);
 
   {schema_ad_hoc_migration_stmt}: ok
   | {name group_foo}
   | {name proc_bar}
+
+The statement ending at line XXXX
+
+@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(group_something, foo);
+
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC foo ()
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC foo () USING TRANSACTION
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'foo'
+
+  {schema_ad_hoc_migration_stmt}: err
+  | {name group_something}
+  | {name foo}
 
 The statement ending at line XXXX
 

@@ -201,6 +201,8 @@ static void reset_enforcements(void);
 static uint32_t sem_with_depth(void);
 static ast_node *sem_find_table(CSTR name, ast_node *ast_error);
 static void sem_shared_cte(ast_node *cte_body);
+static void sem_declare_proc_stmt(ast_node *ast);
+static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -3737,6 +3739,11 @@ static bool_t sem_validate_version(uint32_t code, ast_node *ast, int32_t *versio
           record_error(ast);
           return false;
         }
+      }
+
+      if (!sem_create_migration_proc_prototype(ast, proc_name)) {
+        record_error(ast);
+        return false;
       }
     }
 
@@ -10418,6 +10425,32 @@ static void sem_accumulate_if_stmt(ast_node *ast, shared_cte_info *info) {
   else {
     info->missing_else = ast;
   }
+}
+
+// The presence of a migration proc is an indirect declaration of its signature
+// make a declare proc for that migration out of thin air and add it to the
+// known proc decls as usual so that we can report errors later if the migration
+// proc we find does not match.
+static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name)
+{
+ /*
+  {declare_proc_stmt}
+  | {proc_name_type}
+  | | {name foo}
+  | | {int PROC_FLAG_USES_DML}
+  | {proc_params_stmts}
+ */
+
+  AST_REWRITE_INFO_SET(origin->lineno, origin->filename);
+
+  ast_node *ast_name = new_ast_str(name);
+  ast_node *proc_name_flags = new_ast_proc_name_type(ast_name, new_ast_opt(PROC_FLAG_USES_DML));
+  ast_node *declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts(NULL, NULL));
+
+  AST_REWRITE_INFO_RESET();
+
+  sem_declare_proc_stmt(declare_proc_stmt);
+  return !is_error(declare_proc_stmt);
 }
 
 // The procedure is already known to be of the correct shape
@@ -17568,7 +17601,7 @@ static void sem_declare_proc_no_check_stmt(ast_node *ast) {
 }
 
 // There are three forms of this declaration:
-// 1.  a regular proc with no DML
+// 1. a regular proc with no DML
 //    declare proc X(id integer);
 // 2. a regular proc that uses DML (needs a db paramter and returns rc)
 //    declare proc X(id integer) using transaction;
@@ -21465,6 +21498,12 @@ static void sem_schema_ad_hoc_migration_stmt_for_recreate(ast_node *ast) {
        return;
     }
   }
+ 
+  if (!sem_create_migration_proc_prototype(ast, proc)) {
+    record_error(ast);
+    return;
+  }
+
   record_ok(ast);
 }
 

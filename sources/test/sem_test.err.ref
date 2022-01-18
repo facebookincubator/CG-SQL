@@ -895,6 +895,21 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC MyAdHocMigration () USING TRANSACTION
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC MyAdHocMigration (x INTEGER)
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'MyAdHocMigration'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC InvalidAdHocMigration (y INTEGER)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC InvalidAdHocMigration () USING TRANSACTION
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'InvalidAdHocMigration'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC foo ()
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC foo () USING TRANSACTION
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'foo'
 test/sem_test.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0176: the indicated procedure or group already has a recreate action 'group_foo'
 test/sem_test.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0338: the name of a migration procedure may not end in '_crc' 'not_allowed_crc'
 test/sem_test.sql:XXXX:1: error: in str : CQL0027: a procedure can appear in only one annotation 'MyAdHocMigration'

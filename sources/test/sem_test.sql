@@ -6107,7 +6107,7 @@ end;
 -- TEST: try to alter a column with create version specs
 -- + error: % version annotations not valid in alter statement 'name'
 -- +1 error:
-alter table bar add column name text @create(1, foo);
+alter table bar add column name text @create(1, bar_upgrader);
 
 -- TEST: try to alter a column with delete version specs
 -- + error: % version annotations not valid in alter statement 'name'
@@ -11824,12 +11824,45 @@ select replace('a', 'b', sensitive('c'));
 -- - error:
 @schema_ad_hoc_migration(5, MyAdHocMigration);
 
+-- TEST: ad hoc migration proc must conform
+-- + {declare_proc_stmt}: err
+-- + Incompatible declarations found
+-- + error: % DECLARE PROC MyAdHocMigration () USING TRANSACTION
+-- + error: % DECLARE PROC MyAdHocMigration (x INTEGER)
+-- + The above must be identical.
+-- + error: % procedure declarations/definitions do not match 'MyAdHocMigration'
+-- + error:
+declare proc MyAdHocMigration(x integer);
+
+-- TEST: this is a valid decl by itself
+-- + {declare_proc_stmt}: ok
+-- - error:
+declare proc InvalidAdHocMigration(y integer);
+
+-- TEST: create ad hoc version migration -- failure due to invalid proc signature
+-- + schema_ad_hoc_migration_stmt}: err
+-- + Incompatible declarations found
+-- + error: % DECLARE PROC InvalidAdHocMigration (y INTEGER)
+-- + error: % DECLARE PROC InvalidAdHocMigration () USING TRANSACTION
+-- + The above must be identical.
+-- + error: % procedure declarations/definitions do not match 'InvalidAdHocMigration'
+@schema_ad_hoc_migration(5, InvalidAdHocMigration);
+
 -- TEST: ok to go, simiple recreate migration
 -- + {schema_ad_hoc_migration_stmt}: ok
 -- + {name group_foo}
 -- + {name proc_bar}
 -- - error:
 @schema_ad_hoc_migration for @recreate(group_foo, proc_bar);
+
+-- TEST: foo is not a valid migration proc
+-- + {schema_ad_hoc_migration_stmt}: err
+-- + Incompatible declarations found
+-- + error: % DECLARE PROC foo ()
+-- + error: % DECLARE PROC foo () USING TRANSACTION
+-- + The above must be identical.
+-- + error: % procedure declarations/definitions do not match 'foo'
+@schema_ad_hoc_migration for @recreate(group_something, foo);
 
 -- TEST: duplicate group/proc in recreate migration
 -- + {schema_ad_hoc_migration_stmt}: err
