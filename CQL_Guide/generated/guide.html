@@ -2602,13 +2602,13 @@ end;</code></pre>
 <div class="sourceCode" id="cb158"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a><span class="kw">create</span> proc foo(n <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>)</span>
 <span id="cb158-2"><a href="#cb158-2" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
 <span id="cb158-3"><a href="#cb158-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">declare</span> C <span class="kw">cursor</span> <span class="kw">like</span> <span class="kw">select</span> <span class="dv">1</span> <span class="fu">value</span>;</span>
-<span id="cb158-4"><a href="#cb158-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">declare</span> i <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>;</span>
-<span id="cb158-5"><a href="#cb158-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> i <span class="op">:=</span> <span class="dv">0</span>;</span>
-<span id="cb158-6"><a href="#cb158-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (i <span class="op">&lt;</span> n)</span>
-<span id="cb158-7"><a href="#cb158-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span></span>
-<span id="cb158-8"><a href="#cb158-8" aria-hidden="true" tabindex="-1"></a>     <span class="co">-- emit one row for every integer</span></span>
-<span id="cb158-9"><a href="#cb158-9" aria-hidden="true" tabindex="-1"></a>     fetch C <span class="kw">from</span> <span class="kw">values</span>(i);</span>
-<span id="cb158-10"><a href="#cb158-10" aria-hidden="true" tabindex="-1"></a>     <span class="kw">out</span> <span class="kw">union</span> C;</span>
+<span id="cb158-4"><a href="#cb158-4" aria-hidden="true" tabindex="-1"></a>  let i <span class="op">:=</span> <span class="dv">0</span>;</span>
+<span id="cb158-5"><a href="#cb158-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> i <span class="op">&lt;</span> n</span>
+<span id="cb158-6"><a href="#cb158-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">begin</span></span>
+<span id="cb158-7"><a href="#cb158-7" aria-hidden="true" tabindex="-1"></a>     <span class="co">-- emit one row for every integer</span></span>
+<span id="cb158-8"><a href="#cb158-8" aria-hidden="true" tabindex="-1"></a>     fetch C <span class="kw">from</span> <span class="kw">values</span>(i);</span>
+<span id="cb158-9"><a href="#cb158-9" aria-hidden="true" tabindex="-1"></a>     <span class="kw">out</span> <span class="kw">union</span> C;</span>
+<span id="cb158-10"><a href="#cb158-10" aria-hidden="true" tabindex="-1"></a>     <span class="kw">set</span> i <span class="op">:=</span> i <span class="op">+</span> <span class="dv">1</span>;</span>
 <span id="cb158-11"><a href="#cb158-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span>;</span>
 <span id="cb158-12"><a href="#cb158-12" aria-hidden="true" tabindex="-1"></a><span class="cf">end</span>;</span></code></pre></div>
 <p>In <code>foo</code> above, we make an entire result set out of thin air. It isn’t very interesting but of course any computation would have been possible.</p>
@@ -7089,7 +7089,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon Jan 10 12:59:21 PST 2022</p>
+<p>Snapshot as of Wed Jan 19 09:26:24 PST 2022</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -10631,7 +10631,7 @@ The above originated from CALL outer USING foo AS source</code></pre>
 <h3 id="cql0446-attributecqltry_is_proc_body-cannot-be-used-more-than-once-per-procedure">CQL0446: <span class="citation" data-cites="attribute">@attribute</span>(cql:try_is_proc_body) cannot be used more than once per procedure</h3>
 <p>The purpose of <code>cql:try_is_proc_body</code> is to indicate that a particular <code>TRY</code> block contains what should be considered to be the true body of the procedure. As it makes no sense for a procedure to have multiple bodies, <code>cql:try_is_proc_body</code> must appear only once within any given procedure.</p>
 <h3 id="cql0447-virtual-table-table-claims-to-be-eponymous-but-its-module-name-module-differs-from-its-table-name">CQL0447: virtual table ‘table’ claims to be eponymous but its module name ‘module’ differs from its table name</h3>
-<p>By definition eponymous virtual table have the same name as their module. If you use the <span class="citation" data-cites="eponymous">@eponymous</span> notation on a virtual table then you must also make the module and table name match.</p>
+<p>By definition, an eponymous virtual table has the same name as its module. If you use the <span class="citation" data-cites="eponymous">@eponymous</span> notation on a virtual table, you must also make the module and table name match.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -10640,7 +10640,7 @@ The above originated from CALL outer USING foo AS source</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon Jan 10 12:59:22 PST 2022</p>
+<p>Snapshot as of Wed Jan 19 09:26:25 PST 2022</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

@@ -2753,13 +2753,13 @@ Here's a (somewhat contrived) example of the kind of thing you can do with this 
 create proc foo(n integer not null)
 begin
   declare C cursor like select 1 value;
-  declare i integer not null;
-  set i := 0;
-  while (i < n)
+  let i := 0;
+  while i < n
   begin
      -- emit one row for every integer
      fetch C from values(i);
      out union C;
+     set i := i + 1;
   end;
 end;
 ```
@@ -9075,7 +9075,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Jan 10 12:59:21 PST 2022
+Snapshot as of Wed Jan 19 09:26:24 PST 2022
 
 ### Operators and Literals
 
@@ -14734,8 +14734,8 @@ As it makes no sense for a procedure to have multiple bodies,
 
 ### CQL0447: virtual table 'table' claims to be eponymous but its module name 'module' differs from its table name
 
-By definition eponymous virtual table have the same name as their module.  If you use the @eponymous notation
-on a virtual table then you must also make the module and table name match.
+By definition, an eponymous virtual table has the same name as its module.  If you use the @eponymous notation
+on a virtual table, you must also make the module and table name match.
 
 
 
@@ -14750,7 +14750,7 @@ on a virtual table then you must also make the module and table name match.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Jan 10 12:59:22 PST 2022
+Snapshot as of Wed Jan 19 09:26:25 PST 2022
 
 ### Rules
 
