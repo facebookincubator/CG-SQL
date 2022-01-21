@@ -2140,6 +2140,27 @@ static void parse_cmd(int argc, char **argv) {
 
   current_file = "<stdin>";
 
+  // This code is generally not something you want on but it can be useful
+  // if you are trying to diagnose a complex failure in a larger build and
+  // you need to see what the executions were.  It can also be helpful if
+  // you are using CQL in its amalgam form. Though, in that case, the
+  // fprintf probably needs to be modified.
+
+  // #define CQL_EXEC_TRACING 1
+  #ifdef CQL_EXEC_TRACING
+
+  CHARBUF_OPEN(args);
+  bprintf(&args, "cql ");
+  for (int32_t i = 1; i < argc; i++) {
+    bprintf(&args, "%s%s", argv[i], i == argc - 1 ? "\n" : " ");
+  }
+  FILE *tr = fopen("/tmp/cqltrace.log", "a+");
+  fprintf(tr, "%s", args.ptr);
+  fclose(tr);
+  CHARBUF_CLOSE(args);
+
+  #endif
+
   for (int32_t a = 1; a < argc; a++) {
     char *arg = argv[a];
     if (strcmp(arg, "--echo") == 0) {
