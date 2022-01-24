@@ -295,7 +295,11 @@ def emit_schema():
             "create table tables(\n"
             "  t_name text primary key,\n"
             "  region text not null,\n"
-            "  deleted bool not null);\n"
+            "  deleted bool not null,\n"
+            "  create_version int not null,\n"
+            "  delete_version int not null,\n"
+            "  recreate bool not null,\n"
+            "  recreate_group text not null);\n"
             "\n"
             "create table pks(\n"
             "  t_name text not null,\n"
@@ -361,8 +365,14 @@ def emit_sql(data):
         t = tup[1]
         t_name = t["name"]
         region = t["region"] if "region" in t else "None"
-        deleted = 1 if t["isDeleted"] else "0"
-        print(f"insert into tables values('{t_name}', '{region}', {deleted});")
+        deleted = 1 if t["isDeleted"] else 0
+        recreated = 1 if t["isRecreated"] else 0
+        createVersion = 0 if "addedVersion" not in t else t["addedVersion"]
+        deleteVersion = -1 if "deletedVersion" not in t else t["deletedVersion"]
+        groupName = "" if "recreateGroupName" not in t else t["recreateGroupName"]
+        print(
+            f"insert into tables values('{t_name}', '{region}', {deleted}, {createVersion}, {deleteVersion}, {recreated}, '{groupName}');"
+        )
         for ctup in enumerate(t["columns"]):
             c = ctup[1]
             c_name = c["name"]
