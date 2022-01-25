@@ -589,6 +589,12 @@ BEGIN
   END CATCH;
 END;
 
+@attribute(cql:private)
+CREATE PROC test_cql_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS deleted_virtual_table;
+  DROP TABLE IF EXISTS added_table;
+END;
 
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps()
@@ -675,7 +681,7 @@ BEGIN
     ---- upgrade to schema version 4 ----
 
     CALL test_cql_get_version_crc(4, schema_version);
-    IF schema_version != 7224256824307254702 THEN
+    IF schema_version != 5525789573222427545 THEN
       -- one time drop migrated_from_recreate
 
       CALL test_cql_one_time_drop('migrated_from_recreate', 4);
@@ -701,10 +707,6 @@ BEGIN
 
       -- logical delete of column rate_2 from foo; -- no ddl
 
-      -- dropping table deleted_virtual_table
-
-      DROP TABLE IF EXISTS deleted_virtual_table;
-
       -- data migration procedures
       IF cql_facet_find(test_facets, 'CreateId2Proc') = -1 THEN
         CALL CreateId2Proc();
@@ -715,13 +717,13 @@ BEGIN
         CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
       END IF;
 
-      CALL test_cql_set_version_crc(4, 7224256824307254702);
+      CALL test_cql_set_version_crc(4, 5525789573222427545);
     END IF;
 
     ---- upgrade to schema version 5 ----
 
     CALL test_cql_get_version_crc(5, schema_version);
-    IF schema_version != -7300976012444483048 THEN
+    IF schema_version != -1443842544793398626 THEN
       -- altering table foo to add column name TEXT;
 
       IF NOT test_check_column_exists('foo', '*[( ]name TEXT*') THEN 
@@ -729,10 +731,6 @@ BEGIN
       END IF;
 
       -- logical delete of column rate from foo; -- no ddl
-
-      -- dropping table added_table
-
-      DROP TABLE IF EXISTS added_table;
 
       -- ad hoc migration proc MyAdHocMigrationScript will run
 
@@ -742,7 +740,7 @@ BEGIN
         CALL test_cql_set_facet_version('MyAdHocMigrationScript', 5);
       END IF;
 
-      CALL test_cql_set_version_crc(5, -7300976012444483048);
+      CALL test_cql_set_version_crc(5, -1443842544793398626);
     END IF;
 
     ---- upgrade to schema version 6 ----
@@ -758,6 +756,7 @@ BEGIN
       CALL test_cql_set_version_crc(6, -6908867606816505101);
     END IF;
 
+    CALL test_cql_drop_tables();
     CALL test_cql_recreate_tables();
     CALL test_cql_create_all_views();
     CALL test_cql_create_all_indices();

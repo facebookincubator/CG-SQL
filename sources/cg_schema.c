@@ -1051,7 +1051,7 @@ static void cg_schema_manage_recreate_tables(
     bclear(&pending_table_creates);
     bprintf(&pending_table_creates, "%s", temp.ptr);
     CHARBUF_CLOSE(temp);
-    
+
     CHARBUF_CLOSE(make_table);
 
     CSTR gname = note->group_name;
@@ -1061,7 +1061,7 @@ static void cg_schema_manage_recreate_tables(
     if (i + 1 < count && gname[0] && !Strcasecmp(gname, (note+1)->group_name)) {
       continue;
     }
-    
+
     bprintf(&update_tables, "%s", pending_table_creates.ptr);
     bclear(&pending_table_creates);
 
@@ -1214,6 +1214,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   CHARBUF_OPEN(pending);
   CHARBUF_OPEN(upgrade);
   CHARBUF_OPEN(baseline);
+  CHARBUF_OPEN(drops);
 
   bprintf(&decls, "%s", rt->source_prefix);
   bprintf(&decls, "-- no columns will be considered hidden in this script\n");
@@ -1416,8 +1417,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         // this is all that's left
         Contract(note->annotation_type == SCHEMA_ANNOTATION_DELETE_TABLE);
 
-        bprintf(&upgrade, "      -- dropping table %s\n\n", target_name);
-        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n\n", target_name);
+        bprintf(&drops, "  DROP TABLE IF EXISTS %s;\n", target_name);
         break;
       }
 
@@ -1453,6 +1453,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   cg_schema_end_version(&main, &upgrade, &pending, prev_version);
+
+  if (drops.used > 1) {
+    bprintf(&main, "    CALL %s_cql_drop_tables();\n", global_proc_name);
+
+    bprintf(&preamble, "@attribute(cql:private)\n");
+    bprintf(&preamble, "CREATE PROC %s_cql_drop_tables()\n", global_proc_name);
+    bprintf(&preamble, "BEGIN\n");
+    bprintf(&preamble, "%s", drops.ptr);
+    bprintf(&preamble, "END;\n");
+  }
 
   if (recreate_items_count) {
     bprintf(&main, "    CALL %s_cql_recreate_tables();\n", global_proc_name);
@@ -1538,6 +1548,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   CHARBUF_CLOSE(output_file);
 
+  CHARBUF_CLOSE(drops);
   CHARBUF_CLOSE(baseline);
   CHARBUF_CLOSE(upgrade);
   CHARBUF_CLOSE(pending);
