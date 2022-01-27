@@ -3502,7 +3502,7 @@ select ifnull(X, 'hello');
 select ifnull(not 'x', not 'hello');
 
 -- TEST: make make an FK with the column count wrong
--- + error: % The number of columns on both sides of a foreign key must match
+-- + error: % number of columns on both sides of a foreign key must match
 -- + {create_table_stmt}: err
 -- + fk_def}: err
 create table fk_table_2 (
@@ -3512,7 +3512,7 @@ create table fk_table_2 (
 );
 
 -- TEST: make make an FK with the column types not matching
--- + error: % the exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
+-- + error: % exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
 -- + {create_table_stmt}: err
 -- + fk_def}: err
 create table fk_table_2 (
@@ -5232,14 +5232,14 @@ end;
 
 -- TEST: try to use LIKE outside of a procedure
 -- + {with_select_stmt}: err
--- + error: % the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
+-- + error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
 -- +1 error:
 with source(*) LIKE there_is_no_such_source
 select 1 x, 2 y, 3.0 z;
 
 -- TEST: try to use LIKE in a procedure that is not a shared fragment
 -- + {with_select_stmt}: err
--- + error: % the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'not_a_shared_fragment'
+-- + error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'not_a_shared_fragment'
 -- +1 error:
 create proc not_a_shared_fragment()
 begin
@@ -5249,7 +5249,7 @@ end;
 
 -- TEST: try to use the shared fragment with a table arg even though it has none
 -- + {with_select_stmt}: err
--- + error: % the called procedure has no table arguments but a USING clause is present 'a_shared_frag'
+-- + error: % called procedure has no table arguments but a USING clause is present 'a_shared_frag'
 -- +1 error:
 with
   some_cte(*) as (select 1 x, 2 y, 3.0 z),
@@ -5296,7 +5296,7 @@ with
 -- + {with_select_stmt}: err
 -- + {name some_cte}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull, u: integer notnull }
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
--- + error: % the table provided must have the same number of columns as the table parameter 'some_cte'
+-- + error: % table provided must have the same number of columns as the table parameter 'some_cte'
 -- +1 error:
 with
   some_cte(*) as (select 1 x, 2 y, 3.0 z, 4 u),
@@ -5307,7 +5307,7 @@ with
 -- + {with_select_stmt}: err
 -- + {name some_cte}: some_cte: { x: integer notnull, y: integer notnull, w: real notnull }
 -- + {name source}: source: { x: integer notnull, y: integer notnull, z: real notnull }
--- + error: % The table argument 'source' requires column 'z' but it is missing in provided table 'some_cte'
+-- + error: % table argument 'source' requires column 'z' but it is missing in provided table 'some_cte'
 -- +1 error:
 with
   some_cte(*) as (select 1 x, 2 y, 3.0 w),
@@ -5327,7 +5327,7 @@ with
 
 -- TEST: try to use LIKE in a procedure that is a shared fragment but not at the top level
 -- + {with_select_stmt}: err
--- + error: % the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'bogus_like_in_shared'
+-- + error: % LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'bogus_like_in_shared'
 -- +1 error:
 @attribute(cql:shared_fragment)
 create proc bogus_like_in_shared()
@@ -6217,7 +6217,7 @@ create table versioned_table(
 ) @create(1, table_create_proc) @delete(3, table_delete_proc);
 
 -- TEST: try to use a migration procedure name that ends in _crc
--- + error: % the name of a migration procedure may not end in '_crc' 'x_crc'
+-- + error: % name of a migration procedure may not end in '_crc' 'x_crc'
 -- +1 error:
 create table bogus_migration_proc(
    id integer
@@ -6822,7 +6822,7 @@ fetch QQ from call not_out_cursor_proc();
 -- TEST: use non-fetched cursor for out statement
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
--- + error: % the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
+-- + error: % cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
 -- +1 error:
 create proc out_cursor_proc_not_shape_storage()
 begin
@@ -6965,7 +6965,7 @@ end;
 
 -- TEST: out cursor outside of a proc
 -- + {out_stmt}: err
--- + error: % the out cursor statement only makes sense inside of a procedure
+-- + error: % out cursor statement only makes sense inside of a procedure
 -- +1 error:
 out curs;
 
@@ -7220,7 +7220,7 @@ end;
 
 -- TEST: fetch cursor from values with dummy values but one is a blob
 -- + {fetch_values_stmt}: err
--- + error: % there's no good way to generate dummy blobs; not supported for now
+-- + error: % CQL has no good way to generate dummy blobs; not supported for now
 -- +1 error:
 create proc fetch_values_blob_dummy()
 begin
@@ -7558,7 +7558,7 @@ create unique index if not exists my_unique_index on bar(id/2 asc, name desc, ra
 
 -- TEST: there is no index that covers id so this is an error, the index covers id/2
 -- + {create_table_stmt}: err
--- + error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 -- +1 error:
 create table ref_bar(
  id integer not null references bar(id) -- index is on id/2
@@ -7582,7 +7582,7 @@ create table fk_on_col(
 
 -- TEST: create a table with a bogus FK : too many cols
 -- + {create_table_stmt}: err
--- + error: % the FK reference must be exactly one column with the correct type 'fk_src'
+-- + error: % FK reference must be exactly one column with the correct type 'fk_src'
 -- +1 error:
 create table bogus_fk_on_col_1(
   fk_src integer references bar ( id, name ) on update cascade on delete set null
@@ -7590,7 +7590,7 @@ create table bogus_fk_on_col_1(
 
 -- TEST: create a table with a bogus FK : wrong type
 -- + {create_table_stmt}: err
--- + error: % the FK reference must be exactly one column with the correct type 'fk_src'
+-- + error: % FK reference must be exactly one column with the correct type 'fk_src'
 -- +1 error:
 create table bogus_fk_on_col_1(
   fk_src integer references bar ( name )
@@ -9647,7 +9647,7 @@ create table reference_uk(
 -- TEST: test foreign key on a mixed of primary and unique key
 -- +1 {create_table_stmt}: err
 -- +1 {fk_def}: err
--- +1 error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+-- +1 error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 -- +1 error:
 create table reference_pk_and_uk(
   id1 int,
@@ -9668,7 +9668,7 @@ create table referenceable_unique_index(
 -- TEST: test foreign key on a mixed of a primary and unique index
 -- +1 {create_table_stmt}: err
 -- +1 {fk_def}: err
--- +1 error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+-- +1 error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 -- +1 error:
 create table reference_pk_and_unique_index(
   id1 int,
@@ -9679,7 +9679,7 @@ create table reference_pk_and_unique_index(
 -- TEST: test foreign key on a mixed of a unique key and unique index
 -- +1 {create_table_stmt}: err
 -- +1 {fk_def}: err
--- +1 error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+-- +1 error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 -- +1 error:
 create table reference_uk_and_unique_index(
   id1 real,
@@ -9691,7 +9691,7 @@ create table reference_uk_and_unique_index(
 -- TEST: test foreign key on a single non referenceable column
 -- +1 {create_table_stmt}: err
 -- +1 {fk_def}: err
--- + error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 -- +1 error:
 create table reference_not_referenceable_column(
   id long int primary key,
@@ -9701,7 +9701,7 @@ create table reference_not_referenceable_column(
 -- TEST: test foreign key on multiple non referenceable columns
 -- +1 {create_table_stmt}: err
 -- +1 {fk_def}: err
--- + error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table
 -- +1 error:
 create table reference_not_referenceable_columns(
   id1 text primary key,
@@ -9713,7 +9713,7 @@ create table reference_not_referenceable_columns(
 -- TEST: test foreign key on a subset of unique index
 -- +1 {create_table_stmt}: err
 -- +1 {fk_def}: err
--- + error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table
 -- +1 error:
 create table reference_not_referenceable_column(
   id text,
@@ -11329,7 +11329,7 @@ end;
 -- TEST: can't use offset without limit
 -- + {select_stmt}: err
 -- + {opt_offset}: err
--- + error: % the OFFSET clause may only be used if LIMIT is also present
+-- + error: % OFFSET clause may only be used if LIMIT is also present
 -- +1 error:
 select * from foo offset 1;
 
@@ -11491,7 +11491,7 @@ end;
 -- + {name upsert_conflict_target_column_not_unique_key}: err
 -- + {upsert_stmt}: err
 -- + {conflict_target}: err
--- + error: % the set of columns referenced in the conflict target should match exactly a unique key in table we apply upsert
+-- + error: % columns referenced in an UPSERT conflict target must exactly match a unique key the target table
 -- +1 error:
 create proc upsert_conflict_target_column_not_unique_key()
 begin
@@ -11868,11 +11868,11 @@ declare proc InvalidAdHocMigration(y integer);
 -- + {schema_ad_hoc_migration_stmt}: err
 -- + {name group_foo}
 -- + {name proc_bar}
--- + error: % the indicated procedure or group already has a recreate action 'group_foo'
+-- + error: % indicated procedure or group already has a recreate action 'group_foo'
 @schema_ad_hoc_migration for @recreate(group_foo, proc_bar);
 
 -- TEST: create ad hoc version migration -- bogus name
--- + error: % the name of a migration procedure may not end in '_crc' 'not_allowed_crc'
+-- + error: % name of a migration procedure may not end in '_crc' 'not_allowed_crc'
 -- +1 error:
 @schema_ad_hoc_migration(5, not_allowed_crc);
 
@@ -11909,7 +11909,7 @@ on conflict(id) do update set name = excluded.name, rate = id+1;
 -- + {default_columns_values}
 -- + {upsert_update}
 -- + {conflict_target}
--- +1 error: % the upsert-clause is not compatible with DEFAULT VALUES
+-- +1 error: % upsert-clause is not compatible with DEFAULT VALUES
 -- + Error
 insert into foo default values on conflict do nothing;
 
@@ -12530,13 +12530,13 @@ select id, lag(id, 1, 0) over () from foo;
 -- TEST: kind not compatible in lag between arg3 and arg1
 -- + {select_stmt}: err
 -- + error: % expressions of different kinds can't be mixed: 'dollars' vs. 'some_key'
--- + error: % The first and third arguments must be compatible in function 'lag'
+-- + error: % first and third arguments must be compatible in function 'lag'
 -- +2 Error
 select lag(cost, 1, id) over () from with_kind;
 
 -- TEST lag with non integer offset
 -- + {select_stmt}: err
--- + error: % The second argument must be an integer (between 0 and max integer) in function 'lag'
+-- + error: % second argument must be an integer (between 0 and max integer) in function 'lag'
 -- +1 error:
 select id, lag(id, 1.3, 0) over () from foo;
 
@@ -12610,7 +12610,7 @@ select id, lag(id | " ") over () from foo;
 -- + {call}: err
 -- + {name lag}
 -- + {arg_list}: err
--- + error: % The first and third arguments must be compatible in function 'lag'
+-- + error: % first and third arguments must be compatible in function 'lag'
 -- +2 Error
 select id, lag(id, 0, 0.7) over () from foo;
 
@@ -12728,7 +12728,7 @@ select id, nth_value(id) over () from foo;
 -- + {name nth_value}: ok
 -- + {name id}: id: integer notnull
 -- + {int 0}: integer notnull
--- + error: % The second argument must be an integer between 1 and max integer in function 'nth_value'
+-- + error: % second argument must be an integer between 1 and max integer in function 'nth_value'
 -- +1 error:
 select id, nth_value(id, 0) over () as nth from foo;
 
@@ -13306,7 +13306,7 @@ select instr('a', 'a');
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name instr}
--- + error: % CQL0085: all arguments must be strings 'instr'
+-- + error: % all arguments must be strings 'instr'
 -- +1 error:
 select instr(1, 'a');
 
@@ -13363,7 +13363,7 @@ end;
 
 -- TEST: use the wrong name for the assembly fragment
 -- + {create_proc_stmt}: err
--- + error: % the name of the assembly procedure must match the name of the base fragment 'wrong_assembly_frag_name'
+-- + error: % name of the assembly procedure must match the name of the base fragment 'wrong_assembly_frag_name'
 -- +1 error:
 @attribute(cql:assembly_fragment=core)
 create proc wrong_assembly_frag_name(id_ integer not null)
@@ -13615,7 +13615,7 @@ create table self_ref4(
 
 -- TEST: refer to a column in myself -- column not a key -- via constraint
 -- + {create_table_stmt}: err
--- + error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
 -- +1 error:
 create table self_ref5(
  id integer primary key,
@@ -13625,7 +13625,7 @@ create table self_ref5(
 
 -- TEST: refer to a table id that isn't a part of a PK/UK via the attribute
 -- + {create_table_stmt}: err
--- + error: % the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
+-- + error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
 -- +1 error:
 create table fk_to_non_key(
  id integer references self_ref2(id2)
@@ -13673,7 +13673,7 @@ end;
 -- + misc_attrs}: err
 -- + {name bogus}: err
 -- + {name foo}
--- error: % the table name in ok_table_scan does not exist 'bogus'
+-- error: % table name in ok_table_scan does not exist 'bogus'
 -- +1 error:
 @attribute(cql:ok_table_scan=bogus)
 @attribute(cql:attr)
@@ -13755,7 +13755,7 @@ values (1), (_sens);
 -- + {select_stmt}: err
 -- + {values}: err
 -- + {dbl 4.5}: err
--- + error: % the number of columns values for each row should be identical in VALUES clause
+-- + error: % number of columns values for each row should be identical in VALUES clause
 -- +1 error:
 values (1), (3, 4.5);
 
@@ -13843,7 +13843,7 @@ insert into foo (id) values (1), (2) @dummy_seed(1);
 -- + {select_stmt}: err
 -- + {values}: err
 -- + {int 10}: err
--- + error: % the number of columns values for each row should be identical in VALUES clause
+-- + error: % number of columns values for each row should be identical in VALUES clause
 -- +1 error:
 values (1, 2), (10);
 
@@ -14256,7 +14256,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {assign}: err
 -- + {call}: err
--- + error: % the cursor arguments must have identical column count 'cql_cursor_diff_col'
+-- + error: % cursor arguments must have identical column count 'cql_cursor_diff_col'
 -- +1 error:
 create proc cql_cursor_diff_col_with_wrong_col_count_arg()
 begin
@@ -14575,7 +14575,7 @@ begin
 end;
 
 -- TEST: unbox from an object that has no type spec
--- + error: % the variable must be of type object<T cursor> where T is a valid shape name 'box'
+-- + error: % variable must be of type object<T cursor> where T is a valid shape name 'box'
 -- +1 error:
 create proc cursor_unbox_untyped(box object)
 begin
@@ -14583,7 +14583,7 @@ begin
 end;
 
 -- TEST: unbox from an object that is not marked CURSOR
--- + error: % the variable must be of type object<T cursor> where T is a valid shape name 'box'
+-- + error: % variable must be of type object<T cursor> where T is a valid shape name 'box'
 -- +1 error:
 create proc cursor_unbox_not_cursor(box object<bar>)
 begin
@@ -14616,7 +14616,7 @@ begin
 end;
 
 -- TEST: try to box a value cursor
--- + error: % the cursor did not originate from a SQLite statement, it only has values 'C'
+-- + error: % cursor did not originate from a SQLite statement, it only has values 'C'
 -- +1 error:
 create proc cursor_box_value(out box object<bar cursor>)
 begin
@@ -14676,7 +14676,7 @@ set an_long := cql_get_blob_size(blob_var, 0);
 -- + {assign}: err
 -- + {call}: err
 -- + {name cql_get_blob_size}
--- + error: % the argument must be of type blob 'cql_get_blob_size'
+-- + error: % argument must be of type blob 'cql_get_blob_size'
 -- +1 error:
 set an_long := cql_get_blob_size(an_int);
 
@@ -16579,7 +16579,7 @@ create virtual table virtual_with_hidden using module_name as (
 );
 
 -- TEST: hidden applied on virtual tables
--- + error: % the HIDDEN column attribute must be the first attribute if present
+-- + error: % HIDDEN column attribute must be the first attribute if present
 -- +1 error:
 create virtual table virtual_with_hidden_wrong using module_name as (
   x integer not null hidden,
@@ -16801,13 +16801,13 @@ set real_nn := (select not 'x' if nothing 1.0);
 
 -- TEST: error inside of any other DML
 -- + {select_stmt}: err
--- + error: % CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+-- + error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
 select (select 0 if nothing -1);
 
 -- TEST: error inside of any other DML
 -- + {delete_stmt}: err
--- + error: % CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+-- + error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
 delete from foo where id = (select 33 if nothing 0);
 
@@ -16851,14 +16851,14 @@ insert into foo(id)
 
 -- TEST: top level compound select not ok
 -- + {insert_stmt}: err
--- + error: % CQL0370: due to a memory leak bug in old SQLite versions,
+-- + error: % due to a memory leak bug in old SQLite versions,
 -- +1 error:
 insert into foo(id)
   select 1 union all select 1;
 
 -- TEST: top level join not ok
 -- + {insert_stmt}: err
--- + error: % CQL0370: due to a memory leak bug in old SQLite versions,
+-- + error: % due to a memory leak bug in old SQLite versions,
 -- +1 error:
 insert into foo(id)
   select 1 from
@@ -16990,7 +16990,7 @@ end;
 -- + {switch_stmt}: err
 -- + {int 0}
 -- + {switch_body}
--- + error: % the type of a WHEN expression is bigger than the type of the SWITCH expression
+-- + error: % type of a WHEN expression is bigger than the type of the SWITCH expression
 -- +1 error:
 switch z
   when 1L then nothing
@@ -17000,7 +17000,7 @@ end;
 -- + {switch_stmt}: err
 -- + {int 0}
 -- + {switch_body}
--- + error: % the WHEN expression cannot be evaluated to a constant
+-- + error: % WHEN expression cannot be evaluated to a constant
 -- +1 error:
 switch z
   when 1+x then nothing
@@ -17211,21 +17211,21 @@ end;
 
 -- TEST: try to call a proc but the proc had errors
 -- + {declare_out_call_stmt}: err
--- + error: % CQL0213: procedure had errors, can't call 'decl_test_err'
+-- + error: % procedure had errors, can't call 'decl_test_err'
 -- +1 error:
 declare out call decl_test_err(1, 2, 3);
 
 -- TEST: try to call a proc but an OUT arg is aliased by an IN arg
 -- + {declare_out_call_stmt}: err
 -- + {call_stmt}: err
--- + error: % CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
+-- + error: % OUT or INOUT argument cannot be used again in same call 'u'
 -- +1 error:
 declare out call out2_proc(u, u, v);
 
 -- TEST: try to call a proc but an OUT arg is aliased by another OUT arg
 -- + {declare_out_call_stmt}: err
 -- + {call_stmt}: err
--- + error: % CQL0426: OUT or INOUT argument cannot be used again in same call 'u'
+-- + error: % OUT or INOUT argument cannot be used again in same call 'u'
 -- +1 error:
 declare out call out2_proc(1, u, u);
 

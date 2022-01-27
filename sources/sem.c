@@ -2881,7 +2881,7 @@ static void sem_data_type_var(ast_node *ast) {
 
     // The create data type is restricted to text, blob, object only.
     if (core_type != SEM_TYPE_TEXT && core_type != SEM_TYPE_BLOB && core_type != SEM_TYPE_OBJECT) {
-      report_error(ast, "CQL0361: Return data type in a create function declaration can only be text, blob or object", NULL);
+      report_error(ast, "CQL0361: return data type in a create function declaration can only be text, blob or object", NULL);
       record_error(ast);
       return;
     }
@@ -3513,7 +3513,7 @@ static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node
 
   if (!valid) {
     EXTRACT_STRING(name, name_list->left);
-    report_error(name_list, "CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table", ref_table_name);
+    report_error(name_list, "CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table", ref_table_name);
   }
   return valid;
 }
@@ -3599,7 +3599,7 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
     ast_node *key = src_list->left;
     ast_node *ref = ref_list->left;
     if (core_type_of(key->sem->sem_type) != core_type_of(ref->sem->sem_type)) {
-      CSTR error_message = "CQL0022: the exact type of both sides of a foreign key must match";
+      CSTR error_message = "CQL0022: exact type of both sides of a foreign key must match";
       report_sem_type_mismatch(
           key->sem->sem_type,
           ref->sem->sem_type,
@@ -3613,7 +3613,7 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   }
 
   if (src_list || ref_list) {
-    report_error(def, "CQL0023: The number of columns on both sides of a foreign key must match", NULL);
+    report_error(def, "CQL0023: number of columns on both sides of a foreign key must match", NULL);
     record_error(table_ast);
     record_error(def);
     return;
@@ -3917,7 +3917,7 @@ void sem_validate_fk_attr(pending_table_validation *pending) {
 
   ast_node *ref = ref_list->left;
   if (ref_list->right || core_type_of(def->sem->sem_type) != core_type_of(ref->sem->sem_type)) {
-    report_error(def, "CQL0028: the FK reference must be exactly one column with the correct type", def->sem->name);
+    report_error(def, "CQL0028: FK reference must be exactly one column with the correct type", def->sem->name);
     record_error(fk);
     return;
   }
@@ -4056,7 +4056,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *head, coldef_info *info) {
       // 1|2
 
       if (flags) {
-        report_error(ast, "CQL0362: The HIDDEN column attribute must be the first attribute if present", NULL);
+        report_error(ast, "CQL0362: HIDDEN column attribute must be the first attribute if present", NULL);
         record_error(head);
         return false;
       }
@@ -4507,7 +4507,7 @@ static void sem_binary_eq_or_ne(ast_node *ast, CSTR op) {
   }
 
   if (is_ast_null(ast->left) || is_ast_null(ast->right)) {
-    report_error(ast, "CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead", NULL);
+    report_error(ast, "CQL0373: comparing against NULL always yields NULL; use IS and IS NOT instead", NULL);
     record_error(ast);
     return;
   }
@@ -4714,7 +4714,7 @@ static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
   if (is_ast_null(ast->right) && is_not_nullable(ast->left->sem->sem_type)) {
     report_error(
       ast,
-      "CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type",
+      "CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type",
       expr_as_text(ast->left));
     record_error(ast);
     return;
@@ -6432,13 +6432,13 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
   for (ast_node *ast = arg_list; ast; ast = ast->right) arg_count++;
 
   if (arg_count < 2) {
-    report_error(name_ast, "CQL0074: Too few arguments provided", name);
+    report_error(name_ast, "CQL0074: too few arguments provided", name);
     record_error(call_ast);
     return;
   }
 
   if (is_ifnull && arg_count != 2) {
-    report_error(name_ast, "CQL0075: Incorrect number of arguments", name);
+    report_error(name_ast, "CQL0075: incorrect number of arguments", name);
     record_error(call_ast);
     return;
   }
@@ -6450,7 +6450,7 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
     ast_node *expr = ast->left;
 
     if (is_ast_null(expr)) {
-      report_error(expr, "CQL0076: Null literal is useless in function", name);
+      report_error(expr, "CQL0076: NULL literal is useless in function", name);
       record_error(expr);
       record_error(call_ast);
       return;
@@ -6951,7 +6951,7 @@ static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
 
   ast_node *arg = first_arg(arg_list);
   if (!is_blob(arg->sem->sem_type)) {
-    report_error(ast, "CQL0345: the argument must be of type blob", name);
+    report_error(ast, "CQL0345: argument must be of type blob", name);
     record_error(ast);
     return;
   }
@@ -7328,7 +7328,7 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   sem_struct *sptr2 = arg2->sem->sptr;
 
   if (sptr1->count != sptr2->count) {
-    report_error(ast, "CQL0342: the cursor arguments must have identical column count", name);
+    report_error(ast, "CQL0342: cursor arguments must have identical column count", name);
     record_error(ast);
     return false;
   }
@@ -7703,7 +7703,7 @@ static void sem_func_ntile(ast_node *ast, uint32_t arg_count) {
 
   ast_node *arg = first_arg(arg_list);
   if (!is_num_int_in_range(arg, 1, INT_MAX)) {
-    report_error(ast, "CQL0300: Argument must be an integer (between 1 and max integer) in function", name);
+    report_error(ast, "CQL0300: argument must be an integer (between 1 and max integer) in function", name);
     record_error(ast);
     record_error(arg_list);
     return;
@@ -7736,7 +7736,7 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
   if (arg_count > 1) {
     ast_node *arg2 = second_arg(arg_list);
     if (!is_num_int_in_range(arg2, 0, INT_MAX)) {
-      report_error(ast, "CQL0301: The second argument must be an integer (between 0 and max integer) in function", name);
+      report_error(ast, "CQL0301: second argument must be an integer (between 0 and max integer) in function", name);
       record_error(ast);
       record_error(arg_list);
       return;
@@ -7774,7 +7774,7 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
     }
 
     if (!ok) {
-      report_error(ast, "CQL0302: The first and third arguments must be compatible in function", name);
+      report_error(ast, "CQL0302: first and third arguments must be compatible in function", name);
       record_error(ast);
       record_error(arg_list);
       return;
@@ -7848,7 +7848,7 @@ static void sem_func_nth_value(ast_node *ast, uint32_t arg_count) {
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
   if (!is_num_int_in_range(arg2, 1, INT_MAX)) {
-    report_error(ast, "CQL0303: The second argument must be an integer between 1 and max integer in function", name);
+    report_error(ast, "CQL0303: second argument must be an integer between 1 and max integer in function", name);
     record_error(ast);
     record_error(arg_list);
     return;
@@ -8369,7 +8369,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
 
   if (is_ast_declare_func_stmt(user_func)) {
     if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
-      report_error(ast, "CQL0088: User function may not appear in the context of a SQL statement", name);
+      report_error(ast, "CQL0088: user function may not appear in the context of a SQL statement", name);
       record_error(ast);
       return;
     }
@@ -8377,7 +8377,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
   else {
     // Must be is_ast_declare_select_func case (verified above)
     if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
-      report_error(ast, "CQL0089: User function may only appear in the context of a SQL statement", name);
+      report_error(ast, "CQL0089: user function may only appear in the context of a SQL statement", name);
       record_error(ast);
       return;
     }
@@ -8385,7 +8385,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
     // We don't know if UDF is deterministic or not (we need notation for that at some point)
     // for now forbid UDF in a constraint
     if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_CONSTRAINT)) {
-      report_error(ast, "CQL0393: User function cannot appear in a constraint expression ", name);
+      report_error(ast, "CQL0393: user function cannot appear in a constraint expression ", name);
       record_error(ast);
       return;
     }
@@ -8424,13 +8424,13 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
   EXTRACT_STRING(name, name_ast);
 
   if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
-    report_error(ast, "CQL0090: Stored proc calls may not appear in the context of a SQL statement", name);
+    report_error(ast, "CQL0090: stored proc calls may not appear in the context of a SQL statement", name);
     record_error(ast);
     return;
   }
 
   if (has_out_stmt_result(proc) || has_result_set(proc)) {
-    report_error(ast, "CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions", name);
+    report_error(ast, "CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions", name);
     record_error(ast);
     return;
   }
@@ -8711,7 +8711,7 @@ static void sem_window_reference(ast_node *ast) {
     }
   }
 
-  report_error(ast->left, "CQL0296: Window name definition is not used", window_name);
+  report_error(ast->left, "CQL0296: window name definition is not used", window_name);
   record_error(ast->left);
   record_error(ast);
 }
@@ -8845,7 +8845,7 @@ static void sem_expr_window_func_inv(ast_node *ast, CSTR cstr) {
   EXTRACT_ANY_NOTNULL(window_name_or_defn, ast->right);
 
   if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_SELECT_LIST)) {
-    report_error(ast, "CQL0294: Window function invocations can only appear in the select list of a select statement", NULL);
+    report_error(ast, "CQL0294: window function invocations can only appear in the select list of a select statement", NULL);
     record_error(ast);
     return;
   }
@@ -9557,7 +9557,7 @@ static bool_t sem_select_orderby(ast_node *ast) {
 
   if (opt_offset) {
     if (!opt_limit) {
-      report_error(opt_offset, "CQL0271: the OFFSET clause may only be used if LIMIT is also present", NULL);
+      report_error(opt_offset, "CQL0271: OFFSET clause may only be used if LIMIT is also present", NULL);
       record_error(opt_offset);
       error = true;
     }
@@ -9986,7 +9986,7 @@ static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
     if (is_id(expr)) {
       continue;
     }
-    report_error(expr, "CQL0398: A compound select cannot be ordered by the result of an expression", NULL);
+    report_error(expr, "CQL0398: compound select cannot be ordered by the result of an expression", NULL);
     record_error(ast);
     return 1;
   }
@@ -10164,13 +10164,13 @@ static void sem_explain(ast_node *stmt) {
 
   // EXPLAIN [explain_op] [explain_target] is only available in dev mode
   if (!options.dev) {
-    report_error(stmt, "CQL0292: Explain statement is only available in dev mode because its result set may vary between sqlite versions", NULL);
+    report_error(stmt, "CQL0292: explain statement is only available in dev mode because its result set may vary between SQLite versions", NULL);
     record_error(stmt);
     goto cleanup;
   }
 
   if (query_plan != EXPLAIN_QUERY_PLAN) {
-    report_error(stmt, "CQL0293: Only [EXPLAIN QUERY PLAN ...] statement is supported", NULL);
+    report_error(stmt, "CQL0293: only [EXPLAIN QUERY PLAN ...] statement is supported", NULL);
     record_error(stmt);
     goto cleanup;
   }
@@ -10701,7 +10701,7 @@ static void sem_shared_fragment_table_binding(
   sem_accumulate_proc_cte_info(create_proc_stmt, &info);
 
   if (!parms_head) {
-    report_error(cte_binding_list, "CQL0429: the called procedure has no table arguments but a USING clause is present", proc_name);
+    report_error(cte_binding_list, "CQL0429: called procedure has no table arguments but a USING clause is present", proc_name);
     record_error(call_stmt);
     goto cleanup;
   }
@@ -10758,7 +10758,7 @@ static void sem_shared_fragment_table_binding(
     Invariant(sptr_actuals);
 
     if (sptr_formals->count != sptr_actuals->count) {
-      report_error(ast_actual, "CQL0432: the table provided must have the same number of columns as the table parameter", actual);
+      report_error(ast_actual, "CQL0432: table provided must have the same number of columns as the table parameter", actual);
       record_error(call_stmt);
       goto cleanup;
     }
@@ -10776,7 +10776,7 @@ static void sem_shared_fragment_table_binding(
       symtab_entry *col_entry = symtab_find(cols, name);
       if (!col_entry) {
         CSTR msg = dup_printf(
-          "CQL0433: The table argument '%s' requires column '%s' but it is missing in provided table",
+          "CQL0433: table argument '%s' requires column '%s' but it is missing in provided table",
           formal, name);
         report_error(ast_actual, msg, actual);
         record_error(call_stmt);
@@ -10953,7 +10953,7 @@ static void sem_cte_table(ast_node *ast)  {
       }
 
       report_error(cte_body,
-          "CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level"
+          "CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level"
           " i.e. @attribute(cql:shared_fragment)", name);
 
       record_error(ast);
@@ -13859,7 +13859,7 @@ static void sem_insert_stmt(ast_node *ast) {
     else if (is_ast_default_columns_values(columns_values)) {
       // INSERT [conflict resolution] INTO name DEFAULT VALUES
       // insert statement with default values can not be used in an upsert statement
-      report_error(insert_type, "CQL0316: the upsert-clause is not compatible with DEFAULT VALUES", name);
+      report_error(insert_type, "CQL0316: upsert-clause is not compatible with DEFAULT VALUES", name);
       record_error(ast);
       return;
     }
@@ -14063,7 +14063,7 @@ static void sem_upsert_stmt(ast_node *stmt) {
                                                 validate_referenceable_fk_def_callback,
                                                 indexed_columns);
       if (!valid) {
-        report_error(indexed_columns, "CQL0279: the set of columns referenced in the conflict target should match exactly a unique key in table we apply upsert", NULL);
+        report_error(indexed_columns, "CQL0279: columns referenced in an UPSERT conflict target must exactly match a unique key the target table", NULL);
         record_error(upsert_update);
         record_error(conflict_target);
         goto error;
@@ -14287,7 +14287,7 @@ static void sem_fetch_values_stmt(ast_node *ast) {
       info.use_null = will_use_null;
 
       if (is_blob(sem_type_col) && !info.use_null) {
-        report_error(ast, "CQL0168: there's no good way to generate dummy blobs; not supported for now", NULL);
+        report_error(ast, "CQL0168: CQL has no good way to generate dummy blobs; not supported for now", NULL);
         valid = 0;
         break;
       }
@@ -16486,7 +16486,7 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
 
   if (Strcasecmp(base_frag_name, proc_name)) {
     report_error(create_proc_stmt,
-      "CQL0319: the name of the assembly procedure must match the name of the base fragment", proc_name);
+      "CQL0319: name of the assembly procedure must match the name of the base fragment", proc_name);
     goto error;
   }
 
@@ -17943,7 +17943,7 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
 
   // it has to be a typed object variable
   if (!is_object(var->sem->sem_type) || !var->sem->kind) {
-    report_error(var, "CQL0346: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
+    report_error(var, "CQL0346: variable must be of type object<T cursor> where T is a valid shape name", var_name);
     return NULL;
   }
 
@@ -17953,7 +17953,7 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   CSTR tail = " CURSOR";
   size_t len_tail = strlen(tail);
   if (len < len_tail + 1 || strcmp(tail, kind + len - len_tail)) {
-    report_error(var, "CQL0343: the variable must be of type object<T cursor> where T is a valid shape name", var_name);
+    report_error(var, "CQL0343: variable must be of type object<T cursor> where T is a valid shape name", var_name);
     return NULL;
   }
 
@@ -18023,7 +18023,7 @@ static void sem_set_from_cursor(ast_node *ast) {
   // the cursor has to be a statement cursor
   if (cursor->sem->sem_type & SEM_TYPE_VALUE_CURSOR) {
     report_error(cursor,
-       "CQL0261: the cursor did not originate from a SQLite statement, it only has values", cursor->sem->name);
+       "CQL0261: cursor did not originate from a SQLite statement, it only has values", cursor->sem->name);
     record_error(ast);
     return;
   }
@@ -18274,7 +18274,7 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bytebuf *case_d
 
     sem_t core_type_expr = core_type_of(expr->sem->sem_type);
     if (core_type_expr > core_type) {
-      report_error(expr, "CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression", NULL);
+      report_error(expr, "CQL0382: type of a WHEN expression is bigger than the type of the SWITCH expression", NULL);
       record_error(head);
       return;
     }
@@ -18283,7 +18283,7 @@ static void sem_switch_expr_list(ast_node *ast, sem_t core_type, bytebuf *case_d
     eval(expr, &result);
 
     if (result.sem_type == SEM_TYPE_ERROR) {
-      report_error(expr, "CQL0380: the WHEN expression cannot be evaluated to a constant", NULL);
+      report_error(expr, "CQL0380: WHEN expression cannot be evaluated to a constant", NULL);
       record_error(head);
       return;
     }
@@ -19800,7 +19800,7 @@ static void sem_out_any(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
 
   if (!current_proc) {
-    report_error(ast, "CQL0222: the out cursor statement only makes sense inside of a procedure", NULL);
+    report_error(ast, "CQL0222: out cursor statement only makes sense inside of a procedure", NULL);
     record_error(ast);
     return;
   }
@@ -19814,7 +19814,7 @@ static void sem_out_any(ast_node *ast) {
   }
 
   if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
-    report_error(ast, "CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]'", cursor->sem->name);
+    report_error(ast, "CQL0223: cursor was not fetched with the auto-fetch syntax 'fetch [cursor]'", cursor->sem->name);
     record_error(ast);
     return;
   }
@@ -20593,13 +20593,13 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
      is_ast_select_if_nothing_or_null_expr(parent);
 
   if (in_select_if_nothing && current_expr_context != SEM_EXPR_CONTEXT_NONE) {
-    report_error(parent, "CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML", NULL);
+    report_error(parent, "CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML", NULL);
     record_error(ast);
     return;
   }
 
   if (current_expr_context == SEM_EXPR_CONTEXT_CONSTRAINT) {
-    report_error(ast, "CQL0394: Nested select expressions may not appear inside of a constraint expression", NULL);
+    report_error(ast, "CQL0394: nested select expressions may not appear inside of a constraint expression", NULL);
     record_error(ast);
     return;
   }
@@ -21493,12 +21493,12 @@ static void sem_schema_ad_hoc_migration_stmt_for_recreate(ast_node *ast) {
 
   if (adding_current_entity) {
     if (!symtab_add(ad_hoc_recreate_actions, group, ast)) {
-       report_error(ast, "CQL0176: the indicated procedure or group already has a recreate action", group);
+       report_error(ast, "CQL0176: indicated procedure or group already has a recreate action", group);
        record_error(ast);
        return;
     }
   }
- 
+
   if (!sem_create_migration_proc_prototype(ast, proc)) {
     record_error(ast);
     return;

@@ -12139,7 +12139,7 @@ The statement ending at line XXXX
 
 SELECT coalesce(X, NULL, 1.5);
 
-test/sem_test.sql:XXXX:1: error: in null : CQL0076: Null literal is useless in function 'coalesce'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'coalesce'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -12199,7 +12199,7 @@ The statement ending at line XXXX
 
 SELECT ifnull(X, 5, 1.5);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0075: Incorrect number of arguments 'ifnull'
+test/sem_test.sql:XXXX:1: error: in str : CQL0075: incorrect number of arguments 'ifnull'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -12229,7 +12229,7 @@ The statement ending at line XXXX
 
 SELECT ifnull(5);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0074: Too few arguments provided 'ifnull'
+test/sem_test.sql:XXXX:1: error: in str : CQL0074: too few arguments provided 'ifnull'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -12317,7 +12317,7 @@ CREATE TABLE fk_table_2(
   FOREIGN KEY (id1, id2) REFERENCES foo (id)
 );
 
-test/sem_test.sql:XXXX:1: error: in fk_def : CQL0023: The number of columns on both sides of a foreign key must match
+test/sem_test.sql:XXXX:1: error: in fk_def : CQL0023: number of columns on both sides of a foreign key must match
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -12357,7 +12357,7 @@ CREATE TABLE fk_table_2(
   FOREIGN KEY (id) REFERENCES foo (id)
 );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0022: the exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
+test/sem_test.sql:XXXX:1: error: in str : CQL0022: exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -19859,7 +19859,7 @@ WITH
 source (*) LIKE there_is_no_such_source
 SELECT 1 AS x, 2 AS y, 3.0 AS z;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
+test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment)
 
   {with_select_stmt}: err
   | {with}
@@ -19906,7 +19906,7 @@ BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'not_a_shared_fragment'
+test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'not_a_shared_fragment'
 
   {create_proc_stmt}: err
   | {name not_a_shared_fragment}: err
@@ -19956,7 +19956,7 @@ x (*) AS (CALL a_shared_frag(1, 2) USING some_cte AS foo)
 SELECT *
   FROM x;
 
-test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: the called procedure has no table arguments but a USING clause is present 'a_shared_frag'
+test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: called procedure has no table arguments but a USING clause is present 'a_shared_frag'
 
   {with_select_stmt}: err
   | {with}
@@ -20369,7 +20369,7 @@ x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0432: the table provided must have the same number of columns as the table parameter 'some_cte'
+test/sem_test.sql:XXXX:1: error: in str : CQL0432: table provided must have the same number of columns as the table parameter 'some_cte'
 
   {with_select_stmt}: err
   | {with}
@@ -20457,7 +20457,7 @@ x (*) AS (CALL shared_frag2(1, 2) USING some_cte AS source)
 SELECT *
   FROM x;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0433: The table argument 'source' requires column 'z' but it is missing in provided table 'some_cte'
+test/sem_test.sql:XXXX:1: error: in str : CQL0433: table argument 'source' requires column 'z' but it is missing in provided table 'some_cte'
 
   {with_select_stmt}: err
   | {with}
@@ -20624,7 +20624,7 @@ BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0427: the LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'bogus_like_in_shared'
+test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be used inside a shared fragment at the top level i.e. @attribute(cql:shared_fragment) 'bogus_like_in_shared'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -22313,7 +22313,7 @@ The statement ending at line XXXX
 
 SELECT simple_func(1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0088: User function may not appear in the context of a SQL statement 'simple_func'
+test/sem_test.sql:XXXX:1: error: in call : CQL0088: user function may not appear in the context of a SQL statement 'simple_func'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -25861,7 +25861,7 @@ BEGIN
   OUT C;
 END;
 
-test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: the cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
+test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
 
   {create_proc_stmt}: err
   | {name out_cursor_proc_not_shape_storage}: err
@@ -26444,7 +26444,7 @@ The statement ending at line XXXX
 
 OUT curs;
 
-test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0222: the out cursor statement only makes sense inside of a procedure
+test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0222: out cursor statement only makes sense inside of a procedure
 
   {out_stmt}: err
   | {name curs}
@@ -26683,7 +26683,7 @@ The statement ending at line XXXX
 
 SET an_int := out_cursor_proc();
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0091: Stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
+test/sem_test.sql:XXXX:1: error: in call : CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
 
   {assign}: err
   | {name an_int}: an_int: integer variable
@@ -26711,7 +26711,7 @@ The statement ending at line XXXX
 
 SET an_int := ( SELECT proc_with_single_output(1, an_int, an_int) );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0090: Stored proc calls may not appear in the context of a SQL statement 'proc_with_single_output'
+test/sem_test.sql:XXXX:1: error: in call : CQL0090: stored proc calls may not appear in the context of a SQL statement 'proc_with_single_output'
 
   {assign}: err
   | {name an_int}: an_int: integer variable
@@ -27130,7 +27130,7 @@ BEGIN
   FETCH C() FROM VALUES() @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 
-test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: there's no good way to generate dummy blobs; not supported for now
+test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: CQL has no good way to generate dummy blobs; not supported for now
 
   {create_proc_stmt}: err
   | {name fetch_values_blob_dummy}: err
@@ -28225,7 +28225,7 @@ CREATE TABLE ref_bar(
   id INTEGER NOT NULL REFERENCES bar (id)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -28295,7 +28295,7 @@ CREATE TABLE bogus_fk_on_col_1(
   fk_src INTEGER REFERENCES bar (id, name) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: the FK reference must be exactly one column with the correct type 'fk_src'
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exactly one column with the correct type 'fk_src'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -28324,7 +28324,7 @@ CREATE TABLE bogus_fk_on_col_1(
   fk_src INTEGER REFERENCES bar (name)
 );
 
-test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: the FK reference must be exactly one column with the correct type 'fk_src'
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exactly one column with the correct type 'fk_src'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -29288,7 +29288,7 @@ The statement ending at line XXXX
 
 SET my_real := SqlUserFunc(1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0089: User function may only appear in the context of a SQL statement 'SqlUserFunc'
+test/sem_test.sql:XXXX:1: error: in call : CQL0089: user function may only appear in the context of a SQL statement 'SqlUserFunc'
 
   {assign}: err
   | {name my_real}: my_real: real variable
@@ -29303,7 +29303,7 @@ The statement ending at line XXXX
 
 SET my_real := SqlUserFunc(DISTINCT 1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0089: User function may only appear in the context of a SQL statement 'SqlUserFunc'
+test/sem_test.sql:XXXX:1: error: in call : CQL0089: user function may only appear in the context of a SQL statement 'SqlUserFunc'
 
   {assign}: err
   | {name my_real}: my_real: real variable
@@ -29319,7 +29319,7 @@ The statement ending at line XXXX
 
 SET my_real := SqlUserFunc(1) FILTER (WHERE 0);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0089: User function may only appear in the context of a SQL statement 'SqlUserFunc'
+test/sem_test.sql:XXXX:1: error: in call : CQL0089: user function may only appear in the context of a SQL statement 'SqlUserFunc'
 
   {assign}: err
   | {name my_real}: my_real: real variable
@@ -33689,7 +33689,7 @@ SELECT key_, sort_key
   FROM b
 ORDER BY 1 + 1, key_;
 
-test/sem_test.sql:XXXX:1: error: in add : CQL0398: A compound select cannot be ordered by the result of an expression
+test/sem_test.sql:XXXX:1: error: in add : CQL0398: compound select cannot be ordered by the result of an expression
 
   {select_stmt}: err
   | {select_core_list}: UNION: { key_: integer notnull, sort_key: integer notnull }
@@ -36774,7 +36774,7 @@ CREATE TABLE reference_pk_and_uk(
   FOREIGN KEY (id1, id2) REFERENCES referenceable (a, b)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -36858,7 +36858,7 @@ CREATE TABLE reference_pk_and_unique_index(
   FOREIGN KEY (id1, id2) REFERENCES referenceable (a, c)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -36902,7 +36902,7 @@ CREATE TABLE reference_uk_and_unique_index(
   FOREIGN KEY (id1, id2, id3) REFERENCES referenceable (b, c, d)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -36954,7 +36954,7 @@ CREATE TABLE reference_not_referenceable_column(
   FOREIGN KEY (id) REFERENCES referenceable (e)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -36990,7 +36990,7 @@ CREATE TABLE reference_not_referenceable_columns(
   FOREIGN KEY (id1, id2, id3) REFERENCES referenceable (c, d, e)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -37044,7 +37044,7 @@ CREATE TABLE reference_not_referenceable_column(
   FOREIGN KEY (id) REFERENCES referenceable (c)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'referenceable'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -47330,7 +47330,7 @@ SELECT *
   FROM foo
 OFFSET 1;
 
-test/sem_test.sql:XXXX:1: error: in opt_offset : CQL0271: the OFFSET clause may only be used if LIMIT is also present
+test/sem_test.sql:XXXX:1: error: in opt_offset : CQL0271: OFFSET clause may only be used if LIMIT is also present
 
   {select_stmt}: err
   | {select_core_list}: select: { id: integer notnull }
@@ -48005,7 +48005,7 @@ BEGIN
   ON CONFLICT (name) DO NOTHING;
 END;
 
-test/sem_test.sql:XXXX:1: error: in indexed_columns : CQL0279: the set of columns referenced in the conflict target should match exactly a unique key in table we apply upsert
+test/sem_test.sql:XXXX:1: error: in indexed_columns : CQL0279: columns referenced in an UPSERT conflict target must exactly match a unique key the target table
 
   {create_proc_stmt}: err
   | {name upsert_conflict_target_column_not_unique_key}: err
@@ -49389,7 +49389,7 @@ The statement ending at line XXXX
 
 @SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(group_foo, proc_bar);
 
-test/sem_test.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0176: the indicated procedure or group already has a recreate action 'group_foo'
+test/sem_test.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0176: indicated procedure or group already has a recreate action 'group_foo'
 
   {schema_ad_hoc_migration_stmt}: err
   | {name group_foo}
@@ -49518,7 +49518,7 @@ The statement ending at line XXXX
 INSERT INTO foo DEFAULT VALUES
 ON CONFLICT DO NOTHING;
 
-test/sem_test.sql:XXXX:1: error: in insert_normal : CQL0316: the upsert-clause is not compatible with DEFAULT VALUES 'foo'
+test/sem_test.sql:XXXX:1: error: in insert_normal : CQL0316: upsert-clause is not compatible with DEFAULT VALUES 'foo'
 
   {upsert_stmt}: err
   | {insert_stmt}: err
@@ -49950,7 +49950,7 @@ The statement ending at line XXXX
 EXPLAIN
 SELECT 1;
 
-test/sem_test.sql:XXXX:1: error: in explain_stmt : CQL0293: Only [EXPLAIN QUERY PLAN ...] statement is supported
+test/sem_test.sql:XXXX:1: error: in explain_stmt : CQL0293: only [EXPLAIN QUERY PLAN ...] statement is supported
 
   {explain_stmt}: err
   | {int 1}
@@ -50378,7 +50378,7 @@ SELECT 1
   WHERE 
   row_number() OVER ();
 
-test/sem_test.sql:XXXX:1: error: in window_func_inv : CQL0294: Window function invocations can only appear in the select list of a select statement
+test/sem_test.sql:XXXX:1: error: in window_func_inv : CQL0294: window function invocations can only appear in the select list of a select statement
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -50591,7 +50591,7 @@ SELECT id
   WINDOW 
     win AS ();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0296: Window name definition is not used 'win'
+test/sem_test.sql:XXXX:1: error: in str : CQL0296: window name definition is not used 'win'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -51208,7 +51208,7 @@ SELECT id,
   ntile(9898989889989L) OVER ()
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0300: Argument must be an integer (between 1 and max integer) in function 'ntile'
+test/sem_test.sql:XXXX:1: error: in call : CQL0300: argument must be an integer (between 1 and max integer) in function 'ntile'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -51245,7 +51245,7 @@ SELECT id,
   ntile(0) OVER ()
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0300: Argument must be an integer (between 1 and max integer) in function 'ntile'
+test/sem_test.sql:XXXX:1: error: in call : CQL0300: argument must be an integer (between 1 and max integer) in function 'ntile'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -51394,7 +51394,7 @@ SELECT
   FROM with_kind;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'some_key'
-test/sem_test.sql:XXXX:1: error: in call : CQL0302: The first and third arguments must be compatible in function 'lag'
+test/sem_test.sql:XXXX:1: error: in call : CQL0302: first and third arguments must be compatible in function 'lag'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -51432,7 +51432,7 @@ SELECT id,
   lag(id, 1.3, 0) OVER ()
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0301: The second argument must be an integer (between 0 and max integer) in function 'lag'
+test/sem_test.sql:XXXX:1: error: in call : CQL0301: second argument must be an integer (between 0 and max integer) in function 'lag'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -51627,7 +51627,7 @@ SELECT id,
   lag(id, -1) OVER ()
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0301: The second argument must be an integer (between 0 and max integer) in function 'lag'
+test/sem_test.sql:XXXX:1: error: in call : CQL0301: second argument must be an integer (between 0 and max integer) in function 'lag'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -51707,7 +51707,7 @@ SELECT id,
   FROM foo;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 0.7
-test/sem_test.sql:XXXX:1: error: in call : CQL0302: The first and third arguments must be compatible in function 'lag'
+test/sem_test.sql:XXXX:1: error: in call : CQL0302: first and third arguments must be compatible in function 'lag'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -52146,7 +52146,7 @@ SELECT id,
   nth_value(id, 0) OVER () AS nth
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0303: The second argument must be an integer between 1 and max integer in function 'nth_value'
+test/sem_test.sql:XXXX:1: error: in call : CQL0303: second argument must be an integer between 1 and max integer in function 'nth_value'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -54927,7 +54927,7 @@ BEGIN
     FROM core;
 END;
 
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0319: the name of the assembly procedure must match the name of the base fragment 'wrong_assembly_frag_name'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0319: name of the assembly procedure must match the name of the base fragment 'wrong_assembly_frag_name'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -56049,7 +56049,7 @@ CREATE TABLE self_ref5(
   FOREIGN KEY (id2) REFERENCES self_ref5 (id2)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref5'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -56088,7 +56088,7 @@ CREATE TABLE fk_to_non_key(
   id INTEGER REFERENCES self_ref2 (id2)
 );
 
-test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: the set of columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
+test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -58452,7 +58452,7 @@ BEGIN
   SET a_string := cql_cursor_diff_col(c1, c2);
 END;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0342: the cursor arguments must have identical column count 'cql_cursor_diff_col'
+test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have identical column count 'cql_cursor_diff_col'
 
   {create_proc_stmt}: err
   | {name cql_cursor_diff_col_with_wrong_col_count_arg}: err
@@ -60065,7 +60065,7 @@ BEGIN
   DECLARE C CURSOR FOR box;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0346: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+test/sem_test.sql:XXXX:1: error: in str : CQL0346: variable must be of type object<T cursor> where T is a valid shape name 'box'
 
   {create_proc_stmt}: err
   | {name cursor_unbox_untyped}: err
@@ -60087,7 +60087,7 @@ BEGIN
   DECLARE C CURSOR FOR box;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0343: the variable must be of type object<T cursor> where T is a valid shape name 'box'
+test/sem_test.sql:XXXX:1: error: in str : CQL0343: variable must be of type object<T cursor> where T is a valid shape name 'box'
 
   {create_proc_stmt}: err
   | {name cursor_unbox_not_cursor}: err
@@ -60178,7 +60178,7 @@ BEGIN
   SET box FROM CURSOR C;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0261: the cursor did not originate from a SQLite statement, it only has values 'C'
+test/sem_test.sql:XXXX:1: error: in str : CQL0261: cursor did not originate from a SQLite statement, it only has values 'C'
 
   {create_proc_stmt}: err
   | {name cursor_box_value}: err
@@ -60382,7 +60382,7 @@ The statement ending at line XXXX
 
 SET an_long := cql_get_blob_size(an_int);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0345: the argument must be of type blob 'cql_get_blob_size'
+test/sem_test.sql:XXXX:1: error: in call : CQL0345: argument must be of type blob 'cql_get_blob_size'
 
   {assign}: err
   | {name an_long}: an_long: longint variable
@@ -63378,7 +63378,7 @@ CREATE TABLE with_check_expr_udf(
   CHECK (v > SqlUserFunc(1))
 );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0393: User function cannot appear in a constraint expression  'SqlUserFunc'
+test/sem_test.sql:XXXX:1: error: in call : CQL0393: user function cannot appear in a constraint expression  'SqlUserFunc'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -63457,7 +63457,7 @@ CREATE TABLE with_check_expr_select(
   CHECK (v > ( SELECT 5 ))
 );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0394: Nested select expressions may not appear inside of a constraint expression
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0394: nested select expressions may not appear inside of a constraint expression
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -64125,7 +64125,7 @@ The statement ending at line XXXX
 
 DECLARE FUNC maybe_create_func_int () CREATE INTEGER;
 
-test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
   {declare_func_stmt}: err
   | {name maybe_create_func_int}
@@ -64137,7 +64137,7 @@ The statement ending at line XXXX
 
 DECLARE FUNC maybe_create_func_bool () CREATE BOOL;
 
-test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
   {declare_func_stmt}: err
   | {name maybe_create_func_bool}
@@ -64149,7 +64149,7 @@ The statement ending at line XXXX
 
 DECLARE FUNC maybe_create_func_long () CREATE LONG_INT NOT NULL @SENSITIVE;
 
-test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: Return data type in a create function declaration can only be text, blob or object
+test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
   {declare_func_stmt}: err
   | {name maybe_create_func_long}
@@ -66415,7 +66415,7 @@ CREATE VIRTUAL TABLE virtual_with_hidden_wrong USING module_name AS (
   y INTEGER
 );
 
-test/sem_test.sql:XXXX:1: error: in col_attrs_hidden : CQL0362: The HIDDEN column attribute must be the first attribute if present
+test/sem_test.sql:XXXX:1: error: in col_attrs_hidden : CQL0362: HIDDEN column attribute must be the first attribute if present
 
   {create_virtual_table_stmt}: err
   | {module_info}
@@ -67122,7 +67122,7 @@ The statement ending at line XXXX
 
 SELECT ( SELECT 0 IF NOTHING -1 );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -67159,7 +67159,7 @@ The statement ending at line XXXX
 
 DELETE FROM foo WHERE id = ( SELECT 33 IF NOTHING 0 );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: The (select ... if nothing) construct is for use in top level expressions, not inside of other DML
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 
   {delete_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -67986,7 +67986,7 @@ SWITCH z
   WHEN 1L THEN NOTHING
 END;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0382: the type of a WHEN expression is bigger than the type of the SWITCH expression
+test/sem_test.sql:XXXX:1: error: in num : CQL0382: type of a WHEN expression is bigger than the type of the SWITCH expression
 
   {switch_stmt}: err
   | {int 0}
@@ -68003,7 +68003,7 @@ SWITCH z
   WHEN 1 + x THEN NOTHING
 END;
 
-test/sem_test.sql:XXXX:1: error: in add : CQL0380: the WHEN expression cannot be evaluated to a constant
+test/sem_test.sql:XXXX:1: error: in add : CQL0380: WHEN expression cannot be evaluated to a constant
 
   {switch_stmt}: err
   | {int 0}
@@ -68441,7 +68441,7 @@ The statement ending at line XXXX
 
 SELECT 1 = NULL;
 
-test/sem_test.sql:XXXX:1: error: in eq : CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead
+test/sem_test.sql:XXXX:1: error: in eq : CQL0373: comparing against NULL always yields NULL; use IS and IS NOT instead
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -68464,7 +68464,7 @@ The statement ending at line XXXX
 
 SELECT 1 <> NULL;
 
-test/sem_test.sql:XXXX:1: error: in ne : CQL0373: Comparing against NULL always yields NULL; use IS and IS NOT instead
+test/sem_test.sql:XXXX:1: error: in ne : CQL0373: comparing against NULL always yields NULL; use IS and IS NOT instead
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76684,7 +76684,7 @@ The statement ending at line XXXX
 
 SELECT 1 + (NOT 2 IS NULL);
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76710,7 +76710,7 @@ The statement ending at line XXXX
 
 SELECT (NOT 1) + (NOT 2 IS NULL);
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76737,7 +76737,7 @@ The statement ending at line XXXX
 
 SELECT NOT 1 + (2 IS NULL);
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76763,7 +76763,7 @@ The statement ending at line XXXX
 
 SELECT NOT 1 + 2 IS NULL;
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1 + 2'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1 + 2'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76789,7 +76789,7 @@ The statement ending at line XXXX
 
 SELECT 1 + (NOT 2) IS NULL;
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1 + (NOT 2)'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1 + (NOT 2)'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76815,8 +76815,8 @@ The statement ending at line XXXX
 
 SELECT 1 IS NOT NULL AND 2 + (NOT 3) IS NULL;
 
-test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1'
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2 + (NOT 3)'
+test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '2 + (NOT 3)'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -76846,8 +76846,8 @@ The statement ending at line XXXX
 
 SELECT 1 IS NOT NULL AND 2 + (NOT 3 IS NULL);
 
-test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1'
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '3'
+test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '1'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '3'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -77867,7 +77867,7 @@ The statement ending at line XXXX
 
 SELECT 5 IS NULL IS NULL;
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -77920,7 +77920,7 @@ The statement ending at line XXXX
 
 SELECT 5 IS NOT NULL IS NULL;
 
-test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
+test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type '5'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -79666,7 +79666,7 @@ The statement ending at line XXXX
 
 LET not_null_object_is_null := not_null_object IS NULL;
 
-test/sem_test.sql:XXXX:1: error: in is : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
+test/sem_test.sql:XXXX:1: error: in is : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
 
   {let_stmt}: err
   | {name not_null_object_is_null}
@@ -79678,7 +79678,7 @@ The statement ending at line XXXX
 
 LET not_null_object_is_not_null := not_null_object IS NOT NULL;
 
-test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: Cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
+test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: cannot use IS NULL or IS NOT NULL on a value of a NOT NULL type 'not_null_object'
 
   {let_stmt}: err
   | {name not_null_object_is_not_null}
