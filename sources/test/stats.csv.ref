@@ -1,0 +1,6 @@
+"foo","add",1
+"foo","create_proc_stmt",1
+"foo","let_stmt",1
+"foo","num",2
+"foo","stmt_list",1
+"foo","str",2

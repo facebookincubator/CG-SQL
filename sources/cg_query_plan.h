@@ -9,8 +9,8 @@
 
 #include "cql.h"
 
-// Entry point for cql query plan runtime.
-// The runtime takes as an input a cql with one or many sql or cql statements
+// Entry point for cql query plan result type.
+// The result type takes as an input a cql with one or many sql or cql statements
 // It codegen a CQL stored proc that print out the query plan report of all
 // elegible sql statement in the input. All sql statement are not eligible to
 // run in an explain statement, this is the reason why we used in the previous

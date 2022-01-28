@@ -9,12 +9,13 @@
 #include "cg_common.h"
 #include "cg_c.h"
 #include "cg_java.h"
-#include "cg_schema.h"
 #include "cg_json_schema.h"
-#include "cg_test_helpers.h"
-#include "cg_query_plan.h"
-#include "cg_udf.h"
 #include "cg_objc.h"
+#include "cg_query_plan.h"
+#include "cg_schema.h"
+#include "cg_stats.h"
+#include "cg_test_helpers.h"
+#include "cg_udf.h"
 #include "rt.h"
 
 // These are the various result types we can produce
@@ -307,6 +308,12 @@ static rtdata rt_udf = {
   .cqlrt = "cqlrt.h",
 };
 
+static rtdata rt_stats = {
+  .name = "stats",
+  .code_generator = &cg_stats_main,
+  .required_file_names_count = 1,
+};
+
 static rtdata *(rt_all[]) = {
   &rt_c,
   &rt_objc,
@@ -320,6 +327,7 @@ static rtdata *(rt_all[]) = {
   &rt_test_helpers,
   &rt_query_plan,
   &rt_udf,
+  &rt_stats,
   RT_EXTRAS
   NULL,
 };

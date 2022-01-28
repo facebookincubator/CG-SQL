@@ -47,7 +47,7 @@ OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebu
           $O/cg_common.o $O/cg_c.o $O/cg_java.o $O/cg_objc.o $O/symtab.o $O/compat.o \
           $O/cg_schema.o $O/crc64xz.o $O/cg_json_schema.o $O/cg_test_helpers.o $O/encoders.o \
           $O/unit_tests.o $O/cg_query_plan.o ${O}/minipool.o $O/cg_udf.o $O/rt.o $O/eval.o \
-          $O/rewrite.o $O/printf.o $O/flow.o
+          $O/rewrite.o $O/printf.o $O/flow.o $O/cg_stats.o
 
 OBJECTS+=$(ADDITIONAL_OBJECTS)
 
@@ -86,7 +86,7 @@ $O/ast.o: ast.c ast.h cql.h encoders.h charbuf.h
 
 $O/cqlrt.o: cqlrt.c cqlrt.h
 
-$O/rt.o: rt.c rt.h
+$O/rt.o: rt.c rt.h rt_common.c
 
 $O/gen_sql.o: gen_sql.c ast.h gen_sql.h charbuf.h cql.h encoders.h
 
@@ -116,7 +116,9 @@ $O/cg_test_helpers.o: cg_test_helpers.c cg_test_helpers.h cg_common.h sem.h char
 
 $O/cg_query_plan.o: cg_query_plan.c cg_query_plan.h cg_common.h ast.h sem.h charbuf.h list.h cql.h ast.h
 
-$O/cg_udf.o: cg_udf.c cg_udf.h cg_common.h ast.h sem.h charbuf.h list.h cql.h ast.h
+$O/cg_udf.o: cg_udf.c cg_udf.h cg_common.h ast.h sem.h charbuf.h list.h cql.h
+
+$O/cg_stats.o: cg_stats.c cg_stats.h ast.h
 
 $O/eval.o: eval.c eval.h
 

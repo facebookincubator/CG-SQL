@@ -1490,6 +1490,21 @@ unit_tests() {
   fi
 }
 
+stats_test() {
+  echo '--------------------------------- STAGE 18 -- STATS OUTPUT TEST'
+  echo running status test
+  if ! ${CQL} --cg "${OUT_DIR}/stats.csv" --in "${TEST_DIR}/stats_test.sql" --rt stats 2>"${OUT_DIR}/stats_test.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/stats_test.err"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit stats.csv
+}
+
+
 GENERATED_TAG=generated
 AT_GENERATED_TAG="@$GENERATED_TAG"
 
@@ -1528,6 +1543,7 @@ run_test
 upgrade_test
 query_plan_test
 line_number_test
+stats_test
 amalgam_test
 signatures_test
 extra_tests
