@@ -516,11 +516,15 @@ static void gen_create_attr(ast_node *attr) {
 
 static void gen_delete_attr(ast_node *attr) {
   Contract (is_ast_delete_attr(attr));
+
+  // attributes do not appear when writing out commands for Sqlite
   if (!suppress_attributes()) {
-    // attributes do not appear when writing out commands for Sqlite
-    gen_printf(" @DELETE(");
-    gen_version_and_proc(attr->left);
-    gen_printf(")");
+    gen_printf(" @DELETE");
+    if (attr->left) {
+      gen_printf("(");
+      gen_version_and_proc(attr->left);
+      gen_printf(")");
+    }
   }
 }
 

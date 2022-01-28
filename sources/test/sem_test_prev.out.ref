@@ -1047,15 +1047,14 @@ The statement ending at line XXXX
 
 CREATE TABLE ok_to_delete_recreate_table(
   id INTEGER
-) @DELETE(6);
+) @RECREATE @DELETE;
 
-  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } deleted validated @delete(6)
+  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } validated @delete(1) @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
-  | | | {delete_attr}
-  | |   | {version_annotation}
-  | |     | {int 6}
+  | | | {recreate_attr}
+  | |   | {delete_attr}
   | | {name ok_to_delete_recreate_table}
   | {col_key_list}
     | {col_def}: id: integer
@@ -1113,15 +1112,14 @@ The statement ending at line XXXX
 
 CREATE TABLE recreate_deleted_in_the_past(
   id INTEGER
-) @DELETE(2);
+) @RECREATE @DELETE;
 
-  {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(2)
+  {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } validated @delete(1) @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
-  | | | {delete_attr}
-  | |   | {version_annotation}
-  | |     | {int 2}
+  | | | {recreate_attr}
+  | |   | {delete_attr}
   | | {name recreate_deleted_in_the_past}
   | {col_key_list}
     | {col_def}: id: integer
@@ -1426,7 +1424,7 @@ CREATE TABLE Recreated1(
   id INTEGER PRIMARY KEY
 ) @RECREATE(bar);
 
-  {create_table_stmt}: Recreated1: { id: integer notnull primary_key } validated @recreate(bar)
+  {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -1448,7 +1446,7 @@ CREATE TABLE Recreated2(
   id INTEGER REFERENCES Recreated1 (id)
 ) @RECREATE(bar);
 
-  {create_table_stmt}: Recreated2: { id: integer foreign_key } validated @recreate(bar)
+  {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -1790,15 +1788,15 @@ CREATE TABLE table_going(
   col1 TEXT,
   col2 INTEGER,
   FOREIGN KEY (col2) REFERENCES table_staying (col1) ON UPDATE CASCADE ON DELETE CASCADE
-) @DELETE(1);
+) @RECREATE(my_recreate_group) @DELETE;
 
-  {create_table_stmt}: table_going: { col1: text, col2: integer foreign_key } deleted validated @delete(1)
+  {create_table_stmt}: table_going: { col1: text, col2: integer foreign_key } validated @delete(1) @recreate(my_recreate_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
-  | | | {delete_attr}
-  | |   | {version_annotation}
-  | |     | {int 1}
+  | | | {recreate_attr}
+  | |   | {name my_recreate_group}
+  | |   | {delete_attr}
   | | {name table_going}
   | {col_key_list}
     | {col_def}: col1: text
@@ -2097,6 +2095,73 @@ CREATE TABLE conflict_clause_pk(
           | | {indexed_column}
           |   | {name id}: id: integer notnull
           | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE dropping_this(
+  f1 INTEGER,
+  f2 TEXT
+) @DELETE(5);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 5}
+  | | {name dropping_this}
+  | {col_key_list}
+    | {col_def}: f1: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name f1}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: f2: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name f2}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE losing_group(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name losing_group}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE gaining_group(
+  id INTEGER
+) @RECREATE(new_group);
+
+  {create_table_stmt}: gaining_group: { id: integer } validated @recreate(new_group)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name new_group}
+  | | {name gaining_group}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
 
 The statement ending at line XXXX
 
@@ -3508,7 +3573,9 @@ CREATE TABLE Recreated1(
   id INTEGER
 ) @RECREATE(foo);
 
-  {create_table_stmt}: Recreated1: { id: integer } @recreate(foo)
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'Recreated1'
+
+  {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -3528,7 +3595,9 @@ CREATE TABLE Recreated2(
   id INTEGER REFERENCES Recreated1 (id)
 ) @RECREATE(foo);
 
-  {create_table_stmt}: Recreated2: { id: integer foreign_key } @recreate(foo)
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'Recreated2'
+
+  {create_table_stmt}: err
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -4306,4 +4375,74 @@ CREATE TABLE conflict_clause_pk(
           | | {indexed_column}
           |   | {name id}: id: integer notnull
           | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE dropping_this(
+  f1 INTEGER,
+  f2 TEXT
+) @RECREATE(foo);
+
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0448: table was marked @delete but it needs to be marked @recreate @delete 'dropping_this'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name foo}
+  | | {name dropping_this}
+  | {col_key_list}
+    | {col_def}: f1: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name f1}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: f2: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name f2}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE losing_group(
+  id INTEGER
+) @RECREATE(foo);
+
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'losing_group'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name foo}
+  | | {name losing_group}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE gaining_group(
+  id INTEGER
+) @RECREATE;
+
+  {create_table_stmt}: gaining_group: { id: integer } @recreate
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | | {name gaining_group}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
 

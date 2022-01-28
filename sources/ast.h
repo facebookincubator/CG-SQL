@@ -588,7 +588,7 @@ AST(col_attrs_unique)
 AST(col_attrs_hidden)
 AST(sensitive_attr);
 AST(col_attrs_fk)
-AST1(recreate_attr)
+AST(recreate_attr)
 AST(create_attr)
 AST(delete_attr)
 AST(version_annotation)

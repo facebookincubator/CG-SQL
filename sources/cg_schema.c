@@ -977,6 +977,12 @@ static void cg_schema_manage_recreate_tables(
   for (size_t i = 0; i < count; i++) {
     recreate_annotation *note = &notes[i];
 
+    EXTRACT_NOTNULL(recreate_attr, note->annotation_ast);
+    EXTRACT(delete_attr, recreate_attr->right);
+
+    // presence of a node on the right of the @recreate is the @delete
+    bool_t is_deleted = !!delete_attr;
+
     ast_node *ast = note->target_ast;
     ast_node *ast_output = ast;
 
@@ -1007,9 +1013,11 @@ static void cg_schema_manage_recreate_tables(
 
     CHARBUF_OPEN(make_table);
 
-    gen_set_output_buffer(&make_table);
-    gen_statement_with_callbacks(ast_output, &callbacks);
-    bprintf(&make_table, ";\n");
+    if (!is_deleted) {
+      gen_set_output_buffer(&make_table);
+      gen_statement_with_callbacks(ast_output, &callbacks);
+      bprintf(&make_table, ";\n");
+    }
 
     if (!is_eponymous) {
       // note that this will also drop any indices that are on the table

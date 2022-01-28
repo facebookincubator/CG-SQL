@@ -3024,7 +3024,7 @@ static void sem_update_column_type(ast_node *table_ast, ast_node *columns, sem_t
 // as they are always @recreate objects, but they can be deleted.  All we need to do
 // is verify that they have no delete migration proc; it's not safe for them to have such
 // a proc because indices and triggers must be removed entirely if their table is ever deleted
-// at which point the migration proc would vanish.  To avoid this problem we dont' support
+// at which point the migration proc would vanish.  To avoid this problem we don't support
 // migration procs on these objects.
 static bool_t sem_validate_no_delete_migration(version_attrs_info *vers_info, ast_node *ast, CSTR obj_name) {
   Contract(vers_info);
@@ -11361,8 +11361,8 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
 
   for (ast_node *ast = vers_info->attrs_ast; ast; ast = ast->right) {
     if (is_ast_recreate_attr(ast)) {
-      // there is exactly one attribute and it is @recreate (syntax allows nothing else)
-      Contract(!ast->right);
+      // recreate attributes come in exactly this one order; enforced by syntax
+      // we get the recreate node and an optional delete, nothing else
       Contract(ast == vers_info->attrs_ast);
       vers_info->recreate = true;
       vers_info->recreate_version_ast = ast;
@@ -11371,6 +11371,19 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
         EXTRACT_STRING(group_name, ast->left);
         vers_info->recreate_group_name = group_name;
       }
+
+      // optional delete node is present, it has shape, enforced by parser
+      // cons up a fake v1 delete annotation for the vers_info
+      if (ast->right) {
+        AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+        ast_node *version_annotation = new_ast_version_annotation(new_ast_opt(1), NULL);
+        AST_REWRITE_INFO_RESET();
+
+        vers_info->delete_version_ast = version_annotation;
+        vers_info->delete_version = 1;
+      }
+
+      // either way, we're done now
       return true;
     }
     if (is_ast_create_attr(ast)) {
@@ -11573,7 +11586,7 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
 
   // Note that it is ok to go from "no plan" to "recreate" so -1 for both is ok
   if (prev->create_version > 0 || prev->delete_version > 0) {
-    if (cur->recreate) {
+    if (cur->recreate && !prev->recreate) {
       report_error(name_ast, "CQL0114: current schema can't go back to @recreate semantics for", name);
       return false;
     }
@@ -11896,13 +11909,39 @@ static void sem_validate_previous_table(ast_node *prev_table) {
     return;
   }
 
-  // if this table changed to the new plan we have to transition against
   // the max schema number, we can't do that until later so save it.
   if (prev_info.recreate && !cur_info.recreate) {
+    // the table was deleted and didn't stay on the recreate plan, that's an error
+    if (cur_info.delete_version > 0 && !cur_info.is_virtual_table) {
+      report_error(ast, "CQL0448: table was marked @delete but it needs to be marked @recreate @delete", name);
+      record_error(prev_table);
+      record_error(ast);
+      return;
+    }
+
     // check create verisions
     if (ast->sem->create_version > 0) {
       add_item_to_list(&all_prev_recreate_tables, ast);
     }
+  }
+
+  if (prev_info.recreate && cur_info.recreate) {
+     bool_t error = false;
+     if (prev_info.recreate_group_name == NULL || cur_info.recreate_group_name == NULL) {
+        // error only if we lost the group name
+        error =  prev_info.recreate_group_name && !cur_info.recreate_group_name;
+     }
+     else {
+        // error if the name changed
+        error = !!Strcasecmp(prev_info.recreate_group_name, cur_info.recreate_group_name);
+     }
+
+     if (error) {
+       report_error(ast, "CQL0449: recreate group annotation changed in table", name);
+       record_error(prev_table);
+       record_error(ast);
+       return;
+     }
   }
 
   // If we're on the @recreate plan then we can make any changes we like to the table
@@ -12070,6 +12109,15 @@ static void sem_validate_previous_table(ast_node *prev_table) {
 // this will be later sorted and used to drive schema migration if schema codegen happens.
 static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info) {
   ast_node *target_ast = vers_info->target_ast;
+
+  if (vers_info->recreate) {
+    ast_node *recreate_ast = vers_info->recreate_version_ast;
+    CSTR group_name = vers_info->recreate_group_name ? vers_info->recreate_group_name : "";
+    record_recreate_annotation(target_ast, vers_info->name, group_name, recreate_ast);
+    // no need for @create or @delete annotation if recreate, the recreate will also handle delete if reqd
+    return;
+  }
+
   if (vers_info->create_version > 0) {
     EXTRACT(version_annotation, vers_info->create_version_ast);
     uint32_t code = vers_info->create_code;
@@ -12082,11 +12130,6 @@ static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info) 
     record_schema_annotation(vers_info->delete_version, target_ast, vers_info->name, code, NULL, version_annotation, 0);
   }
 
-  if (vers_info->recreate) {
-    ast_node *recreate_ast = vers_info->recreate_version_ast;
-    CSTR group_name = vers_info->recreate_group_name ? vers_info->recreate_group_name : "";
-    record_recreate_annotation(target_ast, vers_info->name, group_name, recreate_ast);
-  }
 }
 
 // The create trigger statement is quite a beast, validations include:

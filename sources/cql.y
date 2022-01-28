@@ -227,7 +227,7 @@ static void cql_reset_globals(void);
 %type <ival> opt_vtab_flags
 
 %type <aval> col_key_list col_key_def col_def col_name
-%type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr
+%type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr 
 %type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr
 %type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args opt_conflict_clause
@@ -503,9 +503,14 @@ let_stmt:
 
 version_attrs_opt_recreate:
   /* nil */  { $version_attrs_opt_recreate = NULL; }
-  | AT_RECREATE  { $version_attrs_opt_recreate = new_ast_recreate_attr(NULL); }
-  | AT_RECREATE '(' name ')'  { $version_attrs_opt_recreate = new_ast_recreate_attr($name); }
+  | AT_RECREATE  opt_delete_plain_attr { $version_attrs_opt_recreate = new_ast_recreate_attr(NULL, $opt_delete_plain_attr); }
+  | AT_RECREATE '(' name ')'  opt_delete_plain_attr { $version_attrs_opt_recreate = new_ast_recreate_attr($name, $opt_delete_plain_attr); }
   | version_attrs  { $version_attrs_opt_recreate = $version_attrs; }
+  ;
+
+opt_delete_plain_attr:
+  /* nil */  {$opt_delete_plain_attr = NULL; }
+  | AT_DELETE { $opt_delete_plain_attr = new_ast_delete_attr(NULL, NULL); }
   ;
 
 opt_version_attrs:
@@ -550,7 +555,7 @@ create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags name[table_name]
     struct ast_node *flags_node = new_ast_opt(flags);
     struct ast_node *name = $table_name;
     struct ast_node *col_key_list = $col_key_list;
-    struct ast_node *version_info = $opt_delete_version_attr ? $opt_delete_version_attr : new_ast_recreate_attr(NULL);
+    struct ast_node *version_info = $opt_delete_version_attr ? $opt_delete_version_attr : new_ast_recreate_attr(NULL, NULL);
     struct ast_node *table_flags_attrs = new_ast_table_flags_attrs(flags_node, version_info);
     struct ast_node *table_name_flags = new_ast_create_table_name_flags(table_flags_attrs, name);
     struct ast_node *create_table_stmt =  new_ast_create_table_stmt(table_name_flags, col_key_list);

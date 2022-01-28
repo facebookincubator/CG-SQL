@@ -197,7 +197,7 @@ create table cannot_change_to_recreate
 create table ok_to_delete_recreate_table
 (
   id int
-) @delete(6);
+) @recreate @delete;
 
 -- the new version of this table is on the create plan, that's ok to go
 -- - error:
@@ -214,12 +214,12 @@ create table not_ok_to_create_recreate_table
 ) @create(6);
 
 -- TEST : the new version of this table is ok the delete plan, the version number can be low, it's ok for deleted
--- + {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(2)
+-- + {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } validated @delete(1) @recreate
 -- - error:
 create table recreate_deleted_in_the_past
 (
   id int
-) @delete(2);
+) @recreate @delete;
 
 -- TEST : the new version of this table is ok on the create plan but the version number is too small
 -- + {create_table_stmt}: err
@@ -307,13 +307,17 @@ create table t_several_columns_added_interleaved(
 @schema_ad_hoc_migration(6, MigrateNewCurrent);
 
 -- These two tables are changing from recreate group foo to create group bar
--- this must not cause any error
+-- this now generates errors as motion cannot be allowed due to possible FK
+-- issues.  The issue is that the version of the table in the DB could have
+-- different FK references than the current version of the table.  The
+-- delete order when the table moves is not clear.  See the docs for CQL0449
+-- for more details.
 
--- TEST: simple recreate in a new group, no issues
+-- TEST: simple recreate in a new group, no issues until previous schema validation
 -- - error:
 create table Recreated1 ( id integer primary key) @recreate(bar);
 
--- TEST: simple recreate in a new group, with FK, no issues
+-- TEST: simple recreate in a new group, with FK, no issues until previous schema validation
 -- - error:
 create table Recreated2 ( id integer references Recreated1(id) ) @recreate(bar);
 
@@ -406,7 +410,7 @@ create table table_going(
   col1 text,
   col2 int,
   foreign key(col2) references table_staying(col1) on update cascade on delete cascade
-) @delete(1);
+) @recreate(my_recreate_group) @delete;
 
 -- TEST: it's ok for items to appear with a migration
 -- create validated in normal processing, delete validated in previous
@@ -467,6 +471,32 @@ create table conflict_clause_pk(
   id int not null,
   constraint pk1 primary key (id) on conflict rollback
 );
+
+-- TEST: attempt to transition with a normal delete
+-- this table should stay on the recreate plan
+-- error will be detected during previous validation
+-- so far so good
+-- - error:
+create table dropping_this
+(
+  f1 integer,
+  f2 text
+) @delete(5);
+
+-- TEST: this table had a group but gets one
+-- error will be detected during previous validation
+-- - error:
+create table losing_group
+(
+  id integer
+) @recreate;
+
+-- TEST: this table gets a group, that's valid
+-- - error:
+create table gaining_group
+(
+  id integer
+) @recreate(new_group);
 
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
@@ -841,12 +871,14 @@ create table t_several_columns_added_interleaved(
 -- These two tables are changing from recreate group foo to create group bar
 -- this must not cause any error in current or previous schema
 
--- TEST: simple recreate in a new group, no issues (foo -> bar above)
--- - error:
+-- TEST: simple recreate in a new group -- this cannot be allowed (see error docs)
+-- + error: % recreate group annotation changed in table 'Recreated1'
 create table Recreated1 ( id integer) @recreate(foo);
 
--- TEST: simple recreate in a new group, with FK, no issues (foo -> bar above)
--- - error:
+-- TEST: recreate in a new group is not allowed because it can cause FK violations
+-- table delete order is required to be within the group and also globally correct and
+-- these two are not miscible.  Therefore we cannot allow tables to move groups
+-- + error: % recreate group annotation changed in table 'Recreated2'
 create table Recreated2 ( id integer references Recreated1(id) ) @recreate(foo);
 
 
@@ -1030,3 +1062,31 @@ create table conflict_clause_pk(
   id int not null,
   constraint pk1 primary key (id) on conflict rollback
 );
+
+-- TEST: this table was on the recreate plan, it needs to stay on that plan
+-- + {create_table_stmt}: err
+-- + error: % table was marked @delete but it needs to be marked @recreate @delete 'dropping_this'
+-- +1 error:
+create table dropping_this
+(
+  f1 integer,
+  f2 text
+) @recreate(foo);
+
+
+-- TEST: this table had a group and losses it
+-- + {create_table_stmt}: err
+-- + error: % recreate group annotation changed in table 'losing_group'
+-- +1 error:
+create table losing_group
+(
+  id integer
+) @recreate(foo);
+
+-- TEST: this table gains a group, that's ok
+-- {create_table_stmt}: gaining_group: { id: integer } @recreate
+-- - error:
+create table gaining_group
+(
+  id integer
+) @recreate;

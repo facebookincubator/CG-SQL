@@ -901,6 +901,12 @@ create table lots_o_defaults
 -- create a table using recreate
 create table foo (id integer) @recreate;
 
+-- create a table using recreate and then delete
+create table foo2 (id integer) @recreate @delete;
+
+-- create a table using recreate group and then delete
+create table foo3 (id integer) @recreate(foo3_group) @delete;
+
 -- use with CTE in an insert statement
 with x(a,b) as (select 111,222)
 insert into foo values ( (select a from x), (select b from x) );

@@ -32,7 +32,7 @@ CREATE TABLE test_recreate_table_A(
   colA    INT,
   colC    TEXT,
   colD    TEXT
-) @delete(2);
+) @recreate @delete;
 
 CREATE TABLE test_recreate_table_B(
   colA    INT,
