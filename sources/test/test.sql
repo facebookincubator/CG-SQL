@@ -1290,6 +1290,18 @@ create virtual table @eponymous foo using bar(this, that, the_other) as (
   t text
 );
 
+-- a simple eponymous virtual table form
+create virtual table @eponymous if not exists foo using bar(this, that, the_other) as (
+  id integer,
+  t text
+);
+
+-- a simple eponymous virtual table form
+create virtual table if not exists @eponymous foo using bar(this, that, the_other) as (
+  id integer,
+  t text
+);
+
 create virtual table foo using bar as (
   id integer,
   t text
