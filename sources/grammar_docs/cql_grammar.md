@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jan 19 09:26:24 PST 2022
+Snapshot as of Fri Jan 28 14:22:31 PST 2022
 
 ### Operators and Literals
 
@@ -230,9 +230,14 @@ let_stmt:
 
 version_attrs_opt_recreate:
   /* nil */
-  | "@RECREATE"
-  | "@RECREATE" '(' name ')'
+  | "@RECREATE"  opt_delete_plain_attr
+  | "@RECREATE" '(' name ')'  opt_delete_plain_attr
   | version_attrs
+  ;
+
+opt_delete_plain_attr:
+  /* nil */
+  | "@DELETE"
   ;
 
 opt_version_attrs:

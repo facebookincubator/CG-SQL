@@ -12,7 +12,8 @@ schema_upgrade_script_stmt ::= "@SCHEMA_UPGRADE_SCRIPT"
 schema_upgrade_version_stmt ::= "@SCHEMA_UPGRADE_VERSION" '(' "integer-literal" ')'
 set_stmt ::= "SET" name ":=" expr | "SET" name "FROM" "CURSOR" name
 let_stmt ::= "LET" name ":=" expr
-version_attrs_opt_recreate ::= /* nil */ | "@RECREATE" | "@RECREATE" '(' name ')' | version_attrs
+version_attrs_opt_recreate ::= /* nil */ | "@RECREATE" opt_delete_plain_attr | "@RECREATE" '(' name ')' opt_delete_plain_attr | version_attrs
+opt_delete_plain_attr ::= /* nil */ | "@DELETE"
 opt_version_attrs ::= /* nil */ | version_attrs
 version_attrs ::= "@CREATE" version_annotation opt_version_attrs | "@DELETE" version_annotation opt_version_attrs
 opt_delete_version_attr ::= /* nil */ | "@DELETE" version_annotation

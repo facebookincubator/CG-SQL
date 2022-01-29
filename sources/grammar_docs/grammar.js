@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Jan 19 09:26:25 2022
+// Snapshot as of Fri Jan 28 14:22:31 2022
 
 
 const PREC = {
@@ -37,7 +37,8 @@ module.exports = grammar({
     schema_upgrade_version_stmt: $ => seq($.AT_SCHEMA_UPGRADE_VERSION, '(', $.INT_LIT, ')'),
     set_stmt: $ => choice(seq($.SET, $.name, ":=", $.expr), seq($.SET, $.name, $.FROM, $.CURSOR, $.name)),
     let_stmt: $ => seq($.LET, $.name, ":=", $.expr),
-    version_attrs_opt_recreate: $ => choice($.AT_RECREATE, seq($.AT_RECREATE, '(', $.name, ')'), $.version_attrs),
+    version_attrs_opt_recreate: $ => choice(seq($.AT_RECREATE, optional($.opt_delete_plain_attr)), seq($.AT_RECREATE, '(', $.name, ')', optional($.opt_delete_plain_attr)), $.version_attrs),
+    opt_delete_plain_attr: $ => $.AT_DELETE,
     opt_version_attrs: $ => $.version_attrs,
     version_attrs: $ => choice(seq($.AT_CREATE, $.version_annotation, optional($.opt_version_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.opt_version_attrs))),
     opt_delete_version_attr: $ => seq($.AT_DELETE, $.version_annotation),
@@ -320,8 +321,8 @@ module.exports = grammar({
     CURSOR: $ => CI('cursor'),
     LET: $ => CI('let'),
     AT_RECREATE: $ => CI('@recreate'),
-    AT_CREATE: $ => CI('@create'),
     AT_DELETE: $ => CI('@delete'),
+    AT_CREATE: $ => CI('@create'),
     DROP: $ => CI('drop'),
     TABLE: $ => CI('table'),
     IF: $ => CI('if'),
