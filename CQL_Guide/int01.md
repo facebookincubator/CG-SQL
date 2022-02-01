@@ -42,19 +42,19 @@ There's no need to discuss the approximately 150 such tokens, but the following 
 * the lexer expects plain text files, and all the tokens are defined in plain ASCII only, however
   * the presence of UTF8 characters in places where any text is legal (such as string literals) should just work
 * all of the tokens are case-insensitive
-  * this means only vanilla ASCII insensitivity, no attempt is made to understand more complex UNICODE code-points
+  * this means only vanilla ASCII insensitivity; no attempt is made to understand more complex UNICODE code-points
 * multi-word tokens typically are defined with an expression like this:  `IS[ \t]+NOT[ \t]+FALSE/[^A-Z_]`
   * in most cases, to avoid ambiguity, and to get order of operations correct, the entire word sequence is one token
   * only spaces and tabs are allowed between the words
   * the token ends on non-identifier characters, so the text "X IS NOT FALSEY" must become the tokens { `X`, `IS_NOT`, `FALSEY` } and not { `X`, `IS_NOT_FALSE`, `Y` }
     * the second option is actually the longest token, so without the trailing qualifier it would be preferred
-    * hence, where a continuation is possible, the trailing context must be specified in multi=word tokens
+    * hence, where a continuation is possible, the trailing context must be specified in multi-word tokens
 * there is special processing needed to lex `/* ... */` comments correctly
 * there are token types for each of the sorts of literals that can be encountered
   * special care is taken to keep the literals in string form so that no precision is lost
   * integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marked with the trailing `L` as in `1L`
-  * string literals include the quotation marks in the token text which distinguishes them from identifiers, they are otherwise encoded similarly
-* the character class `[-+&~|^/%*(),.;!<>:=]` produces single character tokens for operators, other non-matching single characters (e.g. `'$'` produce an error)
+  * string literals include the quotation marks in the token text which distinguishes them from identifiers; they are otherwise encoded similarly
+* the character class `[-+&~|^/%*(),.;!<>:=]` produces single character tokens for operators; other non-matching single characters (e.g. `'$'`) produce an error
 * line directives `^#line\ [0-9]+\ \"[^"]*\".*` or `^#\ [0-9]+\ \"[^"]*\".*` get special processing so that pre-processed input does not lose file and line number fidelity
 
 ### Parsing and the Abstract Syntax Tree
@@ -67,7 +67,7 @@ to find all the `table_factor` nodes it is easy to do so without having to worry
 the generic walkers can go through those new nodes as well.  All of the grammar productions simply make one or more AST nodes and link them together so that in the
 end there is a single root for the entire program in a binary tree.
 
-There are 4 kinds of AST nodes, they all begin with the following five fields, these represent the AST "base type" if you like.
+There are 4 kinds of AST nodes, they all begin with the following five fields. These represent the AST "base type", if you like.
 
 ```C
   const char *_Nonnull type;
@@ -78,7 +78,7 @@ There are 4 kinds of AST nodes, they all begin with the following five fields, t
 ```
 
 * `type` : a string literal that uniquely identifies the node type
-  * the string literal is compared for identity (it's an exact pointer match) you don't `strcmp` types
+  * the string literal is compared for identity (it's an exact pointer match: you don't `strcmp` types)
 * `sem` : begins as `NULL` this is where the semantic type goes once semantic processing happens
 * `parent` : the parent node in the AST (not often used but sometimes indispensible)
 * `lineno` : the line number of the file that had the text that led to this AST (useful for errors)
@@ -107,12 +107,12 @@ SET X := 1 + 3;
     | {int 3}
 ```
 
-In the above "assign" and "add" are the generic nodes.  Note that this node type can be a leaf but usually is not.  The other types
+In the above, "assign" and "add" are the generic nodes.  Note that this node type can be a leaf but usually is not.  The other types
 are always leaves.
 
 Note that in the above output, the node `type` was directly printed (because it's a meaningful name).  Likewise, the type needs no decoding
 when viewing the AST in a debugger.  Simply printing the node with something like `p *ast` in lldb will show you
-all the node fields and the type in a human readable fashion.
+all the node fields and the type in human-readable form.
 
 #### The Grammar Code Node `int_ast_node`
 
