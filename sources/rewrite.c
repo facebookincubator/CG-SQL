@@ -526,8 +526,8 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
     // since this can only happen if there is 100% duplication, that means there is always a previous parameter
     // if this were the first node we would have expanded ... something
     EXTRACT_NOTNULL(params, param->parent);
-    EXTRACT_NAMED_NOTNULL(prev, params, params->parent);
-    ast_set_right(prev, params->right);
+    EXTRACT_NAMED_NOTNULL(tail, params, params->parent);
+    ast_set_right(tail, params->right);
   }
 
   AST_REWRITE_INFO_RESET();
@@ -956,8 +956,8 @@ static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
     // since this can only happen if there is 100% duplication, that means there is always a previous typed name
     // if this were the first node we would have expanded ... something
     EXTRACT_NOTNULL(typed_names, typed_name->parent);
-    EXTRACT_NAMED_NOTNULL(prev, typed_names, typed_names->parent);
-    ast_set_right(prev, typed_names->right);
+    EXTRACT_NAMED_NOTNULL(tail, typed_names, typed_names->parent);
+    ast_set_right(tail, typed_names->right);
   }
 
   AST_REWRITE_INFO_RESET();
@@ -1476,18 +1476,247 @@ cql_noexport void rewrite_printf_inserting_casts_as_needed(ast_node *ast, CSTR f
           Invariant(sem_type == SEM_TYPE_REAL);
           type_ast = new_ast_type_real(NULL);
           break;
-      } 
+      }
       arg_item->left = new_ast_cast_expr(arg, type_ast);
     }
     AST_REWRITE_INFO_RESET();
   }
-  
+
   // We know that we do not have too few arguments.
   Contract(printf_iterator_next(iterator) == SEM_TYPE_OK);
 
   // Validate the rewrite.
   sem_expr(ast);
 }
-  
+
+// Just maintain head and tail whilst adding a node at the tail.
+// This uses the usual convention that ->right is the "next" pointer.
+static void add_tail(ast_node **head, ast_node **tail, ast_node *node) {
+  if (*head) {
+    (*tail)->right = node;
+  }
+  else {
+    *head = node;
+  }
+  *tail = node;
+}
+
+// Here we've found one column_calculation node, this corresponds to a single
+// instance of COLUMNS(...) in the select list.  When we process this, we
+// will replace it with its expansion.  Note that each one is independent
+// so often you really only one one (distinct is less powerful if you have two or more).
+static void rewrite_column_calculation(ast_node *column_calculation, sem_join *jptr_from) {
+  Contract(is_ast_column_calculation(column_calculation));
+
+  bool_t distinct = !!column_calculation->right;
+
+  symtab *used_names = NULL;
+
+  if (distinct) {
+    used_names = symtab_new();
+  }
+
+  // this will map from column name to the first table that has that column
+  symtab *location = symtab_new();
+
+  // this will tell us if any given column requires disambiguation
+  symtab *dups = symtab_new();
+
+  // here we make the lookup maps by walking the jptr for the from clause
+  // this will save us a lot of searching later...
+  for (int32_t i = 0; i < jptr_from->count; i++) {
+    CSTR name = jptr_from->names[i];
+    sem_struct *sptr_table = jptr_from->tables[i];
+    for (int32_t j = 0; j < sptr_table->count; j++) {
+      CSTR col = sptr_table->names[j];
+
+      if (!symtab_add(location, col, (void*)name)) {
+        symtab_add(dups, col, NULL);
+      }
+    }
+  }
+
+  ast_node *tail = NULL;
+  ast_node *head = NULL;
+
+  for (ast_node *item = column_calculation->left; item; item = item->right) {
+    Contract(is_ast_col_calcs(item));
+    EXTRACT(col_calc, item->left);
+
+    if (is_ast_dot(col_calc->left)) {
+      // If a column is explicitly mentioned, we simply emit it
+      // we won't duplicate the column later but neither will we
+      // filter it out if distinct is mentioned, this is to prevent
+      // bogus manual columns from staying in select lists.  If it's
+      // not distinct, either hoist it to the front or else remove it.
+
+      EXTRACT_NOTNULL(dot, col_calc->left);
+      EXTRACT_STRING(left, dot->left);
+      EXTRACT_STRING(right, dot->right);
+
+      ast_node *dot_new = new_ast_dot(new_ast_str(left), new_ast_str(right));
+      ast_node *select_expr = new_ast_select_expr(dot_new, NULL);
+      ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
+      add_tail(&head, &tail, select_expr_list);
+      if (used_names) {
+        symtab_add(used_names, right, NULL);
+      } 
+    }
+    else if (col_calc->left) {
+      EXTRACT_STRING(name, col_calc->left);
+
+      bool_t found = false;
+      for (int32_t i = 0; i < jptr_from->count; i++) {
+        if (!Strcasecmp(name, jptr_from->names[i])) {
+          sem_struct *sptr;
+
+          EXTRACT(like, col_calc->right);
+
+          if (like) {
+            ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+            if (!found_shape) {
+              record_error(column_calculation);
+              goto cleanup;
+            }
+            // get just the shape columns (or try anyway)
+            sptr = found_shape->sem->sptr;
+          }
+          else {
+            // get all the columns from this table
+            sptr = jptr_from->tables[i];
+          }
+
+          for (int32_t j = 0; j < sptr->count; j++) {
+            CSTR col = sptr->names[j];
+
+            if (used_names && !symtab_add(used_names, col, NULL)) {
+              continue;
+            }
+
+            ast_node *dot = new_ast_dot(new_ast_str(name), new_ast_str(col));
+            ast_node *select_expr = new_ast_select_expr(dot, NULL);
+            ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
+
+            add_tail(&head, &tail, select_expr_list);
+          }
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        report_error(col_calc->left, "CQL0069: name not found", name);
+        record_error(column_calculation);
+        goto cleanup;
+      }
+    }
+    else {
+      // the other case has just a like expression
+      EXTRACT_NOTNULL(like, col_calc->right);
+
+      ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+      if (!found_shape) {
+        record_error(column_calculation);
+        goto cleanup;
+      }
+      // get just the shape columns (or try anyway)
+      sem_struct *sptr = found_shape->sem->sptr;
+
+      // no distinct processing so we just try to add every name in the like expression
+      if (!used_names) {
+        for (int32_t i = 0; i < sptr->count; i++) {
+          CSTR name = sptr->names[i];
+          ast_node *id = new_ast_str(name);
+          ast_node *select_expr = new_ast_select_expr(id, NULL);
+          ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
+
+          add_tail(&head, &tail, select_expr_list);
+        }
+      }
+      else {
+        // now we can use our found structure from the like
+        // we will find the table that has the given column
+        // we generate a disambiguation "dot" node if it is needed
+        for (int32_t i = 0; i < sptr->count; i++) {
+          CSTR col = sptr->names[i];
+
+          if (symtab_add(used_names, col, NULL)) {
+            ast_node *id = new_ast_str(col);
+            ast_node *expr = id;
+            if (symtab_find(dups, col)) {
+              symtab_entry *entry = symtab_find(location, col);
+              expr = new_ast_dot(new_ast_str((CSTR)entry->val), id);
+            }
+            ast_node *select_expr = new_ast_select_expr(expr, NULL);
+            ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
+
+            add_tail(&head, &tail, select_expr_list);
+          }
+        }
+      }
+    }
+  }
+
+  // replace the calc node with the head payload
+  ast_node *splice = column_calculation->parent;
+
+  ast_set_left(splice, head->left);
+  ast_set_right(tail, splice->right); // this could be mutating the head
+  ast_set_right(splice, head->right); // works even if head is an alias for tail
+
+  record_ok(column_calculation);
+
+cleanup:
+  if (used_names) {
+    symtab_delete(used_names);
+  }
+  if (dups) {
+    symtab_delete(dups);
+  }
+  if (location) {
+    symtab_delete(location);
+  }
+}
+
+// At this point we're going to walk the select expression list looking for
+// the construct COLUMNS(...) with its various forms.  This is a generalization
+// of the T.* syntax that allows you to pull slices of the tables and to
+// get distinct columns where there are duplicates due to joins.  Ultimately
+// this is just sugar but the point is that there could be dozens of such columns
+// and if you have to type it all yourself it is very easy to get it wrong. So
+// here we're going to expand out the COLUMNS(...) operator into the actual
+// tables/columns you requested.  SQLite, has no support for this sort of thing
+// so it, and indeed the rest of the compilation chain, will just see the result
+// of the expansion.
+cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
+  Contract(is_ast_select_expr_list_con(ast));
+  EXTRACT_NOTNULL(select_expr_list, ast->left);
+
+  for (ast_node *item = select_expr_list; item; item = item->right) {
+    Contract(is_ast_select_expr_list(item));
+    if (is_ast_column_calculation(item->left)) {
+      EXTRACT_NOTNULL(column_calculation, item->left);
+
+      if (!jptr_from) {
+        report_error(ast, "CQL0053: select columns(...) cannot be used with no FROM clause", NULL);
+        record_error(ast);
+        return;
+      }
+
+      AST_REWRITE_INFO_SET(column_calculation->lineno, column_calculation->filename);
+
+      rewrite_column_calculation(column_calculation, jptr_from);
+
+      AST_REWRITE_INFO_RESET();
+
+      if (is_error(column_calculation)) {
+        record_error(ast);
+        return;
+      }
+    }
+  }
+  record_ok(ast);
+}
+
 
 #endif

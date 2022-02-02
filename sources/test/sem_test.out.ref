@@ -81187,3 +81187,542 @@ test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0447: virtual
               | {name t}
               | {type_text}
 
+The statement ending at line XXXX
+
+CREATE TABLE simple_shape(
+  id INTEGER,
+  t TEXT
+);
+
+  {create_table_stmt}: simple_shape: { id: integer, t: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name simple_shape}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: t: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name t}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE simple_shape2(
+  id INTEGER,
+  t TEXT,
+  u TEXT
+);
+
+  {create_table_stmt}: simple_shape2: { id: integer, t: text, u: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name simple_shape2}
+  | {col_key_list}
+    | {col_def}: id: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name id}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: t: text
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name t}
+      |     | {type_text}: text
+      | {col_key_list}
+        | {col_def}: u: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name u}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+SELECT simple_shape2.id, simple_shape2.t, simple_shape2.u
+  FROM simple_shape2;
+
+  {select_stmt}: select: { id: integer, t: text, u: text }
+  | {select_core_list}: select: { id: integer, t: text, u: text }
+  | | {select_core}: select: { id: integer, t: text, u: text }
+  |   | {select_expr_list_con}: select: { id: integer, t: text, u: text }
+  |     | {select_expr_list}: select: { id: integer, t: text, u: text }
+  |     | | {select_expr}: id: integer
+  |     | | | {dot}: id: integer
+  |     | |   | {name simple_shape2}
+  |     | |   | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: t: text
+  |     |   | | {dot}: t: text
+  |     |   |   | {name simple_shape2}
+  |     |   |   | {name t}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: u: text
+  |     |       | {dot}: u: text
+  |     |         | {name simple_shape2}
+  |     |         | {name u}
+  |     | {select_from_etc}: TABLE { simple_shape2: simple_shape2 }
+  |       | {table_or_subquery_list}: TABLE { simple_shape2: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { simple_shape2: simple_shape2 }
+  |       |   | {name simple_shape2}: TABLE { simple_shape2: simple_shape2 }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT simple_shape2.id, simple_shape2.t, simple_shape2.u
+  FROM simple_shape2;
+
+  {select_stmt}: select: { id: integer, t: text, u: text }
+  | {select_core_list}: select: { id: integer, t: text, u: text }
+  | | {select_core}: select: { id: integer, t: text, u: text }
+  |   | {select_expr_list_con}: select: { id: integer, t: text, u: text }
+  |     | {select_expr_list}: select: { id: integer, t: text, u: text }
+  |     | | {select_expr}: id: integer
+  |     | | | {dot}: id: integer
+  |     | |   | {name simple_shape2}
+  |     | |   | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: t: text
+  |     |   | | {dot}: t: text
+  |     |   |   | {name simple_shape2}
+  |     |   |   | {name t}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: u: text
+  |     |       | {dot}: u: text
+  |     |         | {name simple_shape2}
+  |     |         | {name u}
+  |     | {select_from_etc}: TABLE { simple_shape2: simple_shape2 }
+  |       | {table_or_subquery_list}: TABLE { simple_shape2: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { simple_shape2: simple_shape2 }
+  |       |   | {name simple_shape2}: TABLE { simple_shape2: simple_shape2 }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT simple_shape2.id, simple_shape2.t
+  FROM simple_shape2;
+
+  {select_stmt}: select: { id: integer, t: text }
+  | {select_core_list}: select: { id: integer, t: text }
+  | | {select_core}: select: { id: integer, t: text }
+  |   | {select_expr_list_con}: select: { id: integer, t: text }
+  |     | {select_expr_list}: select: { id: integer, t: text }
+  |     | | {select_expr}: id: integer
+  |     | | | {dot}: id: integer
+  |     | |   | {name simple_shape2}
+  |     | |   | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: t: text
+  |     |     | {dot}: t: text
+  |     |       | {name simple_shape2}
+  |     |       | {name t}
+  |     | {select_from_etc}: TABLE { simple_shape2: simple_shape2 }
+  |       | {table_or_subquery_list}: TABLE { simple_shape2: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { simple_shape2: simple_shape2 }
+  |       |   | {name simple_shape2}: TABLE { simple_shape2: simple_shape2 }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id, t
+  FROM simple_shape2;
+
+  {select_stmt}: select: { id: integer, t: text }
+  | {select_core_list}: select: { id: integer, t: text }
+  | | {select_core}: select: { id: integer, t: text }
+  |   | {select_expr_list_con}: select: { id: integer, t: text }
+  |     | {select_expr_list}: select: { id: integer, t: text }
+  |     | | {select_expr}: id: integer
+  |     | | | {name id}: id: integer
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: t: text
+  |     |     | {name t}: t: text
+  |     | {select_from_etc}: TABLE { simple_shape2: simple_shape2 }
+  |       | {table_or_subquery_list}: TABLE { simple_shape2: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { simple_shape2: simple_shape2 }
+  |       |   | {name simple_shape2}: TABLE { simple_shape2: simple_shape2 }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT T1.id, T1.t
+  FROM simple_shape2 AS T1
+  INNER JOIN simple_shape2 AS T2;
+
+  {select_stmt}: select: { id: integer, t: text }
+  | {select_core_list}: select: { id: integer, t: text }
+  | | {select_core}: select: { id: integer, t: text }
+  |   | {select_expr_list_con}: select: { id: integer, t: text }
+  |     | {select_expr_list}: select: { id: integer, t: text }
+  |     | | {select_expr}: id: integer
+  |     | | | {dot}: id: integer
+  |     | |   | {name T1}
+  |     | |   | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: t: text
+  |     |     | {dot}: t: text
+  |     |       | {name T1}
+  |     |       | {name t}
+  |     | {select_from_etc}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       | {join_clause}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { T1: simple_shape2 }
+  |       | | | {name simple_shape2}: TABLE { T1: simple_shape2 }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       |     | {int 1}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: simple_shape2 }
+  |       |         | {name simple_shape2}: TABLE { T2: simple_shape2 }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT T1.id, T1.t, T1.u
+  FROM simple_shape2 AS T1
+  INNER JOIN simple_shape2 AS T2;
+
+  {select_stmt}: select: { id: integer, t: text, u: text }
+  | {select_core_list}: select: { id: integer, t: text, u: text }
+  | | {select_core}: select: { id: integer, t: text, u: text }
+  |   | {select_expr_list_con}: select: { id: integer, t: text, u: text }
+  |     | {select_expr_list}: select: { id: integer, t: text, u: text }
+  |     | | {select_expr}: id: integer
+  |     | | | {dot}: id: integer
+  |     | |   | {name T1}
+  |     | |   | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: t: text
+  |     |   | | {dot}: t: text
+  |     |   |   | {name T1}
+  |     |   |   | {name t}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: u: text
+  |     |       | {dot}: u: text
+  |     |         | {name T1}
+  |     |         | {name u}
+  |     | {select_from_etc}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       | {join_clause}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { T1: simple_shape2 }
+  |       | | | {name simple_shape2}: TABLE { T1: simple_shape2 }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       |     | {int 1}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: simple_shape2 }
+  |       |         | {name simple_shape2}: TABLE { T2: simple_shape2 }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT T1.id, T1.t, T1.u
+  FROM simple_shape2 AS T1
+  INNER JOIN simple_shape2 AS T2;
+
+  {select_stmt}: select: { id: integer, t: text, u: text }
+  | {select_core_list}: select: { id: integer, t: text, u: text }
+  | | {select_core}: select: { id: integer, t: text, u: text }
+  |   | {select_expr_list_con}: select: { id: integer, t: text, u: text }
+  |     | {select_expr_list}: select: { id: integer, t: text, u: text }
+  |     | | {select_expr}: id: integer
+  |     | | | {dot}: id: integer
+  |     | |   | {name T1}
+  |     | |   | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: t: text
+  |     |   | | {dot}: t: text
+  |     |   |   | {name T1}
+  |     |   |   | {name t}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: u: text
+  |     |       | {dot}: u: text
+  |     |         | {name T1}
+  |     |         | {name u}
+  |     | {select_from_etc}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       | {join_clause}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { T1: simple_shape2 }
+  |       | | | {name simple_shape2}: TABLE { T1: simple_shape2 }
+  |       | | | {opt_as_alias}
+  |       | |   | {name T1}
+  |       | | {join_target_list}
+  |       |   | {join_target}: JOIN { T1: simple_shape2, T2: simple_shape2 }
+  |       |     | {int 1}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}: TABLE { T2: simple_shape2 }
+  |       |         | {name simple_shape2}: TABLE { T2: simple_shape2 }
+  |       |         | {opt_as_alias}
+  |       |           | {name T2}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(not_correct)
+  FROM simple_shape;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_correct'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {name not_correct}
+  |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
+  |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
+  |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
+  |       |   | {name simple_shape}: TABLE { simple_shape: simple_shape }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(simple_shape LIKE this_is_not_a_shape)
+  FROM simple_shape;
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'this_is_not_a_shape'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {name simple_shape}
+  |     |       | {like}: err
+  |     |         | {name this_is_not_a_shape}: err
+  |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
+  |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
+  |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
+  |       |   | {name simple_shape}: TABLE { simple_shape: simple_shape }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(LIKE this_is_not_a_shape)
+  FROM simple_shape;
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'this_is_not_a_shape'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {like}: err
+  |     |         | {name this_is_not_a_shape}: err
+  |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
+  |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
+  |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
+  |       |   | {name simple_shape}: TABLE { simple_shape: simple_shape }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT id, cost, value
+  FROM simple_shape;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cost'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: id: integer
+  |     | | | {name id}: id: integer
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: err
+  |     |   | | {name cost}: err
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}
+  |     |       | {name value}
+  |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
+  |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
+  |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
+  |       |   | {name simple_shape}: TABLE { simple_shape: simple_shape }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT simple_shape.id, simple_shape.cost, simple_shape.value
+  FROM simple_shape;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'simple_shape.cost'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: id: integer
+  |     | | | {dot}: id: integer
+  |     | |   | {name simple_shape}
+  |     | |   | {name id}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: err
+  |     |   | | {dot}: err
+  |     |   |   | {name simple_shape}
+  |     |   |   | {name cost}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}
+  |     |       | {dot}
+  |     |         | {name simple_shape}
+  |     |         | {name value}
+  |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
+  |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
+  |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
+  |       |   | {name simple_shape}: TABLE { simple_shape: simple_shape }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(LIKE foo);
+
+test/sem_test.sql:XXXX:1: error: in select_expr_list_con : CQL0053: select columns(...) cannot be used with no FROM clause
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {like}
+  |     |         | {name foo}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 AS y, T.id, T.t, T.u, 1 AS x
+  FROM simple_shape2 AS T;
+
+  {select_stmt}: select: { y: integer notnull, id: integer, t: text, u: text, x: integer notnull }
+  | {select_core_list}: select: { y: integer notnull, id: integer, t: text, u: text, x: integer notnull }
+  | | {select_core}: select: { y: integer notnull, id: integer, t: text, u: text, x: integer notnull }
+  |   | {select_expr_list_con}: select: { y: integer notnull, id: integer, t: text, u: text, x: integer notnull }
+  |     | {select_expr_list}: select: { y: integer notnull, id: integer, t: text, u: text, x: integer notnull }
+  |     | | {select_expr}: y: integer notnull
+  |     | | | {int 1}: integer notnull
+  |     | | | {opt_as_alias}
+  |     | |   | {name y}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: id: integer
+  |     |   | | {dot}: id: integer
+  |     |   |   | {name T}
+  |     |   |   | {name id}
+  |     |   | {select_expr_list}
+  |     |     | {select_expr}: t: text
+  |     |     | | {dot}: t: text
+  |     |     |   | {name T}
+  |     |     |   | {name t}
+  |     |     | {select_expr_list}
+  |     |       | {select_expr}: u: text
+  |     |       | | {dot}: u: text
+  |     |       |   | {name T}
+  |     |       |   | {name u}
+  |     |       | {select_expr_list}
+  |     |         | {select_expr}: x: integer notnull
+  |     |           | {int 1}: integer notnull
+  |     |           | {opt_as_alias}
+  |     |             | {name x}
+  |     | {select_from_etc}: TABLE { T: simple_shape2 }
+  |       | {table_or_subquery_list}: TABLE { T: simple_shape2 }
+  |       | | {table_or_subquery}: TABLE { T: simple_shape2 }
+  |       |   | {name simple_shape2}: TABLE { T: simple_shape2 }
+  |       |   | {opt_as_alias}
+  |       |     | {name T}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

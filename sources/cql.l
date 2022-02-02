@@ -238,6 +238,7 @@ TYPE                         { return TYPE; }
 ALTER                        { return ALTER; }
 RENAME                       { return RENAME; }
 COLUMN                       { return COLUMN; }
+COLUMNS                      { return COLUMNS; }
 ADD                          { return ADD; }
 ARGUMENTS                    { return ARGUMENTS; }
 RETURN                       { return RETURN; }

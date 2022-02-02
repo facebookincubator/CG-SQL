@@ -1656,6 +1656,21 @@ tar;
 SELECT *
   FROM (CALL foo() USING stuff AS source);
 
+SELECT COLUMNS(LIKE foo)
+  FROM foo2;
+
+SELECT COLUMNS(LIKE foo, y LIKE bar)
+  FROM foo2;
+
+SELECT COLUMNS(LIKE foo, y LIKE bar)
+  FROM foo2;
+
+SELECT COLUMNS(DISTINCT LIKE foo, y LIKE bar)
+  FROM foo2;
+
+SELECT COLUMNS(DISTINCT a.b, LIKE bar)
+  FROM foo2;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

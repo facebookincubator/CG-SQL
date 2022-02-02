@@ -213,7 +213,7 @@ static void cql_reset_globals(void);
 %token FUNC FUNCTION PROC PROCEDURE BEGIN_ "BEGIN" OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
-%token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN RENAME ALTER
+%token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN COLUMNS RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
 %token AT_RC AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
@@ -227,10 +227,11 @@ static void cql_reset_globals(void);
 %type <ival> opt_vtab_flags
 
 %type <aval> col_key_list col_key_def col_def col_name
-%type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr 
+%type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
 %type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr
 %type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args opt_conflict_clause
+%type <aval> col_calc col_calcs column_calculation
 
 %type <aval> alter_table_add_column_stmt
 %type <aval> create_index_stmt create_table_stmt create_view_stmt create_virtual_table_stmt
@@ -1042,6 +1043,25 @@ shape_arguments:
   | FROM ARGUMENTS shape_def  { $shape_arguments = new_ast_from_shape(new_ast_str("ARGUMENTS"), $shape_def); }
   ;
 
+column_calculation:
+  COLUMNS '(' col_calcs ')' {
+    $column_calculation = new_ast_column_calculation($col_calcs, NULL); }
+  | COLUMNS '(' DISTINCT col_calcs ')' {
+    $column_calculation = new_ast_column_calculation($col_calcs, new_ast_distinct()); }
+  ;
+
+col_calcs[result]:
+  col_calc  { $result = new_ast_col_calcs($col_calc, NULL); }
+  | col_calc ',' col_calcs[list] { $result = new_ast_col_calcs($col_calc, $list); }
+  ;
+
+col_calc:
+  name { $col_calc = new_ast_col_calc($name, NULL); }
+  | shape_def { $col_calc = new_ast_col_calc(NULL, $shape_def); }
+  | name shape_def { $col_calc = new_ast_col_calc($name, $shape_def); }
+  | name[n1] '.' name[n2] { $col_calc = new_ast_col_calc(new_ast_dot($n1, $n2), NULL); }
+  ;
+
 call_expr:
   expr  { $call_expr = $expr; }
   | shape_arguments  { $call_expr = $shape_arguments; }
@@ -1360,7 +1380,8 @@ select_expr_list[result]:
 
 select_expr:
   expr opt_as_alias  { $select_expr = new_ast_select_expr($expr, $opt_as_alias); }
-  |  name '.' '*'  { $select_expr = new_ast_table_star($name); }
+  | name '.' '*'  { $select_expr = new_ast_table_star($name); }
+  | column_calculation  { $select_expr = $column_calculation; }
   ;
 
 opt_as_alias:

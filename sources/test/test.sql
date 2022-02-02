@@ -1532,6 +1532,16 @@ select * from bar, tar;
 
 select * from (call foo() using stuff as source);
 
+select columns(like foo) from foo2;
+
+select columns(like foo, y like bar) from foo2;
+
+select columns(like foo, y like bar) from foo2;
+
+select columns(distinct like foo, y like bar) from foo2;
+
+select columns(distinct a.b, like bar) from foo2;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

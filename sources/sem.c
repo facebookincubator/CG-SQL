@@ -8947,6 +8947,8 @@ static void sem_select_expr(ast_node *ast) {
 // Otherwise, get each item and validate.  At this point we compute the
 // net result type of the select from the select list.
 static void sem_select_expr_list(ast_node *ast) {
+  Contract(ast);
+
   if (is_ast_star(ast->left)) {
     // select * from [etc]
     Contract(ast->right == NULL);
@@ -9711,13 +9713,19 @@ static void sem_select_expr_list_con(ast_node *ast) {
   sem_select_from(select_from_etc);
   error = is_error(select_from_etc);
 
+  if (!error) {
+    from_jptr = select_from_etc->sem->jptr;
+    Invariant(from_jptr && query_parts || !from_jptr && !query_parts);
+
+    rewrite_select_expr_list(ast, from_jptr);
+    error = is_error(ast);
+  }
+
   // Push a flow context to contain improvements made via the WHERE clause that
   // will be in effect for the SELECT expression list.
   FLOW_PUSH_CONTEXT_NORMAL();
 
   if (!error) {
-    from_jptr = select_from_etc->sem->jptr;
-    Invariant(from_jptr && query_parts || !from_jptr && !query_parts);
 
     // Analyze the WHERE clause. We first push on the result of
     // `select_expr_list_alias_sptr(select_expr_list)` which is simply all

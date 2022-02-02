@@ -973,7 +973,6 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   EXTRACT_STRING(left, ast->left);
   EXTRACT_STRING(right, ast->right);
 
-
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
   // simple case if SEM is not available
   gen_printf("%s.%s", left, right);
@@ -1451,6 +1450,47 @@ static void gen_select_expr(ast_node *ast) {
   }
 }
 
+static void gen_col_calc(ast_node *ast) {
+  Contract(is_ast_col_calc(ast));
+  if (ast->left) {
+    EXTRACT_NAME_AND_SCOPE(ast->left);
+    if (scope) {
+      gen_printf("%s.%s", scope, name);
+    } else {
+      gen_printf("%s", name);
+    }
+    if (ast->right) {
+      gen_printf(" ");
+    }
+  }
+
+  if (ast->right) {
+    gen_shape_def(ast->right);
+  }
+}
+
+static void gen_col_calcs(ast_node *ast) {
+  Contract(is_ast_col_calcs(ast));
+  ast_node *item = ast;
+  while (item) {
+    gen_col_calc(item->left);
+    if (item->right) {
+      gen_printf(", ");
+    }
+    item = item->right;
+  }
+}
+
+static void gen_column_calculation(ast_node *ast) {
+  Contract(is_ast_column_calculation(ast));
+  gen_printf("COLUMNS(");
+  if (ast->right) {
+    gen_printf("DISTINCT ");
+  }
+  gen_col_calcs(ast->left);
+  gen_printf(")");
+}
+
 static void gen_select_expr_list(ast_node *ast) {
 
   if (is_ast_star(ast->left)) {
@@ -1480,6 +1520,9 @@ static void gen_select_expr_list(ast_node *ast) {
         EXTRACT_STRING(name, table_star->left);
         gen_printf("%s.*", name);
       }
+    }
+    else if (is_ast_column_calculation(expr)) {
+      gen_column_calculation(expr);
     }
     else {
       EXTRACT_NOTNULL(select_expr, expr);

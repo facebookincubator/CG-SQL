@@ -20576,3 +20576,100 @@ as (
   id integer @sensitive,
   t text
 );
+
+create table simple_shape(
+  id integer,
+  t text
+);
+
+create table simple_shape2(
+  id integer,
+  t text,
+  u text
+);
+
+-- TEST: this is just a rewrite, validating correct column choice
+-- + SELECT simple_shape2.id, simple_shape2.t, simple_shape2.u
+-- - error:
+select columns(simple_shape2) from simple_shape2;
+
+-- TEST: this is just a rewrite, validating correct column choice
+-- + SELECT simple_shape2.id, simple_shape2.t, simple_shape2.u
+-- - error:
+select columns(distinct simple_shape2, simple_shape2) from simple_shape2;
+
+-- TEST: this is just a rewrite, validating correct column choice
+-- + SELECT simple_shape2.id, simple_shape2.t
+-- - error:
+select columns(distinct simple_shape2 like simple_shape) from simple_shape2;
+
+-- TEST: this is just a rewrite, validating correct column choice
+-- + SELECT id, t
+-- - t, u
+-- - error:
+select columns(like simple_shape) from simple_shape2;
+
+-- TEST: this is just a rewrite, validating correct column choice
+-- + SELECT T1.id, T1.t
+-- - T1.u
+-- - error:
+select columns(distinct like simple_shape) from simple_shape2 T1 join simple_shape2 T2;
+
+-- TEST: this is just a rewrite, validating correct column choice
+-- + SELECT T1.id, T1.t, T1.u
+-- - error:
+select columns(distinct T1) from simple_shape2 T1 join simple_shape2 T2;
+
+-- TEST: this is just a rewrite, validating correct column choice
+-- + SELECT T1.id, T1.t, T1.u
+-- - error:
+select columns(distinct T1, T2) from simple_shape2 T1 join simple_shape2 T2;
+
+-- TEST: attempt to extract a bogus table from the join
+-- + {select_stmt}: err
+-- + {select_expr_list_con}: err
+-- + error: % name not found 'not_correct'
+-- +1 error:
+select columns(not_correct) from simple_shape;
+
+-- TEST: attempt to extract a bogus column shape
+-- + {select_stmt}: err
+-- + {select_expr_list_con}: err
+-- + error: % must be a cursor, proc, table, or view 'this_is_not_a_shape'
+-- +1 error:
+select columns(simple_shape like this_is_not_a_shape) from simple_shape;
+
+-- TEST: attempt to extract a bogus column shape with no table qualification
+-- + {select_stmt}: err
+-- + {select_expr_list_con}: err
+-- + error: % must be a cursor, proc, table, or view 'this_is_not_a_shape'
+-- +1 error:
+select columns(like this_is_not_a_shape) from simple_shape;
+
+-- TEST: these columns don't exist, but the shapes are valid...
+-- + {select_stmt}: err
+-- + {select_expr_list_con}: err
+-- + SELECT id, cost, value
+-- + error: % name not found 'cost'
+-- +1 error:
+select columns(like with_kind) from simple_shape;
+
+-- TEST: these columns don't exist, but the shapes are valid...
+-- + {select_stmt}: err
+-- + {select_expr_list_con}: err
+-- + SELECT simple_shape.id, simple_shape.cost, simple_shape.value
+-- + error: % name not found 'simple_shape.cost'
+-- +1 error:
+select columns(simple_shape like with_kind) from simple_shape;
+
+-- TEST: can't use the columns construct if there is no from clause
+-- + {select_stmt}: err
+-- + {select_expr_list_con}: err
+-- + error: % select columns(...) cannot be used with no FROM clause
+-- +1 error:
+select columns(like foo);
+
+-- TEST: ensure that consecutive column rewrites link up properly
+-- + SELECT 1 AS y, T.id, T.t, T.u, 1 AS x
+-- - error:
+select 1 y, columns(distinct T.id), columns(T.t, T.u), 1 x from simple_shape2 T;
