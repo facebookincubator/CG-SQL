@@ -55387,7 +55387,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0021: foreign key refers to non-
       |     | {name col2}
       |     | {type_int}: integer
       | {col_key_list}
-        | {fk_def}
+        | {fk_def}: err
           | {fk_info}
             | {name_list}
             | | {name col2}: col2: integer

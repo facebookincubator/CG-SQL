@@ -130,6 +130,22 @@ CREATE TABLE expression_uk(
   CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
 );
 
+CREATE TABLE delete__second(
+  id INTEGER PRIMARY KEY
+) @DELETE(7);
+
+CREATE TABLE delete_first(
+  id INTEGER REFERENCES delete__second (id)
+) @DELETE(7);
+
+CREATE TABLE create_first(
+  id INTEGER PRIMARY KEY
+) @CREATE(7);
+
+CREATE TABLE create__second(
+  id INTEGER REFERENCES create_first (id)
+) @CREATE(7);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *

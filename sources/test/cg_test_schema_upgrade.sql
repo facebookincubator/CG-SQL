@@ -220,3 +220,29 @@ create table expression_uk(
   id int not null,
   constraint uk1 unique (id/2, id%2)
 );
+
+-- This table has to be deleted after delete_first
+-- even though it sorts in the other order by name
+-- the old algorithm would have got this wrong
+create table delete__second
+(
+ id integer primary key
+) @delete(7);
+
+create table delete_first
+(
+  id integer references delete__second(id)
+) @delete(7);
+
+-- This table has to be created before create__second
+-- even though it sorts in the other order by name.
+-- the old algorithm would have got this wrong
+create table create_first
+(
+ id integer primary key
+) @create(7);
+
+create table create__second
+(
+  id integer references create_first(id)
+) @create(7);
