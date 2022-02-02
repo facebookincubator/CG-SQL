@@ -96,14 +96,21 @@ static int annotation_comparator(const void *v1, const void *v2) {
   if (a1->annotation_type < a2->annotation_type) return -1;
   if (a1->annotation_type > a2->annotation_type) return 1;
 
-  // patternlint-disable-next-line prefer-sized-ints-in-msys
-  int ret = Strcasecmp(a1->target_name, a2->target_name);
-  if (ret) return ret;
+  // equality is not an option
+  Invariant(a1->ordinal != a2->ordinal);
 
-  // It can't be a tie!  table+ordinal+create/delete is unique
-  Invariant(a1->column_ordinal != a2->column_ordinal);
+  switch (a1->annotation_type) {
+    case SCHEMA_ANNOTATION_DELETE_TRIGGER:
+    case SCHEMA_ANNOTATION_DELETE_VIEW:
+    case SCHEMA_ANNOTATION_DELETE_INDEX:
+    case SCHEMA_ANNOTATION_DELETE_COLUMN:
+    case SCHEMA_ANNOTATION_DELETE_TABLE:
+      // deletes need to happen in the opposite order from declaration
+      return (a1->ordinal < a2->ordinal) ? 1 : -1;
+  }
 
-  return (a1->column_ordinal < a2->column_ordinal) ? -1 : 1;
+  // other operations happen in the order of declaration
+  return (a1->ordinal < a2->ordinal) ? -1 : 1;
 }
 
 // Sort the @recreate annotations in place: the order is:
@@ -1133,6 +1140,14 @@ static llint_t cg_schema_compute_crc(
   *schema_items_count = schema_annotations->used / schema_items_size;
   *notes = (schema_annotation*)base;
   *max_schema_version = 0;
+
+  // number them all now that we have the full list, there's no more growing etc.
+  // this is the original order of the lists which is declaration order
+  // this is used to ensure deletes/creates respect the dependency order
+  for (size_t i = 0; i < *schema_items_count; i++) {
+    (*notes)[i].ordinal = (int32_t)i;
+  }
+
   if (*schema_items_count) {
      qsort(base, *schema_items_count, schema_items_size, annotation_comparator);
      *max_schema_version = (*notes)[*schema_items_count - 1].version;

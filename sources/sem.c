@@ -3277,25 +3277,33 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
     return current_table_ast;
   }
 
-  ast_node *ref_table_ast = find_usable_and_not_deleted_table_or_view(
+  ast_node *ref_table_ast;
+
+  if (table_info->delete_version > 0 || current_proc) {
+    // Create table statements inside a proc are exempt from the extra checks. Those statements aren't just schema
+    // declarations they are the ones creating the table, maybe to make things right in the context of schema upgrade
+    // itself. These extra check just doesn't make sense there.
+ 
+    // Deleted tables likewise, do not need to have FK's that make sense in the current schema
+
+    ref_table_ast = find_table_or_view_even_deleted(table_name);
+
+    if (!ref_table_ast) {
+      report_error(err_target, "CQL0021: foreign key refers to non-existent table", table_name);
+      record_error(err_target);
+    }
+
+    // this table is going away, so the fk checks are moot
+    return ref_table_ast;
+  }
+
+  ref_table_ast = find_usable_and_not_deleted_table_or_view(
     table_name,
     err_target,
     "CQL0021: foreign key refers to non-existent table");
 
   if (!ref_table_ast) {
     return NULL;
-  }
-
-  if (current_proc) {
-    // Create table statements inside a proc are exempt from the extra checks. Those statements aren't just schema
-    // declarations they are the ones creating the table, maybe to make things right in the context of schema upgrade
-    // itself. These extra check just doesn't make sense there.
-    return ref_table_ast;
-  }
-
-  if (table_info->delete_version > 0) {
-    // this table is going away, so the fk checks are moot
-    return ref_table_ast;
   }
 
   // We have to make sure we aren't referencing the future.

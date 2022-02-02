@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc -7638289707424553675
+-- schema crc -3139502500644660849
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE LONG<facet_data> not null;
@@ -153,6 +153,22 @@ CREATE TABLE expression_uk(
   id INTEGER NOT NULL,
   CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
 );
+
+CREATE TABLE delete__second(
+  id INTEGER PRIMARY KEY
+) @DELETE(7);
+
+CREATE TABLE delete_first(
+  id INTEGER REFERENCES delete__second (id)
+) @DELETE(7);
+
+CREATE TABLE create_first(
+  id INTEGER PRIMARY KEY
+) @CREATE(7);
+
+CREATE TABLE create__second(
+  id INTEGER REFERENCES create_first (id)
+) @CREATE(7);
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
@@ -545,6 +561,8 @@ CREATE PROC test_cql_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS deleted_virtual_table;
   DROP TABLE IF EXISTS added_table;
+  DROP TABLE IF EXISTS delete_first;
+  DROP TABLE IF EXISTS delete__second;
 END;
 
 @attribute(cql:private)
@@ -577,7 +595,7 @@ BEGIN
     ---- upgrade to schema version 4 ----
 
     CALL test_cql_get_version_crc(4, schema_version);
-    IF schema_version != 5525789573222427545 THEN
+    IF schema_version != 2603445000966959897 THEN
       -- one time drop migrated_from_recreate
 
       CALL test_cql_one_time_drop('migrated_from_recreate', 4);
@@ -589,16 +607,16 @@ BEGIN
         t TEXT
       );
 
-      -- altering table added_table to add column name2 TEXT;
-
-      IF NOT test_check_column_exists('added_table', '*[( ]name2 TEXT*') THEN 
-        ALTER TABLE added_table ADD COLUMN name2 TEXT;
-      END IF;
-
       -- altering table foo to add column id2 INTEGER;
 
       IF NOT test_check_column_exists('foo', '*[( ]id2 INTEGER*') THEN 
         ALTER TABLE foo ADD COLUMN id2 INTEGER DEFAULT 12345;
+      END IF;
+
+      -- altering table added_table to add column name2 TEXT;
+
+      IF NOT test_check_column_exists('added_table', '*[( ]name2 TEXT*') THEN 
+        ALTER TABLE added_table ADD COLUMN name2 TEXT;
       END IF;
 
       -- logical delete of column rate_2 from foo; -- no ddl
@@ -613,7 +631,7 @@ BEGIN
         CALL test_cql_set_facet_version('DeleteRate2Proc', 4);
       END IF;
 
-      CALL test_cql_set_version_crc(4, 5525789573222427545);
+      CALL test_cql_set_version_crc(4, 2603445000966959897);
     END IF;
 
     ---- upgrade to schema version 5 ----
@@ -652,20 +670,39 @@ BEGIN
       CALL test_cql_set_version_crc(6, -6908867606816505101);
     END IF;
 
+    ---- upgrade to schema version 7 ----
+
+    CALL test_cql_get_version_crc(7, schema_version);
+    IF schema_version != 1426090987381496410 THEN
+      -- creating table create_first
+
+      CREATE TABLE IF NOT EXISTS create_first(
+        id INTEGER PRIMARY KEY
+      );
+
+      -- creating table create__second
+
+      CREATE TABLE IF NOT EXISTS create__second(
+        id INTEGER REFERENCES create_first (id)
+      );
+
+      CALL test_cql_set_version_crc(7, 1426090987381496410);
+    END IF;
+
     CALL test_cql_drop_tables();
     CALL test_cql_recreate_tables();
     CALL test_cql_create_all_views();
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
-    CALL test_cql_set_facet_version('cql_schema_version', 6);
-    CALL test_cql_set_facet_version('cql_schema_crc', -7638289707424553675);
+    CALL test_cql_set_facet_version('cql_schema_version', 7);
+    CALL test_cql_set_facet_version('cql_schema_crc', -3139502500644660849);
 END;
 
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_needed_upgrades()
 BEGIN
   -- check for downgrade --
-  IF cql_facet_find(test_facets, 'cql_schema_version') > 6 THEN
+  IF cql_facet_find(test_facets, 'cql_schema_version') > 7 THEN
     SELECT 'downgrade detected' facet;
   ELSE
     -- save the current facets so we can diff them later --
@@ -691,7 +728,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> -7638289707424553675 THEN
+  IF schema_crc <> -3139502500644660849 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades();

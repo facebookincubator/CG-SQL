@@ -102,6 +102,22 @@ CREATE TABLE expression_uk(
   CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
 );
 
+CREATE TABLE delete__second(
+  id INTEGER PRIMARY KEY
+);
+
+CREATE TABLE delete_first(
+  id INTEGER REFERENCES delete__second (id)
+);
+
+CREATE TABLE create_first(
+  id INTEGER PRIMARY KEY
+);
+
+CREATE TABLE create__second(
+  id INTEGER REFERENCES create_first (id)
+);
+
 CREATE VIEW shared_view AS
 SELECT *
   FROM foo;

@@ -92,6 +92,7 @@ typedef struct recreate_annotation {
 } recreate_annotation;
 
 typedef struct schema_annotation {
+  int32_t ordinal;                // this will be the original annotation order
   int32_t version;                // the version number (always > 0)
   ast_node *target_ast;           // top level target (table, view, or index)
   CSTR target_name;               // the name of the target
