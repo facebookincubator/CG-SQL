@@ -81589,24 +81589,21 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-SELECT id, cost, value
+SELECT COLUMNS(LIKE with_kind)
   FROM simple_shape;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cost'
+test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'cost'
 
   {select_stmt}: err
   | {select_core_list}: err
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer
-  |     | | | {name id}: id: integer
-  |     | | {select_expr_list}
-  |     |   | {select_expr}: err
-  |     |   | | {name cost}: err
-  |     |   | {select_expr_list}
-  |     |     | {select_expr}
-  |     |       | {name value}
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {like}: ok
+  |     |         | {name with_kind}
   |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
   |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
   |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
@@ -81620,30 +81617,22 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cost'
 
 The statement ending at line XXXX
 
-SELECT simple_shape.id, simple_shape.cost, simple_shape.value
+SELECT COLUMNS(simple_shape LIKE with_kind)
   FROM simple_shape;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'simple_shape.cost'
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'simple_shape.cost'
 
   {select_stmt}: err
   | {select_core_list}: err
   | | {select_core}: err
   |   | {select_expr_list_con}: err
   |     | {select_expr_list}: err
-  |     | | {select_expr}: id: integer
-  |     | | | {dot}: id: integer
-  |     | |   | {name simple_shape}
-  |     | |   | {name id}
-  |     | | {select_expr_list}
-  |     |   | {select_expr}: err
-  |     |   | | {dot}: err
-  |     |   |   | {name simple_shape}
-  |     |   |   | {name cost}
-  |     |   | {select_expr_list}
-  |     |     | {select_expr}
-  |     |       | {dot}
-  |     |         | {name simple_shape}
-  |     |         | {name value}
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {name simple_shape}
+  |     |       | {like}: ok
+  |     |         | {name with_kind}
   |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
   |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
   |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
@@ -81719,6 +81708,195 @@ SELECT 1 AS y, T.id, T.t, T.u, 1 AS x
   |       |   | {name simple_shape2}: TABLE { T: simple_shape2 }
   |       |   | {opt_as_alias}
   |       |     | {name T}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE two_col_v1(
+  x INTEGER,
+  r REAL
+);
+
+  {create_table_stmt}: two_col_v1: { x: integer, r: real }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name two_col_v1}
+  | {col_key_list}
+    | {col_def}: x: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name x}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: r: real
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name r}
+            | {type_real}: real
+
+The statement ending at line XXXX
+
+CREATE TABLE two_col_v2(
+  x INTEGER,
+  t REAL
+);
+
+  {create_table_stmt}: two_col_v2: { x: integer, t: real }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name two_col_v2}
+  | {col_key_list}
+    | {col_def}: x: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name x}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: t: real
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name t}
+            | {type_real}: real
+
+The statement ending at line XXXX
+
+CREATE TABLE two_col_v3(
+  x INTEGER,
+  r TEXT
+);
+
+  {create_table_stmt}: two_col_v3: { x: integer, r: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name two_col_v3}
+  | {col_key_list}
+    | {col_def}: x: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name x}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: r: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name r}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(two_col_v3 LIKE two_col_v1)
+  FROM two_col_v3;
+
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {name two_col_v3}
+  |     |       | {like}: ok
+  |     |         | {name two_col_v1}
+  |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
+  |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
+  |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
+  |       |   | {name two_col_v3}: TABLE { two_col_v3: two_col_v3 }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(two_col_v3 LIKE two_col_v2)
+  FROM two_col_v3;
+
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'two_col_v3.t'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {name two_col_v3}
+  |     |       | {like}: ok
+  |     |         | {name two_col_v2}
+  |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
+  |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
+  |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
+  |       |   | {name two_col_v3}: TABLE { two_col_v3: two_col_v3 }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(LIKE two_col_v1)
+  FROM two_col_v3;
+
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {like}: ok
+  |     |         | {name two_col_v1}
+  |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
+  |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
+  |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
+  |       |   | {name two_col_v3}: TABLE { two_col_v3: two_col_v3 }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT COLUMNS(LIKE two_col_v2)
+  FROM two_col_v3;
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 't'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {column_calculation}: err
+  |     |   | {col_calcs}
+  |     |     | {col_calc}
+  |     |       | {like}: ok
+  |     |         | {name two_col_v2}
+  |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
+  |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
+  |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
+  |       |   | {name two_col_v3}: TABLE { two_col_v3: two_col_v3 }
   |       | {select_where}
   |         | {select_groupby}
   |           | {select_having}

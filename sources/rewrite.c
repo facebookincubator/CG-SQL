@@ -1501,40 +1501,148 @@ static void add_tail(ast_node **head, ast_node **tail, ast_node *node) {
   *tail = node;
 }
 
+static void append_scoped_name(ast_node **head, ast_node **tail, CSTR scope, CSTR name) {
+  ast_node *expr = NULL;
+  if (scope) {
+    expr = new_ast_dot(new_ast_str(scope), new_ast_str(name));
+  }
+  else {
+    expr = new_ast_str(name);
+  }
+  ast_node *select_expr = new_ast_select_expr(expr, NULL);
+  ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
+  add_tail(head, tail, select_expr_list);
+}
+
+// This is our helper struct with the computed symbol tables for disambiguation
+// we flow this around when we need to do the searches.
+typedef struct jfind_t {
+  sem_join *jptr;
+  symtab *location;
+  symtab *dups;
+  symtab *tables;
+} jfind_t;
+
+
+// This just gives us easy access to the sem_struct or NULL
+static sem_struct *jfind_table(jfind_t *jfind, CSTR name) {
+  symtab_entry *entry = symtab_find(jfind->tables, name);
+  return entry ? (sem_struct *)(entry->val) : NULL;
+}
+
+// We often need to find the index of a particular column
+// because in X like Y the column order of X might be different
+// than Y and probably is.
+static int32_t find_col_in_sptr(sem_struct *sptr, CSTR name) {
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (!Strcasecmp(sptr->names[i], name)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// If we need them we make these fast disambiguation tables so that
+// we don't have to do a cubic algorithm re-searching every column we need
+// These will tell us the disambiguated location of any given column name
+// and its duplicate status as well fast access to the sem_struct for
+// any scope within the jptr -- this will be the jptr of a FROM clause.
+static void jfind_init(jfind_t *jfind, sem_join *jptr) {
+  jfind->jptr = jptr;
+
+  // this will map from column name to the first table that has that column
+  jfind->location = symtab_new();
+
+  // this will tell us if any given column requires disambiguation
+  jfind->dups = symtab_new();
+
+  // this will tell us the sptr index for a particular table name
+  jfind->tables = symtab_new();
+
+  // here we make the lookup maps by walking the jptr for the from clause
+  // this will save us a lot of searching later...
+  for (int32_t i = 0; i < jptr->count; i++) {
+    CSTR name = jptr->names[i];
+    sem_struct *sptr = jptr->tables[i];
+    symtab_add(jfind->tables, name, (void *)sptr);
+
+    for (int32_t j = 0; j < sptr->count; j++) {
+      CSTR col = sptr->names[j];
+
+      if (!symtab_add(jfind->location, col, (void*)name)) {
+        symtab_add(jfind->dups, col, NULL);
+      }
+    }
+  }
+}
+
+// cleanup the helper tables so we don't leak in the amalgam
+static void jfind_cleanup(jfind_t *jfind) {
+  if (jfind->location) {
+    symtab_delete(jfind->location);
+  }
+  if (jfind->dups) {
+    symtab_delete(jfind->dups);
+  }
+  if (jfind->tables) {
+    symtab_delete(jfind->tables);
+  }
+}
+
+// This will check if the indicated column of the required sptr is a type match
+// for the same column name (maybe different index) in the actual column.  We
+// have to do this because we want to make sure that when you say COLUMNS(X like foo)
+// that the foo columns of X are the same type as those in foo.
+static bool_t verify_matched_column(
+  ast_node *ast,
+  sem_struct *sptr_reqd,
+  int32_t i_reqd,
+  sem_struct *sptr_actual,
+  CSTR scope)
+{
+  CHARBUF_OPEN(err);
+  bool_t ok = false;
+  CSTR col = sptr_reqd->names[i_reqd];
+
+  // if we're emitting from the same structure there's nothing to check
+  // this is not the LIKE case
+  if (sptr_reqd == sptr_actual) {
+    ok = true;
+    goto cleanup;
+  }
+
+  // for better diagnostics, we can give the scoped name
+  bprintf(&err, "%s.%s", scope, col);
+
+  int32_t i_actual = find_col_in_sptr(sptr_actual, col);
+  if (i_actual < 0) {
+    report_error(ast, "CQL0069: name not found", err.ptr);
+    goto cleanup;
+  }
+
+  // here the ast is only where we charge the error, but as it happens that will be the node we just added
+  // which by an amazing coincidence has exactly the right file/line number for the columns node
+  if (!sem_verify_assignment(ast, sptr_reqd->semtypes[i_reqd], sptr_actual->semtypes[i_actual], err.ptr)) {
+    goto cleanup;
+  }
+
+  ok = true;
+
+cleanup:
+  CHARBUF_CLOSE(err);
+  return ok;
+}
+
 // Here we've found one column_calculation node, this corresponds to a single
 // instance of COLUMNS(...) in the select list.  When we process this, we
 // will replace it with its expansion.  Note that each one is independent
-// so often you really only one one (distinct is less powerful if you have two or more).
-static void rewrite_column_calculation(ast_node *column_calculation, sem_join *jptr_from) {
+// so often you really only need one (distinct is less powerful if you have two or more).
+static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jfind) {
   Contract(is_ast_column_calculation(column_calculation));
 
   bool_t distinct = !!column_calculation->right;
 
-  symtab *used_names = NULL;
-
-  if (distinct) {
-    used_names = symtab_new();
-  }
-
-  // this will map from column name to the first table that has that column
-  symtab *location = symtab_new();
-
-  // this will tell us if any given column requires disambiguation
-  symtab *dups = symtab_new();
-
-  // here we make the lookup maps by walking the jptr for the from clause
-  // this will save us a lot of searching later...
-  for (int32_t i = 0; i < jptr_from->count; i++) {
-    CSTR name = jptr_from->names[i];
-    sem_struct *sptr_table = jptr_from->tables[i];
-    for (int32_t j = 0; j < sptr_table->count; j++) {
-      CSTR col = sptr_table->names[j];
-
-      if (!symtab_add(location, col, (void*)name)) {
-        symtab_add(dups, col, NULL);
-      }
-    }
-  }
+  symtab *used_names = distinct ? symtab_new() : NULL;
 
   ast_node *tail = NULL;
   ast_node *head = NULL;
@@ -1554,60 +1662,54 @@ static void rewrite_column_calculation(ast_node *column_calculation, sem_join *j
       EXTRACT_STRING(left, dot->left);
       EXTRACT_STRING(right, dot->right);
 
-      ast_node *dot_new = new_ast_dot(new_ast_str(left), new_ast_str(right));
-      ast_node *select_expr = new_ast_select_expr(dot_new, NULL);
-      ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
-      add_tail(&head, &tail, select_expr_list);
+      // no type check is needed here, we just emit the name whatever it is
+      append_scoped_name(&head, &tail, left, right);
       if (used_names) {
         symtab_add(used_names, right, NULL);
-      } 
+      }
     }
     else if (col_calc->left) {
-      EXTRACT_STRING(name, col_calc->left);
+      EXTRACT_STRING(scope, col_calc->left);
 
-      bool_t found = false;
-      for (int32_t i = 0; i < jptr_from->count; i++) {
-        if (!Strcasecmp(name, jptr_from->names[i])) {
-          sem_struct *sptr;
+      sem_struct *sptr_table = jfind_table(jfind, scope);
 
-          EXTRACT(like, col_calc->right);
-
-          if (like) {
-            ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
-            if (!found_shape) {
-              record_error(column_calculation);
-              goto cleanup;
-            }
-            // get just the shape columns (or try anyway)
-            sptr = found_shape->sem->sptr;
-          }
-          else {
-            // get all the columns from this table
-            sptr = jptr_from->tables[i];
-          }
-
-          for (int32_t j = 0; j < sptr->count; j++) {
-            CSTR col = sptr->names[j];
-
-            if (used_names && !symtab_add(used_names, col, NULL)) {
-              continue;
-            }
-
-            ast_node *dot = new_ast_dot(new_ast_str(name), new_ast_str(col));
-            ast_node *select_expr = new_ast_select_expr(dot, NULL);
-            ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
-
-            add_tail(&head, &tail, select_expr_list);
-          }
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        report_error(col_calc->left, "CQL0069: name not found", name);
+      if (!sptr_table) {
+        report_error(col_calc->left, "CQL0069: name not found", scope);
         record_error(column_calculation);
         goto cleanup;
+      }
+
+      EXTRACT(like, col_calc->right);
+
+      sem_struct *sptr;
+
+      if (like) {
+        ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+        if (!found_shape) {
+          record_error(column_calculation);
+          goto cleanup;
+        }
+        // get just the shape columns (or try anyway)
+        sptr = found_shape->sem->sptr;
+      }
+      else {
+        // get all the columns from this table
+        sptr = sptr_table;
+      }
+
+      for (int32_t j = 0; j < sptr->count; j++) {
+        CSTR col = sptr->names[j];
+
+        if (used_names && !symtab_add(used_names, col, NULL)) {
+          continue;
+        }
+
+        append_scoped_name(&head, &tail, scope, col);
+
+        if (!verify_matched_column(tail, sptr, j, sptr_table, scope)) {
+          record_error(column_calculation);
+          goto cleanup;
+        }
       }
     }
     else {
@@ -1619,38 +1721,44 @@ static void rewrite_column_calculation(ast_node *column_calculation, sem_join *j
         record_error(column_calculation);
         goto cleanup;
       }
+
       // get just the shape columns (or try anyway)
       sem_struct *sptr = found_shape->sem->sptr;
 
-      // no distinct processing so we just try to add every name in the like expression
-      if (!used_names) {
-        for (int32_t i = 0; i < sptr->count; i++) {
-          CSTR name = sptr->names[i];
-          ast_node *id = new_ast_str(name);
-          ast_node *select_expr = new_ast_select_expr(id, NULL);
-          ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
+      // now we can use our found structure from the like
+      // we will find the table that has the given column
+      // we generate a disambiguation scope if it is needed
+      for (int32_t i = 0; i < sptr->count; i++) {
+        CSTR col = sptr->names[i];
 
-          add_tail(&head, &tail, select_expr_list);
-        }
-      }
-      else {
-        // now we can use our found structure from the like
-        // we will find the table that has the given column
-        // we generate a disambiguation "dot" node if it is needed
-        for (int32_t i = 0; i < sptr->count; i++) {
-          CSTR col = sptr->names[i];
+        if (!used_names || symtab_add(used_names, col, NULL)) {
+          // if the name has duplicates then qualify it
 
-          if (symtab_add(used_names, col, NULL)) {
-            ast_node *id = new_ast_str(col);
-            ast_node *expr = id;
-            if (symtab_find(dups, col)) {
-              symtab_entry *entry = symtab_find(location, col);
-              expr = new_ast_dot(new_ast_str((CSTR)entry->val), id);
-            }
-            ast_node *select_expr = new_ast_select_expr(expr, NULL);
-            ast_node *select_expr_list = new_ast_select_expr_list(select_expr, NULL);
+          symtab_entry *entry = symtab_find(jfind->location, col);
 
-            add_tail(&head, &tail, select_expr_list);
+          if (!entry) {
+            report_error(like, "CQL0069: name not found", col);
+            record_error(column_calculation);
+            goto cleanup;
+          }
+
+          CSTR scope = (CSTR)entry->val;
+
+          sem_struct *sptr_table = jfind_table(jfind, scope);
+          Invariant(sptr_table); // this is our lookup of a scope that is known, it cant fail
+
+          // We only use the scope in the output if it's needed and if distinct was specified
+          // if distinct wasn't specified then ambiguity is an error and it will be.  The later
+          // stages will check for an unambiguous name.
+          CSTR used_scope = (used_names && symtab_find(jfind->dups, col)) ? scope : NULL;
+
+          append_scoped_name(&head, &tail, used_scope, col);
+
+          // We check the type of the first match of the name, this is the only column that
+          // can match legally.  If there are other columns ambiguity errors will be emitted.
+          if (!verify_matched_column(tail, sptr, i, sptr_table, scope)) {
+            record_error(column_calculation);
+            goto cleanup;
           }
         }
       }
@@ -1670,12 +1778,6 @@ cleanup:
   if (used_names) {
     symtab_delete(used_names);
   }
-  if (dups) {
-    symtab_delete(dups);
-  }
-  if (location) {
-    symtab_delete(location);
-  }
 }
 
 // At this point we're going to walk the select expression list looking for
@@ -1692,6 +1794,8 @@ cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
   Contract(is_ast_select_expr_list_con(ast));
   EXTRACT_NOTNULL(select_expr_list, ast->left);
 
+  jfind_t jfind = {0};
+
   for (ast_node *item = select_expr_list; item; item = item->right) {
     Contract(is_ast_select_expr_list(item));
     if (is_ast_column_calculation(item->left)) {
@@ -1703,19 +1807,26 @@ cql_noexport void rewrite_select_expr_list(ast_node *ast, sem_join *jptr_from) {
         return;
       }
 
+      if (!jfind.jptr) {
+        jfind_init(&jfind, jptr_from);
+      }
+
       AST_REWRITE_INFO_SET(column_calculation->lineno, column_calculation->filename);
 
-      rewrite_column_calculation(column_calculation, jptr_from);
+      rewrite_column_calculation(column_calculation, &jfind);
 
       AST_REWRITE_INFO_RESET();
 
       if (is_error(column_calculation)) {
         record_error(ast);
-        return;
+        goto cleanup;
       }
     }
   }
   record_ok(ast);
+
+cleanup:
+  jfind_cleanup(&jfind);
 }
 
 

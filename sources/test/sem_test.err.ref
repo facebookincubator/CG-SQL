@@ -1356,7 +1356,11 @@ test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0447: virtual
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_correct'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'this_is_not_a_shape'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'this_is_not_a_shape'
-test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cost'
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'simple_shape.cost'
+test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'cost'
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'simple_shape.cost'
 test/sem_test.sql:XXXX:1: error: in select_expr_list_con : CQL0053: select columns(...) cannot be used with no FROM clause
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found 'two_col_v3.t'
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible types in expression 'two_col_v3.r'
+test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 't'
 semantic errors present; no code gen.

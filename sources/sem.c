@@ -2579,7 +2579,7 @@ error:
 // * the variable must be sensitive if the assignment is sensitive
 // * the variable type must be bigger than the expression type
 // Here ast is used only to give a place to put any errors.
-static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
+cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
   if (!sem_verify_compat(ast, sem_type_needed, sem_type_found, var_name)) {
     return false;
   }

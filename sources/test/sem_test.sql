@@ -20649,7 +20649,8 @@ select columns(like this_is_not_a_shape) from simple_shape;
 -- TEST: these columns don't exist, but the shapes are valid...
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- + SELECT id, cost, value
+-- errors during expansion, the columns node stays in the tree
+-- + SELECT COLUMNS(LIKE with_kind)
 -- + error: % name not found 'cost'
 -- +1 error:
 select columns(like with_kind) from simple_shape;
@@ -20657,7 +20658,8 @@ select columns(like with_kind) from simple_shape;
 -- TEST: these columns don't exist, but the shapes are valid...
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
--- + SELECT simple_shape.id, simple_shape.cost, simple_shape.value
+-- expansion failed so the COLUMNS node is not replaced
+-- + SELECT COLUMNS(simple_shape LIKE with_kind)
 -- + error: % name not found 'simple_shape.cost'
 -- +1 error:
 select columns(simple_shape like with_kind) from simple_shape;
@@ -20673,3 +20675,36 @@ select columns(like foo);
 -- + SELECT 1 AS y, T.id, T.t, T.u, 1 AS x
 -- - error:
 select 1 y, columns(distinct T.id), columns(T.t, T.u), 1 x from simple_shape2 T;
+
+-- some simple shapes to match
+create table two_col_v1(x integer, r real);
+create table two_col_v2(x integer, t real);
+create table two_col_v3(x integer, r text);
+
+-- TEST: v3 has r text but v1 requires r real
+-- + {select_stmt}: err
+-- + {column_calculation}: err
+-- + error: % incompatible types in expression 'two_col_v3.r'
+-- +1 error:
+select COLUMNS(two_col_v3 like two_col_v1) from two_col_v3;
+
+-- TEST: v3 has r text but v2 requires t real
+-- + {select_stmt}: err
+-- + {column_calculation}: err
+-- + error: % name not found 'two_col_v3.t'
+-- +1 error:
+select COLUMNS(two_col_v3 like two_col_v2) from two_col_v3;
+
+-- TEST: v3 has r text but v1 requires r real
+-- + {select_stmt}: err
+-- + {column_calculation}: err
+-- + error: % incompatible types in expression 'two_col_v3.r'
+-- +1 error:
+select COLUMNS(like two_col_v1) from two_col_v3;
+
+-- TEST: v3 has r text but v2 requires t real
+-- + {select_stmt}: err
+-- + {column_calculation}: err
+-- + error: % name not found 't'
+-- +1 error:
+select COLUMNS(like two_col_v2) from two_col_v3;
