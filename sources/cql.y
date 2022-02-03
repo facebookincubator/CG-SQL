@@ -2656,7 +2656,7 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt)
     CSTR comment = get_last_doc_comment();
     if (comment) {
        ast_node *misc_attr_key = new_ast_dot(new_ast_str("cql"), new_ast_str("doc_comment"));
-       ast_node *misc_attr = new_ast_misc_attr(misc_attr_key, new_ast_str(comment));
+       ast_node *misc_attr = new_ast_misc_attr(misc_attr_key, new_ast_cstr(comment));
        misc_attrs = new_ast_misc_attrs(misc_attr, misc_attrs);
     }
   }

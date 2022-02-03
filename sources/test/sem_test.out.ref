@@ -81120,7 +81120,7 @@ END;
   |   | {dot}
   |   | | {name cql}
   |   | | {name doc_comment}
-  |   | {name "/** This is a doc comment */"}: ok
+  |   | {strlit '/** This is a doc comment */'}: ok
   | {create_proc_stmt}: ok
     | {name doc_comment_proc}: ok
     | {proc_params_stmts}

@@ -1385,3 +1385,22 @@ create proc high_bit_escapes()
 begin
   select "\xa1\xa2" t;
 end;
+
+-- TEST: string literal attributes
+-- + "name" : "foo",
+-- + "value" : "bar"
+@attribute(foo="bar")
+create proc string_literal_attr()
+begin
+end;
+
+-- TEST: verify doc comments
+-- + "name" : "cql:doc_comment",
+-- + "value" : "/**\n * some potato\n */"
+/**
+ * some potato
+ */
+create procedure potato(i int, b real, c text)
+begin
+  select 1 x;
+end;

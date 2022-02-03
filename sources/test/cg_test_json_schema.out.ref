@@ -2656,6 +2656,55 @@
       ],
       "statement" : "SELECT '\u00a1\u00a2' AS t",
       "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:doc_comment="/**\n * some potato\n */")
+    CREATE PROC potato (i INTEGER, b REAL, c TEXT)
+    BEGIN
+    SELECT 1 AS x;
+    END
+
+    {
+      "name" : "potato",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "i",
+          "argOrigin" : "i",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "b",
+          "argOrigin" : "b",
+          "type" : "real",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "c",
+          "argOrigin" : "c",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "attributes" : [
+        {
+          "name" : "cql:doc_comment",
+          "value" : "/**\n * some potato\n */"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "SELECT 1 AS x",
+      "statementArgs" : [  ]
     }
   ],
   "inserts" : [
@@ -3516,6 +3565,28 @@
       ],
       "hasSelectResult" : 1,
       "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(foo="bar")
+    CREATE PROC string_literal_attr ()
+    BEGIN
+    END
+
+    {
+      "name" : "string_literal_attr",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "attributes" : [
+        {
+          "name" : "foo",
+          "value" : "bar"
+        }
+      ],
+      "usesDatabase" : 0
     }
   ],
   "regions" : [

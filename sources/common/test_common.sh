@@ -1132,8 +1132,7 @@ misc_cases() {
 json_validate() {
   sql_file=$1
   echo "checking for valid JSON formatting of ${sql_file} (test mode disabled)"
-  cc -E -x c "${sql_file}" >"${OUT_DIR}/__temp"
-  if  ! ${CQL} --cg "${OUT_DIR}/__temp.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
+  if  ! ${CQL} --cg "${OUT_DIR}/__temp.out" --in "${sql_file}" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
   then
     cat cg_test_json_schema.err
     echo "non-test JSON output failed for ${sql_file}"
@@ -1159,8 +1158,7 @@ json_validate() {
 json_schema_test() {
   echo '--------------------------------- STAGE 11 -- JSON SCHEMA TEST'
   echo running json schema test
-  cc -DCQL_TEST -E -x c "${TEST_DIR}/cg_test_json_schema.sql" >"${OUT_DIR}/__temp"
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_json_schema.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_json_schema.out" --in "${TEST_DIR}/cg_test_json_schema.sql" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_json_schema.err"
@@ -1181,8 +1179,7 @@ json_schema_test() {
   json_validate "${OUT_DIR}/__temp"
 
   echo running json codegen test for base query fragment
-  cc -E -x c "${TEST_DIR}/cg_test_base_fragment.sql" >"${OUT_DIR}/__temp"
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_base_fragment_json.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_base_fragment_json.out" --in "${TEST_DIR}/cg_test_base_fragment.sql" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_json.err"
@@ -1192,8 +1189,7 @@ json_schema_test() {
   json_validate "${TEST_DIR}/cg_test_base_fragment.sql"
 
   echo running json codegen test for extension query fragment
-  cc -E -x c "${TEST_DIR}/cg_test_extension_fragment.sql" >"${OUT_DIR}/__temp"
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_json.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_json.out" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_json.err"
@@ -1203,8 +1199,7 @@ json_schema_test() {
   json_validate "${TEST_DIR}/cg_test_extension_fragment.sql"
 
   echo running json codegen test for assembly query fragment
-  cc -E -x c "${TEST_DIR}/cg_test_assembly_query.sql" >"${OUT_DIR}/__temp"
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_json.out" --in "${OUT_DIR}/__temp" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_json.out" --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_json.err"
