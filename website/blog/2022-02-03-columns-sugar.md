@@ -102,7 +102,7 @@ select columns(distinct like Foo, like Bar) from ...;
 -- if a specific column is mentioned it is always included
 -- but later clauses that are not a specific column will avoid it
 -- if F or B has an x it won't appear again, just T.x
-select columns(T.x, F like Foo, B like Bar) from F, B ..;
+select columns(distinct T.x, F like Foo, B like Bar) from F, B ..;
 ```
 
 Of course this is all just sugar, so it all ends up being a column list with table
