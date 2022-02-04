@@ -580,7 +580,7 @@ static void cg_json_added_migration_proc(charbuf *output, ast_node *list) {
   for (ast_node *attr = list; attr; attr = attr->right) {
     if (is_ast_create_attr(attr)){
       EXTRACT(version_annotation, attr->left);
-      if (version_annotation->right) {
+      if (version_annotation && version_annotation->right) {
         bprintf(output,",\n\"addedMigrationProc\" : ");
         cg_migration_proc(version_annotation->right, output);
       }
@@ -594,7 +594,7 @@ static void cg_json_deleted_migration_proc(charbuf *output, ast_node *list) {
   for (ast_node *attr = list; attr; attr = attr->right) {
     if (is_ast_delete_attr(attr)){
       EXTRACT(version_annotation, attr->left);
-      if (version_annotation->right) {
+      if (version_annotation && version_annotation->right) {
         bprintf(output,",\n\"deletedMigrationProc\" : ");
         cg_migration_proc(version_annotation->right, output);
       }

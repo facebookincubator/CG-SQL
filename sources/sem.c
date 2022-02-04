@@ -11603,8 +11603,11 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
   // Note that it is ok to go from "no plan" to "recreate" so -1 for both is ok
   if (prev->create_version > 0 || prev->delete_version > 0) {
     if (cur->recreate && !prev->recreate) {
-      report_error(name_ast, "CQL0114: current schema can't go back to @recreate semantics for", name);
-      return false;
+      // temporary exception, if deleted then you can move to (back) to recreate
+      if (cur->delete_version <= 0 || prev->delete_version <= 0) {
+        report_error(name_ast, "CQL0114: current schema can't go back to @recreate semantics for", name);
+        return false;
+      }
     }
   }
 
@@ -11632,9 +11635,13 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
     }
   }
 
-  if (!sem_validate_delete_prev_cur(prev->delete_version, cur->delete_version)) {
-    report_error(name_ast, "CQL0116: current delete version not equal to previous delete version for", name);
-    return false;
+  // temporary workaround to allow create tables to move back to recreate
+  // some tables were deleted and moved to baseline and those need to be fixed.
+  if (prev->recreate || !cur->recreate) {
+    if (!sem_validate_delete_prev_cur(prev->delete_version, cur->delete_version)) {
+      report_error(name_ast, "CQL0116: current delete version not equal to previous delete version for", name);
+      return false;
+    }
   }
 
   // adding a migrate proc when moving to the delete plan is ok
