@@ -81904,3 +81904,56 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 't'
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+DECLARE PROC arg_shape (xyzzy INTEGER);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name arg_shape}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: xyzzy: integer variable in
+        | {param_detail}: xyzzy: integer variable in
+          | {name xyzzy}: xyzzy: integer variable in
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+SELECT xyzzy
+  FROM (SELECT 1 AS xyzzy);
+
+  {select_stmt}: select: { xyzzy: integer notnull }
+  | {select_core_list}: select: { xyzzy: integer notnull }
+  | | {select_core}: select: { xyzzy: integer notnull }
+  |   | {select_expr_list_con}: select: { xyzzy: integer notnull }
+  |     | {select_expr_list}: select: { xyzzy: integer notnull }
+  |     | | {select_expr}: xyzzy: integer notnull
+  |     |   | {name xyzzy}: xyzzy: integer notnull
+  |     | {select_from_etc}: TABLE { select: select }
+  |       | {table_or_subquery_list}: TABLE { select: select }
+  |       | | {table_or_subquery}: TABLE { select: select }
+  |       |   | {select_stmt}: select: { xyzzy: integer notnull }
+  |       |     | {select_core_list}: select: { xyzzy: integer notnull }
+  |       |     | | {select_core}: select: { xyzzy: integer notnull }
+  |       |     |   | {select_expr_list_con}: select: { xyzzy: integer notnull }
+  |       |     |     | {select_expr_list}: select: { xyzzy: integer notnull }
+  |       |     |     | | {select_expr}: xyzzy: integer notnull
+  |       |     |     |   | {int 1}: integer notnull
+  |       |     |     |   | {opt_as_alias}
+  |       |     |     |     | {name xyzzy}
+  |       |     |     | {select_from_etc}: ok
+  |       |     |       | {select_where}
+  |       |     |         | {select_groupby}
+  |       |     |           | {select_having}
+  |       |     | {select_orderby}
+  |       |       | {select_limit}
+  |       |         | {select_offset}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

@@ -14936,10 +14936,19 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeabl
 
   EXTRACT_STRING(proc_name, get_proc_name(proc));
 
+  ast_node *result;
+
   // we're goign to make a synthetic type node for the procedures arguments
-  AST_REWRITE_INFO_SET(like_ast->lineno, like_ast->filename);
-  ast_node *result = new_ast_str(like_name);
-  AST_REWRITE_INFO_RESET();
+  if (yylineno == -1) {
+    // set up a rewrite context if one is needed
+    // if yylineno is not -1 then something else is already rewriting
+    AST_REWRITE_INFO_SET(like_ast->lineno, like_ast->filename);
+    result = new_ast_str(like_name);
+    AST_REWRITE_INFO_RESET();
+  }
+  else {
+    result = new_ast_str(like_name);
+  }
 
   uint32_t count =0 ;
 

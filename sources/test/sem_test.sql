@@ -20708,3 +20708,10 @@ select COLUMNS(like two_col_v1) from two_col_v3;
 -- + error: % name not found 't'
 -- +1 error:
 select COLUMNS(like two_col_v2) from two_col_v3;
+
+declare proc arg_shape(xyzzy integer);
+
+-- TEST: verify that proc args are also valid shapes
+-- + SELECT xyzzy
+-- - error:
+select columns(like arg_shape arguments) from (select 1 xyzzy);
