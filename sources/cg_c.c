@@ -4717,7 +4717,11 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
 
   if (!has_shared_fragments && options.compress) {
     bprintf(cg_main_output, "/*  ");
-    cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+    CHARBUF_OPEN(t2);
+      cg_pretty_quote_plaintext(temp.ptr, &t2, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+      cg_remove_star_slash(&t2); // internal "*/" in a comment is fatal...
+      bprintf(cg_main_output, "%s", t2.ptr);
+    CHARBUF_CLOSE(t2);
     bprintf(cg_main_output, " */\n");
 
     if (!has_prepare_stmt) {
@@ -6622,12 +6626,16 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       }
       // emit source comment
       bprintf(out, "\n/*\n");
+      CHARBUF_OPEN(tmp);
       gen_stmt_level = 1;
-      gen_set_output_buffer(out);
+      gen_set_output_buffer(&tmp);
       if (misc_attrs) {
         gen_misc_attrs(misc_attrs);
       }
       gen_one_stmt(stmt);
+      cg_remove_star_slash(&tmp); // internal "*/" in a comment is fatal...
+      bprintf(out, "%s", tmp.ptr);
+      CHARBUF_CLOSE(tmp);
       bprintf(out, ";\n*/\n");
     }
   }

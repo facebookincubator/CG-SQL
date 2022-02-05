@@ -5114,6 +5114,17 @@ declare const group some_constants (
   const_z = "hello, world\n"
 );
 
+-- TEST: star slash safety
+-- when we generate the comment for this proc we have to
+-- nix the */ or it doesn't compile because it prematurely
+-- ends the comment block in the generated C
+-- this test will fail if the code gen is wrong because the
+-- generated C will not compile at all
+create proc star_slash()
+begin
+  let x := "*/";
+end;
+
 @emit_constants some_constants;
 
 --------------------------------------------------------------------

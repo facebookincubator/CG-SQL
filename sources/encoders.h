@@ -23,3 +23,4 @@ cql_noexport void cg_encode_json_string_literal(CSTR _Nonnull str, charbuf *_Non
 cql_noexport void cg_encode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_decode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_pretty_quote_plaintext(CSTR _Nonnull str, charbuf *_Nonnull output, uint32_t flags);
+cql_noexport void cg_remove_star_slash(charbuf *_Nonnull b);

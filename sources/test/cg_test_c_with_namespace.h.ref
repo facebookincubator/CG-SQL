@@ -3480,6 +3480,9 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+extern void star_slash(void);
+
+// The statement ending at line XXXX
 #ifndef const_group_some_constants_defined
 #define const_group_some_constants_defined
 

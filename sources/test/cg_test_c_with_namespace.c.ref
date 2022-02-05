@@ -412,6 +412,7 @@ cql_string_literal(_literal_20_arguments_are_evaluated_left_to_right, "2");
 cql_string_literal(_literal_21_arguments_are_evaluated_left_to_right, "3");
 cql_string_literal(_literal_22_arguments_are_evaluated_left_to_right, "4");
 cql_string_literal(_literal_23_hello_sensitive_function_is_a_no_op, "hello");
+cql_string_literal(_literal_24_star_slash, "*/");
 
 // The statement ending at line XXXX
 
@@ -16027,6 +16028,26 @@ static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlit
 cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC star_slash ()
+BEGIN
+  LET x := "+/";
+END;
+*/
+
+#define _PROC_ "star_slash"
+// export: DECLARE PROC star_slash ();
+void star_slash(void) {
+  cql_string_ref x = NULL;
+
+  cql_set_string_ref(&x, _literal_24_star_slash);
+
+  cql_string_release(x);
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

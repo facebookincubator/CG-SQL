@@ -221,4 +221,5 @@ DECLARE PROC foo () (shared_something INTEGER NOT NULL);
 DECLARE PROC shared_conditional_user (x INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
 DECLARE PROC nested_shared_stuff () (x INTEGER NOT NULL);
 DECLARE PROC use_nested_select_shared_frag_form () (x INTEGER NOT NULL);
+DECLARE PROC star_slash ();
 DECLARE PROC end_proc ();

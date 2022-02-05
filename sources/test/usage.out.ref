@@ -35,22 +35,25 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --rt java
   java wrappers for result sets produced by the stored procedures in the input
   requires one output file (foo.java)
+--rt json_schema
+  produces JSON output suitable for consumption by downstream codegen tools
+  requires one output file (foo.json)
 --rt schema
   produces the canonical schema for the given input files; stored procedures etc. are removed
   requires one output file
---rt schema_upgrade
-  produces a CQL schema upgrade script which can then be compiled with CQL itself
-  requires one output file (foo.sql)
 --rt schema_facet_checker
   produces a CQL script that checks whether the schema is up to date,
   which can then be compiled with CQL itself
   requires one output file (foo.sql)
---rt json_schema
-  produces JSON output suitable for consumption by downstream codegen tools
-  requires one output file (foo.json)
+--rt schema_upgrade
+  produces a CQL schema upgrade script which can then be compiled with CQL itself
+  requires one output file (foo.sql)
 --rt query_plan
   produces a set of helper procedures that create a query plan for every DML statement in the input
   requires one output file (foo_queryplans.sql)
+--rt stats
+  produces a simple .csv file with node count information for AST nodes per procedure in the input
+  requires one output file (foo.csv)
 --rt udf
   generates stub implementations of all UDFs needed in the input, for use with --rt query_plan
   requires two output files (udfs.h, udfs.c)
