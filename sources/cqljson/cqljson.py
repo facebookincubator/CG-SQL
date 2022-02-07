@@ -330,6 +330,17 @@ def emit_schema():
             "  p_name text not null,\n"
             "  t_name text not null);\n"
             "\n"
+            "create table views(\n"
+            "  v_name text primary key,\n"
+            "  region text not null,\n"
+            "  deleted bool not null,\n"
+            "  create_version int not null,\n"
+            "  delete_version int not null);\n"
+            "\n"
+            "create table proc_view_deps(\n"
+            "  p_name text not null,\n"
+            "  v_name text not null);\n"
+            "\n"
         )
     )
 
@@ -344,6 +355,8 @@ def emit_tabledep(section):
         usesTables = src["usesTables"]
         for tdep in usesTables:
             print(f"insert into proc_deps values('{pname}', '{tdep}');")
+        for vdep in src.get("usesViews", []):
+            print(f"insert into proc_view_deps values('{pname}', '{vdep}');")
 
 
 # This walks the various JSON chunks and emits them into the equivalent table:
@@ -414,6 +427,17 @@ def emit_sql(data):
     emit_tabledep(data["generalInserts"])
     emit_tabledep(data["updates"])
     emit_tabledep(data["general"])
+
+    for tup in enumerate(data["views"]):
+        v = tup[1]
+        v_name = v["name"]
+        region = v.get("region", "None")
+        deleted = 1 if v["isDeleted"] else 0
+        createVersion = v.get("addedVersion", 0)
+        deleteVersion = v.get("deletedVersion", -1)
+        print(
+            f"insert into views values('{v_name}', '{region}', {deleted}, {createVersion}, {deleteVersion});"
+        )
 
 
 def get_fks(targets, tables, data, arg):
