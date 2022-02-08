@@ -1404,3 +1404,20 @@ create procedure potato(i int, b real, c text)
 begin
   select 1 x;
 end;
+
+-- TEST: create a deleted view (for the next test)
+-- + "name" : "deleted_view",
+-- + "isTemp" : 0,
+-- + "isDeleted" : 1,
+-- + "deletedVersion" : 2,
+create view deleted_view as select 1 x @delete(2);
+
+-- TEST: use a deleted view alias -- this is legal, by virtue of the fact that it's not really a view at all
+-- + "name" : "uses_deleted_view_alias",
+-- + "usesTables" : [  ],
+-- - "usesViews"
+create proc uses_deleted_view_alias()
+begin
+  with deleted_view(*) as (select 1 x, 2 y)
+  select * from deleted_view;
+end;

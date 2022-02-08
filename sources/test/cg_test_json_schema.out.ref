@@ -1844,6 +1844,30 @@
       "fromTables" : [ "T1" ],
       "usesTables" : [ "T1" ]
     }
+
+    The statement ending at line XXXX
+
+    CREATE VIEW deleted_view AS
+    SELECT 1 AS x @DELETE(2)
+
+    ,
+    {
+      "name" : "deleted_view",
+      "CRC" : "-5750924639555741080",
+      "isTemp" : 0,
+      "isDeleted" : 1,
+      "deletedVersion" : 2,
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "select" : "SELECT 1 AS x",
+      "selectArgs" : [  ],
+      "usesTables" : [  ]
+    }
   ],
   "indices" : [
 
@@ -2704,6 +2728,38 @@
         }
       ],
       "statement" : "SELECT 1 AS x",
+      "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE PROC uses_deleted_view_alias ()
+    BEGIN
+    WITH
+    deleted_view (x, y) AS (SELECT 1 AS x, 2 AS y)
+    SELECT *
+      FROM deleted_view;
+    END
+
+    {
+      "name" : "uses_deleted_view_alias",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+      ],
+      "usesTables" : [  ],
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "y",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "WITH deleted_view (x, y) AS (SELECT 1 AS x, 2 AS y) SELECT x, y FROM deleted_view",
       "statementArgs" : [  ]
     }
   ],

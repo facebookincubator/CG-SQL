@@ -391,6 +391,17 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
     ast_node *table_or_view = find_table_or_view_even_deleted(table_or_view_name);
 
+    // It's not actually possible to use a deleted table or view in a procedure.
+    // If the name lookup here says that we found something deleted it means
+    // that we have actually found a CTE that is an alias for a deleted table
+    // or view. In that case, we don't want to add the thing we found to the dependency
+    // set we are creating.  We don't want to make this CTE an error because
+    // its reasonable to replace a deleted table/view with CTE of the same name.
+    // Hence we simply filter out deleted tables/views here.
+    if (table_or_view && table_or_view->sem->delete_version > 0) {
+      table_or_view = NULL;
+    }
+
     // Make sure we don't process a table or view that we've already processed.
     if (table_or_view) {
       if (is_ast_create_table_stmt(table_or_view)) {
