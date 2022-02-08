@@ -50,6 +50,7 @@ s/[[:<:]]DELETE[[:>:]]/"DELETE"/g
 s/[[:<:]]DESC[[:>:]]/"DESC"/g
 s/[[:<:]]DISTINCT[[:>:]]/"DISTINCT"/g
 s/[[:<:]]DISTINCTROW[[:>:]]/"DISTINCTROW"/g
+s/[[:<:]]COLUMNS[[:>:]]/"COLUMNS"/g
 s/[[:<:]]DO[[:>:]]/"DO"/g
 s/[[:<:]]DROP[[:>:]]/"DROP"/g
 s/[[:<:]]ELSE[[:>:]]/"ELSE"/g

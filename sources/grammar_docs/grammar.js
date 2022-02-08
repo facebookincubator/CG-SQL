@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Jan 28 14:22:31 2022
+// Snapshot as of Mon Feb  7 18:04:58 2022
 
 
 const PREC = {
@@ -119,6 +119,9 @@ module.exports = grammar({
     arg_list: $ => choice($.arg_expr, seq($.arg_expr, ',', optional($.arg_list))),
     expr_list: $ => choice($.expr, seq($.expr, ',', $.expr_list)),
     shape_arguments: $ => choice(seq($.FROM, $.name), seq($.FROM, $.name, $.shape_def), seq($.FROM, $.ARGUMENTS), seq($.FROM, $.ARGUMENTS, $.shape_def)),
+    column_calculation: $ => choice(seq($.COLUMNS, '(', $.col_calcs, ')'), seq($.COLUMNS, '(', $.DISTINCT, $.col_calcs, ')')),
+    col_calcs: $ => choice($.col_calc, seq($.col_calc, ',', $.col_calcs)),
+    col_calc: $ => choice($.name, $.shape_def, seq($.name, $.shape_def), seq($.name, '.', $.name)),
     call_expr: $ => choice($.expr, $.shape_arguments),
     call_expr_list: $ => choice($.call_expr, seq($.call_expr, ',', $.call_expr_list)),
     cte_tables: $ => choice($.cte_table, seq($.cte_table, ',', $.cte_tables)),
@@ -176,7 +179,7 @@ module.exports = grammar({
     opt_offset: $ => seq($.OFFSET, $.expr),
     select_opts: $ => choice($.ALL, $.DISTINCT, $.DISTINCTROW),
     select_expr_list: $ => choice($.select_expr, seq($.select_expr, ',', $.select_expr_list), '*'),
-    select_expr: $ => choice(seq($.expr, optional($.opt_as_alias)), seq($.name, '.', '*')),
+    select_expr: $ => choice(seq($.expr, optional($.opt_as_alias)), seq($.name, '.', '*'), $.column_calculation),
     opt_as_alias: $ => $.as_alias,
     as_alias: $ => choice(seq($.AS, $.name), $.name),
     query_parts: $ => choice($.table_or_subquery_list, $.join_clause),
@@ -410,6 +413,7 @@ module.exports = grammar({
     IS: $ => CI('is'),
     WHEN: $ => CI('when'),
     THEN: $ => CI('then'),
+    COLUMNS: $ => CI('columns'),
     WITH: $ => CI('with'),
     RECURSIVE: $ => CI('recursive'),
     SELECT: $ => CI('select'),
