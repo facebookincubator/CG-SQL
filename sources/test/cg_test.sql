@@ -5114,15 +5114,20 @@ declare const group some_constants (
   const_z = "hello, world\n"
 );
 
--- TEST: star slash safety
+-- TEST: slash star and star slash safety
 -- when we generate the comment for this proc we have to
--- nix the */ or it doesn't compile because it prematurely
--- ends the comment block in the generated C
--- this test will fail if the code gen is wrong because the
--- generated C will not compile at all
-create proc star_slash()
+-- nix the slash star and star slash or otherwise things will fail
+-- in the generated C code:
+--
+--   - For star slash, not doing so will result in the comment
+--     block ending prematurely, resulting in invalid C code that
+--     won't compile.
+--   - For slash star, there is a high chance that the compiler 
+--     will reject the generated code under certain configurations
+--     (-Werror and -Wcomment flags).
+create proc slash_star_and_star_slash()
 begin
-  let x := "*/";
+  let x := "/*  */";
 end;
 
 @emit_constants some_constants;

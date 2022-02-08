@@ -412,7 +412,7 @@ cql_string_literal(_literal_20_arguments_are_evaluated_left_to_right, "2");
 cql_string_literal(_literal_21_arguments_are_evaluated_left_to_right, "3");
 cql_string_literal(_literal_22_arguments_are_evaluated_left_to_right, "4");
 cql_string_literal(_literal_23_hello_sensitive_function_is_a_no_op, "hello");
-cql_string_literal(_literal_24_star_slash, "*/");
+cql_string_literal(_literal_24_slash_star_and_star_slash, "/*  */");
 
 // The statement ending at line XXXX
 
@@ -16034,18 +16034,18 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC star_slash ()
+CREATE PROC slash_star_and_star_slash ()
 BEGIN
-  LET x := "+/";
+  LET x := "/+  +/";
 END;
 */
 
-#define _PROC_ "star_slash"
-// export: DECLARE PROC star_slash ();
-void star_slash(void) {
+#define _PROC_ "slash_star_and_star_slash"
+// export: DECLARE PROC slash_star_and_star_slash ();
+void slash_star_and_star_slash(void) {
   cql_string_ref x = NULL;
 
-  cql_set_string_ref(&x, _literal_24_star_slash);
+  cql_set_string_ref(&x, _literal_24_slash_star_and_star_slash);
 
   cql_string_release(x);
 }

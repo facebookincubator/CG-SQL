@@ -296,19 +296,26 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
   bputc(output, '"');
 }
 
-// This removes any "*/" that happens in the buffer
-// by converting it into "+/".
+// This removes any "*/" and "/*" that happens in the buffer
+// by converting them into "+/" and "/+" respectively.
 //
-// This is used to prevent prematurely ending a comment
-// in an emitted comment block.
+// This is used for two purposes:
+//
+//   - To prevent prematurely ending a comment in an emitted
+//     comment block.
+//   - To prevent certain compiler under some compilation
+//     flags from failing when they see an opening comment
+//     marker inside a comment.
 //
 // You can only use this function on text that is going
 // into a comment block.
-cql_noexport void cg_remove_star_slash(charbuf *_Nonnull b) {
+cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
   char *p = b->ptr;
   for (int32_t i = 0; i < b->used - 2; i++) {
     if (p[i] == '*' && p[i+1] == '/') {
       p[i] = '+';
+    } else if (p[i] == '/' && p[i+1] == '*') {
+      p[i+1] = '+';
     }
   }
 }

@@ -4719,7 +4719,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
     bprintf(cg_main_output, "/*  ");
     CHARBUF_OPEN(t2);
       cg_pretty_quote_plaintext(temp.ptr, &t2, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
-      cg_remove_star_slash(&t2); // internal "*/" in a comment is fatal...
+      cg_remove_slash_star_and_star_slash(&t2); // internal "*/" is fatal. "/*" can also be under certain compilation flags
       bprintf(cg_main_output, "%s", t2.ptr);
     CHARBUF_CLOSE(t2);
     bprintf(cg_main_output, " */\n");
@@ -6633,7 +6633,7 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         gen_misc_attrs(misc_attrs);
       }
       gen_one_stmt(stmt);
-      cg_remove_star_slash(&tmp); // internal "*/" in a comment is fatal...
+      cg_remove_slash_star_and_star_slash(&tmp); // internal "*/" is fatal. "/*" can also be under certain compilation flags
       bprintf(out, "%s", tmp.ptr);
       CHARBUF_CLOSE(tmp);
       bprintf(out, ";\n*/\n");
