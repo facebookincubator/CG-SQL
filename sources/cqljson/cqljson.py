@@ -150,17 +150,18 @@ def emit_erd(data, universe, tables):
                 c = ctup[1]
                 c_name = c["name"]
                 c_type = c["type"]
+                c_kind = "&lt;" + c["kind"] + "&gt;" if "kind" in c else ""
                 c_notnull = c["isNotNull"] == 1
 
                 nntext1 = "<b>" if c_notnull else ""
-                nntext2 = "</b>" if c_notnull else ""
+                nntext2 = "</b>" if c_notnull else "?"
 
                 fkport = f" port='{c_name}'" if c_name in fkports else ""
 
                 if not_pk_pass != (c_name in pk):
                     print("<tr>")
                     print(f"<td align='left'>{c_name}</td>")
-                    print(f"<td align='left'>{nntext1}{c_type}{nntext2}</td>")
+                    print(f"<td align='left'>{nntext1}{c_type}{c_kind}{nntext2}</td>")
                     if c_name in colinfo:
                         print(f"<td align='left'{fkport}>{colinfo[c_name]}</td>")
                     else:
@@ -309,6 +310,7 @@ def emit_schema():
             "  t_name text not null,\n"
             "  c_name text not null,\n"
             "  c_type text not null,\n"
+            "  c_kind text not null,\n"
             "  c_notnull bool not null,\n"
             "  primary key (t_name, c_name));\n"
             "\n"
@@ -377,12 +379,12 @@ def emit_sql(data):
     for tup in enumerate(data["tables"]):
         t = tup[1]
         t_name = t["name"]
-        region = t["region"] if "region" in t else "None"
+        region = t.get("region", "None")
         deleted = 1 if t["isDeleted"] else 0
         recreated = 1 if t["isRecreated"] else 0
-        createVersion = 0 if "addedVersion" not in t else t["addedVersion"]
-        deleteVersion = -1 if "deletedVersion" not in t else t["deletedVersion"]
-        groupName = "" if "recreateGroupName" not in t else t["recreateGroupName"]
+        createVersion = t.get("addedVersion", 0)
+        deleteVersion = t.get("deletedVersion", -1)
+        groupName = t.get("recreateGroupName", "")
         print(
             f"insert into tables values('{t_name}', '{region}', {deleted}, {createVersion}, {deleteVersion}, {recreated}, '{groupName}');"
         )
@@ -390,9 +392,10 @@ def emit_sql(data):
             c = ctup[1]
             c_name = c["name"]
             c_type = c["type"]
+            c_kind = c.get("kind", "")
             c_notnull = c["isNotNull"]
             print(
-                f"insert into columns values ('{t_name}', '{c_name}', '{c_type}', {c_notnull});"
+                f"insert into columns values ('{t_name}', '{c_name}', '{c_type}', '{c_kind}', {c_notnull});"
             )
 
         for pkcol in t["primaryKey"]:
