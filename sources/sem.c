@@ -10296,9 +10296,6 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
     EXTRACT_STRING(col_name, item->left);
     sptr->names[i] = col_name;
 
-    // TODO: CTE's are not preserving KIND right now  T108037068
-    // sptr->kinds[i] = item->left->sem->kind;  this is not the correct source of the kind
-
     item = item->right;
   }
 
