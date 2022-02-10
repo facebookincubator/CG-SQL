@@ -1410,7 +1410,7 @@ BEGIN_TEST(object_notnull)
   declare _set object;
   set _set := nullable(set_create());
   set _setNN := ifnull_crash(_set);
-  EXPECT(_set == _setNN); // should be the same pointer
+  EXPECT(_set == _setNN); -- should be the same pointer
 END_TEST(object_notnull)
 
 BEGIN_TEST(dummy_values)
