@@ -238,40 +238,17 @@ def emit_table_diagram(data, universe, tables):
 def emit_region_diagram(data):
     connected = {}
 
-    for tup in enumerate(data["regions"]):
-        r = tup[1]
-        r_name = r["name"]
-
-        for rdep in enumerate(r["using"]):
-            rparent = rdep[1]
-            connected[r_name] = 1
-            connected[rparent] = 1
-
     print("digraph parse {")
     print("rankdir=LR;")
-
-    need_orphans = False
-    need_root = False
 
     for tup in enumerate(data["regions"]):
         r = tup[1]
         r_name = r["name"]
         print(f'{r_name} [label = "{r_name}" shape=plaintext]')
 
-        if len(r["using"]) == 0:
-            if r_name in connected:
-                need_root = True
-                print(f"{r_name} -> root")
-            else:
-                need_orphans = True
-                print(f"{r_name} -> orphans")
-
         for rdep in enumerate(r["using"]):
             rparent = rdep[1]
             print(f"{r_name} -> {rparent}")
-
-    if need_orphans and need_root:
-        print("{rank=same orphans root}")
 
     print("}")
 
