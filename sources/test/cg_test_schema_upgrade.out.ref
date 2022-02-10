@@ -516,13 +516,6 @@ BEGIN
     );
     CALL test_cql_set_facet_version('complex_virtual_table_table_crc', 5892669275896520096);
   END IF;
-  IF cql_facet_find(test_facets, 'epon_table_crc') != 7162631825357261735 THEN
-    CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
-      id INTEGER @SENSITIVE,
-      t TEXT
-    );
-    CALL test_cql_set_facet_version('epon_table_crc', 7162631825357261735);
-  END IF;
   IF cql_facet_find(test_facets, 'a_virtual_table_table_crc') != -4813907186176555661 THEN
     DROP TABLE IF EXISTS a_virtual_table;
     CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (

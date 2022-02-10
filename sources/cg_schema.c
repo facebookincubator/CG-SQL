@@ -1012,6 +1012,11 @@ static void cg_schema_manage_recreate_tables(
       continue;
     }
 
+    if (is_eponymous) {
+      // eponymous virtual tables do not get created or deleted
+      continue;
+    }
+
     EXTRACT(create_table_name_flags, ast->left);
     EXTRACT(table_flags_attrs, create_table_name_flags->left);
     EXTRACT_STRING(table_name, create_table_name_flags->right);
@@ -1026,10 +1031,8 @@ static void cg_schema_manage_recreate_tables(
       bprintf(&make_table, ";\n");
     }
 
-    if (!is_eponymous) {
-      // note that this will also drop any indices that are on the table
-      bprintf(&update_tables, "    DROP TABLE IF EXISTS %s;\n", table_name);
-    }
+    // note that this will also drop any indices that are on the table
+    bprintf(&update_tables, "    DROP TABLE IF EXISTS %s;\n", table_name);
 
     list_item *index_list = ast->sem->index_list;
 
@@ -1072,7 +1075,7 @@ static void cg_schema_manage_recreate_tables(
     CSTR gname = note->group_name;
 
     // if there is a group and and this node can be merged with the next
-    // the hold the update and accumulate the CRC
+    // then hold the update and accumulate the CRC
     if (i + 1 < count && gname[0] && !Strcasecmp(gname, (note+1)->group_name)) {
       continue;
     }
