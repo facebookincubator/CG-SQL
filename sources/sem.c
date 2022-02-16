@@ -5295,47 +5295,6 @@ static ast_node *find_local_or_global_variable(CSTR name) {
   return entry ? entry->val : NULL;
 }
 
-// A cursor name C in an expression context refers to the deleted "_C_has_row_"
-// boolean. This lets you say "if C then stuff; end if;"
-static sem_resolve sem_try_resolve_cursor_as_expression(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
-  Contract(name);
-  Contract(type_ptr);
-
-  if (scope) {
-    return SEM_RESOLVE_CONTINUE;
-  }
-
-  ast_node *variable = find_local_or_global_variable(name);
-  if (!variable) {
-    return SEM_RESOLVE_CONTINUE;
-  }
-
-  sem_t sem_type = variable->sem->sem_type;
-  if (!is_cursor(sem_type)) {
-    return SEM_RESOLVE_CONTINUE;
-  }
-
-  // cursor appearing in an expression context, rewrite as the flag that says
-  // if the cursor has data.  This lets you write
-  // fetch cursor into ... then  if cursor then ... endif
-
-  if (ast) {
-    CSTR vname = NULL;
-
-    if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-      vname = dup_printf("%s._has_row_", variable->sem->name);
-    }
-    else {
-      vname = dup_printf("_%s_has_row_", variable->sem->name);
-    }
-
-    ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
-    ast->sem->name = vname;
-  }
-
-  return SEM_RESOLVE_STOP;
-}
-
 static sem_resolve sem_try_resolve_variable(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
@@ -5350,8 +5309,6 @@ static sem_resolve sem_try_resolve_variable(ast_node *ast, CSTR name, CSTR scope
   }
 
   sem_t sem_type = variable->sem->sem_type;
-  // Cursors-as-expressions are checked first, so this must be true.
-  Invariant(is_unitary(sem_type));
 
   if (is_object(sem_type) &&
       CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_TABLE_FUNC)) {
@@ -5758,23 +5715,23 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
 // - `*typr_ptr` will be set to mutable type (`sem_t *`) in the current
 //   environment if the identifier successfully resolves to a type. (There are,
 //   unfortunately, a few exceptions in which a type will be successfully
-//   resolved and yet `*typr_ptr` will not be set. These include when a cursor
-//   in an expression position, when the expression is `rowid` (or similar), and
-//   when the id resolves to an enum case. The reason no mutable type is
-//   returned in these cases is that a new type is allocated as part of semantic
-//   analysis, and there exists no single, stable type in the environment to
-//   which a pointer could be returned. This is a limitation of this function,
-//   albeit one that's currently not problematic.)
+//   resolved and yet `*typr_ptr` will not be set. These include when the
+//   expression is `rowid` (or similar) and when the id resolves to an enum
+//   case. The reason no mutable type is returned in these cases is that a new
+//   type is allocated as part of semantic analysis, and there exists no single,
+//   stable type in the environment to which a pointer could be returned. This
+//   is a limitation of this function, albeit one that's currently not
+//   problematic.)
 //
 //  Resolution is attempted in the order that the `sem_try_resolve_*` functions
 //  appear in the `resolver` array. Each takes the same arguments: An (optional)
 //  AST, a mandatory name, an optional scope, and mandatory type pointer. If the
 //  identifier provided to one of these resolvers is resolved successfully, *or*
 //  if the correct resolver was found but there was an error in the program,
-//  `SEM_RESOLVE_STOP` is returned and resolution is complete, successful or not.
-//  If a resolver is tried and it determines that it is not the correct resolver
-//  for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned and the
-//  next resolver is tried.
+//  `SEM_RESOLVE_STOP` is returned and resolution is complete, successful or
+//  not. If a resolver is tried and it determines that it is not the correct
+//  resolver for the identifier in question, `SEM_RESOLVE_CONTINUE` is returned
+//  and the next resolver is tried.
 //
 // This function should not be called directly. If one is interested in
 // performing semantic analysis, call `sem_resolve_id` (or, if within an
@@ -5790,7 +5747,6 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
     sem_try_resolve_arguments,
     sem_try_resolve_column,
     sem_try_resolve_rowid,
-    sem_try_resolve_cursor_as_expression,
     sem_try_resolve_variable,
     sem_try_resolve_enum,
     sem_try_resolve_global_constant,
@@ -5865,6 +5821,24 @@ static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
     if (is_error(ast)) {
       return;
     }
+
+    // If the variable is also a struct, then it's a cursor.
+    sem_t sem_type = ast->sem->sem_type;
+    if (is_struct(sem_type)) {
+      Invariant(is_cursor(sem_type));
+      // When the name of a cursor appears in an expression context, it doesn't
+      // refer to the cursor itself. Instead, it refers to a boolean indicating
+      // whether or not the cursor has a row. We adjust things here accordingly.
+      CSTR vname = NULL;
+      if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
+        vname = dup_printf("%s._has_row_", ast->sem->name);
+      } else {
+        vname = dup_printf("_%s_has_row_", ast->sem->name);
+      }
+      ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
+      ast->sem->name = vname;
+      return;
+    }
   }
 
   if (is_analyzing_notnull_rewrite) {
@@ -5901,8 +5875,10 @@ static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
 }
 
 // Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
-// identifier if one exists in the environment. See the documentation for
-// `sem_resolve_id_with_type` for limitations.
+// identifier if one exists in the environment. The type pointer returned is for
+// the original binding and thus corresponds to the type set via
+// `sem_resolve_id`, *not* the type set via `sem_resolve_id_expr`. See the
+// documentation for `sem_resolve_id_with_type` for limitations.
 static sem_t *find_mutable_type(CSTR name, CSTR scope) {
   Contract(name);
 
