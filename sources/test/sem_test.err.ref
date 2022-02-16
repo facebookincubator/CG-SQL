@@ -153,8 +153,8 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in leave_stmt : CQL0308: statement should be the last thing in a statement list
 test/sem_test.sql:XXXX:1: error: in continue_stmt : CQL0308: statement should be the last thing in a statement list
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_variable'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_variable'
 test/sem_test.sql:XXXX:1: error: in leave_stmt : CQL0219: leave must be inside of a 'loop', 'while', or 'switch' statement
 test/sem_test.sql:XXXX:1: error: in continue_stmt : CQL0218: continue must be inside of a 'loop' or 'while' statement
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0308: statement should be the last thing in a statement list
@@ -162,7 +162,7 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0308: statement should be t
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0307: return statement should be in a procedure and not at the top level
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0307: return statement should be in a procedure and not at the top level
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 test/sem_test.sql:XXXX:1: error: in close_stmt : CQL0391: CLOSE cannot be used on a boxed cursor 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0151: table in delete statement does not exist 'bogus_table'
 test/sem_test.sql:XXXX:1: error: in str : CQL0152: cannot delete from a view 'MyView'
@@ -185,7 +185,7 @@ test/sem_test.sql:XXXX:1: error: in fetch_stmt : CQL0217: number of variables di
 test/sem_test.sql:XXXX:1: error: in fetch_stmt : CQL0217: number of variables did not match count of columns in cursor 'fetch_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'a_string2'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'an_int2'
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_cursor'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0216: FETCH variable not found 'non_existent_variable'
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'var_id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 'id'
@@ -605,7 +605,7 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0063: can't mix and match out,
 test/sem_test.sql:XXXX:1: error: in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union'
 test/sem_test.sql:XXXX:1: error: in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_union_call_and_out_union_other_order'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0222: out cursor statement only makes sense inside of a procedure
 test/sem_test.sql:XXXX:1: error: in str : CQL0215: value cursors are not used with FETCH C, or FETCH C INTO 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -617,10 +617,10 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0091: stored procs that deal with 
 test/sem_test.sql:XXXX:1: error: in param : CQL0211: procedure without trailing OUT parameter used as function 'proc2'
 test/sem_test.sql:XXXX:1: error: in call : CQL0090: stored proc calls may not appear in the context of a SQL statement 'proc_with_single_output'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_cursor'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0166: count of columns differs from count of values
@@ -628,8 +628,8 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: CQL has no good
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column missing in FETCH statement 'B'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'B'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C0'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C0'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'C1'
 test/sem_test.sql:XXXX:1: error: in columns_values : CQL0299: [shape] has too few fields 'C0'
 test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor without fields 'C0'
@@ -951,17 +951,17 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0303: second argument must be an i
 test/sem_test.sql:XXXX:1: error: in from_shape : CQL0297: FROM [shape] is redundant if column list is empty
 test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor without fields 'fetch_cursor'
 test/sem_test.sql:XXXX:1: error: in columns_values : CQL0299: [shape] has too few fields 'small_cursor'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'x'
 test/sem_test.sql:XXXX:1: error: in update_cursor_stmt : CQL0157: count of columns differs from count of values
 test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'w'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'my_cursor'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0055: all columns in the select must have a name
 test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column missing in FETCH statement 'c1'
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_symbol'
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_symbol'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_symbol'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_symbol'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
@@ -1027,7 +1027,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0334: @dummy_seed @dummy_nu
 test/sem_test.sql:XXXX:1: error: in num : CQL0337: the number of columns values for each row should be identical in VALUES clause
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0339: WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled 'table_with_invalid_without_rowid_mode'
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_cursor'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_real_shape'
 test/sem_test.sql:XXXX:1: error: in str : CQL0340: FROM ARGUMENTS used in a procedure with no arguments 'arg_rewrite_no_args'
@@ -1040,7 +1040,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear
 test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
 test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear inside of procedures
 test/sem_test.sql:XXXX:1: error: in num : CQL0341: argument must be a variable in function 'cql_cursor_diff_col'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'an_int'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_col'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_cursor_diff_val'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c1'
@@ -1070,7 +1070,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'box'
 test/sem_test.sql:XXXX:1: error: in str : CQL0261: cursor did not originate from a SQLite statement, it only has values 'C'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'barf'
 test/sem_test.sql:XXXX:1: error: in str : CQL0057: in the cursor and the variable type, all must have the same column count
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'XYZZY'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'XYZZY'
 test/sem_test.sql:XXXX:1: error: in set_from_cursor : CQL0173: variable not found 'box'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_get_blob_size'
 test/sem_test.sql:XXXX:1: error: in call : CQL0345: argument must be of type blob 'cql_get_blob_size'

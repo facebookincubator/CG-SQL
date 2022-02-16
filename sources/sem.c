@@ -5322,6 +5322,8 @@ static sem_resolve sem_try_resolve_variable(ast_node *ast, CSTR name, CSTR scope
     ast->sem = new_sem(sem_type);
     ast->sem->name = variable->sem->name;
     ast->sem->kind = variable->sem->kind;
+    // Needed for cursors.
+    ast->sem->sptr = variable->sem->sptr;
   }
 
   *type_ptr = &variable->sem->sem_type;
@@ -5761,7 +5763,7 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
   }
 
   if (scope) {
-     name = dup_printf("%s.%s", scope, name);
+    name = dup_printf("%s.%s", scope, name);
   }
 
   report_resolve_error(ast, "CQL0069: name not found", name);
@@ -18254,32 +18256,26 @@ cql_noexport void sem_any_shape(ast_node *ast) {
   sem_cursor(ast);
 }
 
-// Cursors appear in only a few places legally as an actual cursor;
+// Cursors appear in only a few places legally as an actual cursor:
+//
 //  * fetch cursor [one of the fetch flavors]
 //  * close cursor
 //  * on the left side of X.field where X is a cursor that was autofetched
 //  * on the right side of a `declare cursor C like ...` statement.
-// In those cases we specifically look up the cursor verify that is
-// is in fact a cursor.  In other cases using the name of the cursor refers
-// to a boolean that indicates if the cursor presently has a value.
+//
+//  In those cases, we specifically verify that is, in fact, a cursor.  In other
+//  cases, the name of a cursor refers to a boolean that indicates whether the
+//  cursor presently has a value.
 cql_noexport void sem_cursor(ast_node *ast) {
   EXTRACT_STRING(name, ast);
 
-  ast_node *variable = find_local_or_global_variable(name);
-  if (!variable) {
-    report_error(ast, "CQL0204: cursor not found", name);
-    record_error(ast);
+  sem_resolve_id(ast, name, NULL);
+  if (is_error(ast)) {
     return;
   }
 
-  ast->sem = variable->sem;
-
-  sem_t sem_type = ast->sem->sem_type;
-  Invariant(is_variable(sem_type));
-  sem_type &= SEM_TYPE_CORE;
-
-  if (sem_type != SEM_TYPE_STRUCT) {
-    report_error(ast, "CQL0205: variable is not a cursor", name);
+  if (!is_cursor(ast->sem->sem_type)) {
+    report_error(ast, "CQL0205: not a cursor", name);
     record_error(ast);
     return;
   }

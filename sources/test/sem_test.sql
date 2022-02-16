@@ -1863,7 +1863,7 @@ loop fetch my_cursor into X, Y begin
 end;
 
 -- TEST: try to loop over a scalar
--- + error: % variable is not a cursor 'X'
+-- + error: % not a cursor 'X'
 -- +1 error:
 -- + {loop_stmt}: err
 -- + {fetch_stmt}: err
@@ -1873,7 +1873,7 @@ loop fetch X into y begin
 end;
 
 -- TEST: try to loop over something that isn't present
--- + error: % cursor not found 'not_a_variable'
+-- + error: % name not found 'not_a_variable'
 -- +1 error:
 -- + {loop_stmt}: err
 -- + {fetch_stmt}: err
@@ -1980,7 +1980,7 @@ end;
 close my_cursor;
 
 -- TEST: close invalid cursor
--- + error: % variable is not a cursor 'X'
+-- + error: % not a cursor 'X'
 -- +1 error:
 -- + {close_stmt}: err
 -- + {name X}: err
@@ -2246,7 +2246,7 @@ fetch fetch_cursor into a_string2, a_string, a_nullable;
 fetch fetch_cursor into an_int, an_int2, a_nullable;
 
 -- TEST: fetch using a bogus cursor
--- + error: % cursor not found 'not_a_cursor'
+-- + error: % name not found 'not_a_cursor'
 -- +1 error:
 -- + {fetch_stmt}: err
 -- + {name not_a_cursor}: err
@@ -6955,7 +6955,7 @@ end;
 -- TEST: use out statement with non cursor
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
--- + error: % variable is not a cursor 'C'
+-- + error: % not a cursor 'C'
 -- +1 error:
 create proc out_not_cursor()
 begin
@@ -7150,7 +7150,7 @@ end;
 -- + {stmt_list}: err
 -- + {fetch_call_stmt}: err
 -- +2 {name C}: err
--- +2 error: % variable is not a cursor 'C'
+-- +2 error: % not a cursor 'C'
 create proc fetch_from_call_to_proc_with_invalid_cursor()
 begin
   declare C text;
@@ -7177,7 +7177,7 @@ end;
 
 -- TEST: fetch non cursor
 -- + {fetch_values_stmt}: err
--- + error: % cursor not found 'not_a_cursor'
+-- + error: % name not found 'not_a_cursor'
 -- +1 error:
 fetch not_a_cursor from values(1,2,3);
 
@@ -7289,7 +7289,7 @@ end;
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
 -- + {name C0}: err
--- + error: % variable is not a cursor 'C0'
+-- + error: % not a cursor 'C0'
 -- +1 error:
 create proc fetch_to_cursor_from_invalid_cursor()
 begin
@@ -7305,7 +7305,7 @@ end;
 -- + {stmt_list}: err
 -- + {fetch_values_stmt}: err
 -- + {name C1}: err
--- + error: % variable is not a cursor 'C1'
+-- + error: % not a cursor 'C1'
 -- +1 error:
 create proc fetch_to_invalid_cursor_from_cursor()
 begin
@@ -7381,7 +7381,7 @@ end;
 -- + {stmt_list}: err
 -- + {declare_cursor_like_name}: err
 -- + {name C0}: err
--- + error: % variable is not a cursor 'C0'
+-- + error: % not a cursor 'C0'
 -- +1 error:
 create proc declare_cursor_like_non_cursor_variable()
 begin
@@ -12803,7 +12803,7 @@ insert into referenceable from cursor small_cursor;
 
 -- TEST: try to use something that isn't a cursor
 -- + {insert_stmt}: err
--- + error: % variable is not a cursor 'X'
+-- + error: % not a cursor 'X'
 -- +1 error:
 insert into referenceable from cursor X;
 
@@ -12850,7 +12850,7 @@ update cursor my_cursor(like not_a_symbol) from values(1);
 
 -- TEST -- not a cursor
 -- + {update_cursor_stmt}: err
--- + error: % variable is not a cursor 'X'
+-- + error: % not a cursor 'X'
 -- +1 error:
 update cursor X(one) from values (2);
 
@@ -12910,7 +12910,7 @@ update cursor nully_cursor(like c1c7) from cursor c1c7;
 
 -- TEST: try to update cursor from a bogus symbol
 -- + {update_cursor_stmt}: err
--- + error: % cursor not found 'not_a_symbol'
+-- + error: % name not found 'not_a_symbol'
 -- +1 error:
 update cursor nully_cursor(like c1c7) from cursor not_a_symbol;
 
@@ -12929,7 +12929,7 @@ fetch nully_cursor(like c1c7) from cursor c1c7;
 
 -- TEST: fetch cursor form bogus cursor
 -- + {fetch_values_stmt}: err
--- + error: % cursor not found 'not_a_symbol'
+-- + error: % name not found 'not_a_symbol'
 -- +1 error:
 fetch nully_cursor(like c1c7) from cursor not_a_symbol;
 
@@ -13959,7 +13959,7 @@ end;
 -- This is strictly a rewrite so all we have to do here is make sure that we are calling the proc correctly
 -- + {create_proc_stmt}: err
 -- + {call_stmt}: err
--- + error: % cursor not found 'not_a_cursor'
+-- + error: % name not found 'not_a_cursor'
 -- +1 error:
 create proc shape_thing_bogus_cursor()
 begin
@@ -14199,7 +14199,7 @@ set a_string := cql_cursor_diff_col(1, "bogus");
 -- TEST: call cql_cursor_diff_col with invalid variable arguments
 -- + {assign}: err
 -- + {call}: err
--- + error: % variable is not a cursor 'an_int'
+-- + error: % not a cursor 'an_int'
 -- +1 error:
 set a_string := cql_cursor_diff_col(an_int, an_int2);
 
@@ -14643,7 +14643,7 @@ begin
 end;
 
 -- TEST: try to box but the source isnt a cursor
--- + error: % cursor not found 'XYZZY'
+-- + error: % name not found 'XYZZY'
 -- +1 error:
 create proc cursor_box_not_a_cursor(out box object<foo cursor>)
 begin

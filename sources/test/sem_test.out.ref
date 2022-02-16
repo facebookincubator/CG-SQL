@@ -6776,7 +6776,7 @@ BEGIN
   LEAVE;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 
   {loop_stmt}: err
   | {fetch_stmt}: err
@@ -6793,7 +6793,7 @@ BEGIN
   LEAVE;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_variable'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_variable'
 
   {loop_stmt}: err
   | {fetch_stmt}: err
@@ -7006,7 +7006,7 @@ The statement ending at line XXXX
 
 CLOSE X;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 
   {close_stmt}: err
   | {name X}: err
@@ -7756,7 +7756,7 @@ The statement ending at line XXXX
 
 FETCH not_a_cursor INTO i;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_cursor'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
   {fetch_stmt}: err
   | {name not_a_cursor}: err
@@ -26427,7 +26427,7 @@ BEGIN
   OUT C;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 
   {create_proc_stmt}: err
   | {name out_not_cursor}: err
@@ -26923,8 +26923,8 @@ BEGIN
   OUT C;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 
   {create_proc_stmt}: err
   | {name fetch_from_call_to_proc_with_invalid_cursor}: err
@@ -26990,7 +26990,7 @@ The statement ending at line XXXX
 
 FETCH not_a_cursor FROM VALUES(1, 2, 3);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_cursor'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
   {fetch_values_stmt}: err
   | {name_columns_values}
@@ -27356,7 +27356,7 @@ BEGIN
   OUT C1;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C0'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C0'
 
   {create_proc_stmt}: err
   | {name fetch_to_cursor_from_invalid_cursor}: err
@@ -27413,7 +27413,7 @@ BEGIN
   FETCH C1 FROM C0;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'C1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C1'
 
   {create_proc_stmt}: err
   | {name fetch_to_invalid_cursor_from_cursor}: err
@@ -52554,7 +52554,7 @@ The statement ending at line XXXX
 
 INSERT INTO referenceable(a, b, c, d, e) FROM X;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 
   {insert_stmt}: err
   | {insert_normal}
@@ -52669,7 +52669,7 @@ The statement ending at line XXXX
 
 UPDATE CURSOR X(one) FROM VALUES(2);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'X'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 
   {update_cursor_stmt}: err
   | {name X}: err
@@ -53043,7 +53043,7 @@ The statement ending at line XXXX
 
 UPDATE CURSOR nully_cursor(c1, c7) FROM not_a_symbol;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_symbol'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_symbol'
 
   {update_cursor_stmt}: err
   | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
@@ -53168,7 +53168,7 @@ The statement ending at line XXXX
 
 FETCH nully_cursor(c1, c7) FROM not_a_symbol;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_symbol'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_symbol'
 
   {fetch_values_stmt}: err
   | {name_columns_values}
@@ -57278,7 +57278,7 @@ BEGIN
   CALL shape_consumer(FROM not_a_cursor);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'not_a_cursor'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
   {create_proc_stmt}: err
   | {name shape_thing_bogus_cursor}: err
@@ -58247,7 +58247,7 @@ The statement ending at line XXXX
 
 SET a_string := cql_cursor_diff_col(an_int, an_int2);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0205: variable is not a cursor 'an_int'
+test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
 
   {assign}: err
   | {name a_string}: a_string: text variable
@@ -60294,7 +60294,7 @@ BEGIN
   SET box FROM CURSOR XYZZY;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0204: cursor not found 'XYZZY'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'XYZZY'
 
   {create_proc_stmt}: err
   | {name cursor_box_not_a_cursor}: err
