@@ -4122,6 +4122,56 @@ BEGIN_TEST(skip_nullables)
   EXPECT(not C);
 END_TEST(skip_nullables)
 
+@attribute(cql:shared_fragment)
+create proc sign_func(x integer not null)
+begin
+  select case
+    when x < 0 then -1
+    when x = 0 then 0
+    else 1
+  end x;
+end;
+
+@attribute(cql:shared_fragment)
+create proc max_func(x integer not null, y integer not null)
+begin
+  select case when x <= y then y else x end result;
+end;
+
+@attribute(cql:shared_fragment)
+create proc ten()
+begin
+  select 10 ten;
+end;
+
+@attribute(cql:shared_fragment)
+create proc numbers(lim integer not null)
+begin
+  with N(x) as (
+    select 1 x
+    union all
+    select x+1 x from N
+    limit lim)
+  select x from N;
+end;
+
+BEGIN_TEST(inline_proc)
+  declare C cursor for
+    select
+      sign_func(x - ten()) s1,
+      sign(x-10) s2,
+      max_func(x - ten(), sign_func(x - ten())) m1,
+      max(x - 10, sign(x - 10)) m2
+   from
+     (call numbers(20));
+
+  loop fetch C
+  begin
+    EXPECT(C.s1 == C.s2);
+    EXPECT(C.m1 == C.m2);
+  end;
+
+END_TEST(inline_proc)
 
 END_SUITE()
 

@@ -434,7 +434,7 @@ select 10 as T where 1;
 -- + {name c}: err
 -- + {select_from_etc}: ok
 -- + error: % name not found 'c'
--- + Error
+-- +1 error:
 select c where 1;
 
 -- TEST: a WHERE clause can refer to the FROM
@@ -447,28 +447,28 @@ select * from foo where id > 1000;
 -- + {select_stmt}: err
 -- + {opt_where}: err
 -- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'x'
--- + Error
+-- +1 error:
 select id as x from foo where x > 1000;
 
 -- TEST: a GROUP BY clause cannot refer to the SELECT list
 -- + {select_stmt}: err
 -- + {opt_groupby}: err
 -- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
--- + Error
+-- +1 error:
 select id, name as y from bar group by y having count(name) > 10;
 
 -- TEST: a HAVING clause cannot refer to the SELECT list
 -- + {select_stmt}: err
 -- + {opt_having}: err
 -- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
--- + Error
+-- +1 error:
 select id, name as y from bar group by name having count(y) > 10;
 
 -- TEST: a WINDOW clause cannot refer to the SELECT list
 -- + {select_stmt}: err
 -- + {opt_select_window}: err
 -- + error: % alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
--- + Error
+-- +1 error:
 select id, name as y, row_number() over w
 from bar
 window w as (order by y);
@@ -478,7 +478,7 @@ window w as (order by y);
 -- + {select_stmt}: err
 -- + {opt_where}: err
 -- + error: % must use qualified form to avoid ambiguity with alias 'name'
--- + Error
+-- +1 error:
 select id as name from bar where name like "%foo%";
 
 -- TEST: using a qualified reference avoids the error above
@@ -492,7 +492,7 @@ select id as name from bar where bar.name like "%foo%";
 -- + {select_stmt}: err
 -- + {opt_where}: err
 -- + error: % must use qualified form to avoid ambiguity with alias 'name'
--- + Error
+-- +1 error:
 select id as name
 from bar
 where id > (select count(rate) from bar where name like "%foo%");
@@ -510,7 +510,6 @@ where id > (select count(rate) from bar where bar.name like "%foo%");
 -- + {select_stmt}: err
 -- + {opt_groupby}: err
 -- + error: % must use qualified form to avoid ambiguity with alias 'name'
--- + Error
 select id as name, name from bar group by name having count(name) > 10;
 
 -- TEST: a HAVING clause cannot refer to the FROM if what it refers to in the
@@ -518,7 +517,6 @@ select id as name, name from bar group by name having count(name) > 10;
 -- + {select_stmt}: err
 -- + {opt_having}: err
 -- + error: % must use qualified form to avoid ambiguity with alias 'name'
--- + Error
 select id as name, name from bar group by name having count(name) > 10;
 
 -- TEST: a WINDOW clause cannot refer to the FROM if what it refers to in the
@@ -526,7 +524,7 @@ select id as name, name from bar group by name having count(name) > 10;
 -- + {select_stmt}: err
 -- + {opt_select_window}: err
 -- + error: % must use qualified form to avoid ambiguity with alias 'name'
--- + Error
+-- +1 error:
 select id as name, name, row_number() over w
 from bar
 window w as (order by name);
@@ -1246,7 +1244,7 @@ create table simple_ak_table_3 (
 -- TEST: invalidate unique key that is the subset (in order) of another, (a, b, c) is invalid because (a, b) is already unique key
 -- + {create_table_stmt}: err
 -- + error: % at least part of this unique key is redundant with previous unique keys
--- + Error
+-- +1 error:
 create table simple_ak_table_4 (
   a integer not null,
   b text,
@@ -1258,7 +1256,7 @@ create table simple_ak_table_4 (
 -- TEST: invalidate same column in two unique key, (b, a) is invalid because (a, b) is already unique key
 -- + {create_table_stmt}: err
 -- + error: % at least part of this unique key is redundant with previous unique keys
--- + Error
+-- +1 error:
 create table simple_ak_table_5 (
   a integer not null,
   b text,
@@ -1271,7 +1269,7 @@ create table simple_ak_table_5 (
 -- TEST: invalidate unique key that is the subset (at end) of another, (c, d, b, a) is invalid because subset (a, b) is already unique key
 -- + {create_table_stmt}: err
 -- + error: % at least part of this unique key is redundant with previous unique keys
--- + Error
+-- +1 error:
 create table simple_ak_table_6 (
   a integer not null,
   b text,
@@ -1284,7 +1282,7 @@ create table simple_ak_table_6 (
 -- TEST: invalidate unique key that is the subset (at start) of another, (a, b) is invalid because (a) is unique key
 -- + {create_table_stmt}: err
 -- + error: % at least part of this unique key is redundant with previous unique keys
--- + Error
+-- +1 error:
 create table simple_ak_table_7 (
   a integer not null,
   b text,
@@ -2127,7 +2125,7 @@ insert into bar values ('string is wrong', 'string', 1);
 insert into bar values (1, 2, 3);
 
 -- TEST: insert too many columns
--- + Error
+-- +1 error:
 -- +1 error:
 -- + error: % count of columns differs from count of values
 -- + {insert_stmt}: err
@@ -2135,7 +2133,7 @@ insert into bar values (1, 2, 3);
 insert into foo values(NULL, 2);
 
 -- TEST: insert too few columns
--- + Error
+-- +1 error:
 -- +1 error:
 -- + error: % select statement with VALUES clause requires a non empty list of values
 -- + {insert_stmt}: err
@@ -3710,7 +3708,7 @@ select strftime('%YYYY-%mm-%DDT%HH:%MM:%SS.SSS', 'now', '+1 month');
 select strftime('%W', 'now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: strftime with non-string modifier
--- + Error
+-- +1 error:
 -- +1 error:
 -- + {select_stmt}: err
 select strftime('%s', 'now', 3);
@@ -3759,7 +3757,7 @@ select date('now', '+1 month');
 select date('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: date with non-string modifier
--- + Error
+-- +1 error:
 -- +1 error:
 -- + {select_stmt}: err
 select date('now', 3);
@@ -3802,7 +3800,7 @@ select time('now', '+1 month');
 select time('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: time with non-string modifier
--- + Error
+-- +1 error:
 -- +1 error:
 -- + {select_stmt}: err
 select time('now', 3);
@@ -3845,7 +3843,7 @@ select datetime('now', '+1 month');
 select datetime('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: datetime with non-string modifier
--- + Error
+-- +1 error:
 -- +1 error:
 -- + {select_stmt}: err
 select datetime('now', 3);
@@ -3888,7 +3886,7 @@ select julianday('now', '+1 month');
 select julianday('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: julianday with non-string modifier
--- + Error
+-- +1 error:
 -- +1 error:
 -- + {select_stmt}: err
 select julianday('now', 3);
@@ -4025,7 +4023,7 @@ declare proc decl3(id integer) ( A integer not null, B bool );
 declare proc decl4(x like decl3);
 
 -- TEST: declare inside of a proc
--- + Error
+-- +1 error:
 -- +1 error:
 -- + error: % declared procedures must be top level 'yy'
 -- + {create_proc_stmt}: err
@@ -7053,7 +7051,7 @@ end;
 -- + {call}: err
 -- + {distinct}
 -- + {arg_list}: ok
--- + error: % DISTINCT may only be used in function that are aggregated or user defined 'proc_func'
+-- + error: % procedure as function call is not compatible with DISTINCT or filter clauses 'proc_func'
 -- +1 error:
 SET an_int := proc_func(distinct 1);
 
@@ -7077,7 +7075,7 @@ set an_int := proc2(1);
 
 -- TEST: user proc calls can't happen inside of SQL
 -- + {call}: err
--- + error: % Stored proc calls may not appear in the context of a SQL statement 'proc_with_single_output'
+-- + error: % a function call to a procedure inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'proc_with_single_output'
 -- +1 error:
 set an_int := (select proc_with_single_output(1, an_int, an_int));
 
@@ -8053,7 +8051,7 @@ end;
 
 -- TEST: views must have a name for every column
 -- + all columns in the select must have a name
--- + Error
+-- +1 error:
 create view MyBogusView as select 1, 2;
 
 -- TEST: make this proc accept args to fake the result of another proc
@@ -8411,7 +8409,7 @@ end;
 -- TEST: specify update columns
 -- + {create_trigger_stmt}: err
 -- + error: % name list has duplicate name 'a'
--- + Error
+-- +1 error:
 create trigger trigger4a
   instead of update of a, a, c on ViewShape
 begin
@@ -8421,7 +8419,7 @@ end;
 -- TEST: specify a view where one is not allowed
 -- + {create_trigger_stmt}: err
 -- + error: % a trigger on a view must be the INSTEAD OF form 'ViewShape'
--- + Error
+-- +1 error:
 create trigger trigger4b
   before update on ViewShape
 begin
@@ -8431,7 +8429,7 @@ end;
 -- TEST: specify a bogus table name
 -- + {create_trigger_stmt}: err
 -- + error: % table/view not found 'no_such_table_dude'
--- + Error
+-- +1 error:
 create trigger trigger4c
   before update on no_such_table_dude
 begin
@@ -8443,7 +8441,7 @@ end;
 -- + {stmt_list}: err
 -- + {select_stmt}: err
 -- + error: % name not found 'old.id'
--- + Error
+-- +1 error:
 create trigger trigger4d
   before insert on bar
 begin
@@ -10946,7 +10944,7 @@ declare select function tvf(id integer) (foo text);
 -- TEST: table valued functions may not appear in an expression context
 -- + {select_stmt}: err
 -- + error: % table valued functions may not be used in an expression context 'tvf'
--- + Error
+-- +1 error:
 select 1 where tvf(5) = 1;
 
 -- TEST: use a table valued function
@@ -11166,7 +11164,7 @@ select min(_sens, 1L);
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
 -- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
--- + Error
+-- +1 error:
 create table recreatable_reference_1(
   id integer primary key references recreatable(id),
   name text
@@ -11176,7 +11174,7 @@ create table recreatable_reference_1(
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
 -- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
--- + Error
+-- +1 error:
 create table recreatable_reference_2(
   id integer primary key references recreatable(id),
   name text
@@ -11196,7 +11194,7 @@ create table in_group_test(
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
 -- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
--- + Error
+-- +1 error:
 create table recreatable_reference_3(
   id integer primary key references in_group_test(id),
   name text
@@ -11206,7 +11204,7 @@ create table recreatable_reference_3(
 -- + create_table_stmt}: err
 -- + col_attrs_fk}: err
 -- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
--- + Error
+-- +1 error:
 create table recreatable_reference_4(
   id integer primary key references in_group_test(id),
   name text
@@ -11449,7 +11447,7 @@ end;
 -- + {upsert_stmt}: err
 -- + {insert_stmt}: err
 -- + error: % upsert syntax only supports INSERT INTO 'foo'
--- + Error
+-- +1 error:
 create proc upsert_or_ignore()
 begin
   insert or ignore into foo select id from bar where 1 on conflict(id) do nothing;
@@ -11464,7 +11462,7 @@ end;
 -- + {conflict_target}: err
 -- + {name bogus}: err
 -- + error: % name not found 'bogus'
--- + Error
+-- +1 error:
 create proc upsert_with_bogus_where_stmt()
 begin
   insert into foo(id) values(1) on conflict(id) where bogus=1 do nothing;
@@ -11910,7 +11908,7 @@ on conflict(id) do update set name = excluded.name, rate = id+1;
 -- + {upsert_update}
 -- + {conflict_target}
 -- +1 error: % upsert-clause is not compatible with DEFAULT VALUES
--- + Error
+-- +1 error:
 insert into foo default values on conflict do nothing;
 
 -- TEST declare a value fetcher that doesn't use DML
@@ -12202,7 +12200,7 @@ select id, row_number() over () as row_num from foo;
 -- + {select_expr}: err
 -- + {call}: err
 -- + error: % function may not appear in this context 'row_number'
--- + Error
+-- +1 error:
 select id, row_number() as row_num from foo;
 
 -- TEST: window function invocation outside [SELECT expr] statement
@@ -12212,7 +12210,7 @@ select id, row_number() as row_num from foo;
 -- + {window_func_inv}: err
 -- + {call}
 -- + error: % Window function invocations can only appear in the select list of a select statement
--- + Error
+-- +1 error:
 select 1 where row_number() over ();
 
 -- TEST: test invalid number of argument on window function row_number()
@@ -12222,7 +12220,7 @@ select 1 where row_number() over ();
 -- + {name row_number}: err
 -- + {select_from_etc}: TABLE { foo: foo }
 -- + error: % function got incorrect number of arguments 'row_number'
--- + Error
+-- +1 error:
 select id, row_number(1) over () as row_num from foo;
 
 -- TEST: window function invocatin with a window clause
@@ -12255,7 +12253,7 @@ order by id;
 -- + {call_filter_clause}
 -- + {name bogus}: err
 -- + error: % Window name is not defined 'bogus'
--- + Error
+-- +1 error:
 select id, row_number() over bogus
   from foo;
 
@@ -12267,7 +12265,7 @@ select id, row_number() over bogus
 -- + {window_defn}: err
 -- + {name bogus}: err
 -- + error: % name not found 'bogus'
--- + Error
+-- +1 error:
 select id, row_number() over win
   from foo
   window
@@ -12281,7 +12279,7 @@ select id, row_number() over win
 -- + {name win}: err
 -- + {window_defn}
 -- + error: % Window name definition is not used 'win'
--- + Error
+-- +1 error:
 select id
   from foo
   window
@@ -12323,7 +12321,7 @@ select id, group_concat(id, '.') filter (where id >= 99) over () as row_num from
 -- + {eq}: err
 -- + {name alias}: err
 -- + error: % name not found 'alias'
--- + Error
+-- +1 error:
 select id as alias, avg(id) filter (where alias = 0) over () from foo;
 
 -- TEST: test FILTER clause may only be used with aggregate window functions
@@ -12332,8 +12330,14 @@ select id as alias, avg(id) filter (where alias = 0) over () from foo;
 -- + {call}: err
 -- + {name row_number}
 -- + error: % function may not appear in this context 'row_number'
--- + Error
 select 1, row_number() filter (where 1) over ();
+
+-- TEST: test DISTINCT clause may only be used with aggregates
+-- + {select_stmt}: err
+-- + {call}: err
+-- + {name row_number}
+-- + error: % DISTINCT may only be used in function that are aggregated or user defined 'row_number'
+select 1, row_number(distinct 1);
 
 -- TEST: test partition by grammar
 -- + {select_stmt}: select: { id: integer notnull, _anon: integer notnull }
@@ -12366,7 +12370,7 @@ select id, row_number() over (order by id asc) from foo;
 -- + {groupby_list}: err
 -- + {name bogus}: err
 -- + error: % name not found 'bogus'
--- + Error
+-- +1 error:
 select id, row_number() over (order by bogus asc) from foo;
 
 -- TEST: test frame spec grammar combination
@@ -12416,7 +12420,7 @@ select id,
 -- + {opt_frame_spec}: err
 -- + {name bogus}: err
 -- + error: % name not found 'bogus'
--- + Error
+-- +1 error:
 select id,
        row_number() over (rows bogus = null preceding exclude ties)
   from foo;
@@ -13265,7 +13269,7 @@ select abs() from bar;
 -- + {call}: err
 -- + {name abs}
 -- + error: % argument must be numeric 'abs'
--- + Error
+-- +1 error:
 select abs('Horty');
 
 -- TEST: test abs with null param
@@ -14159,7 +14163,7 @@ set a_string := @PROC;
 
 -- TEST: @proc in bad context (savepoint)
 -- + {savepoint_stmt}: err
--- + Error
+-- +1 error:
 savepoint @proc;
 
 -- TEST: @proc in bad context (release)
@@ -20715,3 +20719,136 @@ declare proc arg_shape(xyzzy integer);
 -- + SELECT xyzzy
 -- - error:
 select columns(like arg_shape arguments) from (select 1 xyzzy);
+
+-- TEST: create a shared fragment with no from clause
+-- + {create_proc_stmt}: select: { result: integer } dml_proc
+-- - error:
+@attribute(cql:shared_fragment)
+create proc inline_math(x_ integer, y_ integer)
+begin
+  select x_ + y_ result;
+end;
+
+-- TEST: invoke a shared fragment as an expression
+create proc do_inline_math()
+-- + {create_proc_stmt}: select: { result: integer } dml_proc
+-- + {name inline_math}: integer inline_call
+-- - error:
+begin
+  with N(i) as (
+    select 1 i
+    union all
+    select i + 1 i from N
+    limit 20
+  )
+  select inline_math(i, i+3) result from N;
+end;
+
+-- TEST: the fragment is ok on its own
+-- but you can't use this fragment as an inline function
+@attribute(cql:shared_fragment)
+create proc inline_math_bad(x integer, y integer)
+begin
+  select x + y sum from (select 1 z);
+end;
+
+-- TEST: try to use a bogus fragment as an inline function
+-- + {create_proc_stmt}: err
+-- + {call}: err
+-- + error: % a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad'
+-- +1 error:
+create proc do_inline_math_bad()
+begin
+  select inline_math_bad(1,2) bad;
+end;
+
+-- TEST: the fragment is ok on its own
+-- it has a compound query so you can't use it in an expression
+@attribute(cql:shared_fragment)
+create proc inline_math_bad2()
+begin
+  select 1 x
+  union all
+  select 2 x;
+end;
+
+-- TEST: try to use a bogus fragment as an inline function
+-- + {create_proc_stmt}: err
+-- + {call}: err
+-- + error: % a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad2'
+-- +1 error:
+create proc do_inline_math_bad2()
+begin
+  select inline_math_bad2() bad;
+end;
+
+-- TEST: the fragment has an error, can't use it
+@attribute(cql:shared_fragment)
+create proc inline_math_bad3()
+begin
+  select not 'x' y;
+end;
+
+-- TEST: try to use a bogus fragment as an inline function
+-- + {create_proc_stmt}: err
+-- + {call}: err
+-- + error: % procedure had errors, can't call 'inline_math_bad3'
+-- +1 error:
+create proc do_inline_math_bad3()
+begin
+  select inline_math_bad3() bad;
+end;
+
+-- TEST: the fragment is ok on its own
+-- it can't be used as an expression because it selects 2 values
+@attribute(cql:shared_fragment)
+create proc inline_math_bad4()
+begin
+  select 1 x, 2 y;
+end;
+
+-- TEST: try to use a bogus fragment as an inline function
+-- + {create_proc_stmt}: err
+-- + {call}: err
+-- + error: % nested select expression must return exactly one column 'inline_math_bad4'
+-- +1 error:
+create proc do_inline_math_bad4()
+begin
+  select inline_math_bad4() bad;
+end;
+
+-- TEST: invoke a shared fragment as an expression
+-- + {create_proc_stmt}: err
+-- + {call}: err
+-- + error: % too few arguments provided to procedure 'inline_math'
+-- +1 error:
+create proc do_inline_math_bad5()
+begin
+  select 1 where inline_math(2); -- wrong number of args
+end;
+
+@attribute(cql:shared_fragment)
+create proc inline_frag(x integer)
+begin
+  select 1 x;
+end;
+
+-- TEST: invoke a shared fragment as an expression, try to use distinct
+-- + {create_proc_stmt}: err
+-- + {call}: err
+-- + error: % procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
+-- +1 error:
+create proc do_inline_math_bad6()
+begin
+  select 1 where inline_frag(distinct 2);
+end;
+
+-- TEST: invoke a shared fragment as an expression, try to use filter clause
+-- + {create_proc_stmt}: err
+-- + {call}: err
+-- + error: % procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
+-- +1 error:
+create proc do_inline_math_bad7()
+begin
+  select 1 where inline_frag(2) filter (where 1);
+end;

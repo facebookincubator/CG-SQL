@@ -86,6 +86,12 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable cte_proc_callback;
   void *_Nullable cte_proc_context;
 
+  // This callback is used to expand inline function call sequences inside of a SQL expression
+  // the normal response will be to recursively generate the SQL for the function fragment
+  // and emit it to the output stream
+  gen_sql_callback _Nullable inline_func_callback;
+  void *_Nullable inline_func_context;
+
   // This callback is used to suppress any particular CTE that we might need to omit from a select statement
   // normally this causes us to check the name of the CTE against a blocklist
   gen_sql_callback _Nullable cte_suppress_callback;

@@ -140,12 +140,14 @@ static symtab *text_pieces;
 // The current shared fragment number in the current procdure
 static int32_t proc_cte_index;
 
-
-
-
 // This is the mapping between the original parameter name and the aliased name
 // for a particular parameter of a particular shared CTE fragment
 static symtab *proc_arg_aliases;
+
+// This tells us if we are currently processing an inline fragment in which case
+// we know there are no local variables only parameters and those have been
+// remapped as part of the inlining process
+static bool_t in_inline_function_fragment;
 
 // This is the mapping between the original CTE and the aliased name
 // for a particular parameter of a particular shared CTE fragment
@@ -3915,6 +3917,18 @@ static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer
   // all variables have a name
   Contract(ast->sem->name);
 
+  // If the current context is inline function expansion then arg variables
+  // are emitted as is -- we rewrite these so that they come from an inline table
+  // e.g.
+  //   'select x + y'
+  // becomes
+  //   '(select x + y from (select arg1 x, arg2 y))'
+  //
+  // as a result x, y are not bound variables
+  if (in_inline_function_fragment) {
+    return false;
+  }
+
   cur_variable_count++;
 
   symtab_entry *entry = symtab_find(proc_arg_aliases, ast->sem->name);
@@ -4422,6 +4436,78 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
   }
 }
 
+static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_STRING(proc_name, call_ast->left);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // flush what we have so far
+  cg_emit_one_frag(buffer);
+
+  ast_node *ast = find_proc(proc_name);
+
+  Contract(is_ast_create_proc_stmt(ast));
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+  bool_t saved_in_inline_function_fragment = in_inline_function_fragment;
+  symtab *saved_proc_arg_aliases = proc_arg_aliases;
+  symtab *saved_proc_cte_aliases = proc_cte_aliases;
+  in_inline_function_fragment = true;
+
+  proc_arg_aliases = NULL;
+  proc_cte_aliases = NULL;
+
+  bprintf(buffer, "(");
+
+  // Emit a fragment from a statement, note that this can nest
+  cg_fragment_stmt(stmt, buffer);
+
+  proc_arg_aliases = saved_proc_arg_aliases;
+  proc_cte_aliases = saved_proc_cte_aliases;
+  in_inline_function_fragment = saved_in_inline_function_fragment;
+
+  if (params) {
+    // If there are any args we create a nested select expression
+    // to bind them to the variable names.  Note that this means
+    // args are evaluated once which could be important if there
+    // are SQL functions with side-effects being used (highly rare)
+    // or expensive functions.
+    bprintf(buffer, " FROM (SELECT ");
+
+    while (params) {
+      Invariant(is_ast_params(params));
+      Invariant(arg_list); // expressions match the args
+
+      EXTRACT_NOTNULL(param, params->left);
+      EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+
+      EXTRACT_NOTNULL(param_detail, param->right);
+      EXTRACT_ANY_NOTNULL(param_name_ast, param_detail->left)
+      EXTRACT_STRING(param_name, param_name_ast);
+
+      gen_root_expr(expr);
+      bprintf(buffer, " %s", param_name);
+      if (params->right) {
+        bprintf(buffer, ", ");
+      }
+
+      // guaranteed to stay in lock step
+      params = params->right;
+      arg_list = arg_list->right;
+    }
+    bprintf(buffer, ")");
+  }
+
+  bprintf(buffer, ")");
+  cg_emit_one_frag(buffer);
+
+  return true;
+}
+
 static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
@@ -4437,8 +4523,11 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   EXTRACT(stmt_list, proc_params_stmts->right);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
+  bool_t saved_in_inline_function_fragment = in_inline_function_fragment;
   symtab *saved_proc_arg_aliases = proc_arg_aliases;
   symtab *saved_proc_cte_aliases = proc_cte_aliases;
+  in_inline_function_fragment = false;
+
   symtab *new_arg_aliases = symtab_new();
   proc_cte_aliases = symtab_new();
 
@@ -4582,6 +4671,7 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   symtab_delete(proc_cte_aliases);
   proc_arg_aliases = saved_proc_arg_aliases;
   proc_cte_aliases = saved_proc_cte_aliases;
+  in_inline_function_fragment = saved_in_inline_function_fragment;
 
   return true;
 }
@@ -4619,6 +4709,32 @@ static bool_t cg_note_variable_exists(ast_node *cte_body, void *context, charbuf
   return false;
 }
 
+// The inline function counts as a shared fragment and we recurse to find any
+// internal shared fragments or conditional fragments inside of the inline function.
+// Note that even though it has no FROM clause the inline function could have
+// a nested select inside of its select list and therefore all fragment types
+// can appear inside of an inline function fragment.
+static bool_t cg_note_inline_func(ast_node *call_ast, void *context, charbuf *buffer) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_STRING(proc_name, call_ast->left);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+
+  ast_node *ast = find_proc(proc_name);
+
+  Contract(is_ast_create_proc_stmt(ast));
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+  // recurse the fragment contents, we might find more stuff, like variables
+  // and such deeper in the tree
+  gen_one_stmt(stmt);
+
+  has_shared_fragments = true;
+  return false;
+}
+
 // We set up a walk of the tree using the echo functions but
 // we are going to note what kinds of things we spotted while doing
 // the walk.  We need to know in advance what style of codegen we'll
@@ -4634,6 +4750,7 @@ static void cg_classify_fragments(ast_node *stmt) {
   init_gen_sql_callbacks(&callbacks);
   callbacks.cte_proc_callback = cg_search_conditionals_call_in_cte;
   callbacks.variables_callback = cg_note_variable_exists;
+  callbacks.inline_func_callback = cg_note_inline_func;
   gen_statement_with_callbacks(stmt, &callbacks);
   CHARBUF_CLOSE(sql);
 }
@@ -4694,6 +4811,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   callbacks.cte_proc_callback = cg_call_in_cte;
   callbacks.cte_suppress_callback = cg_suppress_cte;
   callbacks.table_rename_callback = cg_table_rename;
+  callbacks.inline_func_callback = cg_inline_func;
 
   CHARBUF_OPEN(temp);
   gen_set_output_buffer(&temp);

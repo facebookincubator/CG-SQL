@@ -26648,7 +26648,7 @@ The statement ending at line XXXX
 
 SET an_int := proc_func(DISTINCT 1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0305: DISTINCT may only be used in function that are aggregated or user defined 'proc_func'
+test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses 'proc_func'
 
   {assign}: err
   | {name an_int}: an_int: integer variable
@@ -26658,7 +26658,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0305: DISTINCT may only be used in
       | {call_filter_clause}
       | | {distinct}
       | {arg_list}: ok
-        | {int 1}: integer notnull
+        | {int 1}
 
 The statement ending at line XXXX
 
@@ -26711,7 +26711,7 @@ The statement ending at line XXXX
 
 SET an_int := ( SELECT proc_with_single_output(1, an_int, an_int) );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0090: stored proc calls may not appear in the context of a SQL statement 'proc_with_single_output'
+test/sem_test.sql:XXXX:1: error: in call : CQL0224: a function call to a procedure inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'proc_with_single_output'
 
   {assign}: err
   | {name an_int}: an_int: integer variable
@@ -50733,6 +50733,37 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0306: FILTER clause may only be us
   |     |       |         | {int 1}: integer notnull
   |     |       | {window_defn}: ok
   |     |         | {window_defn_orderby}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1, row_number(DISTINCT 1);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'row_number'
+test/sem_test.sql:XXXX:1: error: in call : CQL0305: DISTINCT may only be used in function that are aggregated or user defined 'row_number'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: integer notnull
+  |     | | | {int 1}: integer notnull
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: err
+  |     |     | {call}: err
+  |     |       | {name row_number}
+  |     |       | {call_arg_list}
+  |     |         | {call_filter_clause}
+  |     |         | | {distinct}
+  |     |         | {arg_list}: ok
+  |     |           | {int 1}: integer notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -81956,4 +81987,626 @@ SELECT xyzzy
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC inline_math (x_ INTEGER, y_ INTEGER)
+BEGIN
+  SELECT x_ + y_ AS result;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { result: integer } dml_proc
+    | {name inline_math}: select: { result: integer } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x_: integer variable in
+      | | | {param_detail}: x_: integer variable in
+      | |   | {name x_}: x_: integer variable in
+      | |   | {type_int}: integer
+      | | {params}
+      |   | {param}: y_: integer variable in
+      |     | {param_detail}: y_: integer variable in
+      |       | {name y_}: y_: integer variable in
+      |       | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { result: integer }
+          | {select_core_list}: select: { result: integer }
+          | | {select_core}: select: { result: integer }
+          |   | {select_expr_list_con}: select: { result: integer }
+          |     | {select_expr_list}: select: { result: integer }
+          |     | | {select_expr}: result: integer
+          |     |   | {add}: integer
+          |     |   | | {name x_}: x_: integer variable in
+          |     |   | | {name y_}: y_: integer variable in
+          |     |   | {opt_as_alias}
+          |     |     | {name result}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math ()
+BEGIN
+  WITH
+  N (i) AS (SELECT 1 AS i
+  UNION ALL
+  SELECT i + 1 AS i
+    FROM N
+  LIMIT 20)
+  SELECT inline_math(i, i + 3) AS result
+    FROM N;
+END;
+
+  {create_proc_stmt}: select: { result: integer } dml_proc
+  | {name do_inline_math}: select: { result: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {with_select_stmt}: select: { result: integer }
+        | {with}
+        | | {cte_tables}: ok
+        |   | {cte_table}: N: { i: integer notnull }
+        |     | {cte_decl}: N: { i: integer notnull }
+        |     | | {name N}
+        |     | | {name_list}
+        |     |   | {name i}
+        |     | {select_stmt}: UNION ALL: { i: integer notnull }
+        |       | {select_core_list}: UNION ALL: { i: integer notnull }
+        |       | | {select_core}: select: { i: integer notnull }
+        |       | | | {select_expr_list_con}: select: { i: integer notnull }
+        |       | |   | {select_expr_list}: select: { i: integer notnull }
+        |       | |   | | {select_expr}: i: integer notnull
+        |       | |   |   | {int 1}: integer notnull
+        |       | |   |   | {opt_as_alias}
+        |       | |   |     | {name i}
+        |       | |   | {select_from_etc}: ok
+        |       | |     | {select_where}
+        |       | |       | {select_groupby}
+        |       | |         | {select_having}
+        |       | | {select_core_compound}
+        |       |   | {int 2}
+        |       |   | {select_core_list}: select: { i: integer notnull }
+        |       |     | {select_core}: select: { i: integer notnull }
+        |       |       | {select_expr_list_con}: select: { i: integer notnull }
+        |       |         | {select_expr_list}: select: { i: integer notnull }
+        |       |         | | {select_expr}: i: integer notnull
+        |       |         |   | {add}: integer notnull
+        |       |         |   | | {name i}: i: integer notnull
+        |       |         |   | | {int 1}: integer notnull
+        |       |         |   | {opt_as_alias}
+        |       |         |     | {name i}
+        |       |         | {select_from_etc}: TABLE { N: N }
+        |       |           | {table_or_subquery_list}: TABLE { N: N }
+        |       |           | | {table_or_subquery}: TABLE { N: N }
+        |       |           |   | {name N}: TABLE { N: N }
+        |       |           | {select_where}
+        |       |             | {select_groupby}
+        |       |               | {select_having}
+        |       | {select_orderby}
+        |         | {select_limit}
+        |           | {opt_limit}: integer notnull
+        |           | | {int 20}: integer notnull
+        |           | {select_offset}
+        | {select_stmt}: select: { result: integer }
+          | {select_core_list}: select: { result: integer }
+          | | {select_core}: select: { result: integer }
+          |   | {select_expr_list_con}: select: { result: integer }
+          |     | {select_expr_list}: select: { result: integer }
+          |     | | {select_expr}: result: integer
+          |     |   | {call}: integer
+          |     |   | | {name inline_math}: integer inline_call
+          |     |   | | {call_arg_list}
+          |     |   |   | {call_filter_clause}
+          |     |   |   | {arg_list}: ok
+          |     |   |     | {name i}: i: integer notnull
+          |     |   |     | {arg_list}
+          |     |   |       | {add}: integer notnull
+          |     |   |         | {name i}: i: integer notnull
+          |     |   |         | {int 3}: integer notnull
+          |     |   | {opt_as_alias}
+          |     |     | {name result}
+          |     | {select_from_etc}: TABLE { N: N }
+          |       | {table_or_subquery_list}: TABLE { N: N }
+          |       | | {table_or_subquery}: TABLE { N: N }
+          |       |   | {name N}: TABLE { N: N }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC inline_math_bad (x INTEGER, y INTEGER)
+BEGIN
+  SELECT x + y AS sum
+    FROM (SELECT 1 AS z);
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { sum: integer } dml_proc
+    | {name inline_math_bad}: select: { sum: integer } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x: integer variable in
+      | | | {param_detail}: x: integer variable in
+      | |   | {name x}: x: integer variable in
+      | |   | {type_int}: integer
+      | | {params}
+      |   | {param}: y: integer variable in
+      |     | {param_detail}: y: integer variable in
+      |       | {name y}: y: integer variable in
+      |       | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { sum: integer }
+          | {select_core_list}: select: { sum: integer }
+          | | {select_core}: select: { sum: integer }
+          |   | {select_expr_list_con}: select: { sum: integer }
+          |     | {select_expr_list}: select: { sum: integer }
+          |     | | {select_expr}: sum: integer
+          |     |   | {add}: integer
+          |     |   | | {name x}: x: integer variable in
+          |     |   | | {name y}: y: integer variable in
+          |     |   | {opt_as_alias}
+          |     |     | {name sum}
+          |     | {select_from_etc}: TABLE { select: select }
+          |       | {table_or_subquery_list}: TABLE { select: select }
+          |       | | {table_or_subquery}: TABLE { select: select }
+          |       |   | {select_stmt}: select: { z: integer notnull }
+          |       |     | {select_core_list}: select: { z: integer notnull }
+          |       |     | | {select_core}: select: { z: integer notnull }
+          |       |     |   | {select_expr_list_con}: select: { z: integer notnull }
+          |       |     |     | {select_expr_list}: select: { z: integer notnull }
+          |       |     |     | | {select_expr}: z: integer notnull
+          |       |     |     |   | {int 1}: integer notnull
+          |       |     |     |   | {opt_as_alias}
+          |       |     |     |     | {name z}
+          |       |     |     | {select_from_etc}: ok
+          |       |     |       | {select_where}
+          |       |     |         | {select_groupby}
+          |       |     |           | {select_having}
+          |       |     | {select_orderby}
+          |       |       | {select_limit}
+          |       |         | {select_offset}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math_bad ()
+BEGIN
+  SELECT inline_math_bad(1, 2) AS bad;
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad'
+
+  {create_proc_stmt}: err
+  | {name do_inline_math_bad}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: err
+        |     |   | {call}: err
+        |     |   | | {name inline_math_bad}
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {int 1}
+        |     |   |     | {arg_list}
+        |     |   |       | {int 2}
+        |     |   | {opt_as_alias}
+        |     |     | {name bad}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC inline_math_bad2 ()
+BEGIN
+  SELECT 1 AS x
+  UNION ALL
+  SELECT 2 AS x;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: UNION ALL: { x: integer notnull } dml_proc
+    | {name inline_math_bad2}: UNION ALL: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: UNION ALL: { x: integer notnull }
+          | {select_core_list}: UNION ALL: { x: integer notnull }
+          | | {select_core}: select: { x: integer notnull }
+          | | | {select_expr_list_con}: select: { x: integer notnull }
+          | |   | {select_expr_list}: select: { x: integer notnull }
+          | |   | | {select_expr}: x: integer notnull
+          | |   |   | {int 1}: integer notnull
+          | |   |   | {opt_as_alias}
+          | |   |     | {name x}
+          | |   | {select_from_etc}: ok
+          | |     | {select_where}
+          | |       | {select_groupby}
+          | |         | {select_having}
+          | | {select_core_compound}
+          |   | {int 2}
+          |   | {select_core_list}: select: { x: integer notnull }
+          |     | {select_core}: select: { x: integer notnull }
+          |       | {select_expr_list_con}: select: { x: integer notnull }
+          |         | {select_expr_list}: select: { x: integer notnull }
+          |         | | {select_expr}: x: integer notnull
+          |         |   | {int 2}: integer notnull
+          |         |   | {opt_as_alias}
+          |         |     | {name x}
+          |         | {select_from_etc}: ok
+          |           | {select_where}
+          |             | {select_groupby}
+          |               | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math_bad2 ()
+BEGIN
+  SELECT inline_math_bad2() AS bad;
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause 'inline_math_bad2'
+
+  {create_proc_stmt}: err
+  | {name do_inline_math_bad2}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: err
+        |     |   | {call}: err
+        |     |   | | {name inline_math_bad2}
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   | {opt_as_alias}
+        |     |     | {name bad}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC inline_math_bad3 ()
+BEGIN
+  SELECT NOT 'x' AS y;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: err
+    | {name inline_math_bad3}: err
+    | {proc_params_stmts}
+      | {stmt_list}: err
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {not}: err
+          |     |   | | {strlit 'x'}: text notnull
+          |     |   | {opt_as_alias}
+          |     |     | {name y}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math_bad3 ()
+BEGIN
+  SELECT inline_math_bad3() AS bad;
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0213: procedure had errors, can't call 'inline_math_bad3'
+
+  {create_proc_stmt}: err
+  | {name do_inline_math_bad3}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: err
+        |     |   | {call}: err
+        |     |   | | {name inline_math_bad3}
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   | {opt_as_alias}
+        |     |     | {name bad}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC inline_math_bad4 ()
+BEGIN
+  SELECT 1 AS x, 2 AS y;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull, y: integer notnull } dml_proc
+    | {name inline_math_bad4}: select: { x: integer notnull, y: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { x: integer notnull, y: integer notnull }
+          | {select_core_list}: select: { x: integer notnull, y: integer notnull }
+          | | {select_core}: select: { x: integer notnull, y: integer notnull }
+          |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull }
+          |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull }
+          |     | | {select_expr}: x: integer notnull
+          |     | | | {int 1}: integer notnull
+          |     | | | {opt_as_alias}
+          |     | |   | {name x}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: y: integer notnull
+          |     |     | {int 2}: integer notnull
+          |     |     | {opt_as_alias}
+          |     |       | {name y}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math_bad4 ()
+BEGIN
+  SELECT inline_math_bad4() AS bad;
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0232: nested select expression must return exactly one column 'inline_math_bad4'
+
+  {create_proc_stmt}: err
+  | {name do_inline_math_bad4}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: err
+        |     |   | {call}: err
+        |     |   | | {name inline_math_bad4}
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   | {opt_as_alias}
+        |     |     | {name bad}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math_bad5 ()
+BEGIN
+  SELECT 1
+    WHERE inline_math(2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided to procedure 'inline_math'
+
+  {create_proc_stmt}: err
+  | {name do_inline_math_bad5}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     | {select_from_etc}: err
+        |       | {select_where}
+        |         | {opt_where}: err
+        |         | | {call}: err
+        |         |   | {name inline_math}
+        |         |   | {call_arg_list}
+        |         |     | {call_filter_clause}
+        |         |     | {arg_list}: ok
+        |         |       | {int 2}: integer notnull
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC inline_frag (x INTEGER)
+BEGIN
+  SELECT 1 AS x;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
+    | {name inline_frag}: select: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x: integer variable in
+      |   | {param_detail}: x: integer variable in
+      |     | {name x}: x: integer variable in
+      |     | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { x: integer notnull }
+          | {select_core_list}: select: { x: integer notnull }
+          | | {select_core}: select: { x: integer notnull }
+          |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     | {select_expr_list}: select: { x: integer notnull }
+          |     | | {select_expr}: x: integer notnull
+          |     |   | {int 1}: integer notnull
+          |     |   | {opt_as_alias}
+          |     |     | {name x}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math_bad6 ()
+BEGIN
+  SELECT 1
+    WHERE inline_frag(DISTINCT 2);
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
+
+  {create_proc_stmt}: err
+  | {name do_inline_math_bad6}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     | {select_from_etc}: err
+        |       | {select_where}
+        |         | {opt_where}: err
+        |         | | {call}: err
+        |         |   | {name inline_frag}
+        |         |   | {call_arg_list}
+        |         |     | {call_filter_clause}
+        |         |     | | {distinct}
+        |         |     | {arg_list}: ok
+        |         |       | {int 2}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC do_inline_math_bad7 ()
+BEGIN
+  SELECT 1
+    WHERE inline_frag(2) FILTER (WHERE 1);
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
+
+  {create_proc_stmt}: err
+  | {name do_inline_math_bad7}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}
+        |     |   | {int 1}
+        |     | {select_from_etc}: err
+        |       | {select_where}
+        |         | {opt_where}: err
+        |         | | {call}: err
+        |         |   | {name inline_frag}
+        |         |   | {call_arg_list}
+        |         |     | {call_filter_clause}
+        |         |     | | {opt_filter_clause}: integer notnull
+        |         |     |   | {opt_where}: integer notnull
+        |         |     |     | {int 1}: integer notnull
+        |         |     | {arg_list}: ok
+        |         |       | {int 2}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
 

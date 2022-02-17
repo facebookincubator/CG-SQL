@@ -203,6 +203,7 @@ static ast_node *sem_find_table(CSTR name, ast_node *ast_error);
 static void sem_shared_cte(ast_node *cte_body);
 static void sem_declare_proc_stmt(ast_node *ast);
 static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name);
+static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_orderby);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -2046,6 +2047,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_VIRTUAL) {
     bprintf(out, " virtual");
   }
+  if (sem_type & SEM_TYPE_INLINE_CALL) {
+    bprintf(out, " inline_call");
+  }
 }
 
 // For debug/test output, prettyprint a structure type
@@ -3283,7 +3287,7 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
     // Create table statements inside a proc are exempt from the extra checks. Those statements aren't just schema
     // declarations they are the ones creating the table, maybe to make things right in the context of schema upgrade
     // itself. These extra check just doesn't make sense there.
- 
+
     // Deleted tables likewise, do not need to have FK's that make sense in the current schema
 
     ref_table_ast = find_table_or_view_even_deleted(table_name);
@@ -8391,37 +8395,139 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
   ast->sem = ret_data_type->sem;
 }
 
+// We're looking for this shape, simple select with just the skeleton
+// We already have a helper for most of this...
+//  | {select_stmt}: select: { sum: integer }
+//    | {select_core_list}: select: { sum: integer }
+//    | | {select_core}: select: { sum: integer }
+//    |   | {select_expr_list_con}: select: { sum: integer }
+//    |     | {select_expr_list}: select: { sum: integer }
+//    |       | ....
+//    |     | {select_from_etc}:
+//    | {select_orderby}
+//      | {select_limit}
+//        | {select_offset}
+bool_t is_no_clause_simple_select(ast_node *select_stmt) {
+  // accept only if simple select statement (no WITH variants etc.)
+  if (is_ast_select_stmt(select_stmt)) {
+    EXTRACT_NOTNULL(select_core_list, select_stmt->left);
+
+    // accept only if not compound select
+    if (!select_core_list->right) {
+      EXTRACT_NOTNULL(select_core, select_core_list->left);
+      EXTRACT_NOTNULL(select_expr_list_con, select_core->right);
+      EXTRACT_NOTNULL(select_from_etc, select_expr_list_con->right);
+      EXTRACT_NOTNULL(select_orderby, select_stmt->right);
+
+      // no from clause and none of the extras either (WHERE, HAVING, ORDER BY etc.)
+      return !select_from_etc->left && !sem_has_extra_clauses(select_from_etc, select_orderby);
+    }
+  }
+
+  return false;
+}
+
 // Calling a stored procedure as a function
 // There are a few things to check:
-//  * we can't use these in SQL, so this has to be a loose expression
-//  * args have to be checked and compatible with formals, except
-//  * the last formal must be an OUT arg and it must be a scalar type
-//  * that out arg will be treated as the return value of the "function"
-//  * in code-gen we will create a temporary for it, semantic analysis doesn't care
+//  * it has to be a loose expression or else a shared fragment
+//  * args have to be checked and compatible with formals, except, for non-SQL calls
+//    * the last formal must be an OUT arg and it must be a scalar type
+//    * that out arg will be treated as the return value of the "function"
+//    * in code-gen we will create a temporary for it, semantic analysis doesn't care
 static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
   Contract(is_ast_call(ast));
   Contract(is_proc(proc));
 
+  EXTRACT_STRING(proc_name, get_proc_name(proc));
+
+  // no calling procs that had errors...
+  if (is_error(proc)) {
+    report_error(ast, "CQL0213: procedure had errors, can't call", proc_name);
+    record_error(ast);
+    return;
+  }
+
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  ast_node *name_ast = get_proc_name(proc);
-  ast_node *params = get_proc_params(proc);
-  EXTRACT_STRING(name, name_ast);
+  // Ensure we have none of these forms.  There is general checking for this
+  // later but by checking here we can give a more specific error message
+  EXTRACT_NOTNULL(call_filter_clause, call_arg_list->left);
+  EXTRACT(distinct, call_filter_clause->left);
+  EXTRACT(opt_filter_clause, call_filter_clause->right);
+
+  if (distinct || opt_filter_clause) {
+    report_error(ast, "CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses", proc_name);
+    record_error(ast);
+    return;
+  }
+
+  EXTRACT_NOTNULL(proc_params_stmts, proc->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
 
   if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
-    report_error(ast, "CQL0090: stored proc calls may not appear in the context of a SQL statement", name);
-    record_error(ast);
+    // validate shared fragment call:
+    //  * target has no errors
+    //  * target is a shared fragment
+    //    * target therefore a single select statement
+    //    * target therefore has no out-arguments
+    //  * target has no select clauses like FROM etc.
+    //  * target has one column, it's just a SQL expression
+
+    // check if we are calling a shared fragment
+    uint32_t frag_type = find_proc_frag_type(proc);
+    if (frag_type != FRAG_TYPE_SHARED) {
+      report_error(ast,
+        "CQL0224: a function call to a procedure inside SQL may call "
+        "only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
+      record_error(ast);
+      return;
+    }
+
+    Invariant(proc->sem->sptr);
+    sem_struct *sptr = proc->sem->sptr;
+    if (sptr->count > 1) {
+       report_error(ast, "CQL0232: nested select expression must return exactly one column", proc_name);
+       record_error(ast);
+       return;
+    }
+
+    EXTRACT_ANY_NOTNULL(select_stmt, stmt_list->left);
+
+    if (!is_no_clause_simple_select(select_stmt)) {
+      report_error(ast, "CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause", proc_name);
+      record_error(ast);
+      return;
+    }
+
+    sem_validate_args_vs_formals(ast, proc_name, arg_list, params, NORMAL_CALL);
+    if (is_error(ast)) {
+      return;
+    }
+
+    Invariant(ast->sem->sem_type == SEM_TYPE_OK);
+
+    Invariant(sptr->count == 1);
+    ast->sem = new_sem(sptr->semtypes[0]);
+    ast->sem->kind = sptr->kinds[0];
+
+    // we don't want the inline-ness to run up the tree so
+    // we just put that flag bit on the proc name
+
+    ast->left->sem = new_sem(ast->sem->sem_type);
+    *ast->left->sem = *ast->sem;
+    ast->left->sem->sem_type |= SEM_TYPE_INLINE_CALL;
     return;
   }
 
   if (has_out_stmt_result(proc) || has_result_set(proc)) {
-    report_error(ast, "CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions", name);
+    report_error(ast, "CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions", proc_name);
     record_error(ast);
     return;
   }
 
-  sem_validate_args_vs_formals(ast, name, arg_list, params, PROC_AS_FUNC);
+  sem_validate_args_vs_formals(ast, proc_name, arg_list, params, PROC_AS_FUNC);
   Invariant(ast->sem);  // either an error or a result
 
   // The call may have mutated any or all of the currently improved globals, so
@@ -8522,14 +8628,14 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
       return;
     }
     ((sem_func *)entry->val)(ast, arg_count);
-    goto cleanup;
+    goto additional_checks;
   }
 
   // check for special functions which do their own analysis of their arguments
   entry = symtab_find(builtin_special_funcs, name);
   if (entry) {
     ((sem_special_func *)entry->val)(ast, arg_count, &call_aggr_or_user_def_func);
-    goto cleanup;
+    goto additional_checks;
   }
 
   // check for user defined functions
@@ -8537,14 +8643,17 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   if (user_func) {
     sem_user_func(ast, user_func);
     call_aggr_or_user_def_func = 1;
-    goto cleanup;
+    goto additional_checks;
   }
 
   // check for a proc that can be called as a function
   ast_node *proc = find_proc(name);
   if (proc) {
     sem_proc_as_func(ast, proc);
-    goto cleanup;
+    if (is_error(ast)) {
+      return;
+    }
+    goto additional_checks;
   }
 
   // check for an attempt to use an unchecked proc in an expression context
@@ -8559,7 +8668,7 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   record_error(ast);
   return;
 
-cleanup:
+additional_checks:
   if (!call_aggr_or_user_def_func) {
     if (distinct) {
       // Only aggregated functions and user defined functions that take one parameter

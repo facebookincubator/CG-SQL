@@ -367,18 +367,25 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
       alt_visited = callbacks->visited_update;
     }
   }
-  else if (callbacks->callback_proc) {
-    if (is_ast_call_stmt(node) | is_ast_call(node)) {
-      // Both cases have the name in the node left so we can consolidate
-      // the check to see if it's a proc is redundant in the call_stmt case
-      // but it lets us share code so we just go with it.  The other case
-      // is a possible proc_as_func call so we must check if the target is a proc.
+  else if (is_ast_call_stmt(node) | is_ast_call(node)) {
+    // Both cases have the name in the node left so we can consolidate
+    // the check to see if it's a proc is redundant in the call_stmt case
+    // but it lets us share code so we just go with it.  The other case
+    // is a possible proc_as_func call so we must check if the target is a proc.
 
-      EXTRACT_ANY_NOTNULL(name_ast, node->left);
-      EXTRACT_STRING(name, name_ast);
-      ast_node *proc = find_proc(name);
-      if (proc) {
-        EXTRACT_STRING(canon_name, get_proc_name(proc));
+    EXTRACT_ANY_NOTNULL(name_ast, node->left);
+    EXTRACT_STRING(name, name_ast);
+    ast_node *proc = find_proc(name);
+
+    if (proc) {
+      // this only happens for ast_call but this check is safe for both
+      if (name_ast->sem && (name_ast->sem->sem_type & SEM_TYPE_INLINE_CALL)) {
+        // Look through the proc definition for tables because the target will be inlined
+        continue_find_table_node(callbacks, proc);
+      }
+
+      EXTRACT_STRING(canon_name, get_proc_name(proc));
+      if (callbacks->callback_proc) {
         if (symtab_add(callbacks->visited_proc, canon_name, name_ast)) {
           callbacks->callback_proc(canon_name, name_ast, callbacks->callback_context);
         }

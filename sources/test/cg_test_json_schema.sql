@@ -1377,6 +1377,25 @@ begin
   select id from T6;
 end;
 
+-- Shared fragment function form we can use
+-- we will verify this creates a dependency on T2
+@attribute(cql:shared_fragment)
+create proc shared_func()
+begin
+  select (select max(id) from T2) result;
+end;
+
+-- TEST: verify that we dive into the contents of the called shared fragment
+-- the shared fragment uses T2 so we take that dependency.
+-- + "name" : "shared_frag_user_function_style",
+-- + "fromTables" : [ "T2" ],
+-- + "usesTables" : [ "T2" ],
+-- + "statement" : "SELECT shared_func() AS result",
+create proc shared_frag_user_function_style()
+begin
+  select shared_func() result;
+end;
+
 -- TEST: these are not valid characters in a JSON string, they have to be escaped
 -- + "statement" : "SELECT '\u00a1\u00a2' AS t"
 -- + SELECT "\xa1\xa2" AS t;
