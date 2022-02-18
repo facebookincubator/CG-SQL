@@ -2472,7 +2472,7 @@ Any failures can be caught with `try/catch` as usual.
 This feature is really only syntatic sugar for the "awkward" form above, but it does allow for slightly better generated C code.
 
 
-## Chapter 5: Types of Cursors, OUT and OUT UNION, and FETCH flavors
+## Chapter 5: Types of Cursors, Shapes, OUT and OUT UNION, and FETCH
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
@@ -2495,31 +2495,29 @@ create table xy_table(x integer, y integer);
 declare C cursor for select x, y from xy_table;
 ```
 
-When compiled, this will result in creating a SQLite statement object (type `sqlite_stmt*`)
-and storing it in a variable called `C`.  This statement can then be used later in various ways.
+When compiled, this will result in creating a SQLite statement object (type `sqlite_stmt *`)
+and storing it in a variable called `C_stmt`.  This statement can then be used later in various ways.
 
-Here's perhaps the simplest way to use a cursor:
+Here's perhaps the simplest way to use the cursor above:
 
 ```sql
-declare x, y  integer;
+declare x, y integer;
 fetch C into x, y;
 ```
 
 This will have the effect of reading one row from the results of the query into
 the local variables `x` and `y`.
 
-These variables might then be used to create some output such as
+These variables might then be used to create some output such as:
 
 ```sql
 /* note use of double quotes so that \n is legal */
 call printf("x:%d y:%d\n", ifnull(x, 0), ifnull(y,0));
 ```
 
-or any other use.
-
-More generally, there may or may not be a fetched value.  The cursor variable `C`
-can be used by itself as a virtual boolean indicating the presence of a row.
-So a more complete example might be
+More generally, there the cursor may or may not be holding fetched values.
+The cursor variable `C` can be used by itself as a boolean indicating the
+presence of a row.  So a more complete example might be
 
 ```sql
 if C then
@@ -2538,7 +2536,7 @@ begin
 end;
 ```
 
-Here we read all the rows out and print them.
+The last example above reads all the rows and prints them.
 
 Now if the table `xy_table` had instead had dozens of columns, those declarations
 would be very verbose and error prone, and frankly annoying, especially if
@@ -2546,12 +2544,12 @@ the table definition was changing over time.
 
 To make this a little easier, there are so-called 'automatic' cursors.  These
 happen implicitly and include all the necessary storage to exactly match
-the rows in their statement.  Using the automatic syntax for the above we might get
+the rows in their statement.  Using the automatic syntax for the above looks like so:
 
 ```sql
 declare C cursor for select * from xy_table;
 fetch C;
-if (C) then
+if C then
   call printf("x:%d y:%d\n", ifnull(C.x, 0), ifnull(C.y,0));
 end if;
 ```
@@ -2567,26 +2565,29 @@ end;
 ```
 
 All the necessary local state is automatically created, hence "automatic" cursor.
-This pattern is generally preferred but the loose variables pattern is in
+This pattern is generally preferred, but the loose variables pattern is in
 some sense more general.
 
 In all the cases if the number or type of variables do not match the select statement,
 semantic errors are produced.
 
-
 ### Value Cursors
 
 The purpose of value cursors is to make it possible for a stored procedure to
-work with structures as a unit rather than field by field.  SQL doesn't have
-the notion of structure types but structures actually appear pretty directly
-in many places:
+work with structures as a unit rather than only field by field.  SQL doesn't have
+the notion of structure types, but structures actually appear pretty directly
+in many places.  Generally we call these things "Shapes" and there are a variety
+of source for shapes including:
 
-* the columns of a table are structures
-* the projection of a `SELECT` statement is a structure
-* other things directly derived from the above  (like the columns of a statement cursor)
-are likewise structures
+* the columns of a table
+* the projection of a `SELECT` statement
+* the columns of a cursor
+* the result type of a procedure that returns a select
+* the arguments of a procedure
+* other things derived from the above
 
-Let's first start with how you declare a value cursor.  It is by analogy to one of the structure types above.
+Let's first start with how you declare a value cursor.  It is providing one of the
+shape sources above.
 
 So:
 
@@ -2596,64 +2597,80 @@ declare C cursor like select 1 a, 'x' b;
 declare C cursor like my_view;
 declare C cursor like my_other_cursor;
 declare C cursor like my_previously_declared_stored_proc;
+declare C cursor like my_previously_declared_stored_proc arguments;
 ```
 
-Any of those forms define a valid set of columns.  Note that the `select` example in no way causes the query provided to run. Instead, the select statement is analyzed and the column names and types are computed.  The cursor gets the same field names and types.  Nothing happens at run time.
-The last example assumes that there is a stored procedure defined somewhere earlier in this translation unit and that procedure returns a result set. The cursor declaration makes a cursor that could receive the result of that procedure.  We'll cover
-that particular case in more detail below when we deal with the `OUT` statement.
+Any of those forms define a valid set of columns -- a shape.  Note that the
+`select` example in no way causes the query provided to run. Instead, the select
+statement is analyzed and the column names and types are computed.  The cursor
+gets the same field names and types.  Nothing happens at run time.
 
-Now once we have declared the cursor we can load it with values using `fetch` in the value form.
+The last two examples assume that there is a stored procedure defined somewhere
+earlier in the same translation unit and that the procedure returns a result set
+or has arguments, respectively.
 
-You can load up a cursor from values.  The values must be type-compatible of course.
+In all cases the cursor declaration makes a cursor that could hold the indicated result.
+That result can then be loaded with `FETCH` or emitted with `OUT` or `OUT UNION` which
+will be discussed below.
+
+Once we have declared a value cursor we can load it with values using `FETCH` in its
+value form. Here are some examples:
+
+Fetch from compatible values:
 
 ```sql
 fetch C from values(1,2);
 ```
 
-You can call a procedure that returns a single row:
+Fetch from a call to a procedure that returns a single row:
 
 ```sql
 fetch C from call my_previously_declared_stored_proc();
 ```
 
-You can fetch a cursor from another cursor:
+Fetch from another cursor:
 ```sql
 fetch C from D;
 ```
 
-In this case D must be an 'automatic' cursor but it could be coming from a statement.
-This lets you copy a row and save it for later.  E.g. you could copy the current max-valued
-row into a value cursor and use it after the loop.
+In this last case if D is a statement cursor it must also be "automatic" (i.e. it has
+the storage).  This form lets you copy a row and save it for later.  For instance, in
+a loop you could copy the current max-value row into a value cursor and use it after
+the loop, like so:
 
 ```sql
-declare C cursor for select id, value, <other_stuff> from <somewhere> where <conditions>;
+declare C cursor for select * from somewhere;
 declare D cursor like C;
-
-fetch D from values (-1, -999);
 
 loop fetch C
 begin
-  if (D.max < C.max) then
+  if (not D or D.something < C.something) then
     fetch D from C;
   end if;
 end;
-
--- this could print <other stuff> too
-call printf("id:%d value:%d", D.id, D.value);
 ```
 
-Value cursors are always 'automatic' -- they have their own storage.
+After the loop, D either empty because there were no rows (thus `if D` would fail)
+or else it has the row with the maximum value of `something`, whatever that is.
 
-Value cursors also may or may not be holding a row.
+Value cursors are always have their own storage, so you could say all value cursors
+are "automatic".
+
+And as we saw above, value cursors may or may not be holding a row.
 
 ```sql
 declare C cursor like xy_table;
 if not C then
-  call printf("this will always be true because it starts empty\n");
+  call printf("this will always print because C starts empty\n");
 end if;
 ```
 
 When you call a procedure you may or may not get a row as we'll see below.
+
+The third type of cursor is a "result set" cursor but that won't make any sense
+until we've discussed result sets a little which requires `OUT` and/or `OUT UNION`
+and so we'll go on to those statements next.  As it happens, we are recapitulating
+the history of cursor features in the CQL language by exploring the system in this way.
 
 ### OUT Statement
 
@@ -2662,24 +2679,27 @@ a procedure to return a single row from a complex query
 without having a crazy number of `OUT` parameters.  It's easiest
 to illustrate this with an example.
 
-The older verbose pattern looks like this:
+Suppose you want to return several variables, the "classic" way to do so
+would be a procedure like this:
 ```sql
-create proc get_a_row(id_ integer not null,
-                      out got_row bool not null,
-                      out w integer not null,
-                      out x integer,
-                      out y text not null,
-                      out z real)
+create proc get_a_row(
+  id_ integer not null,
+  out got_row bool not null,
+  out w integer not null,
+  out x integer,
+  out y text not null,
+  out z real)
 begin
-  declare C cursor for select w, x, y, z from somewhere where id = id_;
+  declare C cursor for
+    select w, x, y, z from somewhere where id = id_;
   fetch C into w, x, y, z;
   set got_row := C;
 end;
 ```
 
-Now you can imagine this gets very annoying if `get_a_row` has to produce
-a couple dozen column values.  And of course you have to get the types
-exactly right.  And they might evolve over time.  Joy.
+This is already verbose, but you can imagine the situation gets very annoying
+if `get_a_row` has to produce a couple dozen column values.  And of course you
+have to get the types exactly right. And they might evolve over time.  Joy.
 
 On the receiving side you get to do something just as annoying:
 
@@ -2692,25 +2712,27 @@ declare got_row bool not null;
 call get_a_row(id, got_row, w, x, y, z);
 ```
 
-Using the `out` statement we get the equivalent functionality with a much simplified pattern. It looks like this:
+Using the `out` statement we get the equivalent functionality with a much
+simplified pattern. It looks like this:
 ```sql
 create proc get_a_row(id_ integer not null)
 begin
-   declare C cursor for select a, b, c, d from somewhere where id = id_;
-   fetch C;
-   out C;
+  declare C cursor for
+    select w, x, y, z from somewhere where id = id_;
+  fetch C;
+  out C;
 end;
 ```
 
-To use it you simply do this:
+To use the new procedure you simply do this:
 ```sql
 declare C cursor like get_a_row;
 fetch C from call get_a_row(id);
 ```
 
-In fact originally the above was the only way to load a value cursor, before
-the calculus was generalized. The original form still works, and does both
-things in one step:
+In fact, originally you did the two steps above in one statement and that was the
+only way to load a value cursor. Later, the calculus was generalized. The original
+form still works:
 ```sql
 declare C cursor fetch from call get_a_row(id);
 ```
@@ -2724,19 +2746,24 @@ large number of `out` arguments to your procedure.
 Once you have the result in a value cursor you can do the usual
 cursor operations to move it around or otherwise work with it.
 
-The use of the `LIKE` keyword to refer to the types of complex entities spread to other
-places in CQL as a very useful construct, but it began here with the
-need to describe a cursor shape economically, by reference.
+The use of the `LIKE` keyword to refer to groups of columns spread
+to other places in CQL as a very useful construct, but it began here
+with the need to describe a cursor shape economically, by reference.
 
 ### OUT UNION Statement
-The semantics of the `out` statement are that it always produces one row
-of output (a procedure can produce no row if an `out` never actually ran but the procedure does use `out`).
-If an `out` statement runs more than once the most recent row becomes the result.  So the `out` statement really does
-mirror having one `out` variable for each column.  This was its intent and procedures
-that return at most, or exactly, one row are very common.  However, in general, one row results
-do not suffice; you might want to produce a result set from various sources
-with maybe arbitrary computation in there as well.  For that you need to be able to emit multiple
-rows from a computed source.  This is exactly what `out union` provides.
+The semantics of the `OUT` statement are that it always produces one row
+of output (a procedure can produce no row if an `out` never actually rans
+but the procedure does use `OUT`).
+
+If an `OUT` statement runs more than once, the most recent row becomes the
+result.  So the `OUT` statement really does mirror having one `out` variable
+for each output column.  This was its intent and procedures that return at most,
+or exactly, one row are very common so it works well enough.
+
+However, in general, one row results do not suffice; you might want to produce a
+result set from various sources, possibly with some computation as part of
+the row creation process.  To make general results, you need to be able to emit
+multiple rows from a computed source.  This is exactly what `OUT UNION` provides.
 
 Here's a (somewhat contrived) example of the kind of thing you can do with this form:
 
@@ -2755,11 +2782,11 @@ begin
 end;
 ```
 
-In `foo` above, we make an entire result set out of thin air.  It isn't very
-interesting but of course any computation would have been possible.
+In `foo` above, we make an entire result set out of thin air.  It isn't a very
+interesting result, but of course any computation would have been possible.
 
-This pattern is very flexibe as we see below in `bar` where
-we're going to merge two different data streams.
+This pattern is very flexible as we see below in `bar` where
+we merge two different data streams.
 
 ```sql
 create table t1(id integer, stuff text, [other things too]);
@@ -2774,11 +2801,11 @@ begin
   fetch D;
 
   -- we're going to merge these two queries
-  while (C or D)
+  while C or D
   begin
     -- if both have a row pick the smaller id
-    if (C and D) then
-       if (C.id < D.id) then
+    if C and D then
+       if C.id < D.id then
          out union C;
          fetch C;
        else
@@ -2798,19 +2825,32 @@ begin
 end;
 ```
 
-Just like `foo`, in `bar`, each time `out union` runs a new row is accumulated.  Now, if you build
-a procedure that ends with a `select` statement CQL automatically creates a fetcher function
-that does exactly the same thing -- it loops over the SQLite statement for the select and fetches
-each row, materializing a result.  With `out union` you take manual control of this process, allowing you
-to build arbitrary result sets.  Note that either of `C` or `D` above could have been modified, replaced, skipped,
-normalized, etc. with any kind of computation.  Even entirely synthetic rows can be computed
-and inserted into the output as we saw in `foo`.
+Just like `foo`, in `bar`, each time `OUT UNION` runs a new row is accumulated.
+
+Now, if you build a procedure that ends with a `SELECT` statement CQL automatically
+creates a fetcher function that does something like an `OUT UNION` loop -- it loops
+over the SQLite statement for the `SELECT` and fetches each row, materializing a result.
+
+With `OUT UNION` you take manual control of this process, allowing you to build arbitrary
+result sets.  Note that either of `C` or `D` above could have been modified, replaced,
+skipped, normalized, etc. with any kind of computation.  Even entirely synthetic rows can
+be computed and inserted into the output as we saw in `foo`.
 
 ### Result Set Cursors
 
-So `OUT UNION` makes it possible to create arbitrary result sets using a mix of sources and filtering.  Unfortunately this result type is not a simple row, nor is it a SQLite statement and so while it can produce ordinary result sets for CQL callers, CQL could not itself consume that result type.
+Now that we have `OUT UNION` it makes sense to talk about the final type of cursor.
 
-To address this hole, and thereby make it a lot easier to test these result sets (which really is the most interesting use case for re-consuming a result set) we need an additional cursor type.  The syntax is exactly the same as the statement cursor cases described above but, instead of holding a SQLite statement, the cursor holds a result set pointer and the current/max row numbers.  Stepping through it simply increments the row number and fetches the next row out of the rowset instead of from SQLite.
+`OUT UNION` makes it possible to create arbitrary result sets using a mix of sources
+and filtering.  Unfortunately this result type is not a simple row, nor is it a SQLite
+statement.  This meant that neither of the existing types of cursors could hold the
+result of a procedure that used `OUT UNION`. -- CQL could not itself consume its own
+results.
+
+To address this hole, we need an additional cursor type.  The syntax is exactly the same
+as the statement cursor cases described above but, instead of holding a SQLite statement,
+the cursor holds a result set pointer and the current and maximum row numbers.
+Stepping through the cursor simply increments the row number and fetches the next row
+out of the rowset instead of from SQLite.
 
 Example:
 ```sql
@@ -2820,22 +2860,35 @@ begin
   declare C cursor for call bar();
   loop fetch C
   begin
-    call printf("%d %s\n", C.id, C.stuff);  -- or whatever
+    call printf("%d %s\n", C.id, C.stuff);  -- or whatever fields you need
   end;
 end;
 ```
 
-If `bar` had been created with a `select union` and `order by` to merge the results, the above would have worked with `C` being a standard statement cursor, iterating over the union.   Since `foo` produces a result set, CQL transparently produces a suitable cursor implementation behind the scenes but otherwise the usage is the same.
+If `bar` had been created with a `SELECT`, `UNION ALL`, and `ORDER BY` to merge the
+results, the above would have worked with `C` being a standard statement cursor,
+iterating over the union. Since `foo` produces a result set, CQL transparently produces
+a suitable cursor implementation behind the scenes, but otherwise the usage is the same.
 
-Note this is a lousy way to iterate over rows; you have to materialize the entire result set so that you can just step over it.  Re-consuming like this is not recommended at all for production code but it is ideal for testing result sets that were made with `out union` which otherwise would require C/C++ to test.  Testing CQL with CQL is generally a lot easier.
+Note this is a lousy way to simply iterate over rows; you have to materialize the entire
+result set so that you can just step over it.  Re-consuming like this is not recommended
+at all for production code, but it is ideal for testing result sets that were made with
+`OUT UNION` which otherwise would require C/C++ to test.  Testing CQL with CQL is
+generally a lot easier.
 
 ### Reshaping Data, Cursor `LIKE` forms
 
-There are lots of cases where you have big rows with many columns and there are various manipulations you need to do.  Some of these choices are emitting extra, related, rows, some of them are altering some of the columns before emitting the rows into the result set for use by some client.
+There are lots of cases where you have big rows with many columns, and there are various manipulations you might need to do.
 
-What follows is a set of useful syntactic sugar constructs that simplify handling complex rows.  The idea is that pretty much anywhere you can specify a list of columns you can instead use the `LIKE x` construct to get the columns as they appear in object `x` -- which is usually a cursor.  It’s a lot easier to illustrate with examples, even though these are, again, a bit contrived.
+What follows is a set of useful syntactic sugar constructs that simplify handling
+complex rows.  The idea is that pretty much anywhere you can specify a list of columns
+you can instead use the `LIKE x` construct to get the columns as they appear in the
+shape `x` -- which is usually a table or a cursor.
 
-First we need some table with lots of columns -- usually the column names are much bigger which makes it all the more important to not have to type them over and over.
+It’s a lot easier to illustrate with examples, even though these are, again, a bit contrived.
+
+First we need some table with lots of columns -- usually the column names are much bigger which makes it all the more important to not have to type them over and over, but
+in the interest of some brevity, here's a big table:
 
 ```sql
 create table big (
@@ -2849,7 +2902,8 @@ create table big (
   f integer);
 ```
 
-We're going to emit two rows as the result of this proc.  Easy enough...
+This example showcases several of the cursor and shape slicing features by emitting
+two related rows:
 
 ```sql
 create proc foo(id_ integer not null)
@@ -2860,24 +2914,26 @@ begin
   declare result cursor like select id, b, c, d from big;
 
   -- fetch the main row, specified by id_
+  -- main row has all the fields, including id2
   declare main_row cursor for select * from big where id = id_;
   fetch main_row;
 
   -- now fetch the result columns out of the main row
-  -- like result means "the column names found in 'result'"
+  -- 'like result' means "the column names found in 'result'"
   fetch result from cursor main_row(like result);
 
   -- this is our first result row
   out union result;
 
-  -- now we want the related row, but we only need 2 columns
+  -- now we want the related row, but we only need two columns
+  -- from the related row, 'b' and 'c'
   declare alt_row cursor for select b, c from big where big.id2 = main_row.id2;
   fetch alt_row;
 
-  -- update some of the fields of the result from the alt result
+  -- update some of the fields 'result' from the the new cursor
   update cursor result(like alt_row) from cursor alt_row;
 
-  -- and emit that row
+  -- and emit the 2nd row
   out union result;
 end;
 ```
@@ -2890,18 +2946,21 @@ and
 
 `update cursor result(like alt_row) from cursor alt_row;`
 
-In the first case what we're saying is that we want to load the columns of `result` from `main_row`
-but we only want to take the columns that are actually present in `result`.  So this is a narrowing
-of a wide row into a smaller row.  In this case the smaller row, `result` is what we want to emit.
+In the first case what we're saying is that we want to load the columns
+of `result` from `main_row` but we only want to take the columns that are
+actually present in `result`.  So this is a narrowing of a wide row into a
+smaller row.  In this case, the smaller row, `result`, is what we want to emit.
 We needed the other columns to compute `alt_row`.
 
-The second case, what we're saying is that we want to update `result` by replacing the columns
-found in `alt_row` with the values in `alt_row`.   So in this case we're writing a smaller cursor
-into part of a wider cursor.  Note that we used the `update` form here because it preserves
-all other columns.  If we used `fetch` we would be rewriting the entire row contents, using `NULL`
-if necessary, not desired here.
+The second case, what we're saying is that we want to update `result` by
+replacing the columns found in `alt_row` with the values in `alt_row`.
+So in this case we're writing a smaller cursor into part of a wider cursor.
+Note that we used the `update cursor` form here because it preserves all other
+columns.  If we used `fetch` we would be rewriting the entire row contents,
+using `NULL` if necessary, and that is not desired here.
 
-Here is the rewritten version of the above procedure; this is what ultimately gets compiled into C.
+Here is the rewritten version of the above procedure; this is what ultimately gets
+compiled into C.
 
 ```sql
 CREATE PROC foo (id_ INTEGER NOT NULL)
@@ -2922,33 +2981,39 @@ BEGIN
 END;
 ```
 
-Of course you could have typed all that before but when there are 50 odd columns it gets old fast and it’s very error prone.  The sugar form is going to be 100% correct and will require much less typing.
+Of course you could have typed the above directly but if there are 50 odd columns it
+gets old fast and is very error prone.  The sugar form is going to be 100% correct
+and will require much less typing and maintenance.
 
 Finally, while I've shown both `LIKE` forms separately, they can also be used together.  For instance:
 
 ```sql
-    update cursor C(like X) from cursor D(like X);
+  update cursor C(like X) from cursor D(like X);
 ```
 
 The above would mean, "move the columns that are found in `X` from cursor `D` to cursor `C`", presuming `X` has columns common to both.
 
 ### Fetch Statement Specifics
 
-Many of the examples used the `FETCH` statement in a sort of demonstrative way that is hopefully self-evident but the statement has many forms and so it's worth going over them specifically.  Below we'll use the letters `C` and `D` for the names of cursors.  Usually `C`;
+Many of the examples used the `FETCH` statement in a sort of demonstrative way that is
+hopefully self-evident but the statement has many forms and so it's worth going over
+them specifically.  Below we'll use the letters `C` and `D` for the names of cursors.  Usually `C`;
 
-#### For Statement or Result Set Cursors
+#### Fetch with Statement or Result Set Cursors
 
 A cursor declared in one of these forms:
 
 * `declare C cursor for select * from foo;`
 * `declare C cursor for call foo();`  (foo might end with a `select` or use `out union`)
 
-is either a statement cursor or a result set cursor.  In either case it moves through the results.  You load the next row with:
+is either a statement cursor or a result set cursor.  In either case the cursor moves
+through the results.  You load the next row with:
 
 * `FETCH C`, or
 * `FETCH C into x, y, z;`
 
-In the first form `C` is said to be *automatic* in that it automatically declares the storage needed to hold all its columns.  As mentioned above, automatic cursors have storage for their row.
+In the first form `C` is said to be *automatic* in that it automatically declares the storage needed to hold all its columns.  As mentioned above, automatic cursors have
+storage for their row.
 
 Having done this fetch you can use C as a scalar variable to see if it holds a row, e.g.
 
@@ -2961,7 +3026,7 @@ if C then
 end if
 ```
 
- You can easily iterate, e.g.
+You can easily iterate, e.g.
 
 ```sql
 declare C cursor for select * from foo;
@@ -2971,11 +3036,14 @@ begin
   call printf("%s\n", C.whatever);
 end;
 ```
- Automatic cursors are so much easier to use than explicit storage that explicit storage is rarely seen.  Storing to `out` parameters is one case where explicit storage actually is the right choice, as the `out` parameters have to be declared anyway.
 
-#### For Value Cursors
+Automatic cursors are so much easier to use than explicit storage that explicit storage
+is rarely seen.  Storing to `out` parameters is one case where explicit storage actually
+is the right choice, as the `out` parameters have to be declared anyway.
 
- A cursor declared in one of these forms:
+#### Fetch with Value Cursors
+
+ A value cursor is declared in one of these ways:
 
  * `declare C cursor fetch from call foo(args)`
    * `foo` must be a procedure that returns one row with `OUT`
@@ -2983,7 +3051,7 @@ end;
  * `declare C cursor like X;`
    * where X is the name of a table, a view, another cursor, or a procedure that returns a structured result
 
- is a value cursor.  A value cursor is *always* automatic; it's purpose is to hold a row.  It doesn't iterate over anything but it can be re-loaded in a loop.
+ A value cursor is *always* automatic; it's purpose is to hold a row.  It doesn't iterate over anything but it can be re-loaded in a loop.
 
  * `fetch C` or `fetch C into ...` is not valid on such a cursor, because it doesn't have a source to step through.
 
@@ -2993,40 +3061,43 @@ end;
    * `foo` must be a procedure that returns one row with `OUT`
  * `fetch C(a,b,c...) from values(x, y, z);`
 
-The first form is in some sense the origin of the value cursor.  Value cursors were added to the language initially to provide a way to capture the single row `out` statement results, much like result set cursors were added to capture procedure results from `out union`.  In the first form, the cursor storage (a C struct) is provided by reference as a hidden out parameter to procedure and the procedure fills it in.  The procedure may or may not use the `out` statement in its control flow, as the cursor might not hold a row.  You can use `if C then ...` as before to test for a row.
+The first form is in some sense the origin of the value cursor.  Value cursors were added to the language initially to provide a way to capture the single row `OUT` statement results, much like result set cursors were added to capture procedure results from `OUT UNION`.  In the first form, the cursor storage (a C struct) is provided by reference as a hidden out parameter to the procedure and the procedure fills it in.  The procedure may or may not use the `OUT` statement in its control flow, as the cursor might not hold a row.  You can use `if C then ...` as before to test for a row.
 
 The second form is more interesting as it allows the cursor to be loaded from arbitrary expressions subject to some rules:
  * you should think of the cursor as a logical row: it's either fully loaded or it's not, therefore you must specify enough columns in the column list to ensure that all `NOT NULL` columns will get a value
  * if not mentioned in the list, NULL will be loaded where possible
  * if insufficient columns are named, an error is generated
  * if the value types specified are not compatible with the column types mentioned, an error is generated
+ * later in this chapter, we'll show that columns can also be filled with dummy data using a seed value
 
-With this form, any possible valid cursor values could be set, but many forms of updates that are common would be awkward. So there are various forms of syntactic sugar that are automatically rewritten into the canonical form.  Several standard rewrites happen.
+With this form, any possible valid cursor values could be set, but many forms of updates
+that are common would be awkward. So there are various forms of syntactic sugar that are
+automatically rewritten into the canonical form.  See the examples below:
 
 * `fetch C from values(x, y, z)`
-  * if no columns are specified this is the same as naming all the columns, in order
+  * if no columns are specified this is the same as naming all the columns, in declared order
 
 * `fetch C from arguments`
-  * the arguments to the procedure in which this statement appears are used, in order, as the values
-  * in this case `C` is also rewritten into `C(a,b,c,..)`
+  * the arguments to the procedure in which this statement appears are used as the values, in order
+  * in this case `C` was also rewritten into `C(a,b,c,..)` etc.
 
 * `fetch C from arguments like C`
-  * the arguments to the procedure in which this statement appears are used, by name, as the values
+  * the arguments to the procedure in which this statement appears are used, by name, as the values, using the names of of the indicated shape
   * the order in which the arguments appeared no longer matters, the names that match the columns of C are used if present
   * the formal parameter name may have a single trailing underscore (this is what `like C` would generate)
-  * e.g. if `C` has columns `a` and `b` then there must exist formals named `a` or `a_` and `b` or `b_` in any position
+  * e.g. if `C` has columns `a` and `b` then there must exist formals named `a` or `a_` and `b` or `b_`, in any position
 
 * `fetch C(a,b) from cursor D(a,b)`
   * the named columns of D are used as the values
-  * in this case it becomes: `fetch C(a,b) from values(D.a, D.b);`
+  * in this case the statement becomes: `fetch C(a,b) from values(D.a, D.b);`
 
-That most recent form does seem like it saves much but recall the first rewrite:
+That most recent form doesn't seem like it saves much, but recall the first rewrite:
 
 * `fetch C from cursor D`
   * both cursors are expanded into all their columns, creating a copy from one to the other
-  * `fetch C from D` can be used  if the cursors have the exact same column names and types; it also generates slightly better code and is a common case
+  * `fetch C from D` can be used if the cursors have the exact same column names and types; it also generates slightly better code and is a common case
 
- It is very normal to want to use some of the columns of a cursor in a standard way; these `like` forms do that job.
+ It is very normal to want to use only some of the columns of a cursor; these `like` forms do that job.  We saw some of these forms in an earlier example.
 
  * `fetch C from cursor D(like C)`
    * here `D` is presumed to be "bigger" than `C`, in that it has all of the `C` columns and maybe more.  The `like C` expands into the names of the `C` columns so `C` is loaded from the `C` part of `D`
@@ -3037,26 +3108,29 @@ That most recent form does seem like it saves much but recall the first rewrite:
 
  * `fetch C(like D) from cursor D`
    * the `like D` expands into the columns of `D` causing the cursor to be loaded with what's in `D` and `NULL` (if needed)
-   * this might look like `fetch C(d1, d2) from values(D.d1, D.d2)`
+   * when expanded, this might look like `fetch C(x, y) from values(D.x, D.y)`
 
-Like can be used in both places, for instance suppose `E` is a cursor that has a subset of the rows of both `C` and `D`.  Without ever loading this cursor, just by defining its type you can write a form like this:
+`LIKE` can be used in both places, for instance suppose `E` is a shape that has a subset of the rows of both `C` and `D`.  You can write a form like this:
 
 * `fetch C(like E) from cursor D(like E)`
   * this means take the column names found in `E` and copy them from D to C.
-  * the usual type checking is done of course but the types of the columns in `E` won't matter, only those in `C` and `D`
+  * the usual type checking is done
 
- As is mentioned above, the `fetch` form means to load an entire row into the cursor.  This is important because "half loaded" cursors would be semantically problematic.  However there are many cases where you might like to amend the values of an already loaded cursor.  You can do this with the `update` form.
+ As is mentioned above, the `fetch` form means "load an entire row into the cursor". This
+ is important because "half loaded" cursors would be semantically problematic.  However
+ there are many cases where you might like to amend the values of an already loaded
+ cursor.  You can do this with the `update` form.
 
  * `update cursor C(a,b,..) from values(1,2,..);`
    * the update form is a no-op if the cursor is not already loaded with values (!!)
    * the columns and values are type checked so a valid row is ensured (or no row)
    * all the re-writes above are legal so `update cursor C(like D) from D` is possible; it is in fact the use-case for which this was designed.
 
-### Calling Procedures with Bulk Arguments
+### Calling Procedures with Argument Bundles
 
-It's often desirable to treat bundles of arguments as a unit, or cursors as a unit, especially when calling other procedures.  The patterns above
-are very helpful for moving data between cursors, arguments, and the database.  These can be rounded out with similar constructs for
-procedure calls as follows.
+It's often desirable to treat bundles of arguments as a unit, or cursors as a unit, especially when calling other procedures.  The shape patterns above are very helpful
+for moving data between cursors, and the database.  These can be rounded out with
+similar constructs for procedure definitions and procedure calls as follows.
 
 First we'll define some shapes to use in the examples.  Note that we made `U` using `T`.
 
@@ -3065,17 +3139,23 @@ create table T(x integer not null, y integer not null,  z integer not null);
 create table U(like T, a integer not null, b integer not null);
 ```
 
-As we've seen, we can do this:
+We haven't mentioned this before but the implication of the above is that you can
+use the `LIKE` construct inside a table definition to add columns from a shape.
+
+We can also use the `LIKE` construct to create procedure arguments.  To avoid conflicts
+with column names, when used this way the procedure arguments all get a trailing
+underscore appended to them.  The arguments will be `x_`, `y_`, and `z_` as we can
+see if the following:
 
 ```sql
 create proc p1(like T)
 begin
-   call printf("%d %d %d\n", x_, y_, z_);
+  call printf("%d %d %d\n", x_, y_, z_);
 end;
 ```
 
-But the following is also possible. It isn't an especially fabulous example but of course
-it generalizes. The arguments will be `x_`, `y_`, and `z_`.
+Shapes can also be used in a procedure call, as showed below. This next example is
+obviously contrived, but of course it generalizes. It is exactly equivalent to the above.
 
 ```sql
 create proc p2(like T)
@@ -3101,7 +3181,8 @@ end;
 
 The `like` construct allows you to select some of the arguments, or
 some of a cursor to use as arguments.  This next procedure has more arguments
-than just `T`. The arguments will be `x_`, `y_`, `z_`, `a_`, `b_`
+than just `T`. The arguments will be `x_`, `y_`, `z_`, `a_`, `b_`.  But the
+call will still have the `T` arguments `x_`, `y_`, and `z_`.
 
 ```sql
 create proc q2(like U)
@@ -3141,22 +3222,273 @@ e.g.
   set x := a_function(from C);
 ```
 
-Since these forms are simply syntatic sugar, they can also appear inside of functions in
-SQL statements. The variables mentioned will be expanded and become bound variables just
-like any other variable that appears in a SQL statement.
+Since these forms are simply syntatic sugar, they can also appear inside of function calls
+that are in SQL statements. The variables mentioned will be expanded and become bound
+variables just like any other variable that appears in a SQL statement.
 
-Note the form `x IN (from arguments)` is not supported at this time, though this is a relatively
-easy addition.
+Note the form `x IN (from arguments)` is not supported at this time, though this would be
+a relatively easy addition.
+
+### Using Named Argument Bundles
+
+There are many cases where stored procedures require complex arguments using data shapes
+that come from the schema, or from other procedures.  As we have seen the `LIKE` construct
+for arguments can help with this, but it has some limitations. Let's consider a specific
+example to study:
+
+```sql
+create table Person (
+  id text primary key,
+  name text not null,
+  address text not null,
+  birthday real
+);
+```
+
+To manage this table we might need something like this:
+
+```sql
+create proc insert_person(like Person)
+begin
+  insert into Person from arguments;
+end;
+```
+
+As we have seen, the above expands into:
+
+```sql
+create proc insert_person(
+  id_ text not null,
+  name_ text not null,
+  address_ text not null,
+  birthday_ real)
+begin
+  insert into Person(id, name, address, birthday)
+    values(id_, name_, address_, birthday_);
+end;
+```
+
+It's clear that the sugared version is a lot easier to reason about than the
+fully expanded version, and much less prone to errors as well.
+
+This much is already helpful, but just those forms aren't general enough to handle
+the usual mix of situations.  For instance, what if we need a procedure that works
+with two people? A hypothetical `insert_two_people` procedure cannot be written with
+the forms we have so far.
+
+To generalize this the language adds the notion of named argument bundles. The idea here
+is to name the bundles which provides a useful scoping.  Example:
+
+```sql
+create proc insert_two_people(p1 like Person, p2 like Person)
+begin
+  -- using a procedure that takes a Person args
+  call insert_person(from p1);
+  call insert_person(from p2);
+end;
+```
+
+or alternatively
+
+```sql
+create proc insert_two_people(p1 like Person, p2 like Person)
+begin
+  -- inserting a Person directly
+  insert into Person from p1;
+  insert into Person from p2;
+end;
+```
+
+The above expands into:
+
+```sql
+create proc insert_two_people(
+  p1_id text not null,
+  p1_name text not null,
+  p1_address text not null,
+  p1_birthday real,
+  p2_id text not null,
+  p2_name text not null,
+  p2_address text not null,
+  p2_birthday real)
+begin
+  insert into Person(id, name, address, birthday)
+    values(p1_id, p1_name, p1_address, p1_birthday);
+  insert into Person(id, name, address, birthday)
+    values(p2_id, p2_name, p2_address, p2_birthday);
+end;
+```
+
+Or course different named bundles can have different types -- you can create and name
+shapes of your choice.  The language allows you to use an argument bundle name in all
+the places that a cursor was previously a valid source.  That includes `insert`,
+`fetch`, `update cursor`, and procedure calls.  You can refer to the arguments by
+their expanded name such as `p1_address` or alternatively `p1.address` -- they mean
+the same thing.
+
+Here's another example showing a silly but illustrative thing you could do:
+
+```sql
+create proc insert_lotsa_people(P like Person)
+begin
+  -- make a cursor to hold the arguments
+  declare C cursor like P;
+
+  -- convert arguments to a cursor
+  fetch C from P;
+
+  -- set up to patch the cursor and use it 20 times
+  let i := 0;
+  while i < 20
+  begin
+    update cursor C(id) from values(printf("id_%d", i));
+    insert into Person from C;
+    set i := i + 1;
+  end;
+end;
+```
+
+The above shows that you can use a bundle as the source of a shape, and you can
+use a bundle as a source of data to load a cursor.  After which you can do all the
+usual value cursor things.  Of course in this case the value cursor was redundant,
+we could just as easily have done something like this:
+
+```sql
+  set P_id := printf("id_%d", i);
+  insert into Person from P;
+  set i := i + 1;
+```
+
+Note: the CQL JSON output includes extra information about procedure arguments
+if they originated as part of a shape bundle do identify the shape source
+for tools that might need that information.
+
+### The COLUMNS/LIKE construct in the SELECT statement
+
+The select list of a `SELECT` statement already has complex syntax and functionality,
+but it is a very interesting place to use shapes.  To make it possible to use
+shape notations and not confuse them with standard SQL the `COLUMNS` construct was
+added to the language.  This allows for a sugared syntax for extracting columns in bulk.
+
+The `COLUMNS` clause is like of a generalization of the `select T.*` with shape slicing and type-checking.  The forms are discussed below:
+
+
+#### Columns from a join table or tables
+
+This is the simplest form, it's just like `T.*`:
+
+```
+-- same as A.*
+select columns(A) from ...;
+
+-- same as A.*, B.*
+select columns(A, B) from ...;
+```
+
+#### Columns from a particular joined table that match a shape
+
+This allows you to choose some of the columns of one table of the FROM clause.
+
+```
+-- the columns of A that match the shape Foo
+select columns(A like Foo) from ...;
+
+-- get the Foo shape from A and the Far shape from B
+select columns(A like Foo, B like Bar) from ...;
+```
+
+#### Columns from any that match a shape, from anywhere in the FROM
+
+Here we do not specify a particular table that contains the columns,
+the could come from any of the tables in the FROM clause.
+
+```
+--- get the Foo shape from anywhere in the join
+select columns(like Foo) from ...;
+
+-- get the Foo and Bar shapes, from anywhere in the join
+select columns(like Foo, like Bar) from ...;
+```
+
+#### Specific columns
+
+This form allows you to slice out a few columns without defining a shape, you
+simply list the exact columns you want.
+
+```
+-- T1.x and T2.y plus the Foo shape
+select columns(T1.x, T2.y, like Foo) from ...;
+```
+
+#### Distinct columns
+
+Its often the case that there are duplicate column names in the `FROM` clause.
+For instance, you could join `A` to `B` with both having a column `pk`. The
+final result set can only have one column named `pk`, the distinct clause
+helps you to get distinct column names.  In this context `distinct` is about
+column names, not values.
+
+```
+-- removes duplicate column names
+-- e.g. there will be one copy of 'pk'
+select columns(distinct A, B) from A join B using(pk);
+
+-- if both Foo and Bar have an (e.g.) 'id' field you only get one copy
+select columns(distinct like Foo, like Bar) from ...;
+```
+
+If a specific column is mentioned it is always included, but later expressions
+that are not a specific column will avoid that column name.
+
+```
+-- if F or B has an x it won't appear again, just T.x
+select columns(distinct T.x, F like Foo, B like Bar) from F, B ..;
+```
+
+Of course this is all just sugar, so it all compiles to a column list with table
+qualifications -- but the syntax is very powerful.  You can easily narrowin a
+wide table, or fusing joins that share common keys.
+
+```
+-- just the Foo columns
+select columns(like Foo) from Superset_Of_Foo_From_Many_Joins_Even;
+
+-- only one copy of 'pk'
+select columns(distinct A,B,C) from
+  A join B using (pk) join C using (pk);
+```
+
+And of course you can define shapes however you like and then use them
+to slice off column chucks of your choice.  There are many ways to build
+up shapes from other shapes.  For instance, you can declare procedures
+that return the shape you want and never actually create the procedure --
+a pattern is very much like a shape "typedef".  E.g.
+
+```
+declare proc shape1() (x integer, y real, z text);
+declare proc shape2() (like shape1, u bool, v bool);
+```
+
+With this combination you can easily define common column shapes and slice them
+out of complex queries without having to type the columns names over and over.
 
 ### Missing Data Columns, Nulls and Dummy Data
 
-What follow are the rules for columns that are missing.  These are also done by rewriting the AST. There are several options, with the dummy data choices (see below) being really only interesting in test code.  None of what follows applies to the `update cursor` statement because its purpose is to do partial updates.
+What follows are the rules for columns that are missing in an `INSERT`, or `FETCH` statement. As with many of the other things discussed here, the forms result in
+automatic rewriting of the code to include the specified dummy data.  So SQLite
+will never see these forms.
 
-* When fetching a row all the columns must come from somewhere; if the column is mentioned or mentioned by rewrite then it must have a value mentioned, or mentioned by rewrite
-* For columns that are not mentioned, a NULL value is used if it is legal
-  * `fetch C(a) from values(1)` might turn into `fetch C(a,b,c,d) from values (1, NULL, NULL, NULL)`
+Two things to note: First, the dummy data options described below are really only interesting in test code, it's hard to imagine them being useful in production code.
+Second, none of what follows applies to the `update cursor` statement because its
+purpose is to do partial updates on exactly the specified columns and we're about to
+talk about what happens with the columns that were not specified.
 
-In addition to the automatic NULL you may add the annotation `@dummy_seed([long integer expression])`. If present
+When fetching a row all the columns must come from somewhere; if the column is
+mentioned or mentioned by rewrite then it must have a value mentioned, or a value
+mentioned by rewrite. For columns that are not mentioned, a NULL value is used if
+it is legal to do so.  For example, `fetch C(a) from values(1)` might turn into `fetch C(a,b,c,d) from values (1, NULL, NULL, NULL)`
+
+In addition to the automatic NULL you may add the annotation `@dummy_seed([long integer expression])`. If this annotion is present then:
 * the expression is evaluated and stored in the hidden variable _seed_
 * all integers, and long integers get _seed_ as their value (possibly truncated)
 * booleans get 1 if and only if _seed_ is non-zero
@@ -4469,6 +4801,11 @@ the `alter table` form is not allowed on a virtual table.
 Semantic validation enforces "no alter statements on virtual tables" as well as other things like no indices, and no triggers, since SQLite
 does not support any of those things.
 
+CQL supports the notion of [eponymous virtual tables](https://www.sqlite.org/vtab.html#epovtab).  If you intend to register the virtual
+table's module in this fashion, you can use `create virtual table @eponymous ...` to declare this to CQL.  The only effect this has
+is to ensure that CQL will not try to drop this table during schema maintenance as dropping such a table is an invalid operation.  In
+all other ways, the fact that the table is eponymous makes no difference.
+
 Finally, because virtual tables are on the `@recreate` plan, you may not have foreign keys that reference virtual tables. Such keys seem
 like a bad idea in any case.
 
@@ -5028,13 +5365,13 @@ They have various constraints:
 * `@create` and `@delete` can only be applied to tables and columns
 * `@recreate` can only be applied to tables (nothing else needs it anyway)
 * `@recreate` cannot mix with `@create` or `@delete`
-* `@recreate` can include a group name as in `@recreate(musketeers)`, if a group name is specified then all the tables in that group are recreated if any of them change
+* `@recreate` can include a group name as in `@recreate(musketeers)`; if a group name is specified then all the tables in that group are recreated if any of them change
 
-Indices, Views, and Triggers are always "recreated" (just like tables can be) and so neither the `@recreate` nor the `@create` annotations are needed (or allowed).  However when an Index, View, or Trigger is retired it must be marked with `@delete` so that it isn't totally forgotten but can be deleted anywhere it might still exist.  Note that when one of these items is deleted the definition is not used as it will only be dropped anyway, the simplest creation of the object with the correct name will do the job as a tombstone.
+Indices, Views, and Triggers are always "recreated" (just like tables can be) and so neither the `@recreate` nor the `@create` annotations are needed (or allowed).  However when an Index, View, or Trigger is retired it must be marked with `@delete` so that it isn't totally forgotten but can be deleted anywhere it might still exist.  Note that when one of these items is deleted, the definition is not used as it will only be dropped anyway. The simplest creation of the object with the correct name will do the job as a tombstone.
 
-e.g. `create view used_to_be_fabulous as select 1 x @delete(12);`  suffices to drop the `used_to_be_fabulous` view in version 12 no matter how complicated it used to be.  It's `CREATE VIEW` will not be emitted into the upgrade procedure in any case.  Similarly trivial indices and triggers of the correct name can be used for the tombstone.
+e.g. `create view used_to_be_fabulous as select 1 x @delete(12);`  suffices to drop the `used_to_be_fabulous` view in version 12 no matter how complicated it used to be.  Its `CREATE VIEW` will not be emitted into the upgrade procedure in any case.  Similarly, trivial indices and triggers of the correct name can be used for the tombstone.
 
-In addition, if there is some data migration that needs to happen at a particular schema version that isn't associated with any particular change in schema, you can run an *ad hoc* migrator at any time.  The syntax for that is`@schema_ad_hoc_migration(version, migration proc);`  Ad hoc migrations are the last to run in any given schema version, they happen after table drop migrations.
+In addition, if there is some data migration that needs to happen at a particular schema version that isn't associated with any particular change in schema, you can run an *ad hoc* migrator at any time.  The syntax for that is `@schema_ad_hoc_migration(version, migration proc);`.  Ad hoc migrations are the last to run in any given schema version; they happen after table drop migrations.
 
 ### Semantics
 
@@ -5042,9 +5379,10 @@ In addition, if there is some data migration that needs to happen at a particula
 
 `@delete` declares that the annotated object disappeared in the indicated version, and at that time the migration proc needs to be executed to clean up the contents, or potentially move them elsewhere.
 
-`@recreate` declares that the annotated object can be dropped and recreated when it changes, there is no need to preserve its contents during an upgrade. Such objects may be changed arbitrarily from version to version
+`@recreate` declares that the annotated object can be dropped and recreated when it changes because there is no need to preserve its contents during an upgrade. Such objects may be changed arbitrarily from version to version.
 
-* no columns in a `@recreate` table may have `@create` or `@delete` (it isn't needed anyway)
+
+* no columns in a `@recreate` table may have `@create` or `@delete` (these aren't needed anyway)
    * therefore tables with `@recreate` never have deprecated columns (since `@delete` isn't allowed on their columns)
 
 NOTE: all annotations are suppressed from generated SQL.  SQLite never sees them.
@@ -5060,28 +5398,28 @@ Not all migrations are possible in a sensible fashion, therefore CQL enforces ce
 * columns may be added to a table, but only at the end of the table
 * added columns must be nullable or have a default value (otherwise all existing insert statements would break for sure)
 * columns may not be renamed
-* columns may be deleted but this is only a logical delete, SQLite has no primitive to remove columns; once deleted you may not longer refer to that column in queries
+* columns may be deleted but this is only a logical delete, SQLite has no primitive to remove columns; once deleted you may no longer refer to that column in queries
 * deleted columns must be nullable or have a default value (otherwise all existing and future insert statements would break for sure, the column isn't really gone)
 * views, indices, and triggers may be added (no annotation required) and removed (with `@delete`) like tables
 * views, indices, and triggers may be altered completely from version to version
-* no normal code is allowed to refer to deleted columns, tables, etc.  this includes views, indices, and triggers
-* schema migration stored procs see the schema as it existed in their annotation (so an older version), they are also forbidden from using views (see below)
+* no normal code is allowed to refer to deleted columns, tables, etc.  This includes views, indices, and triggers
+* schema migration stored procs see the schema as it existed in their annotation (so an older version). They are also forbidden from using views (see below)
 * recreated objects (tables marked with @recreate, views, tables, and indices) have no change restrictions
 
 
 ### Prosecution
 
-Moving from one schema version to another is done in an orderly fashion with the migration proc taking these essential steps in this order
+Moving from one schema version to another is done in an orderly fashion with the migration proc taking these essential steps in this order:
 
-* the ```cql_schema_facets``` table is created if needed, this records the current state of the schema
-* the last known schema hash is read from the ```cql_schema_facets``` tables (it's zero by default)
-* if the overall schema hash code matches what is stored processing stops, otherwise an upgrade ensues
+* the ```cql_schema_facets``` table is created if needed -- this records the current state of the schema
+* the last known schema hash is read from the ```cql_schema_facets``` tables (it is zero by default)
+* if the overall schema hash code matches what is stored, processing stops; otherwise an upgrade ensues
 * all known views are dropped (hence migration procs won't see them!)
 * any index that needs to change is dropped (this includes items marked ```@delete``` or indices that are different than before)
-  * change is detect by hash (crc64) of the previous index definition vs. the current
+  * change is detected by hash (crc64) of the previous index definition vs. the current
 * all known triggers are dropped (hence they will not fire during migration!)
-* the current schema version is extracted from ```cql_schema_facets``` (it's zero by default)
-* if the current schema version is 0 then the original version of all the tables are created
+* the current schema version is extracted from ```cql_schema_facets``` (it is zero by default)
+* if the current schema version is zero, then the original versions of all the tables are created
 
 * if the current schema version is <= 1 then
   * any tables that need to be created at schema version 1 are created as they exist at schema version 1
@@ -5105,7 +5443,7 @@ Moving from one schema version to another is done in an orderly fashion with the
 * all tables that are marked with `@recreate` are re-created if necessary
   * i.e. if the checksum of the table definition has changed for any  table (or group) then `drop` it and create the new version.
 * all indices that changed and were not marked with `@delete` are re-created
-* all views not marked with `@delete` are recreated
+* all views not marked with `@delete` are re-created
 * all triggers not marked with `@delete` are re-installed
 * the current schema hash is written to the ```cql_schema_facets``` table
 
@@ -5155,7 +5493,7 @@ create index index_still_present on table2(name1, name2);
 -- this index is going away
 create index index_going_away on table2(name3) @delete(3);
 
--- this is a simple trigger, it's a bit silly but that doesn't matter
+-- this is a simple trigger, and it's a bit silly but that doesn't matter
 create trigger trigger_one
   after insert on foo
 begin
@@ -5168,18 +5506,18 @@ This schema has a LOT of versioning... you can see tables and columns appearing 
 * things with no create annotation were present in the base schema
 * only things with no delete annotation are visible to normal code
 * created columns have to be at the end of their table (required by SQLite)
-* they have to be in ascending  schema version order (but you can add several columns in one version)
-* there may or may not be a proc to run to populate data in that column when it's added or removed data when it's deleted
+* they have to be in ascending schema version order (but you can add several columns in one version)
+* there may or may not be a proc to run to populate data in that column when it's added or to remove data when it's deleted
    * proc names must be unique
 * you can't delete a table or column in a version before it was created
 * you can't delete a column in a table in a version before the table was created
 * you can't create a column in a table in a version after the table was deleted
-* there's probably more I forgot...
+* there may be additional checks not listed here
 
 ### Sample Upgrade Script
-With just those annotations you can automatically create the following upgrade script which is itself CQL (and hence has to be compiled). This code is totally readable!
+With just those annotations you can automatically create the following upgrade script which is itself CQL (and hence has to be compiled). Notice that this code is totally readable!
 
-I've split the script into logical pieces to explain what's going on.
+The script has been split into logical pieces to make it easier to explain what's going on.
 
 #### Preamble
 
@@ -5286,7 +5624,7 @@ BEGIN
 DELETE FROM table2 WHERE table2.id = new.id;
 END;
 ```
-We have only the one trigger, we declare it here.
+We have only the one trigger; we declare it here.
 
 ```sql
 -- facets table declaration --
@@ -5562,7 +5900,7 @@ END;
 The main script orchestrates everything.  There are inline comments for all of it.  The general order of events is:
 
 * create schema facets table if needed
-* check main schema crc, if it matches we're done here, otherwise continue...
+* check main schema crc; if it matches we're done here, otherwise continue...
 
 These operations are done in `test_perform_needed_upgrades`
 * drop all views
@@ -5581,8 +5919,8 @@ These operations are done in `test_perform_needed_upgrades`
     * delete column
     * delete table
   * drop any tables that need to be dropped in this version
-  * mark schema upgraded to the current version so far, proceed to the next version
-  * each partial step is also marked as completed so it can be skipped if the script is run again
+  * mark schema upgraded to the current version so far, and proceed to the next version
+  * each partial step is also marked as completed so that it can be skipped if the script is run again
 * create all the views
 * (re)create any indices that changed and are not dead
 * set the schema CRC to the current CRC
@@ -5871,9 +6209,9 @@ Schema Regions let you create logical groupings, you simply declare the regions 
 @declare_schema_region extra using root;
 ```
 
-The above simply declares the region, it doesn't put anything into them.  In this case we now have a `root` region and an `extra` region.  The `root` schema items will not be allowed to refer to anything in `extra`.
+The above simply declares the regions -- it doesn't put anything into them.  In this case we now have a `root` region and an `extra` region.  The `root` schema items will not be allowed to refer to anything in `extra`.
 
-Without regions, you could also ensure that the above is true by putting all the `extra` items afer the `root` in the input file but things can get more complicated than that in general, and the schema might also be in several files, complicating ordering as the option.  Also relying on order could be problematic as it is quite easy to put things in the wrong place (e.g. add a new `root` item after the `extra` items).  Making this a bit more complicated, we could have:
+Without regions, you could also ensure that the above is true by putting all the `extra` items afer the `root` in the input file but things can get more complicated than that in general, and the schema might also be in several files, complicating ordering as the option.  Also, relying on order could be problematic as it is quite easy to put things in the wrong place (e.g. add a new `root` item after the `extra` items).  Making this a bit more complicated, we could have:
 
 
 ```sql
@@ -5938,11 +6276,11 @@ end;
 @end_schema_region;
 ```
 
-With the structure above specified, even if a new contribution to the `root` schema appears later, the rules enforce that this region cannot refer to anything other other things in `root`.  This can be very important if schema is being included via `#include` and might get pulled into the compilation in various orders.  A feature area might also have a named public region that others things can depend on (e.g. some views) and private regions (e.g. some tables, or whatever).
+With the structure above specified, even if a new contribution to the `root` schema appears later, the rules enforce that this region cannot refer to anything other than things in `root`.  This can be very important if schema is being included via `#include` and might get pulled into the compilation in various orders.  A feature area might also have a named public region that others things can depend on (e.g. some views) and private regions (e.g. some tables, or whatever).
 
 #### Region Visibility
 
-Schema region do not provide additional name spaces, the names of objects should be unique across all regions.  i.e. regions do not hide or scope entity names, rather they create errors if inappropriate names are used.
+Schema regions do not provide additional name spaces -- the names of objects should be unique across all regions. In other words, regions do not hide or scope entity names; rather they create errors if inappropriate names are used.
 
 Case 1: The second line will fail semantic validation because table `A` already exists
 ```sql
@@ -5962,7 +6300,7 @@ create table A (id integer, name text);
 @end_region;
 ```
 
-Case 3: Again fails for the same reason as case #1. Table `A` already exist in region `extra`, you can not define another table with the same name in another region.
+Case 3: Again fails for the same reason as case #1. Table `A` already exist in region `extra`, and you cannot define another table with the same name in another region.
 ```sql
 @declare_region root;
 @declare_region extra;
@@ -5978,11 +6316,11 @@ create table A (id integer, name text);
 @end_region;
 ```
 
-Really the visibility rules couldn't be anything other than the above, SQLite has no knowledge of regions at all and so any exotic name resolution would just doom SQLite statements to fail when they finally run.
+Really the visibility rules couldn't be anything other than the above, as SQLite has no knowledge of regions at all and so any exotic name resolution would just doom SQLite statements to fail when they finally run.
 
 ##### Exception for `"... LIKE <table>"` statement
 
-The rules above are enforced for all constructs except for where the syntactic sugar `... LIKE <table>` forms, which can happen in a variety of statement. This form doesn't create a dependence on the table (but does create a dependence on its shape). When CQL generates output the `LIKE` construct is replaced with the actual names of columns it refers to.  But these are independent columns, so this is simply a typing-saver.  The table (or view, cursor, etc.) reference will be gone.
+The rules above are enforced for all constructs except for where the syntactic sugar `... LIKE <table>` forms, which can happen in a variety of statements. This form doesn't create a dependence on the table (but does create a dependence on its shape). When CQL generates output, the `LIKE` construct is replaced with the actual names of the columns it refers to.  But these are independent columns, so this is simply a keystroke saver.  The table (or view, cursor, etc.) reference will be gone.
 
 These cases below will succeed.
 ```sql
@@ -6002,14 +6340,14 @@ Note: this exception may end up causing maintenance problems and so it might be 
 
 #### Maintaining Schema in Pieces
 
-When creating upgrade scripts using the `--rt schema_upgrade` flags you can add region options `--include_regions a b c` and `--exclude_regions d e f` per the following:
+When creating upgrade scripts, using the `--rt schema_upgrade` flags you can add region options `--include_regions a b c` and `--exclude_regions d e f` per the following:
 
 Included regions:
-* included regions must be valid region names, the base types are walked to compute all the regions that are "in"
-* declarations are emitted in the upgrade for all of the "in" objects, "exclude" does not affect the declarations
+* must be valid region names -- the base types are walked to compute all the regions that are "in"
+* declarations are emitted in the upgrade for all of the "in" objects -- "exclude" does not affect the declarations
 
 Excluded regions:
-* excluded regions must be valid region names and indicate parts of schema that are upgraded elsewhere, perhaps with a seperate CQL run, a different automatic upgrade, or even a manual mechanism
+* must be valid region names and indicate parts of schema that are upgraded elsewhere, perhaps with a seperate CQL run, a different automatic upgrade, or even a manual mechanism
 * upgrade code will be generated for all the included schema, but not for the excluded regions and their contents
 
 
@@ -6029,7 +6367,7 @@ The second command declares all of `root` and `extra` so that the `feature1` thi
 
 The third command declares all of `root` and `extra` so that the `feature2` things can refer to them, however the upgrade code for these shared regions is not emitted.  Only the upgrade for schema in `feature2` is emitted.  `feature1` is completely absent.
 
-Note that in the above examples CQL is generating more CQL to be compiled again (a common pattern).  The CQL upgrade scripts need to be compiled as usual to produce executable code.  Thus the output of this form includes the schema declarations and executable DDL.
+Note that in the above examples, CQL is generating more CQL to be compiled again (a common pattern).  The CQL upgrade scripts need to be compiled as usual to produce executable code.  Thus the output of this form includes the schema declarations and executable DDL.
 
 
 ##### Schema Not In Any Region
@@ -6042,7 +6380,7 @@ In general, best practice is that there is no schema in `<none>`, but since most
 
 #### Deployable Regions
 
-Given the above we note that some schema regions correspond to the way that we will deploy the schema, we want those bundles to be safe to deploy but to so we need a new notion -- a deployable region.  To make this possible CQL includes the following:
+Given the above we note that some schema regions correspond to the way that we will deploy the schema.  We want those bundles to be safe to deploy but to in order to be so we need a new notion -- a deployable region.  To make this possible CQL includes the following:
 
 * You can declare a region as deployable using `@declare_deployable_region`
 * CQL computes the covering of a deployable region: its transitive closure up to but not including any deployable regions it references
@@ -6051,17 +6389,17 @@ Given the above we note that some schema regions correspond to the way that we w
 Because of the above, each deployable region is in fact a well defined root for the regions it contains.  The deployable region becomes the canonical way in which a bundle of regions (and their content) is deployed and any given schema item can be in only one deployable region.
 
 ##### Motivation and Examples
-As we saw above, regions are logical groupings of tables/views/etc such that if an entity is in some region `R` then it is allowed to only refer to the things that `R` declared as dependencies `D1`, `D2`, etc. and their transitive closure.  You can make as many logical regions as you like and you can make them as razor thin as you like; they have no physical reality but they let you make as many logical groups of things as you might want.
+As we saw above, regions are logical groupings of tables/views/etc such that if an entity is in some region `R` then it is allowed to only refer to the things that `R` declared as dependencies `D1`, `D2`, etc. and their transitive closures.  You can make as many logical regions as you like and you can make them as razor thin as you like; they have no physical reality but they let you make as many logical groups of things as you might want.
 
-Additionally, when we’re deploying schema you generally need to do it in several pieces. E.g. if we have tables that go in an in-memory database then defining a region that holds all the in-memory tables makes it easy to say put all those in memory tables into a particular deployment script.
+Additionally, when we’re deploying schema you generally need to do it in several pieces. E.g. if we have tables that go in an in-memory database then defining a region that holds all the in-memory tables makes it easy to, say, put all those in-memory tables into a particular deployment script.
 
-Now we come to the reason for deployable regions. From CQL’s perspective all regions are simply logical groups, some grouping that is meaningful to programmers but has no physical reality. This means you’re free to reorganize tables etc. as you see fit into new or different regions when things should move. Only that’s not quite true. The fact that we deploy our schema in certain ways means while most logical moves are totally fine, if you were to move a table from say the main database region to the in-memory region you would be causing a major problem.  Some installations may already have the table in the main area and there would be nothing left in the schema to tell CQL to drop the table from the main database -- the best you can hope for is the new location gets a copy of the table the old location keeps it and now there are name conflicts forever.
+Now we come to the reason for deployable regions. From CQL’s perspective, all regions are simply logical groups; some grouping is then meaningful to programmers but has no physical reality. This means you’re free to reorganize tables etc. as you see fit into new or different regions when things should move. Only, that’s not quite true. The fact that we deploy our schema in certain ways means while most logical moves are totally fine, if you were to move a table from, say, the main database region to the in-memory region you would be causing a major problem.  Some installations may already have the table in the main area and there would be nothing left in the schema to tell CQL to drop the table from the main database -- the best you can hope for is the new location gets a copy of the table the old location keeps it and now there are name conflicts forever.
 
-So, the crux of the problem is this. We want to let you move schema freely between logical regions however it makes sense to you but once you pick the region you are going to be deployed in, you can’t change that.
+So, the crux of the problem is this: We want to let you move schema freely between logical regions in whatever way makes sense to you, but once you pick the region you are going to deploy in, you cannot change that.
 
-To do this, CQL needs to know that some of the regions are deployable regions and there have to be rules so that it all makes sense.  Importantly, every region has to be contained in at most one deployable region.
+To accomplish this, CQL needs to know that some of the regions are deployable regions and there have to be rules to make it all makes sense.  Importantly, every region has to be contained in at most one deployable region.
 
-Since the regions form a DAG we must create an error if any region could ever roll up to two different deployable regions. The easiest way to describe this rule is “no peeking” – the contents of a deployable region are “private” they can refer to each other in any dag shape but outside of the deployable region you can only refer to its root. So you can still compose them but each deployable region owns a well defined covering. Note you can make as many fine-grained deployable regions as you want, you don’t actually have to deploy them separately, but you get stronger rules about the sharing.
+Since the regions form a DAG we must create an error if any region could ever roll up to two different deployable regions. The easiest way to describe this rule is “no peeking” – the contents of a deployable region are “private” they can refer to each other in any DAG shape but outside of the deployable region you can only refer to its root. So you can still compose them but each deployable region owns a well-defined covering. Note that you can make as many fine-grained deployable regions as you want; you don’t actually have to deploy them separately, but you get stronger rules about the sharing when you do.
 
 Here’s an example:
 
@@ -6085,22 +6423,22 @@ Master Deployment 2
 ```
 
 In the above:
-* none of the logical regions for feature 1, 2, 3 are allowed to refer to logical regions in any other feature, any of them could refer to Core (but not directly to what is inside Core)
-* within those regions you can make any set of groupings that makes sense and change them over time as you see fit
+* none of the logical regions for feature 1, 2, 3 are allowed to refer to logical regions in any other feature, though any of them could refer to Core (but not directly to what is inside Core)
+* within those regions you can make any set of groupings that makes sense and you can change them over time as you see fit, with some restrictions
 * any such regions are not allowed to move to a different Feature group (because those are deployment regions)
-* the Master Deployment regions just group features in ways we’d like to deploy them, in this case there are two deployments one that includes Feature 1 & 2 and another that includes Feature 1 & 3
+* the Master Deployment regions just group features in ways we’d like to deploy them; in this case there are two deployments: one that includes Feature 1 & 2 and another that includes Feature 1 & 3
 * the deployable region boundaries are preventing Feature 1 regions from using Feature 2 regions in an ad hoc way (i.e. you can't cheat by taking a direct dependency on something inside a different feature), but both Features can use Core
 * Feature 3 doesn’t use Core but Core will still be in Master Deployment 2 due to Feature 1
 
 Note that the deployable regions for Feature 1, 2, and 3 aren't actually deployed alone, but they are adding enforcement that makes the features cleaner
 
-Because of how upgrades work, “Core” could have its own upgrader. Then when you create the upgrader for Master Deployment 1 and 2 you can specify “exclude Core” in which case those tables are assumed to be updated independently. You could create as many or as few independently upgrade-able things with this pattern. Because regions are not allowed to "peek" inside of a deployable region, you can reorganize your logical regions without breaking other parts of the schema.
+Because of how upgrades work, “Core” could have its own upgrader. Then when you create the upgrader for Master Deployment 1 and 2, you can specify “exclude Core” in which case those tables are assumed to be updated independently. You could create as many or as few independently upgrade-able things with this pattern. Because regions are not allowed to "peek" inside of a deployable region, you can reorganize your logical regions without breaking other parts of the schema.
 
 #### Private Regions
 
-The above constructs create a good basis for creating and composing regions, but a key missing aspect is the ability to hide internal details in the logical groups.  This becomes increasingly important as your desire to modularize schema grows; you will want to have certain parts that can change without worrying about breaking others and without fear that there are foreign keys and so forth to them.
+The above constructs create a good basis for creating and composing regions, but a key missing aspect is the ability to hide internal details in the logical groups.  This becomes increasingly important as your desire to modularize schema grows; you will want to have certain parts that can change without worrying about breaking others and without fear that there are foreign keys and so forth referring to them.
 
-To accomplish this CQL provides the ability to compose schema regions with the optional `private` keyword.  In the following example there will be three regions creatively named `r1`, `r2`, and `r3`.  Region `r2` consumes `r1` privately and therefore `r3` is not allowed to use things in `r1` even though it consumes `r2`.  When creating an upgrade script for `r3` you will still need (and will get) all of `r2` and `r1`, but from a visibility perspective `r3` can only directly depend on `r2`.
+To accomplish this, CQL provides the ability to compose schema regions with the optional `private` keyword.  In the following example there will be three regions creatively named `r1`, `r2`, and `r3`.  Region `r2` consumes `r1` privately and therefore `r3` is not allowed to use things in `r1` even though it consumes `r2`.  When creating an upgrade script for `r3` you will still need (and will get) all of `r2` and `r1`, but from a visibility perspective `r3` can only directly depend on `r2`.
 
 ```sql
 @declare_schema_region r1;
@@ -6140,7 +6478,7 @@ That would seem to make it all moot.  However, this is where deployable regions 
 
 Once this is done it becomes an error to try to make new regions that peek into `r2`; you have to take all of `r2` or none of it -- and you can’t see the private parts.  Of course you can do region wrapping at any level so you can have as many subgroups as you like, whatever is useful. You can even add additional deployable regions that aren’t actually deployed to get the "hardened" grouping at no cost.
 
-So, in summary, to get true privacy first make whatever logical regions you like that are helpful.  Put privacy where you need/want it.  Import logical regions as much as you want in your own bundle of regions.  Then wrap that bundle up in a deployable region (they nest) and then your private regions are safe from unwanted usage.
+So, in summary, to get true privacy, first make whatever logical regions you like that are helpful.  Put privacy where you need/want it.  Import logical regions as much as you want in your own bundle of regions.  Then wrap that bundle up in a deployable region (they nest) and then your private regions are safe from unwanted usage.
 
 
 ## Chapter 11: Previous Schema Validation
@@ -9036,9 +9374,14 @@ These are the various outputs the compiler can produce.
 * suitable for use to create the next or first "previous" schema for schema validation
 * requires one output file
 
+#### --rt schema_facet_checker
+* produces a CQL script that checks whether the schema is up to date which can then be compiled with CQL itself
+* see the chapter on schema upgrade/migration: [Chapter 10](https://cgsql.dev/cql-guide/ch10/)
+* requires one output file (foo.sql)
+
 #### --rt schema_upgrade
-* produces a CQL schema upgrade script (one file) which can then be compiled with CQL itself
-* see the section on schema upgrade/migration
+* produces a CQL schema upgrade script which can then be compiled with CQL itself
+* see the chapter on schema upgrade/migration: [Chapter 10](https://cgsql.dev/cql-guide/ch10/)
 * requires one output file (foo.sql)
 
 ##### --include_regions a b c
@@ -9066,6 +9409,10 @@ These are the various outputs the compiler can produce.
 * the output consists of a set of procedures that will emit all query plans for the DML that was in the input
 * see `--rt udf` for additional info
 
+#### --rt stats
+* produces  a simple .csv file with node count information for AST nodes per procedure in the input
+* requires one output file (foo.csv)
+
 #### --rt udf
 * produces stub UDF implementations for all UDFS that were seen in the input
 * this output is suitable for use with `--rt query_plan` so that SQL with UDFs will run in a simple context
@@ -9084,7 +9431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Jan 28 14:22:31 PST 2022
+Snapshot as of Fri Feb 18 12:11:59 PST 2022
 
 ### Operators and Literals
 
@@ -9131,29 +9478,29 @@ REALLIT /* floating point literal */
 "@SENSITIVE" "ABORT" "ACTION" "ADD" "AFTER" "ALL" "ALTER"
 "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE" "BEGIN"
 "BLOB" "BY" "CALL" "CASCADE" "CASE" "CAST" "CATCH" "CHECK"
-"CLOSE" "COLUMN" "COMMIT" "CONST" "CONSTRAINT" "CONTEXT
-COLUMN" "CONTEXT TYPE" "CONTINUE" "CREATE" "CROSS" "CURRENT
-ROW" "CURSOR" "DECLARE" "DEFAULT" "DEFERRABLE" "DEFERRED"
-"DELETE" "DESC" "DISTINCT" "DISTINCTROW" "DO" "DROP" "ELSE
-IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE CURRENT ROW"
-"EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE TIES"
-"EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH" "FILTER"
-"FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM" "FUNC"
-"FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF" "IGNORE"
-"IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT" "INSERT"
-"INSTEAD" "INT" "INTEGER" "INTO" "JOIN" "KEY" "LEAVE"
-"LEFT" "LET" "LIMIT" "LONG" "LONG_INT" "LONG_INTEGER"
-"LOOP" "NO" "NOT DEFERRABLE" "NOTHING" "NULL" "OBJECT" "OF"
-"OFFSET" "ON CONFLICT" "ON" "OPEN" "ORDER" "OUT" "OUTER"
-"OVER" "PARTITION" "PRECEDING" "PRIMARY" "PRIVATE" "PROC"
-"PROCEDURE" "QUERY PLAN" "RAISE" "RANGE" "REAL" "RECURSIVE"
-"REFERENCES" "RELEASE" "RENAME" "REPLACE" "RESTRICT"
-"RETURN" "RIGHT" "ROLLBACK" "ROWID" "ROWS" "SAVEPOINT"
-"SELECT" "SET" "STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT"
-"THEN" "THROW" "TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE"
-"UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES"
-"VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH"
-"WITHOUT"
+"CLOSE" "COLUMN" "COLUMNS" "COMMIT" "CONST" "CONSTRAINT"
+"CONTEXT COLUMN" "CONTEXT TYPE" "CONTINUE" "CREATE" "CROSS"
+"CURRENT ROW" "CURSOR" "DECLARE" "DEFAULT" "DEFERRABLE"
+"DEFERRED" "DELETE" "DESC" "DISTINCT" "DISTINCTROW" "DO"
+"DROP" "ELSE IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE
+CURRENT ROW" "EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE
+TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
+"FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM"
+"FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF"
+"IGNORE" "IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT"
+"INSERT" "INSTEAD" "INT" "INTEGER" "INTO" "JOIN" "KEY"
+"LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
+"LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
+"NULL" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON" "OPEN"
+"ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
+"PRIMARY" "PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE"
+"RANGE" "REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
+"REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
+"ROWS" "SAVEPOINT" "SELECT" "SET" "STATEMENT" "SWITCH"
+"TABLE" "TEMP" "TEXT" "THEN" "THROW" "TO" "TRANSACTION"
+"TRIGGER" "TRY" "TYPE" "UNBOUNDED" "UNIQUE" "UPDATE"
+"UPSERT" "USING" "VALUES" "VIEW" "VIRTUAL" "WHEN" "WHERE"
+"WHILE" "WINDOW" "WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -9767,6 +10114,23 @@ shape_arguments:
   | "FROM" "ARGUMENTS" shape_def
   ;
 
+column_calculation:
+  "COLUMNS" '(' col_calcs ')'
+  | "COLUMNS" '(' "DISTINCT" col_calcs ')'
+  ;
+
+col_calcs:
+  col_calc
+  | col_calc ',' col_calcs
+  ;
+
+col_calc:
+  name
+  | shape_def
+  | name shape_def
+  | name '.' name
+  ;
+
 call_expr:
   expr
   | shape_arguments
@@ -10033,7 +10397,8 @@ select_expr_list:
 
 select_expr:
   expr opt_as_alias
-  |  name '.' '*'
+  | name '.' '*'
+  | column_calculation
   ;
 
 opt_as_alias:
@@ -10159,10 +10524,15 @@ insert_stmt:
   | insert_stmt_type name "USING" expr_names opt_insert_dummy_spec
   ;
 
+insert_list_item:
+  expr
+  | shape_arguments
+  ;
+
 insert_list:
   /* nil */
-  | expr
-  | expr ',' insert_list
+  | insert_list_item
+  | insert_list_item ',' insert_list
   ;
 
 basic_update_stmt:
@@ -11403,9 +11773,7 @@ SQLite user defined functions (or builtins) declared with  `declare select funct
 
 -----
 
-### CQL0090: stored proc calls may not appear in the context of a SQL statement 'procedure_name'
-
-While it's possible to call a CQL stored procedure as though it was a function (if it has an OUT argument as its last arg) you may not do this from inside of a SQL statement.  Just like external C functions SQLite cannot call stored procs.
+CQL0090: -- more specific errors are now generated
 
 -----
 
@@ -12233,15 +12601,14 @@ It's the declaration that's failing here, not the call.
 
 -----
 
-### CQL0204: cursor not found 'name'
-
-The indicated name appeared in a context where a cursor name was expected, but that name does not correspond to any variable at all.  Probably there is a typo here.
+CQL0204 : Unused.
 
 -----
 
-### CQL0205: variable is not a cursor 'name'
+### CQL0205: not a cursor 'name'
 
-The indicated name appeared in a context where a cursor name was expected. There is a variable of that name but it is not a cursor.  Probably there is a copy/pasta type error here.
+The indicated name appeared in a context where the name of a cursor was
+expected, but the name does not refer to a cursor.
 
 -----
 
@@ -14796,6 +15163,34 @@ It's ok for a recreate table that had no group to move into some group. Tables w
 no group are already known to have no FKs other than possibly to themselves.
 
 
+### CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause
+
+When using a shared fragment like an expression, the shared fragment must consist of a
+simple SELECT without a FROM clause. That SELECT, however, may contain a nested SELECT
+expression which, itself, may have a FROM clause.
+
+Additional constraints:
+
+* the target of the call is a shared fragment
+  * the target therefore a single select statement
+  * the target therefore has no out-arguments
+* the target has no select clauses other than the select list, e.g. no FROM, WHERE, LIMIT etc.
+* the target returns exactly one column, i.e. it's just one SQL expression
+
+
+### CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses
+
+Certain built-in functions like `COUNT` can be used with `DISTINCT` or `FILTER` options like so:
+
+```
+select count(distinct ...);
+
+select sum(...) filter(where ...) over (...)
+```
+
+These options are not valid when calling a procedure as a function and so they generate errors if used.
+
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -14808,7 +15203,7 @@ no group are already known to have no FKs other than possibly to themselves.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Jan 28 14:22:31 PST 2022
+Snapshot as of Fri Feb 18 12:11:59 PST 2022
 
 ### Rules
 
@@ -17817,6 +18212,167 @@ the result set. The rowid is of course the database rowid.
 0: rowid:1 Buy milk (done)
 1: rowid:3 Write code (not done)
 ```
+
+
+
+## Appendix 11: Production Considerations
+<!---
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+
+### Production Considerations
+
+This system as it appears in the sources here is designed to get some basic SQLite scenarios working but
+the runtime systems that are packaged here are basic, if only for clarity.  There are some important
+things you should think about improving or customizing for your production environment. Here's a brief list.
+
+
+#### Concurrency
+
+The reference counting solution in the stock `CQLRT` implementation is single threaded.  This might be ok,
+in many environments only one thread is doing all the data access.  But if you plan to share objects
+between threads this is something you'll want to address.  `CQLRT` is designed to be replacable.  In fact
+there is another version included in the distribution `cqlrt_cf` that is more friendly to iOS and CoreFoundation.
+This alternate version is an excellent demonstration of what is possible.  There are more details
+in [Internals Part 5: CQL Runtime](https://cgsql.dev/cql-guide/int05).
+
+#### Statement Caching
+
+SQLite statement management includes the ability to reset and re-prepare statements.  This is an
+important performance optimization but the stock `CQLRT` does not take advantage of this.  This is
+for two reasons:  first, simplicity, but more importantly, any kind of statement cache would require
+a caching policy and this simple `CQLRT` cannot possibly know what might consitute a good policy
+for your application.
+
+These three macros can be defined in your `cqlrt.h` and they can be directed at a version that
+keeps a cache of your choice.
+
+```C
+#ifndef cql_sqlite3_exec
+#define cql_sqlite3_exec(db, sql) sqlite3_exec((db), (sql), NULL, NULL, NULL)
+#endif
+
+#ifndef cql_sqlite3_prepare_v2
+#define cql_sqlite3_prepare_v2(db, sql, len, stmt, tail) sqlite3_prepare_v2((db), (sql), (len), (stmt), (tail))
+#endif
+
+#ifndef cql_sqlite3_finalize
+#define cql_sqlite3_finalize(stmt) sqlite3_finalize((stmt))
+#endif
+```
+As you might expect, `prepare` creates a statement or else returns one from the cache.
+When the `finalize` API is called the indicated statement can be returned to the cache or discarded.
+The `exec` API does both of these operations, but also, recall that `exec` can get a semicolon
+seperated list of statements. Your `exec` implementation will have to use SQLite's prepare functions
+to split the list and get prepared statements for part of the string.  Alternately you could choose
+not to cache in the `exec` case.
+
+#### Your Underlying Runtime
+
+As you can see in `cqlrt_cf`, there is considerable ability to define what the basic data types mean.  Importantly,
+the reference types `text`, `blob`, and `object` can become something different (e.g., something
+already supported by your environment).  For instance, on Windows you could use COM or .NET types
+for your objects.  All object references are substantially opaque to `CQLRT`, they have comparatively
+few APIs that are defined in the runtime.  Things like getting the text out of the string reference
+and so forth.
+
+In addition to the basic types and operations you can also define a few helper functions that
+allow you to create some more complex object types.  For instance, list, set, and dictionary
+creation and management functions can be readily created and then you can declare them using
+the `DECLARE FUNCTION` language features.  These objects will then be whatever list, set, or
+dictionary they need to be to interoperate with the rest of your environment.  You can
+define all the data types you might need in your `CQLRT` and you can employ whatever
+threading model and locking primitives you need for correctness.
+
+#### Debugging and Tracing
+
+The `CQLRT` interface includes some helper macros for logging.  These are defined
+as no-ops by default but of course they can be changed.
+
+```
+#define cql_contract assert
+#define cql_invariant assert
+#define cql_tripwire assert
+#define cql_log_database_error(...)
+#define cql_error_trace()
+```
+
+`cql_contract` and `cql_invariant` are for fatal errors. They both assert something
+that is expected to always be true (like `assert`) with only difference being that
+the former is conventionally used to validate preconditions of functions.
+
+`cql_tripwire` is a slightly softer form of assert that should crash in debug
+builds but only log an error in production builds. It is generally used to enforce
+a new condition that may not always hold with the goal of eventually transitioning
+over to `cql_contract` or `cql_invariant` once logging has demonstrated that the
+tripwire is never hit.
+When a `fetch_results` method is called, a failure results in a call to `cql_log_database_error`.
+Presently the log format is very simple.  The invocation looks like this:
+
+```C
+ cql_log_database_error(info->db, "cql", "database error");
+```
+The logging facility is expected to send the message to wherever is appropriate for your environment.
+Additionally it will typically get the failing result code and error message from SQLite however
+these are likely to be stale. Failed queries usually still require cleanup and so the SQLite error
+codes be lose because (e.g.) a `finalize` has happened, clearing the code. You can do better if
+your runtime caches the results of recent failed `prepare` calls, for instance.  In any case
+what you log and where you log it is entirely up to you.
+
+The `cql_error_trace` macro is described in [Internals Chapter 3](https://cgsql.dev/cql-guide/int03#cleanup-and-errors).
+It will typically invoke `printf` or `fprintf` or something like that to trace the origin of thrown
+exceptions and to get the error text from SQLite as soon as possible.
+
+An example might be:
+
+```
+#define cql_error_trace() fprintf(stderr, "error %d in %s %s:%d\n", _rc_, _PROC_, __FILE__, __LINE_)
+```
+Typically the cost of all these diagnostics is too high to include in production code so this is
+turned on when debugging failures.  But you can make that choice for yourself.
+
+#### Customizing Code Generation
+
+The file `rt_common.c` defines the common result types, but the skeleton file `rt.c`
+includes affordances to add your own types without having to worry about conflicts with the
+common types.  These macros define
+
+```C
+#define RT_EXTRAS
+#define RT_EXTRA_CLEANUP
+```
+
+Simply define these two to create whatever `rt_` data structures you want and add any
+cleanup function that might be needed to release resources.  The other cleanup
+functions should provide a good template for you to make your own.
+
+The C data type `rtdata` includes many text fragments that directly control the
+code generation.  If you want to make your generated code look more like say
+CoreFoundation you can define an `rtdata` that will do the job.  This will mean
+a lot of your generated code won't require the `#defines` for the CQL types,
+it can use your runtime directly.  You can also enable things like Pascal casing
+for procedure names and a common prefix on procedure names if those are useful
+in your environment.  However, the system is designed so that such changes
+aren't necessary.  The data types in `cqlrt.h` are enough for any remapping,
+additional changes with `rtdata` are merely cosmetic.
+
+#### Summary
+
+The `CQLRT` macros are very powerful, they allow you to target almost any
+runtime with a C API.  The `cqlrt_cf` version is a good example of the
+sorts of changes you can make.
+
+Concurrency and Statement Caching are not supported in the basic version
+for `cqlrt.h`.  If this is important to you you might want to customize for that.
+
+Helper functions for additional data types can be added, these can be
+unique to your runtime.
+
+There are tracing macros to help with debugability.  Providing some
+useful versions of those can be of great help in production environments.
 
 
 

@@ -378,7 +378,7 @@
 </ul></li>
 <li>all of the tokens are case-insensitive
 <ul>
-<li>this means only vanilla ASCII insensitivity, no attempt is made to understand more complex UNICODE code-points</li>
+<li>this means only vanilla ASCII insensitivity; no attempt is made to understand more complex UNICODE code-points</li>
 </ul></li>
 <li>multi-word tokens typically are defined with an expression like this: <code>IS[ \t]+NOT[ \t]+FALSE/[^A-Z_]</code>
 <ul>
@@ -387,7 +387,7 @@
 <li>the token ends on non-identifier characters, so the text “X IS NOT FALSEY” must become the tokens { <code>X</code>, <code>IS_NOT</code>, <code>FALSEY</code> } and not { <code>X</code>, <code>IS_NOT_FALSE</code>, <code>Y</code> }
 <ul>
 <li>the second option is actually the longest token, so without the trailing qualifier it would be preferred</li>
-<li>hence, where a continuation is possible, the trailing context must be specified in multi=word tokens</li>
+<li>hence, where a continuation is possible, the trailing context must be specified in multi-word tokens</li>
 </ul></li>
 </ul></li>
 <li>there is special processing needed to lex <code>/* ... */</code> comments correctly</li>
@@ -395,14 +395,14 @@
 <ul>
 <li>special care is taken to keep the literals in string form so that no precision is lost</li>
 <li>integer literals are compared against 0x7fffffff and if greater they automatically become long literals even if they are not marked with the trailing <code>L</code> as in <code>1L</code></li>
-<li>string literals include the quotation marks in the token text which distinguishes them from identifiers, they are otherwise encoded similarly</li>
+<li>string literals include the quotation marks in the token text which distinguishes them from identifiers; they are otherwise encoded similarly</li>
 </ul></li>
-<li>the character class <code>[-+&amp;~|^/%*(),.;!&lt;&gt;:=]</code> produces single character tokens for operators, other non-matching single characters (e.g. <code>'$'</code> produce an error)</li>
+<li>the character class <code>[-+&amp;~|^/%*(),.;!&lt;&gt;:=]</code> produces single character tokens for operators; other non-matching single characters (e.g. <code>'$'</code>) produce an error</li>
 <li>line directives <code>^#line\ [0-9]+\ \"[^"]*\".*</code> or <code>^#\ [0-9]+\ \"[^"]*\".*</code> get special processing so that pre-processed input does not lose file and line number fidelity</li>
 </ul>
 <h3 id="parsing-and-the-abstract-syntax-tree">Parsing and the Abstract Syntax Tree</h3>
 <p>Inside of <code>cql.y</code> you will find the token declarations, precedence rules, and all of the productions in the overall grammar. The grammar processing does as little as possible in that stage to create an abstract syntax tree (AST). The AST itself is a simple binary tree; where nodes might require more than just left and right children to specify the syntax fully, additional nodes are used in the tree shape rather than introduce n-ary nodes. This means the tree is sometimes bigger, but generally not very much bigger. The benefit of this choice is that the AST can always be walked generically as a binary tree, so if you need to find all the <code>table_factor</code> nodes it is easy to do so without having to worry about how every kind of node expands. If new node types come along the generic walkers can go through those new nodes as well. All of the grammar productions simply make one or more AST nodes and link them together so that in the end there is a single root for the entire program in a binary tree.</p>
-<p>There are 4 kinds of AST nodes, they all begin with the following five fields, these represent the AST “base type” if you like.</p>
+<p>There are 4 kinds of AST nodes, they all begin with the following five fields. These represent the AST “base type”, if you like.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>  <span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>_Nonnull type<span class="op">;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> sem_node <span class="op">*</span>_Nullable sem<span class="op">;</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> ast_node <span class="op">*</span>_Nullable parent<span class="op">;</span></span>
@@ -411,7 +411,7 @@
 <ul>
 <li><code>type</code> : a string literal that uniquely identifies the node type
 <ul>
-<li>the string literal is compared for identity (it’s an exact pointer match) you don’t <code>strcmp</code> types</li>
+<li>the string literal is compared for identity (it’s an exact pointer match: you don’t <code>strcmp</code> types)</li>
 </ul></li>
 <li><code>sem</code> : begins as <code>NULL</code> this is where the semantic type goes once semantic processing happens</li>
 <li><code>parent</code> : the parent node in the AST (not often used but sometimes indispensible)</li>
@@ -435,8 +435,8 @@
   | {add}
     | {int 1}
     | {int 3}</code></pre>
-<p>In the above “assign” and “add” are the generic nodes. Note that this node type can be a leaf but usually is not. The other types are always leaves.</p>
-<p>Note that in the above output, the node <code>type</code> was directly printed (because it’s a meaningful name). Likewise, the type needs no decoding when viewing the AST in a debugger. Simply printing the node with something like <code>p *ast</code> in lldb will show you all the node fields and the type in a human readable fashion.</p>
+<p>In the above, “assign” and “add” are the generic nodes. Note that this node type can be a leaf but usually is not. The other types are always leaves.</p>
+<p>Note that in the above output, the node <code>type</code> was directly printed (because it’s a meaningful name). Likewise, the type needs no decoding when viewing the AST in a debugger. Simply printing the node with something like <code>p *ast</code> in lldb will show you all the node fields and the type in human-readable form.</p>
 <h4 id="the-grammar-code-node-int_ast_node">The Grammar Code Node <code>int_ast_node</code></h4>
 <div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> int_ast_node <span class="op">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> the common fields</span>
