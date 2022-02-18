@@ -60,18 +60,19 @@ function Feature({imageUrl, title, description}) {
   );
 }
 
-function Video() {
+function Video({heading, title, url}) {
   return (
     <div id="video" className={styles.videoSection}>
       <div className="container padding-vert--xl text--left">
         <div className="row">
           <div className="col">
-            <h1 className="text--center">See CG/SQL in Practice</h1>
+            <h1 className="text--center margin-bottom--lg">{heading}</h1>
             <div align="center">
               <iframe
                 width="560"
                 height="315"
-                src="https://www.youtube.com/embed/videoseries?list=PLJE37RiwD_9pvAT-1bpuCx7CGM-Nkwjj0"
+                title={title}
+                src={url}
                 frameborder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen></iframe>
@@ -121,6 +122,9 @@ function Home() {
         </div>
       </header>
       <main>
+      <Video heading="Watch Brief Intro Video" 
+        title="Explain Like I'm 5: CG/SQL" 
+        url="https://www.youtube.com/embed/gQbbdcLLYHs"/>
         <div className="container padding-vert--xl text--left">
           <div className="row">
             <div className="col">
@@ -144,9 +148,10 @@ function Home() {
             </div>
           </div>
         </div>
+        <Video heading="See CG/SQL in Practice" 
+         title="See CG/SQL in Practice" 
+         url="https://www.youtube.com/embed/videoseries?list=PLJE37RiwD_9pvAT-1bpuCx7CGM-Nkwjj0"/>
       </main>
-
-      <Video />
     </Layout>
   );
 }
