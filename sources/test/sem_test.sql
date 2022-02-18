@@ -20852,3 +20852,78 @@ create proc do_inline_math_bad7()
 begin
   select 1 where inline_frag(2) filter (where 1);
 end;
+
+create table Shape_xy (x int, y int);
+create table Shape_uv (u text, v text);
+create table Shape_uvxy (like Shape_xy, like Shape_uv);
+
+-- TEST: expand various insert_list forms using the FROM syntax
+-- these are all rewrites so we verify that the rewrite was correct
+-- these four forms are exhaustive
+-- + INSERT INTO Shape_xy(x, y) VALUES(C.x, C.y);
+-- + INSERT INTO Shape_xy(x, y) VALUES(1, 2), (3, 4), (C.x, C.y);
+-- + FETCH R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
+-- + UPDATE CURSOR R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
+-- + cte1 (l, m, n, o) AS (VALUES(C.x, C.y, D.u, D.v))
+-- + cte2 (l, m, n, o) AS (VALUES(1, 2, '3', '4'), (C.x, C.y, D.u, D.v))
+-- - error:
+create proc ShapeTrix()
+begin
+  declare C cursor for select Shape_xy.*, 1 u, 2 v from Shape_xy;
+  fetch C;
+  insert into Shape_xy values(from C like Shape_xy);
+  insert into Shape_xy values (1,2), (3,4), (from C like Shape_xy);
+
+  declare D cursor for select * from Shape_uv;
+  fetch D;
+
+  declare R cursor like Shape_uvxy;
+  fetch R from values (from C like Shape_xy, from D);
+
+  update cursor  R from values (from C like Shape_xy, from D);
+
+  declare S cursor for 
+    with cte1(l,m,n,o) as (values (from C like Shape_xy, from D))
+     select * from cte1;
+  fetch S;
+
+  declare T cursor for 
+    with cte2(l,m,n,o) as (values (1,2,'3','4'), (from C like Shape_xy, from D))
+     select * from cte2;
+  fetch S;
+end;
+
+-- TEST: bogus shape name in insert
+-- + error: % name not found 'not_a_cursor'
+-- +1 error:
+create proc ShapeTrixError1()
+begin
+  insert into Shape_xy values(from not_a_cursor like Shape_xy);
+end;
+
+-- TEST: bogus shape name in fetch cursor
+-- + error: % name not found 'not_a_cursor'
+-- +1 error:
+create proc ShapeTrixError2()
+begin
+  declare R cursor like Shape_uvxy;
+  fetch R from values (from not_a_cursor);
+end;
+
+-- TEST: bogus shape name in update cursor
+-- + error: % name not found 'not_a_cursor'
+-- +1 error:
+create proc ShapeTrixError3()
+begin
+  declare R cursor like Shape_uvxy;
+  fetch R() from values () @dummy_seed(1);
+  update cursor R from values (from not_a_cursor);
+end;
+
+-- TEST: bogus shape name in values (fail later in the list)
+-- + error: % name not found 'not_a_cursor'
+-- +1 error:
+create proc ShapeTrixError4()
+begin
+  insert into Shape_xy values(1,2), (from not_a_cursor like Shape_xy);
+end;

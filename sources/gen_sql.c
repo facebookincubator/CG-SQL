@@ -2549,7 +2549,13 @@ static void gen_insert_list(ast_node *_Nullable ast) {
 
   while (ast) {
     Contract(is_ast_insert_list(ast));
-    gen_root_expr(ast->left);
+
+    if (is_ast_from_shape(ast->left)) {
+      gen_shape_arg(ast->left);
+    }
+    else {
+      gen_root_expr(ast->left);
+    }
 
     if (ast->right) {
       gen_printf(", ");

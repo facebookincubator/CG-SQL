@@ -1542,6 +1542,28 @@ select columns(distinct like foo, y like bar) from foo2;
 
 select columns(distinct a.b, like bar) from foo2;
 
+create table T (x int, y int);
+create table U (u text, v text);
+create table V (x int, y int, u text, v text);
+create proc p()
+begin
+  declare C cursor for select T.*, 1 u, 2 v from T;
+  fetch C;
+  insert into T values(from C like T);
+
+  declare D cursor for select * from U;
+  fetch D;
+
+  declare R cursor like V;
+  fetch R from values (from C like T, from D);
+  update cursor  R from values (from C like T, from D);
+
+  declare S cursor for 
+    with cte(l,m,n,o) as (values (from C like T, from D))
+     select * from cte;
+  fetch S;
+end;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"
