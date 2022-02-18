@@ -8597,7 +8597,7 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   }
 
   // expand any FROM forms in the arg list
-  if (!rewrite_call_args_if_needed(arg_list)) {
+  if (!rewrite_shape_forms_in_list_if_needed(arg_list)) {
     record_error(ast);
     return;
   }
@@ -9927,6 +9927,14 @@ static void sem_values(ast_node *ast) {
   Contract(is_ast_values(ast));
   EXTRACT(insert_list, ast->left);
 
+  // if there are any FROM C(like shape) thing in the values list, expand them
+  // we do the first row of values if there is one... we need this to get the count
+  // so that we know that they all match
+  if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
+    record_error(ast);
+    return;
+  }
+
   uint32_t total_count = 0;
   ast_node *items = insert_list;
   while (items) {
@@ -9943,6 +9951,12 @@ static void sem_values(ast_node *ast) {
 
     if (values_insert_list == NULL) {
       report_error(ast, "CQL0336: select statement with VALUES clause requires a non empty list of values", NULL);
+      record_error(ast);
+      return;
+    }
+
+    // if there are any FROM C(like shape) thing in the values list, expand them
+    if (!rewrite_shape_forms_in_list_if_needed(values_insert_list)) {
       record_error(ast);
       return;
     }
@@ -13583,6 +13597,12 @@ static void sem_update_cursor_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
   EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
 
+  // if there are any FROM C(like shape) thing in the values list, expand them
+  if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
+    record_error(ast);
+    return;
+  }
+
   sem_t sem_type = cursor->sem->sem_type;
 
   // We can't do this if the cursor was not used with the auto syntax
@@ -14354,6 +14374,12 @@ static void sem_fetch_values_stmt(ast_node *ast) {
 
   // this may have be rewritten by the above
   EXTRACT(insert_list, columns_values->right);
+
+  // if there are any FROM C(like shape) thing in the values list, expand them
+  if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
+    record_error(ast);
+    return;
+  }
 
   int32_t dummy_flags = 0;
 
@@ -19280,7 +19306,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   }
 
   // expand any FROM forms in the arg list
-  if (!rewrite_call_args_if_needed(expr_list)) {
+  if (!rewrite_shape_forms_in_list_if_needed(expr_list)) {
     record_error(ast);
     return;
   }

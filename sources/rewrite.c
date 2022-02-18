@@ -39,6 +39,7 @@ static ast_node *rewrite_gen_iif_case_expr(ast_node *expr, ast_node *val1, ast_n
 static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t report_column_name);
 static bool_t rewrite_one_def(ast_node *head);
 static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names);
+static void rewrite_from_shape_args(ast_node *head);
 
 // @PROC can be used in place of an ID in various places
 // replace that name if appropriate
@@ -50,7 +51,6 @@ cql_noexport void rewrite_proclit(ast_node *ast) {
     ((str_ast_node*)ast)->value = newname;
   }
 }
-
 
 // To do this rewrite we only need to check a few things:
 //  * is the given name really a shape
@@ -228,11 +228,12 @@ cql_noexport void rewrite_from_shape_if_needed(ast_node *ast_stmt, ast_node *col
 // FROM [shape] [LIKE type ] entries we encounter.  We don't validate
 // the types here.  That happens after expansion.  It's possible that the
 // types don't match at all, but we don't care yet.
-cql_noexport void rewrite_from_shape_args(ast_node *head) {
-  Contract(is_ast_expr_list(head) || is_ast_arg_list(head));
+static void rewrite_from_shape_args(ast_node *head) {
+  Contract(is_ast_expr_list(head) || is_ast_arg_list(head) || is_ast_insert_list(head));
 
-  // We might need to make arg_list nodes or expr_list nodes, they are the same really
-  // so we'll change the node type to what we need
+  // We might need to make arg_list nodes, insert_list nodes, or expr_list nodes, they are the
+  // same really so we'll change the node type to what we need.  We just stash what
+  // the first item was and make any that we create the same as this one.
   CSTR node_type = head->type;
 
   for (ast_node *item = head ; item ; item = item->right) {
@@ -736,7 +737,7 @@ cql_noexport void rewrite_empty_column_list(ast_node *columns_values, sem_struct
 
 // We can't just return the error in the tree like we usually do because
 // arg_list might be null and we're trying to do all the helper logic here.
-cql_noexport bool_t rewrite_call_args_if_needed(ast_node *arg_list) {
+cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(ast_node *arg_list) {
   if (arg_list) {
     // if there are any cursor forms in the arg list that need to be expanded, do that here.
     rewrite_from_shape_args(arg_list);
