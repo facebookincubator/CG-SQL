@@ -4123,12 +4123,11 @@ BEGIN_TEST(skip_nullables)
 END_TEST(skip_nullables)
 
 @attribute(cql:shared_fragment)
-create proc sign_func(x integer not null)
+create proc abs_func(x integer not null)
 begin
   select case
-    when x < 0 then -1
-    when x = 0 then 0
-    else 1
+    when x < 0 then x * -1
+    else x
   end x;
 end;
 
@@ -4158,10 +4157,10 @@ end;
 BEGIN_TEST(inline_proc)
   declare C cursor for
     select
-      sign_func(x - ten()) s1,
-      sign(x-10) s2,
-      max_func(x - ten(), sign_func(x - ten())) m1,
-      max(x - 10, sign(x - 10)) m2
+      abs_func(x - ten()) s1,
+      abs(x-10) s2,
+      max_func(x - ten(), abs_func(x - ten())) m1,
+      max(x - 10, abs(x - 10)) m2
    from
      (call numbers(20));
 
