@@ -29,9 +29,9 @@
 //
 // Design principles:
 //
-//  1. Keep each pass in one file (simple, focused, and easy refactor)
-//  2. Use simple printable AST parse nodes (no separate #define per AST node type)
-//  3. 100% unit test coverage on all passes including output validation
+//  1. Keep each pass in one file (simple, focused, and easy refactor).
+//  2. Use simple printable AST parse nodes (no separate #define per AST node type).
+//  3. 100% unit test coverage on all passes including output validation.
 
 %{
 
