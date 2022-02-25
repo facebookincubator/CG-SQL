@@ -83203,3 +83203,83 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
                 | {select_limit}
                   | {select_offset}
 
+The statement ending at line XXXX
+
+@ENFORCE_STRICT SIGN FUNCTION;
+
+  {enforce_strict_stmt}: ok
+  | {int 12}
+
+The statement ending at line XXXX
+
+SELECT sign(-1);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0452: function may not be used in SQL because it is not supported on old versions of SQLite 'sign'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name sign}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {uminus}: integer notnull
+  |     |           | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+LET sign_of_some_value := sign(-42);
+
+  {let_stmt}: sign_of_some_value: integer notnull variable
+  | {name sign_of_some_value}: sign_of_some_value: integer notnull variable
+  | {call}: integer notnull
+    | {name sign}: integer notnull
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {uminus}: integer notnull
+          | {int 42}: integer notnull
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL SIGN FUNCTION;
+
+  {enforce_normal_stmt}: ok
+  | {int 12}
+
+The statement ending at line XXXX
+
+SELECT sign(-1);
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {call}: integer notnull
+  |     |     | {name sign}: integer notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {uminus}: integer notnull
+  |     |           | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

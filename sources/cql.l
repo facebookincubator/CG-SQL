@@ -267,6 +267,7 @@ FOR{sp}EACH{sp}ROW/{stop}    { return FOR_EACH_ROW; }
 ENCODE                       { return ENCODE; }
 CONTEXT{sp}COLUMN/{stop}     { return CONTEXT_COLUMN; }
 CONTEXT{sp}TYPE/{stop}       { return CONTEXT_TYPE; }
+SIGN{sp}FUNCTION/{stop}      { return SIGN_FUNCTION; }
 
 0x{hex}+                     { char *s = Strdup(yytext); yylval.sval = s; return strtoll(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
 0x{hex}+L                    { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }

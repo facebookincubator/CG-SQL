@@ -20927,3 +20927,33 @@ create proc ShapeTrixError4()
 begin
   insert into Shape_xy values(1,2), (from not_a_cursor like Shape_xy);
 end;
+
+-- TEST: disallow use of sign in SQL
+-- + @ENFORCE_STRICT SIGN FUNCTION;
+-- + {enforce_strict_stmt}: ok
+-- + {int 12}
+-- - error
+@enforce_strict sign function;
+
+-- TEST: sign cannot be used in SQL after `@enforce_strict sign function`
+-- + {select_stmt}: err
+-- + error: % function may not be used in SQL because it is not supported on old versions of SQLite 'sign'
+-- +1 error:
+select sign(-1);
+
+-- TEST: sign still works outside of SQL
+-- + {let_stmt}: sign_of_some_value: integer notnull variable
+-- - error:
+let sign_of_some_value := sign(-42);
+
+-- TEST: allow use of sign in SQL once again
+-- + @ENFORCE_NORMAL SIGN FUNCTION;
+-- + {enforce_normal_stmt}: ok
+-- + {int 12}
+-- - error
+@enforce_normal sign function;
+
+-- TEST: sign can be used in SQL normally
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- - error:
+select sign(-1);

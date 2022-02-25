@@ -1377,4 +1377,5 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
+test/sem_test.sql:XXXX:1: error: in call : CQL0452: function may not be used in SQL because it is not supported on old versions of SQLite 'sign'
 semantic errors present; no code gen.

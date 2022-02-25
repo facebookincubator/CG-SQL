@@ -231,6 +231,7 @@ struct enforcement_options {
   bool_t strict_encode_context_type;  // the specified vault context column must be the specified data type
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
   bool_t strict_cast;                 // NO-OP casts result in errors
+  bool_t strict_sign_function;        // the SQLite sign function may not be used (as it is absent in <3.35.0)
 };
 
 static struct enforcement_options enforcement;
@@ -7126,6 +7127,18 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
     report_error(name_ast, "CQL0082: argument must be numeric", name);
     record_error(ast);
     return;
+  }
+
+  if (enforcement.strict_sign_function) {
+    if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
+      report_error(
+        ast,
+        "CQL0452: function may not be used in SQL because it is not supported on old versions of SQLite",
+        name
+      );
+      record_error(ast);
+      return;
+    }
   }
 
   sem_t sem_type = arg->sem->sem_type;
@@ -21122,6 +21135,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_IS_TRUE:
       enforcement.strict_is_true = strict;
+      break;
+    
+    case ENFORCE_SIGN_FUNCTION:
+      enforcement.strict_sign_function = strict;
       break;
 
     default:

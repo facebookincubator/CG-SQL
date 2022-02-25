@@ -219,6 +219,7 @@ static void cql_reset_globals(void);
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
+%token SIGN_FUNCTION
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -2063,6 +2064,7 @@ enforcement_options:
   | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
   | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
   | CAST { $enforcement_options = new_ast_opt(ENFORCE_CAST); }
+  | SIGN_FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_SIGN_FUNCTION); }
   ;
 
 enforce_strict_stmt:

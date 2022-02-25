@@ -3537,6 +3537,10 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("IS TRUE");
       break;
 
+    case ENFORCE_SIGN_FUNCTION:
+      gen_printf("SIGN FUNCTION");
+      break;
+
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);
