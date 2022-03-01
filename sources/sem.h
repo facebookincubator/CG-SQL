@@ -55,11 +55,11 @@ typedef struct sem_node {
   struct sem_struct *sptr;          // encoded struct if any
   struct sem_join *jptr;            // encoded join if any
   int32_t create_version;           // create version if any (really only for tables and columns)
-  int32_t delete_version;           // create version if any (really only for tables and columns)
+  int32_t delete_version;           // delete version if any (really only for tables and columns)
   bool_t recreate;                  // for tables only, true if marked @recreate
   CSTR recreate_group_name;         // for tables only, the name of the recreate group if they are in one
-  CSTR region;                      // the schema region, if applicable, null means unscoped (default)
-  symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used if any
+  CSTR region;                      // the schema region, if applicable; null means unscoped (default)
+  symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used, if any
   list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
   struct eval_node *value;          // for enum values we have to store the evaluated constant value of each member of the enum
 } sem_node;
