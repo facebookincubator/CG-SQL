@@ -16050,6 +16050,93 @@ void slash_star_and_star_slash(void) {
   cql_string_release(x);
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC blob_serialization_test ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 'foo' AS name;
+  FETCH C;
+  DECLARE B BLOB<structured_storage>;
+  SET B FROM CURSOR C;
+  DECLARE D CURSOR LIKE C;
+  FETCH D FROM B;
+END;
+*/
+
+#define _PROC_ "blob_serialization_test"
+// export: DECLARE PROC blob_serialization_test () USING TRANSACTION;
+
+typedef struct blob_serialization_test_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_string_ref _Nonnull name;
+} blob_serialization_test_C_row;
+
+#define blob_serialization_test_C_refs_offset cql_offsetof(blob_serialization_test_C_row, name) // count = 1
+
+typedef struct blob_serialization_test_D_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_string_ref _Nonnull name;
+} blob_serialization_test_D_row;
+
+#define blob_serialization_test_D_refs_offset cql_offsetof(blob_serialization_test_D_row, name) // count = 1
+CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+  blob_serialization_test_C_row C = { ._refs_count_ = 1, ._refs_offset_ = blob_serialization_test_C_refs_offset };
+
+  static cql_uint16 C_cols[] = { 2,
+    cql_offsetof(blob_serialization_test_C_row, id),
+    cql_offsetof(blob_serialization_test_C_row, name)
+  };
+
+  static uint8_t C_data_types[] = {
+    CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
+    CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
+  };
+  cql_blob_ref B = NULL;
+  blob_serialization_test_D_row D = { ._refs_count_ = 1, ._refs_offset_ = blob_serialization_test_D_refs_offset };
+
+  static cql_uint16 D_cols[] = { 2,
+    cql_offsetof(blob_serialization_test_D_row, id),
+    cql_offsetof(blob_serialization_test_D_row, name)
+  };
+
+  static uint8_t D_data_types[] = {
+    CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
+    CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
+  };
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT 1, 'foo'");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(C_stmt);
+  C._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 2,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.name);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_serialize_to_blob(&B, &C, C._has_row_, C_cols, C_data_types);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_deserialize_from_blob(B, &D, &D._has_row_, D_cols, D_data_types);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  cql_teardown_row(C);
+  cql_blob_release(B);
+  cql_teardown_row(D);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

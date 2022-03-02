@@ -5132,6 +5132,27 @@ end;
 
 @emit_constants some_constants;
 
+create table structured_storage(
+  id integer not null,
+  name text not null
+);
+
+-- TEST: basic blob serialization case
+-- + _rc_ = cql_serialize_to_blob(&B, &C, C._has_row_, C_cols, C_data_types);
+-- + _rc_ = cql_deserialize_from_blob(B, &D, &D._has_row_, D_cols, D_data_types);
+create proc blob_serialization_test()
+begin
+  declare C cursor for select 1 id, 'foo' name;
+  fetch C;
+
+  declare B blob<structured_storage>;
+
+  set B from cursor C;
+
+  declare D cursor like C;
+  fetch D from B;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

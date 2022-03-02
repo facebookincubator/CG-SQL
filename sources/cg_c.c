@@ -49,6 +49,8 @@ static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_pa
 static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym_name, CSTR struct_name);
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
 static void cg_declare_simple_var(sem_t sem_type, CSTR name);
+static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type);
+
 cql_noexport void cg_c_init(void);
 
 // Emits a sql statement with bound args.
@@ -3200,6 +3202,20 @@ static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CST
   bprintf(output, "\n};\n");
 }
 
+static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
+  bprintf(output, "\nstatic uint8_t %s[] = {\n", sym_name);
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (i != 0) {
+      bprintf(output, ",\n");
+    }
+    bprintf(output, "  ");
+    cg_data_type(output, false, sptr->semtypes[i]);
+  }
+
+  bprintf(output, "\n};\n");
+}
+
 // Emit the offsets for the reference types in the given struct type into the output
 static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym, CSTR struct_name) {
   int32_t refs_count = refs_count_sptr(sptr);
@@ -4957,8 +4973,11 @@ static bool cg_verify_unbound_stmt(ast_node *stmt)
 // struct helper to make a suitable struct and the creates the local and
 // initializes its teardown function.  Code also has to go into the cleanup
 // section for suitable teardown.
-static void cg_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
+static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
   Contract(cursor_name);
+  Contract(sem);
+
+  sem_struct *sptr = sem->sptr;
   Contract(sptr);
 
   int32_t refs_count = refs_count_sptr(sptr);
@@ -4981,6 +5000,21 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   else {
     bprintf(cg_declarations_output, "%s %s = { 0 };\n", row_type.ptr, cursor_name);
   }
+
+  if (sem->sem_type & SEM_TYPE_SERIALIZE) {
+    CHARBUF_OPEN(cols_name);
+    CHARBUF_OPEN(types_name);
+
+    bprintf(&cols_name, "%s_cols", cursor_name);
+    bprintf(&types_name, "%s_data_types", cursor_name);
+
+    cg_col_offsets(cg_declarations_output, sptr, cols_name.ptr, row_type.ptr);
+    cg_data_types(cg_declarations_output, sptr, types_name.ptr);
+
+    CHARBUF_CLOSE(types_name);
+    CHARBUF_CLOSE(cols_name);
+  }
+
 
   CHARBUF_CLOSE(row_type);
 }
@@ -5267,7 +5301,7 @@ static void cg_declare_cursor(ast_node *ast) {
   }
 
   if (name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-    cg_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
+    cg_declare_auto_cursor(cursor_name, name_ast->sem);
   }
   else {
     // make the cursor_has_row hidden variable
@@ -5310,7 +5344,7 @@ static void cg_declare_cursor_like(ast_node *name_ast) {
   EXTRACT_STRING(cursor_name, name_ast);
 
   Contract(name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE);
-  cg_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
+  cg_declare_auto_cursor(cursor_name, name_ast->sem);
 }
 
 static void cg_declare_cursor_like_name(ast_node *ast) {
@@ -5339,7 +5373,7 @@ static void cg_declare_value_cursor(ast_node *ast) {
   EXTRACT_NOTNULL(call_stmt, ast->right);
 
   // DECLARE [name] CURSOR FETCH FROM [call_stmt]]
-  cg_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
+  cg_declare_auto_cursor(cursor_name, name_ast->sem);
   cg_call_stmt_with_cursor(call_stmt, cursor_name);
 }
 
@@ -5382,6 +5416,31 @@ static void cg_fetch_values_stmt(ast_node *ast) {
     CHARBUF_CLOSE(temp);
     CG_POP_EVAL(expr);
   }
+}
+
+static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
+  Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
+  CSTR cursor_name = ast->left->sem->name;
+  CSTR blob_name  = ast->right->sem->name;
+
+  // note this needs return code
+  bprintf(cg_main_output,
+    "_rc_ = cql_deserialize_from_blob(%s, &%s, &%s._has_row_, %s_cols, %s_data_types);\n",
+    blob_name, cursor_name, cursor_name, cursor_name, cursor_name);
+  cg_error_on_rc_notequal("SQLITE_OK");
+}
+
+static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
+  Contract(is_ast_set_blob_from_cursor_stmt(ast));
+
+  CSTR blob_name  = ast->left->sem->name;
+  CSTR cursor_name = ast->right->sem->name;
+
+  // note this needs return code
+  bprintf(cg_main_output,
+    "_rc_ = cql_serialize_to_blob(&%s, &%s, %s._has_row_, %s_cols, %s_data_types);\n",
+    blob_name, cursor_name, cursor_name, cursor_name, cursor_name);
+  cg_error_on_rc_notequal("SQLITE_OK");
 }
 
 // Fetch has already been rigorously checked so we don't have to worry about
@@ -8220,6 +8279,8 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(loop_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_values_stmt);
+  STMT_INIT(set_blob_from_cursor_stmt);
+  STMT_INIT(fetch_cursor_from_blob_stmt);
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(fetch_call_stmt);
 

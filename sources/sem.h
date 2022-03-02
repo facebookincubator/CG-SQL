@@ -166,7 +166,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_INIT_REQUIRED   _64(0x4000000000) // set for variables that require initialization before use
 #define SEM_TYPE_INIT_COMPLETE   _64(0x8000000000) // set when SEM_TYPE_INIT_REQUIRED is present to indicate initialization
 #define SEM_TYPE_INLINE_CALL    _64(0x10000000000) // set when a proc_as_func call in SQL can be executed safely by inlining the SQL
-#define SEM_TYPE_FLAGS          _64(0x1FFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_SERIALIZE      _64(0x20000000000) // set when a cursor will need serialization features
+#define SEM_TYPE_FLAGS          _64(0x3FFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
@@ -242,9 +243,12 @@ cql_noexport int32_t sem_column_index(sem_struct *sptr, CSTR name);
 
 cql_noexport ast_node *find_proc(CSTR name);
 cql_noexport bytebuf *find_proc_arg_info(CSTR name);
+cql_noexport ast_node *find_local_or_global_variable(CSTR name);
 cql_noexport ast_node *find_region(CSTR name);
 cql_noexport ast_node *find_func(CSTR name);
 cql_noexport ast_node *find_table_or_view_even_deleted(CSTR name);
+cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_node *err_target, CSTR msg);
+cql_noexport void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope);
 cql_noexport ast_node *find_enum(CSTR name);
 cql_noexport ast_node *find_base_fragment(CSTR name);
 cql_noexport ast_node *find_recreate_migrator(CSTR name);
@@ -278,6 +282,7 @@ cql_noexport ast_node *first_arg(ast_node *arg_list);
 cql_noexport ast_node *second_arg(ast_node *arg_list);
 cql_noexport ast_node *third_arg(ast_node *arg_list);
 cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast);
+cql_noexport void sem_verify_identical_columns(ast_node *expected, ast_node *actual, CSTR target);
 cql_noexport void sem_any_shape(ast_node *ast);
 cql_noexport sem_node *new_sem(sem_t sem_type);
 cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);

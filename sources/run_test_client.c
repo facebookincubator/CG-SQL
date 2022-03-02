@@ -36,6 +36,9 @@ cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db);
 cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
 cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db);
 
+extern cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i);
+extern cql_int32 get_blob_size(cql_blob_ref b);
+
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
 
@@ -1677,4 +1680,23 @@ cql_code some_integers_fetch(
     cql_int32 start,
     cql_int32 stop) {
   return some_integers_fetch_results(_db_, (some_integers_result_set_ref _Nullable *_Nonnull)rs, start, stop);
+}
+
+// get the indexed character and return it as an integer for CQL consumpsion
+cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i) {
+  return (cql_int32)(((uint8_t *)cql_get_blob_bytes(b))[i]);
+}
+
+// This is lossy but that's ok, this is only a test helper
+// we can't test blobs > 2G with this but that's not what
+// we use this for anyway.
+cql_int32 get_blob_size(cql_blob_ref b) {
+  return (cql_int32)cql_get_blob_size(b);
+}
+
+// for making buffers that are broken
+cql_blob_ref create_truncated_blob(cql_blob_ref b, cql_int32 new_size) {
+  cql_int32 existing_size = cql_get_blob_size(b);
+  cql_contract(new_size <= existing_size);
+  return cql_blob_ref_new(cql_get_blob_bytes(b), new_size);
 }

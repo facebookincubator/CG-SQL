@@ -2713,6 +2713,28 @@ static void gen_expr_names(ast_node *ast) {
   }
 }
 
+static void gen_fetch_cursor_from_blob_stmt(ast_node *ast) {
+  Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
+  EXTRACT_ANY_NOTNULL(cursor, ast->left);
+  EXTRACT_ANY_NOTNULL(blob, ast->right);
+
+  gen_printf("FETCH ");
+  gen_expr(cursor, EXPR_PRI_ROOT);
+  gen_printf(" FROM ");
+  gen_expr(blob, EXPR_PRI_ROOT);
+}
+
+static void gen_set_blob_from_cursor_stmt(ast_node *ast) {
+  Contract(is_ast_set_blob_from_cursor_stmt(ast));
+  EXTRACT_ANY_NOTNULL(blob, ast->left);
+  EXTRACT_ANY_NOTNULL(cursor, ast->right);
+
+  gen_printf("SET ");
+  gen_expr(blob, EXPR_PRI_ROOT);
+  gen_printf(" FROM CURSOR ");
+  gen_expr(cursor, EXPR_PRI_ROOT);
+}
+
 static void gen_fetch_values_stmt(ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
@@ -3831,6 +3853,8 @@ cql_noexport void gen_init() {
   STMT_INIT(upsert_update);
   STMT_INIT(conflict_target);
   STMT_INIT(fetch_values_stmt);
+  STMT_INIT(set_blob_from_cursor_stmt);
+  STMT_INIT(fetch_cursor_from_blob_stmt);
   STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_const_stmt);
   STMT_INIT(declare_cursor);

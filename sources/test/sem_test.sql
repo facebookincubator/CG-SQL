@@ -20993,3 +20993,105 @@ let sign_of_some_value := sign(-42);
 -- + {select_stmt}: select: { _anon: integer notnull }
 -- - error:
 select sign(-1);
+
+create table structured_storage(
+  id integer not null,
+  name text not null
+);
+
+-- TEST: verify basic analysis of structure storage, correct case
+-- + {set_blob_from_cursor_stmt}: ok
+-- + {name B}: B: blob<structured_storage> variable
+-- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+-- + {fetch_cursor_from_blob_stmt}: ok
+-- + {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
+-- + {name B}: B: blob<structured_storage> variable
+-- - error:
+create proc blob_serialization_test()
+begin
+  declare C cursor for select 1 id, 'foo' name;
+  fetch C;
+
+  declare B blob<structured_storage>;
+
+  set B from cursor C;
+
+  declare D cursor like C;
+  fetch D from B;
+end;
+
+-- TEST: verify type check on columns
+-- + error: % in the cursor and the blob type, all columns must be an exact type match (expected text notnull; found integer notnull) 'name'
+-- +1 error:
+create proc blob_serialization_test_type_mismatch()
+begin
+  declare C cursor for select 1 id, 5 name;
+  fetch C;
+
+  declare B blob<structured_storage>;
+
+  set B from cursor C;
+end;
+
+-- TEST: verify blob type is a table
+-- + error: % blob type is not a valid table 'not_a_table'
+-- +1 error:
+create proc blob_serialization_test_type_not_a_table()
+begin
+  declare C cursor for select 1 id, 'name' name;
+  fetch C;
+
+  declare B blob<not_a_table>;
+
+  set  B from cursor C;
+end;
+
+-- TEST: verify blob type is not a view (better error for this case)
+-- + error: % blob type is a view, not a table 'MyView'
+-- +1 error:
+create proc blob_serialization_test_type_is_a_view()
+begin
+  declare C cursor for select 1 id, 'name' name;
+  fetch C;
+
+  declare B blob<MyView>;
+
+  set B from cursor C;
+end;
+
+-- TEST: verify blob type has a type kind
+-- + error: % blob variable must have a type-kind for type safety 'B'
+-- +1 error:
+create proc blob_serialization_test_type_has_no_kind()
+begin
+  declare C cursor for select 1 id, 'name' name;
+  fetch C;
+
+  declare B blob;
+
+  set B from cursor C;
+end;
+
+-- TEST: verify blob fetch from cursor; cursor has storage
+-- + error: % cursor was not declared for storage 'C'
+-- +1 error:
+create proc blob_serialization_test_no_storage()
+begin
+  declare C cursor for select 1 id, 5 name;
+
+  declare B blob<structured_storage>;
+
+  set B from cursor C;
+end;
+
+-- TEST: verify blob fetch from cursor; valid cursor
+-- + error: % name not found 'not_a_cursor'
+-- +1 error:
+create proc blob_serialization_test_valid_cursor()
+begin
+  declare C cursor for select 1 id, 5 name;
+
+  declare B blob<structured_storage>;
+
+  set B from cursor not_a_cursor;
+end;

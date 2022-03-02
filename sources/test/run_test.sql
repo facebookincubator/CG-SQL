@@ -17,11 +17,16 @@
 @echo c,"\n\n";
 */
 
+declare function get_blob_byte(b blob not null, i integer not null) integer not null;
+declare function get_blob_size(b blob not null) integer not null;
+declare function create_truncated_blob(b blob not null, truncated_size integer not null) create blob not null;
+
 BEGIN_SUITE()
 
 declare function blob_from_string(str text @sensitive) create blob not null;
 declare function string_from_blob(b blob @sensitive) create text not null;
 declare procedure cql_init_extensions() using transaction;
+
 
 declare enum floats real (
    one = 1.0,
@@ -4171,6 +4176,400 @@ BEGIN_TEST(inline_proc)
   end;
 
 END_TEST(inline_proc)
+
+declare proc alltypes_nullable() (
+  t bool,
+  f bool,
+  i integer,
+  l long,
+  r real,
+  bl blob,
+  str text
+);
+
+declare proc alltypes_notnull() (
+  t_nn bool not null,
+  f_nn bool not null,
+  i_nn integer not null,
+  l_nn long not null,
+  r_nn real not null,
+  bl_nn blob not null,
+  str_nn text not null
+);
+
+create table storage_notnull(
+  like alltypes_notnull
+);
+
+create table storage_nullable(
+  like alltypes_nullable
+);
+
+create table storage_both(
+  like alltypes_notnull,
+  like alltypes_nullable
+);
+
+create table storage_with_extras(
+  like alltypes_notnull,
+  x integer not null
+);
+
+create table storage_one_int(
+  x integer not null
+);
+
+create table storage_one_long(
+  x long not null
+);
+
+BEGIN_TEST(blob_serialization)
+  let a_blob := blob_from_string("a blob");
+  let b_blob := blob_from_string("b blob");
+  declare cursor_both cursor like storage_both;
+  fetch cursor_both using
+      false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
+      false f_nn, true t_nn, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+
+  -- note: using cursor_both and cursor_both ensures codegen is canonicalizing the name
+  declare blob_both blob<storage_both>;
+  set blob_both from cursor cursor_both;
+  declare test_cursor_both cursor like cursor_both;
+  fetch test_cursor_both from blob_both;
+
+  EXPECT(test_cursor_both);
+  EXPECT(test_cursor_both.t_nn == cursor_both.t_nn);
+  EXPECT(test_cursor_both.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_both.i_nn == cursor_both.i_nn);
+  EXPECT(test_cursor_both.l_nn == cursor_both.l_nn);
+  EXPECT(test_cursor_both.r_nn == cursor_both.r_nn);
+  EXPECT(test_cursor_both.bl_nn == cursor_both.bl_nn);
+  EXPECT(test_cursor_both.str_nn == cursor_both.str_nn);
+  EXPECT(test_cursor_both.t == cursor_both.t);
+  EXPECT(test_cursor_both.f == cursor_both.f);
+  EXPECT(test_cursor_both.i == cursor_both.i);
+  EXPECT(test_cursor_both.l == cursor_both.l);
+  EXPECT(test_cursor_both.r == cursor_both.r);
+  EXPECT(test_cursor_both.bl == cursor_both.bl);
+  EXPECT(test_cursor_both.str == cursor_both.str);
+
+  declare cursor_notnulls cursor like storage_notnull;
+  fetch cursor_notnulls from cursor_both(like cursor_notnulls);
+  declare blob_notnulls blob<storage_notnull>;
+  set blob_notnulls from cursor cursor_notnulls;
+  declare test_cursor_notnulls cursor like cursor_notnulls;
+  fetch test_cursor_notnulls from blob_notnulls;
+
+  EXPECT(test_cursor_notnulls);
+  EXPECT(test_cursor_notnulls.t_nn == cursor_both.t_nn);
+  EXPECT(test_cursor_notnulls.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_notnulls.i_nn == cursor_both.i_nn);
+  EXPECT(test_cursor_notnulls.l_nn == cursor_both.l_nn);
+  EXPECT(test_cursor_notnulls.r_nn == cursor_both.r_nn);
+  EXPECT(test_cursor_notnulls.bl_nn == cursor_both.bl_nn);
+  EXPECT(test_cursor_notnulls.str_nn == cursor_both.str_nn);
+
+  -- deserializing should not screw up the reference counts
+  set blob_notnulls from cursor cursor_notnulls;
+  set blob_notnulls from cursor cursor_notnulls;
+  set blob_notnulls from cursor cursor_notnulls;
+
+  -- The next tests verify various things with blobs that are
+  -- not directly the right type so we're cheesing the type system.
+  -- We need to be able to handle different version sources
+  -- as well as assorted corruptions without crashing hence
+  -- we pass in blobs of dubious pedigree.
+
+  -- There are missing nullable columns at the end
+  -- this is ok and it is our versioning strategy.
+  declare any_blob blob;
+  let stash_both := blob_both;
+  let stash_notnulls := blob_notnulls;
+  set any_blob := blob_notnulls;
+  set blob_both := any_blob;
+  fetch test_cursor_both from blob_both;
+
+  EXPECT(test_cursor_both);
+  EXPECT(test_cursor_both.t_nn == cursor_both.t_nn);
+  EXPECT(test_cursor_both.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_both.i_nn == cursor_both.i_nn);
+  EXPECT(test_cursor_both.l_nn == cursor_both.l_nn);
+  EXPECT(test_cursor_both.r_nn == cursor_both.r_nn);
+  EXPECT(test_cursor_both.bl_nn == cursor_both.bl_nn);
+  EXPECT(test_cursor_both.str_nn == cursor_both.str_nn);
+  EXPECT(test_cursor_both.t is null);
+  EXPECT(test_cursor_both.f is null);
+  EXPECT(test_cursor_both.i is null);
+  EXPECT(test_cursor_both.l is null);
+  EXPECT(test_cursor_both.r is null);
+  EXPECT(test_cursor_both.bl is null);
+  EXPECT(test_cursor_both.str is null);
+
+  set blob_both := null;
+
+  -- null blob, throws exception
+  let caught := false;
+  begin try
+    fetch test_cursor_both from blob_both;
+  end try;
+  begin catch
+    EXPECT(not test_cursor_both);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+
+  -- small blob will have too many fields...
+  set caught := false;
+  set any_blob := stash_both;
+  set blob_notnulls := any_blob;
+  begin try
+    fetch test_cursor_notnulls from blob_notnulls;
+  end try;
+  begin catch
+    EXPECT(not test_cursor_notnulls);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+
+  -- we're missing fields and they aren't nullable, this will make errors
+  declare cursor_with_extras cursor like storage_with_extras;
+  set caught := false;
+  set any_blob := stash_notnulls;
+  declare blob_with_extras blob<storage_with_extras>;
+  set blob_with_extras := any_blob;
+  begin try
+    fetch cursor_with_extras from blob_with_extras;
+  end try;
+  begin catch
+    EXPECT(not cursor_with_extras);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+
+  -- attempting to read from an empty cursor will throw
+  EXPECT(not cursor_with_extras);
+  set caught := false;
+  begin try
+    set blob_with_extras from cursor cursor_with_extras;
+  end try;
+  begin catch
+    EXPECT(not cursor_with_extras);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+
+  -- the types are all wrong but they are simply not null values of the same types
+  -- we can safely decode that
+  declare blob_nullables blob<storage_nullable>;
+  set any_blob := stash_notnulls;
+  set blob_nullables := any_blob;
+  declare cursor_nullables cursor like storage_nullable;
+  fetch cursor_nullables from blob_nullables;
+
+  -- note that we read the not null versions of the fields
+  EXPECT(cursor_nullables);
+  EXPECT(cursor_nullables.t == cursor_both.t_nn);
+  EXPECT(cursor_nullables.f == cursor_both.f_nn);
+  EXPECT(cursor_nullables.i == cursor_both.i_nn);
+  EXPECT(cursor_nullables.l == cursor_both.l_nn);
+  EXPECT(cursor_nullables.r == cursor_both.r_nn);
+  EXPECT(cursor_nullables.bl == cursor_both.bl_nn);
+  EXPECT(cursor_nullables.str == cursor_both.str_nn);
+
+  -- now blob_nullables really does have nullable types
+  set blob_nullables from cursor cursor_nullables;
+  set any_blob := blob_nullables;
+  set blob_notnulls := any_blob;
+
+  -- we can't read possibly null types into not null types
+  set caught := false;
+  begin try
+    fetch test_cursor_notnulls from blob_notnulls;
+  end try;
+  begin catch
+    EXPECT(not test_cursor_notnulls);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+
+  -- set up a totally different stored blob
+  declare cursor_other cursor like storage_one_int;
+  fetch cursor_other using 5 x;
+  declare blob_other blob<storage_one_int>;
+  set blob_other from cursor cursor_other;
+  declare test_cursor_other cursor like cursor_other;
+  fetch test_cursor_other from blob_other;
+  EXPECT(test_cursor_other);
+  EXPECT(test_cursor_other.x = cursor_other.x);
+
+  set any_blob := blob_other;
+  set blob_nullables := any_blob;
+
+  -- the types in this blob do not match the cursor we're going to use it with
+  set caught := false;
+  begin try
+    fetch cursor_nullables from blob_nullables;
+  end try;
+  begin catch
+    EXPECT(not cursor_nullables);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+
+END_TEST(blob_serialization)
+
+BEGIN_TEST(corrupt_blob_deserialization)
+  let a_blob := blob_from_string("a blob");
+  let b_blob := blob_from_string("b blob");
+  declare cursor_both cursor like storage_both;
+  fetch cursor_both using
+      false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
+      false f_nn, true t_nn, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+
+  declare blob_both blob<storage_both>;
+  set blob_both from cursor cursor_both;
+  if blob_both is null throw;
+
+  -- sanity check the decode of the full blob
+  declare test_cursor_both cursor like cursor_both;
+  fetch test_cursor_both from blob_both;
+
+  -- sanity check the blob size of the full encoding
+  let full_size := get_blob_size(blob_both);
+  EXPECT(full_size > 50);
+  EXPECT(full_size < 100);
+
+  -- try truncated blobs of every size
+  let i := 0;
+  while i < full_size
+  begin
+    declare blob_broken  blob<storage_both>;
+    set blob_broken := create_truncated_blob(blob_both, i);
+    -- the types in this blob do not match the cursor we're going to use it with
+    let caught := false;
+    begin try
+      -- this is gonna fail
+      fetch cursor_both from blob_broken;
+    end try;
+    begin catch
+      EXPECT(not cursor_both);
+      set caught := true;
+    end catch;
+    EXPECT(caught);
+    set i := i + 1;
+  end;
+
+END_TEST(corrupt_blob_deserialization)
+
+BEGIN_TEST(bogus_varint)
+  let control_blob := (select X'490001');  -- one byte zigzag encoding of -1
+  declare test_blob blob<storage_one_int>;
+  set test_blob := control_blob;
+  declare C cursor like storage_one_int;
+
+  -- correctly encoded control case
+  fetch C from test_blob;
+  EXPECT(C);
+  EXPECT(C.x == -1);
+
+  -- this int has 6 bytes, 5 is the most you can need
+  let bogus_int := (select X'4900818181818100');
+
+  set test_blob := bogus_int;
+
+  let caught := false;
+  begin try
+    -- this is gonna fail
+    fetch C from test_blob;
+  end try;
+  begin catch
+    EXPECT(not C);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+END_TEST(bogus_varint)
+
+BEGIN_TEST(bogus_varlong)
+  let control_blob := (select X'4C0001');  -- one byte zigzag encoding of -1
+  declare test_blob blob<storage_one_long>;
+  set test_blob := control_blob;
+  declare C cursor like storage_one_long;
+
+  -- correctly encoded control case
+  fetch C from test_blob;
+  EXPECT(C);
+  EXPECT(C.x == -1);
+
+  -- this long has 11 bytes, 10 is the most you can need
+  let bogus_long := (select X'4C008181818181818181818100');
+
+  set test_blob := bogus_long;
+
+  let caught := false;
+  begin try
+    -- this is gonna fail
+    fetch C from test_blob;
+  end try;
+  begin catch
+    EXPECT(not C);
+    set caught := true;
+  end catch;
+  EXPECT(caught);
+END_TEST(bogus_varlong)
+
+create proc round_trip_int(value integer not null)
+begin
+  DECLARE C cursor LIKE storage_one_int;
+  FETCH C using value x;
+  EXPECT(C.x == value);
+  declare int_blob blob<storage_one_int>;
+  set int_blob from cursor C;
+  DECLARE D cursor like C;
+  fetch D from int_blob;
+  EXPECT(C.x == D.x);
+end;
+
+create proc round_trip_long(value long not null)
+begin
+  DECLARE C cursor LIKE storage_one_long;
+  FETCH C using value x;
+  EXPECT(C.x == value);
+  declare int_blob blob<storage_one_long>;
+  set int_blob from cursor C;
+  DECLARE D cursor like C;
+  fetch D from int_blob;
+  EXPECT(C.x == D.x);
+end;
+
+
+@echo c,"#undef cql_error_trace\n";
+@echo c,'#define cql_error_trace() \
+   fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))';
+@echo c,"\n\n";
+
+BEGIN_TEST(serialization_tricky_values)
+  call round_trip_int(0);
+  call round_trip_int(1);
+  call round_trip_int(-1);
+  call round_trip_int(129);
+  call round_trip_int(32769);
+  call round_trip_int(-129);
+  call round_trip_int(-32769);
+  call round_trip_int(0x7fffffff);
+  call round_trip_int(-214783648);
+
+  call round_trip_long(0);
+  call round_trip_long(1);
+  call round_trip_long(-1);
+  call round_trip_long(129);
+  call round_trip_long(32769);
+  call round_trip_long(-129);
+  call round_trip_long(-32769);
+  call round_trip_long(0x7fffffffL); 
+  call round_trip_long(-214783648L);
+  call round_trip_long(0x7fffffffffffffffL); // max int64
+  call round_trip_long(0x8000000000000000L); // min int64
+END_TEST(serialization_tricky_values)
 
 END_SUITE()
 

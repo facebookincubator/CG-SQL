@@ -83396,3 +83396,380 @@ SELECT sign(-1);
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+CREATE TABLE structured_storage(
+  id INTEGER NOT NULL,
+  name TEXT NOT NULL
+);
+
+  {create_table_stmt}: structured_storage: { id: integer notnull, name: text notnull }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name structured_storage}
+  | {col_key_list}
+    | {col_def}: id: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: name: text notnull
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name name}
+          | | {type_text}: text
+          | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_test ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 'foo' AS name;
+  FETCH C;
+  DECLARE B BLOB<structured_storage>;
+  SET B FROM CURSOR C;
+  DECLARE D CURSOR LIKE C;
+  FETCH D FROM B;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name blob_serialization_test}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { id: integer notnull, name: text notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'foo'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {declare_vars_type}: blob<structured_storage>
+      | | {name_list}: B: blob<structured_storage> variable
+      | | | {name B}: B: blob<structured_storage> variable
+      | | {type_blob}: blob<structured_storage>
+      |   | {name structured_storage}
+      | {set_blob_from_cursor_stmt}: ok
+      | | {name B}: B: blob<structured_storage> variable
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {declare_cursor_like_name}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+      | | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+      | | {like}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      |   | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      | {fetch_cursor_from_blob_stmt}: ok
+        | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
+        | {name B}: B: blob<structured_storage> variable
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_test_type_mismatch ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 5 AS name;
+  FETCH C;
+  DECLARE B BLOB<structured_storage>;
+  SET B FROM CURSOR C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0061: in the cursor and the blob type, all columns must be an exact type match (expected text notnull; found integer notnull) 'name'
+
+  {create_proc_stmt}: err
+  | {name blob_serialization_test_type_mismatch}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { id: integer notnull, name: integer notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: integer notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: integer notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: integer notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: integer notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: integer notnull
+      |   |     |     | {int 5}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc shape_storage
+      | {declare_vars_type}: blob<structured_storage>
+      | | {name_list}: B: blob<structured_storage> variable
+      | | | {name B}: B: blob<structured_storage> variable
+      | | {type_blob}: blob<structured_storage>
+      |   | {name structured_storage}
+      | {set_from_cursor}: err
+        | {name B}: B: blob<structured_storage> variable
+        | {name C}: err
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_test_type_not_a_table ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 'name' AS name;
+  FETCH C;
+  DECLARE B BLOB<not_a_table>;
+  SET B FROM CURSOR C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0453: blob type is not a valid table 'not_a_table'
+
+  {create_proc_stmt}: err
+  | {name blob_serialization_test_type_not_a_table}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'name'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {declare_vars_type}: blob<not_a_table>
+      | | {name_list}: B: blob<not_a_table> variable
+      | | | {name B}: B: blob<not_a_table> variable
+      | | {type_blob}: blob<not_a_table>
+      |   | {name not_a_table}
+      | {set_from_cursor}: err
+        | {name B}: B: blob<not_a_table> variable
+        | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_test_type_is_a_view ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 'name' AS name;
+  FETCH C;
+  DECLARE B BLOB<MyView>;
+  SET B FROM CURSOR C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0456: blob type is a view, not a table 'MyView'
+
+  {create_proc_stmt}: err
+  | {name blob_serialization_test_type_is_a_view}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'name'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {declare_vars_type}: blob<MyView>
+      | | {name_list}: B: blob<MyView> variable
+      | | | {name B}: B: blob<MyView> variable
+      | | {type_blob}: blob<MyView>
+      |   | {name MyView}
+      | {set_from_cursor}: err
+        | {name B}: B: blob<MyView> variable
+        | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_test_type_has_no_kind ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 'name' AS name;
+  FETCH C;
+  DECLARE B BLOB;
+  SET B FROM CURSOR C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a type-kind for type safety 'B'
+
+  {create_proc_stmt}: err
+  | {name blob_serialization_test_type_has_no_kind}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'name'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {declare_vars_type}: blob
+      | | {name_list}: B: blob variable
+      | | | {name B}: B: blob variable
+      | | {type_blob}: blob
+      | {set_from_cursor}: err
+        | {name B}: B: blob variable
+        | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_test_no_storage ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 5 AS name;
+  DECLARE B BLOB<structured_storage>;
+  SET B FROM CURSOR C;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0454: cursor was not declared for storage 'C'
+
+  {create_proc_stmt}: err
+  | {name blob_serialization_test_no_storage}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc
+      | | {select_stmt}: select: { id: integer notnull, name: integer notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: integer notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: integer notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: integer notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: integer notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: integer notnull
+      |   |     |     | {int 5}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_vars_type}: blob<structured_storage>
+      | | {name_list}: B: blob<structured_storage> variable
+      | | | {name B}: B: blob<structured_storage> variable
+      | | {type_blob}: blob<structured_storage>
+      |   | {name structured_storage}
+      | {set_from_cursor}: err
+        | {name B}: B: blob<structured_storage> variable
+        | {name C}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_test_valid_cursor ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS id, 5 AS name;
+  DECLARE B BLOB<structured_storage>;
+  SET B FROM CURSOR not_a_cursor;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
+
+  {create_proc_stmt}: err
+  | {name blob_serialization_test_valid_cursor}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc
+      | | {select_stmt}: select: { id: integer notnull, name: integer notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: integer notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: integer notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: integer notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: integer notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: integer notnull
+      |   |     |     | {int 5}: integer notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_vars_type}: blob<structured_storage>
+      | | {name_list}: B: blob<structured_storage> variable
+      | | | {name B}: B: blob<structured_storage> variable
+      | | {type_blob}: blob<structured_storage>
+      |   | {name structured_storage}
+      | {set_from_cursor}: err
+        | {name B}: B: blob<structured_storage> variable
+        | {name not_a_cursor}: err
+

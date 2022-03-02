@@ -727,7 +727,7 @@ static void cql_fetch_field(
     char *_Nullable encode_context_field,
     cql_object_ref _Nullable encoder)
 {
-  cql_bool is_encoded = (type & CQL_DATA_TYPE_ENCODED) && enable_encoding;
+  bool is_encoded = (type & CQL_DATA_TYPE_ENCODED) && enable_encoding;
   cql_int32 core_data_type_and_not_null = type & ~CQL_DATA_TYPE_ENCODED;
 
   switch (core_data_type_and_not_null) {
@@ -983,7 +983,7 @@ void cql_copyoutrow(
     // We never encode values read from result_set even though the type flag
     // is CQL_DATA_TYPE_ENCODED. The flag CQL_DATA_TYPE_ENCODED is used to encode fields
     // read from db (see cql_multifetch(...)) or to decode fields read from result_set (out union).
-    cql_bool should_decode = db && cql_result_set_get_is_encoded_col(result_set, column);
+    bool should_decode = db && cql_result_set_get_is_encoded_col(result_set, column);
 
     if (should_decode && !got_decoder) {
       encoder = cql_copy_encoder(db);
@@ -1583,7 +1583,7 @@ cql_bool cql_rows_same(
       uint8_t type  = meta1->dataTypes[col];
       cql_bool notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
       type &= CQL_DATA_TYPE_CORE;
-      size_t size = notnull ?  normal_datasizes[type] : nullable_datasizes[type];
+      size_t size = notnull ? normal_datasizes[type] : nullable_datasizes[type];
       if (memcmp(data1 + offset, data2 + offset, size)) {
         return false;
       }
@@ -2636,4 +2636,629 @@ cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull name) {
      return -1;
   }
   return payload->val;
+}
+
+#define cql_append_value(b, var) cql_bytebuf_append(&b, &var, sizeof(var))
+
+#define cql_append_nullable_value(b, var) \
+  if (!var.is_null) { \
+    cql_setbit(bits, nullable_index); \
+    cql_append_value(b, var.value); \
+  }
+
+static void cql_setbit(uint8_t *_Nonnull bytes, uint16_t index) {
+  bytes[index / 8] |= (1 << (index % 8));
+}
+
+static cql_bool cql_getbit(const uint8_t *_Nonnull bytes, uint16_t index) {
+  return !!(bytes[index / 8] & (1 << (index % 8)));
+}
+
+typedef struct cql_input_buf {
+  const unsigned char *_Nonnull data;
+  uint32_t remaining;
+} cql_input_buf;
+
+static bool cql_input_read(cql_input_buf *_Nonnull buf, void *_Nonnull dest, uint32_t bytes) {
+  if (bytes > buf->remaining) {
+    return false;
+  }
+
+  memcpy(dest, buf->data, bytes);
+  buf->remaining -= bytes;
+  buf->data += bytes;
+
+  return true;
+}
+
+static bool cql_input_inline_str(
+  cql_input_buf *_Nonnull buf,
+  const char *_Nonnull *_Nonnull dest)
+{
+  unsigned char *nullchar = memchr(buf->data, 0, buf->remaining);
+  if (nullchar) {
+    uint32_t bytes = (uint32_t)(nullchar - buf->data) + 1;
+    *dest = (const char *)buf->data;
+    buf->remaining -= bytes;
+    buf->data += bytes;
+    return true;
+  }
+
+  return false;
+}
+
+static bool cql_input_inline_bytes(
+  cql_input_buf *_Nonnull buf,
+  const uint8_t *_Nonnull *_Nonnull dest,
+  uint32_t bytes)
+{
+  if (bytes <= buf->remaining) {
+    *dest = buf->data;
+    buf->remaining -= bytes;
+    buf->data += bytes;
+    return true;
+  }
+
+  return false;
+}
+
+static uint32_t cql_zigzag_encode_32 (cql_int32 i) {
+  return (i >> 31) ^ (i << 1);
+}
+
+static cql_int32 cql_zigzag_decode_32 (uint32_t i) {
+  return (i >> 1) ^ -(i & 1);
+}
+
+static uint64_t cql_zigzag_encode_64 (cql_int64 i) {
+  return (i >> 63) ^ (i << 1);
+}
+
+static cql_int64 cql_zigzag_decode_64 (uint64_t i) {
+  return (i >> 1) ^ -(i & 1);
+}
+
+// variable length encoding using zigzag and 7 bits with extension
+// note that this also takes care of any endian issues
+static bool cql_read_varint_32(cql_input_buf *_Nonnull buf, cql_int32 *_Nonnull out) {
+  uint32_t result = 0;
+  uint8_t byte;
+  uint8_t i = 0;
+  uint8_t offset = 0;
+  while (i < 5) {
+    if (!cql_input_read(buf, &byte, 1)) {
+      return false;
+    }
+    result |= ((uint32_t)(byte & 0x7f)) << offset;
+    if (!(byte & 0x80)) {
+      *out = cql_zigzag_decode_32(result);
+      return true;
+    }
+    offset += 7;
+    i++;
+  }
+
+  // badly formed buffer, 5 bytes is the most we need for a 32 bit varint
+  return false;
+}
+
+// variable length encoding using zigzag and 7 bits with extension
+// note that this also takes care of any endian issues
+static bool cql_read_varint_64(cql_input_buf *_Nonnull buf, cql_int64 *_Nonnull out) {
+  uint64_t result = 0;
+  uint8_t byte;
+  uint8_t i = 0;
+  uint8_t offset = 0;
+  while (i < 10) {
+    if (!cql_input_read(buf, &byte, 1)) {
+      return false;
+    }
+    result |= ((uint64_t)(byte & 0x7f)) << offset;
+    if (!(byte & 0x80)) {
+      *out = cql_zigzag_decode_64(result);
+      return true;
+    }
+    offset += 7;
+    i++;
+  }
+
+  // badly formed buffer, 10 bytes is the most we need for a 64 bit varint
+  return false;
+}
+
+// variable length encoding using zigzag and 7 bits with extension
+// note that this also takes care of any endian issues
+static void cql_write_varint_32(cql_bytebuf *_Nonnull buf, int32_t si) {
+  uint32_t i = cql_zigzag_encode_32(si);
+  do {
+    uint8_t byte = i & 0x7f;
+    i >>= 7;
+    if (i) {
+      byte |= 0x80;
+    }
+    cql_append_value(*buf, byte);
+  } while (i);
+}
+
+// variable length encoding using zigzag and 7 bits with extension
+// note that this also takes care of any endian issues
+static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
+  uint64_t i = cql_zigzag_encode_64(si);
+  do {
+    uint8_t byte = i & 0x7f;
+    i >>= 7;
+    if (i) {
+      byte |= 0x80;
+    }
+    cql_append_value(*buf, byte);
+  } while (i);
+}
+
+cql_code cql_serialize_to_blob(
+  cql_blob_ref _Nullable *_Nonnull blob,
+  void *_Nonnull cursor_raw,
+  cql_bool has_row,
+  uint16_t *_Nonnull offsets,
+  uint8_t *_Nonnull types)
+{
+  if (!has_row) {
+    return SQLITE_ERROR;
+  }
+
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+
+  uint8_t code = 0;
+  uint16_t nullable_count = 0;
+  uint16_t bool_count = 0;
+  uint8_t *cursor = cursor_raw;  // we will be using char offsets
+
+  for (uint16_t i = 0; i < count; i++) {
+    uint8_t type = types[i];
+    cql_bool nullable = !(type & CQL_DATA_TYPE_NOT_NULL);
+    int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+
+    code = 0;
+    if (nullable) {
+      nullable_count++;
+      code = 'a' - 'A';  // lower case for nullable
+    }
+
+    // this makes upper or lower case depending on nullable
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_INT32:  code += 'I'; break;
+      case CQL_DATA_TYPE_INT64:  code += 'L'; break;
+      case CQL_DATA_TYPE_DOUBLE: code += 'D'; break;
+      case CQL_DATA_TYPE_BOOL:   code += 'F'; bool_count++; break;
+      case CQL_DATA_TYPE_STRING: code += 'S'; break;
+      case CQL_DATA_TYPE_BLOB:   code += 'B'; break;
+    }
+
+    // verifies that we set code
+    cql_invariant(code != 0 && code != 'a' - 'A');
+
+    cql_append_value(b, code);
+  }
+
+  // null terminate the type info
+  code = 0;
+  cql_append_value(b, code);
+
+  uint16_t bitvector_bytes_needed = (nullable_count + bool_count + 7) / 8;
+  uint8_t *bits = cql_bytebuf_alloc(&b, bitvector_bytes_needed);
+  memset(bits, 0, bitvector_bytes_needed);
+  uint16_t nullable_index = 0;
+  uint16_t bool_index = 0;
+
+  for (uint16_t i = 0; i < count; i++) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+
+    if (type & CQL_DATA_TYPE_NOT_NULL) {
+      switch (core_data_type) {
+        case CQL_DATA_TYPE_INT32: {
+          cql_int32 int32_data = *(cql_int32 *)(cursor + offset);
+          cql_write_varint_32(&b, int32_data);
+          break;
+        }
+        case CQL_DATA_TYPE_INT64: {
+          cql_int64 int64_data = *(cql_int64 *)(cursor + offset);
+          cql_write_varint_64(&b, int64_data);
+          break;
+        }
+        case CQL_DATA_TYPE_DOUBLE: {
+          // IEEE 754 big endian seems to be everywhere we need it to be
+          // it's good enough for SQLite so it's good enough for us.
+          // We're punting on their ARM7 mixed endian support, we don't care about ARM7
+          cql_double double_data = *(cql_double *)(cursor + offset);
+          cql_append_value(b, double_data);
+          break;
+        }
+        case CQL_DATA_TYPE_BOOL: {
+          cql_bool bool_data = *(cql_bool *)(cursor + offset);
+          if (bool_data) {
+            cql_setbit(bits, nullable_count + bool_index);
+          }
+          bool_index++;
+          break;
+        }
+        case CQL_DATA_TYPE_STRING: {
+          cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
+          cql_alloc_cstr(temp, str_ref);
+          cql_bytebuf_append(&b, temp, (uint32_t)(strlen(temp) + 1));
+          cql_free_cstr(temp, str_ref);
+          break;
+        }
+        case CQL_DATA_TYPE_BLOB: {
+          cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
+          const void *bytes = cql_get_blob_bytes(blob_ref);
+          cql_uint32 size = cql_get_blob_size(blob_ref);
+          cql_append_value(b, size);
+          cql_bytebuf_append(&b, bytes, size);
+          break;
+        }
+      }
+    }
+    else {
+      switch (core_data_type) {
+        case CQL_DATA_TYPE_INT32: {
+          cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
+          if (!int32_data.is_null) { 
+            cql_setbit(bits, nullable_index); 
+            cql_write_varint_32(&b, int32_data.value);
+          }
+          break;
+        }
+        case CQL_DATA_TYPE_INT64: {
+          cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
+          if (!int64_data.is_null) { 
+            cql_setbit(bits, nullable_index); 
+            cql_write_varint_64(&b, int64_data.value);
+          }
+          break;
+        }
+        case CQL_DATA_TYPE_DOUBLE: {
+          // IEEE 754 big endian seems to be everywhere we need it to be
+          // it's good enough for SQLite so it's good enough for us.
+          // We're punting on their ARM7 mixed endian support, we don't care about ARM7
+          cql_nullable_double double_data = *(cql_nullable_double *)(cursor + offset);
+          cql_append_nullable_value(b, double_data);
+          break;
+        }
+        case CQL_DATA_TYPE_BOOL: {
+          cql_nullable_bool bool_data = *(cql_nullable_bool *)(cursor + offset);
+          if (!bool_data.is_null) {
+            cql_setbit(bits, nullable_index);
+            if (bool_data.value) {
+              cql_setbit(bits, nullable_count + bool_index);
+            }
+          }
+          bool_index++;
+          break;
+        }
+        case CQL_DATA_TYPE_STRING: {
+          cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
+          if (str_ref) {
+            cql_setbit(bits, nullable_index);
+            cql_alloc_cstr(temp, str_ref);
+            cql_bytebuf_append(&b, temp, (uint32_t)(strlen(temp) + 1));
+            cql_free_cstr(temp, str_ref);
+          }
+          break;
+        }
+        case CQL_DATA_TYPE_BLOB: {
+          cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
+          if (blob_ref) {
+            cql_setbit(bits, nullable_index);
+            const void *bytes = cql_get_blob_bytes(blob_ref);
+            uint32_t size = cql_get_blob_size(blob_ref);
+            cql_append_value(b, size);
+            cql_bytebuf_append(&b, bytes, size);
+          }
+          break;
+        }
+      }
+      nullable_index++;
+    }
+  }
+  cql_invariant(nullable_index == nullable_count);
+
+  cql_blob_ref new_blob = cql_blob_ref_new((const uint8_t *)b.ptr, b.used);
+  cql_blob_release(*blob);
+  *blob = new_blob;
+
+  cql_bytebuf_close(&b);
+  return SQLITE_OK;
+}
+
+// release the references in a cursor using the types and offsets info
+static void cql_clear_references_before_deserialization(
+  unsigned char *_Nonnull cursor,
+  uint16_t *_Nonnull offsets,
+  uint8_t *_Nonnull types)
+{
+  uint16_t count = offsets[0];
+
+  for (uint16_t i = 0; i < count; i++) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    uint8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+
+    if (core_data_type == CQL_DATA_TYPE_STRING || core_data_type == CQL_DATA_TYPE_BLOB) {
+      cql_release(*(cql_type_ref *)(cursor + offset));
+      *(cql_type_ref *)(cursor + offset) = NULL;
+    }
+  }
+}
+
+#define cql_read_var(buf, var) \
+   if (!cql_input_read(buf, &var, sizeof(var))) { \
+     goto error; \
+   }
+
+cql_code cql_deserialize_from_blob(
+  cql_blob_ref _Nullable b,
+  void *_Nonnull cursor_raw,
+  cql_bool *_Nonnull has_row,
+  uint16_t *_Nonnull offsets,
+  uint8_t *_Nonnull types)
+{
+  // we have to release the existing cursor before we start
+  // we'll be clobbering the field while we build it.
+
+  *has_row = false;
+  cql_clear_references_before_deserialization(cursor_raw, offsets, types);
+
+  if (!b) {
+    goto error;
+  }
+
+  const uint8_t *bytes = (const uint8_t *)cql_get_blob_bytes(b);
+
+  cql_input_buf input;
+  input.data = bytes;
+  input.remaining = cql_get_blob_size(b);
+
+  uint16_t needed_count = offsets[0];  // the first index is the count of fields
+
+  uint16_t nullable_count = 0;
+  uint16_t bool_count = 0;
+  uint16_t actual_count = 0;
+
+  uint8_t *cursor = cursor_raw;  // we will be using char offsets
+
+  uint16_t i = 0;
+
+  for (;;) {
+    char code;
+    cql_read_var(&input, code);
+
+    if (!code) {
+      break;
+    }
+
+    bool nullable_code = (code >= 'a' && code <= 'z');
+    nullable_count += nullable_code;
+    actual_count++;
+
+    // too many fields present in the record, that is wrong for sure
+    if (actual_count > needed_count) {
+      goto error;
+    }
+
+    uint8_t type = types[i++];
+    bool nullable_type = !(type & CQL_DATA_TYPE_NOT_NULL);
+    uint8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+
+    // it's ok if we need a nullable but we're getting a non-nullable
+    if (!nullable_type && nullable_code) {
+      // nullability must match
+      goto error;
+    }
+
+    // normalize to the not null type, we've already checked nullability match
+    code = nullable_code ? code - ('a' - 'A') : code;
+
+    // ensure that what we have is what we need for all of what we have
+    bool code_ok = false;
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_INT32:  code_ok = code == 'I'; break;
+      case CQL_DATA_TYPE_INT64:  code_ok = code == 'L'; break;
+      case CQL_DATA_TYPE_DOUBLE: code_ok = code == 'D'; break;
+      case CQL_DATA_TYPE_BOOL:   code_ok = code == 'F'; bool_count++; break;
+      case CQL_DATA_TYPE_STRING: code_ok = code == 'S'; break;
+      case CQL_DATA_TYPE_BLOB:   code_ok = code == 'B'; break;
+    }
+
+    if (!code_ok) {
+      goto error;
+    }
+  }
+
+  // if we have too few fields we can use null fillers, this is the versioning
+  // policy, we will check that any missing fields are nullable.
+  while (i < needed_count) {
+    uint8_t type = types[i++];
+    if (type & CQL_DATA_TYPE_NOT_NULL) {
+      goto error;
+    }
+  }
+
+  // get the bool bits we need
+  const uint8_t *bits;
+  uint16_t bytes_needed = (nullable_count + bool_count + 7) / 8;
+  if (!cql_input_inline_bytes(&input, &bits, bytes_needed)) {
+    goto error;
+  }
+
+  uint16_t nullable_index = 0;
+  uint16_t bool_index = 0;
+
+  // The types are compatible and we have enough of them, we can start
+  // trying to decode.
+
+  for (i = 0; i < needed_count; i++) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+
+    bool fetch_data = false;
+    bool needed_notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
+
+
+    if (i >= actual_count) {
+      // we don't have this field
+      fetch_data = false;
+    }
+    else {
+      bool actual_notnull = bytes[i] >= 'A' && bytes[i] <= 'Z';
+
+      if (actual_notnull) {
+        // marked not null in the metadata means it is always present
+        fetch_data = true;
+      }
+      else {
+        // fetch any nullable field if and only if its not null bit is set
+        fetch_data = cql_getbit(bits, nullable_index++);
+      }
+    }
+
+    if (fetch_data) {
+      switch (core_data_type) {
+        case CQL_DATA_TYPE_INT32: {
+          cql_int32 *result;
+          if (needed_notnull) {
+            result = (cql_int32 *)(cursor + offset);
+          }
+          else {
+            cql_nullable_int32 *nullable_storage = (cql_nullable_int32 *)(cursor+offset);
+            nullable_storage->is_null = false;
+            result = &nullable_storage->value;
+          }
+          if (!cql_read_varint_32(&input, result)) {
+            goto error;
+          }
+          
+          break;
+        }
+        case CQL_DATA_TYPE_INT64: {
+          cql_int64 *result;
+          if (needed_notnull) {
+            result = (cql_int64 *)(cursor + offset);
+          }
+          else {
+            cql_nullable_int64 *nullable_storage = (cql_nullable_int64 *)(cursor+offset);
+            nullable_storage->is_null = false;
+            result = &nullable_storage->value;
+          }
+          if (!cql_read_varint_64(&input, result)) {
+            goto error;
+          }
+          break;
+        }
+        case CQL_DATA_TYPE_DOUBLE: {
+          // IEEE 754 big endian seems to be everywhere we need it to be
+          // it's good enough for SQLite so it's good enough for us.
+          // We're punting on their ARM7 mixed endian support, we don't care about ARM7
+          cql_double *result;
+          if (needed_notnull) {
+            result = (cql_double *)(cursor + offset);
+          }
+          else {
+            cql_nullable_double *nullable_storage = (cql_nullable_double *)(cursor+offset);
+            nullable_storage->is_null = false;
+            result = &nullable_storage->value;
+          }
+          cql_read_var(&input, *result);
+          break;
+        }
+        case CQL_DATA_TYPE_BOOL: {
+          cql_bool *result;
+          if (needed_notnull) {
+            result = (cql_bool *)(cursor + offset);
+          }
+          else {
+            cql_nullable_bool *nullable_storage = (cql_nullable_bool *)(cursor+offset);
+            nullable_storage->is_null = false;
+            result = &nullable_storage->value;
+          }
+          *result = cql_getbit(bits, nullable_count + bool_index);
+          bool_index++;
+          break;
+        }
+        case CQL_DATA_TYPE_STRING: {
+          cql_string_ref *str_ref = (cql_string_ref *)(cursor + offset);
+          const char *result;
+          if (!cql_input_inline_str(&input, &result)) {
+            goto error;
+          }
+          *str_ref = cql_string_ref_new(result);
+          break;
+        }
+        case CQL_DATA_TYPE_BLOB: {
+          cql_blob_ref *blob_ref = (cql_blob_ref *)(cursor + offset);
+          uint32_t byte_count;
+          cql_read_var(&input, byte_count);
+          const uint8_t *result;
+          if (!cql_input_inline_bytes(&input, &result, byte_count)) {
+            goto error;
+          }
+          *blob_ref = cql_blob_ref_new(result, byte_count);
+          break;
+        }
+      }
+    }
+    else {
+      switch (core_data_type) {
+        case CQL_DATA_TYPE_INT32: {
+          cql_nullable_int32 *int32_data = (cql_nullable_int32 *)(cursor + offset);
+          int32_data->value = 0;
+          int32_data->is_null = true;
+          break;
+        }
+        case CQL_DATA_TYPE_INT64: {
+          cql_nullable_int64 *int64_data = (cql_nullable_int64 *)(cursor + offset);
+          int64_data->value = 0;
+          int64_data->is_null = true;
+          break;
+        }
+        case CQL_DATA_TYPE_DOUBLE: {
+          cql_nullable_double *double_data = (cql_nullable_double *)(cursor + offset);
+          double_data->value = 0;
+          double_data->is_null = true;
+          break;
+        }
+        case CQL_DATA_TYPE_BOOL: {
+          cql_nullable_bool *bool_data = (cql_nullable_bool *)(cursor + offset);
+          bool_data->value = 0;
+          bool_data->is_null = true;
+          break;
+        }
+        case CQL_DATA_TYPE_STRING: {
+          cql_string_ref *str_ref = (cql_string_ref *)(cursor + offset);
+          *str_ref = NULL;
+          break;
+        }
+        case CQL_DATA_TYPE_BLOB: {
+          cql_blob_ref *blob_ref = (cql_blob_ref *)(cursor + offset);
+          *blob_ref = NULL;
+          break;
+        }
+      }
+    }
+  }
+
+  *has_row = true;
+  return SQLITE_OK;
+
+error:
+  *has_row = false;
+  cql_clear_references_before_deserialization(cursor_raw, offsets, types);
+  return SQLITE_ERROR;
 }

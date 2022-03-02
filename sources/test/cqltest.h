@@ -32,7 +32,7 @@ declare proc exit no check;
 #define END_TEST(x) \
   end try; \
   begin catch \
-    call printf("%s had a db error\n", #x); \
+    call printf("%s had an unexpected CQL exception (usually a db error)\n", #x); \
     set fails := fails + 1; \
     throw; \
   end catch; \

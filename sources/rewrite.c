@@ -1831,4 +1831,162 @@ cleanup:
 }
 
 
+// Here we convert one of the normal fetch_values forms
+//
+//   FETCH C from B       -- C is a cursor B is a blob
+//   SET B from CURSOR C  -- load the blob from the cursor
+//
+// into the blob deserializing or deserializing forms.
+// We rewrite the AST here to the blob form so that it's easier
+// for the later passes to see the difference.  The parser
+// can't do this because you have to know the type of the arguments
+// to know that this is the blob case.
+//
+// The relevant statments are fetch_cursor_from_blob_stmt and
+// set_blob_from_cursor_stmt.  These only have very simple forms,
+// the idea is that if you need any slicing, extraction,
+// or whatever, you do it with the cursors not blobs.
+cql_noexport bool_t try_rewrite_blob_fetch_forms(ast_node *ast) {
+  Contract(is_ast_fetch_values_stmt(ast) || is_ast_set_from_cursor(ast));
+
+  ast_node *cursor = NULL;
+  ast_node *blob = NULL;
+  ast_node *dest = NULL;
+  ast_node *src = NULL;
+
+  if (is_ast_fetch_values_stmt(ast)) {
+    EXTRACT(insert_dummy_spec, ast->left);
+    EXTRACT_NOTNULL(name_columns_values, ast->right);
+    EXTRACT_ANY_NOTNULL(target, name_columns_values->left)
+    EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
+
+    // check for the simple case of fetching to or from a blob
+
+    if (insert_dummy_spec) {
+      return false;
+    }
+
+    if (!is_ast_from_shape(columns_values->right)) {
+      return false;
+    }
+
+    EXTRACT_NOTNULL(from_shape, columns_values->right);
+
+    // any shape with a like clause is not the blob case
+    if (from_shape->left) {
+      return false;
+    }
+
+    EXTRACT_ANY_NOTNULL(source, from_shape->right);
+
+    EXTRACT_STRING(source_name, source);
+    EXTRACT_STRING(target_name, target);
+    ast_node *variable = find_local_or_global_variable(source_name);
+    if (variable && is_blob(variable->sem->sem_type)) {
+      // we're committed now, there's a blob on the right
+      // one way or another we are resolving the type
+      dest = cursor = target;
+      src = blob = source;
+      goto rewrite_or_fail;
+    }
+  }
+  else {
+    EXTRACT_ANY_NOTNULL(source, ast->right);
+    EXTRACT_ANY_NOTNULL(target, ast->left);
+    EXTRACT_STRING(target_name, target);
+
+    ast_node *variable = find_local_or_global_variable(target_name);
+    if (variable && is_blob(variable->sem->sem_type)) {
+      // we're committed now, there's a blob on the right
+      // one way or another we are resolving the type
+      src = cursor = source;
+      dest = blob = target;
+      goto rewrite_or_fail;
+    }
+  }
+
+  // the blob position is not a blob, proceed as usual
+  return false;
+
+rewrite_or_fail:
+  Invariant(cursor);
+
+  // the blob has already been checked, it's a valid name
+  sem_expr(blob);
+  Invariant(!is_error(blob));
+
+  // we have to validate the cursor
+  sem_cursor(cursor);
+  if (is_error(cursor)) {
+    record_error(ast);
+    return true;
+  }
+
+  if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+    report_error(cursor, "CQL0454: cursor was not declared for storage", cursor->sem->name);
+    record_error(ast);
+    return true;
+  }
+
+  // Note that the blob might have been rewritten due to notnull improvement
+  // but that's ok, we only need the name and it's in the sem node for us now.
+  CSTR kind = blob->sem->kind;
+  CSTR blob_name = blob->sem->name;
+
+  if (!kind) {
+    report_error(blob, "CQL0455: blob variable must have a type-kind for type safety", blob_name);
+    record_error(ast);
+    return true;
+  }
+
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
+      kind,
+      blob,
+      "CQL0453: blob type is not a valid table");
+  if (!table_ast) {
+    record_error(ast);
+    return true;
+  }
+
+  if (!is_ast_create_table_stmt(table_ast)) {
+    report_error(blob, "CQL0456: blob type is a view, not a table", kind);
+    record_error(ast);
+    return true;
+  }
+
+  blob->sem->sptr = table_ast->sem->sptr;
+
+  sem_verify_identical_columns(dest, src, "in the cursor and the blob type");
+  if (is_error(src)) {
+    record_error(ast);
+    return true;
+  }
+
+  if (dest == blob) {
+    ast->type = k_ast_set_blob_from_cursor_stmt;
+  }
+  else {
+    ast->type = k_ast_fetch_cursor_from_blob_stmt;
+  }
+
+  ast_set_left(ast, dest);
+  ast_set_right(ast, src);
+
+  // Now we need to mark the cursor as requiring the serializer helpers
+  // so that we know to code-gen them later.  Since we want to do this
+  // during the cursor declare we need to put this on the declaration.
+  // Therefore, we're mutating the flags in place so as to change the
+  // various linked places this type is used in particular we want to mutate
+  // the semantic info in the declare cursor node.  This is why we
+  // don't make a new semantic node.
+
+  ast_node *var = find_local_or_global_variable(cursor->sem->name);
+  Invariant(var); // we know the cursor exists and is unique already
+  var->sem->sem_type |= SEM_TYPE_SERIALIZE;
+
+  record_ok(ast);
+  return true;
+}
+
+
 #endif

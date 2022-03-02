@@ -44,5 +44,6 @@ cql_noexport void rewrite_nullable_to_notnull(ast_node *_Nonnull ast);
 cql_noexport void rewrite_guard_stmt_to_if_stmt(ast_node *_Nonnull ast);
 cql_noexport void rewrite_printf_inserting_casts_as_needed(ast_node *_Nonnull ast, CSTR _Nonnull format_string);
 cql_noexport void rewrite_select_expr_list(ast_node *_Nonnull ast, sem_join *_Nullable jptr_from);
+cql_noexport bool_t try_rewrite_blob_fetch_forms(ast_node *_Nonnull ast);
 
 #endif
