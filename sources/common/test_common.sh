@@ -1362,7 +1362,7 @@ query_plan_test() {
   if ! ${CQL} --test --dev --cg "${OUT_DIR}/udf.h" "${OUT_DIR}/udf.c" --in "${OUT_DIR}/cg_test_query_plan.out" --rt udf 2>"${OUT_DIR}/udf.err"
   then
     echo "ERROR:"
-    cat $"{OUT_DIR}/udf.err"
+    cat "${OUT_DIR}/udf.err"
     failed
   fi
 

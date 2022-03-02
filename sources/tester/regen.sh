@@ -6,6 +6,8 @@
 #
 # @lint-ignore-every LICENSELINT
 
+set -euo pipefail
+
 pushd ..
 make clean && make
 popd

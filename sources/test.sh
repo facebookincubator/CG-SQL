@@ -25,7 +25,6 @@ do
   then
      CQL=${OUT_DIR}/cql_amalgam
      shift 1
-     USE_AMALGAM=1
   elif [ "$1" == "--non_interactive" ]
   then
     # shellcheck disable=SC2034
