@@ -142,7 +142,7 @@ typedef void sem_special_func(ast_node *ast, uint32_t arg_count, bool_t *is_aggr
 // forward references for mutual recursion cases
 static void sem_stmt_list(ast_node *ast);
 static void sem_stmt_list_in_current_flow_context(ast_node *ast);
-static void sem_stmt_list_within_loop(ast_node *ast);
+static void sem_stmt_list_within_loop(ast_node *stmt_list, ast_node *true_expr);
 static void sem_select(ast_node *node);
 static void sem_select_core_list(ast_node *ast);
 static void sem_query_parts(ast_node *node);
@@ -18801,7 +18801,7 @@ static void sem_while_stmt(ast_node *ast) {
   if (stmt_list) {
     loop_depth++;
 
-    sem_stmt_list_within_loop(stmt_list);
+    sem_stmt_list_within_loop(stmt_list, expr);
 
     loop_depth--;
 
@@ -18834,7 +18834,7 @@ static void sem_loop_stmt(ast_node *ast) {
   if (stmt_list) {
     loop_depth++;
 
-    sem_stmt_list_within_loop(stmt_list);
+    sem_stmt_list_within_loop(stmt_list, NULL);
 
     loop_depth--;
 
@@ -20439,8 +20439,14 @@ static void sem_stmt_list(ast_node *head) {
 }
 
 // Like `sem_stmt_list`, but specifically for lists of statements within loops
-// (e.g., WHILE and LOOP).
-static void sem_stmt_list_within_loop(ast_node *head) {
+// (e.g., WHILE and LOOP). The optional `true_expr` argument is used to set
+// positive improvements via the knowledge that `true_expr` must have been true
+// if the body of the loop is presently executing. (Due to the fact that one can
+// jump out of a loop, no assumptions can be made about `true_expr` after the
+// loop exits, and so no negative improvements are set.)
+static void sem_stmt_list_within_loop(ast_node *stmt_list, ast_node *true_expr) {
+  Contract(stmt_list);
+
   loop_analysis_state saved_loop_analysis_state = current_loop_analysis_state;
   bool_t is_top_level_loop = false;
 
@@ -20458,9 +20464,12 @@ recurse:
       // loop. See `_flow_pop_context_jump` for an example of why this is
       // necessary.
       FLOW_PUSH_CONTEXT_JUMP();
-      sem_stmt_list_in_current_flow_context(head);
+      if (true_expr) {
+        sem_set_notnull_improvements_for_true_condition(true_expr);
+      }
+      sem_stmt_list_in_current_flow_context(stmt_list);
       FLOW_POP_CONTEXT_JUMP();
-      if (is_error(head)) {
+      if (is_error(stmt_list)) {
         goto cleanup;
       }
       // We only want to perform reanalysis if this is a top-level loop. Doing
@@ -20495,9 +20504,12 @@ recurse:
       // work just as well because any improvements in effect before the loop that
       // needed to be unset to ensure safety were already unset above.
       FLOW_PUSH_CONTEXT_JUMP();
-      sem_stmt_list_in_current_flow_context(head);
+      if (true_expr) {
+        sem_set_notnull_improvements_for_true_condition(true_expr);
+      }
+      sem_stmt_list_in_current_flow_context(stmt_list);
       FLOW_POP_CONTEXT_JUMP();
-      if (is_error(head)) {
+      if (is_error(stmt_list)) {
         goto cleanup;
       }
       break;

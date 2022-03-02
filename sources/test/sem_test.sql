@@ -19216,6 +19216,42 @@ begin
   let x3 := a; -- nullable for now, but this may change in the future
 end;
 
+-- TEST: Improvements work for WHILE conditions.
+-- + {name x0}: x0: integer variable
+-- + {name y0}: y0: integer notnull variable
+-- + {name x1}: x1: integer notnull variable
+-- + {name y1}: y1: integer variable
+-- + {name z1}: z1: integer notnull variable
+-- + {name x2}: x2: integer variable
+-- + {name y2}: y2: integer variable
+-- + {name z2}: z2: integer variable
+-- - error:
+create proc improvements_work_for_while_conditions()
+begin
+  declare a int;
+  declare b int;
+  declare c int;
+
+  if b is null return;
+
+  let x0 := a; -- nullable
+  let y0 := b; -- nonnull due to negative check
+  let z0 := b; -- nullable
+
+  while a is not null and c is not null
+  begin
+    let x1 := a; -- nonnull due to loop condition
+    let y1 := b; -- nullable due to set later in loop
+    let z1 := c; -- nonnull despite set later in loop due to loop condition
+    set b := null;
+    set c := null;
+  end;
+
+  let x2 := a; -- nullable due to end of loop
+  let y2 := b; -- nullable due to set within loop
+  let z2 := c; -- nullable due to end of loop
+end;
+
 -- Used in the following test.
 declare proc requires_inout_text_notnull(inout t text not null);
 
