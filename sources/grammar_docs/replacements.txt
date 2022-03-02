@@ -240,6 +240,7 @@ s/[[:<:]]NOT_MATCH[[:>:]]/"NOT MATCH"/g
 s/[[:<:]]NOT_REGEXP[[:>:]]/"NOT REGEXP"/g
 s/[[:<:]]ON_CONFLICT[[:>:]]/"ON CONFLICT"/g
 s/[[:<:]]QUERY_PLAN[[:>:]]/"QUERY PLAN"/g
+s/[[:<:]]SIGN_FUNCTION[[:>:]]/"SIGN FUNCTION"/g
 s/[[:<:]]UNION_ALL[[:>:]]/"UNION ALL"/g
 
 s/[ ][ ]*$//

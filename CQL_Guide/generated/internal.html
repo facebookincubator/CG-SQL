@@ -2920,7 +2920,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li><code>value</code> : a character buffer that will get the <code>value</code> expression for this variable (more below)</li>
 </ul>
 <p>And this is a good time to talk about <code>is_null</code> and <code>value</code> because they will be everywhere.</p>
-<p>The codegen for expressions in the C code generator produces two results: * the text that corresponds to the current value so far (e.g. “(1+2)<em>3"), and, </em> the text that will tell you if the current value is null * this could be as simple as”0" for an expression that is known to be not null</p>
+<p>The codegen for expressions in the C code generator produces two results: * the text that corresponds to the current value so far (e.g. “(1+2)<em>3”), and, </em> the text that will tell you if the current value is null * this could be as simple as”0” for an expression that is known to be not null</p>
 <p>Let’s make this a little more concrete:</p>
 <p>Suppose we ask for a scratch “not null integer”, we get results like this:</p>
 <ul>
@@ -6371,7 +6371,7 @@ typedef struct cql_boxed_stmt {
 <li>this puts us in the write place to put an end marker such as ‘]’ or ‘}’</li>
 </ul></li>
 </ul>
-<p>So reviewing this bit of code, * emit the attribute name and start the array “[" * we start indenting * we start a list * we emit a comma if needed * we emit the new misc attribute * this will crack the AST, and get the attribute name and value * this can recurse * <code>cg_json_misc_attr</code> is pretty simple and a good exercise for the reader * repeat for all attributes * end the list * end the indenting * emit the attribute end "]”</p>
+<p>So reviewing this bit of code, * emit the attribute name and start the array “[” * we start indenting * we start a list * we emit a comma if needed * we emit the new misc attribute * this will crack the AST, and get the attribute name and value * this can recurse * <code>cg_json_misc_attr</code> is pretty simple and a good exercise for the reader * repeat for all attributes * end the list * end the indenting * emit the attribute end ”]”</p>
 <h4 id="quoted-text">Quoted Text</h4>
 <p>Most quoted text in the JSON output is either hard-coded constants, or else is a CQL identifier and therefore has no special characters. Those two cases are very simple and no escaping or special formatting is needed. We just emit the text with quotes around it. However, there are cases where general text that might have special characters in it needs to be emitted. When that happens a call like this is used:</p>
 <div class="sourceCode" id="cb306"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb306-1"><a href="#cb306-1" aria-hidden="true" tabindex="-1"></a>cg_pretty_quote_plaintext<span class="op">(</span></span>

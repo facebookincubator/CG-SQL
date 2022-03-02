@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Feb 18 12:11:59 PST 2022
+Snapshot as of Tue Mar  1 13:34:24 EST 2022
 
 ### Operators and Literals
 
@@ -78,11 +78,11 @@ TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
 "PRIMARY" "PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE"
 "RANGE" "REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
 "REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
-"ROWS" "SAVEPOINT" "SELECT" "SET" "STATEMENT" "SWITCH"
-"TABLE" "TEMP" "TEXT" "THEN" "THROW" "TO" "TRANSACTION"
-"TRIGGER" "TRY" "TYPE" "UNBOUNDED" "UNIQUE" "UPDATE"
-"UPSERT" "USING" "VALUES" "VIEW" "VIRTUAL" "WHEN" "WHERE"
-"WHILE" "WINDOW" "WITH" "WITHOUT"
+"ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
+"STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
+"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "UNBOUNDED"
+"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VIEW"
+"VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -1528,6 +1528,7 @@ enforcement_options:
   | "ENCODE" "CONTEXT TYPE" "BLOB"
   | "IS TRUE"
   | "CAST"
+  | "SIGN FUNCTION"
   ;
 
 enforce_strict_stmt:
