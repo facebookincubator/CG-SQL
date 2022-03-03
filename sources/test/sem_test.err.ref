@@ -1385,4 +1385,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a typ
 test/sem_test.sql:XXXX:1: error: in str : CQL0454: cursor was not declared for storage 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not marked with @attribute(cql:blob_storage) 'foo'
+test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+test/sem_test.sql:XXXX:1: error: in drop_table_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+test/sem_test.sql:XXXX:1: error: in delete_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
 semantic errors present; no code gen.

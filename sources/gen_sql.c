@@ -2220,8 +2220,8 @@ static void gen_create_trigger_stmt(ast_node *ast) {
 
 static void gen_create_table_stmt(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
-  EXTRACT(create_table_name_flags, ast->left);
-  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_STRING(name, create_table_name_flags->right);
@@ -2252,8 +2252,8 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
   Contract(is_ast_create_virtual_table_stmt(ast));
   EXTRACT_NOTNULL(module_info, ast->left);
   EXTRACT_NOTNULL(create_table_stmt, ast->right);
-  EXTRACT(create_table_name_flags, create_table_stmt->left);
-  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_NOTNULL(create_table_name_flags, create_table_stmt->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_STRING(name, create_table_name_flags->right);

@@ -21107,3 +21107,31 @@ begin
    declare C cursor like foo;
    fetch C from b;
 end;
+
+-- TEST: can't put triggers on structured storage
+-- + {create_trigger_stmt}: err
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
+-- +1 error:
+create trigger storage_trigger
+  before delete on structured_storage
+begin
+  delete from bar where rate > id;
+end;
+
+-- TEST: can't drop structured storage
+-- + {drop_table_stmt}: err
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
+-- +1 error:
+drop table structured_storage;
+
+-- TEST: can't delete from structured storage
+-- + {delete_stmt}: err
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
+-- +1 error:
+delete from structured_storage where 1;
+
+-- TEST: can't put an index on structured storage
+-- + {create_index_stmt}: err
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
+-- +1 error:
+create index oh_no_you_dont on structured_storage(id);

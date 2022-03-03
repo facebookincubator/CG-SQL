@@ -366,8 +366,8 @@ static void cg_generate_baseline_tables(charbuf *output) {
       continue;
     }
 
-    EXTRACT(create_table_name_flags, ast->left);
-    EXTRACT(table_flags_attrs, create_table_name_flags->left);
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+    EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
     EXTRACT_OPTION(flags, table_flags_attrs->left);
 
     // the cases we might have to skip a table are pulled out to get better code coverage detail
@@ -491,8 +491,8 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       continue;
     }
 
-    EXTRACT(create_table_name_flags, ast->left);
-    EXTRACT(table_flags_attrs, create_table_name_flags->left);
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+    EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
     EXTRACT_OPTION(flags, table_flags_attrs->left);
 
     bool_t temp = !!(flags & TABLE_IS_TEMP);
@@ -1027,8 +1027,8 @@ static void cg_schema_manage_recreate_tables(
       Invariant(is_ast_create_virtual_table_stmt(ast_output));
 
       EXTRACT_NOTNULL(module_info, ast_output->left);
-      EXTRACT(create_table_name_flags, ast->left);
-      EXTRACT(table_flags_attrs, create_table_name_flags->left);
+      EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+      EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
       EXTRACT_OPTION(flags, table_flags_attrs->left);
       is_eponymous = !!(flags & VTAB_IS_EPONYMOUS);
     }
@@ -1042,8 +1042,8 @@ static void cg_schema_manage_recreate_tables(
       continue;
     }
 
-    EXTRACT(create_table_name_flags, ast->left);
-    EXTRACT(table_flags_attrs, create_table_name_flags->left);
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+    EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
     EXTRACT_STRING(table_name, create_table_name_flags->right);
 
     // recreate if needed

@@ -83811,3 +83811,74 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not ma
             | {from_shape}
               | {name b}: b: blob<foo> variable
 
+The statement ending at line XXXX
+
+CREATE TRIGGER storage_trigger
+  BEFORE DELETE ON structured_storage
+BEGIN
+  DELETE FROM bar WHERE rate > id;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+
+  {create_trigger_stmt}: err
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name storage_trigger}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name structured_storage}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {delete_stmt}
+                    | {name bar}
+                    | {opt_where}
+                      | {gt}
+                        | {name rate}
+                        | {name id}
+
+The statement ending at line XXXX
+
+DROP TABLE structured_storage;
+
+test/sem_test.sql:XXXX:1: error: in drop_table_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+
+  {drop_table_stmt}: err
+  | {name structured_storage}
+
+The statement ending at line XXXX
+
+DELETE FROM structured_storage WHERE 1;
+
+test/sem_test.sql:XXXX:1: error: in delete_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+
+  {delete_stmt}: err
+  | {name structured_storage}
+  | {opt_where}
+    | {int 1}
+
+The statement ending at line XXXX
+
+CREATE INDEX oh_no_you_dont ON structured_storage (id);
+
+test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name oh_no_you_dont}
+  | | {name structured_storage}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
+

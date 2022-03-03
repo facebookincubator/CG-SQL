@@ -233,8 +233,8 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
     if (is_ast_create_table_stmt(item->ast)) {
       EXTRACT_MISC_ATTRS(item->ast, misc_attrs);
       if (misc_attrs != NULL) {
-        EXTRACT(create_table_name_flags, item->ast->left);
-        EXTRACT(table_flags_attrs, create_table_name_flags->left);
+        EXTRACT_NOTNULL(create_table_name_flags, item->ast->left);
+        EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
         EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
         EXTRACT_STRING(name, name_ast);
         if (exists_attribute_str(misc_attrs, "no_table_scan")) {

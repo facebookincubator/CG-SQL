@@ -392,7 +392,7 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
       }
     }
   }
-  
+
   if (table_or_view_name_ast) {
     // Find the definition and see if we have a create_table_stmt.
     EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
@@ -412,7 +412,7 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     // Make sure we don't process a table or view that we've already processed.
     if (table_or_view) {
       if (is_ast_create_table_stmt(table_or_view)) {
-        EXTRACT(create_table_name_flags, table_or_view->left);
+        EXTRACT_NOTNULL(create_table_name_flags, table_or_view->left);
         EXTRACT_STRING(canonical_name, create_table_name_flags->right);
 
         // Found a table, execute the callback.

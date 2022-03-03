@@ -202,6 +202,7 @@ static void sem_shared_cte(ast_node *cte_body);
 static void sem_declare_proc_stmt(ast_node *ast);
 static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name);
 static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_orderby);
+static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -1567,8 +1568,8 @@ static void init_version_attrs_info(version_attrs_info *vers_info, CSTR name, as
     vers_info->create_code = SCHEMA_ANNOTATION_CREATE_TABLE;
     vers_info->delete_code = SCHEMA_ANNOTATION_DELETE_TABLE;
     vers_info->is_virtual_table =  ast->parent && is_ast_create_virtual_table_stmt(ast->parent);
-    EXTRACT(create_table_name_flags, ast->left);
-    EXTRACT(table_flags_attrs, create_table_name_flags->left);
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+    EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
     EXTRACT_OPTION(flags, table_flags_attrs->left);
     vers_info->is_temp = !!(flags & TABLE_IS_TEMP);
   }
@@ -3128,6 +3129,11 @@ static void sem_create_index_stmt(ast_node *ast) {
     return;
   }
 
+  sem_non_blob_storage_table(ast, table_ast);
+  if (is_error(ast)) {
+    return;
+  }
+
   if (is_virtual_ast(table_ast)) {
     report_error(table_name_ast, "CQL0159: cannot add an index to a virtual table", table_name);
     record_error(ast);
@@ -3405,7 +3411,7 @@ static bool_t find_referenceable_columns(
 ) {
   Contract(is_ast_create_table_stmt(ref_table_ast));
 
-  EXTRACT(create_table_name_flags, ref_table_ast->left);
+  EXTRACT_NOTNULL(create_table_name_flags, ref_table_ast->left);
   EXTRACT_STRING(ref_table_name, create_table_name_flags->right);
 
   EXTRACT_NOTNULL(col_key_list, ref_table_ast->right);
@@ -3504,7 +3510,7 @@ static bool_t validate_referenceable_fk_def_callback(ast_node *name_list, void *
 static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node *name_list) {
   Contract(is_ast_name_list(name_list));
 
-  EXTRACT(create_table_name_flags, ref_table_ast->left);
+  EXTRACT_NOTNULL(create_table_name_flags, ref_table_ast->left);
   EXTRACT_STRING(ref_table_name, create_table_name_flags->right);
 
   // If we only have only one column listed in name_list then we just
@@ -11564,6 +11570,25 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
   return true;
 }
 
+// Ensure that the table parameter is not blob storage, if it is
+// then mark an error at the indicated location
+static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table) {
+  Contract(ast_error);
+  Contract(ast_table);
+
+  if (is_ast_create_table_stmt(ast_table) && is_table_blob_storage(ast_table)) {
+    EXTRACT_NOTNULL(create_table_name_flags, ast_table->left);
+    EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+    EXTRACT_STRING(name, name_ast);
+
+    report_error(ast_error, "CQL0458: the indicated table may only be used for blob storage", name);
+    record_error(ast_error);
+    return;
+  }
+
+  record_ok(ast_error);
+}
+
 // This is the basic checking for the drop table statement
 // * the table must exist in some version
 // * it has to be a table and not a view
@@ -11576,6 +11601,11 @@ static void sem_drop_table_stmt(ast_node *ast) {
   ast_node *table_ast = find_usable_table_or_view_even_deleted(name, name_ast, "CQL0108: table in drop statement does not exist");
   if (!table_ast) {
     record_error(ast);
+    return;
+  }
+
+  sem_non_blob_storage_table(ast, table_ast);
+  if (is_error(ast)) {
     return;
   }
 
@@ -11985,8 +12015,8 @@ static bool_t sem_validate_identical_procs(ast_node *prev_proc, ast_node *cur_pr
 static void sem_validate_previous_table(ast_node *prev_table) {
   Contract(!current_joinscope);
   Contract(is_ast_create_table_stmt(prev_table));
-  EXTRACT_NAMED(prev_create_table_name_flags, create_table_name_flags, prev_table->left);
-  EXTRACT_NAMED(prev_table_flags_attrs, table_flags_attrs, prev_create_table_name_flags->left);
+  EXTRACT_NAMED_NOTNULL(prev_create_table_name_flags, create_table_name_flags, prev_table->left);
+  EXTRACT_NAMED_NOTNULL(prev_table_flags_attrs, table_flags_attrs, prev_create_table_name_flags->left);
   EXTRACT_OPTION(prev_flags, prev_table_flags_attrs->left);
   EXTRACT_ANY(prev_table_attrs, prev_table_flags_attrs->right);
   EXTRACT_ANY_NOTNULL(prev_name_ast, prev_create_table_name_flags->right);
@@ -12016,8 +12046,8 @@ static void sem_validate_previous_table(ast_node *prev_table) {
     return;
   }
 
-  EXTRACT(create_table_name_flags, ast->left);
-  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
@@ -12365,6 +12395,11 @@ static void sem_create_trigger_stmt(ast_node *ast) {
     return;
   }
 
+  sem_non_blob_storage_table(ast, target);
+  if (is_error(ast)) {
+    return;
+  }
+
   if (is_virtual_ast(target)) {
     report_error(table_name_ast, "CQL0162: cannot add a trigger to a virtual table", table_name);
     record_error(ast);
@@ -12510,8 +12545,8 @@ static bool_t sem_validate_vers_ok_in_context(version_attrs_info *vers) {
 static void sem_create_table_stmt(ast_node *ast) {
   Contract(!current_joinscope);
   Contract(is_ast_create_table_stmt(ast));
-  EXTRACT(create_table_name_flags, ast->left);
-  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
@@ -12766,8 +12801,8 @@ void sem_create_virtual_table_stmt(ast_node *ast) {
 
   EXTRACT_NOTNULL(module_info, ast->left);
   EXTRACT_NOTNULL(create_table_stmt, ast->right);
-  EXTRACT(create_table_name_flags, create_table_stmt->left);
-  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_NOTNULL(create_table_name_flags, create_table_stmt->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_STRING(name, create_table_name_flags->right);
   EXTRACT_STRING(module_name, module_info->left);
@@ -13317,6 +13352,11 @@ static void sem_delete_stmt(ast_node *ast) {
     "CQL0151: table in delete statement does not exist");
   if (!table_ast) {
     record_error(ast);
+    return;
+  }
+
+  sem_non_blob_storage_table(ast, table_ast);
+  if (is_error(ast)) {
     return;
   }
 
@@ -15681,8 +15721,8 @@ static void sem_one_autodrop(CSTR name, ast_node *misc_attr_value, void *context
     return;
   }
 
-  EXTRACT(create_table_name_flags, temp_table->left);
-  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_NOTNULL(create_table_name_flags, temp_table->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
 
   int32_t temp = flags & TABLE_IS_TEMP;
@@ -20983,7 +21023,7 @@ static void sem_validate_all_tables_not_in_previous(ast_node *root) {
 
     // no need to report on tables that are already in error state
     if (!is_error(ast)) {
-      EXTRACT(create_table_name_flags, ast->left);
+      EXTRACT_NOTNULL(create_table_name_flags, ast->left);
       EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
       EXTRACT_STRING(name, name_ast);
 
@@ -21043,7 +21083,7 @@ static void sem_validate_all_prev_recreate_tables(ast_node *root) {
   for (list_item *item = all_prev_recreate_tables; item; item = item->next) {
     ast_node *ast = item->ast;
 
-    EXTRACT(create_table_name_flags, ast->left);
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
     EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
     EXTRACT_STRING(name, name_ast);
 
@@ -21181,7 +21221,7 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
     case ENFORCE_IS_TRUE:
       enforcement.strict_is_true = strict;
       break;
-    
+
     case ENFORCE_SIGN_FUNCTION:
       enforcement.strict_sign_function = strict;
       break;

@@ -1491,8 +1491,8 @@ static void cg_json_table_indices(list_item *head, charbuf *output) {
 static void cg_json_table(charbuf *output, ast_node *ast) {
   Invariant(is_ast_create_table_stmt(ast));
 
-  EXTRACT(create_table_name_flags, ast->left);
-  EXTRACT(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_STRING(name, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);

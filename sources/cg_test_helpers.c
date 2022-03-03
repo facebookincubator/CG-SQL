@@ -610,8 +610,8 @@ static void cg_emit_index_stmt(
 static CSTR get_table_or_view_name(ast_node *table_or_view) {
   CSTR table_name = NULL;
   if (is_ast_create_table_stmt(table_or_view)) {
-    EXTRACT(create_table_name_flags, table_or_view->left);
-    EXTRACT(table_flags_attrs, create_table_name_flags->left);
+    EXTRACT_NOTNULL(create_table_name_flags, table_or_view->left);
+    EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
     EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
     EXTRACT_STRING(name, name_ast);
     table_name = name;
