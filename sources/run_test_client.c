@@ -1700,3 +1700,37 @@ cql_blob_ref create_truncated_blob(cql_blob_ref b, cql_int32 new_size) {
   cql_contract(new_size <= existing_size);
   return cql_blob_ref_new(cql_get_blob_bytes(b), new_size);
 }
+
+static int32_t rand_state = 0;
+
+// to ensure we can get the same series again (this is public)
+void rand_reset() {
+  rand_state = 0;
+}
+
+// This random number generator doesn't have to be very good
+// but I can't use anything that looks standard because of who
+// knows what copyright issues I might face for daring to use the same
+// integers in linear congruence math. So for this lame thing I picked my
+// own constants out of thin air and I have no idea if they are any good
+// but they are my own and really we just don't care that much.
+static int32_t seriously_lousy_rand() {
+  rand_state = (rand_state * 1302475243 + 21493) & 0x7fffffff;
+  return rand_state;
+}
+
+// We are about to break all the rules to corrupt this blob
+// mutating the blob in place because we know how.
+void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
+
+  cql_int32 size = cql_get_blob_size(b);
+  uint8_t *bytes = (uint8_t *)cql_get_blob_bytes(b);
+
+  for (int32_t i = 0; i < 20; i++) {
+     uint32_t index = seriously_lousy_rand() % size;
+     uint8_t byte = seriously_lousy_rand() & 0xff;
+
+     // smash
+     bytes[index] = byte;
+  }
+}

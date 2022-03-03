@@ -4547,12 +4547,6 @@ begin
   EXPECT(C.x == D.x);
 end;
 
-
-@echo c,"#undef cql_error_trace\n";
-@echo c,'#define cql_error_trace() \
-   fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))';
-@echo c,"\n\n";
-
 BEGIN_TEST(serialization_tricky_values)
   call round_trip_int(0);
   call round_trip_int(1);
@@ -4576,6 +4570,75 @@ BEGIN_TEST(serialization_tricky_values)
   call round_trip_long(0x7fffffffffffffffL); // max int64
   call round_trip_long(0x8000000000000000L); // min int64
 END_TEST(serialization_tricky_values)
+
+declare proc rand_reset();
+declare proc corrupt_blob_with_invalid_shenanigans(b blob not null);
+
+BEGIN_TEST(clobber_blobs)
+  -- the point of the test is to ensure that we don't segv or get ASAN failures
+  -- or leak memory when dealing with broken blobs.  Some of the blobs
+  -- may still be valid since we corrupt them randomly.  But this will
+  -- help us to be sure that nothing horrible happens if you corrupt blobs
+
+  -- we're going to make a good blob with various data in it and then clobber it
+  let a_blob := blob_from_string("a blob");
+  let b_blob := blob_from_string("b blob");
+  declare cursor_both cursor like storage_both;
+  fetch cursor_both using
+      false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
+      false f_nn, true t_nn, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+
+  -- storage both means nullable types and not null types
+  declare my_blob blob<storage_both>;
+  set my_blob from cursor cursor_both;
+
+  -- sanity check the decode of the full blob
+  declare test_cursor_both cursor like storage_both;
+  fetch test_cursor_both from my_blob;
+
+  call rand_reset();
+
+  let good := 0;
+  let bad := 0;
+
+  -- if this test fails you can use this count to set a breakpoint
+  -- on the attempt that crashed, check out this value in the debugger
+  let attempt := 0;
+
+  let i := 0;
+  while i < 100
+  begin
+     set i := i + 1;
+
+     -- refresh the blob from the cursor, it's good now (again)
+     set my_blob from cursor cursor_both;
+     if my_blob is null throw;
+
+     -- same buffer will be smashed 10 times
+     let j := 0;
+     while j < 10
+     begin
+       set j := j + 1;
+
+       -- invoke da smasher
+       call corrupt_blob_with_invalid_shenanigans(my_blob);
+
+       begin try
+         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
+         fetch test_cursor_both from my_blob;
+         set good := good + 1;
+       end try; 
+       begin catch
+         set bad := bad + 1;
+       end catch;
+
+       set attempt := attempt + 1;
+     end;
+  end;
+
+  call printf("blob corruption results: good: %d, bad: %d\n", good, bad);
+  call printf("1000 bad results is normal\n");
+END_TEST(clobber_blobs)
 
 END_SUITE()
 
