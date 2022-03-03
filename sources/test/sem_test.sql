@@ -20994,6 +20994,7 @@ let sign_of_some_value := sign(-42);
 -- - error:
 select sign(-1);
 
+@attribute(cql:blob_storage)
 create table structured_storage(
   id integer not null,
   name text not null
@@ -21094,4 +21095,15 @@ begin
   declare B blob<structured_storage>;
 
   set B from cursor not_a_cursor;
+end;
+
+-- TEST: blob storage types must use cql:blob_storage
+-- + {fetch_values_stmt}: err
+-- + error: % the indicated table is not marked with @attribute(cql:blob_storage) 'foo'
+-- +1 error:
+create proc blob_serialization_not_storage_table()
+begin
+   declare b blob<foo>;
+   declare C cursor like foo;
+   fetch C from b;
 end;

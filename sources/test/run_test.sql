@@ -4197,28 +4197,34 @@ declare proc alltypes_notnull() (
   str_nn text not null
 );
 
+@attribute(cql:blob_storage)
 create table storage_notnull(
   like alltypes_notnull
 );
 
+@attribute(cql:blob_storage)
 create table storage_nullable(
   like alltypes_nullable
 );
 
+@attribute(cql:blob_storage)
 create table storage_both(
   like alltypes_notnull,
   like alltypes_nullable
 );
 
+@attribute(cql:blob_storage)
 create table storage_with_extras(
   like alltypes_notnull,
   x integer not null
 );
 
+@attribute(cql:blob_storage)
 create table storage_one_int(
   x integer not null
 );
 
+@attribute(cql:blob_storage)
 create table storage_one_long(
   x long not null
 );

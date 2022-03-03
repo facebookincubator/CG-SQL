@@ -1954,6 +1954,12 @@ rewrite_or_fail:
     return true;
   }
 
+  if (!is_table_blob_storage(table_ast)) {
+    report_error(blob, "CQL0457: the indicated table is not marked with @attribute(cql:blob_storage)", kind);
+    record_error(ast);
+    return true;
+  }
+
   blob->sem->sptr = table_ast->sem->sptr;
 
   sem_verify_identical_columns(dest, src, "in the cursor and the blob type");

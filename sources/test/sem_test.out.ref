@@ -83398,30 +83398,37 @@ SELECT sign(-1);
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:blob_storage)
 CREATE TABLE structured_storage(
   id INTEGER NOT NULL,
   name TEXT NOT NULL
 );
 
-  {create_table_stmt}: structured_storage: { id: integer notnull, name: text notnull }
-  | {create_table_name_flags}
-  | | {table_flags_attrs}
-  | | | {int 0}
-  | | {name structured_storage}
-  | {col_key_list}
-    | {col_def}: id: integer notnull
-    | | {col_def_type_attrs}: ok
-    |   | {col_def_name_type}
-    |   | | {name id}
-    |   | | {type_int}: integer
-    |   | {col_attrs_not_null}: ok
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name blob_storage}
+  | {create_table_stmt}: structured_storage: { id: integer notnull, name: text notnull }
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name structured_storage}
     | {col_key_list}
-      | {col_def}: name: text notnull
-        | {col_def_type_attrs}: ok
-          | {col_def_name_type}
-          | | {name name}
-          | | {type_text}: text
-          | {col_attrs_not_null}: ok
+      | {col_def}: id: integer notnull
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {col_def}: name: text notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name name}
+            | | {type_text}: text
+            | {col_attrs_not_null}: ok
 
 The statement ending at line XXXX
 
@@ -83772,4 +83779,35 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
       | {set_from_cursor}: err
         | {name B}: B: blob<structured_storage> variable
         | {name not_a_cursor}: err
+
+The statement ending at line XXXX
+
+CREATE PROC blob_serialization_not_storage_table ()
+BEGIN
+  DECLARE b BLOB<foo>;
+  DECLARE C CURSOR LIKE foo;
+  FETCH C FROM b;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not marked with @attribute(cql:blob_storage) 'foo'
+
+  {create_proc_stmt}: err
+  | {name blob_serialization_not_storage_table}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob<foo>
+      | | {name_list}: b: blob<foo> variable
+      | | | {name b}: b: blob<foo> variable
+      | | {type_blob}: blob<foo>
+      |   | {name foo}
+      | {declare_cursor_like_name}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+      | | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+      | | {like}: foo: { id: integer notnull primary_key autoinc }
+      |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+      | {fetch_values_stmt}: err
+        | {name_columns_values}
+          | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+          | {columns_values}
+            | {from_shape}
+              | {name b}: b: blob<foo> variable
 

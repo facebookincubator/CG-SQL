@@ -561,6 +561,23 @@ cql_noexport uint32_t find_shared_fragment_attr(
   return misc.count;
 }
 
+// Helper function to extract the blob storage node (if any) from the misc attributes
+// provided, and invoke the callback function.
+cql_noexport bool_t find_blob_storage_attr(
+  ast_node *_Nullable misc_attr_list)
+{
+  Contract(is_ast_misc_attrs(misc_attr_list));
+
+  misc_attrs_type misc = {
+    .presence_only = 1,
+    .attribute_name = "blob_storage",
+    .count = 0,
+  };
+
+  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
+  return misc.count != 0;
+}
+
 // Helper function to extract the base fragment node (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_base_fragment_attr(
@@ -647,6 +664,15 @@ cql_noexport uint32_t find_proc_frag_type(ast_node *ast) {
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   return find_fragment_attr_type(misc_attrs, NULL);
+}
+
+
+// helper to get the fragment type of a given procedure
+cql_noexport bool_t is_table_blob_storage(ast_node *ast) {
+  Contract(is_ast_create_table_stmt(ast));
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  return misc_attrs && find_blob_storage_attr(misc_attrs);
 }
 
 cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_t flip) {

@@ -5132,6 +5132,7 @@ end;
 
 @emit_constants some_constants;
 
+@attribute(cql:blob_storage)
 create table structured_storage(
   id integer not null,
   name text not null

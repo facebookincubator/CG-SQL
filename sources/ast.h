@@ -469,6 +469,7 @@ cql_noexport uint32_t find_assembly_query_attr(
 
 cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list, CSTR _Nullable *_Nullable base_name);
 cql_noexport uint32_t find_proc_frag_type(ast_node *_Nonnull ast);
+cql_noexport bool_t is_table_blob_storage(ast_node *_Nonnull ast);
 
 // Callback whenever a misc_attr node is found in find_misc_attrs().
 typedef void (*find_ast_misc_attr_callback)(
