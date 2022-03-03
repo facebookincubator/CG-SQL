@@ -370,13 +370,30 @@ static void cg_generate_baseline_tables(charbuf *output) {
     EXTRACT(table_flags_attrs, create_table_name_flags->left);
     EXTRACT_OPTION(flags, table_flags_attrs->left);
 
-    bool_t temp = !!(flags & TABLE_IS_TEMP);
+    // the cases we might have to skip a table are pulled out to get better code coverage detail
+    // the order was selected to give the best (i.e. most painful) test-detection
 
-    if (ast->sem->create_version == -1 && !ast->sem->recreate && !temp) {
-      gen_set_output_buffer(output);
-      gen_statement_with_callbacks(ast_output, &callbacks);
-      bprintf(output, ";\n\n");
+    if (ast->sem->create_version != -1) {
+      continue;
     }
+
+    bool_t temp = !!(flags & TABLE_IS_TEMP);
+    if (temp) {
+      continue;
+    }
+
+    bool_t is_blob_storage = is_table_blob_storage(ast);
+    if (is_blob_storage) {
+      continue;
+    }
+
+    if (ast->sem->recreate) {
+      continue;
+    }
+
+    gen_set_output_buffer(output);
+    gen_statement_with_callbacks(ast_output, &callbacks);
+    bprintf(output, ";\n\n");
   }
 }
 
@@ -459,6 +476,14 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
     }
 
     Invariant(is_ast_create_table_stmt(ast));
+
+    // Note that we do not filter out blob_storage tables universally, their type might be mentioned
+    // as part of the type descriminator in other parts of schema, so the declaration will stay.
+    // They will get the usual region treatment for dependencies.  However, in no case will
+    // SQLite ever see these tables.
+    if (schema_sqlite && is_table_blob_storage(ast)) {
+      continue;
+    }
 
     CSTR region = ast->sem->region;
 
@@ -1357,6 +1382,11 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
       continue;
     }
 
+    // no schema maintenance for blob storage tables, they aren't physical tables
+    if (is_ast_create_table_stmt(note->target_ast) && is_table_blob_storage(note->target_ast)) {
+      continue;
+    }
+
     switch (type) {
       case SCHEMA_ANNOTATION_CREATE_COLUMN: {
         ast_node *def = note->column_ast;
@@ -1420,7 +1450,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         }
 
         bprintf(&upgrade, "      -- creating table %s\n\n", target_name);
-
 
         gen_sql_callbacks callbacks;
         init_gen_sql_callbacks(&callbacks);

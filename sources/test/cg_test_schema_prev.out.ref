@@ -146,6 +146,16 @@ CREATE TABLE create__second(
   id INTEGER REFERENCES create_first (id)
 ) @CREATE(7);
 
+CREATE TABLE blob_storage_at_create_table(
+  x INTEGER,
+  y TEXT
+) @CREATE(5);
+
+CREATE TABLE blob_storage_baseline_table(
+  x INTEGER,
+  y TEXT
+);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *

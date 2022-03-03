@@ -246,3 +246,16 @@ create table create__second
 (
   id integer references create_first(id)
 ) @create(7);
+
+
+@attribute(cql:blob_storage)
+create table blob_storage_at_create_table(
+  x integer,
+  y text
+) @create(5);
+
+@attribute(cql:blob_storage)
+create table blob_storage_baseline_table(
+  x integer,
+  y text
+);
