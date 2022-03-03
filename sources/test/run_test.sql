@@ -27,7 +27,6 @@ declare function blob_from_string(str text @sensitive) create blob not null;
 declare function string_from_blob(b blob @sensitive) create text not null;
 declare procedure cql_init_extensions() using transaction;
 
-
 declare enum floats real (
    one = 1.0,
    two = 2.0
@@ -4423,6 +4422,27 @@ BEGIN_TEST(blob_serialization)
   EXPECT(caught);
 
 END_TEST(blob_serialization)
+
+BEGIN_TEST(blob_serialization_null_cases)
+  declare cursor_nulls cursor like storage_nullable;
+  fetch cursor_nulls using
+    null f, null t, null i, null l, null r, null bl, null str;
+
+  declare blob_nulls blob<storage_nullable>;
+  set blob_nulls from cursor cursor_nulls;
+  declare test_cursor cursor like cursor_nulls;
+  fetch test_cursor from blob_nulls;
+
+  EXPECT(test_cursor);
+  EXPECT(test_cursor.t is null);
+  EXPECT(test_cursor.f is null);
+  EXPECT(test_cursor.i is null);
+  EXPECT(test_cursor.l is null);
+  EXPECT(test_cursor.r is null);
+  EXPECT(test_cursor.bl is null);
+  EXPECT(test_cursor.str is null);
+
+END_TEST(blob_serialization_null_cases)
 
 BEGIN_TEST(corrupt_blob_deserialization)
   let a_blob := blob_from_string("a blob");
