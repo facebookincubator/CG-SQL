@@ -21135,3 +21135,124 @@ delete from structured_storage where 1;
 -- + error: % the indicated table may only be used for blob storage 'structured_storage'
 -- +1 error:
 create index oh_no_you_dont on structured_storage(id);
+
+-- TEST: virtual tables cannot be blob storage
+-- + {create_virtual_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: it is a virtual table 'virtual_blob_storage_illegal'
+-- +1 error:
+@attribute(cql:blob_storage)
+create virtual table virtual_blob_storage_illegal using module_name(args) as (
+  id integer,
+  t text
+);
+
+-- TEST: temp tables cannot be blob storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: it is redundantly marked TEMP 'temp_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create temp table temp_blob_storage(
+  id integer,
+  t text
+);
+
+-- TEST: without rowid tables cannot be blob storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: it is redundantly marked WITHOUT ROWID 'norowid_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table norowid_blob_storage(
+  id integer,
+  t text
+) without rowid;
+
+-- TEST: tables with constraints cannot be blob storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: it has at least one constraint 'constraint_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table constraint_blob_storage(
+  id integer,
+  t text,
+ CONSTRAINT ak1 UNIQUE (id)
+);
+
+-- TEST: table with column with primary key cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 'id' has a primary key in 'pk_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table pk_col_blob_storage(
+  id integer primary key,
+  t text
+);
+
+-- TEST: table with column with foreign key cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 'id' has a foreign key in 'fk_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table fk_col_blob_storage(
+  id integer references foo(id),
+  t text
+);
+
+-- TEST: table with column with unique key cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 'id' has a unique key in 'uk_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table uk_col_blob_storage(
+  id integer unique,
+  t text
+);
+
+-- TEST: table with hidden column cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 'id' is a hidden column in 'hidden_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table hidden_col_blob_storage(
+  id integer hidden,
+  t text
+);
+
+-- TEST: table with check constraint on column cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 'id' has a check expression in 'check_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table check_col_blob_storage(
+  id integer check(id = 5),
+  t text
+);
+
+-- TEST: table with collate on column cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 't' specifies collation order in 'collate_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table collate_col_blob_storage(
+  id integer,
+  t text collate nocase
+);
+
+-- TEST: table with default value on column cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 'id' has a default value in 'default_value_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table default_value_col_blob_storage(
+  id integer default 5,
+  t text
+);
+
+-- TEST: table with deleted column cannot be blob
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: column 't' has been deleted in 'deleted_col_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table deleted_col_blob_storage(
+  id integer,
+  t text @delete(7)
+);

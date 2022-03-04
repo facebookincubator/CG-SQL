@@ -669,7 +669,7 @@ cql_noexport uint32_t find_proc_frag_type(ast_node *ast) {
 
 // helper to get the fragment type of a given procedure
 cql_noexport bool_t is_table_blob_storage(ast_node *ast) {
-  Contract(is_ast_create_table_stmt(ast));
+  Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   return misc_attrs && find_blob_storage_attr(misc_attrs);

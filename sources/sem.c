@@ -12534,6 +12534,127 @@ static bool_t sem_validate_vers_ok_in_context(version_attrs_info *vers) {
   return true;
 }
 
+static void report_invalid_blob_storage_column(ast_node *ast, CSTR reason, CSTR column, CSTR table) {
+  Contract(ast);
+  Contract(reason);
+  Contract(table);
+
+  CSTR err_msg = dup_printf("CQL0459: table is not suitable for use as blob storage: column '%s' %s in", column, reason);
+  report_error(ast, err_msg, table);
+  record_error(ast);
+}
+
+// validate that the indicated col_def is ok for blob storage
+// this basically means it has to be ultra simple
+// no autoinc, no fk, no pk, no default value
+static void sem_blob_storage_col_def(ast_node *table_ast, ast_node *def, CSTR table_name) {
+  Contract(is_ast_col_def(def));
+  EXTRACT_NOTNULL(col_def_type_attrs, def->left);
+
+  EXTRACT_ANY(attrs, col_def_type_attrs->right);
+  EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
+  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_STRING(col_name, name_ast);
+
+  // if we find anything weird, it's an error
+  for (ast_node *ast = attrs; ast; ast = ast->right) {
+    if (is_ast_create_attr(ast) || is_ast_col_attrs_not_null(ast) || is_ast_sensitive_attr(ast)) {
+    }
+    else if (is_ast_delete_attr(ast)) {
+      // In principle we could support this, but we don't for now.
+      // To do this you'd have to ensure that the blob storage included the field but didn't decode it
+      // if it was present...  the problem is that old versions of the blob might exist with the field
+      // there, so you can't just get rid of it.  Really this is likely to be super confusing
+      // and we may never do this for that reason.
+      report_invalid_blob_storage_column(table_ast, "has been deleted", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_default(ast)) {
+      // In principle we could support this, but we don't for now.
+      report_invalid_blob_storage_column(table_ast, "has a default value", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_check(ast)) {
+      report_invalid_blob_storage_column(table_ast, "has a check expression", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_collate(ast)) {
+      report_invalid_blob_storage_column(table_ast, "specifies collation order", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_pk(ast)) {
+      // note that autoinc must be on a pk and is in its node so this also detects autoinc
+      report_invalid_blob_storage_column(table_ast, "has a primary key", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_fk(ast)) {
+      report_invalid_blob_storage_column(table_ast, "has a foreign key", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_hidden(ast)) {
+      report_invalid_blob_storage_column(table_ast, "is a hidden column", col_name, table_name);
+      return;
+    }
+    else {
+      // this is all that's left
+      Contract(is_ast_col_attrs_unique(ast));
+      report_invalid_blob_storage_column(table_ast, "has a unique key", col_name, table_name);
+      return;
+    }
+  }
+}
+
+static void report_invalid_blob_storage(ast_node *ast, CSTR reason, CSTR table) {
+  Contract(ast);
+  Contract(reason);
+  Contract(table);
+
+  CSTR err_msg = dup_printf("CQL0459: table is not suitable for use as blob storage: %s", reason);
+  report_error(ast, err_msg, table);
+  record_error(ast);
+}
+
+static void sem_validate_table_for_blob_storage(ast_node *ast) {
+  Contract(is_ast_create_table_stmt(ast));
+  EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(col_key_list, ast->right);
+
+  Contract(!is_error(ast));
+
+  int32_t temp = flags & TABLE_IS_TEMP;
+  int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
+
+  if (temp) {
+    report_invalid_blob_storage(ast, "it is redundantly marked TEMP", name);
+    return;
+  }
+
+  if (no_rowid) {
+    report_invalid_blob_storage(ast, "it is redundantly marked WITHOUT ROWID", name);
+    return;
+  }
+
+  // check the column defs, error out if we find any constraints
+  for (ast_node *item = col_key_list; item; item = item->right) {
+    Contract(is_ast_col_key_list(item));
+    EXTRACT_ANY_NOTNULL(def, item->left);
+
+    if (!is_ast_col_def(def)) {
+      report_invalid_blob_storage(ast, "it has at least one constraint", name);
+      return;
+    }
+
+    sem_blob_storage_col_def(ast, def, name);
+    if (is_error(ast)) {
+      return;
+    }
+  }
+}
+
 // Unlike the other parts of DDL we actually deeply care about the tables.
 // We have to grab all the columns and column types out of it and create
 // the appropriate sem_struct, as well as the sem_join with just one table.
@@ -12767,6 +12888,13 @@ static void sem_create_table_stmt(ast_node *ast) {
       goto cleanup;;
     }
 
+    if (is_table_blob_storage(ast)) {
+      sem_validate_table_for_blob_storage(ast);
+      if (is_error(ast)) {
+        goto cleanup;
+      }
+    }
+
     if (validating_previous_schema) {
       sem_validate_previous_table(ast);
     }
@@ -12806,6 +12934,11 @@ void sem_create_virtual_table_stmt(ast_node *ast) {
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_STRING(name, create_table_name_flags->right);
   EXTRACT_STRING(module_name, module_info->left);
+
+  if (is_table_blob_storage(ast)) {
+    report_invalid_blob_storage(ast, "it is a virtual table", name);
+    return;
+  }
 
   bool_t is_eponymous = !!(flags & VTAB_IS_EPONYMOUS);
 
