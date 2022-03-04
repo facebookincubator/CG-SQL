@@ -871,10 +871,10 @@ AST(or)</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <h3 id="preface-1">Preface</h3>
-<p>Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler. As in the previous sections, the goal here is not to go over every single rule but rather to give a sense of how semantic analysis happens in general – the core strategies and implementation choices – so that when reading the code you will have an idea how smaller pieces fit into the whole. To accomplish this, various key data structures will be explained in detail as well as selected examples of their use.</p>
+<p>Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler. As in the previous sections, the goal here is not to go over every single rule but rather to give a sense of how semantic analysis happens in general – the core strategies and implementation choices – so that when reading the code you will have an idea of how smaller pieces fit into the whole. To accomplish this, various key data structures will be explained in detail and selected examples of their use are included.</p>
 <h2 id="semantic-analysis">Semantic Analysis</h2>
-<p>The overall goal of the semantic analysis pass is to verify that a correct program has been submitted to the compiler. The compiler does this by “decorating” the AST with semantic information. This information is mainly concerned with the “types” of the various things in the program. A key function of the semantic analyzer, the primary “weapon” in computing these types if you will, is name resolution. The semantic analyzer decides what any given name means in any context and then uses that meaning, which is itself based on the AST constructs that came before, to compute types and then check those types for errors.</p>
-<p>Broadly speaking the errors that can be discovered are of these forms:</p>
+<p>The overall goal of the semantic analysis pass is to verify that a correct program has been submitted to the compiler. The compiler does this by “decorating” the AST with semantic information. This information is mainly concerned with the “types” of the various things in the program. A key function of the semantic analyzer, the primary “weapon” in computing these types, if you will, is name resolution. The semantic analyzer decides what any given name means in any context and then uses that meaning, which is itself based on the AST constructs that came before, to compute types and then check those types for errors.</p>
+<p>Broadly speaking, the errors that can be discovered are of these forms:</p>
 <ul>
 <li>mentioned names do not exist
 <ul>
@@ -890,7 +890,7 @@ AST(or)</code></pre>
 <li>e.g. you can’t add a string to a real</li>
 <li>e.g. you can’t do the <code>%</code> operation on a real</li>
 <li>e.g. the expression in a <code>WHERE</code> clause must result in a numeric</li>
-<li>e.g. the first argument to <code>printf</code> must be a string literal.</li>
+<li>e.g. the first argument to <code>printf</code> must be a string literal</li>
 <li>e.g. you can’t assign a long value to an integer variable</li>
 <li>e.g. you can’t assign a possibly null result to a not-null variable</li>
 </ul></li>
@@ -905,9 +905,9 @@ AST(or)</code></pre>
 <li>e.g. use of unique SQLite functions outside of a SQL statement</li>
 </ul></li>
 </ul>
-<p>There are several hundred possible errors, no attempt will be made to cover them all here but we will talk about how errors are created, recorded, and reported.</p>
+<p>There are several hundred possible errors, and no attempt will be made to cover them all here but we will talk about how errors are created, recorded, and reported.</p>
 <h3 id="decorated-ast-examples">Decorated AST examples</h3>
-<p>Recalling the AST output from <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>, this is what that same tree looks like with semantic information attached.</p>
+<p>Recalling the AST output from <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>, this is what that same tree looks like with semantic information attached:</p>
 <pre><code>LET X := 1 + 3;
 
   {let_stmt}: X: integer notnull variable
@@ -915,7 +915,7 @@ AST(or)</code></pre>
   | {add}: integer notnull
     | {int 1}: integer notnull
     | {int 3}: integer notnull</code></pre>
-<p>And here’s an example with some structure types</p>
+<p>And here’s an example with some structure types:</p>
 <pre><code>SELECT 1 AS x, 3.2 AS y;
 
   {select_stmt}: select: { x: integer notnull, y: real notnull }
@@ -946,7 +946,7 @@ AST(or)</code></pre>
 <div class="sourceCode" id="cb30"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> sem_node <span class="op">*</span>_Nullable sem<span class="op">;</span></span></code></pre></div>
 <p>This is the pointer to the semantic information for that node. Semantic analysis happens immediately after parsing and before any of the code-generators run. Importantly, code generators never run if semantic analysis reported any errors. Before we get into the shape of the semantic node, we should start with the fundamental unit of type info <code>sem_t</code> which is usually stored in a variable called <code>sem_type</code>.</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">uint64_t</span> sem_t<span class="op">;</span></span></code></pre></div>
-<p>The low order bits of a <code>sem_t</code> encode the core type and indeed there is an helper function to extract the core type from a <code>sem_t</code>.</p>
+<p>The low order bits of a <code>sem_t</code> encode the core type and indeed there is a helper function to extract the core type from a <code>sem_t</code>.</p>
 <div class="sourceCode" id="cb32"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Strips out all the flag bits and gives you the base/core type.</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>cql_noexport sem_t core_type_of<span class="op">(</span>sem_t sem_type<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> sem_type <span class="op">&amp;</span> SEM_TYPE_CORE<span class="op">;</span></span>
@@ -969,8 +969,8 @@ AST(or)</code></pre>
 <span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_CORE 0xff      </span><span class="co">// bit mask for the core types</span></span>
 <span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) </span><span class="co">// the last unitary type</span></span></code></pre></div>
-<p>These break into a few categories: * <code>NULL</code> to <code>OBJECT</code> are the “unitary” types, these are the types that a single simple variable can be * a column can be any of these except <code>OBJECT</code> or <code>NULL</code> * the <code>NULL</code> type comes only from the <code>NULL</code> literal which has no type * instances of say a <code>TEXT</code> column might have a <code>NULL</code> value but they are known to be <code>TEXT</code> * <code>STRUCT</code> indicates that the object has many fields, like a table, or a cursor * <code>JOIN</code> indicates that the object is the concatenation of many <code>STRUCT</code> types * e.g. <code>T1 inner join T2</code> is a <code>JOIN</code> type with <code>T1</code> and <code>T2</code> being the parts * a <code>JOIN</code> could be flattened to <code>STRUCT</code>, but this is typically not done * the type of a <code>SELECT</code> statement will be a <code>STRUCT</code> representing the expressions that were selected * those expressions in turn used columns from the <code>JOIN</code> that was the <code>FROM</code> clause * <code>ERROR</code> indicates that the subtree had an error * the error will have been already reported * the error type generally cascades up the AST to the root * <code>OK</code> indicates that there is no type information but there was no problem * e.g. a correct <code>IF</code> statement will resolve to simply <code>OK</code> (no error) * <code>PENDING</code> is used sometimes while a type computation is in progress * this type doesn’t appear in the AST, but has its own unique value so as to not conflict with any others * <code>REGION</code> is used to identify AST fragments that correspond to schema regions * see <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> of the Guide for more information on regions * <code>CORE</code> is the mask for the core parts, <code>0xf</code> would do the job but for easy reading in the debugger we use <code>0xff</code> * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong</p>
-<p>The core type can be modified by various flags. The flags in principle can be combined in any way but in practice many combinations make no sense. For instance, <code>HAS_DEFAULT</code> is for table columns and <code>CREATE_FUNC</code> is for function declarations. There is no one object that could require both of these.</p>
+<p>These break into a few categories: * <code>NULL</code> to <code>OBJECT</code> are the “unitary” types – these are the types that a single simple variable can be * a column can be any of these except <code>OBJECT</code> or <code>NULL</code> * the <code>NULL</code> type comes only from the <code>NULL</code> literal which has no type * instances of, say, a <code>TEXT</code> column might have a <code>NULL</code> value but they are known to be <code>TEXT</code> * <code>STRUCT</code> indicates that the object has many fields, like a table, or a cursor * <code>JOIN</code> indicates that the object is the concatenation of many <code>STRUCT</code> types * e.g. <code>T1 inner join T2</code> is a <code>JOIN</code> type with <code>T1</code> and <code>T2</code> being the parts * a <code>JOIN</code> could be flattened to <code>STRUCT</code>, but this is typically not done * the type of a <code>SELECT</code> statement will be a <code>STRUCT</code> representing the expressions that were selected * those expressions in turn used columns from the <code>JOIN</code> that was the <code>FROM</code> clause * <code>ERROR</code> indicates that the subtree had an error * the error will have been already reported * the error type generally cascades up the AST to the root * <code>OK</code> indicates that there is no type information but there was no problem * e.g. a correct <code>IF</code> statement will resolve to simply <code>OK</code> (no error) * <code>PENDING</code> is used sometimes while a type computation is in progress * this type doesn’t appear in the AST, but has its own unique value so as to not conflict with any others * <code>REGION</code> is used to identify AST fragments that correspond to schema regions * see <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> of the Guide for more information on regions * <code>CORE</code> is the mask for the core parts, <code>0xf</code> would do the job but for easy reading in the debugger we use <code>0xff</code> * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong</p>
+<p>The core type can be modified by various flags. The flags, in principle, can be combined in any way but in practice many combinations make no sense. For instance, <code>HAS_DEFAULT</code> is for table columns and <code>CREATE_FUNC</code> is for function declarations. There is no one object that could require both of these.</p>
 <p>The full list as of this writing is as follows:</p>
 <div class="sourceCode" id="cb34"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_NOTNULL               _64(0x0100) </span><span class="co">// set if and only if null is not possible</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_TYPE_HAS_DEFAULT           _64(0x0200) </span><span class="co">// set for table columns with a default</span></span>
@@ -1012,42 +1012,42 @@ AST(or)</code></pre>
 <li><code>SEM_TYPE_SENSITIVE</code> indicates that the marked item is some kind of PII or other sensitive data.
 <ul>
 <li>Any time a sensitive operand is combined with another operand the resulting type is sensitive</li>
-<li>There are very few ways to “get rid” of the sensitive bit – it corresponds to the presence of <code>@sensitive</code> in the data type declaration.</li>
+<li>There are very few ways to “get rid” of the sensitive bit – it corresponds to the presence of <code>@sensitive</code> in the data type declaration</li>
 <li>Values that are sensitive cannot be assigned to targets that are not marked sensitive</li>
 </ul></li>
 </ul>
-<p>The semantic node <code>sem_node</code> carries all the possible semantic info we might need, the <code>sem_type</code> holds the flags above and tells us how to interpret the rest of the node. There are many fields, we’ll talk about some of the most important ones here to give you a sense of how things hang together.</p>
+<p>The semantic node <code>sem_node</code> carries all the possible semantic info we might need, and the <code>sem_type</code> holds the flags above and tells us how to interpret the rest of the node. There are many fields – we’ll talk about some of the most important ones here to give you a sense of how things hang together.</p>
 <p>Note that <code>CSTR</code> is simply an alias for <code>const char *</code>. <code>CSTR</code> is used extensively in the codebase for brevity.</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> sem_node <span class="op">{</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  sem_t sem_type<span class="op">;</span>                   <span class="co">// core type plus flags</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  CSTR name<span class="op">;</span>                        <span class="co">// for named expressions in select columns etc.</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  CSTR name<span class="op">;</span>                        <span class="co">// for named expressions in select columns, etc.</span></span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  CSTR kind<span class="op">;</span>                        <span class="co">// the Foo in object&lt;Foo&gt;, not a variable or column name</span></span>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  CSTR error<span class="op">;</span>                       <span class="co">// error text for test output, not used otherwise</span></span>
 <span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> sem_struct <span class="op">*</span>sptr<span class="op">;</span>          <span class="co">// encoded struct if any</span></span>
 <span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> sem_join <span class="op">*</span>jptr<span class="op">;</span>            <span class="co">// encoded join if any</span></span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> create_version<span class="op">;</span>           <span class="co">// create version if any (really only for tables and columns)</span></span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> delete_version<span class="op">;</span>           <span class="co">// create version if any (really only for tables and columns)</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int32_t</span> delete_version<span class="op">;</span>           <span class="co">// delete version if any (really only for tables and columns)</span></span>
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  bool_t recreate<span class="op">;</span>                  <span class="co">// for tables only, true if marked @recreate</span></span>
 <span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  CSTR recreate_group_name<span class="op">;</span>         <span class="co">// for tables only, the name of the recreate group if they are in one</span></span>
-<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  CSTR region<span class="op">;</span>                      <span class="co">// the schema region, if applicable, null means unscoped (default)</span></span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  symtab <span class="op">*</span>used_symbols<span class="op">;</span>             <span class="co">// for select statements, we need to know which of the ids in the select list was used if any</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  CSTR region<span class="op">;</span>                      <span class="co">// the schema region, if applicable; null means unscoped (default)</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  symtab <span class="op">*</span>used_symbols<span class="op">;</span>             <span class="co">// for select statements, we need to know which of the ids in the select list was used, if any</span></span>
 <span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>  list_item <span class="op">*</span>index_list<span class="op">;</span>            <span class="co">// for tables we need the list of indices that use this table (so we can recreate them together if needed)</span></span>
 <span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">struct</span> eval_node <span class="op">*</span>value<span class="op">;</span>          <span class="co">// for enum values we have to store the evaluated constant value of each member of the enum</span></span>
 <span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> sem_node<span class="op">;</span></span></code></pre></div>
 <ul>
 <li><code>sem_type</code> : already discussed above, this tells you how to interpret everything else</li>
-<li><code>name</code> : variables, columns, etc. have a canonical name, when a name case-insensitivity resolves, the canonical name is stored here
+<li><code>name</code> : variables, columns, etc. have a canonical name – when a name case-insensitivity resolves, the canonical name is stored here
 <ul>
 <li>typically later passes emit the canonical variable name everywhere</li>
-<li>e.g. <code>FoO</code> and <code>fOO</code> might both resolve to an object declared as <code>foo</code>, we always emit <code>foo</code> in codegen</li>
+<li>e.g. because <code>FoO</code> and <code>fOO</code> might both resolve to an object declared as <code>foo</code>, we always emit <code>foo</code> in codegen</li>
 </ul></li>
 <li><code>kind</code> : in CQL any type can be discriminated as in <code>declare foo real&lt;meters&gt;</code>, the kind here is <code>meters</code>
 <ul>
 <li>two expressions of the same core type (e.g. <code>real</code>) are incompatible if they have a <code>kind</code> and the <code>kind</code> does not match</li>
-<li>e.g. if you have <code>bar real&lt;liters&gt;</code> then <code>set foo := bar;</code> is an error even though both are <code>real</code> because <code>foo</code> above is <code>real&lt;meters&gt;</code></li>
+<li>e.g. if you have <code>bar real&lt;liters&gt;</code> then <code>set foo := bar;</code> this is an error even though both are <code>real</code> because <code>foo</code> above is <code>real&lt;meters&gt;</code></li>
 </ul></li>
-<li><code>sptr</code> : if the item’s core type is <code>SEM_TYPE_STRUCT</code> then this is populated, see below</li>
-<li><code>jptr</code> : if the item’s core type is <code>SEM_TYPE_JOIN</code> then this is populated, see below</li>
+<li><code>sptr</code> : if the item’s core type is <code>SEM_TYPE_STRUCT</code> then this is populated (see below)</li>
+<li><code>jptr</code> : if the item’s core type is <code>SEM_TYPE_JOIN</code> then this is populated (see below)</li>
 </ul>
 <p>If the object is a structure type then this is simply an array of names, kinds, and semantic types. In fact the semantic types will be all be unitary, possibly modified by <code>NOT_NULL</code> or <code>SENSITIVE</code> but none of the other flags apply. A single <code>sptr</code> directly corresponds to the notion of a “shape” in the analyzer. Shapes come from anything that looks like a table, such as a cursor, or the result of a <code>SELECT</code> statement.</p>
 <div class="sourceCode" id="cb36"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">// for tables and views and the result of a select</span></span>
@@ -1103,8 +1103,8 @@ AST(or)</code></pre>
 <span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>  all_functions_list <span class="op">=</span> NULL<span class="op">;</span></span>
 <span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span></code></pre></div>
 <p>This basically deallocates everything and resets all the globals to <code>NULL</code>.</p>
-<p><code>sem_main</code> of course has to walk the AST and it does so in much the same way as we saw in <code>gen_sql.c</code>. There is a series of symbol tables whose key is an AST type and whose value is a function plus arguments to dispatch (effectively a lambda). The semantic analyzer doesn’t have to think about things like “should I emit parentheses” so the signature of each type of lambda can be quite a bit simpler. We’ll go over each kind with some examples.</p>
-<p>First we have the non-sql statements, these are basic flow control or other things that SQLite will never see directly.</p>
+<p><code>sem_main</code> of course has to walk the AST and it does so in much the same way as we saw in <code>gen_sql.c</code>. There is a series of symbol tables whose key is an AST type and whose value is a function plus arguments to dispatch (effectively a lambda.) The semantic analyzer doesn’t have to think about things like “should I emit parentheses?” so the signature of each type of lambda can be quite a bit simpler. We’ll go over each kind with some examples.</p>
+<p>First we have the non-SQL statements, these are basic flow control or other things that SQLite will never see directly.</p>
 <div class="sourceCode" id="cb40"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>  symtab <span class="op">*</span>syms <span class="op">=</span> non_sql_stmts<span class="op">;</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>if_stmt<span class="op">);</span></span>
@@ -1113,7 +1113,7 @@ AST(or)</code></pre>
 <span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>leave_stmt<span class="op">);</span></span>
 <span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span></code></pre></div>
 <p>Here <code>STMT_INIT</code> creates a binding between (e.g.) the AST type <code>if_stmt</code> and the function <code>sem_if_stmt</code>. This lets us dispatch any part of the AST to its handler directly.</p>
-<p>Next we have the SQL statements. These get analyzed in the same way as the others, and with functions that have the same signature, however, if you use one of these it means that procedure that contained this statement must get a database connection in order to run. Use of the database will require the procedure’s signature to change; this is recorded by the setting the <code>SEM_TYPE_DML_PROC</code> flag bit to be set on the procedures AST node.</p>
+<p>Next we have the SQL statements. These get analyzed in the same way as the others, and with functions that have the same signature, however, if you use one of these it means that procedure that contained this statement must get a database connection in order to run. Use of the database will require the procedure’s signature to change; this is recorded by the setting the <code>SEM_TYPE_DML_PROC</code> flag bit to be set on the procedure’s AST node.</p>
 <div class="sourceCode" id="cb41"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>  syms <span class="op">=</span> sql_stmts<span class="op">;</span></span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>create_table_stmt<span class="op">);</span></span>
@@ -1126,7 +1126,7 @@ AST(or)</code></pre>
 <span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>  STMT_INIT<span class="op">(</span>insert_stmt<span class="op">);</span></span>
 <span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span></code></pre></div>
 <p>Again <code>STMT_INIT</code> creates a binding between (e.g.) the AST type <code>delete_stmt</code> and the function <code>sem_delete_stmt</code> so we can dispatch to the handler.</p>
-<p>Next we have expression types, these are set up with <code>EXPR_INIT</code>. Many of the operators require exactly the same kinds of verification, so in order to be able to share the code, the expression analysis functions get an extra argument for the operator in question. Typically the string of the operator is only needed to make a good quality error message with validation being otherwise identical. Here are some samples…</p>
+<p>Next we have expression types. These are set up with <code>EXPR_INIT</code>. Many of the operators require exactly the same kinds of verification, so in order to be able to share the code, the expression analysis functions get an extra argument for the operator in question. Typically the string of the operator is only needed to make a good quality error message with validation being otherwise identical. Here are some samples…</p>
 <div class="sourceCode" id="cb42"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>num<span class="op">,</span> sem_expr_num<span class="op">,</span> <span class="st">&quot;NUM&quot;</span><span class="op">);</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>str<span class="op">,</span> sem_expr_str<span class="op">,</span> <span class="st">&quot;STR&quot;</span><span class="op">);</span></span>
 <span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  EXPR_INIT<span class="op">(</span>blob<span class="op">,</span> sem_expr_blob<span class="op">,</span> <span class="st">&quot;BLB&quot;</span><span class="op">);</span></span>
@@ -1150,9 +1150,9 @@ AST(or)</code></pre>
 <li><code>sem_expr_const</code> : analyzes a <code>const(...)</code> expression, doing the constant evaluation</li>
 <li><code>sem_binary_math</code> : analyzes any normal binary math operator like ‘+’, ‘-’, ‘/’ etc.</li>
 <li><code>sem_binary_integer_math</code> : analyzes any binary math operator where the operands must be integers like ‘%’ or ‘|’</li>
-<li><code>sem_unary_logical</code> : analyzes any unary logical operator (the result is a bool), this is really only <code>NOT</code></li>
-<li><code>sem_unary_is_true_or_false</code> : analyzes any of the <code>IS TRUE</code>, <code>IS FALSE</code>, family of postfix unary operators</li>
-<li><code>sem_unary_integer_math</code> : analyzes any unary operator where the operand must be an integer, this is really only <code>~</code></li>
+<li><code>sem_unary_logical</code> : analyzes any unary logical operator (the result is a bool) – this is really only <code>NOT</code></li>
+<li><code>sem_unary_is_true_or_false</code> : analyzes any of the <code>IS TRUE</code>, <code>IS FALSE</code> family of postfix unary operators</li>
+<li><code>sem_unary_integer_math</code> : analyzes any unary operator where the operand must be an integer – this is really only <code>~</code></li>
 <li><code>sem_unary_math</code> : analyzes any any math unary operator, presently only negation (but in the future unary <code>+</code> too)</li>
 </ul>
 <p>The last group of normal associations are for builtin functions, like these:</p>
@@ -1234,7 +1234,7 @@ AST(or)</code></pre>
 <span id="cb46-26"><a href="#cb46-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// hence ast-&gt;sem-&gt;name = ast-&gt;left-&gt;sem-&gt;name is WRONG here and it is not missing on accident</span></span>
 <span id="cb46-27"><a href="#cb46-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p><em>Unary Prep</em></p>
-<p>OK already we need to pause, there is a “prep” pattern here common to most of the shared operators that we should discuss. The prep step takes care of most of the normal error handling which is the same for all the unary operators and same pattern happens in binary operators. Let’s take a look at <code>sem_unary_prep</code>.</p>
+<p>OK already we need to pause because there is a “prep” pattern here common to most of the shared operators that we should discuss. The prep step takes care of most of the normal error handling which is the same for all the unary operators and the same pattern happens in binary operators. Let’s take a look at <code>sem_unary_prep</code>.</p>
 <div class="sourceCode" id="cb47"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The unary operators all have a similar prep to the binary.  We need</span></span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="co">// to visit the left side (it&#39;s always the left node even if the operator goes on the right)</span></span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="co">// if that&#39;s ok then we need the combined_flags and core type.  There is only</span></span>
@@ -1321,7 +1321,7 @@ AST(or)</code></pre>
 <span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> true<span class="op">;</span></span>
 <span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>That function is pretty much dumb as rocks. The non-numeric types are blob, object, and text. There is a custom error for each type (it could have been shared but specific error messages seem to help users). This code doesn’t know its context, but all it needs is <code>op</code> to tell it what the numeric-only operator was and it can produce a nice error message. It leaves an error in the AST using <code>record_error</code>, its caller can then simply <code>return</code> if anything goes wrong.</p>
+<p>That function is pretty much dumb as rocks. The non-numeric types are blob, object, and text. There is a custom error for each type (it could have been shared but specific error messages seem to help users.) This code doesn’t know its context, but all it needs is <code>op</code> to tell it what the numeric-only operator was and it can produce a nice error message. It leaves an error in the AST using <code>record_error</code>. Its caller can then simply <code>return</code> if anything goes wrong.</p>
 <p>It’s not hard to guess how <code>sem_reject_real</code> works:</p>
 <div class="sourceCode" id="cb50"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Some math operators like &lt;&lt; &gt;&gt; &amp; | % only make sense on integers</span></span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="co">// This function does the extra checking to ensure they do not get real values</span></span>
@@ -1340,13 +1340,13 @@ AST(or)</code></pre>
 <li>it assumes the type is already known to be numeric</li>
 <li>the pre-check for errors is to avoid double reporting; if something has already gone wrong, the core type will be <code>SEM_TYPE_ERROR</code>
 <ul>
-<li>no new error recording is needed in that case, obviously an error was already recorded</li>
+<li>no new error recording is needed in that case, as obviously an error was already recorded</li>
 </ul></li>
 </ul>
 <h3 id="binary-operators">Binary Operators</h3>
 <h4 id="binary-prep">Binary Prep</h4>
 <p>With the knowledge we have so far, this code pretty much speaks for itself, but we’ll walk through it.</p>
-<div class="sourceCode" id="cb51"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">// All the binary ops do the same preparation, they evaluate the left and the</span></span>
+<div class="sourceCode" id="cb51"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">// All the binary ops do the same preparation -- they evaluate the left and the</span></span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co">// right expression, then they check those for errors.  Then they need</span></span>
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="co">// the types of those expressions and the combined_flags of the result.  This</span></span>
 <span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="co">// does exactly that for its various callers.  Returns true if all is well.</span></span>
@@ -1377,7 +1377,7 @@ AST(or)</code></pre>
 <span id="cb51-29"><a href="#cb51-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
 <li><code>sem_expr</code> : used to recursively walk the left and right nodes</li>
-<li><code>is_error</code> : checks if either side had errors, if so, simply propagate the error</li>
+<li><code>is_error</code> : checks if either side had errors, and, if so, simply propagates the error</li>
 <li>extract the left and right core types</li>
 <li>combine nullability and sensitivity flags</li>
 </ul>
@@ -1453,11 +1453,11 @@ AST(or)</code></pre>
 <ul>
 <li>if their <code>kind</code> is incompatible, records an error on the right</li>
 </ul></li>
-<li><code>new_sem</code> : creates a <code>sem_node</code> with the combined type, flags, and then the <code>kind</code> is set.</li>
+<li><code>new_sem</code> : creates a <code>sem_node</code> with the combined type, flags, and then the <code>kind</code> is set</li>
 </ul>
-<p>At this point it might help to look a few more of the base validators, they are very unremarkable.</p>
+<p>At this point it might help to look at a few more of the base validators – they are rather unremarkable.</p>
 <h4 id="example-validator-error_any_object">Example Validator: error_any_object</h4>
-<div class="sourceCode" id="cb54"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co">// If either of the types is an object then produce an error on the ast.</span></span>
+<div class="sourceCode" id="cb54"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co">// If either of the types is an object, then produce an error on the ast.</span></span>
 <span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> bool_t error_any_object<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> sem_t core_type_left<span class="op">,</span> sem_t core_type_right<span class="op">,</span> CSTR op<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>is_object<span class="op">(</span>core_type_left<span class="op">))</span> <span class="op">{</span></span>
 <span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    report_error<span class="op">(</span>ast<span class="op">-&gt;</span>left<span class="op">,</span> <span class="st">&quot;CQL0002: left operand cannot be an object in&quot;</span><span class="op">,</span> op<span class="op">);</span></span>
@@ -1476,9 +1476,9 @@ AST(or)</code></pre>
 <ul>
 <li><code>is_object</code> : checks a <code>sem_type</code> against <code>SEM_TYPE_OBJECT</code>
 <ul>
-<li>if the left or right child is an object an appropriate error is generated</li>
+<li>if the left or right child is an object, an appropriate error is generated</li>
 </ul></li>
-<li>there is no strong convention about returning <code>true</code> if ok, or <code>true</code> if error, it’s pretty ad hoc
+<li>there is no strong convention for returning <code>true</code> if ok, or <code>true</code> if error; it’s pretty ad hoc
 <ul>
 <li>this doesn’t seem to cause a lot of problems</li>
 </ul></li>
@@ -1487,7 +1487,7 @@ AST(or)</code></pre>
 <div class="sourceCode" id="cb55"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Here we check that type&lt;Foo&gt; only combines with type&lt;Foo&gt; or type.</span></span>
 <span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="co">// If there is a current object type, then the next item must match</span></span>
 <span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="co">// If there is no such type, then an object type that arrives becomes the required type</span></span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="co">// if they ever don&#39;t match record an error</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="co">// if they ever don&#39;t match, record an error</span></span>
 <span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> CSTR sem_combine_kinds_general<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR kleft<span class="op">,</span> CSTR kright<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>kright<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>kleft<span class="op">)</span> <span class="op">{</span></span>
@@ -1511,7 +1511,7 @@ AST(or)</code></pre>
 <ul>
 <li><code>sem_combine_kinds</code> : uses the worker <code>sem_combine_kinds_general</code> after extracting the <code>kind</code> from the left node
 <ul>
-<li>usually you already have one <code>kind</code> and you want to know if another <code>kind</code> is compatible hence this helper</li>
+<li>usually you already have one <code>kind</code> and you want to know if another <code>kind</code> is compatible, hence this helper</li>
 </ul></li>
 <li><code>sem_combine_kinds_general</code> : applies the general rules for “kind” strings:
 <ul>
@@ -1533,13 +1533,13 @@ AST(or)</code></pre>
 <h4 id="example-validator-sem_combine_types">Example Validator : sem_combine_types</h4>
 <div class="sourceCode" id="cb57"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The second workhorse of semantic analysis, given two types that</span></span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="co">// are previously known to be compatible, it returns the smallest type</span></span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="co">// that holds both.  If either is nullable the result is nullable.</span></span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: in the few cases where that isn&#39;t true the normal algorithm for</span></span>
-<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="co">// nullablity result must be overridden (see coalesce for instance).</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="co">// that holds both.  If either is nullable, the result is nullable.</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: in the few cases where that isn&#39;t true, the normal algorithm for</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="co">// nullability result must be overridden (see coalesce, for instance).</span></span>
 <span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> sem_t sem_combine_types<span class="op">(</span>sem_t sem_type_1<span class="op">,</span> sem_t sem_type_2<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span> too much code <span class="op">...</span> summary below</span>
 <span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>This beast is rather lengthy but unremarkable. It follows these rules: * text is only compatible with text * object is only compatible with object * blob is only compatible with blob * numerics are only compatible with other numerics and NULL * NULL promotes the other operand, whatever it is (might still be NULL) * bool promotes to integer if needed * integer promotes to long integer if needed * long integer promotes to real if needed * the combined type is the smallest numeric type that holds left and right according to the above</p>
+<p>This beast is rather lengthy but unremarkable. It follows these rules: * text is only compatible with text * object is only compatible with object * blob is only compatible with blob * numerics are only compatible with other numerics and NULL * NULL promotes the other operand, whatever it is (might still be NULL) * bool promotes to integer if needed * integer promotes to long integer if needed * long integer promotes to real if needed * the combined type is the smallest numeric type that holds left and right according to the above rules</p>
 <p>Some examples might be helpful:</p>
 <ul>
 <li>1 + 2L -&gt; long</li>
@@ -1586,12 +1586,12 @@ AST(or)</code></pre>
 <span id="cb58-28"><a href="#cb58-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
 <li><code>sem_verify_compat</code> : checks for standard type compatibility between the left and the right</li>
-<li><code>sem_verify_safeassign</code> : checks that if the types are different the right operand is the smaller</li>
+<li><code>sem_verify_safeassign</code> : checks that if the types are different the right operand is the smaller of the two</li>
 <li>nullability checks ensure you aren’t trying to assign a nullable value to a not null variable</li>
 <li>sensitivity checks ensure you aren’t trying to assign a sensitive value to a not sensitive variable</li>
 </ul>
 <h3 id="simple-statement-validation">Simple Statement Validation</h3>
-<p>With the expression building blocks, most of the usual kind of language statements become quite simple to check for correctness. It’s probably easiest to illustrate this with an example, let’s look at validation for the <code>WHILE</code> statement.</p>
+<p>With the expression building blocks, most of the usual kind of language statements become quite simple to check for correctness. It’s probably easiest to illustrate this with an example. Let’s look at validation for the <code>WHILE</code> statement:</p>
 <div class="sourceCode" id="cb59"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">// While semantic analysis is super simple.</span></span>
 <span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="co">//  * the condition must be numeric</span></span>
 <span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="co">//  * the statement list must be error-free</span></span>
@@ -1630,9 +1630,9 @@ AST(or)</code></pre>
 <li><code>sem_numeric_expr</code> : verifies the loop expression is numeric</li>
 <li><code>sem_stmt_list</code> : recursively validates the body of the loop</li>
 </ul>
-<p>Note: the while expression is one of the loop constructs which means <code>LEAVE</code> and <code>CONTINUE</code> are legal inside it. The <code>loop_depth</code> global tracks the fact that we are in a loop so that analysis for <code>LEAVE</code> and <code>CONTINUE</code> can report errors if we are not.</p>
+<p>Note: the while expression is one of the loop constructs which means that <code>LEAVE</code> and <code>CONTINUE</code> are legal inside it. The <code>loop_depth</code> global tracks the fact that we are in a loop so that analysis for <code>LEAVE</code> and <code>CONTINUE</code> can report errors if we are not.</p>
 <p>It’s not hard to imagine that <code>sem_stmt_list</code> will basically walk the AST, pulling out statements and dispatching them using the <code>STMT_INIT</code> tables previously discussed. You might land right back in <code>sem_while_stmt</code> for a nested <code>WHILE</code> – it’s turtles all the way down.</p>
-<p>If <code>SEM_EXPR_CONTEXT_NONE</code> is a mystery, don’t worry it’s covered in the next section.</p>
+<p>If <code>SEM_EXPR_CONTEXT_NONE</code> is a mystery, don’t worry, it’s covered in the next section.</p>
 <h3 id="expression-contexts">Expression Contexts</h3>
 <p>It turns out that in the SQL language some expression types are only valid in some parts of a SQL statement (e.g. aggregate functions can’t appear in a <code>LIMIT</code> clause) and so there is always a context for any numeric expression. When a new root expression is being evaluated, it sets the expression context per the caller’s specification.</p>
 <p>The expression contexts are as follows:</p>
@@ -1649,19 +1649,19 @@ AST(or)</code></pre>
 <span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_EXPR_CONTEXT_WINDOW         0x0400</span></span>
 <span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800</span></span>
 <span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000</span></span></code></pre></div>
-<p>The idea here is simple, when calling a root expression, the analyzer provides the context value that has the bit that corresponds to the current context. For instance, the expression being validated in is the <code>WHERE</code> clause, the code will provide <code>SEM_EXPR_CONTEXT_WHERE</code>. The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union of the context bits where it can be used. The validator can check those possibilities against the current context with one bitwise “and” operation. A zero result indicates that the operation is not valid in the current context.</p>
+<p>The idea here is simple: when calling a root expression, the analyzer provides the context value that has the bit that corresponds to the current context. For instance, the expression being validated in is the <code>WHERE</code> clause – the code will provide <code>SEM_EXPR_CONTEXT_WHERE</code>. The inner validators check this context, in particular anything that is only available in some contexts has a bit-mask of that is the union of the context bits where it can be used. The validator can check those possibilities against the current context with one bitwise “and” operation. A zero result indicates that the operation is not valid in the current context.</p>
 <p>This bitwise “and” is performed by one of these two helper macros which makes the usage a little clearer:</p>
 <div class="sourceCode" id="cb61"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context &amp; (x)))</span></span>
 <span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context &amp; (x)))</span></span></code></pre></div>
 <h4 id="expression-context-example-concat">Expression Context Example : Concat</h4>
-<p>The concatenation operator <code>||</code> is challenging to successfully emulate because it does many different kinds of numeric to string conversions automatically. Rather than perennially getting this wrong, we simply do not support this operator in a context where SQLite isn’t going to be doing the concatenation. So typically users use “printf” instead to get formatting done outside of a SQL context. The check for invalid use of <code>||</code> is very simple and it happens of course in <code>sem_concat</code>.</p>
+<p>The concatenation operator <code>||</code> is challenging to successfully emulate because it does many different kinds of numeric to string conversions automatically. Rather than perennially getting this wrong, we simply do not support this operator in a context where SQLite isn’t going to be doing the concatenation. So typically users use “printf” instead to get formatting done outside of a SQL context. The check for invalid use of <code>||</code> is very simple and it happens, of course, in <code>sem_concat</code>.</p>
 <div class="sourceCode" id="cb62"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>CURRENT_EXPR_CONTEXT_IS<span class="op">(</span>SEM_EXPR_CONTEXT_NONE<span class="op">))</span> <span class="op">{</span></span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    report_error<span class="op">(</span>ast<span class="op">,</span> <span class="st">&quot;CQL0241: CONCAT may only appear in the context of a SQL statement&quot;</span><span class="op">,</span> NULL<span class="op">);</span></span>
 <span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    record_error<span class="op">(</span>ast<span class="op">);</span></span>
 <span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
 <h4 id="expression-context-example-in">Expression Context Example : IN</h4>
-<p>A slightly more complex example happens processing the <code>IN</code> operator. This operator has two forms, the form with an expression list, which can be used anywhere, and the form with a <code>SELECT</code> statement. The latter form can only appear in some sections of SQL, and not at all in loose expressions. For instance, that form may not appear in the <code>LIMIT</code> or <code>OFFSET</code> sections of a SQLite statement.</p>
+<p>A slightly more complex example happens processing the <code>IN</code> operator. This operator has two forms: the form with an expression list, which can be used anywhere, and the form with a <code>SELECT</code> statement. The latter form can only appear in some sections of SQL, and not at all in loose expressions. For instance, that form may not appear in the <code>LIMIT</code> or <code>OFFSET</code> sections of a SQLite statement.</p>
 <p>We use this construct to do the validation:</p>
 <div class="sourceCode" id="cb63"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> valid <span class="op">=</span> SEM_EXPR_CONTEXT_SELECT_LIST</span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>                    <span class="op">|</span>SEM_EXPR_CONTEXT_WHERE</span>
@@ -1679,7 +1679,7 @@ AST(or)</code></pre>
 <h3 id="name-resolution">Name Resolution</h3>
 <p>We’ve gotten pretty far without talking about the elephant in the room: name resolution.</p>
 <p>Like SQL, many statements in CQL have names in positions where the type of the name is completely unambiguous. For instance nobody could be confused what sort of symbol <code>Foo</code> is in <code>DROP INDEX Foo</code>.</p>
-<p>This type, with a clear name category, are the easiest name resolutions, and there are a lot in this form. Let’s do an example.</p>
+<p>This type, with a clear name category, is the easiest name resolutions, and there are a lot in this form. Let’s do an example.</p>
 <h4 id="example-index-name-resolution">Example: Index Name Resolution</h4>
 <div class="sourceCode" id="cb64"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This is the basic checking for the drop index statement</span></span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="co">// * the index must exist (have been declared) in some version</span></span>
@@ -1714,7 +1714,7 @@ AST(or)</code></pre>
 <span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>We haven’t discussed schema regions yet but what you need to know about them for now is this: * any object can be in a region. * a region may depend on other regions</p>
 <p>If an object is in a region, then it may only use schema parts that are in the same region, or the region’s dependencies (transitively).</p>
-<p>The point of this is that you might have a rather large schema and you probably don’t want any piece of code to use any piece of schema. You can use regions to ensure that the code for feature “X” doesn’t try to use schema designed exclusively for feature “Y”. That “X” code probably has no business even knowing of the existence of “Y” schema.</p>
+<p>The point of this is that you might have a rather large schema and you probably don’t want any piece of code to use just any piece of schema. You can use regions to ensure that the code for feature “X” doesn’t try to use schema designed exclusively for feature “Y”. That “X” code probably has no business even knowing of the existence of “Y” schema.</p>
 <p>So now <code>usable</code> simply means this: * <code>find_index</code> can find the name in the symbol table for indices * the found index is accessible in the current region</p>
 <p>If we had used an example that was looking up a table name, the same region considerations would apply, however, additionally tables can be deprecated with <code>@delete</code> so there would be additional checks to make sure we’re talking about a live table and not a table’s tombstone.</p>
 <p>In short, these simple cases just require looking up the entity and verifying that it’s accessible in the current context.</p>
@@ -1732,20 +1732,20 @@ AST(or)</code></pre>
 <span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>  sem_t <span class="op">*</span>type <span class="op">=</span> NULL<span class="op">;</span></span>
 <span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>  sem_resolve_id_with_type<span class="op">(</span>ast<span class="op">,</span> name<span class="op">,</span> scope<span class="op">,</span> <span class="op">&amp;</span>type<span class="op">);</span></span>
 <span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>The name resolver works on either a vanilla name (e.g. <code>x</code>) or a scoped name (e.g. <code>T1.x</code>). The name and scope are provided. The <code>ast</code> parameter is used only as a place to report errors, there is no further cracking of the AST needed to resolve the name. As you can see <code>sem_resolve_id</code> just calls the more general function <code>sem_resolve_id_with_type</code> and is used in the most common case where you don’t need to be able to mutate the sematic type info for the identifier. That’s the 99% case.</p>
+<p>The name resolver works on either a vanilla name (e.g. <code>x</code>) or a scoped name (e.g. <code>T1.x</code>). The name and scope are provided. The <code>ast</code> parameter is used only as a place to report errors; there is no further cracking of the AST needed to resolve the name. As you can see <code>sem_resolve_id</code> just calls the more general function <code>sem_resolve_id_with_type</code> and is used in the most common case where you don’t need to be able to mutate the semantic type info for the identifier. That’s the 99% case.</p>
 <p>So let’s move on to the “real” resolver.</p>
 <div class="sourceCode" id="cb67"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This function is responsible for resolving both unqualified identifiers (ids)</span></span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a><span class="co">// and qualified identifiers (dots). It performs the following two roles:</span></span>
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
 <span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a><span class="co">// - If an optional `ast` is provided, it works the same way most semantic</span></span>
-<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   analysis functions work: semantic information will be written into into the</span></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   analysis functions work: semantic information will be written into the</span></span>
 <span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   ast, errors will be reported to the user, and errors will be recorded in</span></span>
 <span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a><span class="co">//   the AST.</span></span>
 <span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a><span class="co">// - `*typr_ptr` will be set to mutable type (`sem_t *`) in the current</span></span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a><span class="co">// - `*type_ptr` will be set to mutable type (`sem_t *`) in the current</span></span>
 <span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a><span class="co">//   environment if the identifier successfully resolves to a type. (There are,</span></span>
 <span id="cb67-11"><a href="#cb67-11" aria-hidden="true" tabindex="-1"></a><span class="co">//   unfortunately, a few exceptions in which a type will be successfully</span></span>
-<span id="cb67-12"><a href="#cb67-12" aria-hidden="true" tabindex="-1"></a><span class="co">//   resolved and yet `*typr_ptr` will not be set. These include when a cursor</span></span>
+<span id="cb67-12"><a href="#cb67-12" aria-hidden="true" tabindex="-1"></a><span class="co">//   resolved and yet `*type_ptr` will not be set. These include when a cursor is</span></span>
 <span id="cb67-13"><a href="#cb67-13" aria-hidden="true" tabindex="-1"></a><span class="co">//   in an expression position, when the expression is `rowid` (or similar), and</span></span>
 <span id="cb67-14"><a href="#cb67-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   when the id resolves to an enum case. The reason no mutable type is</span></span>
 <span id="cb67-15"><a href="#cb67-15" aria-hidden="true" tabindex="-1"></a><span class="co">//   returned in these cases is that a new type is allocated as part of semantic</span></span>
@@ -1765,7 +1765,7 @@ AST(or)</code></pre>
 <span id="cb67-29"><a href="#cb67-29" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
 <span id="cb67-30"><a href="#cb67-30" aria-hidden="true" tabindex="-1"></a><span class="co">// This function should not be called directly. If one is interested in</span></span>
 <span id="cb67-31"><a href="#cb67-31" aria-hidden="true" tabindex="-1"></a><span class="co">// performing semantic analysis, call `sem_resolve_id` (or, if within an</span></span>
-<span id="cb67-32"><a href="#cb67-32" aria-hidden="true" tabindex="-1"></a><span class="co">// expression, `sem_resolve_id_expr`). Alternatively, if one wants to get a</span></span>
+<span id="cb67-32"><a href="#cb67-32" aria-hidden="true" tabindex="-1"></a><span class="co">// expression, `sem_resolve_id_expr`.) Alternatively, if one wants to get a</span></span>
 <span id="cb67-33"><a href="#cb67-33" aria-hidden="true" tabindex="-1"></a><span class="co">// mutable type from the environment, call `find_mutable_type`.</span></span>
 <span id="cb67-34"><a href="#cb67-34" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> sem_resolve_id_with_type<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">,</span> CSTR name<span class="op">,</span> CSTR scope<span class="op">,</span> sem_t <span class="op">**</span>type_ptr<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb67-35"><a href="#cb67-35" aria-hidden="true" tabindex="-1"></a>  Contract<span class="op">(</span>name<span class="op">);</span></span>
@@ -1798,7 +1798,7 @@ AST(or)</code></pre>
 <li><code>sem_try_resolve_arguments</code> : an argument in the argument list</li>
 <li><code>sem_try_resolve_column</code> : a column name (possibly scoped)</li>
 <li><code>sem_try_resolve_rowid</code> : the virtual rowid column (possibly scoped)</li>
-<li><code>sem_try_resolve_cursor_as_expression</code> : use of a cursor as a boolean, the bool is true if the cursor has data</li>
+<li><code>sem_try_resolve_cursor_as_expression</code> : use of a cursor as a boolean – the bool is true if the cursor has data</li>
 <li><code>sem_try_resolve_variable</code> : local or global variables</li>
 <li><code>sem_try_resolve_enum</code> : the constant value of an enum (must be scoped)</li>
 <li><code>sem_try_resolve_cursor_field</code> : a field in a cursor (must be scoped)</li>
@@ -1828,7 +1828,7 @@ AST(or)</code></pre>
 <p>Some of the mini-resolvers have quite a few steps, but any one mini-resolver is only about a screenful of code and it does one job.</p>
 <h3 id="flow-analysis">Flow Analysis</h3>
 <p>CQL implements a basic form of control flow analysis in “flow.c”. The header “flow.h” exposes a small set of primitives used by “sem.c” during semantic analysis.</p>
-<p>Flow analysis in CQL involves two important concepts: <strong>flow contexts</strong> and <strong>improvements</strong>. These are rather entangled concepts—one is useless without the other—and so the approach to describing them here will alternate between giving a bit of background on one and then the other, with a greater level of detail about the specific types of improvements being supplied later on.</p>
+<p>Flow analysis in CQL involves two important concepts: <strong>flow contexts</strong> and <strong>improvements</strong>. These are rather entangled concepts — one is useless without the other — and so the approach to describing them here will alternate between giving a bit of background on one and then the other, with a greater level of detail about the specific types of improvements being supplied later on.</p>
 <p>A flow context is used, in essence, to create a boundary around a portion of a user’s program. At the moment, there are four types of contexts.</p>
 <p>The first type of context is called, rather boringly, a <strong>normal</strong> context. Normal contexts are used for portions of a user’s code that may be entered conditionally. A good example of this is in <code>SELECT</code> expressions: When a <code>WHERE</code> clause is present, the expression list is only evaluated when the <code>WHERE</code> clause is true. If we look at <code>sem_select_expr_list_con</code>, we can get an idea of how this works in terms of flow contexts:</p>
 <div class="sourceCode" id="cb69"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> sem_select_expr_list_con<span class="op">(</span>ast_node <span class="op">*</span>ast<span class="op">)</span> <span class="op">{</span></span>
@@ -1964,7 +1964,7 @@ AST(or)</code></pre>
 <span id="cb72-13"><a href="#cb72-13" aria-hidden="true" tabindex="-1"></a><span class="dv">013</span>    <span class="cf">END</span> <span class="cf">IF</span>;</span>
 <span id="cb72-14"><a href="#cb72-14" aria-hidden="true" tabindex="-1"></a><span class="dv">014</span>  <span class="cf">END</span>;</span>
 <span id="cb72-15"><a href="#cb72-15" aria-hidden="true" tabindex="-1"></a><span class="dv">015</span>  <span class="kw">CALL</span> requires_text_notnull(x);</span></code></pre></div>
-<p>Here, even though the outer <code>IF</code> makes no change overall to the nullability improvement to <code>x</code> from line 2—it unsets it on line 6 and then re-sets it on line 10 and the <code>ELSE</code> does nothing—there is no guarantee that line 10 will ever be evaluated because we may jump straight from line 8 to line 15. As a result, it is necessary that <code>x</code> be un-improved after the <code>WHILE</code> loop; a normal context would not accomplish this, but a jump context does. See the comments within <code>_flow_push_context_branch</code> for additional discussion.</p>
+<p>Here, even though the outer <code>IF</code> makes no change overall to the nullability improvement to <code>x</code> from line 2 – it unsets it on line 6 and then re-sets it on line 10 and the <code>ELSE</code> does nothing—there is no guarantee that line 10 will ever be evaluated because we may jump straight from line 8 to line 15. As a result, it is necessary that <code>x</code> be un-improved after the <code>WHILE</code> loop; a normal context would not accomplish this, but a jump context does. See the comments within <code>_flow_push_context_branch</code> for additional discussion.</p>
 <p>While jump contexts are necessary for the safety of improvements in the presence of loops, they are not sufficient: It’s actually necessary to analyze loops <em>twice</em>. This is because execution of a loop might repeat, and so a statement that results in the unsetting of an improvement later in a loop must affect improvements earlier in that loop. For example:</p>
 <div class="sourceCode" id="cb73"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span> x <span class="dt">INT</span>;</span>
 <span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> x <span class="op">:=</span> <span class="dv">1</span>;</span>
@@ -1978,7 +1978,7 @@ AST(or)</code></pre>
 <p>Semantic analysis keeps track of whether or not it is currently reanalyzing the statement list of a loop via the <code>current_loop_analysis_state</code> variable:</p>
 <div class="sourceCode" id="cb74"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The analysis of loops like LOOP and WHILE is done in two passes. First, we</span></span>
 <span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a><span class="co">// analyze the loop to conservatively figure out every improvement that the loop</span></span>
-<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="co">// could possibly unset. After that, then we reanalyze it with said improvements</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="co">// could possibly unset. After that, we reanalyze it with said improvements</span></span>
 <span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a><span class="co">// unset to ensure that everything is safe. See `sem_stmt_list_within_loop` for</span></span>
 <span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a><span class="co">// more information on why this is necessary.</span></span>
 <span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">enum</span> <span class="op">{</span></span>
@@ -2021,15 +2021,15 @@ AST(or)</code></pre>
 <span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="co">// This needs to be called for everything that is no longer safe to consider NOT</span></span>
 <span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a><span class="co">// NULL due to a mutation. It is fine to call this for something not currently</span></span>
 <span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a><span class="co">// subject to improvement, but it must only be called with a name/scope pair</span></span>
-<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a><span class="co">// referring to something has a mutable type (e.g., it must not be an unbound</span></span>
-<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a><span class="co">// variable, a cursor used an expression, an enum case, et cetera).</span></span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a><span class="co">// referring to something that has a mutable type (e.g., it must not be an unbound</span></span>
+<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a><span class="co">// variable, a cursor used as an expression, an enum case, et cetera).</span></span>
 <span id="cb76-9"><a href="#cb76-9" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">void</span> sem_unset_notnull_improved<span class="op">(</span>CSTR name<span class="op">,</span> CSTR scope<span class="op">);</span></span></code></pre></div>
 <p>Similarly, <code>sem_is_notnull_improved</code> uses <code>find_mutable_type</code> to check whether or not something is currently improved:</p>
 <div class="sourceCode" id="cb77"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns true if currently improved to be nonnull, else false.</span></span>
 <span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> bool_t sem_is_notnull_improved<span class="op">(</span>CSTR name<span class="op">,</span> CSTR scope<span class="op">);</span></span></code></pre></div>
 <p>Why does nullability inference use this approach? The reason is that the alternative would be maintaining some sort of set of currently improved identifiers and cursor fields and checking it whenever resolving an identifier or cursor field. The problem would be that merely knowing that some identifier “x” is improved would not be sufficient, however: We’d have to know <em>which</em> “x”. Is it the local variable “x”? Is it the column “x” of the table from which we’re currently selecting? In essence, correctly maintaining an independent set of all currently active improvements would involve re-implementing all of the scoping rules of the language. By using <code>find_mutable_type</code>, we can simply piggyback on the existing name resolution logic and avoid all of these issues.</p>
 <p>A nullability improvement is always created within a particular flow context. When an improvement is added via <code>sem_set_notnull_improved</code>, a record of that improvement is recorded in the current context. When that context ends, that same record is used to remove the improvement. It is also the case that <code>sem_unset_notnull_improved</code> may be used to remove an improvement before a context has ended due to a <code>SET</code>, <code>FETCH</code>, or call to a procedure or function with an <code>OUT</code> argument resulting in the improvement no longer being safe.</p>
-<p>Improvements can introduced into the current context via <code>sem_set_notnull_improved</code> directly (when a variable is <code>SET</code> to a value of a nonnull type), but more commonly they are introduced via one of the following two functions:</p>
+<p>Improvements can be introduced into the current context via <code>sem_set_notnull_improved</code> directly (when a variable is <code>SET</code> to a value of a nonnull type), but more commonly they are introduced via one of the following two functions:</p>
 <div class="sourceCode" id="cb78"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Given a conditional expression `ast` containing possibly AND-linked IS NOT</span></span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="co">// NULL subexpressions, set all of the applicable improvements within the</span></span>
 <span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a><span class="co">// current nullability context.</span></span>
@@ -2135,7 +2135,7 @@ AST(or)</code></pre>
 <span id="cb83-34"><a href="#cb83-34" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
 <span id="cb83-35"><a href="#cb83-35" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span></span>
 <span id="cb83-36"><a href="#cb83-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p>At this point, you should have a decent understanding how how nullability improvements function, both in terms of semantic analysis and in terms of code generation. The implementation is heavily commented, so reading the code and searching for calls to the core functions listed below should be sufficient to fill in any gaps:</p>
+<p>At this point, you should have a decent understanding of how nullability improvements function, both in terms of semantic analysis and in terms of code generation. The implementation is heavily commented, so reading the code and searching for calls to the core functions listed below should be sufficient to fill in any gaps:</p>
 <div class="sourceCode" id="cb84"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>bool_t sem_is_notnull_improved<span class="op">(</span>CSTR name<span class="op">,</span> CSTR scope<span class="op">);</span></span>
 <span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> sem_set_notnull_improved<span class="op">(</span>CSTR name<span class="op">,</span> CSTR scope<span class="op">);</span></span>
 <span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> sem_unset_notnull_improved<span class="op">(</span>CSTR name<span class="op">,</span> CSTR scope<span class="op">);</span></span>
@@ -2158,7 +2158,7 @@ AST(or)</code></pre>
 <span id="cb85-9"><a href="#cb85-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb85-10"><a href="#cb85-10" aria-hidden="true" tabindex="-1"></a><span class="co">-- `x` is NOT safe to use here either (it might be uninitialized)</span></span></code></pre></div>
 <p>As with nullability improvements, initialization improvements rely heavily on flow contexts. The function <code>sem_set_initialization_improved</code>, similarly to <code>sem_set_notnull_improved</code> for nullability, is used to enable an initialization improvement. (There is nothing analogous to <code>sem_unset_notnull_improved</code> for initialization because nothing can ever be uninitialized once it has been given a value.)</p>
-<p>Unlike nullability improvements, initialization improvements use <em>two</em> flags: <code>SEM_TYPE_INIT_REQUIRED</code> and <code>SEM_TYPE_INIT_COMPLETE</code>. Rather than assuming everything is uninitalized by default and requiring the presence of some <code>SEM_TYPE_INITIALIZED</code> flag before anything can be used, we explicitly tag things that are not initialized but need to be with <code>SEM_TYPE_INIT_REQUIRED</code> and later tag them with <code>SEM_TYPE_INIT_COMPLETE</code> once they’ve been initialized. Doing it this way has two benefits:</p>
+<p>Unlike nullability improvements, initialization improvements use <em>two</em> flags: <code>SEM_TYPE_INIT_REQUIRED</code> and <code>SEM_TYPE_INIT_COMPLETE</code>. Rather than assuming everything is uninitalized by default and requiring the presence of some <code>SEM_TYPE_INITIALIZED</code> flag before anything can be used, we explicitly tag things that are not initialized but need to be with <code>SEM_TYPE_INIT_REQUIRED</code> and later tag them with <code>SEM_TYPE_INIT_COMPLETE</code> once they’ve been initialized. Doing it in this way has two benefits:</p>
 <ol type="1">
 <li><p>It reduces the amount of noise in the AST output significantly: Code like <code>LET x := 10;</code> can remain <code>{let_stmt}: x: integer notnull variable</code> in the AST without the need of the extra noise of some <code>initialized</code> flag.</p></li>
 <li><p>More importantly, it means we only have to deal with initialization in a tiny portion of “sem.c”. For example, we must handle it in <code>sem_declare_vars_type</code> to add the <code>SEM_TYPE_INIT_REQUIRED</code> flag and in <code>sem_assign</code> to add <code>SEM_TYPE_INIT_COMPLETE</code>, but <code>sem_let_stmt</code> can remain blissfully ignorant of initialization altogether.</p></li>
@@ -2235,25 +2235,25 @@ AST(or)</code></pre>
 <span id="cb87-49"><a href="#cb87-49" aria-hidden="true" tabindex="-1"></a>  ast<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>region <span class="op">=</span> current_region<span class="op">;</span></span></code></pre></div>
 <ul>
 <li><code>new_sem_struct</code> : makes a struct to hold the result, we already have the count of columns and the table name</li>
-<li><code>symtab_new</code> : is going to gives us a scratch symbol table so we can check for duplicate column names</li>
+<li><code>symtab_new</code> : is going to give us a scratch symbol table so we can check for duplicate column names</li>
 <li>we walk all the items in the table and use <code>is_ast_col_def(def)</code> to find the column definitions</li>
 <li><code>Invariant(def-&gt;sem-&gt;name)</code> : claims that we must have already computed the semantic info for the column and it has its name populated
 <ul>
 <li>this was done earlier</li>
 </ul></li>
-<li><code>symtab_add(columns, def-&gt;sem-&gt;name, NULL)</code> : adds a nil entry under the column name, if this fails we have a duplicate column
+<li><code>symtab_add(columns, def-&gt;sem-&gt;name, NULL)</code> : adds a nil entry under the column name – if this fails we have a duplicate column,
 <ul>
 <li>in which case we report errors and stop</li>
 </ul></li>
 <li><code>is_deleted</code> : tells us if the column was marked with <code>@delete</code> in which case it no longer counts as part of the table</li>
-<li>if all this is good we set the <code>names</code>, <code>kinds</code>, and <code>semtypes</code> from the column definition’s semnatic info</li>
+<li>if all this is good we set the <code>names</code>, <code>kinds</code>, and <code>semtypes</code> from the column definition’s semantic info</li>
 <li><code>symtab_delete</code> : cleans up the temporary symbol table</li>
 <li><code>new_sem</code> : creates a <code>sem_node</code> of type <code>SEM_TYPE_STRUCT</code> which is filled in
 <ul>
 <li><code>sem_join_from_sem_struct</code> will be discussed shortly, but it creates a <code>jptr</code> with one table in it</li>
 </ul></li>
 </ul>
-<p>Structure types often come from the shape of a table, but other things can create a structure type. For instance, the columns of a view, or any select statement, are also described by a structure type and are therefore valid “shapes”. The return type of a procedure usually comes from a <code>SELECT</code> statement so the procedure too can be the source of a shape. The arguments of a procedure form a shape. The fields of a cursor form a shape. You can even have a named subset of the arguments of a procedure and use them like a shape. All of these things are described by structure types.</p>
+<p>Structure types often come from the shape of a table, but other things can create a structure type. For instance, the columns of a view, or any select statement, are also described by a structure type and are therefore valid “shapes”. The return type of a procedure usually comes from a <code>SELECT</code> statement, so the procedure too can be the source of a shape. The arguments of a procedure form a shape. The fields of a cursor form a shape. You can even have a named subset of the arguments of a procedure and use them like a shape. All of these things are described by structure types.</p>
 <h4 id="shapes-and-the-like-construct">Shapes and the LIKE construct</h4>
 <p>There are many cases where you want to be able to capture or re-use something with a known shape and you don’t want to have to fully re-declare the thing. CQL uses the <code>LIKE</code> construct to do these sorts of things. This is more fully explained in <a href="https://cgsql.dev/cql-guide/ch05#reshaping-data-cursor-like-forms">Chapter 5</a> of the Guide, but for now let’s look at two different cases that are of interest.</p>
 <p>First, a cursor:</p>
@@ -2370,9 +2370,9 @@ AST(or)</code></pre>
 <ul>
 <li>some join types change the nullability of columns like <code>LEFT JOIN</code>, so we have to handle that too</li>
 <li>the names of the tables in the new concatenated joinscope have to be unambiguous so there is also error checking to do</li>
-<li>but basically it’s just a concat…</li>
+<li>but basically it’s just a concatenation</li>
 </ul>
-<p>Importantly, we call the thing a “joinscope” because it creates a namespace. When we are evaluating names inside of the <code>FROM</code> clause or even later in say a <code>WHERE</code> clause, the joinscope that we have created so far controls the <code>table.column</code> combinations you can use in expressions. This changes again when there is a subquery, so the joinscopes can be pushed and popped as needed.</p>
+<p>Importantly, we call the thing a “joinscope” because it creates a namespace. When we are evaluating names inside of the <code>FROM</code> clause or even later in, say, a <code>WHERE</code> clause, the joinscope that we have created so far controls the <code>table.column</code> combinations that you can use in expressions. This changes again when there is a subquery, so the joinscopes can be pushed and popped as needed.</p>
 <p>By way of example, you’ll see these two patterns in the code:</p>
 <div class="sourceCode" id="cb95"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>  PUSH_JOIN<span class="op">(</span>from_scope<span class="op">,</span> select_from_etc<span class="op">-&gt;</span>sem<span class="op">-&gt;</span>jptr<span class="op">);</span></span>
 <span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>  error <span class="op">=</span> sem_select_orderby<span class="op">(</span>select_orderby<span class="op">);</span></span>
@@ -2384,10 +2384,10 @@ AST(or)</code></pre>
 <span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>  sem_numeric_expr<span class="op">(</span>ast<span class="op">-&gt;</span>left<span class="op">,</span> ast<span class="op">,</span> <span class="st">&quot;LIMIT&quot;</span><span class="op">,</span> SEM_EXPR_CONTEXT_LIMIT<span class="op">);</span></span>
 <span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>  POP_JOIN<span class="op">();</span></span></code></pre></div>
 <ul>
-<li><code>PUSH_JOIN_BLOCK</code> : causes the name search to stop, nothing deeper in the stack is searched</li>
-<li>in this case we do not allow <code>LIMIT</code> expressions to see any joinscopes, they may not use any columns
+<li><code>PUSH_JOIN_BLOCK</code> : causes the name search to stop – nothing deeper in the stack is searched</li>
+<li>in this case we do not allow <code>LIMIT</code> expressions to see any joinscopes, as they may not use any columns
 <ul>
-<li>even if the <code>LIMIT</code> clause is appearing in a subquery it can’t refer to columns in the parent query.</li>
+<li>even if the <code>LIMIT</code> clause is appearing in a subquery it can’t refer to columns in the parent query</li>
 </ul></li>
 </ul>
 <h3 id="schema-regions">Schema Regions</h3>
@@ -2476,7 +2476,7 @@ AST(or)</code></pre>
 <li><code>symtab_new</code> : creates a new symbol table <code>current_region_image</code></li>
 <li><code>sem_accumulate_public_region_image</code> : populates <code>current_region_image</code> by recursively walking this region adding the names of all the regions we find along the way
 <ul>
-<li>note the regions form a DAG so we might find the same name twice, we can stop if we find a region that is already in the image symbol table</li>
+<li>note the regions form a DAG so we might find the same name twice; we can stop if we find a region that is already in the image symbol table</li>
 </ul></li>
 <li><code>current_region</code> : set it to the now new current region</li>
 </ul>
@@ -2547,7 +2547,7 @@ AST(or)</code></pre>
 <span id="cb102-7"><a href="#cb102-7" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_ad_hoc_list <span class="op">);</span></span>
 <span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_select_functions_list <span class="op">);</span></span>
 <span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a>cql_data_decl<span class="op">(</span> <span class="kw">struct</span> list_item <span class="op">*</span>all_enums_list <span class="op">);</span></span></code></pre></div>
-<p>These linked lists are authoritiative, they let you easily enumerate all the objects of the specified type. For instance, if you wanted to do some validation of all indices you could simply walk <code>all_indices_list</code>.</p>
+<p>These linked lists are authoritiative; they let you easily enumerate all the objects of the specified type. For instance, if you wanted to do some validation of all indices, you could simply walk <code>all_indices_list</code>.</p>
 <div class="sourceCode" id="cb103"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_proc<span class="op">(</span>CSTR name<span class="op">);</span></span>
 <span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_region<span class="op">(</span>CSTR name<span class="op">);</span></span>
 <span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>cql_noexport ast_node <span class="op">*</span>find_func<span class="op">(</span>CSTR name<span class="op">);</span></span>
@@ -2590,8 +2590,8 @@ AST(or)</code></pre>
 <span id="cb104-33"><a href="#cb104-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_LAST 8</span></span></code></pre></div>
 <p>And of course, each “back end” is provided with the root of the AST so that it can also search and/or walk the AST in its own manner. We will see examples of this in later sections.</p>
 <h3 id="recap">Recap</h3>
-<p>At present, there are nearly 20000 lines in <code>sem.c</code> and it would no doubt take more than 20000 lines of text to explain what they all do, and that would be more imprecise than the source code, and probably less readable. <code>sem.c</code> includes over 4000 lines of comments, and probably should have more. While there is a lot of code there it’s very readable and I encourage you to do so to get your answers.</p>
-<p>The point of this part of the Internals Guide isn’t to fully explain all 400+ error checks in about as many semantic error checking functions, it’s to showcase the key concepts shared by all of them. Things like:</p>
+<p>At present, there are nearly 20000 lines in <code>sem.c</code> and it would no doubt take more than 20000 lines of text to explain what they all do, and that would be more imprecise than the source code, and probably less readable. <code>sem.c</code> includes over 4000 lines of comments, and probably should have more. While there is a lot of code there, it’s very readable and I encourage you to do just that – read it – to get your answers.</p>
+<p>The point of this part of the Internals Guide isn’t to fully explain all 400+ error checks in about as many semantic error checking functions, it is to showcase the key concepts shared by all of them. Things like:</p>
 <ul>
 <li>errors are reported largely in the AST and percolate up</li>
 <li>expressions and statements have general purpose dispatch logic for continuing a statement walk</li>

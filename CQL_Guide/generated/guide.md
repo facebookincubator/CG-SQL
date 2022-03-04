@@ -9431,7 +9431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Mar  1 13:34:24 EST 2022
+Snapshot as of Thu Mar  3 15:54:28 EST 2022
 
 ### Operators and Literals
 
@@ -15199,6 +15199,120 @@ indicated function may not be used within SQL because it is not supported on old
 versions of SQLite.
 
 
+### CQL0453: blob type is not a valid table 'table_name'
+
+The CQL forms `SET [blob] FROM CURSOR [cursor]` and `FETCH [cursor] FROM [blob]` require
+that the blob variable be declared with a type kind and the type of the blob
+matches a suitable table.
+
+In this case the blob was declared like so:
+
+```
+DECLARE blob_var blob<table_name>
+```
+
+But the named table `table_name` is not a table.
+
+
+### CQL0454: cursor was not declared for storage 'cursor_name'
+
+The CQL forms `SET [blob] FROM CURSOR [cursor]` and `FETCH [cursor] FROM [blob]` require
+that the cursor variable have storage associated with it.  This means it must
+be a value cursor or else a cursor that was fetched using the `fetch C` form
+and not the `fetch C into [variables]` form.
+
+The indicated cursor was either not fetched at all, or else is using only
+the `fetch into` form so it does not have storage that could be used to
+create a blob.
+
+
+### CQL0455: blob variable must have a type kind for type safety, 'blob_name'
+
+The CQL forms `SET [blob] FROM CURSOR [cursor]` and `FETCH [cursor] FROM [blob]` require
+that the blob variable be declared with a type kind and the type of the blob
+matches a suitable table.
+
+In this case the blob was declared like so:
+
+```
+DECLARE blob_name blob;
+```
+
+But it must be:
+
+```
+DECLARE blob_name blob<table_name>;
+```
+
+Where `table_name` is a suitable table.
+
+
+### CQL0456: blob type is a view, not a table 'view_name'
+
+The CQL forms `SET [blob] FROM CURSOR [cursor]` and `FETCH [cursor] FROM [blob]` require
+that the blob variable be declared with a type kind and the type of the blob
+matches a suitable table.
+
+In this case the blob was declared like:
+
+```
+DECLARE blob_var blob<view_name>
+```
+
+Where the named type `view_name` is a view, not a table.
+
+
+### CQL0457: the indicated table is not marked with @attribute(cql:blob_storage) 'table_name'
+
+The CQL forms `SET [blob] FROM CURSOR [cursor]` and `FETCH [cursor] FROM [blob]` require
+that the blob variable be declared with a type kind and the type of the blob
+matches a suitable table.
+
+In this case the blob was declared like:
+
+```
+DECLARE blob_var blob<table_name>
+```
+
+but the indicated table is missing the necessary attribute `@attribute(cql:blob_storage)`.
+
+This attribute is necessary so that CQL can enforce additional rules on the table
+to ensure that it is viable for blob storage.  For instance, the table can have no
+primary key, no foreign keys, and may not be used in normal SQL statements.
+
+
+### CQL0458: the indicated table may only be used for blob storage 'table_name'
+
+The indicated table has been marked with `@attribute(cql:blob_storage)`.  This means
+that it isn't a real table -- it will have no SQL schema.  Since it's only a storage
+shape, it cannot be used in normal operations that use tables such as `DROP TABLE`,
+`CREATE INDEX`, or inside of `SELECT` statements.
+
+The `CREATE TABLE` construct is used to declare a blob storage type because it's the
+natural way to define a structure in SQL and also because the usual versioning rules are
+helpful for such tables.  But otherwise, blob storage isn't really a table at all.
+
+
+### CQL0459: table is not suitable for use as blob storage: [reason] 'table_name'
+
+The indicated table was marked with `@attribute(cql:blob_storage)`.  This indicates
+that the table is going to be used to define the shape of blobs that could be
+stored in the database. It isn't going to be a "real" table.
+
+There are a number of reasons why a table might not be a valid as blob storage.
+
+For instance:
+
+* it has a primary key
+* it has foreign keys
+* it has constraints
+* it is a virtual table
+
+This error indicates that one of these items is present, the specific cause
+is included in the text of the message.
+
+
+
 
 ## Appendix 5: JSON Schema Grammar
 <!---
@@ -15210,7 +15324,7 @@ versions of SQLite.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Mar  1 13:34:24 EST 2022
+Snapshot as of Thu Mar  3 15:54:29 EST 2022
 
 ### Rules
 
