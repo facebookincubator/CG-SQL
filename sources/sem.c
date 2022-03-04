@@ -9141,6 +9141,12 @@ static ast_node *sem_find_table(CSTR name, ast_node *ast_error) {
     if (!table_ast) {
       record_error(ast_error);
     }
+    else {
+      sem_non_blob_storage_table(ast_error, table_ast);
+      if (is_error(ast_error)) {
+        return NULL;
+      }
+    }
   }
   return table_ast;
 }

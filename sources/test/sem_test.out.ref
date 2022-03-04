@@ -84326,3 +84326,27 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
               | {version_annotation}
                 | {int 7}
 
+The statement ending at line XXXX
+
+SELECT *
+  FROM structured_storage;
+
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: err
+  |       | | {table_or_subquery}: err
+  |       |   | {name structured_storage}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

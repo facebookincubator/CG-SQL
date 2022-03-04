@@ -21256,3 +21256,12 @@ create table deleted_col_blob_storage(
   id integer,
   t text @delete(7)
 );
+
+-- TEST: structured storage cannot appear inside a FROM clause
+-- + {select_stmt}: err
+-- + {select_from_etc}: err
+-- + {table_or_subquery_list}: err
+-- + {table_or_subquery}: err
+-- + error: % the indicated table may only be used for blob storage 'structured_storage'
+-- +1 error:
+select * from structured_storage;
