@@ -1401,5 +1401,6 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not su
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not suitable for use as blob storage: column 't' specifies collation order in 'collate_col_blob_storage'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not suitable for use as blob storage: column 'id' has a default value in 'default_value_col_blob_storage'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not suitable for use as blob storage: column 't' has been deleted in 'deleted_col_blob_storage'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0459: table is not suitable for use as blob storage: it is declared using @recreate 'recreate_blob_storage'
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0458: the indicated table may only be used for blob storage 'structured_storage'
 semantic errors present; no code gen.

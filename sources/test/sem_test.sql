@@ -21257,6 +21257,16 @@ create table deleted_col_blob_storage(
   t text @delete(7)
 );
 
+-- TEST: table with @recreate is not valid
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as blob storage: it is declared using @recreate 'recreate_blob_storage'
+-- +1 error:
+@attribute(cql:blob_storage)
+create table recreate_blob_storage(
+  id integer,
+  t text
+) @recreate;
+
 -- TEST: structured storage cannot appear inside a FROM clause
 -- + {select_stmt}: err
 -- + {select_from_etc}: err

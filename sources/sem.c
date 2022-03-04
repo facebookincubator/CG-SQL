@@ -12624,6 +12624,7 @@ static void sem_validate_table_for_blob_storage(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
@@ -12658,6 +12659,14 @@ static void sem_validate_table_for_blob_storage(ast_node *ast) {
     if (is_error(ast)) {
       return;
     }
+  }
+
+  while (table_attrs) {
+    if (is_ast_recreate_attr(table_attrs)) {
+      report_invalid_blob_storage(ast, "it is declared using @recreate", name);
+      return;
+    }
+    table_attrs = table_attrs->right;
   }
 }
 
