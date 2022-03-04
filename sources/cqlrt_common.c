@@ -3046,37 +3046,43 @@ cql_code cql_deserialize_from_blob(
     nullable_count += nullable_code;
     actual_count++;
 
-    // too many fields present in the record, that is wrong for sure
-    if (actual_count > needed_count) {
-      goto error;
+    if (code == 'f' || code == 'F') {
+      bool_count++;
     }
 
-    uint8_t type = types[i++];
-    bool nullable_type = !(type & CQL_DATA_TYPE_NOT_NULL);
-    uint8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+    // Extra fields do not have to match, the assumption is that this is
+    // a future version of the type talking to a past version.  The past
+    // version sees only what it expects to see.  However, we did have
+    // to compute the nullable_count and bool_count to get the bit vector
+    // size correct.
+    if (actual_count <= needed_count) {
+      uint8_t type = types[i++];
+      bool nullable_type = !(type & CQL_DATA_TYPE_NOT_NULL);
+      uint8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
-    // it's ok if we need a nullable but we're getting a non-nullable
-    if (!nullable_type && nullable_code) {
-      // nullability must match
-      goto error;
-    }
+      // it's ok if we need a nullable but we're getting a non-nullable
+      if (!nullable_type && nullable_code) {
+        // nullability must match
+        goto error;
+      }
 
-    // normalize to the not null type, we've already checked nullability match
-    code = nullable_code ? code - ('a' - 'A') : code;
+      // normalize to the not null type, we've already checked nullability match
+      code = nullable_code ? code - ('a' - 'A') : code;
 
-    // ensure that what we have is what we need for all of what we have
-    bool code_ok = false;
-    switch (core_data_type) {
-      case CQL_DATA_TYPE_INT32:  code_ok = code == 'I'; break;
-      case CQL_DATA_TYPE_INT64:  code_ok = code == 'L'; break;
-      case CQL_DATA_TYPE_DOUBLE: code_ok = code == 'D'; break;
-      case CQL_DATA_TYPE_BOOL:   code_ok = code == 'F'; bool_count++; break;
-      case CQL_DATA_TYPE_STRING: code_ok = code == 'S'; break;
-      case CQL_DATA_TYPE_BLOB:   code_ok = code == 'B'; break;
-    }
+      // ensure that what we have is what we need for all of what we have
+      bool code_ok = false;
+      switch (core_data_type) {
+        case CQL_DATA_TYPE_INT32:  code_ok = code == 'I'; break;
+        case CQL_DATA_TYPE_INT64:  code_ok = code == 'L'; break;
+        case CQL_DATA_TYPE_DOUBLE: code_ok = code == 'D'; break;
+        case CQL_DATA_TYPE_BOOL:   code_ok = code == 'F'; break;
+        case CQL_DATA_TYPE_STRING: code_ok = code == 'S'; break;
+        case CQL_DATA_TYPE_BLOB:   code_ok = code == 'B'; break;
+      }
 
-    if (!code_ok) {
-      goto error;
+      if (!code_ok) {
+        goto error;
+      }
     }
   }
 

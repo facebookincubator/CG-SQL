@@ -4323,18 +4323,21 @@ BEGIN_TEST(blob_serialization)
   end catch;
   EXPECT(caught);
 
-  -- small blob will have too many fields...
+  -- big blob will have too many fields...
   set caught := false;
   set any_blob := stash_both;
   set blob_notnulls := any_blob;
-  begin try
-    fetch test_cursor_notnulls from blob_notnulls;
-  end try;
-  begin catch
-    EXPECT(not test_cursor_notnulls);
-    set caught := true;
-  end catch;
-  EXPECT(caught);
+  fetch test_cursor_notnulls from blob_notnulls;
+
+  -- we still expect to be able to read the fields we know without error
+  EXPECT(test_cursor_notnulls);
+  EXPECT(test_cursor_notnulls.t_nn == cursor_both.t_nn);
+  EXPECT(test_cursor_notnulls.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_notnulls.i_nn == cursor_both.i_nn);
+  EXPECT(test_cursor_notnulls.l_nn == cursor_both.l_nn);
+  EXPECT(test_cursor_notnulls.r_nn == cursor_both.r_nn);
+  EXPECT(test_cursor_notnulls.bl_nn == cursor_both.bl_nn);
+  EXPECT(test_cursor_notnulls.str_nn == cursor_both.str_nn);
 
   -- we're missing fields and they aren't nullable, this will make errors
   declare cursor_with_extras cursor like storage_with_extras;
