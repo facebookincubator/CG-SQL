@@ -91,7 +91,9 @@ static void cg_objc_proc_result_set_getter(
 
   uint32_t col_count_for_base = 0;
 
-  bool_t is_ext = objc_frag_type == FRAG_TYPE_EXTENSION;
+  Invariant(objc_frag_type != FRAG_TYPE_SHARED);
+  Invariant(objc_frag_type != FRAG_TYPE_EXTENSION);
+
   bool_t is_asm_frag = objc_frag_type == FRAG_TYPE_ASSEMBLY;
 
   if (objc_frag_type != FRAG_TYPE_NONE) {
@@ -198,8 +200,7 @@ static void cg_objc_proc_result_set_getter(
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     objc_getter,
-    // only prefix with __PRIVATE__ the private assembly methods
-    is_ext ? rt->symbol_prefix : symbol_prefix.ptr,
+     symbol_prefix.ptr,
     name,
     "_get_",
     col_name);
@@ -224,40 +225,26 @@ static void cg_objc_proc_result_set_getter(
             value_convert_end);
   }
 
-  if (is_ext) {
-    // Since the parent assembly query has already fetched the aggregated resultSet, we just emit
-    // a call to the parent for extension fragment rather than doing a regular getter call.
-    CG_CHARBUF_OPEN_SYM(objc_parent_name, base_fragment_name);
+  if (fetch_proc) {
+    bprintf(output,
+            "\nstatic inline %s%s%s(%s *resultSet)\n",
+            return_type.ptr,
+            return_type_separator,
+            objc_getter.ptr,
+            objc_name);
+  }
+  else {
     bprintf(output,
             "\nstatic inline %s%s%s(%s *resultSet, %s row)\n",
             return_type.ptr,
             return_type_separator,
             objc_getter.ptr,
-            objc_parent_name.ptr,
+            objc_name,
             rt->cql_int32);
-    CHARBUF_CLOSE(objc_parent_name);
-    bprintf(output, "{\n");
   }
-  else {
-    if (fetch_proc) {
-      bprintf(output,
-              "\nstatic inline %s%s%s(%s *resultSet)\n",
-              return_type.ptr,
-              return_type_separator,
-              objc_getter.ptr,
-              objc_name);
-    }
-    else {
-      bprintf(output,
-              "\nstatic inline %s%s%s(%s *resultSet, %s row)\n",
-              return_type.ptr,
-              return_type_separator,
-              objc_getter.ptr,
-              objc_name,
-              rt->cql_int32);
-    }
-    bprintf(output, "{\n");
-  }
+
+  bprintf(output, "{\n");
+  
   bprintf(output, "  %s cResultSet = %s(resultSet);\n", c_result_set_ref, c_convert);
   bprintf(output, "  return %s;\n", value.ptr);
   bprintf(output, "}\n");
@@ -297,14 +284,12 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   encode_columns = symtab_new();
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
-  bool_t is_ext = objc_frag_type == FRAG_TYPE_EXTENSION;
-  if (is_ext) {
-    Contract(base_fragment_name);
-  }
+  Invariant(objc_frag_type != FRAG_TYPE_SHARED);
+  Invariant(objc_frag_type != FRAG_TYPE_EXTENSION);
 
   bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
-  CSTR c_result_set_name = is_ext ? base_fragment_name : name;
-  charbuf *h = is_ext ? objc_extension_header : cg_header_output;
+  CSTR c_result_set_name = name;
+  charbuf *h = cg_header_output;
 
   CG_CHARBUF_OPEN_SYM(objc_name, name);
   CG_CHARBUF_OPEN_SYM(objc_result_set_name, c_result_set_name);
@@ -315,10 +300,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
     c_result_set_ref, rt->impl_symbol_prefix, c_result_set_name, "_result_set_ref");
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(c_convert, "", c_name.ptr, "_from_", objc_name.ptr);
 
-  CG_CHARBUF_OPEN_SYM(objc_class_name, c_result_set_name);
-
-  // if extension we emit the base class name
-  CSTR classname = is_ext ? objc_class_name.ptr : objc_name.ptr;
+  CSTR classname = objc_name.ptr;
 
   bprintf(h, "\n@class %s;\n", classname);
   bprintf(h, "\n#ifdef CQL_EMIT_OBJC_INTERFACES\n");
@@ -328,32 +310,29 @@ static void cg_objc_proc_result_set(ast_node *ast) {
 
   // Since the parent assembly query has already fetched the aggregated resultSet, we call to use that directly and
   // skip setting up objc and c bridging for extension fragment specific result unless otherwise
-  if (!is_ext) {
-    CG_CHARBUF_OPEN_SYM_WITH_PREFIX(objc_convert, "", objc_name.ptr, "_from_", c_name.ptr);
 
-    bprintf(h, "\nstatic inline %s *%s(%s resultSet)\n", objc_name.ptr, objc_convert.ptr, c_result_set_ref.ptr);
-    bprintf(h, "{\n");
-    bprintf(h, "  return (__bridge %s *)resultSet;\n", objc_name.ptr);
-    bprintf(h, "}\n");
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(objc_convert, "", objc_name.ptr, "_from_", c_name.ptr);
 
-    CHARBUF_CLOSE(objc_convert);
-  }
+  bprintf(h, "\nstatic inline %s *%s(%s resultSet)\n", objc_name.ptr, objc_convert.ptr, c_result_set_ref.ptr);
+  bprintf(h, "{\n");
+  bprintf(h, "  return (__bridge %s *)resultSet;\n", objc_name.ptr);
+  bprintf(h, "}\n");
+
+  CHARBUF_CLOSE(objc_convert);
 
   bprintf(
     h,
     "\nstatic inline %s %s(%s *resultSet)\n",
     c_result_set_ref.ptr,
     c_convert.ptr,
-    is_ext ? objc_class_name.ptr : objc_name.ptr);
+    objc_name.ptr);
+
   bprintf(h, "{\n");
   bprintf(h, "  return (__bridge %s)resultSet;\n", c_result_set_ref.ptr);
   bprintf(h, "}\n");
 
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   // extension fragments use SELECT and are incompatible with the single row result set form using OUT
-  if (is_ext) {
-    Invariant(!out_stmt_proc);
-  }
 
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = sptr->count;
@@ -391,16 +370,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             objc_getter.ptr,
             objc_result_set_name.ptr);
         bprintf(h, "{\n");
-        if (is_ext) {
-          CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-            objc_result_set_name_getter, objc_result_set_name.ptr, "_get_", col, "_is_encoded");
-          bprintf(
-              h, "  return %s(resultSet);\n", objc_result_set_name_getter.ptr);
-          CHARBUF_CLOSE(objc_result_set_name_getter);
-        }
-        else {
-          bprintf(h, "  return %s(%s(resultSet));\n", c_getter.ptr, c_convert.ptr);
-        }
+        bprintf(h, "  return %s(%s(resultSet));\n", c_getter.ptr, c_convert.ptr);
         bprintf(h, "}\n");
 
         CHARBUF_CLOSE(c_getter);
@@ -463,7 +433,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
             c_convert.ptr,
             out_stmt_proc ? "" : ", from, count");
     bprintf(h, "  %s(copy);\n", rt->cql_result_set_note_ownership_transferred);
-    bprintf(h, "  return (__bridge_transfer %s *)copy;\n", is_ext ? objc_class_name.ptr : objc_name.ptr);
+    bprintf(h, "  return (__bridge_transfer %s *)copy;\n", objc_name.ptr);
     bprintf(h, "}\n");
   }
 
@@ -476,55 +446,48 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   CG_CHARBUF_OPEN_SYM(cgs_eq_func_name, name, opt_row, "_equal");
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(eq_func_name, rt->impl_symbol_prefix, name, opt_row, "_equal");
 
-  if (!is_ext) {
-
-
-    bprintf(h,
-            "\nstatic inline NSUInteger %s(%s *resultSet",
-            cgs_hash_func_name.ptr,
-            objc_name.ptr);
-    if (!out_stmt_proc) {
-      bprintf(h, ", %s row", rt->cql_int32);
-    }
-    bprintf(h, ")\n");
-    bprintf(h, "{\n");
-    bprintf(h,
-            "  return %s(%s(resultSet)%s);\n",
-            hash_func_name.ptr,
-            c_convert.ptr,
-            out_stmt_proc ? "" : ", row");
-    bprintf(h, "}\n");
-
-    bprintf(h,
-            "\nstatic inline BOOL %s(%s *resultSet1",
-            cgs_eq_func_name.ptr,
-            objc_name.ptr);
-    if (!out_stmt_proc) {
-      bprintf(h, ", %s row1", rt->cql_int32);
-    }
-    bprintf(h, ", %s *resultSet2", objc_name.ptr);
-    if (!out_stmt_proc) {
-      bprintf(h, ", %s row2", rt->cql_int32);
-    }
-    bprintf(h, ")\n");
-    bprintf(h, "{\n");
-    bprintf(h,
-            "  return %s(%s(resultSet1)%s, %s(resultSet2)%s);\n",
-            eq_func_name.ptr,
-            c_convert.ptr,
-            out_stmt_proc ? "" : ", row1",
-            c_convert.ptr,
-            out_stmt_proc ? "" : ", row2");
-    bprintf(h, "}\n");
+  bprintf(h,
+          "\nstatic inline NSUInteger %s(%s *resultSet",
+          cgs_hash_func_name.ptr,
+          objc_name.ptr);
+  if (!out_stmt_proc) {
+    bprintf(h, ", %s row", rt->cql_int32);
   }
+  bprintf(h, ")\n");
+  bprintf(h, "{\n");
+  bprintf(h,
+          "  return %s(%s(resultSet)%s);\n",
+          hash_func_name.ptr,
+          c_convert.ptr,
+          out_stmt_proc ? "" : ", row");
+  bprintf(h, "}\n");
+
+  bprintf(h,
+          "\nstatic inline BOOL %s(%s *resultSet1",
+          cgs_eq_func_name.ptr,
+          objc_name.ptr);
+  if (!out_stmt_proc) {
+    bprintf(h, ", %s row1", rt->cql_int32);
+  }
+  bprintf(h, ", %s *resultSet2", objc_name.ptr);
+  if (!out_stmt_proc) {
+    bprintf(h, ", %s row2", rt->cql_int32);
+  }
+  bprintf(h, ")\n");
+  bprintf(h, "{\n");
+  bprintf(h,
+          "  return %s(%s(resultSet1)%s, %s(resultSet2)%s);\n",
+          eq_func_name.ptr,
+          c_convert.ptr,
+          out_stmt_proc ? "" : ", row1",
+          c_convert.ptr,
+          out_stmt_proc ? "" : ", row2");
+  bprintf(h, "}\n");
 
   CHARBUF_CLOSE(eq_func_name);
   CHARBUF_CLOSE(cgs_eq_func_name);
   CHARBUF_CLOSE(hash_func_name);
   CHARBUF_CLOSE(cgs_hash_func_name);
-
-
-  CHARBUF_CLOSE(objc_class_name);
   CHARBUF_CLOSE(c_convert);
   CHARBUF_CLOSE(c_result_set_ref);
   CHARBUF_CLOSE(c_result_set);
@@ -561,7 +524,6 @@ static void cg_objc_one_stmt(ast_node *stmt) {
 }
 
 static void cg_objc_stmt_list(ast_node *head) {
-  bool_t containsAssembly = false;
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
     objc_frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
@@ -571,24 +533,18 @@ static void cg_objc_stmt_list(ast_node *head) {
       continue;
     }
 
+    if (objc_frag_type == FRAG_TYPE_EXTENSION) {
+      // extension fragments never create any code
+      continue;
+    }
+
     if (objc_frag_type == FRAG_TYPE_BASE) {
       // skipping the base fragment getters since generating in each extension
       // will cause collisions including two fragments headers
       continue;
     }
 
-    if (!containsAssembly) {
-      // record if an assembly is present
-      containsAssembly = objc_frag_type == FRAG_TYPE_ASSEMBLY;
-    }
-
     cg_objc_one_stmt(stmt);
-  }
-
-  // Include header outputs in extension buffer into final generation if this is for
-  // extension only and disgard if this is for parent assembly query
-  if (!containsAssembly) {
-    bprintf(cg_header_output, "%s", objc_extension_header->ptr);
   }
 }
 

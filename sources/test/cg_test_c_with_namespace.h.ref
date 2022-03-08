@@ -2297,29 +2297,13 @@ extern CQL_WARN_UNUSED cql_code frag_test_fetch_results(sqlite3 *_Nonnull _db_, 
 
 // The statement ending at line XXXX
 
-extern cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-
-extern cql_bool ext_get_f2_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_bool __PRIVATE__frag_test_get_f2_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-
-extern cql_int32 ext_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int32 __PRIVATE__frag_test_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-
-extern cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set);
+// The statement ending at line XXXX
+//
 
 // The statement ending at line XXXX
 
-extern cql_int32 ext2_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-
-extern cql_bool ext2_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_bool __PRIVATE__frag_test_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-
-extern cql_int32 ext2_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int32 __PRIVATE__frag_test_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-
-extern cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set);
+// The statement ending at line XXXX
+//
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result);
@@ -3377,6 +3361,9 @@ extern void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_n
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
 #define CRC_foo -1028649829708674110L
 
 extern cql_string_ref _Nonnull foo_stored_procedure_name;
@@ -3399,6 +3386,9 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+//
 
 // The statement ending at line XXXX
 #define CRC_shared_conditional_user -652417972557262450L
@@ -3430,6 +3420,9 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+//
 
 // The statement ending at line XXXX
 #define CRC_nested_shared_stuff 8821613027549937349L

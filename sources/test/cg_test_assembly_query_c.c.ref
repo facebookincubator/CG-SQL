@@ -29,6 +29,39 @@ END;
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:extension_fragment=assembly_core)
+CREATE PROC extension_fragment_one (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+BEGIN
+  WITH
+  assembly_core (x, y, z) AS (SELECT 1, nullable("a"), nullable(3L)),
+  plugin_one (x, y, z) AS (SELECT *
+    FROM assembly_core
+  UNION ALL
+  SELECT 1 AS x, "y" AS y, 7 AS z)
+  SELECT *
+    FROM plugin_one;
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:extension_fragment=assembly_core)
+CREATE PROC extension_fragment_two (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
+BEGIN
+  WITH
+  assembly_core (x, y, z) AS (SELECT 1, nullable("a"), nullable(3L)),
+  plugin_two (x, y, z, flag) AS (SELECT assembly_core.*, plugin_table.flag
+    FROM assembly_core
+    LEFT OUTER JOIN plugin_table ON plugin_table.name = assembly_core.y AND plugin_table.id = id_)
+  SELECT *
+    FROM plugin_two;
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
 @ATTRIBUTE(cql:assembly_fragment=assembly_core)
 CREATE PROC assembly_core (id_ INTEGER NOT NULL, name_ TEXT NOT NULL)
 BEGIN

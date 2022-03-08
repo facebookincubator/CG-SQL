@@ -111,44 +111,13 @@ extern CQL_WARN_UNUSED cql_code frag_test_fetch_results(sqlite3 *_Nonnull _db_, 
 
 // The statement ending at line XXXX
 
-
-static inline cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
-  extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, int32_t row);
-  return frag_test_get_id(result_set, row);
-}
-
-static inline cql_string_ref _Nullable ext_get_f2(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
-  extern cql_string_ref _Nullable __PRIVATE__frag_test_get_f2(frag_test_result_set_ref _Nonnull result_set, int32_t row);
-  return __PRIVATE__frag_test_get_f2(result_set, row);
-}
-
-static inline cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
-   return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
+// The statement ending at line XXXX
+//
 
 // The statement ending at line XXXX
 
-
-static inline cql_int32 ext2_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
-  extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, int32_t row);
-  return frag_test_get_id(result_set, row);
-}
-
-static inline cql_bool ext2_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
-  extern cql_bool __PRIVATE__frag_test_get_f3_is_null(frag_test_result_set_ref _Nonnull result_set, int32_t row);
-  return __PRIVATE__frag_test_get_f3_is_null(result_set, row);
-}
-
-static inline cql_double ext2_get_f3_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
-  extern cql_double __PRIVATE__frag_test_get_f3_value(frag_test_result_set_ref _Nonnull result_set, int32_t row);
-  return __PRIVATE__frag_test_get_f3_value(result_set, row);
-}
-
-static inline cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set) {
-   return cql_result_set_get_count((cql_result_set_ref)result_set);
-}
-
+// The statement ending at line XXXX
+//
 
 // The statement ending at line XXXX
 #define CRC_emit_object_result_set -8134731798097882462L

@@ -33,7 +33,7 @@ select * from assembly_core;
 end;
 
 -- TEST: extension fragment one
--- - extension_fragment_one
+-- - cql_code%extension_fragment_one
 @attribute(cql:extension_fragment=assembly_core)
 create proc extension_fragment_one(id_ INTEGER NOT NULL, name_ text not null)
 begin
@@ -47,7 +47,7 @@ begin
 end;
 
 -- TEST: extension fragment one
--- - extension_fragment_two
+-- - cql_code%extension_fragment_two
 @attribute(cql:extension_fragment=assembly_core)
 create proc extension_fragment_two(id_ integer not null, name_ text not null)
 begin

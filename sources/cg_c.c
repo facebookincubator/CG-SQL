@@ -3525,32 +3525,35 @@ static void cg_create_proc_stmt(ast_node *ast) {
   // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
 
-  if (frag_type == FRAG_TYPE_SHARED) {
+  if (frag_type == FRAG_TYPE_SHARED || frag_type == FRAG_TYPE_EXTENSION) {
     // shared fragments produce no code at all, no header, nothing
+    // extension fragments, same story
+    // put a line marker in the header file in case we want a test suite that verifies that
+
+    if (options.test) {
+      bprintf(cg_header_output, "\n// The statement ending at line %d\n//\n", ast->lineno);
+    }
+
     return;
   }
 
-  // Neither extension fragments nor base fragments produce the code for the procedure, only
-  // the assembly fragment actually generates the result set.  For the others all we do
-  // is generate the getter functions for the result set.
-  if (frag_type == FRAG_TYPE_EXTENSION || frag_type == FRAG_TYPE_BASE) {
+  if (frag_type == FRAG_TYPE_BASE) {
     Contract(has_result_set(ast));
     cg_proc_result_set(ast);
 
-    if (frag_type == FRAG_TYPE_BASE) {
-      // Emit assembly_fetch_results, it has the same signature as the base only with a result set
-      // instead of a statement.
+    // Emit assembly_fetch_results, it has the same signature as the base only with a result set
+    // instead of a statement.
 
-      // Note we can do this prototype on an easy plan.  We know everything about the signature already
-      // from the base_fragment_name.  We also know that it is not an out union proc or an out proc
-      // because it's a fragment and we know it's a DML proc for the same reason.
-      // So we're on the easiest plan for sure.
+    // Note we can do this prototype on an easy plan.  We know everything about the signature already
+    // from the base_fragment_name.  We also know that it is not an out union proc or an out proc
+    // because it's a fragment and we know it's a DML proc for the same reason.
+    // So we're on the easiest plan for sure.
 
-      CHARBUF_OPEN(temp);
-        cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, base_fragment_name, base_fragment_name, &temp);
-        bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, temp.ptr);
-      CHARBUF_CLOSE(temp);
-    }
+    CHARBUF_OPEN(temp);
+      cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, base_fragment_name, base_fragment_name, &temp);
+      bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, temp.ptr);
+    CHARBUF_CLOSE(temp);
+
     return;
   }
 
@@ -6692,28 +6695,6 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // reset the temp stack
   stack_level = 0;
 
-  // There are special rules for some procedures, we avoid emiting them here
-  // so that we don't generate the comments or anything for them.  Testing later
-  // is more of a mess.
-
-  if (misc_attrs && is_ast_create_proc_stmt(stmt)) {
-    // Extension and base fragments should be emitted when compiled by themselves, if the assembly
-    // fragment is present the extension fragments are suppressed and only the assembly is emitted.
-    // Normally extensions are compiled by themselves (with just the base) then AGAIN with the assembly.
-    // The assembly expects that we have seen all the extensions before it is compiled.
-
-    // sets base_fragment_name as well for the current fragment
-    uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
-
-    if (frag_type == FRAG_TYPE_EXTENSION) {
-      // We know the name of the assembly fragment it must be the same as the name in the attribute.
-      // If we find that procedure, everything about the extension is suppressed for this compilation.
-      if (find_proc(base_fragment_name)) {
-        return;
-      }
-    }
-  }
-
   symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
   Contract(entry);
 
@@ -6974,12 +6955,13 @@ static void cg_proc_result_set_getter(function_info *info) {
   charbuf *d = info->defs;
   sem_t sem_type = info->ret_type;
 
+  Invariant(info->frag_type != FRAG_TYPE_EXTENSION);
+
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(symbol_prefix, info->is_private ? "__PRIVATE__" : "", rt->symbol_prefix);
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
-    // only prefix with __PRIVATE__ the private assembly methods
-    info->frag_type == FRAG_TYPE_EXTENSION ? rt->symbol_prefix : symbol_prefix.ptr,
+    symbol_prefix.ptr,
     info->name,
     "_get_",
     info->col,
@@ -7009,44 +6991,21 @@ static void cg_proc_result_set_getter(function_info *info) {
   // Note that the special handling of assembly fragments is not needed for the non-inline-getters case
   // because in that case all the getters are emitted into the defs section anyway.
 
-  if (info->frag_type == FRAG_TYPE_EXTENSION) {
-    // extension fragment can be compiled independently so we include forward declared base row getter in its header
-    CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-      base_col_getter_sym,
-      symbol_prefix.ptr,
-      base_fragment_name,
-      "_get_",
-      info->col,
-      info->sym_suffix);
-    CHARBUF_OPEN(base_func_fwd_decl);
-    cg_var_decl(&base_func_fwd_decl, sem_type, base_col_getter_sym.ptr, CG_VAR_DECL_PROTO);
-    bprintf(&base_func_fwd_decl, "(%s _Nonnull result_set", info->result_set_ref_type);
-    bprintf(&base_func_fwd_decl, ", %s row", rt->cql_int32);
-    bprintf(&base_func_fwd_decl, ")");
-    bprintf(h, "%s%s;\n\n", rt->symbol_visibility, base_func_fwd_decl.ptr);
-    CHARBUF_CLOSE(base_func_fwd_decl);
+  bprintf(d,
+    "  %s *data = (%s *)%s((cql_result_set_ref)result_set);\n",
+    info->row_struct_type,
+    info->row_struct_type,
+    rt->cql_result_set_get_data);
 
-    // extension fragment row getter should always delegate to corresponding getter from its base fragment
-    bprintf(d, "  return %s%s_get_%s%s(result_set, row);\n", symbol_prefix.ptr, base_fragment_name,
-      info->col, info->sym_suffix ? info->sym_suffix : "");
-    CHARBUF_CLOSE(base_col_getter_sym);
+  // Single row result set is always data[0]
+  // And data->field looks nicer than data[0].field
+  if (info->uses_out) {
+    bprintf(d, "  return data->%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
   }
   else {
-    bprintf(d,
-            "  %s *data = (%s *)%s((cql_result_set_ref)result_set);\n",
-            info->row_struct_type,
-            info->row_struct_type,
-            rt->cql_result_set_get_data);
-
-    // Single row result set is always data[0]
-    // And data->field looks nicer than data[0].field
-    if (info->uses_out) {
-      bprintf(d, "  return data->%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
-    }
-    else {
-      bprintf(d, "  return data[row].%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
-    }
+    bprintf(d, "  return data[row].%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
   }
+  
   bprintf(d, "}\n");
 
 cleanup:
@@ -7075,12 +7034,14 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
   charbuf *d = info->defs;
   charbuf *out = NULL;
 
+  Invariant(info->frag_type != FRAG_TYPE_EXTENSION);
+
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(symbol_prefix, info->is_private ? "__PRIVATE__" : "", rt->symbol_prefix);
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
     // only prefix with __PRIVATE__ the private assembly methods
-    info->frag_type == FRAG_TYPE_EXTENSION ? rt->symbol_prefix : symbol_prefix.ptr,
+    symbol_prefix.ptr,
     info->name,
     "_get_",
     info->col,
@@ -7131,71 +7092,42 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
   // definitely set now
   Invariant(out);
 
-  if (info->frag_type == FRAG_TYPE_EXTENSION) {
-    // extension fragment can be complied independently so we include forward declared base row getter in its header
-    CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-      base_col_getter_sym,
-      symbol_prefix.ptr,
-      base_fragment_name,
-      "_get_",
-      info->col,
-      info->sym_suffix);
-    CHARBUF_OPEN(base_func_decl);
-    cg_var_decl(&base_func_decl, info->ret_type, base_col_getter_sym.ptr, CG_VAR_DECL_PROTO);
-    bprintf(&base_func_decl, "(%s _Nonnull result_set, int32_t row)", info->result_set_ref_type);
-    bprintf(out, "  extern %s;\n", base_func_decl.ptr);
-    CHARBUF_CLOSE(base_func_decl);
-    CHARBUF_CLOSE(base_col_getter_sym);
-
-    // extension fragment row getter should always delegate to corresponding getter from its base fragment
-    CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-      extension_getter_sym,
-      symbol_prefix.ptr,
-      base_fragment_name,
-      "_get_",
-      info->col,
-      info->sym_suffix);
-    bprintf(out, "  return %s(result_set, row);\n", extension_getter_sym.ptr);
-    CHARBUF_CLOSE(extension_getter_sym);
+  bprintf(out, "  return ");
+  if (is_ref_type(info->name_type) && is_nullable(info->ret_type)) {
+    bprintf(out,
+      "%s((cql_result_set_ref)result_set, %s, %d) ? NULL : ",
+      rt->cql_result_set_get_is_null,
+      row,
+      info->col_index);
   }
-  else {
-    bprintf(out, "  return ");
-    if (is_ref_type(info->name_type) && is_nullable(info->ret_type)) {
-      bprintf(out,
-              "%s((cql_result_set_ref)result_set, %s, %d) ? NULL : ",
-              rt->cql_result_set_get_is_null,
-              row,
-              info->col_index);
-    }
 
-    switch (info->name_type) {
-      case SEM_TYPE_NULL:
-        bprintf(out, "%s", rt->cql_result_set_get_is_null);
-        break;
-      case SEM_TYPE_BOOL:
-        bprintf(out, "%s", rt->cql_result_set_get_bool);
-        break;
-      case SEM_TYPE_REAL:
-        bprintf(out, "%s", rt->cql_result_set_get_double);
-        break;
-      case SEM_TYPE_INTEGER:
-        bprintf(out, "%s", rt->cql_result_set_get_int32);
-        break;
-      case SEM_TYPE_LONG_INTEGER:
-        bprintf(out, "%s", rt->cql_result_set_get_int64);
-        break;
-      case SEM_TYPE_TEXT:
-        bprintf(out, "%s", rt->cql_result_set_get_string);
-        break;
-      case SEM_TYPE_BLOB:
-        bprintf(out, "%s", rt->cql_result_set_get_blob);
-        break;
-      case SEM_TYPE_OBJECT:
-        bprintf(out, "%s", rt->cql_result_set_get_object);
-        break;
-    }
-    bprintf(out, "((cql_result_set_ref)result_set, %s, %d);\n", row, info->col_index);
+  switch (info->name_type) {
+    case SEM_TYPE_NULL:
+      bprintf(out, "%s", rt->cql_result_set_get_is_null);
+      break;
+    case SEM_TYPE_BOOL:
+      bprintf(out, "%s", rt->cql_result_set_get_bool);
+      break;
+    case SEM_TYPE_REAL:
+      bprintf(out, "%s", rt->cql_result_set_get_double);
+      break;
+    case SEM_TYPE_INTEGER:
+      bprintf(out, "%s", rt->cql_result_set_get_int32);
+      break;
+    case SEM_TYPE_LONG_INTEGER:
+      bprintf(out, "%s", rt->cql_result_set_get_int64);
+      break;
+    case SEM_TYPE_TEXT:
+      bprintf(out, "%s", rt->cql_result_set_get_string);
+      break;
+    case SEM_TYPE_BLOB:
+      bprintf(out, "%s", rt->cql_result_set_get_blob);
+      break;
+    case SEM_TYPE_OBJECT:
+      bprintf(out, "%s", rt->cql_result_set_get_object);
+      break;
   }
+  bprintf(out, "((cql_result_set_ref)result_set, %s, %d);\n", row, info->col_index);
   bprintf(out, "}\n");
 
 cleanup:
@@ -7477,6 +7409,8 @@ static void cg_proc_result_set(ast_node *ast) {
   // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
 
+  Invariant(frag_type != FRAG_TYPE_EXTENSION);
+
   // register the proc name if there is a callback, the particular result type will do whatever it wants
   rt->register_proc_name && rt->register_proc_name(name);
 
@@ -7494,9 +7428,7 @@ static void cg_proc_result_set(ast_node *ast) {
   charbuf *h = cg_header_output;
   charbuf *d = cg_declarations_output;
 
-  // name replacement such that extension fragment should always reference to
-  // base result set type instead of setting up their own
-  CSTR result_set_name = (frag_type == FRAG_TYPE_EXTENSION) ? base_fragment_name : name;
+  CSTR result_set_name = name;
 
   CHARBUF_OPEN(data_types);
   CHARBUF_OPEN(result_set_create);
@@ -7523,7 +7455,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // setting up perf index unless we are currently emitting an extension or base fragment
   // which do not fetch result independently (the assembly query generates the fetcher)
-  if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
+  if (frag_type != FRAG_TYPE_BASE) {
     bprintf(h, "#define CRC_%s %lldL\n", proc_sym.ptr, (llint_t)crc_charbuf(&proc_sym));
 
     bprintf(d, "static int32_t %s;\n", perf_index.ptr);
@@ -7554,12 +7486,12 @@ static void cg_proc_result_set(ast_node *ast) {
   // If we are generating the typed getters, setup the function tables.
   // Again, extension fragments and base fragments do not define the actual tables
   // for the result that's done by the assembly fragment.
-  if (options.generate_type_getters && frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
+  if (options.generate_type_getters && frag_type != FRAG_TYPE_BASE) {
     bprintf(h,
-            "\n%suint8_t %s[%s];\n",
-            rt->symbol_visibility,
-            data_types_sym.ptr,
-            data_types_count_sym.ptr);
+      "\n%suint8_t %s[%s];\n",
+      rt->symbol_visibility,
+      data_types_sym.ptr,
+      data_types_count_sym.ptr);
   }
 
   bprintf(h, "\n");
@@ -7592,7 +7524,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
     // Neither base fragments nor extension fragments declare the result data shape
     // the assembly fragement does that, all columns will be known at that time.
-    if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
+    if (frag_type != FRAG_TYPE_BASE) {
       bprintf(&data_types, "  ");
       bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
       cg_data_type(&data_types, encode, sem_type);
@@ -7625,7 +7557,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
     // if the current row is equal or greater than the base query count
     // is considered a private accesor since it belongs to the extension accessors
-    if (frag_type == FRAG_TYPE_EXTENSION || frag_type == FRAG_TYPE_ASSEMBLY) {
+    if (frag_type == FRAG_TYPE_ASSEMBLY) {
       // we already know the base compiled with no errors
       ast_node *base_proc = find_base_fragment(base_fragment_name);
       Invariant(base_proc);
@@ -7729,7 +7661,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // Skip generating reference and column offsets for extension and base fragments since they always
   // delegate to assembly fragment for retrieving results with proper index
-  if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
+  if (frag_type != FRAG_TYPE_BASE) {
     bprintf(&data_types, "};\n");
     bprintf(d, data_types.ptr);
 
@@ -7757,30 +7689,22 @@ static void cg_proc_result_set(ast_node *ast) {
   // but it is hiding the cql_result_set implementation detail from the API of the generated
   // code by providing a proc-scoped function for it with the typedef for the result set.
 
-  if (frag_type == FRAG_TYPE_EXTENSION && options.generate_type_getters) {
-    // extensions get inline everything in type getters mode
-    bprintf(h, "static inline %s %s(%s _Nonnull result_set) {\n", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
-    bprintf(h, "   return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
-    bprintf(h, "}\n\n");
-  }
-  else {
-    bclear(&temp);
-    bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
-    bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
+  bclear(&temp);
+  bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
+  bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
 
-    // the base fragment doesn't emit the row count symbol, this is done by the assembly; the base
-    // fragment only emits the header for it.  In fact the base fragment only emits headers in general.
+  // the base fragment doesn't emit the row count symbol, this is done by the assembly; the base
+  // fragment only emits the header for it.  In fact the base fragment only emits headers in general.
 
-    if (frag_type != FRAG_TYPE_BASE) {
-      bprintf(d, "\n%s {\n", temp.ptr);
-      bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
-      bprintf(d, "}\n");
-    }
+  if (frag_type != FRAG_TYPE_BASE) {
+    bprintf(d, "\n%s {\n", temp.ptr);
+    bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
+    bprintf(d, "}\n");
   }
 
-  // Skip generating fetch result function for extension and fragments since they always get
+  // Skip generating fetch result function for base fragments since they always get
   // results fetched through the assembly query
-  if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
+  if (frag_type != FRAG_TYPE_BASE) {
     if (uses_out) {
       // Emit foo_fetch_results, it has the same signature as foo only with a result set
       // instead of a statement.
@@ -7930,7 +7854,7 @@ static void cg_proc_result_set(ast_node *ast) {
             uses_out ? "1" : "count");
   }
 
-  if (rt->generate_equality_macros && frag_type != FRAG_TYPE_EXTENSION) {
+  if (rt->generate_equality_macros) {
     bclear(&temp);
 
     CG_CHARBUF_OPEN_SYM(hash_sym, name, uses_out ? "_hash" : "_row_hash");

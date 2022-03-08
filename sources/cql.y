@@ -2274,8 +2274,6 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_params(a, argc, argv, &options.java_fragment_interfaces_count, &options.java_fragment_interfaces);
     } else if (strcmp(arg, "--java_fragment_interface_mode") == 0) {
       options.java_fragment_interface_mode = true;
-    } else if (strcmp(arg, "--java_import") == 0) {
-      a = gather_arg_params(a, argc, argv, &options.java_imports_count, &options.java_imports);
     } else {
       cql_error("unknown arg '%s'\n", argv[a]);
       cql_cleanup_and_exit(1);

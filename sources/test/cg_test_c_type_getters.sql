@@ -87,13 +87,9 @@ begin
   select * from frag_test;
 end;
 
--- TEST: extension creates getters for the base columns and the new columns it added
--- + static inline cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
--- +   extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, int32_t row);
--- +   return frag_test_get_id(result_set, row);
--- + static inline cql_string_ref _Nullable ext_get_f2(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
--- +   extern cql_string_ref _Nullable __PRIVATE__frag_test_get_f2(frag_test_result_set_ref _Nonnull result_set, int32_t row);
--- +   return __PRIVATE__frag_test_get_f2(result_set, row);
+-- TEST: extension creates no getters
+-- - get_id
+-- - get_f2
 @attribute(cql:extension_fragment=frag_test)
 create proc ext()
 begin
@@ -103,10 +99,10 @@ begin
   select * from ext;
 end;
 
--- TEST: another extension, this one should not include anything about f2, it doesn't "know" about that column
+-- TEST: another extension, also no getters
 -- - f2
--- + static inline cql_int32 ext2_result_count(frag_test_result_set_ref _Nonnull result_set)
--- + return cql_result_set_get_count((cql_result_set_ref)result_set);
+-- - result_count
+-- - get_count
 @attribute(cql:extension_fragment=frag_test)
 create proc ext2()
 begin

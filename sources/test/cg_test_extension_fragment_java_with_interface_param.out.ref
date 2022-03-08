@@ -7,15 +7,27 @@ import javax.annotation.Nullable;
 
 import com.facebook.cqlviewmodels.cg_test_base_fragment_java_interface;
 
-public interface cg_test_extension_fragment_java_with_interface_param extends com.facebook.cqlviewmodels.cg_test_base_fragment_java_interface {
+public interface cg_test_extension_fragment_java_with_interface_param implements com.facebook.cqlviewmodels.cg_test_base_fragment_java_interface {
 
   public int getX(int row);
+
+  public boolean getXIsEncoded() {
+    return mResultSet.getIsEncoded(0);
+  }
 
   @Nullable
   public String getY(int row);
 
+  public boolean getYIsEncoded() {
+    return mResultSet.getIsEncoded(1);
+  }
+
   @Nullable
   public Long getZ(int row);
+
+  public boolean getZIsEncoded() {
+    return mResultSet.getIsEncoded(2);
+  }
 
   public int getCount();
 

@@ -5,7 +5,7 @@ import com.facebook.cgsql.CQLResultSet;
 import com.facebook.cgsql.CQLViewModel;
 import javax.annotation.Nullable;
 
-public final class cg_test_assembly_query_java_interface extends CQLViewModel implements BaseFragment, ExtensionFragmentOne, ExtensionFragmentTwo {
+public final class cg_test_assembly_query_java_interface extends CQLViewModel implements BaseFragment {
 
   public static final String STORED_PROCEDURE_NAME = "assembly_core";
 

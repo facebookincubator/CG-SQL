@@ -14,8 +14,6 @@ public final class cg_test_assembly_query_java extends CQLViewModel {
 
   private static final Map<Long, Integer> fragmentColOffsetsForCore = new HashMap<>();
   static {
-    fragmentColOffsetsForCore.put(-3848459142819130300L, 0);
-    fragmentColOffsetsForCore.put(8544313754773622484L, 0);
   }
 
   public static int getExtensionColOffset(Long fragmentCRC) {

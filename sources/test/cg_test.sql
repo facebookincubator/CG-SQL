@@ -3147,15 +3147,11 @@ begin
   select * from frag_test;
 end;
 
--- TEST: extension creates getters for the base columns and the new columns it added
--- + cql_int32 ext_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
--- +   return frag_test_get_id(result_set, row);
--- + cql_bool ext_get_f2_is_null(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
--- +   return __PRIVATE__frag_test_get_f2_is_null(result_set, row);
--- + cql_int32 ext_get_f2_value(frag_test_result_set_ref _Nonnull result_set, cql_int32 row) {
--- +   return __PRIVATE__frag_test_get_f2_value(result_set, row);
--- + cql_int32 ext_result_count(frag_test_result_set_ref _Nonnull result_set) {
--- +   return cql_result_set_get_count((cql_result_set_ref)result_set);
+-- TEST: extension creates no getters
+-- - ext_get_id
+-- - get_f2_is_null
+-- - get_f2_value
+-- - result_count
 @attribute(cql:extension_fragment=frag_test)
 @attribute(cql:vault_sensitive)
 create proc ext()

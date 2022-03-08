@@ -25,6 +25,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, assembly_core_result_set_ref _Nullable *_Nonnull result_set, cql_int32 id_, cql_string_ref _Nonnull name_);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+//
+
+// The statement ending at line XXXX
 #define CRC_assembly_core -1084533396335137227L
 
 extern cql_string_ref _Nonnull assembly_core_stored_procedure_name;
