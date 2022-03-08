@@ -20968,7 +20968,7 @@ end;
 -- + @ENFORCE_STRICT SIGN FUNCTION;
 -- + {enforce_strict_stmt}: ok
 -- + {int 12}
--- - error
+-- - error:
 @enforce_strict sign function;
 
 -- TEST: sign cannot be used in SQL after `@enforce_strict sign function`
@@ -20986,7 +20986,7 @@ let sign_of_some_value := sign(-42);
 -- + @ENFORCE_NORMAL SIGN FUNCTION;
 -- + {enforce_normal_stmt}: ok
 -- + {int 12}
--- - error
+-- - error:
 @enforce_normal sign function;
 
 -- TEST: sign can be used in SQL normally
@@ -21275,3 +21275,167 @@ create table recreate_blob_storage(
 -- + error: % the indicated table may only be used for blob storage 'structured_storage'
 -- +1 error:
 select * from structured_storage;
+
+-- TEST: enable strict has-row check enforcement for the following tests
+-- + @ENFORCE_STRICT CURSOR HAS ROW
+-- + {enforce_strict_stmt}: ok
+-- + {int 21}
+-- error:
+@enforce_strict cursor has row;
+
+-- used in the following tests
+create table has_row_check_table (a text not null, b text);
+
+-- used in the following tests
+@attribute(cql:blob_storage)
+create table has_row_check_blob (a text not null, b text);
+
+-- TEST: accessing an auto cursor field of a nonnull reference type is not
+-- possible before verifying that the cursor has a row
+-- + {create_proc_stmt}: err
+-- + {let_stmt}: err
+-- + {let_stmt}: y: text variable
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+-- +1 error:
+create proc has_row_check_required_before_using_nonnull_reference_field()
+begin
+  declare c cursor for select * from has_row_check_table;
+  fetch c;
+  -- Illegal due to `c.a` having type `TEXT NOT NULL`.
+  let x := c.a;
+  -- Legal.
+  let y := c.b;
+end;
+
+-- TEST: both positive and negative checks work for the has-row case, as with
+-- nullability
+-- + {create_proc_stmt}: err
+-- +2 {let_stmt}: err
+-- + {let_stmt}: x1: text notnull variable
+-- + {let_stmt}: x3: text notnull variable
+-- +2 error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+-- +2 error:
+create proc has_row_checks_can_be_positive_or_negative()
+begin
+  declare c cursor for select * from has_row_check_table;
+  fetch c;
+  -- Illegal.
+  let x0 := c.a;
+  if c then
+    -- Legal due to a positive check.
+    let x1 := c.a;
+  end if;
+  -- Illegal.
+  let x2 := c.a;
+  if not c then
+    let dummy := "hello";
+    return;
+  end if;
+  -- Legal due to a negative check.
+  let x3 := c.a;
+end;
+
+-- TEST: the fetch values form does not require a check because it cannot fail
+-- + {create_proc_stmt}: err
+-- + {let_stmt}: x0: text notnull variable
+-- + {let_stmt}: x1: text notnull variable
+-- + {let_stmt}: x2: text notnull variable
+-- + {let_stmt}: err
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c3.a'
+-- +1 error:
+create proc fetch_values_requires_no_has_row_check(like has_row_check_table)
+begin
+  declare c0 cursor like has_row_check_table;
+  fetch c0 from values ("text", null);
+  -- Legal due to the fetch values form.
+  let x0 := c0.a;
+
+  declare c1 cursor like has_row_check_table;
+  fetch c1 from arguments;
+  -- Legal due to the fetch values form.
+  let x1 := c1.a;
+
+  declare b blob<has_row_check_blob>;
+  declare c2 cursor like has_row_check_blob;
+  fetch c2 from b;
+  -- Legal due to the fetch values form.
+  let x2 := c2.a;
+
+  declare c3 cursor for select * from has_row_check_table;
+  fetch c3;
+  -- Illegal.
+  let x3 := c3.a;
+end;
+
+-- TEST: re-fetching a cursor requires another has-row check
+-- + {create_proc_stmt}: err
+-- + {let_stmt}: x0: text notnull variable
+-- + {let_stmt}: err
+-- + {let_stmt}: x2: text notnull variable
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+-- +1 error:
+create proc fetching_again_requires_another_check()
+begin
+  declare c cursor for select * from has_row_check_table;
+  fetch c;
+  if not c return;
+  -- Legal due to a negative check.
+  let x0 := c.a;
+  fetch c;
+  -- Illegal due to a re-fetch.
+  let x1 := c.a;
+  if c then
+    -- Legal again due to a positive check.
+    let x2 := c.a;
+  end if;
+end;
+
+-- TEST: the loop form does not require a has-row check because the loop only
+-- executes when the cursor has a row
+-- + {create_proc_stmt}: err
+-- + {let_stmt}: x0: text notnull variable
+-- + {let_stmt}: err
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+-- +1 error:
+create proc fetching_with_loop_requires_no_check()
+begin
+  declare c cursor for select * from has_row_check_table;
+  loop fetch c
+  begin
+    -- Legal due to the loop only running if we have a row.
+    let x0 := c.a;
+  end;
+  -- Illegal due to being outside of the loop.
+  let x1 := c.a;
+end;
+
+-- TEST: fetching a cursor within a loop unimproves it earlier in the loop
+-- unless the cursor was improved by the loop condition
+-- + {create_proc_stmt}: err
+-- +1 {let_stmt}: err
+-- + {let_stmt}: x1: text notnull variable
+-- + error: % field of a nonnull reference type accessed before verifying that the cursor has a row 'c0.a'
+-- +1 error:
+create proc refetching_within_loop_may_unimprove_cursor_earlier_in_loop()
+begin
+  declare c0 cursor for select * from has_row_check_table;
+  declare c1 cursor for select * from has_row_check_table;
+  fetch c0;
+  if not c0 return;
+  loop fetch c1
+  begin
+    -- illegal due to the fetch later in the loop
+    let x0 := c0.a;
+    -- legal despite the fetch later in the loop due to the loop condition
+    let x1 := c1.a;
+    fetch c0;
+    fetch c1;
+  end;
+end;
+
+-- TEST: disable strict has-row check enforcement
+-- + @ENFORCE_NORMAL CURSOR HAS ROW
+-- + {enforce_normal_stmt}: ok
+-- + {int 21}
+-- - error:
+@enforce_normal cursor has row;

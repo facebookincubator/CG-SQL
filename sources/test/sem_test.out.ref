@@ -84385,3 +84385,551 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0458: the indicated t
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+@ENFORCE_STRICT CURSOR HAS ROW;
+
+  {enforce_strict_stmt}: ok
+  | {int 21}
+
+The statement ending at line XXXX
+
+CREATE TABLE has_row_check_table(
+  a TEXT NOT NULL,
+  b TEXT
+);
+
+  {create_table_stmt}: has_row_check_table: { a: text notnull, b: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name has_row_check_table}
+  | {col_key_list}
+    | {col_def}: a: text notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name a}
+    |   | | {type_text}: text
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: b: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name b}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:blob_storage)
+CREATE TABLE has_row_check_blob(
+  a TEXT NOT NULL,
+  b TEXT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name blob_storage}
+  | {create_table_stmt}: has_row_check_blob: { a: text notnull, b: text }
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name has_row_check_blob}
+    | {col_key_list}
+      | {col_def}: a: text notnull
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name a}
+      |   | | {type_text}: text
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {col_def}: b: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name b}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE PROC has_row_check_required_before_using_nonnull_reference_field ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT *
+    FROM has_row_check_table;
+  FETCH c;
+  LET x := c.a;
+  LET y := c.b;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+
+  {create_proc_stmt}: err
+  | {name has_row_check_required_before_using_nonnull_reference_field}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | {let_stmt}: err
+      | | {name x}
+      | | {dot}: err
+      |   | {name c}
+      |   | {name a}
+      | {let_stmt}: y: text variable
+        | {name y}: y: text variable
+        | {dot}: c.b: text variable
+          | {name c}
+          | {name b}
+
+The statement ending at line XXXX
+
+CREATE PROC has_row_checks_can_be_positive_or_negative ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT *
+    FROM has_row_check_table;
+  FETCH c;
+  LET x0 := c.a;
+  IF c THEN
+    LET x1 := c.a;
+  END IF;
+  LET x2 := c.a;
+  IF NOT c THEN
+    LET dummy := "hello";
+    RETURN;
+  END IF;
+  LET x3 := c.a;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+
+  {create_proc_stmt}: err
+  | {name has_row_checks_can_be_positive_or_negative}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | {let_stmt}: err
+      | | {name x0}
+      | | {dot}: err
+      |   | {name c}
+      |   | {name a}
+      | {if_stmt}: c._has_row_: bool notnull variable
+      | | {cond_action}: c._has_row_: bool notnull variable
+      | | | {name c}: c._has_row_: bool notnull variable
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: x1: text notnull variable
+      | |     | {name x1}: x1: text notnull variable
+      | |     | {dot}: c.a: text notnull variable
+      | |       | {name c}
+      | |       | {name a}
+      | | {if_alt}: ok
+      | {let_stmt}: err
+      | | {name x2}
+      | | {dot}: err
+      |   | {name c}
+      |   | {name a}
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {not}: bool notnull
+      | | | | {name c}: c._has_row_: bool notnull variable
+      | | | {stmt_list}: ok
+      | |   | {let_stmt}: dummy: text notnull variable
+      | |   | | {name dummy}: dummy: text notnull variable
+      | |   | | {strlit 'hello'}: text notnull
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x3: text notnull variable
+        | {name x3}: x3: text notnull variable
+        | {dot}: c.a: text notnull variable
+          | {name c}
+          | {name a}
+
+The statement ending at line XXXX
+
+CREATE PROC fetch_values_requires_no_has_row_check (a_ TEXT NOT NULL, b_ TEXT)
+BEGIN
+  DECLARE c0 CURSOR LIKE has_row_check_table;
+  FETCH c0(a, b) FROM VALUES("text", NULL);
+  LET x0 := c0.a;
+  DECLARE c1 CURSOR LIKE has_row_check_table;
+  FETCH c1(a, b) FROM VALUES(a_, b_);
+  LET x1 := c1.a;
+  DECLARE b BLOB<has_row_check_blob>;
+  DECLARE c2 CURSOR LIKE has_row_check_blob;
+  FETCH c2 FROM b;
+  LET x2 := c2.a;
+  DECLARE c3 CURSOR FOR SELECT *
+    FROM has_row_check_table;
+  FETCH c3;
+  LET x3 := c3.a;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c3.a'
+
+  {create_proc_stmt}: err
+  | {name fetch_values_requires_no_has_row_check}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a_: text notnull variable in
+    | | | {param_detail}: a_: text notnull variable in
+    | |   | {name a_}: a_: text notnull variable in
+    | |   | {notnull}: text notnull
+    | |     | {type_text}: text
+    | | {params}
+    |   | {param}: b_: text variable in
+    |     | {param_detail}: b_: text variable in
+    |       | {name b_}: b_: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: err
+      | {declare_cursor_like_name}: c0: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
+      | | {name c0}: c0: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
+      | | {like}: has_row_check_table: { a: text notnull, b: text }
+      |   | {name has_row_check_table}: has_row_check_table: { a: text notnull, b: text }
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name c0}: c0: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name a}: a: text notnull
+      |     |   | {name_list}
+      |     |     | {name b}: b: text
+      |     | {insert_list}: ok
+      |       | {strlit 'text'}: text notnull
+      |       | {insert_list}
+      |         | {null}: null
+      | {let_stmt}: x0: text notnull variable
+      | | {name x0}: x0: text notnull variable
+      | | {dot}: c0.a: text notnull variable
+      |   | {name c0}
+      |   | {name a}
+      | {declare_cursor_like_name}: c1: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
+      | | {name c1}: c1: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
+      | | {like}: has_row_check_table: { a: text notnull, b: text }
+      |   | {name has_row_check_table}: has_row_check_table: { a: text notnull, b: text }
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name c1}: c1: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name a}: a: text notnull
+      |     |   | {name_list}
+      |     |     | {name b}: b: text
+      |     | {insert_list}: ok
+      |       | {dot}: a_: text notnull variable in
+      |       | | {name ARGUMENTS}
+      |       | | {name a}
+      |       | {insert_list}
+      |         | {dot}: b_: text variable in
+      |           | {name ARGUMENTS}
+      |           | {name b}
+      | {let_stmt}: x1: text notnull variable
+      | | {name x1}: x1: text notnull variable
+      | | {dot}: c1.a: text notnull variable
+      |   | {name c1}
+      |   | {name a}
+      | {declare_vars_type}: blob<has_row_check_blob>
+      | | {name_list}: b: blob<has_row_check_blob> variable
+      | | | {name b}: b: blob<has_row_check_blob> variable
+      | | {type_blob}: blob<has_row_check_blob>
+      |   | {name has_row_check_blob}
+      | {declare_cursor_like_name}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor serialize
+      | | {name c2}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor serialize
+      | | {like}: has_row_check_blob: { a: text notnull, b: text }
+      |   | {name has_row_check_blob}: has_row_check_blob: { a: text notnull, b: text }
+      | {fetch_cursor_from_blob_stmt}: ok
+      | | {name c2}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor
+      | | {name b}: b: blob<has_row_check_blob> variable
+      | {let_stmt}: x2: text notnull variable
+      | | {name x2}: x2: text notnull variable
+      | | {dot}: c2.a: text notnull variable
+      |   | {name c2}
+      |   | {name a}
+      | {declare_cursor}: c3: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c3}: c3: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c3: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {name c3}: c3: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | {let_stmt}: err
+        | {name x3}
+        | {dot}: err
+          | {name c3}
+          | {name a}
+
+The statement ending at line XXXX
+
+CREATE PROC fetching_again_requires_another_check ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT *
+    FROM has_row_check_table;
+  FETCH c;
+  IF NOT c THEN
+    RETURN;
+  END IF;
+  LET x0 := c.a;
+  FETCH c;
+  LET x1 := c.a;
+  IF c THEN
+    LET x2 := c.a;
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+
+  {create_proc_stmt}: err
+  | {name fetching_again_requires_another_check}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {not}: bool notnull
+      | | | | {name c}: c._has_row_: bool notnull variable
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {let_stmt}: x0: text notnull variable
+      | | {name x0}: x0: text notnull variable
+      | | {dot}: c.a: text notnull variable
+      |   | {name c}
+      |   | {name a}
+      | {fetch_stmt}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | {let_stmt}: err
+      | | {name x1}
+      | | {dot}: err
+      |   | {name c}
+      |   | {name a}
+      | {if_stmt}: c._has_row_: bool notnull variable
+        | {cond_action}: c._has_row_: bool notnull variable
+        | | {name c}: c._has_row_: bool notnull variable
+        | | {stmt_list}: ok
+        |   | {let_stmt}: x2: text notnull variable
+        |     | {name x2}: x2: text notnull variable
+        |     | {dot}: c.a: text notnull variable
+        |       | {name c}
+        |       | {name a}
+        | {if_alt}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC fetching_with_loop_requires_no_check ()
+BEGIN
+  DECLARE c CURSOR FOR SELECT *
+    FROM has_row_check_table;
+  LOOP FETCH c
+  BEGIN
+    LET x0 := c.a;
+  END;
+  LET x1 := c.a;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
+
+  {create_proc_stmt}: err
+  | {name fetching_with_loop_requires_no_check}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {loop_stmt}: ok
+      | | {fetch_stmt}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {stmt_list}: ok
+      |   | {let_stmt}: x0: text notnull variable
+      |     | {name x0}: x0: text notnull variable
+      |     | {dot}: c.a: text notnull variable
+      |       | {name c}
+      |       | {name a}
+      | {let_stmt}: err
+        | {name x1}
+        | {dot}: err
+          | {name c}
+          | {name a}
+
+The statement ending at line XXXX
+
+CREATE PROC refetching_within_loop_may_unimprove_cursor_earlier_in_loop ()
+BEGIN
+  DECLARE c0 CURSOR FOR SELECT *
+    FROM has_row_check_table;
+  DECLARE c1 CURSOR FOR SELECT *
+    FROM has_row_check_table;
+  FETCH c0;
+  IF NOT c0 THEN
+    RETURN;
+  END IF;
+  LOOP FETCH c1
+  BEGIN
+    LET x0 := c0.a;
+    LET x1 := c1.a;
+    FETCH c0;
+    FETCH c1;
+  END;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c0.a'
+
+  {create_proc_stmt}: err
+  | {name refetching_within_loop_may_unimprove_cursor_earlier_in_loop}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: c0: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c0}: c0: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_cursor}: c1: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c1}: c1: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c0: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {name c0}: c0: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {not}: bool notnull
+      | | | | {name c0}: c0._has_row_: bool notnull variable
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {loop_stmt}: err
+        | {fetch_stmt}: c1: select: { a: text notnull, b: text } variable dml_proc shape_storage
+        | | {name c1}: c1: select: { a: text notnull, b: text } variable dml_proc shape_storage
+        | {stmt_list}: err
+          | {let_stmt}: err
+          | | {name x0}: x0: text notnull variable
+          | | {dot}: err
+          |   | {name c0}
+          |   | {name a}
+          | {let_stmt}: x1: text notnull variable
+          | | {name x1}: x1: text notnull variable
+          | | {dot}: c1.a: text notnull variable
+          |   | {name c1}
+          |   | {name a}
+          | {fetch_stmt}: c0: select: { a: text notnull, b: text } variable dml_proc shape_storage
+          | | {name c0}: c0: select: { a: text notnull, b: text } variable dml_proc shape_storage
+          | {fetch_stmt}: c1: select: { a: text notnull, b: text } variable dml_proc shape_storage
+            | {name c1}: c1: select: { a: text notnull, b: text } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL CURSOR HAS ROW;
+
+  {enforce_normal_stmt}: ok
+  | {int 21}
+

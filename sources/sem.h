@@ -167,7 +167,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_INIT_COMPLETE   _64(0x8000000000) // set when SEM_TYPE_INIT_REQUIRED is present to indicate initialization
 #define SEM_TYPE_INLINE_CALL    _64(0x10000000000) // set when a proc_as_func call in SQL can be executed safely by inlining the SQL
 #define SEM_TYPE_SERIALIZE      _64(0x20000000000) // set when a cursor will need serialization features
-#define SEM_TYPE_FLAGS          _64(0x3FFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_HAS_ROW        _64(0x40000000000) // set on auto cursors to indicate that they are known to have a row
+#define SEM_TYPE_FLAGS          _64(0x7FFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
@@ -205,6 +206,7 @@ cql_noexport bool_t is_numeric_expr(ast_node *expr);
 cql_noexport bool_t is_unitary(sem_t sem_type);
 cql_noexport bool_t is_struct(sem_t sem_type);
 cql_noexport bool_t is_cursor(sem_t sem_type);
+cql_noexport bool_t is_auto_cursor(sem_t sem_type);
 cql_noexport bool_t is_primary_key(sem_t sem_type);
 cql_noexport bool_t is_foreign_key(sem_t sem_type);
 cql_noexport bool_t is_sem_error(sem_node *sem);

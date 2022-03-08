@@ -189,12 +189,14 @@ static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
 static void sem_verify_no_anon_columns(ast_node *ast);
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
 static sem_t *find_mutable_type(CSTR name, CSTR scope);
-static bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 static void sem_set_notnull_improved(CSTR name, CSTR scope);
 static void sem_unset_notnull_improved(CSTR name, CSTR scope);
 static void sem_unset_global_notnull_improvements();
-static void sem_set_notnull_improvements_for_true_condition(ast_node *ast);
-static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
+static void sem_set_has_row_improved(CSTR cursor_name);
+static void sem_unset_has_row_improved(CSTR cursor_name);
+static void sem_set_improvements_for_true_condition(ast_node *ast);
+static void sem_set_improvements_for_false_condition(ast_node *ast);
+static bool_t variable_should_require_initialization(sem_t sem_type);
 static void reset_enforcements(void);
 static uint32_t sem_with_depth(void);
 static ast_node *sem_find_table(CSTR name, ast_node *ast_error);
@@ -231,6 +233,7 @@ struct enforcement_options {
   bool_t strict_is_true;              // IS TRUE, IS FALSE, etc. may not be used because of downlevel issues
   bool_t strict_cast;                 // NO-OP casts result in errors
   bool_t strict_sign_function;        // the SQLite sign function may not be used (as it is absent in <3.35.0)
+  bool_t strict_cursor_has_row;       // auto cursors require a has-row check before certain fields are accessed
 };
 
 static struct enforcement_options enforcement;
@@ -1207,6 +1210,10 @@ cql_noexport bool_t is_unitary(sem_t sem_type) {
 
 cql_noexport bool_t is_cursor(sem_t sem_type) {
   return is_struct(sem_type) && is_variable(sem_type);
+}
+
+cql_noexport bool_t is_auto_cursor(sem_t sem_type) {
+  return is_cursor(sem_type) && (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE);
 }
 
 cql_noexport bool_t is_struct(sem_t sem_type) {
@@ -5553,7 +5560,7 @@ static void sem_resolve_cursor_field(ast_node *ast, ast_node *cursor, CSTR field
   CSTR scope = cursor->sem->name;
 
   // We don't do this if the cursor was not used with the auto syntax
-  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+  if (!is_auto_cursor(sem_type)) {
     report_resolve_error(ast, "CQL0067: cursor was not used with 'fetch [cursor]'", scope);
     record_resolve_error(ast);
     return;
@@ -5800,7 +5807,7 @@ cql_noexport void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope) {
 // is to be used only for *references* to a previously declared variable, the
 // combination of flags indicating a completed initialization, if present, will
 // be removed as they serve no purpose outside of declarations.
-static void sem_variable_referenced_is_initialized_if_required(ast_node *ast) {
+static void sem_validate_variable_referenced_is_initialized_if_required(ast_node *ast) {
   Contract(is_id_or_dot(ast));
   Contract(ast->sem);
   Contract(is_variable(ast->sem->sem_type));
@@ -5818,54 +5825,117 @@ static void sem_variable_referenced_is_initialized_if_required(ast_node *ast) {
   ast->sem->sem_type &= sem_not(SEM_TYPE_INIT_REQUIRED | SEM_TYPE_INIT_COMPLETE);
 }
 
-// Like `sem_resolve_id`, but specific to expression contexts (where nullability
-// improvements are applicable).
-static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
-  Contract(is_id_or_dot(ast));
-  Contract(name);
+// Returns true if the type of a cursor field requires checking that the cursor
+// itself has a row before the field is accessed, else false.
+static bool_t auto_cursor_field_requires_has_row_check(sem_t sem_type) {
+  // Since cursor fields are technically variables and we want to use the same
+  // policy for has-row checks as we use for initialization (because, after all,
+  // fetching a cursor is just another form of initialization), we delegate
+  // accordingly.
+  return variable_should_require_initialization(sem_type);
+}
 
-  // Perform resolution, as for ids and dots outside of expressions.
-  sem_resolve_id(ast, name, scope);
-  if (is_error(ast)) {
+// Given the AST of an auto cursor field access and the type of the auto cursor
+// itself, returns true if a has-row check has been performed appropriately (if
+// required), else false.
+static void sem_validate_auto_cursor_field_accessed_has_row_check_if_required(ast_node *ast, sem_t cursor_type) {
+  Contract(is_ast_dot(ast));
+  Contract(ast->sem);
+  Contract(is_variable(ast->sem->sem_type));
+  Contract(!is_cursor(ast->sem->sem_type));
+  Contract(is_auto_cursor(cursor_type));
+
+  if (cursor_type & SEM_TYPE_HAS_ROW) {
+    // The cursor has a row, so we're good.
     return;
   }
 
-  if (is_variable(ast->sem->sem_type)) {
-    // The name/scope pair refers to a variable. Ensure that it has been
-    // appropriately initialized before use.
-    sem_variable_referenced_is_initialized_if_required(ast);
-    if (is_error(ast)) {
-      return;
-    }
+  if (!auto_cursor_field_requires_has_row_check(ast->sem->sem_type)) {
+    // The cursor may not have a row, but having a row is not required to access
+    // this particular field. All is well.
+    return;
+  }
 
-    // If the variable is also a struct, then it's a cursor.
-    sem_t sem_type = ast->sem->sem_type;
-    if (is_struct(sem_type)) {
-      Invariant(is_cursor(sem_type));
-      // When the name of a cursor appears in an expression context, it doesn't
-      // refer to the cursor itself. Instead, it refers to a boolean indicating
-      // whether or not the cursor has a row. We adjust things here accordingly.
-      CSTR vname = NULL;
-      if (sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-        vname = dup_printf("%s._has_row_", ast->sem->name);
-      } else {
-        vname = dup_printf("_%s_has_row_", ast->sem->name);
+  // The cursor has *not* been verified to have a row and the field being
+  // accessed is of a type which requires it to have one. This is unsafe: If the
+  // cursor does not have a row at runtime, the field will be NULL despite the
+  // nonnull type. We issue an error accordingly.
+  report_error(
+    ast,
+    "CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row",
+    ast->sem->name
+  );
+  record_error(ast);
+}
+
+// Given an AST that may represent a cursor field reference, validate that the
+// requirements for has-row checks have been met.
+static void sem_validate_has_row_check_requirements_if_applicable(ast_node *ast) {
+  Contract(ast);
+  Contract(ast->sem);
+
+  if (enforcement.strict_cursor_has_row) {
+    if (is_ast_dot(ast)) {
+      // Since this is a dot, `ast` might refer to a cursor field. To check if
+      // it does, we have to look up the type of `scope`.
+      EXTRACT_STRING(scope, ast->left);
+      sem_t *type = find_mutable_type(scope, NULL);
+      if (type && is_cursor(*type)) {
+        // `scope` corresponds to a cursor (and thus `ast` refers to a cursor
+        // field). It must, therefore, be the case that the cursor is an auto
+        // cursor.
+        Invariant(is_auto_cursor(*type));
+        sem_validate_auto_cursor_field_accessed_has_row_check_if_required(ast, *type);
       }
-      ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
-      ast->sem->name = vname;
-      return;
     }
   }
+}
+
+// Given an AST that may represent a variable reference, validate that the
+// requirements for initialization have been met.
+static void sem_validate_initialization_requirements_if_applicable(ast_node *ast) {
+  Contract(ast);
+  Contract(ast->sem);
+
+  sem_t sem_type = ast->sem->sem_type;
+
+  if (is_variable(sem_type)) {
+    // The name/scope pair refers to a variable. Ensure that it has been
+    // appropriately initialized before use.
+    sem_validate_variable_referenced_is_initialized_if_required(ast);
+  }
+}
+
+// Analyze a cursor used as an expression; this is the has-row boolean case.
+static void sem_cursor_as_expression(ast_node *ast) {
+  Contract(ast);
+  Contract(ast->sem);
+  Contract(is_cursor(ast->sem->sem_type));
+
+  // When the name of a cursor appears in an expression context, it doesn't
+  // refer to the cursor itself. Instead, it refers to a boolean indicating
+  // whether or not the cursor has a row. We adjust things here accordingly.
+  CSTR vname = NULL;
+  if (is_auto_cursor(ast->sem->sem_type)) {
+    vname = dup_printf("%s._has_row_", ast->sem->name);
+  } else {
+    vname = dup_printf("_%s_has_row_", ast->sem->name);
+  }
+  ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
+  ast->sem->name = vname;
+}
+
+// Analyze an expression subject to a nonnull improvement and rewrite it, if
+// appropriate.
+static void sem_notnull_improved_expr(ast_node *ast) {
+  Contract(is_id_or_dot(ast));
+  Contract(ast->sem);
+  Contract(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
 
   if (is_analyzing_notnull_rewrite) {
     // If we're analyzing the product of a rewrite and we're already inside of a
     // call to `cql_inferred_notnull`, do not expand again.
     // forever.
-    return;
-  }
-
-  if (!sem_is_notnull_improved(name, scope)) {
-    // This identifier isn't improved, so we stop.
     return;
   }
 
@@ -5888,6 +5958,43 @@ static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
 
   // If we've made it here, it's safe and appropriate to do the rewrite.
   rewrite_nullable_to_notnull(ast);
+}
+
+// Like `sem_resolve_id`, but specific to expression contexts.
+static void sem_resolve_id_expr(ast_node *ast, CSTR name, CSTR scope) {
+  Contract(is_id_or_dot(ast));
+  Contract(name);
+
+  // Perform resolution, as for ids and dots outside of expressions.
+  sem_resolve_id(ast, name, scope);
+  if (is_error(ast)) {
+    return;
+  }
+
+  sem_validate_has_row_check_requirements_if_applicable(ast);
+  if (is_error(ast)) {
+    return;
+  }
+
+  sem_validate_initialization_requirements_if_applicable(ast);
+  if (is_error(ast)) {
+    return;
+  }
+
+  sem_t sem_type = ast->sem->sem_type;
+
+  if (is_cursor(sem_type)) {
+    // Cursors themselves cannot have improved nullability.
+    Invariant(!(sem_type & SEM_TYPE_INFERRED_NOTNULL));
+    sem_cursor_as_expression(ast);
+    return;
+  }
+
+  if (sem_type & SEM_TYPE_INFERRED_NOTNULL) {
+    // Things with improved nullability must not be cursors.
+    Invariant(!is_cursor(sem_type));
+    sem_notnull_improved_expr(ast);
+  }
 }
 
 // Returns the *mutable* type (`sem_t *`) for a given (potentially qualified)
@@ -6066,7 +6173,7 @@ static void sem_case_list(
 
     FLOW_PUSH_CONTEXT_BRANCH();
     if (!has_expression_to_match) {
-      sem_set_notnull_improvements_for_true_condition(case_expr);
+      sem_set_improvements_for_true_condition(case_expr);
     }
     sem_expr(then_expr);
     FLOW_POP_CONTEXT_BRANCH();
@@ -6077,7 +6184,7 @@ static void sem_case_list(
       return;
     }
 
-    sem_set_notnull_improvements_for_false_condition(case_expr);
+    sem_set_improvements_for_false_condition(case_expr);
 
     sem_sensitive |= sensitive_flag(case_expr->sem->sem_type);
     sem_sensitive |= sensitive_flag(then_expr->sem->sem_type);
@@ -7345,11 +7452,10 @@ static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
     return false;
   }
 
-  if (!(arg1->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) ||
-      !(arg2->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+  if (!is_auto_cursor(arg1->sem->sem_type) || !is_auto_cursor(arg2->sem->sem_type)) {
     EXTRACT_STRING(arg1_name, arg1);
     EXTRACT_STRING(arg2_name, arg2);
-    CSTR cursor_name = !(arg1->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) ? arg1_name : arg2_name;
+    CSTR cursor_name = !is_auto_cursor(arg1->sem->sem_type) ? arg1_name : arg2_name;
     report_error(arg1, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
     record_error(arg1);
     record_error(ast);
@@ -8190,7 +8296,7 @@ static void sem_func_cql_cursor_format(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!(arg->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+  if (!is_auto_cursor(arg->sem->sem_type)) {
     EXTRACT_STRING(cursor_name, arg);
     report_error(arg, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
     record_error(arg);
@@ -9888,7 +9994,7 @@ static void sem_select_expr_list_con(ast_node *ast) {
         error = is_error(select_from_etc);
         if (!error && opt_where) {
           EXTRACT_ANY_NOTNULL(where_expr, opt_where->left);
-          sem_set_notnull_improvements_for_true_condition(where_expr);
+          sem_set_improvements_for_true_condition(where_expr);
         }
         POP_JOIN();
       } else {
@@ -9896,7 +10002,7 @@ static void sem_select_expr_list_con(ast_node *ast) {
         error = is_error(select_from_etc);
         if (!error && opt_where) {
           EXTRACT_ANY_NOTNULL(where_expr, opt_where->left);
-          sem_set_notnull_improvements_for_true_condition(where_expr);
+          sem_set_improvements_for_true_condition(where_expr);
         }
       }
     }
@@ -13104,18 +13210,6 @@ static void sem_alter_table_add_column_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
-// Returns true if currently improved to be nonnull, else false.
-static bool_t sem_is_notnull_improved(CSTR name, CSTR scope) {
-  Contract(name);
-
-  sem_t *type = find_mutable_type(name, scope);
-  if (!type) {
-    return false;
-  }
-
-  return !!(*type & SEM_TYPE_INFERRED_NOTNULL);
-}
-
 // Enables a nonnull improvement, if possible.
 static void sem_set_notnull_improved(CSTR name, CSTR scope) {
   Contract(name);
@@ -13180,47 +13274,62 @@ static void sem_unset_global_notnull_improvements() {
   }
 }
 
-// Given a conditional expression `ast` containing possibly AND-linked IS NOT
-// NULL subexpressions, set all of the applicable improvements within the
-// current nullability context. Generally speaking, calls to this function
-// should be bounded by a new nullability context corresponding to the portion
-// of the program for which the condition `ast` must be be true.
-static void sem_set_notnull_improvements_for_true_condition(ast_node* ast)
+// Given a conditional expression `ast` possibly containing AND-linked
+// subexpressions, set all of the applicable nullability and has-row
+// improvements within the current flow context. Generally speaking, calls to
+// this function should be bounded by a new flow context corresponding to the
+// portion of the program for which the condition `ast` must be be true.
+static void sem_set_improvements_for_true_condition(ast_node* ast)
 {
   Contract(ast);
 
-  // We include all improvements along the outermost spine of AND expressions.
   if (is_ast_and(ast)) {
+    // We include all improvements along the outermost spine of AND expressions.
     Invariant(ast->left);
     Invariant(ast->right);
-    sem_set_notnull_improvements_for_true_condition(ast->left);
-    sem_set_notnull_improvements_for_true_condition(ast->right);
+    sem_set_improvements_for_true_condition(ast->left);
+    sem_set_improvements_for_true_condition(ast->right);
     return;
   }
 
-  // We improve only in case of `x IS NOT NULL` where `x` is an id or dot.
-  if (!is_ast_is_not(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
-    // NOTE: Since calling a procedure as a function is only allowed if it has
-    // exactly one trailing OUT parameter (which becomes the return value), it
-    // cannot be the case that any call within `ast` could unset any
+  if (is_id(ast)) {
+    // This is the "id" case. We can possibly make a has-row improvement.
+    EXTRACT_STRING(name, ast);
+    sem_t *type = find_mutable_type(name, NULL);
+    if (type && is_auto_cursor(*type)) {
+      // `ast` refers to a cursor an auto cursor. We can set a has-row
+      // improvement accordingly.
+      sem_set_has_row_improved(name);
+      return;
+    }
+  }
+
+  if (is_ast_is_not(ast) && is_ast_null(ast->right) && is_id_or_dot(ast->left)) {
+    // This is the "id_or_dot IS NOT NULL" case. We can improve nullability
+    // here.
+    //
+    // NOTE: Since calling a procedure as a function is only allowed if it
+    // has exactly one trailing OUT parameter (which becomes the return value),
+    // it cannot be the case that any call within `ast` could unset any
     // improvements we just made (because no variables might be passed as OUT
     // arguments therein). Were the aforementioned proc-as-func restriction not
     // in place, we'd need to deep-traverse `ast` looking for any calls with OUT
     // arguments as any improvements we just made could possibly be invalidated
     // by such calls. This was, indeed, the case in earlier versions of CQL.
+    EXTRACT_NAME_AND_SCOPE(ast->left);
+    sem_set_notnull_improved(name, scope);
     return;
   }
-
-  EXTRACT_NAME_AND_SCOPE(ast->left);
-  sem_set_notnull_improved(name, scope);
 }
 
 // Improvements for known-false conditions are dual to improvements for
-// known-true conditions: Known-false conditions improve ids and dots verified
-// to be NULL via `IS NULL` along the outermost spine of `OR` expressions,
-// whereas known-true conditions improve ids and dots verified to be nonnull via
-// `IS NOT NULL` along the outermost spine of `AND` expressions. For example,
-// the following two statements introduce the same improvements:
+// known-true conditions.
+//
+// For nullability, known-false conditions improve ids and dots verified to be
+// NULL via `IS NULL` along the outermost spine of `OR` expressions, whereas
+// known-true conditions improve ids and dots verified to be nonnull via `IS NOT
+// NULL` along the outermost spine of `AND` expressions. For example, the
+// following two statements introduce the same improvements:
 //
 //   IF a IS NOT NULL AND b IS NOT NULL THEN
 //     -- `a` and `b` are improved here because we know the condition is true
@@ -13229,26 +13338,50 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node* ast)
 //   IF a IS NULL OR b IS NULL RETURN;
 //   -- `a` and `b` are improved here because we know the condition is false
 //   -- since we must not have returned if we got this far
-static void sem_set_notnull_improvements_for_false_condition(ast_node *ast) {
+//
+// Likewise, for cursors, known-false conditions improve ids verified to not
+// have a row along the outermost spine of `OR` expresions, whereas known-true
+// conditions improve cursors verified to have a row along the outermost spine
+// of `AND` expressions. Again, the following two statements introduce the same
+// improvements:
+//
+//   IF c THEN
+//     -- `c` is known to have a row here
+//   END IF;
+//
+//   IF not c THEN RETURN;
+//   -- `c` is known to have a row here
+static void sem_set_improvements_for_false_condition(ast_node *ast) {
   Contract(ast);
 
   if (is_ast_or(ast)) {
-    // As in `sem_set_notnull_improvements_for_true_condition`, we make sure to
+    // As in `sem_set_improvements_for_true_condition`, we make sure to
     // recurse through the left side first in keeping with the order of
     // evaluation at runtime.
-    sem_set_notnull_improvements_for_false_condition(ast->left);
-    sem_set_notnull_improvements_for_false_condition(ast->right);
+    sem_set_improvements_for_false_condition(ast->left);
+    sem_set_improvements_for_false_condition(ast->right);
     return;
   }
 
-  // We improve only in case of `x IS NULL` where `x` is an id or dot.
-  if (!is_ast_is(ast) || !is_ast_null(ast->right) || !is_id_or_dot(ast->left)) {
-    return;
+  if (is_ast_not(ast) && is_id(ast->left)) {
+    // This is the "NOT id" case. We can possibly make a has-row improvement.
+    EXTRACT_STRING(name, ast->left);
+    sem_t *type = find_mutable_type(name, NULL);
+    if (type && is_auto_cursor(*type)) {
+      // `ast->left` refers to an auto cursor. We can set a has-row improvement
+      // accordingly.
+      sem_set_has_row_improved(name);
+      return;
+    }
   }
 
-  EXTRACT_ANY_NOTNULL(id_or_dot, ast->left);
-  EXTRACT_NAME_AND_SCOPE(id_or_dot);
-  sem_set_notnull_improved(name, scope);
+  if (is_ast_is(ast) && is_ast_null(ast->right) && is_id_or_dot(ast->left)) {
+    // This is the "id_or_dot IS NULL" case. We can improve nullability here.
+    EXTRACT_ANY_NOTNULL(id_or_dot, ast->left);
+    EXTRACT_NAME_AND_SCOPE(id_or_dot);
+    sem_set_notnull_improved(name, scope);
+    return;
+  }
 }
 
 // This is the [expression] then [statements] part of an IF or ELSE IF
@@ -13276,7 +13409,7 @@ static void sem_cond_action(ast_node *ast) {
   if (stmt_list) {
     FLOW_PUSH_CONTEXT_BRANCH();
     // Add improvements for `stmt_list` where `expr` must be true.
-    sem_set_notnull_improvements_for_true_condition(expr);
+    sem_set_improvements_for_true_condition(expr);
     sem_stmt_list_in_current_flow_context(stmt_list);
     FLOW_POP_CONTEXT_BRANCH();
     if (is_error(stmt_list)) {
@@ -13291,12 +13424,13 @@ static void sem_cond_action(ast_node *ast) {
   // improvements to the context created in `sem_if_stmt` so that all later
   // branches will be improved by the OR-linked spine of IS NULL checks in
   // `expr`.
-  sem_set_notnull_improvements_for_false_condition(expr);
+  sem_set_improvements_for_false_condition(expr);
 
   ast->sem = expr->sem;
 }
 
-// Enables an initialization improvement for a variable, if possible.
+// Enables an initialization improvement for a variable if the improvement does
+// not already exist.
 static void sem_set_initialization_improved(CSTR name, CSTR scope) {
   Contract(name);
 
@@ -13309,6 +13443,39 @@ static void sem_set_initialization_improved(CSTR name, CSTR scope) {
   }
 
   flow_set_flag_for_type(SEM_TYPE_INIT_COMPLETE, type);
+}
+
+// Enables a has-row improvement for an auto cursor if the improvement does not
+// already exist.
+static void sem_set_has_row_improved(CSTR cursor_name) {
+  Contract(cursor_name);
+
+  sem_t *type = find_mutable_type(cursor_name, NULL);
+  Contract(type);
+  Contract(is_auto_cursor(*type));
+
+  if (*type & SEM_TYPE_HAS_ROW) {
+    return;
+  }
+
+  flow_set_flag_for_type(SEM_TYPE_HAS_ROW, type);
+}
+
+// Disables a has-row improvement for an auto cursor if the improvement exists.
+// This must be called after every FETCH that is not guaranteed to result in a
+// row.
+static void sem_unset_has_row_improved(CSTR cursor_name) {
+  Contract(cursor_name);
+
+  sem_t *type = find_mutable_type(cursor_name, NULL);
+  Contract(type);
+  Contract(is_auto_cursor(*type));
+
+  if (!(*type & SEM_TYPE_HAS_ROW)) {
+    return;
+  }
+
+  flow_unset_flag_for_type(SEM_TYPE_HAS_ROW, type);
 }
 
 // This is the list of else-ifs, which is to say a linked list of
@@ -13452,7 +13619,7 @@ cleanup:
     EXTRACT(stmt_list, cond_action->right);
     if (stmt_list && stmt_list_contains_control_stmt(stmt_list)) {
       EXTRACT_ANY_NOTNULL(cond_expr, cond_action->left);
-      sem_set_notnull_improvements_for_false_condition(cond_expr);
+      sem_set_improvements_for_false_condition(cond_expr);
     }
   }
 
@@ -13810,7 +13977,7 @@ static void sem_update_cursor_stmt(ast_node *ast) {
   sem_t sem_type = cursor->sem->sem_type;
 
   // We can't do this if the cursor was not used with the auto syntax
-  if (!(sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+  if (!is_auto_cursor(sem_type)) {
     report_error(cursor, "CQL0067: cursor was not used with 'fetch [cursor]'", name);
     record_error(cursor);
     record_error(ast);
@@ -14536,9 +14703,9 @@ static void sem_set_blob_from_cursor_stmt(ast_node *ast) {
 // cursors, not statement cursors.  So we're never dealing with a sqlite statement
 // here, just columns.  They could be being loaded from anywhere.
 // The general forms:
-//   fetch cursor C(cols) from values (values) [insert_dummy_spec]
-//   fetch cursor C from shape
-// The form shape case is sugar; it is immediately rewritten into
+//   fetch C(cols) from values (values) [insert_dummy_spec]
+//   fetch C from shape
+// The "from shape" case is sugar; it is immediately rewritten into
 // the normal fetch from values form where the values are the proc arguments.
 // In addition if the shape is the name of a single blob variable
 // with no other qualifiers then this is the form to convert blobs to cursors
@@ -14573,6 +14740,13 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   if (try_rewrite_blob_fetch_forms(ast)) {
     // true means affirmative success or failure and errors logged already
     has_dml = 1;  // this implies return code and all that comes with it
+    if (!is_error(ast)) {
+      // This type of fetch can fail with an exception. If it does not, we
+      // definitely have a row. If it does, we'll be bumped out of the nearest
+      // enclosing jump context and this improvement will be unset
+      // appropriately.
+      sem_set_has_row_improved(cursor->sem->name);
+    }
     return;
   }
 
@@ -14730,6 +14904,9 @@ static void sem_fetch_values_stmt(ast_node *ast) {
     for (uint32_t i = 0; i < sptr->count; i++) {
       sem_unset_notnull_improved(sptr->names[i], cursor->sem->name);
     }
+
+    // This type of fetch cannot fail so no fetch check should be required.
+    sem_set_has_row_improved(cursor->sem->name);
 
     record_ok(ast);
   }
@@ -19066,7 +19243,8 @@ static void sem_loop_stmt(ast_node *ast) {
   if (stmt_list) {
     loop_depth++;
 
-    sem_stmt_list_within_loop(stmt_list, NULL);
+    EXTRACT_ANY_NOTNULL(condition, fetch_stmt->left);
+    sem_stmt_list_within_loop(stmt_list, condition);
 
     loop_depth--;
 
@@ -19182,7 +19360,7 @@ static void sem_arg_for_out_param(ast_node *arg, ast_node *param) {
     // The caller is responsible for the initialization of arguments passed for
     // INOUT parameters. We already checked that we have a variable above, so
     // now we just need to verify that it has been appropriately initialized.
-    sem_variable_referenced_is_initialized_if_required(arg);
+    sem_validate_variable_referenced_is_initialized_if_required(arg);
     if (is_error(arg)) {
       return;
     }
@@ -19655,6 +19833,9 @@ static void sem_fetch_stmt(ast_node *ast) {
       sem_unset_notnull_improved(sptr->names[i], cursor->sem->name);
     }
 
+    // The "FETCH c" form is not guaranteed to give us a row.
+    sem_unset_has_row_improved(cursor->sem->name);
+
     return;
   }
 
@@ -19763,6 +19944,9 @@ static void sem_fetch_call_stmt(ast_node *ast) {
     record_error(ast);
     return;
   }
+
+  // The "FROM CALL" form is not guaranteed to give us a row.
+  sem_unset_has_row_improved(cursor_name);
 
   record_ok(ast);
 }
@@ -20230,7 +20414,7 @@ static void sem_out_any(ast_node *ast) {
     return;
   }
 
-  if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
+  if (!is_auto_cursor(cursor->sem->sem_type)) {
     report_error(ast, "CQL0223: cursor was not fetched with the auto-fetch syntax 'fetch [cursor]'", cursor->sem->name);
     record_error(ast);
     return;
@@ -20697,7 +20881,7 @@ recurse:
       // necessary.
       FLOW_PUSH_CONTEXT_JUMP();
       if (true_expr) {
-        sem_set_notnull_improvements_for_true_condition(true_expr);
+        sem_set_improvements_for_true_condition(true_expr);
       }
       sem_stmt_list_in_current_flow_context(stmt_list);
       FLOW_POP_CONTEXT_JUMP();
@@ -20737,7 +20921,7 @@ recurse:
       // needed to be unset to ensure safety were already unset above.
       FLOW_PUSH_CONTEXT_JUMP();
       if (true_expr) {
-        sem_set_notnull_improvements_for_true_condition(true_expr);
+        sem_set_improvements_for_true_condition(true_expr);
       }
       sem_stmt_list_in_current_flow_context(stmt_list);
       FLOW_POP_CONTEXT_JUMP();
@@ -21383,6 +21567,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_SIGN_FUNCTION:
       enforcement.strict_sign_function = strict;
+      break;
+
+    case ENFORCE_CURSOR_HAS_ROW:
+      enforcement.strict_cursor_has_row = strict;
       break;
 
     default:

@@ -3563,6 +3563,10 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("SIGN FUNCTION");
       break;
 
+    case ENFORCE_CURSOR_HAS_ROW:
+      gen_printf("CURSOR HAS ROW");
+      break;
+
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);
