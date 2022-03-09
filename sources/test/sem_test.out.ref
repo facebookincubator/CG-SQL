@@ -84933,3 +84933,89 @@ The statement ending at line XXXX
   {enforce_normal_stmt}: ok
   | {int 21}
 
+The statement ending at line XXXX
+
+@ATTRIBUTE(potato:potato=potato)
+@ATTRIBUTE(potato:potato)
+@ATTRIBUTE(potato=potato)
+@ATTRIBUTE(potato)
+@ATTRIBUTE(cql:potato=potato)
+@ATTRIBUTE(cql:potato)
+@ATTRIBUTE(cql=cql)
+@ATTRIBUTE(cql)
+@ATTRIBUTE(cql:vault_sensitive=(privacy_context, (some_column)))
+CREATE PROC attribute_test ()
+BEGIN
+  SELECT 'x' AS some_column;
+END;
+
+test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'privacy_context'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  | | | {dot}
+  | | | | {name potato}
+  | | | | {name potato}
+  | | | {name potato}: ok
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |   | | {dot}
+  |   |   | {name potato}
+  |   |   | {name potato}
+  |   | {misc_attrs}
+  |     | {misc_attr}
+  |     | | {name potato}
+  |     | | {name potato}: ok
+  |     | {misc_attrs}
+  |       | {misc_attr}
+  |       | | {name potato}
+  |       | {misc_attrs}
+  |         | {misc_attr}
+  |         | | {dot}
+  |         | | | {name cql}
+  |         | | | {name potato}
+  |         | | {name potato}: ok
+  |         | {misc_attrs}
+  |           | {misc_attr}
+  |           | | {dot}
+  |           |   | {name cql}
+  |           |   | {name potato}
+  |           | {misc_attrs}
+  |             | {misc_attr}
+  |             | | {name cql}
+  |             | | {name cql}: ok
+  |             | {misc_attrs}
+  |               | {misc_attr}
+  |               | | {name cql}
+  |               | {misc_attrs}
+  |                 | {misc_attr}
+  |                   | {dot}
+  |                   | | {name cql}
+  |                   | | {name vault_sensitive}
+  |                   | {misc_attr_value_list}: ok
+  |                     | {name privacy_context}: ok
+  |                     | {misc_attr_value_list}
+  |                       | {misc_attr_value_list}: ok
+  |                         | {name some_column}: ok
+  | {create_proc_stmt}: err
+    | {name attribute_test}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { some_column: text notnull }
+          | {select_core_list}: select: { some_column: text notnull }
+          | | {select_core}: select: { some_column: text notnull }
+          |   | {select_expr_list_con}: select: { some_column: text notnull }
+          |     | {select_expr_list}: select: { some_column: text notnull }
+          |     | | {select_expr}: some_column: text notnull
+          |     |   | {strlit 'x'}: text notnull
+          |     |   | {opt_as_alias}
+          |     |     | {name some_column}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+

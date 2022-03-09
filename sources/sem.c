@@ -1416,13 +1416,14 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
   ast_node *ast_misc_attr_value_list,
   void *context)
 {
-  Contract(misc_attr_prefix);
-  Contract(misc_attr_name);
   Contract(context);
-  Contract(!(Strcasecmp(misc_attr_prefix, "cql")));
 
-  // not vault_sensitive attribute
-  if (Strcasecmp(misc_attr_name, "vault_sensitive")) {
+  // If missing any part of the attribute or the attribute isn't what is
+  // expected then it's not our attribute.
+  if (!misc_attr_prefix ||
+      !misc_attr_name ||
+      Strcasecmp(misc_attr_prefix, "cql") ||
+      Strcasecmp(misc_attr_name, "vault_sensitive")) {
     return;
   }
 

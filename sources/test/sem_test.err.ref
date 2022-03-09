@@ -1410,4 +1410,5 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c0.a'
+test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'privacy_context'
 semantic errors present; no code gen.

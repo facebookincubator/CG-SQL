@@ -21439,3 +21439,30 @@ end;
 -- + {int 21}
 -- - error:
 @enforce_normal cursor has row;
+
+-- TEST: ensure that various non-matching attributes don't cause any errors
+-- + {create_proc_stmt}: err
+-- + {misc_attrs}: err
+-- + @ATTRIBUTE(potato:potato=potato)
+-- + @ATTRIBUTE(potato:potato)
+-- + @ATTRIBUTE(potato=potato)
+-- + @ATTRIBUTE(potato)
+-- + @ATTRIBUTE(cql:potato=potato)
+-- + @ATTRIBUTE(cql:potato)
+-- + @ATTRIBUTE(cql=cql)
+-- + @ATTRIBUTE(cql)
+-- + error: % vault_sensitive column does not exist in result set 'privacy_context'
+-- +1 error:
+@attribute(potato:potato=potato)
+@attribute(potato:potato)
+@attribute(potato=potato)
+@attribute(potato)
+@attribute(cql:potato=potato)
+@attribute(cql:potato)
+@attribute(cql=cql)
+@attribute(cql)
+@attribute(cql:vault_sensitive=(privacy_context, (some_column)))
+create proc attribute_test()
+begin
+  select 'x' some_column;
+end;

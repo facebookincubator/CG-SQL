@@ -392,12 +392,18 @@ cql_noexport void find_misc_attrs(
     ast_node *values = misc_attr->right;
     CSTR misc_attr_prefix = NULL;
     CSTR misc_attr_name = NULL;
+
     if (is_ast_dot(misc_attr_key)) {
-      misc_attr_prefix = ((str_ast_node *)misc_attr_key->left)->value;
-      misc_attr_name = ((str_ast_node *)misc_attr_key->right)->value;
+      EXTRACT_STRING(prefix, misc_attr_key->left);
+      EXTRACT_STRING(name, misc_attr_key->right);
+      misc_attr_prefix = prefix;
+      misc_attr_name = name;
     } else {
-      misc_attr_name = ((str_ast_node *)misc_attr_key)->value;
+      EXTRACT_STRING(name, misc_attr_key);
+      misc_attr_name = name;
     }
+
+    Invariant(misc_attr_name);
     misc_attr_callback(misc_attr_prefix, misc_attr_name, values, context);
   }
 }
