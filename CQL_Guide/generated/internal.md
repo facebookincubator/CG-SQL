@@ -2074,7 +2074,7 @@ static void sem_select_expr_list_con(ast_node *ast) {
     ...
     sem_sensitive = sem_select_where_etc(select_from_etc);
     ...
-    sem_set_notnull_improvements_for_true_condition(where_expr);
+    sem_set_improvements_for_true_condition(where_expr);
     ...
   }
   ...
@@ -2174,7 +2174,7 @@ static void sem_cond_action(ast_node *ast) {
   if (stmt_list) {
     FLOW_PUSH_CONTEXT_BRANCH();
     // Add improvements for `stmt_list` where `expr` must be true.
-    sem_set_notnull_improvements_for_true_condition(expr);
+    sem_set_improvements_for_true_condition(expr);
     sem_stmt_list_in_current_flow_context(stmt_list);
     FLOW_POP_CONTEXT_BRANCH();
     ...
@@ -2186,7 +2186,7 @@ static void sem_cond_action(ast_node *ast) {
   // improvements to the context created in `sem_if_stmt` so that all later
   // branches will be improved by the OR-linked spine of IS NULL checks in
   // `expr`.
-  sem_set_notnull_improvements_for_false_condition(expr);
+  sem_set_improvements_for_false_condition(expr);
   ...
 }
 ```
@@ -2395,17 +2395,21 @@ nonnull type), but more commonly they are introduced via one of the following
 two functions:
 
 ```c
-// Given a conditional expression `ast` containing possibly AND-linked IS NOT
-// NULL subexpressions, set all of the applicable improvements within the
-// current nullability context.
-static void sem_set_notnull_improvements_for_true_condition(ast_node *expr);
+// Given a conditional expression `ast` possibly containing AND-linked
+// subexpressions, set all of the applicable nullability and has-row
+// improvements within the current flow context. Generally speaking, calls to
+// this function should be bounded by a new flow context corresponding to the
+// portion of the program for which the condition `ast` must be be true.
+static void sem_set_improvements_for_true_condition(ast_node *expr);
 
 // Improvements for known-false conditions are dual to improvements for
-// known-true conditions: Known-false conditions improve ids and dots verified
-// to be NULL via `IS NULL` along the outermost spine of `OR` expressions,
-// whereas known-true conditions improve ids and dots verified to be nonnull via
-// `IS NOT NULL` along the outermost spine of `AND` expressions. For example,
-// the following two statements introduce the same improvements:
+// known-true conditions.
+//
+// For nullability, known-false conditions improve ids and dots verified to be
+// NULL via `IS NULL` along the outermost spine of `OR` expressions, whereas
+// known-true conditions improve ids and dots verified to be nonnull via `IS NOT
+// NULL` along the outermost spine of `AND` expressions. For example, the
+// following two statements introduce the same improvements:
 //
 //   IF a IS NOT NULL AND b IS NOT NULL THEN
 //     -- `a` and `b` are improved here because we know the condition is true
@@ -2414,7 +2418,9 @@ static void sem_set_notnull_improvements_for_true_condition(ast_node *expr);
 //   IF a IS NULL OR b IS NULL RETURN;
 //   -- `a` and `b` are improved here because we know the condition is false
 //   -- since we must not have returned if we got this far
-static void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
+//
+// ...
+static void sem_set_improvements_for_false_condition(ast_node *ast);
 ```
 
 These functions introduce improvements by gathering up all of the `IS NOT NULL`
@@ -2566,8 +2572,8 @@ bool_t sem_is_notnull_improved(CSTR name, CSTR scope);
 void sem_set_notnull_improved(CSTR name, CSTR scope);
 void sem_unset_notnull_improved(CSTR name, CSTR scope);
 void sem_unset_global_notnull_improvements();
-void sem_set_notnull_improvements_for_true_condition(ast_node *ast);
-void sem_set_notnull_improvements_for_false_condition(ast_node *ast);
+void sem_set_improvements_for_true_condition(ast_node *ast);
+void sem_set_improvements_for_false_condition(ast_node *ast);
 void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate)
 void rewrite_nullable_to_unsafe_notnull(ast_node *_Nonnull ast);
 ```

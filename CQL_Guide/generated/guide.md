@@ -9431,7 +9431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar  3 15:54:28 EST 2022
+Snapshot as of Tue Mar  8 16:06:16 PST 2022
 
 ### Operators and Literals
 
@@ -9485,11 +9485,11 @@ REALLIT /* floating point literal */
 "DROP" "ELSE IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE
 CURRENT ROW" "EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE
 TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
-"FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM"
-"FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF"
-"IGNORE" "IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT"
-"INSERT" "INSTEAD" "INT" "INTEGER" "INTO" "JOIN" "KEY"
-"LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
+"FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM
+BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING"
+"HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX" "INITIALLY"
+"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER" "INTO"
+"JOIN" "KEY" "LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
 "LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
 "NULL" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON" "OPEN"
 "ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
@@ -9568,6 +9568,7 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
+  | fetch_cursor_from_blob_stmt
   | guard_stmt
   | if_stmt
   | insert_stmt
@@ -10742,6 +10743,10 @@ fetch_stmt:
   | "FETCH" name
   ;
 
+fetch_cursor_from_blob_stmt:
+  "FETCH" name "FROM BLOB" expr
+  ;
+
 fetch_values_stmt:
   "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec
   | "FETCH" name opt_column_spec from_shape opt_insert_dummy_spec
@@ -10947,6 +10952,7 @@ enforcement_options:
   | "IS TRUE"
   | "CAST"
   | "SIGN FUNCTION"
+  | CURSOR_HAS_ROW
   ;
 
 enforce_strict_stmt:
@@ -15308,8 +15314,80 @@ For instance:
 * it has constraints
 * it is a virtual table
 
-This error indicates that one of these items is present, the specific cause
+This error indicates that one of these items is present. The specific cause
 is included in the text of the message.
+
+
+### CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'cursor.field'
+
+If a cursor has a field of a nonnull reference type (e.g., `TEXT NOT NULL`), it
+is necessary to verify that the cursor has a row before accessing the field
+(unless the cursor has been fetched in such a way that it *must* have a row,
+e.g., via `FETCH ... FROM VALUES` or `LOOP FETCH`). The reason for this is that,
+should the cursor _not_ have a row, the field will be `NULL` despite the nonnull
+type.
+
+Assume we have the following:
+
+```sql
+create table t (x text not null);
+declare proc requires_text_notnull(x text not null);
+```
+
+The following code is **illegal**:
+
+```sql
+declare c cursor for select * from t;
+fetch c;
+-- ILLEGAL because `c` may not have a row and thus
+-- `c.x` may be `NULL`
+call requires_text_notnull(c.x);
+```
+
+To fix it, the cursor must be verified to have a row before the field is
+accessed:
+
+```sql
+declare c cursor for select * from t;
+fetch c;
+if c then
+  -- legal due to the above check
+  call requires_text_notnull(c.x);
+end if;
+```
+
+Alternatively, one can perform a "negative" check by returning (or using another
+control flow statement) when the cursor does not have a row:
+
+```sql
+declare c cursor for select * from t;
+fetch c;
+if not c then
+  call some_logging_function("no rows in t");
+  return;
+end if;
+-- legal as we would have returned if `c` did not
+-- have a row
+call requires_text_notnull(c.x);
+```
+
+If you are sure that a row *must* be present, you can throw to make that
+explicit:
+
+```sql
+declare c cursor for select * from t;
+fetch c;
+if not c throw;
+-- legal as we would have thrown if `c` did not
+-- have a row
+call requires_text_notnull(c.x);
+```
+
+
+### CQL0461: fetch from blob operand is not a blob
+
+The blob operand in the form `FETCH [cursor] FROM BLOB [blob]`
+must be a blob.  The given expression is of some other type.
 
 
 
@@ -15324,7 +15402,7 @@ is included in the text of the message.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar  3 15:54:29 EST 2022
+Snapshot as of Tue Mar  8 16:06:16 PST 2022
 
 ### Rules
 
@@ -17874,7 +17952,7 @@ The result goes in `out/cql_amalgam.c`.  It can then be built using `cc` with wh
 desire.  With a few `-D` directives it can readily be compiled with Microsoft C and it also works with
 Emscripten (`emcc`) basically unchanged.  Clang and Gcc of course also work.
 
-The standard test script `test.sh` builds the amalgam and attempts to compile it as well, this ensures
+The standard test script `test.sh` builds the amalgam and attempts to compile it as well, which ensures
 that the amalgam can at least compile at all times.
 
 ### Testing the Amalgam
@@ -17933,7 +18011,7 @@ Most amalgam functions are `static` to avoid name conflicts. You will want to cr
 
 You'll want to avoid calling any internal functions other than `cql_main` because they are liable to change.
 
-NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API expose the C functions you need and write a wrapper class.
+NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API, expose the C functions you need and write a wrapper class.
 
 ### CQL Amalgam Options
 
@@ -17969,7 +18047,7 @@ Set this symbol so that you own main and cql_main is called at your pleasure.
 
 #### CQL_NO_SYSTEM_HEADERS
 
-The amalgam includes the normal `#include` directives needed to make it compile.  Things like stdio and such.
+The amalgam includes the normal `#include` directives needed to make it compile, things like stdio and such.
 In your situation these headers may not be appropriate.  If `CQL_NO_SYSTEM_HEADERS` is defined then the amalgam
 will not include anything; you can then add whatever headers you need before you include the amalgam.
 
@@ -17995,9 +18073,9 @@ however you deem appropriate.
 // You can define it to be a method of your choice with
 // "#define cql_emit_error your_method" and then your method
 // will get the data instead. This will be whatever output the
-// compiler would have emitted to to stderr.  This includes
+// compiler would have emitted to stderr.  This includes
 // semantic errors or invalid argument combinations.  Note that
-// CQL never emits error fragments with this API, you always
+// CQL never emits error fragments with this API; you always
 // get all the text of one error.  This is important if you
 // are filtering or looking for particular errors in a test
 // harness or some such.
@@ -18038,7 +18116,7 @@ however you deem appropriate.
 // You can define it to be a method of your choice with
 // "#define cql_emit_output your_method" and then your method will
 // get the data instead. This will be whatever output the
-// compiler would have emitted to to stdout.  This is usually
+// compiler would have emitted to stdout.  This is usually
 // reformated CQL or semantic trees and such -- not the normal
 // compiler output.
 //
@@ -18153,7 +18231,7 @@ The options are:
 * `CQL_AMALGAM_SEM` : semantic analysis (needed by most things)
 * `CQL_AMALGAM_TEST_HELPERS` : test helper output
 * `CQL_AMALGAM_UDF` : the UDF stubs used by the query plan output
-* `CQL_AMALGAM_UNIT_TESTS` : some internal unit tests, pretty much needed by nobody
+* `CQL_AMALGAM_UNIT_TESTS` : some internal unit tests, which are pretty much needed by nobody
 
 Note that `CQL_AMALGAM_SEM` is necessary for any of the code generation
 features to work. Likewise, several generators require `CQL_AMALGAM_CG_COMMON` (e.g., C does).
@@ -18163,14 +18241,14 @@ Pick what you want; stubs are created for what you omit to avoid linkage errors.
 ### Other Notes
 
 The amalgam will use malloc/calloc for its allocations and it is designed to release all memory it
-allocated when cql_main returns control to you. Even in the face of error.
+has allocated when cql_main returns control to you, even in the face of error.
 
 Internal compilation errors result in an `assert` failure leading to an abort.  This is not supposed
 to ever happen but there can always be bugs.  Normal errors just prevent later phases of the compiler
 from running so you might not see file output, but rather just error output.  In all cases things
 should be cleaned up.
 
-The compiler can be called repeatedly with no troubles, it re-initializes on each use. The compiler is
+The compiler can be called repeatedly with no troubles; it re-initializes on each use. The compiler is
  not multi-threaded so if there is threading you should use some mutex arrangement to keep it safe.
 A thread-safe version would require extensive modifications.
 
@@ -18364,11 +18442,11 @@ in [Internals Part 5: CQL Runtime](https://cgsql.dev/cql-guide/int05).
 
 SQLite statement management includes the ability to reset and re-prepare statements.  This is an
 important performance optimization but the stock `CQLRT` does not take advantage of this.  This is
-for two reasons:  first, simplicity, but more importantly, any kind of statement cache would require
+for two reasons:  first, simplicity, and secondly (though more importantly), any kind of statement cache would require
 a caching policy and this simple `CQLRT` cannot possibly know what might consitute a good policy
 for your application.
 
-These three macros can be defined in your `cqlrt.h` and they can be directed at a version that
+The following three macros can be defined in your `cqlrt.h` and they can be directed at a version that
 keeps a cache of your choice.
 
 ```C
@@ -18387,8 +18465,8 @@ keeps a cache of your choice.
 As you might expect, `prepare` creates a statement or else returns one from the cache.
 When the `finalize` API is called the indicated statement can be returned to the cache or discarded.
 The `exec` API does both of these operations, but also, recall that `exec` can get a semicolon
-seperated list of statements. Your `exec` implementation will have to use SQLite's prepare functions
-to split the list and get prepared statements for part of the string.  Alternately you could choose
+separated list of statements. Your `exec` implementation will have to use SQLite's prepare functions
+to split the list and get prepared statements for part of the string.  Alternately, you could choose
 not to cache in the `exec` case.
 
 #### Your Underlying Runtime
@@ -18396,22 +18474,22 @@ not to cache in the `exec` case.
 As you can see in `cqlrt_cf`, there is considerable ability to define what the basic data types mean.  Importantly,
 the reference types `text`, `blob`, and `object` can become something different (e.g., something
 already supported by your environment).  For instance, on Windows you could use COM or .NET types
-for your objects.  All object references are substantially opaque to `CQLRT`, they have comparatively
-few APIs that are defined in the runtime.  Things like getting the text out of the string reference
+for your objects.  All object references are substantially opaque to `CQLRT`; they have comparatively
+few APIs that are defined in the runtime:  things like getting the text out of the string reference
 and so forth.
 
 In addition to the basic types and operations you can also define a few helper functions that
 allow you to create some more complex object types.  For instance, list, set, and dictionary
 creation and management functions can be readily created and then you can declare them using
 the `DECLARE FUNCTION` language features.  These objects will then be whatever list, set, or
-dictionary they need to be to interoperate with the rest of your environment.  You can
+dictionary they need to be in order to interoperate with the rest of your environment.  You can
 define all the data types you might need in your `CQLRT` and you can employ whatever
 threading model and locking primitives you need for correctness.
 
 #### Debugging and Tracing
 
 The `CQLRT` interface includes some helper macros for logging.  These are defined
-as no-ops by default but of course they can be changed.
+as no-ops by default but, of course, they can be changed.
 
 ```
 #define cql_contract assert
@@ -18422,7 +18500,7 @@ as no-ops by default but of course they can be changed.
 ```
 
 `cql_contract` and `cql_invariant` are for fatal errors. They both assert something
-that is expected to always be true (like `assert`) with only difference being that
+that is expected to always be true (like `assert`) with the only difference being that
 the former is conventionally used to validate preconditions of functions.
 
 `cql_tripwire` is a slightly softer form of assert that should crash in debug
@@ -18437,10 +18515,10 @@ Presently the log format is very simple.  The invocation looks like this:
  cql_log_database_error(info->db, "cql", "database error");
 ```
 The logging facility is expected to send the message to wherever is appropriate for your environment.
-Additionally it will typically get the failing result code and error message from SQLite however
+Additionally it will typically get the failing result code and error message from SQLite, however
 these are likely to be stale. Failed queries usually still require cleanup and so the SQLite error
-codes be lose because (e.g.) a `finalize` has happened, clearing the code. You can do better if
-your runtime caches the results of recent failed `prepare` calls, for instance.  In any case
+codes be lost because (e.g.) a `finalize` has happened, clearing the code. You can do better if,
+for instance, your runtime caches the results of recent failed `prepare` calls. In any case,
 what you log and where you log it is entirely up to you.
 
 The `cql_error_trace` macro is described in [Internals Chapter 3](https://cgsql.dev/cql-guide/int03#cleanup-and-errors).
@@ -18489,7 +18567,7 @@ sorts of changes you can make.
 Concurrency and Statement Caching are not supported in the basic version
 for `cqlrt.h`.  If this is important to you you might want to customize for that.
 
-Helper functions for additional data types can be added, these can be
+Helper functions for additional data types can be added, and they can be
 unique to your runtime.
 
 There are tracing macros to help with debugability.  Providing some

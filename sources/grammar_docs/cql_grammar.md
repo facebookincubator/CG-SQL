@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar  3 15:54:28 EST 2022
+Snapshot as of Tue Mar  8 16:06:16 PST 2022
 
 ### Operators and Literals
 
@@ -67,11 +67,11 @@ REALLIT /* floating point literal */
 "DROP" "ELSE IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE
 CURRENT ROW" "EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE
 TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
-"FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM"
-"FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF"
-"IGNORE" "IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT"
-"INSERT" "INSTEAD" "INT" "INTEGER" "INTO" "JOIN" "KEY"
-"LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
+"FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM
+BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING"
+"HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX" "INITIALLY"
+"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER" "INTO"
+"JOIN" "KEY" "LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
 "LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
 "NULL" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON" "OPEN"
 "ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
@@ -150,6 +150,7 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
+  | fetch_cursor_from_blob_stmt
   | guard_stmt
   | if_stmt
   | insert_stmt
@@ -1324,6 +1325,10 @@ fetch_stmt:
   | "FETCH" name
   ;
 
+fetch_cursor_from_blob_stmt:
+  "FETCH" name "FROM BLOB" expr
+  ;
+
 fetch_values_stmt:
   "FETCH" name opt_column_spec "FROM" "VALUES" '(' insert_list ')' opt_insert_dummy_spec
   | "FETCH" name opt_column_spec from_shape opt_insert_dummy_spec
@@ -1529,6 +1534,7 @@ enforcement_options:
   | "IS TRUE"
   | "CAST"
   | "SIGN FUNCTION"
+  | CURSOR_HAS_ROW
   ;
 
 enforce_strict_stmt:
