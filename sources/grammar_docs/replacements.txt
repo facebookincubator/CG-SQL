@@ -220,6 +220,7 @@ s/[[:<:]]AT_SENSITIVE[[:>:]]/"@SENSITIVE"/g
 s/[[:<:]]CONTEXT_COLUMN[[:>:]]/"CONTEXT COLUMN"/g
 s/[[:<:]]CONTEXT_TYPE[[:>:]]/"CONTEXT TYPE"/g
 s/[[:<:]]CURRENT_ROW[[:>:]]/"CURRENT ROW"/g
+s/[[:<:]]CURSOR_HAS_ROW[[:>:]]/"CURSOR HAS ROW"/g
 s/[[:<:]]ELSE_IF[[:>:]]/"ELSE IF"/g
 s/[[:<:]]EXCLUDE_CURRENT_ROW[[:>:]]/"EXCLUDE CURRENT ROW"/g
 s/[[:<:]]EXCLUDE_GROUP[[:>:]]/"EXCLUDE GROUP"/g
