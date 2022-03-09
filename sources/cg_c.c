@@ -5424,13 +5424,18 @@ static void cg_fetch_values_stmt(ast_node *ast) {
 static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
   Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
   CSTR cursor_name = ast->left->sem->name;
-  CSTR blob_name  = ast->right->sem->name;
 
-  // note this needs return code
+  EXTRACT_ANY_NOTNULL(blob, ast->right);
+  Invariant(is_blob(blob->sem->sem_type));
+
+  CG_PUSH_EVAL(blob, C_EXPR_PRI_ROOT);
+
   bprintf(cg_main_output,
     "_rc_ = cql_deserialize_from_blob(%s, &%s, &%s._has_row_, %s_cols, %s_data_types);\n",
-    blob_name, cursor_name, cursor_name, cursor_name, cursor_name);
+    blob_value.ptr, cursor_name, cursor_name, cursor_name, cursor_name);
   cg_error_on_rc_notequal("SQLITE_OK");
+
+  CG_POP_EVAL(blob);
 }
 
 static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
@@ -5439,7 +5444,6 @@ static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
   CSTR blob_name  = ast->left->sem->name;
   CSTR cursor_name = ast->right->sem->name;
 
-  // note this needs return code
   bprintf(cg_main_output,
     "_rc_ = cql_serialize_to_blob(&%s, &%s, %s._has_row_, %s_cols, %s_data_types);\n",
     blob_name, cursor_name, cursor_name, cursor_name, cursor_name);

@@ -3491,6 +3491,12 @@ extern void slash_star_and_star_slash(void);
 extern CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern cql_blob_ref _Nullable make_blob(void);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

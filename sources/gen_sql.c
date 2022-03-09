@@ -2720,7 +2720,7 @@ static void gen_fetch_cursor_from_blob_stmt(ast_node *ast) {
 
   gen_printf("FETCH ");
   gen_expr(cursor, EXPR_PRI_ROOT);
-  gen_printf(" FROM ");
+  gen_printf(" FROM BLOB ");
   gen_expr(blob, EXPR_PRI_ROOT);
 }
 

@@ -83439,7 +83439,7 @@ BEGIN
   DECLARE B BLOB<structured_storage>;
   SET B FROM CURSOR C;
   DECLARE D CURSOR LIKE C;
-  FETCH D FROM B;
+  FETCH D FROM BLOB B;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -83810,6 +83810,51 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not ma
           | {columns_values}
             | {from_shape}
               | {name b}: b: blob<foo> variable
+
+The statement ending at line XXXX
+
+CREATE PROC blob_deseralized_from_err ()
+BEGIN
+  DECLARE C CURSOR LIKE foo;
+  FETCH C FROM BLOB NOT 'x';
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name blob_deseralized_from_err}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor_like_name}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+      | | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+      | | {like}: foo: { id: integer notnull primary_key autoinc }
+      |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+      | {fetch_cursor_from_blob_stmt}: err
+        | {name C}
+        | {not}: err
+          | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC blob_deseralized_from_not_a_blob ()
+BEGIN
+  DECLARE C CURSOR LIKE foo;
+  FETCH C FROM BLOB 1;
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0461: fetch from blob operand is not a blob
+
+  {create_proc_stmt}: err
+  | {name blob_deseralized_from_not_a_blob}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor_like_name}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+      | | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+      | | {like}: foo: { id: integer notnull primary_key autoinc }
+      |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+      | {fetch_cursor_from_blob_stmt}: err
+        | {name C}
+        | {int 1}: integer notnull
 
 The statement ending at line XXXX
 
@@ -84593,7 +84638,7 @@ BEGIN
   LET x1 := c1.a;
   DECLARE b BLOB<has_row_check_blob>;
   DECLARE c2 CURSOR LIKE has_row_check_blob;
-  FETCH c2 FROM b;
+  FETCH c2 FROM BLOB b;
   LET x2 := c2.a;
   DECLARE c3 CURSOR FOR SELECT *
     FROM has_row_check_table;

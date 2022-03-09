@@ -223,4 +223,5 @@ DECLARE PROC nested_shared_stuff () (x INTEGER NOT NULL);
 DECLARE PROC use_nested_select_shared_frag_form () (x INTEGER NOT NULL);
 DECLARE PROC slash_star_and_star_slash ();
 DECLARE PROC blob_serialization_test () USING TRANSACTION;
+DECLARE PROC deserialize_func () USING TRANSACTION;
 DECLARE PROC end_proc ();

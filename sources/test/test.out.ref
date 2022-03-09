@@ -1707,6 +1707,8 @@ BEGIN
   FETCH S;
 END;
 
+FETCH C FROM BLOB b;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

@@ -127,6 +127,7 @@ CROSS                        { return CROSS; }
 USING                        { return USING; }
 RIGHT                        { return RIGHT; }
 FROM                         { return FROM; }
+FROM{sp}BLOB/{stop}          { return FROM_BLOB; }
 WHERE                        { return WHERE; }
 GROUP                        { return GROUP; }
 HAVING                       { return HAVING; }

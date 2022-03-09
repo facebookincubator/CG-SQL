@@ -227,6 +227,7 @@ s/[[:<:]]EXCLUDE_GROUP[[:>:]]/"EXCLUDE GROUP"/g
 s/[[:<:]]EXCLUDE_NO_OTHERS[[:>:]]/"EXCLUDE NO OTHERS"/g
 s/[[:<:]]EXCLUDE_TIES[[:>:]]/"EXCLUDE TIES"/g
 s/[[:<:]]FOR_EACH_ROW[[:>:]]/"FOR EACH ROW"/g
+s/[[:<:]]FROM_BLOB[[:>:]]/"FROM BLOB"/g
 s/[[:<:]]IS_FALSE[[:>:]]/"IS FALSE"/g
 s/[[:<:]]IS_NOT_FALSE[[:>:]]/"IS NOT FALSE"/g
 s/[[:<:]]IS_NOT_TRUE[[:>:]]/"IS NOT TRUE"/g

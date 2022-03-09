@@ -1911,60 +1911,8 @@ cql_noexport bool_t try_rewrite_blob_fetch_forms(ast_node *ast) {
 rewrite_or_fail:
   Invariant(cursor);
 
-  // the blob has already been checked, it's a valid name
-  sem_expr(blob);
-  Invariant(!is_error(blob));
-
-  // we have to validate the cursor
-  sem_cursor(cursor);
-  if (is_error(cursor)) {
-    record_error(ast);
-    return true;
-  }
-
-  if (!(cursor->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE)) {
-    report_error(cursor, "CQL0454: cursor was not declared for storage", cursor->sem->name);
-    record_error(ast);
-    return true;
-  }
-
-  // Note that the blob might have been rewritten due to notnull improvement
-  // but that's ok, we only need the name and it's in the sem node for us now.
-  CSTR kind = blob->sem->kind;
-  CSTR blob_name = blob->sem->name;
-
-  if (!kind) {
-    report_error(blob, "CQL0455: blob variable must have a type-kind for type safety", blob_name);
-    record_error(ast);
-    return true;
-  }
-
-  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-      kind,
-      blob,
-      "CQL0453: blob type is not a valid table");
-  if (!table_ast) {
-    record_error(ast);
-    return true;
-  }
-
-  if (!is_ast_create_table_stmt(table_ast)) {
-    report_error(blob, "CQL0456: blob type is a view, not a table", kind);
-    record_error(ast);
-    return true;
-  }
-
-  if (!is_table_blob_storage(table_ast)) {
-    report_error(blob, "CQL0457: the indicated table is not marked with @attribute(cql:blob_storage)", kind);
-    record_error(ast);
-    return true;
-  }
-
-  blob->sem->sptr = table_ast->sem->sptr;
-
-  sem_verify_identical_columns(dest, src, "in the cursor and the blob type");
-  if (is_error(src)) {
-    record_error(ast);
+  sem_validate_cursor_blob_compat(ast, cursor, blob, dest, src);
+  if (is_error(ast)) {
     return true;
   }
 
@@ -1978,19 +1926,6 @@ rewrite_or_fail:
   ast_set_left(ast, dest);
   ast_set_right(ast, src);
 
-  // Now we need to mark the cursor as requiring the serializer helpers
-  // so that we know to code-gen them later.  Since we want to do this
-  // during the cursor declare we need to put this on the declaration.
-  // Therefore, we're mutating the flags in place so as to change the
-  // various linked places this type is used in particular we want to mutate
-  // the semantic info in the declare cursor node.  This is why we
-  // don't make a new semantic node.
-
-  ast_node *var = find_local_or_global_variable(cursor->sem->name);
-  Invariant(var); // we know the cursor exists and is unique already
-  var->sem->sem_type |= SEM_TYPE_SERIALIZE;
-
-  record_ok(ast);
   return true;
 }
 

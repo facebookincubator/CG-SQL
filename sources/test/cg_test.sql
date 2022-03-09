@@ -5150,6 +5150,20 @@ begin
   fetch D from B;
 end;
 
+declare function make_blob() create blob<structured_storage>;
+
+-- TEST: get a blob from somewhere other than a local
+-- checks general expression evaluation in the fetch path
+-- func call is a good standing for general eval
+-- +  cql_blob_release(_tmp_n_blob_0);
+-- + _tmp_n_blob_0 = make_blob();
+-- + _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, &C, &C._has_row_, C_cols, C_data_types);
+create proc deserialize_func()
+begin
+  declare C cursor like structured_storage;
+  fetch C from blob make_blob();
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

@@ -21085,6 +21085,7 @@ begin
   set B from cursor C;
 end;
 
+
 -- TEST: verify blob fetch from cursor; valid cursor
 -- + error: % name not found 'not_a_cursor'
 -- +1 error:
@@ -21103,9 +21104,29 @@ end;
 -- +1 error:
 create proc blob_serialization_not_storage_table()
 begin
-   declare b blob<foo>;
-   declare C cursor like foo;
-   fetch C from b;
+  declare b blob<foo>;
+  declare C cursor like foo;
+  fetch C from b;
+end;
+
+-- TEST: verify that errant blob reports correctly
+-- + {fetch_cursor_from_blob_stmt}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+create proc blob_deseralized_from_err()
+begin
+  declare C cursor like foo;
+  fetch C from blob not 'x';
+end;
+
+-- TEST: verify that errant blob reports correctly
+-- + {fetch_cursor_from_blob_stmt}: err
+-- + error: % fetch from blob operand is not a blob
+-- +1 error:
+create proc blob_deseralized_from_not_a_blob()
+begin
+  declare C cursor like foo;
+  fetch C from blob 1;
 end;
 
 -- TEST: can't put triggers on structured storage
