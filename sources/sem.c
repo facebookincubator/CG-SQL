@@ -16349,33 +16349,35 @@ static bool_t fragment_base_cte_sem_types_check(ast_node *base_select_expr_list,
   return true;
 }
 
-typedef struct name_record {
-  CSTR name;
+typedef struct attr_value_record {
+  CSTR value;
   ast_node *ast;
-} name_record;
+} attr_value_record;
 
-static void reset_name_record(name_record *data) {
-  data->name = NULL;
+static void reset_attr_value_record(attr_value_record *data) {
+  data->value = NULL;
   data->ast = NULL;
 }
 
 // records the at most one instance of found attribute
-static void record_frag_name(CSTR name, ast_node *misc_attr_value, void *context) {
+static void record_attr_value(CSTR value, ast_node *misc_attr_value, void *context) {
   Contract(context);
-  name_record *record = (name_record *)context;
+  attr_value_record *record = (attr_value_record *)context;
 
-  // this callback is always used after the fragment is known to have exactly one matching attribute
-  Invariant(!record->name);
-  record->name = name;
+  // this callback is always used after the target is known to have exactly one matching attribute
+  Invariant(!record->value);
+  Invariant(!record->ast);
+  record->value = value;
   record->ast = misc_attr_value;
 }
 
 // helper to find the at most one instance of the named misc attribute
-static void find_named_cql_attribute(ast_node *misc_attr_list, CSTR attr_name, name_record *data) {
-  reset_name_record(data);
-  uint32_t count = find_attribute_str(misc_attr_list, record_frag_name, data, attr_name);
+static void find_named_cql_attribute(ast_node *misc_attr_list, CSTR attr_name, attr_value_record *data) {
+  reset_attr_value_record(data);
+  uint32_t count = find_attribute_str(misc_attr_list, record_attr_value, data, attr_name);
+
+  // this search is always used after the target is known to have exactly one matching attribute
   Invariant(count == 1);
-  Invariant(data->name);
   Invariant(data->ast);
 }
 
@@ -16510,9 +16512,9 @@ static void sem_base_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast_nod
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
   Contract(is_ast_misc_attrs(misc_attrs));
 
-  name_record data;
+  attr_value_record data;
   find_named_cql_attribute(misc_attrs, "base_fragment", &data);
-  CSTR base_frag_name = data.name;
+  CSTR assembly_frag_name = data.value;
 
   sem_fragment_has_with_select_stmt(stmt_list);
   if (is_error(stmt_list)) {
@@ -16525,12 +16527,12 @@ static void sem_base_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast_nod
   // check for the single named CTE
   EXTRACT_NOTNULL(cte_tables, with_select_stmt->left->left);
   if (cte_tables->right) {
-    report_error(cte_tables, "CQL0253: base fragment must have only a single CTE named the same as the fragment", base_frag_name);
+    report_error(cte_tables, "CQL0253: base fragment must have only a single CTE named the same as the fragment", assembly_frag_name);
     goto error;
   }
 
   EXTRACT_NOTNULL(cte_decl, cte_tables->left->left);
-  if (!sem_fragment_CTE_name_check(cte_decl, base_frag_name,
+  if (!sem_fragment_CTE_name_check(cte_decl, assembly_frag_name,
     "CQL0253: base fragment must have only a single CTE named the same as the fragment")) {
     goto error;
   }
@@ -16538,17 +16540,17 @@ static void sem_base_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast_nod
   // check for select everything from the named CTE
   EXTRACT_NOTNULL(select_stmt, with_select_stmt->right);
 
-  sem_fragment_select_everything_check(select_stmt, base_frag_name);
+  sem_fragment_select_everything_check(select_stmt, assembly_frag_name);
   if (is_error(select_stmt)) {
     goto error;
   }
 
-  if (find_base_fragment(base_frag_name)) {
-    report_error(misc_attrs, "CQL0256: fragment name conflicts with existing base fragment", base_frag_name);
+  if (find_base_fragment(assembly_frag_name)) {
+    report_error(misc_attrs, "CQL0256: fragment name conflicts with existing base fragment", assembly_frag_name);
     goto error;
   }
   else {
-    add_base_fragment(create_proc_stmt, base_frag_name);
+    add_base_fragment(create_proc_stmt, assembly_frag_name);
   }
 
   record_ok(misc_attrs);
@@ -16615,9 +16617,9 @@ static ast_node *get_cte_tables_by_create_proc_stmt(ast_node *create_proc_stmt) 
 // the types of those is going to match in all the getters.
 // We do this check by converting the params to the canoncial string representation and
 // complaining if there is not exact (case insensitive) match.
-static bool_t fragment_params_check(CSTR base_frag_name, ast_node *create_proc_stmt) {
+static bool_t fragment_params_check(CSTR assembly_frag_name, ast_node *create_proc_stmt) {
   // the fragment name has already been checked for existence using fragment_base_columns_check
-  ast_node *base_fragment = find_base_fragment(base_frag_name);
+  ast_node *base_fragment = find_base_fragment(assembly_frag_name);
   Invariant(base_fragment);
 
   ast_node *paramsReqd = get_proc_params(base_fragment);
@@ -16719,7 +16721,7 @@ static bool_t fragment_base_columns_check(
   return true;
 }
 
-static bool_t sem_extension_left_outer_join(CSTR base_frag_name, ast_node *my_select_expr_list_con, ast_node *my_cte_tables)
+static bool_t sem_extension_left_outer_join(CSTR assembly_frag_name, ast_node *my_select_expr_list_con, ast_node *my_cte_tables)
 {
   EXTRACT_NAMED_NOTNULL(my_select_expr_list, select_expr_list, my_select_expr_list_con->left);
 
@@ -16742,7 +16744,7 @@ static bool_t sem_extension_left_outer_join(CSTR base_frag_name, ast_node *my_se
 
   // it has to be the correct table
   EXTRACT_STRING(table_name, table_name_ast);
-  if (Strcasecmp(base_frag_name, table_name)) {
+  if (Strcasecmp(assembly_frag_name, table_name)) {
     goto error;
   }
 
@@ -16759,7 +16761,7 @@ static bool_t sem_extension_left_outer_join(CSTR base_frag_name, ast_node *my_se
 
 error:
   report_error(my_cte_tables, "CQL0260: extension fragment CTE must be a simple left outer join from",
-    base_frag_name);
+    assembly_frag_name);
 
   return false;
 }
@@ -16810,9 +16812,9 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
   Contract(is_ast_misc_attrs(misc_attrs));
 
-  name_record data;
+  attr_value_record data;
   find_named_cql_attribute(misc_attrs, "extension_fragment", &data);
-  CSTR base_frag_name = data.name;
+  CSTR assembly_frag_name = data.value;
 
   // Check the extension fragment adding column(s) for basic syntax requirements and correct reference to base fragment
   // * attribute name match existing base fragment name
@@ -16820,12 +16822,12 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
   // * followed by a single extension CTE with columns including all base fragment columns (select T.* from base CTE)
   // * left outer join with base CTE so it cannot remove from base
   // * the final select must be select * from extension CTE
-  if (!fragment_base_columns_check(base_frag_name, data.ast, stmt_list)) {
+  if (!fragment_base_columns_check(assembly_frag_name, data.ast, stmt_list)) {
     goto error;
   }
 
   // ensure that the fragment parameters exactly match the base fragment
-  if (!fragment_params_check(base_frag_name, create_proc_stmt)) {
+  if (!fragment_params_check(assembly_frag_name, create_proc_stmt)) {
     goto error;
   }
 
@@ -16887,11 +16889,11 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
     // * you can't have any other clauses like WHERE, HAVING, LIMIT, because that would potentially
     //   remove or re-order rows
     EXTRACT_NAMED_NOTNULL(my_select_expr_list_con, select_expr_list_con, my_select_core->right);
-    if (!extension_fragment_select_check(my_select_expr_list_con, my_cte_tables, base_frag_name)) {
+    if (!extension_fragment_select_check(my_select_expr_list_con, my_cte_tables, assembly_frag_name)) {
       goto error;
     }
 
-    if (!sem_extension_left_outer_join(base_frag_name, my_select_expr_list_con, my_cte_tables)) {
+    if (!sem_extension_left_outer_join(assembly_frag_name, my_select_expr_list_con, my_cte_tables)) {
       goto error;
     }
 
@@ -16911,7 +16913,7 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
     // of the compound query is "select * from base"
 
     EXTRACT(select_core, my_any_select_core_list->left);
-    sem_fragment_union_shape(select_core, base_frag_name);
+    sem_fragment_union_shape(select_core, assembly_frag_name);
     if (is_error(select_core)) {
       record_error(with_select_stmt);
       goto error;
@@ -16932,7 +16934,7 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
     }
 
     // get all the things associated with this fragment name
-    bytebuf *buf = symtab_ensure_bytebuf(extensions_by_basename, base_frag_name);
+    bytebuf *buf = symtab_ensure_bytebuf(extensions_by_basename, assembly_frag_name);
     size_t frag_count = buf->used / sizeof(ast_node *);
     ast_node **frags = (ast_node **)buf->ptr;
 
@@ -16976,7 +16978,7 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
       }
     }
 
-    ast_node *base_proc = find_base_fragment(base_frag_name);
+    ast_node *base_proc = find_base_fragment(assembly_frag_name);
     Invariant(base_proc);
 
     sem_verify_identical_columns(base_proc, create_proc_stmt, "in extension fragment");
@@ -17003,7 +17005,7 @@ static void sem_extension_fragment(ast_node *misc_attrs, ast_node *stmt_list, as
   }
 
   add_extension_fragment(create_proc_stmt, my_cte_name);
-  add_extension_to_base(create_proc_stmt, base_frag_name);
+  add_extension_to_base(create_proc_stmt, assembly_frag_name);
   return;
 
 error:
@@ -17120,10 +17122,10 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
   Contract(!stmt_list || is_ast_stmt_list(stmt_list)); // might be null (which will produce an error)
 
-  name_record data;
+  attr_value_record data;
   find_named_cql_attribute(misc_attrs, "assembly_fragment", &data);
 
-  CSTR base_frag_name = data.name;
+  CSTR assembly_frag_name = data.value;
   ast_node *str_ast = data.ast;
 
   ast_node *name_ast = get_proc_name(create_proc_stmt);
@@ -17140,12 +17142,12 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
   //
   // As a result of these rules the assembly fragment will end up looking something like this:
   //
-  // @attribute(cql:assembly_fragment=base_frag_name)
-  // create proc base_frag_name(id_ integer not null)
+  // @attribute(cql:assembly_fragment=assembly_frag_name)
+  // create proc assembly_frag_name(id_ integer not null)
   // begin
   //   with
-  //   base_frag_name(x,y,z) as (select 1 x, 'b' y, 3 z)
-  //   select * from base_frag_name;
+  //   assembly_frag_name(x,y,z) as (select 1 x, 'b' y, 3 z)
+  //   select * from assembly_frag_name;
   // end;
   //
   // Notes:
@@ -17154,40 +17156,40 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
   //    so it is just a surrogate for whatever that query is.  This saves you from having
   //    to duplicate the base query all over.
   //
-  //  * the form base_frag_name(*) as (select ...) is a good option as it saves you
+  //  * the form assembly_frag_name(*) as (select ...) is a good option as it saves you
   //    from duplicating the column names and is rewritten to the above
   //
-  //  * the "select * from base_frag_name" portion can be any query you like that uses
-  //    "base_frag_name".  All appearances of base_frag_name will be replaced with the
+  //  * the "select * from assembly_frag_name" portion can be any query you like that uses
+  //    "assembly_frag_name".  All appearances of assembly_frag_name will be replaced with the
   //    CTE for the final assembled query (see below).  So you could select some or all
   //    of the columns in any order.  In practice you really want to include "*" for
-  //    base_frag_name.* in the select list so that any columns that were added will
+  //    assembly_frag_name.* in the select list so that any columns that were added will
   //    appear even though you might not know what they are going to be.  But other
   //    columns/tables can be added and can contribute to say sort order or limit or
   //    anything like that.
 
-  if (find_assembly_fragment(base_frag_name)) {
-    report_error(str_ast, "CQL0264: duplicate assembly fragments of base fragment", base_frag_name);
+  if (find_assembly_fragment(assembly_frag_name)) {
+    report_error(str_ast, "CQL0264: duplicate assembly fragments of base fragment", assembly_frag_name);
     goto error;
   }
 
-  if (!fragment_base_columns_check(base_frag_name, str_ast, stmt_list)) {
+  if (!fragment_base_columns_check(assembly_frag_name, str_ast, stmt_list)) {
     goto error;
   }
 
   // ensure that the fragment parameters exactly match the base fragment
-  if (!fragment_params_check(base_frag_name, create_proc_stmt)) {
+  if (!fragment_params_check(assembly_frag_name, create_proc_stmt)) {
     goto error;
   }
 
   ast_node *cte_tables = get_cte_tables_by_stmt_list(stmt_list);
   if (cte_tables->right != NULL) {
-   report_error(cte_tables, "CQL0265: assembly fragment can only have one CTE", base_frag_name);
+   report_error(cte_tables, "CQL0265: assembly fragment can only have one CTE", assembly_frag_name);
    record_error(cte_tables);
    goto error;
   }
 
-  if (Strcasecmp(base_frag_name, proc_name)) {
+  if (Strcasecmp(assembly_frag_name, proc_name)) {
     report_error(create_proc_stmt,
       "CQL0319: name of the assembly procedure must match the name of the base fragment", proc_name);
     goto error;
@@ -17231,13 +17233,13 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
   //   ... ...
 
   EXTRACT_NAMED_NOTNULL(base_cte_tables, cte_tables,
-    get_cte_tables_by_create_proc_stmt(find_base_fragment(base_frag_name)));
+    get_cte_tables_by_create_proc_stmt(find_base_fragment(assembly_frag_name)));
 
   cte_tables->left = base_cte_tables->left;
   base_cte_tables->left->parent = cte_tables->left;
 
   // get all the things associated with this fragment name
-  bytebuf *buf = symtab_ensure_bytebuf(extensions_by_basename, base_frag_name);
+  bytebuf *buf = symtab_ensure_bytebuf(extensions_by_basename, assembly_frag_name);
   size_t frag_count = buf->used / sizeof(ast_node *);
   ast_node **frags = (ast_node **)buf->ptr;
 
@@ -17252,7 +17254,7 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
     ast_node *new_extension_cte_tables = copy_ast_tree(extension_cte_tables->right);
     if (!is_first) {
       // If it is not the first extension fragment, we need to change the base cte name to previous extension cte name.
-      replace_fragment_name(new_extension_cte_tables->left->right, base_frag_name, previous_cte_name);
+      replace_fragment_name(new_extension_cte_tables->left->right, assembly_frag_name, previous_cte_name);
     }
     is_first = false;
     EXTRACT_STRING(this_cte_name, extension_cte_table->left->left);
@@ -17264,10 +17266,10 @@ static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast
   }
 
   if (!is_first) {
-    replace_fragment_name(stmt_list->left->right, base_frag_name, previous_cte_name);
+    replace_fragment_name(stmt_list->left->right, assembly_frag_name, previous_cte_name);
   }
 
-  add_assembly_fragment(create_proc_stmt, base_frag_name);
+  add_assembly_fragment(create_proc_stmt, assembly_frag_name);
 
   // For assembly fragment, we only copied the ast node but didn't update the semantic information.
   // Now walk the procedure again.  Note, this might fail if something goes wrong with the rewrite

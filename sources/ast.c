@@ -439,8 +439,8 @@ static void ast_find_ast_misc_attr_callback(
     // Non-string, non-list attributes are ignored for this callback type
     if (is_ast_str(ast_misc_attr_values)) {
       if (misc->str_node_callback) {
-        EXTRACT_STRING(name, ast_misc_attr_values);
-        misc->str_node_callback(name, ast_misc_attr_values, misc->context);
+        EXTRACT_STRING(value, ast_misc_attr_values);
+        misc->str_node_callback(value, ast_misc_attr_values, misc->context);
       }
       misc->count++;
     }
@@ -448,9 +448,9 @@ static void ast_find_ast_misc_attr_callback(
       for (ast_node *list = ast_misc_attr_values; list; list = list->right) {
         // any non-string values are ignored, loop over the rest calling on each string
         if (is_ast_str(list->left)) {
-          EXTRACT_STRING(name, list->left);
+          EXTRACT_STRING(value, list->left);
           if (misc->str_node_callback) {
-            misc->str_node_callback(name, list->left, misc->context);
+            misc->str_node_callback(value, list->left, misc->context);
           }
           misc->count++;
         }
