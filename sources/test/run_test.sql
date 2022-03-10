@@ -4590,8 +4590,17 @@ BEGIN_TEST(serialization_tricky_values)
   call round_trip_long(-32769);
   call round_trip_long(0x7fffffffL); 
   call round_trip_long(-214783648L);
-  call round_trip_long(0x7fffffffffffffffL); // max int64
-  call round_trip_long(0x8000000000000000L); // min int64
+  call round_trip_long(0x7fffffffffffffffL);  -- max int64
+  call round_trip_long(0x8000000000000000L);  -- min int64
+
+  -- these are actually testing constant handling rather than
+  -- the blob but this is a convenient way to ensure that it was
+  -- all on the up and up.  Especially since we already confirmed
+  -- above that it works in hex.
+  call round_trip_long(-9223372036854775808L); -- min int64 in decimal
+  call round_trip_long(-9223372036854775808);  -- min int64 in decimal
+  call round_trip_long(9223372036854775807L);  -- max int64 in decimal
+  call round_trip_long(9223372036854775807);   -- max int64 in decimal
 END_TEST(serialization_tricky_values)
 
 declare proc rand_reset();

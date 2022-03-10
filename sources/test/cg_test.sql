@@ -5164,6 +5164,27 @@ begin
   fetch C from blob make_blob();
 end;
 
+-- TEST: ensure that the max constants are getting handled correctly
+-- including the special cases to avoid compiler warnings.  Note that
+-- this code has to compile correctly in C to pass the test also.  Run
+-- time checks for this are in run_test.sql because this is subtle
+--
+-- +  big1 = _64(0x7fffffffffffffff);
+-- +  big2 = _64(0x8000000000000000);
+-- +  big3 = (_64(9223372036854775807)-1);
+-- +  big4 = (_64(9223372036854775807)-1);
+-- +  big5 = _64(9223372036854775807);
+-- +  big6 = _64(9223372036854775807);
+create proc bigstuff()
+begin
+  let big1 := 0x7fffffffffffffffL;
+  let big2 := 0x8000000000000000L;
+  let big3 := -9223372036854775808L;
+  let big4 := -9223372036854775808;
+  let big5 := 9223372036854775807L;
+  let big6 := 9223372036854775807;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
