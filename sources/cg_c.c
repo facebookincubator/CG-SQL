@@ -1682,6 +1682,21 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
 
+  if (!strcmp(op, "-") && is_ast_num(expr)) {
+    // we have to do special code gen for -9223372036854775808
+    // to avoid compiler warnings...  This is how the literal
+    // gets handled in limits.h as well...
+    EXTRACT_NUM_TYPE(num_type, expr);
+    EXTRACT_NUM_VALUE(lit, expr);
+
+    if (num_type == NUM_LONG && !strcmp("9223372036854775808", lit)) {
+      // add long suffix if needed
+      bprintf(value, "(_64(9223372036854775807)-1)");
+      bprintf(is_null, "0");
+      return;
+    }
+  }
+
   CHARBUF_OPEN(result);
   CG_RESERVE_RESULT_VAR(ast, sem_type_result);
   CG_PUSH_EVAL(expr, pri_new)
