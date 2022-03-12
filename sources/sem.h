@@ -255,6 +255,7 @@ cql_noexport ast_node *find_enum(CSTR name);
 cql_noexport ast_node *find_base_fragment(CSTR name);
 cql_noexport ast_node *find_recreate_migrator(CSTR name);
 cql_noexport ast_node *find_constant_group(CSTR name);
+cql_noexport ast_node *find_variable_group(CSTR name);
 cql_noexport ast_node *find_constant(CSTR name);
 cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);
 cql_noexport void sem_accumulate_full_region_image(symtab *regions, CSTR name);

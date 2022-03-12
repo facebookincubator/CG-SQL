@@ -389,6 +389,33 @@ extern CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, 
 extern CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 // static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+
+// The statement ending at line XXXX
+#ifndef _var_group_var_group_structs_
+#define _var_group_var_group_structs_ 1
+
+typedef struct gr_cursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_string_ref _Nonnull y;
+} gr_cursor_row;
+
+typedef struct gr_blob_cursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_string_ref _Nonnull name;
+} gr_blob_cursor_row;
+#endif
+
+// The statement ending at line XXXX
+
+#define gr_cursor_refs_offset cql_offsetof(gr_cursor_row, y) // count = 1
+
+#define gr_blob_cursor_refs_offset cql_offsetof(gr_blob_cursor_row, name) // count = 1
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -16189,6 +16216,55 @@ void bigstuff(void) {
 
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+#ifndef _var_group_var_group_decl_
+#define _var_group_var_group_decl_ 1
+extern gr_cursor_row gr_cursor;
+extern gr_blob_cursor_row gr_blob_cursor;
+extern uint16_t gr_blob_cursor_cols[];
+extern uint8_t gr_blob_cursor_data_types[];
+#endif
+
+// The statement ending at line XXXX
+gr_cursor_row gr_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_cursor_refs_offset };
+cql_nullable_int32 gr_integer;
+gr_blob_cursor_row gr_blob_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_blob_cursor_refs_offset };
+
+cql_uint16 gr_blob_cursor_cols[] = { 2,
+  cql_offsetof(gr_blob_cursor_row, id),
+  cql_offsetof(gr_blob_cursor_row, name)
+};
+
+uint8_t gr_blob_cursor_data_types[] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
+};
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>)
+BEGIN
+  SET b FROM CURSOR gr_blob_cursor;
+END;
+*/
+
+#define _PROC_ "use_gr_cursor_for_serialization"
+// export: DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) USING TRANSACTION;
+CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable *_Nonnull b) {
+  cql_contract_argument_notnull((void *)b, 1);
+
+  cql_code _rc_ = SQLITE_OK;
+  *(void **)b = NULL; // set out arg to non-garbage
+  _rc_ = cql_serialize_to_blob(b, &gr_blob_cursor, gr_blob_cursor._has_row_, gr_blob_cursor_cols, gr_blob_cursor_data_types);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX
@@ -18702,6 +18778,8 @@ cql_cleanup:
   cql_finalize_stmt(&global_cursor_stmt);
   cql_string_release(_tmp_n_text_1);
   cql_teardown_row(global_cursor2);
+  cql_teardown_row(gr_cursor);
+  cql_teardown_row(gr_blob_cursor);
   return _rc_;
 }
 

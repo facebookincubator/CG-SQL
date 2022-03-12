@@ -59,10 +59,16 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_ex
 // These globals represent the major state of the code-generator
 
 // True if we are presently emitting a stored proc
-static bool_t in_proc = 0;
+static bool_t in_proc = false;
+
+// True if we presently declaring a variable group
+static bool_t in_var_group_decl = false;
+
+// True if we presently emitting  a variable group
+static bool_t in_var_group_emit = false;
 
 // True if we are in a loop (hence the statement might run again)
-static bool_t cg_in_loop = 0;
+static bool_t cg_in_loop = false;
 
 // exports file if we are outputing exports
 static charbuf *exports_output = NULL;
@@ -3207,7 +3213,9 @@ static int32_t refs_count_sptr(sem_struct *sptr) {
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name) {
   uint32_t count = sptr->count;
 
-  bprintf(output, "\nstatic cql_uint16 %s[] = { %d", sym_name, count);
+  CSTR prefix = in_var_group_emit ? "" : "static ";
+
+  bprintf(output, "\n%scql_uint16 %s[] = { %d", prefix, sym_name, count);
 
   for (int32_t i = 0; i < sptr->count; i++) {
     bprintf(output, ",\n");
@@ -3218,7 +3226,9 @@ static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CST
 }
 
 static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
-  bprintf(output, "\nstatic uint8_t %s[] = {\n", sym_name);
+  CSTR prefix = in_var_group_emit ? "" : "static ";
+
+  bprintf(output, "\n%suint8_t %s[] = {\n", prefix, sym_name);
 
   for (int32_t i = 0; i < sptr->count; i++) {
     if (i != 0) {
@@ -3607,10 +3617,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   cg_scratch_masks masks;
   cg_current_masks = &masks;
   cg_zero_masks(cg_current_masks);
-  temp_statement_emitted = 0;
-  in_proc = 1;
+  temp_statement_emitted = false;
+  in_proc = true;
   current_proc = ast;
-  seed_declared = 0;
+  seed_declared = false;
 
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
@@ -3812,8 +3822,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   CHARBUF_CLOSE(proc_contracts);
   CHARBUF_CLOSE(proc_fwd_ref);
 
-  in_proc = 0;
-  use_encode = 0;
+  in_var_group_decl = false;
+  in_var_group_emit = false;
+  in_proc = false;
+  use_encode = false;
   current_proc = NULL;
   base_fragment_name = NULL;
 
@@ -3918,7 +3930,10 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 }
 
 static void cg_declare_simple_var(sem_t sem_type, CSTR name) {
-  cg_var_decl(cg_declarations_output, sem_type, name, CG_VAR_DECL_LOCAL);
+  // if in a variable group we only emit the header part of the declarations
+  if (!in_var_group_decl) {
+    cg_var_decl(cg_declarations_output, sem_type, name, CG_VAR_DECL_LOCAL);
+  }
   if (!in_proc) {
     bprintf(cg_header_output, "%s", rt->symbol_visibility);
     cg_var_decl(cg_header_output, sem_type, name, CG_VAR_DECL_PROTO);
@@ -5000,7 +5015,10 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
 
   int32_t refs_count = refs_count_sptr(sptr);
 
-  cg_c_struct_for_sptr(cg_fwd_ref_output, sptr, cursor_name);
+  // when we do the variable group the struct has already been emitted
+  if (!in_var_group_emit) {
+    cg_c_struct_for_sptr(cg_fwd_ref_output, sptr, cursor_name);
+  }
 
   CSTR scope = current_proc_name();
   CSTR suffix = scope ? "_" : "";
@@ -5010,9 +5028,19 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
 
   if (refs_count) {
     CG_CHARBUF_OPEN_SYM(refs_offset, scope, suffix, cursor_name, "_refs_offset");
-    bprintf(cg_declarations_output, "%s %s = { ._refs_count_ = %d, ._refs_offset_ = %s };\n", row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
-    bprintf(cg_cleanup_output, "  cql_teardown_row(%s);\n", cursor_name);
-    cg_struct_teardown_info(cg_fwd_ref_output, sptr, cursor_name);
+
+    if (in_var_group_decl) {
+      // only extern the cursor
+      bprintf(cg_declarations_output, "%s%s %s;\n",
+        rt->symbol_visibility, row_type.ptr, cursor_name);
+    }
+    else {
+      bprintf(cg_declarations_output, "%s %s = { ._refs_count_ = %d, ._refs_offset_ = %s };\n",
+        row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
+      bprintf(cg_cleanup_output, "  cql_teardown_row(%s);\n", cursor_name);
+      cg_struct_teardown_info(cg_fwd_ref_output, sptr, cursor_name);
+
+    }
     CHARBUF_CLOSE(refs_offset);
   }
   else {
@@ -5026,15 +5054,89 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
     bprintf(&cols_name, "%s_cols", cursor_name);
     bprintf(&types_name, "%s_data_types", cursor_name);
 
-    cg_col_offsets(cg_declarations_output, sptr, cols_name.ptr, row_type.ptr);
-    cg_data_types(cg_declarations_output, sptr, types_name.ptr);
+    if (in_var_group_decl) {
+      bprintf(cg_declarations_output, "%suint16_t %s[];\n", rt->symbol_visibility, cols_name.ptr);
+      bprintf(cg_declarations_output, "%suint8_t %s[];\n", rt->symbol_visibility, types_name.ptr);
+    }
+    else {
+      cg_col_offsets(cg_declarations_output, sptr, cols_name.ptr, row_type.ptr);
+      cg_data_types(cg_declarations_output, sptr, types_name.ptr);
+    }
 
     CHARBUF_CLOSE(types_name);
     CHARBUF_CLOSE(cols_name);
   }
 
-
   CHARBUF_CLOSE(row_type);
+}
+
+static void cg_declare_group_stmt(ast_node *ast) {
+  Contract(is_ast_declare_group_stmt(ast));
+  Contract(!in_var_group_decl);
+  Contract(!in_var_group_emit);
+
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(stmt_list, ast->right);
+
+  // Put a line marker in the header file in case we want a test suite that verifies that.
+  // Note we have to do this only because this only generates declarations so the
+  // normal logic for emitting these doesn't kick in.
+  if (options.test) {
+    bprintf(cg_declarations_output, "\n// The statement ending at line %d\n", ast->lineno);
+    bprintf(cg_fwd_ref_output, "\n// The statement ending at line %d\n", ast->lineno);
+  }
+
+  // This can be duplicated so make it safe to emit twice.
+  // Note that the struct decls go into a different stream
+  // so we wrap those, too.
+
+  bprintf(cg_declarations_output, "#ifndef _%s_var_group_decl_\n", name);
+  bprintf(cg_declarations_output, "#define _%s_var_group_decl_ 1\n", name);
+
+  bprintf(cg_fwd_ref_output, "#ifndef _%s_var_group_structs_\n", name);
+  bprintf(cg_fwd_ref_output, "#define _%s_var_group_structs_ 1\n", name);
+
+  in_var_group_decl = true;
+  cg_stmt_list(stmt_list);
+  in_var_group_decl = false;
+
+  bprintf(cg_declarations_output, "#endif\n");
+  bprintf(cg_fwd_ref_output, "#endif\n");
+}
+
+static void cg_emit_group_stmt(ast_node *ast) {
+  Contract(is_ast_emit_group_stmt(ast));
+  EXTRACT(name_list, ast->left);
+  Contract(!in_var_group_decl);
+  Contract(!in_var_group_emit);
+
+  // Put a line marker in the header file in case we want a test suite that verifies that.
+  // Note we have to do this only because this only generates declarations so the
+  // normal logic for emitting these doesn't kick in.
+  if (options.test) {
+    bprintf(cg_declarations_output, "\n// The statement ending at line %d\n", ast->lineno);
+    bprintf(cg_fwd_ref_output, "\n// The statement ending at line %d\n", ast->lineno);
+  }
+
+  while (name_list) {
+    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_STRING(name, name_ast);
+
+    ast_node *group = find_variable_group(name);
+    Contract(is_ast_declare_group_stmt(group));
+
+    EXTRACT_ANY_NOTNULL(group_name_ast, group->left);
+    EXTRACT_STRING(group_name, group_name_ast);
+    EXTRACT_NOTNULL(stmt_list, group->right);
+
+    Invariant(!Strcasecmp(name, group_name));
+    in_var_group_emit = true;
+    cg_stmt_list(stmt_list);
+    in_var_group_emit = false;
+
+    name_list = name_list->right;
+  }
 }
 
 // This causes enum declarations to go into the header file.
@@ -5459,9 +5561,11 @@ static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
   CSTR blob_name  = ast->left->sem->name;
   CSTR cursor_name = ast->right->sem->name;
 
+  CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "" : "&";
+
   bprintf(cg_main_output,
-    "_rc_ = cql_serialize_to_blob(&%s, &%s, %s._has_row_, %s_cols, %s_data_types);\n",
-    blob_name, cursor_name, cursor_name, cursor_name, cursor_name);
+    "_rc_ = cql_serialize_to_blob(%s%s, &%s, %s._has_row_, %s_cols, %s_data_types);\n",
+    prefix, blob_name, cursor_name, cursor_name, cursor_name, cursor_name);
   cg_error_on_rc_notequal("SQLITE_OK");
 }
 
@@ -7024,7 +7128,7 @@ static void cg_proc_result_set_getter(function_info *info) {
   else {
     bprintf(d, "  return data[row].%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
   }
-  
+
   bprintf(d, "}\n");
 
 cleanup:
@@ -8201,6 +8305,8 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(call_stmt);
   STMT_INIT(declare_out_call_stmt);
   STMT_INIT(declare_vars_type);
+  STMT_INIT(declare_group_stmt);
+  STMT_INIT(emit_group_stmt);
   STMT_INIT(assign);
   STMT_INIT(let_stmt);
   STMT_INIT(set_from_cursor);

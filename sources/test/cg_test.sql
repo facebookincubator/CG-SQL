@@ -5185,6 +5185,60 @@ begin
   let big6 := 9223372036854775807;
 end;
 
+-- TEST: variable group creates declarations only
+-- + #ifndef _var_group_var_group_structs_
+-- + #define _var_group_var_group_structs_ 1
+-- + typedef struct gr_cursor_row {
+-- +   cql_bool _has_row_;
+-- +   cql_uint16 _refs_count_;
+-- +   cql_uint16 _refs_offset_;
+-- +   cql_int32 x;
+-- +   cql_string_ref _Nonnull y;
+-- + } gr_cursor_row;
+-- + #endif
+--
+-- + #ifndef _var_group_var_group_decl_
+-- + #define _var_group_var_group_decl_ 1
+-- + extern gr_cursor_row gr_cursor;
+-- additional stuff for a cursor that needs serialization
+-- + extern gr_blob_cursor_row gr_blob_cursor;
+-- + extern uint16_t gr_blob_cursor_cols[];
+-- + extern uint8_t gr_blob_cursor_data_types[];
+-- + #endif
+declare group var_group
+begin
+  declare gr_cursor cursor like select 1 x, "2" y;
+  declare gr_integer integer;
+  declare gr_blob_cursor cursor like structured_storage;
+end;
+
+-- TEST: emits the definitions only
+-- + gr_cursor_row gr_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_cursor_refs_offset };
+-- + cql_nullable_int32 gr_integer;
+--
+-- additional stuff for a cursor that needs to be serialized
+-- note that the arrays are not static for a global cursor
+-- + gr_blob_cursor_row gr_blob_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_blob_cursor_refs_offset };
+-- + cql_uint16 gr_blob_cursor_cols[] = { 2,
+-- +   cql_offsetof(gr_blob_cursor_row, id),
+-- +   cql_offsetof(gr_blob_cursor_row, name)
+-- + };
+-- + uint8_t gr_blob_cursor_data_types[] = {
+-- +   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
+-- +   CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
+-- + };
+@emit_group var_group;
+
+-- TEST: use the global cursor for serialization
+-- This sets the SERIALIZATION bit on the cursor causing it to emit more stuff
+-- even though it's out of order the codegen will be affected
+-- the test cases above verify this
+-- + _rc_ = cql_serialize_to_blob(b, &gr_blob_cursor, gr_blob_cursor._has_row_, gr_blob_cursor_cols, gr_blob_cursor_data_types);
+create proc use_gr_cursor_for_serialization(out b blob<structured_storage>)
+begin
+  set b from cursor gr_blob_cursor;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

@@ -201,7 +201,7 @@ static void cql_reset_globals(void);
 %token RS ">>"
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
-%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ "NULL" DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_ENUMS AT_EMIT_CONSTANTS
+%token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ "NULL" DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_GROUP AT_EMIT_ENUMS AT_EMIT_CONSTANTS
 %token OBJECT TEXT BLOB LONG_ "LONG" INT_ "INT" INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
@@ -279,9 +279,9 @@ static void cql_reset_globals(void);
 %type <aval> commit_trans_stmt commit_return_stmt
 %type <aval> continue_stmt
 %type <aval> control_stmt
-%type <aval> declare_stmt
-%type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt
-%type <aval> declare_const_stmt const_values const_value emit_constants_stmt
+%type <aval> declare_stmt declare_simple_var_stmt
+%type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt emit_group_stmt
+%type <aval> declare_const_stmt const_values const_value emit_constants_stmt declare_group_stmt simple_variable_decls
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape fetch_cursor_from_blob_stmt
 %type <aval> guard_stmt
@@ -400,6 +400,7 @@ any_stmt:
   | declare_deployable_region_stmt
   | declare_enum_stmt
   | declare_const_stmt
+  | declare_group_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -413,6 +414,7 @@ any_stmt:
   | drop_view_stmt
   | echo_stmt
   | emit_enums_stmt
+  | emit_group_stmt
   | emit_constants_stmt
   | end_schema_region_stmt
   | enforce_normal_stmt
@@ -1313,6 +1315,10 @@ emit_enums_stmt:
   AT_EMIT_ENUMS opt_name_list { $emit_enums_stmt = new_ast_emit_enums_stmt($opt_name_list); }
   ;
 
+emit_group_stmt:
+  AT_EMIT_GROUP opt_name_list { $emit_group_stmt = new_ast_emit_group_stmt($opt_name_list); }
+  ;
+
 emit_constants_stmt:
   AT_EMIT_CONSTANTS name_list { $emit_constants_stmt = new_ast_emit_constants_stmt($name_list); }
   ;
@@ -1633,8 +1639,17 @@ enum_value:
 
 declare_const_stmt:
   DECLARE CONST GROUP name '(' const_values ')' {
-    $declare_const_stmt = new_ast_declare_const_stmt($name, $const_values);
-  }
+    $declare_const_stmt = new_ast_declare_const_stmt($name, $const_values); }
+  ;
+
+declare_group_stmt:
+  DECLARE GROUP name BEGIN_ simple_variable_decls END {
+    $declare_group_stmt = new_ast_declare_group_stmt($name, $simple_variable_decls); }
+  ;
+
+simple_variable_decls[result]:
+  declare_simple_var_stmt[cur] ';' { $result = new_ast_stmt_list($cur, NULL); }
+  | declare_simple_var_stmt[cur] ';' simple_variable_decls[next] { $result = new_ast_stmt_list($cur, $next); }
   ;
 
 const_values[result]:
@@ -1723,14 +1738,20 @@ params[result]:
   |  param ',' params[par]  { $result = new_ast_params($param, $par); }
   ;
 
+/* these forms are just storage */
+declare_simple_var_stmt:
+  DECLARE name_list data_type_with_options  { $declare_simple_var_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  | DECLARE name CURSOR shape_def  { $declare_simple_var_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
+  | DECLARE name CURSOR LIKE select_stmt  { $declare_simple_var_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  ;
+
+/* the additional forms are just about storage */
 declare_stmt:
-  DECLARE name_list data_type_with_options  { $declare_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  declare_simple_var_stmt { $declare_stmt = $declare_simple_var_stmt; }
   | DECLARE name CURSOR FOR select_stmt  { $declare_stmt = new_ast_declare_cursor($name, $select_stmt); }
   | DECLARE name CURSOR FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
   | DECLARE name CURSOR FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
   | DECLARE name CURSOR FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
-  | DECLARE name CURSOR shape_def  { $declare_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
-  | DECLARE name CURSOR LIKE select_stmt  { $declare_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
   | DECLARE name[id] CURSOR FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
   | DECLARE name TYPE data_type_with_options { $declare_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
   ;

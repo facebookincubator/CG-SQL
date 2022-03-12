@@ -3168,6 +3168,22 @@ static void gen_declare_enum_stmt(ast_node *ast) {
   gen_printf("\n)");
 }
 
+static void gen_declare_group_stmt(ast_node *ast) {
+  Contract(is_ast_declare_group_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NOTNULL(stmt_list, ast->right);
+  gen_printf("DECLARE GROUP %s\nBEGIN\n", name);
+
+  while (stmt_list) {
+     EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+     gen_printf("  ");
+     gen_one_stmt(stmt);
+     gen_printf(";\n");
+     stmt_list = stmt_list->right;
+  }
+  gen_printf("END");
+}
+
 static void gen_declare_const_stmt(ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -3674,6 +3690,18 @@ static void gen_schema_ad_hoc_migration_stmt(ast_node *ast) {
   }
 }
 
+static void gen_emit_group_stmt(ast_node *ast) {
+  Contract(is_ast_emit_group_stmt(ast));
+  EXTRACT(name_list, ast->left);
+
+  gen_printf("@EMIT_GROUP");
+  if (name_list) {
+    gen_printf(" ");
+    gen_name_list(name_list);
+  }
+}
+
+
 static void gen_emit_enums_stmt(ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
@@ -3861,6 +3889,7 @@ cql_noexport void gen_init() {
   STMT_INIT(fetch_cursor_from_blob_stmt);
   STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_const_stmt);
+  STMT_INIT(declare_group_stmt);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
@@ -3898,6 +3927,7 @@ cql_noexport void gen_init() {
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(explain_stmt);
   STMT_INIT(emit_enums_stmt);
+  STMT_INIT(emit_group_stmt);
   STMT_INIT(emit_constants_stmt);
 
   EXPR_INIT(num, gen_expr_num, "NUM", EXPR_PRI_ROOT);

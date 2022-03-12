@@ -490,6 +490,7 @@ static symtab *globals;
 static symtab *locals;
 static symtab *enums;
 static symtab *constant_groups;
+static symtab *variable_groups;
 static symtab *constants;
 static symtab *current_variables;
 static symtab *savepoints;
@@ -1766,6 +1767,13 @@ static bool_t add_trigger(ast_node *ast, CSTR name) {
 
 static ast_node *find_trigger(CSTR name) {
   symtab_entry *entry = symtab_find(triggers, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+
+// wrapper for variable groups
+ast_node *find_variable_group(CSTR name) {
+  symtab_entry *entry = symtab_find(variable_groups, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
@@ -18170,6 +18178,84 @@ cleanup:
    symtab_delete(names);
 }
 
+// Variables groups give us a convenient way of declare a bunch of unscoped
+// variables that can be emitted as a unit.  This is a mirror to the enum
+// and constant patterns.  The problem we're solving here is that if
+// you declare a global variable then there is no way to just "extern" said
+// variable.  The CQL declaration *is* the definition.  The group mechanism
+// only gives you the extern declarations when you mention the group.  Though
+// semantically this means nothing, they are still declared as usual.  When
+// we go to codegen we emit (e.g.) "extern int foo".  To get the definition,
+// you do "@emit_variable_group foo" then we will emit "int foo".  This
+// mirrors enums and constants which have the same problem and solve it the
+// same way.
+static void sem_declare_group_stmt(ast_node *ast) {
+  Contract(is_ast_declare_group_stmt(ast));
+
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(stmt_list, ast->right);
+
+  if (current_proc) {
+    report_error(name_ast, "CQL0462: group declared variables must be top level", name);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *existing_variable_group = find_variable_group(name);
+
+  if (existing_variable_group) {
+    bool_t matching = sem_validate_identical_ddl(ast, existing_variable_group);
+    if (!matching) {
+      report_error(ast, "CQL0463: variable definitions do not match in group", name);
+      record_error(ast);
+      return;
+    }
+
+    record_ok(ast);
+    return;
+  }
+
+  symtab_add(variable_groups, name, ast);
+
+  while (stmt_list) {
+     EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+     sem_one_stmt(stmt);
+     if (is_error(stmt)) {
+        record_error(ast);
+        return;
+     }
+
+     stmt_list = stmt_list->right;
+  }
+
+  record_ok(ast);
+}
+
+// Here we will eventually emit the the actual group variable definitions into
+// the output stream. In semantic analysis we only have to verify that the group
+// name is valid. See `sem_declare_group_stmt` above for more details.
+static void sem_emit_group_stmt(ast_node *ast) {
+  Contract(is_ast_emit_group_stmt(ast));
+  EXTRACT(name_list, ast->left);
+
+  while (name_list) {
+    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_STRING(name, name_ast);
+
+    if (!find_variable_group(name)) {
+      report_error(name_ast, "CQL0464: group not found", name);
+      record_error(ast);
+      return;
+    }
+
+    name_list = name_list->right;
+  }
+
+  record_ok(ast);
+}
+
 // Constant groups are a way of declaring arbitrary unscoped constants, the name
 // reference of the constant will be rewritten wherever it appears so that
 // neither the C compiler nor SQLite will ever see a constant name.  Which
@@ -18284,7 +18370,6 @@ static void sem_declare_const_stmt(ast_node *ast) {
   }
 
   record_ok(ast);
-
 }
 
 // Declares an external procedure that can be called with any combination of C args
@@ -22434,6 +22519,7 @@ cql_noexport void sem_main(ast_node *ast) {
   indices = symtab_new();
   globals = symtab_new();
   constant_groups = symtab_new();
+  variable_groups = symtab_new();
   constants = symtab_new();
   current_variables = globals;
   savepoints = symtab_new();
@@ -22477,6 +22563,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(create_proc_stmt);
   STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_const_stmt);
+  STMT_INIT(declare_group_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
@@ -22543,6 +22630,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(emit_enums_stmt);
+  STMT_INIT(emit_group_stmt);
   STMT_INIT(emit_constants_stmt);
 
   AGGR_FUNC_INIT(max);
@@ -22746,6 +22834,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(indices);
   SYMTAB_CLEANUP(locals);
   SYMTAB_CLEANUP(constant_groups);
+  SYMTAB_CLEANUP(variable_groups);
   SYMTAB_CLEANUP(constants);
   SYMTAB_CLEANUP(monitor_symtab );
   SYMTAB_CLEANUP(new_regions);

@@ -3500,6 +3500,15 @@ extern CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_);
 extern void bigstuff(void);
 
 // The statement ending at line XXXX
+extern cql_nullable_int32 gr_integer;
+
+// The statement ending at line XXXX
+extern cql_nullable_int32 gr_integer;
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable *_Nonnull b);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

@@ -248,6 +248,7 @@ RETURN                       { return RETURN; }
 @DUMMY_SEED                  { return AT_DUMMY_SEED; }
 @FILE                        { return AT_FILE; }
 @ATTRIBUTE                   { return AT_ATTRIBUTE; }
+@EMIT_GROUP                  { return AT_EMIT_GROUP; }
 @EMIT_ENUMS                  { return AT_EMIT_ENUMS; }
 @EMIT_CONSTANTS              { return AT_EMIT_CONSTANTS; }
 DEFERRED                     { return DEFERRED; }

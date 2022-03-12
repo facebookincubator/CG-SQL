@@ -199,6 +199,7 @@ s/[[:<:]]AT_DUMMY_SEED[[:>:]]/"@DUMMY_SEED"/g
 s/[[:<:]]AT_ECHO[[:>:]]/"@ECHO"/g
 s/[[:<:]]AT_EMIT_ENUMS[[:>:]]/"@EMIT_ENUMS"/g
 s/[[:<:]]AT_EMIT_CONSTANTS[[:>:]]/"@EMIT_CONSTANTS"/g
+s/[[:<:]]AT_EMIT_GROUP[[:>:]]/"@EMIT_GROUP"/g
 s/[[:<:]]AT_END_SCHEMA_REGION[[:>:]]/"@END_SCHEMA_REGION"/g
 s/[[:<:]]AT_ENFORCE_NORMAL[[:>:]]/"@ENFORCE_NORMAL"/g
 s/[[:<:]]AT_ENFORCE_POP[[:>:]]/"@ENFORCE_POP"/g

@@ -1413,4 +1413,20 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c0.a'
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column does not exist in result set 'privacy_context'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+BEGIN
+  DECLARE var_group_var1 INTEGER;
+END
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+BEGIN
+  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var2 CURSOR LIKE foo;
+  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+END
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : CQL0463: variable definitions do not match in group 'var_group'
+test/sem_test.sql:XXXX:1: error: in str : CQL0462: group declared variables must be top level 'var_group'
+test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'var_group_var_dup'
+test/sem_test.sql:XXXX:1: error: in str : CQL0464: group not found 'not_a_var_group'
 semantic errors present; no code gen.

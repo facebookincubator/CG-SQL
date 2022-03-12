@@ -85064,3 +85064,184 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column
             | {select_limit}
               | {select_offset}
 
+The statement ending at line XXXX
+
+DECLARE GROUP var_group
+BEGIN
+  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var2 CURSOR LIKE foo;
+  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+END;
+
+  {declare_group_stmt}: ok
+  | {name var_group}
+  | {stmt_list}
+    | {declare_vars_type}: integer
+    | | {name_list}: var_group_var1: integer variable
+    | | | {name var_group_var1}: var_group_var1: integer variable
+    | | {type_int}: integer
+    | {declare_cursor_like_name}: var_group_var2: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+    | | {name var_group_var2}: var_group_var2: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+    | | {like}: foo: { id: integer notnull primary_key autoinc }
+    |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | {declare_cursor_like_select}: var_group_var3: select: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
+      | {name var_group_var3}: var_group_var3: select: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
+      | {select_stmt}: select: { x: integer notnull, y: text notnull }
+        | {select_core_list}: select: { x: integer notnull, y: text notnull }
+        | | {select_core}: select: { x: integer notnull, y: text notnull }
+        |   | {select_expr_list_con}: select: { x: integer notnull, y: text notnull }
+        |     | {select_expr_list}: select: { x: integer notnull, y: text notnull }
+        |     | | {select_expr}: x: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | | {opt_as_alias}
+        |     | |   | {name x}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: y: text notnull
+        |     |     | {strlit '2'}: text notnull
+        |     |     | {opt_as_alias}
+        |     |       | {name y}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE GROUP var_group
+BEGIN
+  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var2 CURSOR LIKE foo;
+  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+END;
+
+  {declare_group_stmt}: ok
+  | {name var_group}
+  | {stmt_list}
+    | {declare_vars_type}
+    | | {name_list}
+    | | | {name var_group_var1}
+    | | {type_int}
+    | {declare_cursor_like_name}
+    | | {name var_group_var2}
+    | | {like}
+    |   | {name foo}
+    | {declare_cursor_like_select}
+      | {name var_group_var3}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {select_expr}
+        |     | | | {int 1}
+        |     | | | {opt_as_alias}
+        |     | |   | {name x}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}
+        |     |     | {strlit '2'}
+        |     |     | {opt_as_alias}
+        |     |       | {name y}
+        |     | {select_from_etc}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE GROUP var_group
+BEGIN
+  DECLARE var_group_var1 INTEGER;
+END;
+
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+BEGIN
+  DECLARE var_group_var1 INTEGER;
+END
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
+BEGIN
+  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var2 CURSOR LIKE foo;
+  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+END
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : CQL0463: variable definitions do not match in group 'var_group'
+
+  {declare_group_stmt}: err
+  | {name var_group}
+  | {stmt_list}
+    | {declare_vars_type}
+      | {name_list}
+      | | {name var_group_var1}
+      | {type_int}
+
+The statement ending at line XXXX
+
+CREATE PROC proc_contains_var_group ()
+BEGIN
+  DECLARE GROUP var_group
+  BEGIN
+    DECLARE var_group_var1 INTEGER;
+  END;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0462: group declared variables must be top level 'var_group'
+
+  {create_proc_stmt}: err
+  | {name proc_contains_var_group}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_group_stmt}: err
+        | {name var_group}
+        | {stmt_list}
+          | {declare_vars_type}
+            | {name_list}
+            | | {name var_group_var1}
+            | {type_int}
+
+The statement ending at line XXXX
+
+DECLARE GROUP var_group_error
+BEGIN
+  DECLARE var_group_var_dup INTEGER;
+  DECLARE var_group_var_dup INTEGER;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'var_group_var_dup'
+
+  {declare_group_stmt}: err
+  | {name var_group_error}
+  | {stmt_list}
+    | {declare_vars_type}: integer
+    | | {name_list}: var_group_var_dup: integer variable
+    | | | {name var_group_var_dup}: var_group_var_dup: integer variable
+    | | {type_int}: integer
+    | {declare_vars_type}: err
+      | {name_list}: err
+      | | {name var_group_var_dup}: err
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+@EMIT_GROUP var_group;
+
+  {emit_group_stmt}: ok
+  | {name_list}
+    | {name var_group}
+
+The statement ending at line XXXX
+
+@EMIT_GROUP not_a_var_group;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0464: group not found 'not_a_var_group'
+
+  {emit_group_stmt}: err
+  | {name_list}
+    | {name not_a_var_group}
+

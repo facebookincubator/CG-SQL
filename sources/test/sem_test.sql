@@ -21487,3 +21487,70 @@ create proc attribute_test()
 begin
   select 'x' some_column;
 end;
+
+-- TEST: an ok var group
+-- + {declare_group_stmt}: ok
+-- + {declare_vars_type}: integer
+-- + {declare_cursor_like_name}: var_group_var2: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
+-- + {declare_cursor_like_select}: var_group_var3: select: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
+-- - error:
+declare group var_group
+begin
+  declare var_group_var1 integer;
+  declare var_group_var2 cursor like foo;
+  declare var_group_var3 cursor like select 1 x, "2" y;
+end;
+
+-- TEST: duplicate var group is ok
+-- + {declare_group_stmt}: ok
+-- - error:
+declare group var_group
+begin
+  declare var_group_var1 integer;
+  declare var_group_var2 cursor like foo;
+  declare var_group_var3 cursor like select 1 x, "2" y;
+end;
+
+-- TEST: non-duplicate var group = error
+-- + {declare_group_stmt}: err
+-- + error: % variable definitions do not match in group 'var_group'
+-- additional error lines (for the difference report)
+-- +3 error:
+declare group var_group
+begin
+  declare var_group_var1 integer;
+end;
+
+-- TEST: variable group must be top level
+-- + {create_proc_stmt}: err
+-- + {declare_group_stmt}: err
+-- + error: % group declared variables must be top level 'var_group'
+-- +1 error: 
+create proc proc_contains_var_group()
+begin
+  declare group var_group
+  begin
+    declare var_group_var1 integer;
+  end;
+end;
+
+-- TEST: variable group may contain errors
+-- + {declare_group_stmt}: err
+-- + error: % duplicate variable name in the same scope 'var_group_var_dup'
+-- +1 error: 
+declare group var_group_error
+begin
+  declare var_group_var_dup integer;
+  declare var_group_var_dup integer;
+end;
+
+-- TEST: ok to emit
+-- + {emit_group_stmt}: ok
+-- - error:
+@emit_group var_group;
+
+-- TEST: not ok to emit
+-- + {emit_group_stmt}: err
+-- + error: % group not found 'not_a_var_group'
+-- +1 error:
+@emit_group not_a_var_group;
