@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Mar  8 16:06:16 PST 2022
+Snapshot as of Fri Mar 11 17:34:34 EST 2022
 
 ### Operators and Literals
 
@@ -52,17 +52,18 @@ REALLIT /* floating point literal */
 "@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@CREATE"
 "@DECLARE_DEPLOYABLE_REGION" "@DECLARE_SCHEMA_REGION"
 "@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
-"@EMIT_ENUMS" "@END_SCHEMA_REGION" "@ENFORCE_NORMAL"
-"@ENFORCE_POP" "@ENFORCE_PUSH" "@ENFORCE_RESET"
-"@ENFORCE_STRICT" "@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA"
-"@PROC" "@RC" "@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
-"@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
-"@SENSITIVE" "ABORT" "ACTION" "ADD" "AFTER" "ALL" "ALTER"
-"ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE" "BEGIN"
-"BLOB" "BY" "CALL" "CASCADE" "CASE" "CAST" "CATCH" "CHECK"
-"CLOSE" "COLUMN" "COLUMNS" "COMMIT" "CONST" "CONSTRAINT"
-"CONTEXT COLUMN" "CONTEXT TYPE" "CONTINUE" "CREATE" "CROSS"
-"CURRENT ROW" "CURSOR" "DECLARE" "DEFAULT" "DEFERRABLE"
+"@EMIT_ENUMS" "@EMIT_GROUP" "@END_SCHEMA_REGION"
+"@ENFORCE_NORMAL" "@ENFORCE_POP" "@ENFORCE_PUSH"
+"@ENFORCE_RESET" "@ENFORCE_STRICT" "@EPONYMOUS" "@FILE"
+"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE"
+"@SCHEMA_AD_HOC_MIGRATION" "@SCHEMA_UPGRADE_SCRIPT"
+"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "ABORT" "ACTION"
+"ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
+"AUTOINCREMENT" "BEFORE" "BEGIN" "BLOB" "BY" "CALL"
+"CASCADE" "CASE" "CAST" "CATCH" "CHECK" "CLOSE" "COLUMN"
+"COLUMNS" "COMMIT" "CONST" "CONSTRAINT" "CONTEXT COLUMN"
+"CONTEXT TYPE" "CONTINUE" "CREATE" "CROSS" "CURRENT ROW"
+"CURSOR HAS ROW" "CURSOR" "DECLARE" "DEFAULT" "DEFERRABLE"
 "DEFERRED" "DELETE" "DESC" "DISTINCT" "DISTINCTROW" "DO"
 "DROP" "ELSE IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE
 CURRENT ROW" "EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE
@@ -126,6 +127,7 @@ any_stmt:
   | declare_deployable_region_stmt
   | declare_enum_stmt
   | declare_const_stmt
+  | declare_group_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -139,6 +141,7 @@ any_stmt:
   | drop_view_stmt
   | echo_stmt
   | emit_enums_stmt
+  | emit_group_stmt
   | emit_constants_stmt
   | end_schema_region_stmt
   | enforce_normal_stmt
@@ -911,6 +914,10 @@ emit_enums_stmt:
   "@EMIT_ENUMS" opt_name_list
   ;
 
+emit_group_stmt:
+  "@EMIT_GROUP" opt_name_list
+  ;
+
 emit_constants_stmt:
   "@EMIT_CONSTANTS" name_list
   ;
@@ -1184,6 +1191,15 @@ declare_const_stmt:
   "DECLARE" "CONST" "GROUP" name '(' const_values ')'
   ;
 
+declare_group_stmt:
+  "DECLARE" "GROUP" name "BEGIN" simple_variable_decls "END"
+  ;
+
+simple_variable_decls:
+  declare_simple_var_stmt ';'
+  | declare_simple_var_stmt ';' simple_variable_decls
+  ;
+
 const_values:
    const_value
   | const_value ',' const_values
@@ -1250,14 +1266,20 @@ params:
   |  param ',' params
   ;
 
-declare_stmt:
+/* these forms are just storage */
+declare_simple_var_stmt:
   "DECLARE" name_list data_type_with_options
+  | "DECLARE" name "CURSOR" shape_def
+  | "DECLARE" name "CURSOR" "LIKE" select_stmt
+  ;
+
+/* the additional forms are just about storage */
+declare_stmt:
+  declare_simple_var_stmt
   | "DECLARE" name "CURSOR" "FOR" select_stmt
   | "DECLARE" name "CURSOR" "FOR" explain_stmt
   | "DECLARE" name "CURSOR" "FOR" call_stmt
   | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
-  | "DECLARE" name "CURSOR" shape_def
-  | "DECLARE" name "CURSOR" "LIKE" select_stmt
   | "DECLARE" name "CURSOR" "FOR" name
   | "DECLARE" name "TYPE" data_type_with_options
   ;
@@ -1534,7 +1556,7 @@ enforcement_options:
   | "IS TRUE"
   | "CAST"
   | "SIGN FUNCTION"
-  | CURSOR_HAS_ROW
+  | "CURSOR HAS ROW"
   ;
 
 enforce_strict_stmt:
