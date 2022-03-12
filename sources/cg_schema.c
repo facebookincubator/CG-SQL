@@ -1125,9 +1125,17 @@ static void cg_schema_manage_recreate_tables(
     ast_node *migration = find_recreate_migrator(migrate_key);
     if (migration) {
       EXTRACT_STRING(proc, migration->right);
-      bprintf(&update_tables, "\n    -- recreate migration procedure required\n");
-      bprintf(&update_tables, "    CALL %s();\n\n", proc);
+      CHARBUF_OPEN(migrate_table);
+
+      bprintf(&migrate_table, "\n    -- recreate migration procedure required\n");
+      bprintf(&migrate_table, "    CALL %s();\n\n", proc);
+
+      bprintf(&update_tables, migrate_table.ptr);
       bprintf(decls, "DECLARE PROC %s() USING TRANSACTION;\n", proc);
+
+      table_crc ^= crc_charbuf(&migrate_table);
+
+      CHARBUF_CLOSE(migrate_table);
     }
 
     bprintf(&recreate, "  IF cql_facet_find(%s_facets, '%s') != %lld THEN\n", global_proc_name, facet.ptr, (llint_t)table_crc);

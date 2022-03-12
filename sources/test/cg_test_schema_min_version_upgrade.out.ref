@@ -485,7 +485,7 @@ BEGIN
     );
     CALL test_cql_set_facet_version('table_to_recreate_table_crc', 3137661388576624799);
   END IF;
-  IF cql_facet_find(test_facets, 'gr1_group_crc') != -5344641248211221614 THEN
+  IF cql_facet_find(test_facets, 'gr1_group_crc') != 492937136368369906 THEN
     DROP TABLE IF EXISTS use_g1;
     DROP TABLE IF EXISTS g1;
     CREATE TABLE g1(
@@ -502,7 +502,7 @@ BEGIN
     -- recreate migration procedure required
     CALL RecreateGroup1Migration();
 
-    CALL test_cql_set_facet_version('gr1_group_crc', -5344641248211221614);
+    CALL test_cql_set_facet_version('gr1_group_crc', 492937136368369906);
   END IF;
   IF cql_facet_find(test_facets, 'my_group_group_crc') != 5282334304804635811 THEN
     DROP TABLE IF EXISTS grouped_table_3;
