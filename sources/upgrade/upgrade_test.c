@@ -8,7 +8,7 @@
 #include <sqlite3.h>
 #include <stdio.h>
 
-// All versions have the same signatures, include them all! 
+// All versions have the same signatures, include them all!
 // If we screwed this up the compiler will complain!
 #include "generated_upgrade0.h"
 #include "generated_upgrade1.h"
@@ -74,8 +74,34 @@ int main(int argc, char *argv[]) {
     return SQLITE_ERROR;
   }
 
+  cql_int64 current_version = -1;
+  cql_int64 proposed_version = -1;
+  if (test_get_current_and_proposed_versions(db, &current_version, &proposed_version)) {
+    printf("Error getting current and proposed versions\n");
+    return SQLITE_ERROR;
+  }
+
+  if (current_version != version) {
+    printf("Error getting DB versions: current_version %lld does not match expected version: %lld", current_version, version);
+    return SQLITE_ERROR;
+  }
+
   if (upgrade(db)) {
     printf("Unable to upgrade DB.\n");
+    return SQLITE_ERROR;
+  }
+
+  cql_int64 current_version_after = -1;
+  cql_int64 proposed_version_after = -1;
+  if (test_get_current_and_proposed_versions(db, &current_version_after, &proposed_version_after)) {
+    printf("Error getting current and proposed versions after upgrade\n");
+    return SQLITE_ERROR;
+  }
+
+  if( proposed_version != current_version_after || proposed_version_after != current_version_after) {
+    printf("Error - proposed_version %lld (before upgrade) and current_version_after %lld"
+           " and proposed_version_after %lld do not match.",
+          proposed_version, current_version_after, proposed_version_after);
     return SQLITE_ERROR;
   }
 

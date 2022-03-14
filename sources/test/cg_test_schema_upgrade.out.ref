@@ -813,6 +813,14 @@ BEGIN
     CALL test_cql_set_facet_version('cql_schema_crc', 2133565431963007342);
 END;
 
+CREATE PROCEDURE test_get_current_and_proposed_versions(
+    out current long not null,
+    out proposed long not null
+    )
+BEGIN
+    SET current := test_cql_get_facet_version('cql_schema_version');
+    SET proposed := 7;
+END;
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_needed_upgrades()
 BEGIN

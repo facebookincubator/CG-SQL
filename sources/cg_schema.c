@@ -1547,6 +1547,15 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, schema_crc);
   bprintf(&main, "END;\n\n");
 
+  bprintf(&main, "CREATE PROCEDURE %s_get_current_and_proposed_versions(\n", global_proc_name);
+  bprintf(&main, "    out current long not null,\n");
+  bprintf(&main, "    out proposed long not null\n");
+  bprintf(&main, "    )\n");
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "    SET current := %s_cql_get_facet_version('cql_schema_version');\n", global_proc_name);
+  bprintf(&main, "    SET proposed := %d;\n", max_schema_version);
+  bprintf(&main, "END;\n");
+
   bprintf(&main, "@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
