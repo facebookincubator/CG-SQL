@@ -50,6 +50,7 @@ static symtab *used_alias_syms = NULL;
 // forward references for things that appear out of order or mutually call each other
 static void gen_select_core_list(ast_node *ast);
 static void gen_groupby_list(ast_node *_Nonnull ast);
+static void gen_orderby_list(ast_node *_Nonnull ast);
 static void gen_stmt_list(ast_node *_Nullable ast);
 static void gen_expr(ast_node *_Nonnull ast, int32_t pri);
 static void gen_version_attrs(ast_node *_Nullable ast);
@@ -1690,11 +1691,27 @@ static void gen_asc_desc(ast_node *ast) {
 static void gen_groupby_list(ast_node *ast) {
   Contract(is_ast_groupby_list(ast));
 
-  for (ast_node *item = ast; item ; item = item->right) {
+  for (ast_node *item = ast; item; item = item->right) {
     Contract(is_ast_groupby_list(item));
     EXTRACT_NOTNULL(groupby_item, item->left);
     EXTRACT_ANY_NOTNULL(expr, groupby_item->left);
-    EXTRACT_ANY(opt_asc_desc, groupby_item->right);
+
+    gen_root_expr(expr);
+
+    if (item->right) {
+      gen_printf(", ");
+    }
+  }
+}
+
+static void gen_orderby_list(ast_node *ast) {
+  Contract(is_ast_orderby_list(ast));
+
+  for (ast_node *item = ast; item; item = item->right) {
+    Contract(is_ast_orderby_list(item));
+    EXTRACT_NOTNULL(orderby_item, item->left);
+    EXTRACT_ANY_NOTNULL(expr, orderby_item->left);
+    EXTRACT_ANY(opt_asc_desc, orderby_item->right);
 
     gen_root_expr(expr);
     gen_asc_desc(opt_asc_desc);
@@ -1727,10 +1744,10 @@ static void gen_opt_groupby(ast_node *ast) {
 
 static void gen_opt_orderby(ast_node *ast) {
   Contract(is_ast_opt_orderby(ast));
-  EXTRACT(groupby_list, ast->left);
+  EXTRACT_NOTNULL(orderby_list, ast->left);
 
   gen_printf("ORDER BY ");
-  gen_groupby_list(groupby_list);
+  gen_orderby_list(orderby_list);
 }
 
 static void gen_opt_limit(ast_node *ast) {

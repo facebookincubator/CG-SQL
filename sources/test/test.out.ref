@@ -723,7 +723,11 @@ SELECT a
 
 SELECT a, b
   FROM x
-  GROUP BY a ASC, b DESC;
+ORDER BY a, b;
+
+SELECT a, b
+  FROM x
+ORDER BY a ASC, b DESC;
 
 SELECT CAST(1 AS TEXT);
 

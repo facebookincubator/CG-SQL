@@ -625,8 +625,11 @@ select a from (X inner join Y) left outer join (W inner join Q);
 -- table refs
 select a from (X inner join Y) left outer join (W inner join Q);
 
--- more flexible group_by format
-select a, b from x group by a asc, b desc;
+-- order_by
+select a, b from x order by a, b;
+
+-- order_by
+select a, b from x order by a asc, b desc;
 
 -- simple cast expression
 select cast(1 as text);
@@ -1558,7 +1561,7 @@ begin
   fetch R from values (from C like T, from D);
   update cursor  R from values (from C like T, from D);
 
-  declare S cursor for 
+  declare S cursor for
     with cte(l,m,n,o) as (values (from C like T, from D))
      select * from cte;
   fetch S;

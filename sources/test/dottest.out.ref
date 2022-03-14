@@ -65,40 +65,40 @@ digraph parse {
     select_orderby15 [label = "select_orderby" shape=plaintext]
     select_orderby15 -> opt_orderby16;
     opt_orderby16 [label = "opt_orderby" shape=plaintext]
-    opt_orderby16 -> groupby_list17;
-    groupby_list17 [label = "groupby_list" shape=plaintext]
-    groupby_list17 -> groupby_item18;
-    groupby_item18 [label = "groupby_item" shape=plaintext]
-    groupby_item18 -> str19;
+    opt_orderby16 -> orderby_list17;
+    orderby_list17 [label = "orderby_list" shape=plaintext]
+    orderby_list17 -> orderby_item18;
+    orderby_item18 [label = "orderby_item" shape=plaintext]
+    orderby_item18 -> str19;
     str19 [label = "a" shape=plaintext]
     _18 [label = "⏚" shape=plaintext]
-    groupby_item18 -> _18;
- groupby_list17 -> groupby_list1a;
-    groupby_list1a [label = "groupby_list" shape=plaintext]
-    groupby_list1a -> groupby_item1b;
-    groupby_item1b [label = "groupby_item" shape=plaintext]
-    groupby_item1b -> str1c;
+    orderby_item18 -> _18;
+ orderby_list17 -> orderby_list1a;
+    orderby_list1a [label = "orderby_list" shape=plaintext]
+    orderby_list1a -> orderby_item1b;
+    orderby_item1b [label = "orderby_item" shape=plaintext]
+    orderby_item1b -> str1c;
     str1c [label = "b" shape=plaintext]
     _1b [label = "⏚" shape=plaintext]
-    groupby_item1b -> _1b;
- groupby_list1a -> groupby_list1d;
-    groupby_list1d [label = "groupby_list" shape=plaintext]
-    groupby_list1d -> groupby_item1e;
-    groupby_item1e [label = "groupby_item" shape=plaintext]
-    groupby_item1e -> str1f;
+    orderby_item1b -> _1b;
+ orderby_list1a -> orderby_list1d;
+    orderby_list1d [label = "orderby_list" shape=plaintext]
+    orderby_list1d -> orderby_item1e;
+    orderby_item1e [label = "orderby_item" shape=plaintext]
+    orderby_item1e -> str1f;
     str1f [label = "c" shape=plaintext]
     _1e [label = "⏚" shape=plaintext]
-    groupby_item1e -> _1e;
- groupby_list1d -> groupby_list20;
-    groupby_list20 [label = "groupby_list" shape=plaintext]
-    groupby_list20 -> groupby_item21;
-    groupby_item21 [label = "groupby_item" shape=plaintext]
-    groupby_item21 -> str22;
+    orderby_item1e -> _1e;
+ orderby_list1d -> orderby_list20;
+    orderby_list20 [label = "orderby_list" shape=plaintext]
+    orderby_list20 -> orderby_item21;
+    orderby_item21 [label = "orderby_item" shape=plaintext]
+    orderby_item21 -> str22;
     str22 [label = "d" shape=plaintext]
- groupby_item21 -> asc23;
+ orderby_item21 -> asc23;
     asc23 [label = "asc" shape=plaintext]
     _20 [label = "⏚" shape=plaintext]
-    groupby_list20 -> _20;
+    orderby_list20 -> _20;
     _16 [label = "⏚" shape=plaintext]
     opt_orderby16 -> _16;
  select_orderby15 -> select_limit24;

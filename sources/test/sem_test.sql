@@ -3225,7 +3225,7 @@ declare curs cursor for call proc1();
 select * from foo as T1
 inner join bar as T2 on T1.id = T2.id
 where T2.id > 5
-group by T2.name asc, T2.id desc
+group by T2.name, T2.id
 having T2.name = 'x'
 order by T2.rate
 limit 5
@@ -12356,7 +12356,7 @@ select id, row_number() over (partition by id) from foo;
 -- + {call_filter_clause}
 -- + {window_defn}: ok
 -- + {opt_orderby}: ok
--- + {groupby_list}: ok
+-- + {orderby_list}: ok
 -- + {name id}: id: integer notnull
 -- - error:
 select id, row_number() over (order by id asc) from foo;
@@ -12367,7 +12367,7 @@ select id, row_number() over (order by id asc) from foo;
 -- + {call_filter_clause}
 -- + {window_defn}: err
 -- + {opt_orderby}: err
--- + {groupby_list}: err
+-- + {orderby_list}: err
 -- + {name bogus}: err
 -- + error: % name not found 'bogus'
 -- +1 error:
@@ -13017,7 +13017,7 @@ begin
 end;
 
 -- TEST: use collate in an expression
--- + {groupby_item}
+-- + {orderby_item}
 -- + {collate}: name: text
 -- + {name name}: name: text
 -- + {name nocase}
@@ -20918,12 +20918,12 @@ begin
 
   update cursor  R from values (from C like Shape_xy, from D);
 
-  declare S cursor for 
+  declare S cursor for
     with cte1(l,m,n,o) as (values (from C like Shape_xy, from D))
      select * from cte1;
   fetch S;
 
-  declare T cursor for 
+  declare T cursor for
     with cte2(l,m,n,o) as (values (1,2,'3','4'), (from C like Shape_xy, from D))
      select * from cte2;
   fetch S;

@@ -1892,8 +1892,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, 
   |                     | {window_defn}: err
   |                       | {window_defn_orderby}
   |                         | {opt_orderby}: err
-  |                           | {groupby_list}: err
-  |                             | {groupby_item}
+  |                           | {orderby_list}: err
+  |                             | {orderby_item}
   |                               | {name y}: err
   | {select_orderby}
     | {select_limit}
@@ -2218,8 +2218,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to av
   |                     | {window_defn}: err
   |                       | {window_defn_orderby}
   |                         | {opt_orderby}: err
-  |                           | {groupby_list}: err
-  |                             | {groupby_item}
+  |                           | {orderby_list}: err
+  |                             | {orderby_item}
   |                               | {name name}: err
   | {select_orderby}
     | {select_limit}
@@ -3531,8 +3531,8 @@ LIMIT 5;
   |                 | {strlit 'x'}: text notnull
   | {select_orderby}
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |     | {dot}: rate: longint
     |       | {name T2}
     |       | {name rate}
@@ -3646,8 +3646,8 @@ test/sem_test.sql:XXXX:1: error: in opt_limit : CQL0015: expected numeric expres
   |           | {select_having}
   | {select_orderby}: err
     | {opt_orderby}: err
-    | | {groupby_list}: err
-    |   | {groupby_item}
+    | | {orderby_list}: err
+    |   | {orderby_item}
     |     | {name bogus}: err
     | {select_limit}
       | {opt_limit}: err
@@ -6060,11 +6060,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   |           | {select_having}
   | {select_orderby}: err
     | {opt_orderby}: err
-    | | {groupby_list}: err
-    |   | {groupby_item}
+    | | {orderby_list}: err
+    |   | {orderby_item}
     |   | | {name id}: id: integer notnull
-    |   | {groupby_list}
-    |     | {groupby_item}
+    |   | {orderby_list}
+    |     | {orderby_item}
     |       | {not}: err
     |         | {strlit 'x'}: text notnull
     | {select_limit}
@@ -8116,8 +8116,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     | {update_where}
       | {update_orderby}
         | {opt_orderby}: err
-        | | {groupby_list}: err
-        |   | {groupby_item}
+        | | {orderby_list}: err
+        |   | {orderby_item}
         |     | {not}: err
         |       | {strlit 'x'}: text notnull
         | {opt_limit}
@@ -10956,7 +10956,7 @@ SELECT *
   FROM foo AS T1
   INNER JOIN bar AS T2 ON T1.id = T2.id
   WHERE T2.id > 5
-  GROUP BY T2.name ASC, T2.id DESC
+  GROUP BY T2.name, T2.id
   HAVING T2.name = 'x'
 ORDER BY T2.rate
 LIMIT 5
@@ -11003,15 +11003,13 @@ OFFSET 7;
   |           | | {groupby_list}: ok
   |           |   | {groupby_item}
   |           |   | | {dot}: name: text
-  |           |   | | | {name T2}
-  |           |   | | | {name name}
-  |           |   | | {asc}
+  |           |   |   | {name T2}
+  |           |   |   | {name name}
   |           |   | {groupby_list}
   |           |     | {groupby_item}
   |           |       | {dot}: id: integer notnull
-  |           |       | | {name T2}
-  |           |       | | {name id}
-  |           |       | {desc}
+  |           |         | {name T2}
+  |           |         | {name id}
   |           | {select_having}
   |             | {opt_having}: bool
   |               | {eq}: bool
@@ -11021,8 +11019,8 @@ OFFSET 7;
   |                 | {strlit 'x'}: text notnull
   | {select_orderby}
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |     | {dot}: rate: longint
     |       | {name T2}
     |       | {name rate}
@@ -11099,8 +11097,8 @@ test/sem_test.sql:XXXX:1: error: in opt_offset : CQL0015: expected numeric expre
   |                 | {strlit 'x'}: text notnull
   | {select_orderby}: err
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |     | {dot}: rate: longint
     |       | {name T2}
     |       | {name rate}
@@ -31098,8 +31096,8 @@ END;
         |           | {select_having}
         | {select_orderby}
           | {opt_orderby}: ok
-          | | {groupby_list}: ok
-          |   | {groupby_item}
+          | | {orderby_list}: ok
+          |   | {orderby_item}
           |     | {name bar_id}: bar_id: integer notnull
           | {select_limit}
             | {select_offset}
@@ -31161,11 +31159,11 @@ END;
         |               | {select_having}
         | {select_orderby}
           | {opt_orderby}: ok
-          | | {groupby_list}: ok
-          |   | {groupby_item}
+          | | {orderby_list}: ok
+          |   | {orderby_item}
           |   | | {name sort_order_value}: sort_order_value: integer notnull
-          |   | {groupby_list}
-          |     | {groupby_item}
+          |   | {orderby_list}
+          |     | {orderby_item}
           |       | {name id}: id: integer notnull
           | {select_limit}
             | {select_offset}
@@ -33616,11 +33614,11 @@ ORDER BY sort_key, key_;
   |               | {select_having}
   | {select_orderby}
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |   | | {name sort_key}: sort_key: integer notnull
-    |   | {groupby_list}
-    |     | {groupby_item}
+    |   | {orderby_list}
+    |     | {orderby_item}
     |       | {name key_}: key_: integer notnull
     | {select_limit}
       | {select_offset}
@@ -33671,11 +33669,11 @@ ORDER BY 2, key_;
   |               | {select_having}
   | {select_orderby}
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |   | | {int 2}: integer notnull
-    |   | {groupby_list}
-    |     | {groupby_item}
+    |   | {orderby_list}
+    |     | {orderby_item}
     |       | {name key_}: key_: integer notnull
     | {select_limit}
       | {select_offset}
@@ -33728,13 +33726,13 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0398: compound select cannot be ord
   |               | {select_having}
   | {select_orderby}: err
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |   | | {add}: integer notnull
     |   |   | {int 1}: integer notnull
     |   |   | {int 1}: integer notnull
-    |   | {groupby_list}
-    |     | {groupby_item}
+    |   | {orderby_list}
+    |     | {orderby_item}
     |       | {name key_}: key_: integer notnull
     | {select_limit}
       | {select_offset}
@@ -33809,11 +33807,11 @@ ORDER BY sort_key, key_;
   |               | {select_having}
   | {select_orderby}
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |   | | {name sort_key}: sort_key: integer notnull
-    |   | {groupby_list}
-    |     | {groupby_item}
+    |   | {orderby_list}
+    |     | {orderby_item}
     |       | {name key_}: key_: integer notnull
     | {select_limit}
       | {select_offset}
@@ -33892,8 +33890,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'a_key_'
   |               | {select_having}
   | {select_orderby}: err
     | {opt_orderby}: err
-    | | {groupby_list}: err
-    |   | {groupby_item}
+    | | {orderby_list}: err
+    |   | {orderby_item}
     |     | {name a_key_}: err
     | {select_limit}
       | {opt_limit}: integer notnull
@@ -33974,8 +33972,8 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'b.a_key_'
   |               | {select_having}
   | {select_orderby}: err
     | {opt_orderby}: err
-    | | {groupby_list}: err
-    |   | {groupby_item}
+    | | {orderby_list}: err
+    |   | {orderby_item}
     |     | {dot}: err
     |       | {name b}
     |       | {name a_key_}
@@ -50497,8 +50495,8 @@ ORDER BY id;
   |                         | {window_defn_orderby}
   | {select_orderby}
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |     | {name id}: id: integer notnull
     | {select_limit}
       | {select_offset}
@@ -50577,8 +50575,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
   |                     | {window_defn}: err
   |                       | {window_defn_orderby}
   |                         | {opt_orderby}: err
-  |                           | {groupby_list}: err
-  |                             | {groupby_item}
+  |                           | {orderby_list}: err
+  |                             | {orderby_item}
   |                               | {name bogus}: err
   | {select_orderby}
     | {select_limit}
@@ -50831,8 +50829,8 @@ SELECT id,
   |     |       | {window_defn}: ok
   |     |         | {window_defn_orderby}
   |     |           | {opt_orderby}: ok
-  |     |             | {groupby_list}: ok
-  |     |               | {groupby_item}
+  |     |             | {orderby_list}: ok
+  |     |               | {orderby_item}
   |     |                 | {name id}: id: integer notnull
   |     |                 | {asc}
   |     | {select_from_etc}: TABLE { foo: foo }
@@ -50871,8 +50869,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
   |     |       | {window_defn}: err
   |     |         | {window_defn_orderby}
   |     |           | {opt_orderby}: err
-  |     |             | {groupby_list}: err
-  |     |               | {groupby_item}
+  |     |             | {orderby_list}: err
+  |     |               | {orderby_item}
   |     |                 | {name bogus}: err
   |     |                 | {asc}
   |     | {select_from_etc}: TABLE { foo: foo }
@@ -53540,8 +53538,8 @@ ORDER BY name COLLATE nocase;
   |           | {select_having}
   | {select_orderby}
     | {opt_orderby}: ok
-    | | {groupby_list}: ok
-    |   | {groupby_item}
+    | | {orderby_list}: ok
+    |   | {orderby_item}
     |     | {collate}: name: text
     |       | {name name}: name: text
     |       | {name nocase}
@@ -61968,8 +61966,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   |     |       | | {window_defn}: err
   |     |       |   | {window_defn_orderby}
   |     |       |     | {opt_orderby}: ok
-  |     |       |     | | {groupby_list}: ok
-  |     |       |     |   | {groupby_item}
+  |     |       |     | | {orderby_list}: ok
+  |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}: month: integer
   |     |       |     | {opt_frame_spec}: err
   |     |       |       | {int 266370}
@@ -62079,8 +62077,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   |     |       | | {window_defn}: err
   |     |       |   | {window_defn_orderby}
   |     |       |     | {opt_orderby}: ok
-  |     |       |     | | {groupby_list}: ok
-  |     |       |     |   | {groupby_item}
+  |     |       |     | | {orderby_list}: ok
+  |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}: month: integer
   |     |       |     | {opt_frame_spec}: err
   |     |       |       | {int 266370}
@@ -62145,8 +62143,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
   |     |       | | {window_defn}: ok
   |     |       |   | {window_defn_orderby}
   |     |       |     | {opt_orderby}: ok
-  |     |       |     | | {groupby_list}: ok
-  |     |       |     |   | {groupby_item}
+  |     |       |     | | {orderby_list}: ok
+  |     |       |     |   | {orderby_item}
   |     |       |     |     | {name month}: month: integer
   |     |       |     | {opt_frame_spec}: ok
   |     |       |       | {int 20610}

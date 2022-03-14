@@ -253,7 +253,7 @@ static void cql_reset_globals(void);
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
 %type <aval> opt_partition_by opt_frame_spec frame_boundary_opts frame_boundary_start frame_boundary_end frame_boundary
 %type <aval> opt_where opt_groupby opt_having opt_orderby opt_limit opt_offset opt_as_alias as_alias window_clause
-%type <aval> groupby_item groupby_list opt_asc_desc window_name_defn window_name_defn_list
+%type <aval> groupby_item groupby_list orderby_item orderby_list opt_asc_desc window_name_defn window_name_defn_list
 %type <aval> table_or_subquery table_or_subquery_list query_parts table_function opt_from_query_parts
 %type <aval> opt_join_cond join_cond join_clause join_target join_target_list
 %type <aval> basic_update_stmt with_update_stmt update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
@@ -1344,7 +1344,7 @@ groupby_list[result]:
   ;
 
 groupby_item:
-  expr opt_asc_desc  { $groupby_item = new_ast_groupby_item($expr, $opt_asc_desc); }
+  expr  { $groupby_item = new_ast_groupby_item($expr); }
   ;
 
 opt_asc_desc:
@@ -1360,7 +1360,16 @@ opt_having:
 
 opt_orderby:
   /* nil */  { $opt_orderby = NULL; }
-  | ORDER BY groupby_list  { $opt_orderby = new_ast_opt_orderby($groupby_list); }
+  | ORDER BY orderby_list  { $opt_orderby = new_ast_opt_orderby($orderby_list); }
+  ;
+
+orderby_list[result]:
+  orderby_item  { $result = new_ast_orderby_list($orderby_item, NULL); }
+  | orderby_item ',' orderby_list[gl]  { $result = new_ast_orderby_list($orderby_item, $gl); }
+  ;
+
+orderby_item:
+  expr opt_asc_desc  { $orderby_item = new_ast_orderby_item($expr, $opt_asc_desc); }
   ;
 
 opt_limit:

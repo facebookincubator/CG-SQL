@@ -9645,7 +9645,7 @@ static void sem_table_function(ast_node *ast) {
   ast->sem = name_ast->sem = sem;
 }
 
-// A group-by list is a list of [expression, ASC/DESC].  These each
+// A group-by list is a list of [expression].  These each
 // need to be validated.  Note this is a place where the expression context
 // changes.
 static void sem_groupby_list(ast_node *head) {
@@ -9657,6 +9657,28 @@ static void sem_groupby_list(ast_node *head) {
     EXTRACT_ANY_NOTNULL(expr, groupby_item->left);
 
     sem_root_expr(expr, SEM_EXPR_CONTEXT_GROUP_BY);
+    if (is_error(expr)) {
+      record_error(head);
+      return;
+    }
+  }
+
+  record_ok(head);
+}
+
+
+// A order-by list is a list of [expression, ASC/DESC].  These each
+// need to be validated.  Note this is a place where the expression context
+// changes.
+static void sem_orderby_list(ast_node *head) {
+  Contract(is_ast_orderby_list(head));
+
+  for (ast_node *ast = head; ast; ast = ast->right) {
+    Contract(is_ast_orderby_list(ast));
+    EXTRACT_NOTNULL(orderby_item, ast->left);
+    EXTRACT_ANY_NOTNULL(expr, orderby_item->left);
+
+    sem_root_expr(expr, SEM_EXPR_CONTEXT_ORDER_BY);
     if (is_error(expr)) {
       record_error(head);
       return;
@@ -9698,7 +9720,7 @@ static void sem_opt_groupby(ast_node *ast) {
   Contract(is_ast_opt_groupby(ast));
   EXTRACT_NOTNULL(groupby_list, ast->left);
 
-  // GROUP BY [groupby_list] [opt_asc_desc]
+  // GROUP BY [groupby_list]
   sem_groupby_list(groupby_list);
   if (is_error(groupby_list)) {
     record_error(ast);
@@ -9708,14 +9730,14 @@ static void sem_opt_groupby(ast_node *ast) {
   record_ok(ast);
 }
 
-// The order-by node, if present, simply delegates to the groupby_list helper.
+// The order-by node, if present, simply delegates to the orderby_list helper.
 static void sem_opt_orderby(ast_node *ast) {
   Contract(is_ast_opt_orderby(ast));
-  EXTRACT(groupby_list, ast->left);
+  EXTRACT_NOTNULL(orderby_list, ast->left);
 
-  // ORDER BY [groupby_list] [opt_asc_desc]
-  sem_groupby_list(groupby_list);
-  if (is_error(groupby_list)) {
+  // ORDER BY [group_list] [opt_asc_desc]
+  sem_orderby_list(orderby_list);
+  if (is_error(orderby_list)) {
     record_error(ast);
     return;
   }
@@ -10235,11 +10257,11 @@ static bool_t sem_select_orderby_with_simple_ordering_only(ast_node *ast) {
     return 0;
   }
 
-  EXTRACT_NOTNULL(groupby_list, opt_orderby->left);
-  for (ast_node *list = groupby_list; list; list = list->right) {
-    Contract(is_ast_groupby_list(list));
-    EXTRACT_NOTNULL(groupby_item, list->left);
-    EXTRACT_ANY_NOTNULL(expr, groupby_item->left);
+  EXTRACT_NOTNULL(orderby_list, opt_orderby->left);
+  for (ast_node *list = orderby_list; list; list = list->right) {
+    Contract(is_ast_orderby_list(list));
+    EXTRACT_NOTNULL(orderby_item, list->left);
+    EXTRACT_ANY_NOTNULL(expr, orderby_item->left);
     if (is_ast_num(expr)) {
       continue;
     }
