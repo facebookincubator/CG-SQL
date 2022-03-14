@@ -1901,6 +1901,72 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, 
 
 The statement ending at line XXXX
 
+SELECT *
+  FROM foo
+  GROUP BY count(id);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'count'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {opt_groupby}: err
+  |           | | {groupby_list}: err
+  |           |   | {groupby_item}
+  |           |     | {call}: err
+  |           |       | {name count}
+  |           |       | {call_arg_list}
+  |           |         | {call_filter_clause}
+  |           |         | {arg_list}: ok
+  |           |           | {name id}: id: integer notnull
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+ORDER BY count(id);
+
+  {select_stmt}: select: { id: integer notnull }
+  | {select_core_list}: select: { id: integer notnull }
+  | | {select_core}: select: { id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull }
+  |     | | {star}: select: { id: integer notnull }
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {opt_orderby}: ok
+    | | {orderby_list}: ok
+    |   | {orderby_item}
+    |     | {call}: integer notnull
+    |       | {name count}: integer notnull
+    |       | {call_arg_list}
+    |         | {call_filter_clause}
+    |         | {arg_list}: ok
+    |           | {name id}: id: integer notnull
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT id AS name
   FROM bar
   WHERE name LIKE "%foo%";

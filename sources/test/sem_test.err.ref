@@ -38,6 +38,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, 
 test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
 test/sem_test.sql:XXXX:1: error: in str : CQL0436: alias referenced from WHERE, GROUP BY, HAVING, or WINDOW clause 'y'
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'count'
 test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
 test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'
 test/sem_test.sql:XXXX:1: error: in str : CQL0435: must use qualified form to avoid ambiguity with alias 'name'

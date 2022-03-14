@@ -473,6 +473,20 @@ select id, name as y, row_number() over w
 from bar
 window w as (order by y);
 
+-- TEST: GROUP BY should not be able to have aggregate functions
+-- + {select_stmt}: err
+-- + {opt_groupby}: err
+-- + {groupby_list}: err
+-- +1 error: % function may not appear in this context 'count'
+select * from foo group by count(id);
+
+-- TEST: ORDER BY should be able to have aggregate functions
+-- + {select_stmt}: select: { id: integer notnull }
+-- + {opt_orderby}: ok
+-- + {orderby_list}: ok
+-- - error:
+select * from foo order by count(id);
+
 -- TEST: a WHERE clause cannot refer to the FROM if what it refers to in the
 -- FROM shadows an alias in the SELECT list
 -- + {select_stmt}: err
