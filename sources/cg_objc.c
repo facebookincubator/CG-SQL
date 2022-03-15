@@ -46,13 +46,8 @@ static void cg_objc_proc_result_set_c_getter(
   bool_t is_private)
 {
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-    impl_symbol_prefix,
-    is_private ? "__PRIVATE__" : "",
-    rt->impl_symbol_prefix);
-
-  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
-    impl_symbol_prefix.ptr,
+    rt->impl_symbol_prefix,
     name,
     "_get_",
     col_name,
@@ -60,7 +55,6 @@ static void cg_objc_proc_result_set_c_getter(
 
   bprintf(buffer, "%s(cResultSet%s)", col_getter_sym.ptr, fetch_proc ? "" : ", row");
   CHARBUF_CLOSE(col_getter_sym);
-  CHARBUF_CLOSE(impl_symbol_prefix);
 }
 
 static void cg_objc_proc_result_set_getter(
@@ -189,24 +183,14 @@ static void cg_objc_proc_result_set_getter(
   }
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-    impl_symbol_prefix,
-    is_private ? "__PRIVATE__" : "",
-    rt->impl_symbol_prefix);
-
-  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-    symbol_prefix,
-    is_private ? "__PRIVATE__" : "",
-    rt->symbol_prefix);
-
-  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     objc_getter,
-     symbol_prefix.ptr,
+    rt->symbol_prefix,
     name,
     "_get_",
     col_name);
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(c_getter,
-                                  impl_symbol_prefix.ptr,
+                                  rt->impl_symbol_prefix,
                                   name,
                                   "_get_",
                                   col_name,
@@ -251,8 +235,6 @@ static void cg_objc_proc_result_set_getter(
 
   CHARBUF_CLOSE(c_getter);
   CHARBUF_CLOSE(objc_getter);
-  CHARBUF_CLOSE(symbol_prefix);
-  CHARBUF_CLOSE(impl_symbol_prefix);
   CHARBUF_CLOSE(value);
   CHARBUF_CLOSE(value_convert_begin);
   CHARBUF_CLOSE(return_type);

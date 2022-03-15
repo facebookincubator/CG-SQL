@@ -109,11 +109,11 @@ extern cql_int64 assembly_core_get_z_value(assembly_core_result_set_ref _Nonnull
   return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 2);
 }
 
-extern cql_bool __PRIVATE__assembly_core_get_flag_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+extern cql_bool assembly_core_get_flag_is_null(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 3);
 }
 
-extern cql_bool __PRIVATE__assembly_core_get_flag_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
+extern cql_bool assembly_core_get_flag_value(assembly_core_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 3);
 }
 

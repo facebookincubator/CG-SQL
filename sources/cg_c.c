@@ -7058,7 +7058,6 @@ typedef struct function_info {
   CSTR sym_suffix;
   CSTR value_suffix;
   uint32_t frag_type;
-  bool_t is_private;
 } function_info;
 
 // Using the information above we emit a column getter.  The essence of this
@@ -7080,11 +7079,9 @@ static void cg_proc_result_set_getter(function_info *info) {
 
   Invariant(info->frag_type != FRAG_TYPE_EXTENSION);
 
-  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(symbol_prefix, info->is_private ? "__PRIVATE__" : "", rt->symbol_prefix);
-
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
-    symbol_prefix.ptr,
+    "",
     info->name,
     "_get_",
     info->col,
@@ -7135,7 +7132,6 @@ cleanup:
 
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(col_getter_sym);
-  CHARBUF_CLOSE(symbol_prefix);
 }
 
 // The inlineable version of the getter can be generated instead of the opened coded version as above
@@ -7159,12 +7155,9 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 
   Invariant(info->frag_type != FRAG_TYPE_EXTENSION);
 
-  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(symbol_prefix, info->is_private ? "__PRIVATE__" : "", rt->symbol_prefix);
-
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
-    // only prefix with __PRIVATE__ the private assembly methods
-    symbol_prefix.ptr,
+    rt->symbol_prefix,
     info->name,
     "_get_",
     info->col,
@@ -7257,7 +7250,6 @@ cleanup:
 
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(col_getter_sym);
-  CHARBUF_CLOSE(symbol_prefix);
 }
 
 #define DO_EMIT_SET_NULL true
@@ -7675,7 +7667,6 @@ static void cg_proc_result_set(ast_node *ast) {
       .result_set_ref_type = result_set_ref.ptr,
       .row_struct_type = row_sym.ptr,
       .frag_type = frag_type,
-      .is_private = false,
     };
 
     // if the current row is equal or greater than the base query count
@@ -7689,8 +7680,6 @@ static void cg_proc_result_set(ast_node *ast) {
 
       uint32_t col_count_for_base = base_proc->sem->sptr->count;
       Invariant(col_count_for_base > 0);
-
-      info.is_private = i >= col_count_for_base;
     }
 
     if (options.generate_type_getters) {

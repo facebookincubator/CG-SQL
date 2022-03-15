@@ -42,10 +42,10 @@ static inline NSNumber *_Nullable CGBAssemblyCoreGetZ(CGBAssemblyCore *resultSet
   return CGCAssemblyCoreGetZIsNull(cResultSet, row) ? nil : @(CGCAssemblyCoreGetZValue(cResultSet, row));
 }
 
-static inline NSNumber *_Nullable __PRIVATE__CGBAssemblyCoreGetFlag(CGBAssemblyCore *resultSet, int32_t row)
+static inline NSNumber *_Nullable CGBAssemblyCoreGetFlag(CGBAssemblyCore *resultSet, int32_t row)
 {
   CGCAssemblyCoreResultSetRef cResultSet = CGCAssemblyCoreFromCGBAssemblyCore(resultSet);
-  return __PRIVATE__CGCAssemblyCoreGetFlagIsNull(cResultSet, row) ? nil : @(__PRIVATE__CGCAssemblyCoreGetFlagValue(cResultSet, row));
+  return CGCAssemblyCoreGetFlagIsNull(cResultSet, row) ? nil : @(CGCAssemblyCoreGetFlagValue(cResultSet, row));
 }
 
 static inline int32_t CGBAssemblyCoreResultCount(CGBAssemblyCore *resultSet)
