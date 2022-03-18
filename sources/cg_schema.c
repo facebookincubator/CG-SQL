@@ -25,6 +25,7 @@ cql_noexport void cg_schema_facet_checker_main(ast_node *head) {}
 #include "list.h"
 #include "sem.h"
 #include "symtab.h"
+#include "bytebuf.h"
 #include "cg_schema.h"
 
 static void cg_generate_schema_by_mode(charbuf *output, int32_t mode);
@@ -138,7 +139,13 @@ static int recreate_comparator(const void *v1, const void *v2) {
 }
 
 // Emit the template for ending the upgrade to a particular schema version.
-static void cg_schema_end_version(charbuf *output, charbuf *upgrade, charbuf *pending, int32_t vers) {
+static void cg_schema_end_version(
+  charbuf *output,
+  charbuf *upgrade,
+  charbuf *pending,
+  uint32_t vers,
+  bytebuf *version_bits)
+{
   if (pending->used > 1) {
     bprintf(upgrade, "      -- data migration procedures\n");
     bprintf(upgrade, "%s", pending->ptr);
@@ -153,6 +160,17 @@ static void cg_schema_end_version(charbuf *output, charbuf *upgrade, charbuf *pe
     bprintf(output, "%s", upgrade->ptr);
     bprintf(output, "      CALL %s_cql_set_version_crc(%d, %lld);\n", global_proc_name, vers, upgrade_crc);
     bprintf(output, "    END IF;\n\n");
+
+    // ensure our bit vector has enough space and then set the relevant bit
+    uint32_t byteIndex = vers / 8;
+    uint32_t bitMask = 1 << (vers % 8);
+    if (version_bits->used < byteIndex + 1) {
+      // will realloc if needed
+      uint32_t needed = byteIndex + 1 - version_bits->used;
+      bytebuf_alloc(version_bits, needed);
+      memset(version_bits->ptr + byteIndex, 0, needed);
+    }
+    version_bits->ptr[byteIndex] |= bitMask;
   }
 
   bclear(pending);
@@ -1267,6 +1285,9 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
      &recreate_items_count,
      &max_schema_version);
 
+  bytebuf version_bits;
+  bytebuf_open(&version_bits);
+
   CHARBUF_OPEN(preamble);
   CHARBUF_OPEN(main);
   CHARBUF_OPEN(decls);
@@ -1357,7 +1378,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     bprintf(&main, "    END IF;\n\n");
   }
 
-  int32_t prev_version = 0;
+  uint32_t prev_version = 0;
 
   for (int32_t i = 0; i < schema_items_count; i++) {
     schema_annotation *note = &notes[i];
@@ -1371,15 +1392,15 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     EXTRACT_OPTION(vers, version_annotation->left);
 
     Invariant(note->version == vers);
-    Invariant(vers > 0);
+    Invariant(vers > 0);  // already verified to be positive
 
     if (vers < options.min_schema_version) {
       continue;
     }
 
     if (prev_version != vers) {
-      cg_schema_end_version(&main, &upgrade, &pending, prev_version);
-      prev_version = vers;
+      cg_schema_end_version(&main, &upgrade, &pending, prev_version, &version_bits);
+      prev_version = (uint32_t)vers;
     }
 
     CSTR target_name = note->target_name;
@@ -1515,7 +1536,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     }
   }
 
-  cg_schema_end_version(&main, &upgrade, &pending, prev_version);
+  cg_schema_end_version(&main, &upgrade, &pending, prev_version, &version_bits);
 
   if (drops.used > 1) {
     bprintf(&main, "    CALL %s_cql_drop_tables();\n", global_proc_name);
@@ -1542,6 +1563,35 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   if (trigger_creates) {
     bprintf(&main, "    CALL %s_cql_create_all_triggers();\n", global_proc_name);
   }
+
+  CHARBUF_OPEN(missing_versions);
+  for (uint32_t v = 1; v <= prev_version; v++) {
+    uint32_t byteIndex = v / 8;
+    uint32_t bitMask = 1 << (v % 8);
+    if (version_bits.used > byteIndex && ((uint32_t)(version_bits.ptr[byteIndex]) & bitMask)) {
+      continue;
+    }
+
+    if (missing_versions.used > 1) {
+      bprintf(&missing_versions, ",");
+    }
+    bprintf(&missing_versions, "(%u)", v);
+  }
+
+  if (missing_versions.used > 1) {
+    bprintf(&main, "    CALL %s_cleanup_unused_versions();\n", global_proc_name);
+
+    bprintf(&preamble, "\n@attribute(cql:private)\n");
+    bprintf(&preamble, "CREATE PROC %s_cleanup_unused_versions()\n", global_proc_name);
+    bprintf(&preamble, "BEGIN\n");
+    bprintf(&preamble, "  WITH\n");
+    bprintf(&preamble, "    V(v) AS (VALUES %s),\n", missing_versions.ptr);
+    bprintf(&preamble, "    F(f) AS (SELECT 'cql_schema_v'||v from V)\n");
+    bprintf(&preamble, "  DELETE FROM %s_cql_schema_facets WHERE facet IN (SELECT f from F);\n", global_proc_name);
+    bprintf(&preamble, "END;\n");
+  }
+
+  CHARBUF_CLOSE(missing_versions);
 
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, schema_crc);
@@ -1627,6 +1677,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   CHARBUF_CLOSE(decls);
   CHARBUF_CLOSE(main);
   CHARBUF_CLOSE(preamble);
+
+  bytebuf_close(&version_bits);
 }
 
 #endif
