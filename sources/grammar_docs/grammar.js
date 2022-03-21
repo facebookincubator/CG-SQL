@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Mar 11 17:34:34 2022
+// Snapshot as of Mon Mar 21 09:32:34 2022
 
 
 const PREC = {
@@ -172,10 +172,12 @@ module.exports = grammar({
     opt_where: $ => seq($.WHERE, $.expr),
     opt_groupby: $ => seq($.GROUP, $.BY, $.groupby_list),
     groupby_list: $ => choice($.groupby_item, seq($.groupby_item, ',', $.groupby_list)),
-    groupby_item: $ => seq($.expr, optional($.opt_asc_desc)),
+    groupby_item: $ => $.expr,
     opt_asc_desc: $ => choice($.ASC, $.DESC),
     opt_having: $ => seq($.HAVING, $.expr),
-    opt_orderby: $ => seq($.ORDER, $.BY, $.groupby_list),
+    opt_orderby: $ => seq($.ORDER, $.BY, $.orderby_list),
+    orderby_list: $ => choice($.orderby_item, seq($.orderby_item, ',', $.orderby_list)),
+    orderby_item: $ => seq($.expr, optional($.opt_asc_desc)),
     opt_limit: $ => seq($.LIMIT, $.expr),
     opt_offset: $ => seq($.OFFSET, $.expr),
     select_opts: $ => choice($.ALL, $.DISTINCT, $.DISTINCTROW),

@@ -9431,7 +9431,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Mar 11 17:34:34 EST 2022
+Snapshot as of Mon Mar 21 09:32:33 EDT 2022
 
 ### Operators and Literals
 
@@ -10361,7 +10361,7 @@ groupby_list:
   ;
 
 groupby_item:
-  expr opt_asc_desc
+  expr
   ;
 
 opt_asc_desc:
@@ -10377,7 +10377,16 @@ opt_having:
 
 opt_orderby:
   /* nil */
-  | "ORDER" "BY" groupby_list
+  | "ORDER" "BY" orderby_list
+  ;
+
+orderby_list:
+  orderby_item
+  | orderby_item ',' orderby_list
+  ;
+
+orderby_item:
+  expr opt_asc_desc
   ;
 
 opt_limit:
@@ -15445,7 +15454,7 @@ Perhaps the group was not included (missing an #include) or else there is a typo
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Mar 11 17:34:35 EST 2022
+Snapshot as of Mon Mar 21 09:32:34 EDT 2022
 
 ### Rules
 

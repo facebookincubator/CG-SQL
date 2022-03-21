@@ -7263,7 +7263,7 @@ end;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Fri Mar 11 17:34:34 EST 2022</p>
+<p>Snapshot as of Mon Mar 21 09:32:33 EDT 2022</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8181,7 +8181,7 @@ groupby_list:
   ;
 
 groupby_item:
-  expr opt_asc_desc
+  expr
   ;
 
 opt_asc_desc:
@@ -8197,7 +8197,16 @@ opt_having:
 
 opt_orderby:
   /* nil */
-  | &quot;ORDER&quot; &quot;BY&quot; groupby_list
+  | &quot;ORDER&quot; &quot;BY&quot; orderby_list
+  ;
+
+orderby_list:
+  orderby_item
+  | orderby_item &#39;,&#39; orderby_list
+  ;
+
+orderby_item:
+  expr opt_asc_desc
   ;
 
 opt_limit:
@@ -10991,7 +11000,7 @@ select sum(...) filter(where ...) over (...)</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Fri Mar 11 17:34:35 EST 2022</p>
+<p>Snapshot as of Mon Mar 21 09:32:34 EDT 2022</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

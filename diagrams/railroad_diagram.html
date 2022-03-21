@@ -5086,6 +5086,7 @@
             <li><a href="#opt_offset" title="opt_offset">opt_offset</a></li>
             <li><a href="#opt_when_expr" title="opt_when_expr">opt_when_expr</a></li>
             <li><a href="#opt_where" title="opt_where">opt_where</a></li>
+            <li><a href="#orderby_item" title="orderby_item">orderby_item</a></li>
             <li><a href="#raise_expr" title="raise_expr">raise_expr</a></li>
             <li><a href="#select_expr" title="select_expr">select_expr</a></li>
             <li><a href="#set_stmt" title="set_stmt">set_stmt</a></li>
@@ -7406,58 +7407,7 @@
             <li><a href="#select_core" title="select_core">select_core</a></li>
             <li><a href="#update_stmt" title="update_stmt">update_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_groupby">opt_groupby:</a></p><svg width="343" height="57">
-         <defs>
-            <style type="text/css">
-    @namespace "http://www.w3.org/2000/svg";
-    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
-    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
-    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
-    .filled               {fill: #332900; stroke: none;}
-    text.terminal         {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #141000;
-                            font-weight: bold;
-                          }
-    text.nonterminal      {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1A1400;
-                            font-weight: normal;
-                          }
-    text.regexp           {font-family: Verdana, Sans-serif;
-                            font-size: 12px;
-                            fill: #1F1800;
-                            font-weight: normal;
-                          }
-    rect, circle, polygon {fill: #332900; stroke: #332900;}
-    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
-    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
-    rect.text             {fill: none; stroke: none;}
-    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
-  </style>
-         </defs>
-         <polygon points="9 5 1 1 1 9"></polygon>
-         <polygon points="17 5 9 1 9 9"></polygon>
-         <rect x="51" y="23" width="68" height="32" rx="10"></rect>
-         <rect x="49" y="21" width="68" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="41">GROUP</text>
-         <rect x="139" y="23" width="38" height="32" rx="10"></rect>
-         <rect x="137" y="21" width="38" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="147" y="41">BY</text><a href="#groupby_list" title="groupby_list">
-            <rect x="197" y="23" width="98" height="32"></rect>
-            <rect x="195" y="21" width="98" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="205" y="41">groupby_list</text></a><path class="line" d="m17 5 h2 m20 0 h10 m0 0 h254 m-284 0 h20 m264 0 h20 m-304 0 q10 0 10 10 m284 0 q0 -10 10 -10 m-294 10 v12 m284 0 v-12 m-284 12 q0 10 10 10 m264 0 q10 0 10 -10 m-274 10 h10 m68 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m98 0 h10 m23 -32 h-3"></path>
-         <polygon points="333 5 341 1 341 9"></polygon>
-         <polygon points="333 5 325 1 325 9"></polygon></svg><p>
-         <div class="ebnf"><code>
-               <div><a href="#opt_groupby" title="opt_groupby">opt_groupby</a></div>
-               <div>         ::= ( 'GROUP' 'BY' <a href="#groupby_list" title="groupby_list">groupby_list</a> )?</div></code></div>
-      </p>
-      <p>referenced by:
-         <ul>
-            <li><a href="#select_core" title="select_core">select_core</a></li>
-         </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="groupby_list">groupby_list:</a></p><svg width="207" height="81">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_groupby">opt_groupby:</a></p><svg width="393" height="97">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -7488,25 +7438,30 @@
   </style>
          </defs>
          <polygon points="9 61 1 57 1 65"></polygon>
-         <polygon points="17 61 9 57 9 65"></polygon><a href="#groupby_item" title="groupby_item">
-            <rect x="51" y="47" width="108" height="32"></rect>
-            <rect x="49" y="45" width="108" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="65">groupby_item</text></a><rect x="51" y="3" width="24" height="32" rx="10"></rect>
-         <rect x="49" y="1" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="21">,</text>
-         <path class="line" d="m17 61 h2 m20 0 h10 m108 0 h10 m-148 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -24 q0 -10 10 -10 m128 44 l20 0 m-20 0 q10 0 10 -10 l0 -24 q0 -10 -10 -10 m-128 0 h10 m24 0 h10 m0 0 h84 m23 44 h-3"></path>
-         <polygon points="197 61 205 57 205 65"></polygon>
-         <polygon points="197 61 189 57 189 65"></polygon></svg><p>
+         <polygon points="17 61 9 57 9 65"></polygon>
+         <rect x="51" y="47" width="68" height="32" rx="10"></rect>
+         <rect x="49" y="45" width="68" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="65">GROUP</text>
+         <rect x="139" y="47" width="38" height="32" rx="10"></rect>
+         <rect x="137" y="45" width="38" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="147" y="65">BY</text><a href="#groupby_item" title="groupby_item">
+            <rect x="217" y="47" width="108" height="32"></rect>
+            <rect x="215" y="45" width="108" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="225" y="65">groupby_item</text></a><rect x="217" y="3" width="24" height="32" rx="10"></rect>
+         <rect x="215" y="1" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="225" y="21">,</text>
+         <path class="line" d="m17 61 h2 m20 0 h10 m68 0 h10 m0 0 h10 m38 0 h10 m20 0 h10 m108 0 h10 m-148 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -24 q0 -10 10 -10 m128 44 l20 0 m-20 0 q10 0 10 -10 l0 -24 q0 -10 -10 -10 m-128 0 h10 m24 0 h10 m0 0 h84 m-314 44 h20 m314 0 h20 m-354 0 q10 0 10 10 m334 0 q0 -10 10 -10 m-344 10 v14 m334 0 v-14 m-334 14 q0 10 10 10 m314 0 q10 0 10 -10 m-324 10 h10 m0 0 h304 m23 -34 h-3"></path>
+         <polygon points="383 61 391 57 391 65"></polygon>
+         <polygon points="383 61 375 57 375 65"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#groupby_list" title="groupby_list">groupby_list</a></div>
-               <div>         ::= <a href="#groupby_item" title="groupby_item">groupby_item</a> ( ',' <a href="#groupby_item" title="groupby_item">groupby_item</a> )*</div></code></div>
+               <div><a href="#opt_groupby" title="opt_groupby">opt_groupby</a></div>
+               <div>         ::= ( 'GROUP' 'BY' <a href="#groupby_item" title="groupby_item">groupby_item</a> ( ',' <a href="#groupby_item" title="groupby_item">groupby_item</a> )* )?</div></code></div>
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#opt_groupby" title="opt_groupby">opt_groupby</a></li>
-            <li><a href="#opt_orderby" title="opt_orderby">opt_orderby</a></li>
+            <li><a href="#select_core" title="select_core">select_core</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="groupby_item">groupby_item:</a></p><svg width="233" height="37">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="groupby_item">groupby_item:</a></p><svg width="107" height="37">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -7540,19 +7495,16 @@
          <polygon points="17 17 9 13 9 21"></polygon><a href="#expr" title="expr">
             <rect x="31" y="3" width="48" height="32"></rect>
             <rect x="29" y="1" width="48" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="39" y="21">expr</text></a><a href="#opt_asc_desc" title="opt_asc_desc">
-            <rect x="99" y="3" width="106" height="32"></rect>
-            <rect x="97" y="1" width="106" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="107" y="21">opt_asc_desc</text></a><path class="line" d="m17 17 h2 m0 0 h10 m48 0 h10 m0 0 h10 m106 0 h10 m3 0 h-3"></path>
-         <polygon points="223 17 231 13 231 21"></polygon>
-         <polygon points="223 17 215 13 215 21"></polygon></svg><p>
+            <text class="nonterminal" x="39" y="21">expr</text></a><path class="line" d="m17 17 h2 m0 0 h10 m48 0 h10 m3 0 h-3"></path>
+         <polygon points="97 17 105 13 105 21"></polygon>
+         <polygon points="97 17 89 13 89 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#groupby_item" title="groupby_item">groupby_item</a></div>
-               <div>         ::= <a href="#expr" title="expr">expr</a> <a href="#opt_asc_desc" title="opt_asc_desc">opt_asc_desc</a></div></code></div>
+               <div>         ::= <a href="#expr" title="expr">expr</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#groupby_list" title="groupby_list">groupby_list</a></li>
+            <li><a href="#opt_groupby" title="opt_groupby">opt_groupby</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_asc_desc">opt_asc_desc:</a></p><svg width="155" height="101">
          <defs>
@@ -7601,8 +7553,8 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#groupby_item" title="groupby_item">groupby_item</a></li>
             <li><a href="#indexed_column" title="indexed_column">indexed_column</a></li>
+            <li><a href="#orderby_item" title="orderby_item">orderby_item</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_having">opt_having:</a></p><svg width="241" height="57">
          <defs>
@@ -7652,7 +7604,7 @@
          <ul>
             <li><a href="#select_core" title="select_core">select_core</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_orderby">opt_orderby:</a></p><svg width="343" height="57">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_orderby">opt_orderby:</a></p><svg width="389" height="97">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -7682,28 +7634,79 @@
     polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
   </style>
          </defs>
-         <polygon points="9 5 1 1 1 9"></polygon>
-         <polygon points="17 5 9 1 9 9"></polygon>
-         <rect x="51" y="23" width="68" height="32" rx="10"></rect>
-         <rect x="49" y="21" width="68" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="41">ORDER</text>
-         <rect x="139" y="23" width="38" height="32" rx="10"></rect>
-         <rect x="137" y="21" width="38" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="147" y="41">BY</text><a href="#groupby_list" title="groupby_list">
-            <rect x="197" y="23" width="98" height="32"></rect>
-            <rect x="195" y="21" width="98" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="205" y="41">groupby_list</text></a><path class="line" d="m17 5 h2 m20 0 h10 m0 0 h254 m-284 0 h20 m264 0 h20 m-304 0 q10 0 10 10 m284 0 q0 -10 10 -10 m-294 10 v12 m284 0 v-12 m-284 12 q0 10 10 10 m264 0 q10 0 10 -10 m-274 10 h10 m68 0 h10 m0 0 h10 m38 0 h10 m0 0 h10 m98 0 h10 m23 -32 h-3"></path>
-         <polygon points="333 5 341 1 341 9"></polygon>
-         <polygon points="333 5 325 1 325 9"></polygon></svg><p>
+         <polygon points="9 61 1 57 1 65"></polygon>
+         <polygon points="17 61 9 57 9 65"></polygon>
+         <rect x="51" y="47" width="68" height="32" rx="10"></rect>
+         <rect x="49" y="45" width="68" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="65">ORDER</text>
+         <rect x="139" y="47" width="38" height="32" rx="10"></rect>
+         <rect x="137" y="45" width="38" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="147" y="65">BY</text><a href="#orderby_item" title="orderby_item">
+            <rect x="217" y="47" width="104" height="32"></rect>
+            <rect x="215" y="45" width="104" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="225" y="65">orderby_item</text></a><rect x="217" y="3" width="24" height="32" rx="10"></rect>
+         <rect x="215" y="1" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="225" y="21">,</text>
+         <path class="line" d="m17 61 h2 m20 0 h10 m68 0 h10 m0 0 h10 m38 0 h10 m20 0 h10 m104 0 h10 m-144 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -24 q0 -10 10 -10 m124 44 l20 0 m-20 0 q10 0 10 -10 l0 -24 q0 -10 -10 -10 m-124 0 h10 m24 0 h10 m0 0 h80 m-310 44 h20 m310 0 h20 m-350 0 q10 0 10 10 m330 0 q0 -10 10 -10 m-340 10 v14 m330 0 v-14 m-330 14 q0 10 10 10 m310 0 q10 0 10 -10 m-320 10 h10 m0 0 h300 m23 -34 h-3"></path>
+         <polygon points="379 61 387 57 387 65"></polygon>
+         <polygon points="379 61 371 57 371 65"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#opt_orderby" title="opt_orderby">opt_orderby</a></div>
-               <div>         ::= ( 'ORDER' 'BY' <a href="#groupby_list" title="groupby_list">groupby_list</a> )?</div></code></div>
+               <div>         ::= ( 'ORDER' 'BY' <a href="#orderby_item" title="orderby_item">orderby_item</a> ( ',' <a href="#orderby_item" title="orderby_item">orderby_item</a> )* )?</div></code></div>
       </p>
       <p>referenced by:
          <ul>
             <li><a href="#select_stmt_no_with" title="select_stmt_no_with">select_stmt_no_with</a></li>
             <li><a href="#update_stmt" title="update_stmt">update_stmt</a></li>
             <li><a href="#window_defn" title="window_defn">window_defn</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="orderby_item">orderby_item:</a></p><svg width="233" height="37">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 17 1 13 1 21"></polygon>
+         <polygon points="17 17 9 13 9 21"></polygon><a href="#expr" title="expr">
+            <rect x="31" y="3" width="48" height="32"></rect>
+            <rect x="29" y="1" width="48" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="39" y="21">expr</text></a><a href="#opt_asc_desc" title="opt_asc_desc">
+            <rect x="99" y="3" width="106" height="32"></rect>
+            <rect x="97" y="1" width="106" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="107" y="21">opt_asc_desc</text></a><path class="line" d="m17 17 h2 m0 0 h10 m48 0 h10 m0 0 h10 m106 0 h10 m3 0 h-3"></path>
+         <polygon points="223 17 231 13 231 21"></polygon>
+         <polygon points="223 17 215 13 215 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#orderby_item" title="orderby_item">orderby_item</a></div>
+               <div>         ::= <a href="#expr" title="expr">expr</a> <a href="#opt_asc_desc" title="opt_asc_desc">opt_asc_desc</a></div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#opt_orderby" title="opt_orderby">opt_orderby</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_limit">opt_limit:</a></p><svg width="227" height="57">
          <defs>
