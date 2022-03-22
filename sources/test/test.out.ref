@@ -1720,6 +1720,10 @@ BEGIN
   DECLARE y CURSOR LIKE SELECT 2 AS x, "foo" AS y;
 END;
 
+@UNSUB(1, foo);
+
+@RESUB(2, foo);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

@@ -3608,29 +3608,29 @@ static void gen_enforcement_options(ast_node *ast) {
   }
 }
 
-static void gen_enforce_strict_stmt(ast_node * ast) {
+static void gen_enforce_strict_stmt(ast_node *ast) {
   Contract(is_ast_enforce_strict_stmt(ast));
   gen_printf("@ENFORCE_STRICT ");
   gen_enforcement_options(ast->left);
 }
 
-static void gen_enforce_normal_stmt(ast_node * ast) {
+static void gen_enforce_normal_stmt(ast_node *ast) {
   Contract(is_ast_enforce_normal_stmt(ast));
   gen_printf("@ENFORCE_NORMAL ");
   gen_enforcement_options(ast->left);
 }
 
-static void gen_enforce_reset_stmt(ast_node * ast) {
+static void gen_enforce_reset_stmt(ast_node *ast) {
   Contract(is_ast_enforce_reset_stmt(ast));
   gen_printf("@ENFORCE_RESET");
 }
 
-static void gen_enforce_push_stmt(ast_node * ast) {
+static void gen_enforce_push_stmt(ast_node *ast) {
   Contract(is_ast_enforce_push_stmt(ast));
   gen_printf("@ENFORCE_PUSH");
 }
 
-static void gen_enforce_pop_stmt(ast_node * ast) {
+static void gen_enforce_pop_stmt(ast_node *ast) {
   Contract(is_ast_enforce_pop_stmt(ast));
   gen_printf("@ENFORCE_POP");
 }
@@ -3657,7 +3657,7 @@ static void gen_region_list(ast_node *ast) {
   }
 }
 
-static void gen_declare_deployable_region_stmt(ast_node * ast) {
+static void gen_declare_deployable_region_stmt(ast_node *ast) {
   Contract(is_ast_declare_deployable_region_stmt(ast));
   gen_printf("@DECLARE_DEPLOYABLE_REGION ");
   gen_name(ast->left);
@@ -3667,7 +3667,7 @@ static void gen_declare_deployable_region_stmt(ast_node * ast) {
   }
 }
 
-static void gen_declare_schema_region_stmt(ast_node * ast) {
+static void gen_declare_schema_region_stmt(ast_node *ast) {
   Contract(is_ast_declare_schema_region_stmt(ast));
   gen_printf("@DECLARE_SCHEMA_REGION ");
   gen_name(ast->left);
@@ -3677,15 +3677,32 @@ static void gen_declare_schema_region_stmt(ast_node * ast) {
   }
 }
 
-static void gen_begin_schema_region_stmt(ast_node * ast) {
+static void gen_begin_schema_region_stmt(ast_node *ast) {
   Contract(is_ast_begin_schema_region_stmt(ast));
   gen_printf("@BEGIN_SCHEMA_REGION ");
   gen_name(ast->left);
 }
 
-static void gen_end_schema_region_stmt(ast_node * ast) {
+static void gen_end_schema_region_stmt(ast_node *ast) {
   Contract(is_ast_end_schema_region_stmt(ast));
   gen_printf("@END_SCHEMA_REGION");
+}
+
+static void gen_schema_unsub_stmt(ast_node *ast) {
+  Contract(is_ast_schema_unsub_stmt(ast));
+  EXTRACT_ANY_NOTNULL(l, ast->left);
+
+  gen_printf("@UNSUB(");
+  gen_version_and_proc(l);
+  gen_printf(")");
+}
+
+static void gen_schema_resub_stmt(ast_node *ast) {
+  Contract(is_ast_schema_resub_stmt(ast));
+  EXTRACT_ANY_NOTNULL(l, ast->left);
+  gen_printf("@RESUB(");
+  gen_version_and_proc(l);
+  gen_printf(")");
 }
 
 static void gen_schema_ad_hoc_migration_stmt(ast_node *ast) {
@@ -3942,6 +3959,8 @@ cql_noexport void gen_init() {
   STMT_INIT(begin_schema_region_stmt);
   STMT_INIT(end_schema_region_stmt);
   STMT_INIT(schema_ad_hoc_migration_stmt);
+  STMT_INIT(schema_unsub_stmt);
+  STMT_INIT(schema_resub_stmt);
   STMT_INIT(explain_stmt);
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);

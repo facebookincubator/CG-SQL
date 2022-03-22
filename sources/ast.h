@@ -831,6 +831,8 @@ AST(echo_stmt)
 AST(columns_values);
 AST0(default_columns_values);
 AST(name_columns_values);
+AST1(schema_unsub_stmt);
+AST1(schema_resub_stmt);
 AST1(schema_upgrade_version_stmt);
 AST0(schema_upgrade_script_stmt);
 AST0(previous_schema_stmt);

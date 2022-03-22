@@ -8258,6 +8258,8 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(schema_upgrade_version_stmt);
   NO_OP_STMT_INIT(schema_upgrade_script_stmt);
   NO_OP_STMT_INIT(schema_ad_hoc_migration_stmt);
+  NO_OP_STMT_INIT(schema_unsub_stmt);
+  NO_OP_STMT_INIT(schema_resub_stmt);
   NO_OP_STMT_INIT(declare_enum_stmt);
   NO_OP_STMT_INIT(declare_const_stmt);
   NO_OP_STMT_INIT(declare_named_type);
