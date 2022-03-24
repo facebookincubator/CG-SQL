@@ -21569,7 +21569,7 @@ end;
 -- +1 error:
 @emit_group not_a_var_group;
 
-create table unsub_test_table(id integer);
+create table unsub_test_table(id integer primary key);
 
 create table unsub_test_table_deleted(id integer) @delete(2);
 
@@ -21596,7 +21596,7 @@ create table unsub_test_table_late_create(id integer) @create(7);
 @unsub (5, not_a_table);
 
 -- TEST: table is visible
--- + {select_stmt}: select: { id: integer }
+-- + {select_stmt}: select: { id: integer notnull }
 -- - error:
 select * from unsub_test_table;
 
@@ -21654,7 +21654,7 @@ select * from unsub_test_table;
 @resub(7, unsub_test_table);
 
 -- TEST: table is visible again
--- + {select_stmt}: select: { id: integer }
+-- + {select_stmt}: select: { id: integer notnull }
 -- - error:
 select * from unsub_test_table;
 
@@ -21670,3 +21670,40 @@ select * from unsub_test_table;
 -- + error: % the table named in an @unsub/@resub directive does not exist 'not_a_table'
 -- +1 error:
 @resub(8, not_a_table);
+
+-- now we have a dependency on unsub_test_table
+create table sub_test_dependency(
+  id integer references unsub_test_table(id)
+);
+
+-- TEST: can't do this, unsub_test_table still refers to this table
+-- + {schema_unsub_stmt}: err
+-- + error: % @unsub is invalid because the table is still used by 'sub_test_dependency'
+-- +1 error:
+@unsub (8, unsub_test_table);
+
+-- TEST: ok to remove the leaf table
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (8, sub_test_dependency);
+
+-- TEST: now ok to remove the other table
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (8, unsub_test_table);
+
+-- TEST: can't add the leaf table back first
+-- + {schema_resub_stmt}: err
+-- + error: % @resub is invalid because the table references 'unsub_test_table'
+-- +1 error:
+@resub (9, sub_test_dependency);
+
+-- TEST: this table does not depend on anything, can add it back
+-- + {schema_resub_stmt}: ok
+-- - error:
+@resub (9, unsub_test_table);
+
+-- TEST: now ok to add the depedent table back, its dependency is present
+-- + {schema_resub_stmt}: ok
+-- - error:
+@resub (9, sub_test_dependency);

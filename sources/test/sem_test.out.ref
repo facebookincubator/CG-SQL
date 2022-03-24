@@ -85312,20 +85312,22 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0464: group not found 'not_a_var_gr
 The statement ending at line XXXX
 
 CREATE TABLE unsub_test_table(
-  id INTEGER
+  id INTEGER PRIMARY KEY
 );
 
-  {create_table_stmt}: unsub_test_table: { id: integer }
+  {create_table_stmt}: unsub_test_table: { id: integer notnull primary_key }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | {name unsub_test_table}
   | {col_key_list}
-    | {col_def}: id: integer
+    | {col_def}: id: integer notnull primary_key
       | {col_def_type_attrs}: ok
         | {col_def_name_type}
-          | {name id}
-          | {type_int}: integer
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -85406,12 +85408,12 @@ The statement ending at line XXXX
 SELECT *
   FROM unsub_test_table;
 
-  {select_stmt}: select: { id: integer }
-  | {select_core_list}: select: { id: integer }
-  | | {select_core}: select: { id: integer }
-  |   | {select_expr_list_con}: select: { id: integer }
-  |     | {select_expr_list}: select: { id: integer }
-  |     | | {star}: select: { id: integer }
+  {select_stmt}: select: { id: integer notnull }
+  | {select_core_list}: select: { id: integer notnull }
+  | | {select_core}: select: { id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull }
+  |     | | {star}: select: { id: integer notnull }
   |     | {select_from_etc}: TABLE { unsub_test_table: unsub_test_table }
   |       | {table_or_subquery_list}: TABLE { unsub_test_table: unsub_test_table }
   |       | | {table_or_subquery}: TABLE { unsub_test_table: unsub_test_table }
@@ -85536,12 +85538,12 @@ The statement ending at line XXXX
 SELECT *
   FROM unsub_test_table;
 
-  {select_stmt}: select: { id: integer }
-  | {select_core_list}: select: { id: integer }
-  | | {select_core}: select: { id: integer }
-  |   | {select_expr_list_con}: select: { id: integer }
-  |     | {select_expr_list}: select: { id: integer }
-  |     | | {star}: select: { id: integer }
+  {select_stmt}: select: { id: integer notnull }
+  | {select_core_list}: select: { id: integer notnull }
+  | | {select_core}: select: { id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull }
+  |     | | {star}: select: { id: integer notnull }
   |     | {select_from_etc}: TABLE { unsub_test_table: unsub_test_table }
   |       | {table_or_subquery_list}: TABLE { unsub_test_table: unsub_test_table }
   |       | | {table_or_subquery}: TABLE { unsub_test_table: unsub_test_table }
@@ -85574,4 +85576,87 @@ test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0466: the table named
   | {version_annotation}
     | {int 8}
     | {name not_a_table}
+
+The statement ending at line XXXX
+
+CREATE TABLE sub_test_dependency(
+  id INTEGER REFERENCES unsub_test_table (id)
+);
+
+  {create_table_stmt}: sub_test_dependency: { id: integer foreign_key }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name sub_test_dependency}
+  | {col_key_list}
+    | {col_def}: id: integer foreign_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_fk}: ok
+          | {fk_target_options}
+            | {fk_target}
+            | | {name unsub_test_table}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            | {int 0}
+
+The statement ending at line XXXX
+
+@UNSUB(8, unsub_test_table);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'sub_test_dependency'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 8}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+@UNSUB(8, sub_test_dependency);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 8}
+    | {name sub_test_dependency}
+
+The statement ending at line XXXX
+
+@UNSUB(8, unsub_test_table);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 8}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+@RESUB(9, sub_test_dependency);
+
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0474: @resub is invalid because the table references 'unsub_test_table'
+
+  {schema_resub_stmt}: err
+  | {version_annotation}
+    | {int 9}
+    | {name sub_test_dependency}
+
+The statement ending at line XXXX
+
+@RESUB(9, unsub_test_table);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 9}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+@RESUB(9, sub_test_dependency);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 9}
+    | {name sub_test_dependency}
 

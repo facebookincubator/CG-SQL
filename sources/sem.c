@@ -503,6 +503,8 @@ static symtab *base_fragments;
 static symtab *extension_fragments;
 static symtab *assembly_fragments;
 static symtab *extensions_by_basename;
+static symtab *ref_sources_for_target_table;
+static symtab *ref_targets_for_source_table;
 static symtab *builtin_aggregated_funcs;
 static symtab *arg_bundles;
 static symtab *global_types;
@@ -3575,6 +3577,19 @@ static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node
   return valid;
 }
 
+static void record_table_dependencies(ast_node *src_table_ast, ast_node *ref_table_ast) {
+  Contract(is_ast_create_table_stmt(src_table_ast));
+  Contract(is_ast_create_table_stmt(ref_table_ast));
+
+  EXTRACT_NAMED_NOTNULL(src_create_table_name_flags, create_table_name_flags, src_table_ast->left);
+  EXTRACT_STRING(src_table_name, src_create_table_name_flags->right);
+  EXTRACT_NAMED_NOTNULL(ref_create_table_name_flags, create_table_name_flags, ref_table_ast->left);
+  EXTRACT_STRING(ref_table_name, ref_create_table_name_flags->right);
+
+  symtab_append_bytes(ref_sources_for_target_table, ref_table_name, &src_table_ast, sizeof(src_table_ast));
+  symtab_append_bytes(ref_targets_for_source_table, src_table_name, &ref_table_ast, sizeof(ref_table_ast));
+}
+
 // Similar to other constraints, we don't actually do anything with this
 // other than offer some validation.  Again we use the usual helpers
 // for name lookup within the context of this one FK.  Note that
@@ -3588,7 +3603,7 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   EXTRACT_NOTNULL(fk_target_options, fk_info->right);
   EXTRACT_NOTNULL(fk_target, fk_target_options->left);
   EXTRACT_OPTION(flags, fk_target_options->right);
-  EXTRACT_STRING(table_name, fk_target->left);
+  EXTRACT_STRING(ref_table_name, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
   // FK's inside of a table declaration (i.e. outside of any proc) are totally ignored
@@ -3616,13 +3631,13 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   // FOREIGN KEY ( [src_list] ) REFERENCES [table_name] ([ref_list])
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    if (symtab_find(table_items, name)) {
-      report_error(def, "CQL0020: duplicate constraint name in table", name);
+    EXTRACT_STRING(constraint_name, def->left);
+    if (symtab_find(table_items, constraint_name)) {
+      report_error(def, "CQL0020: duplicate constraint name in table", constraint_name);
       record_error(table_ast);
       return;
     }
-    symtab_add(table_items, name, def);
+    symtab_add(table_items, constraint_name, def);
   }
 
   if (!sem_validate_name_list(src_list, table_ast->sem->jptr)) {
@@ -3630,8 +3645,11 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
     return;
   }
 
+  // Here we make sure that the target table is visible here, that it is
+  // in a compatible recreate group, and it was created before the current
+  // table, if appropriate.
   ast_node *ref_table_ast = find_and_validate_referenced_table(
-    table_name,
+    ref_table_name,
     def,
     table_info);
   if (!ref_table_ast) {
@@ -3644,6 +3662,8 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
     return;
   }
 
+  // Here, we check to make sure that the target of this FK is, in fact, a unique key
+  // in the target table.
   if (!sem_validate_referenceable_fk_def(ref_table_ast, ref_list)) {
     record_error(table_ast);
     record_error(def);
@@ -3681,6 +3701,8 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
     record_error(table_ast);
     return;
   }
+
+  record_table_dependencies(table_ast, ref_table_ast);
 
   record_ok(def);
 }
@@ -3947,24 +3969,25 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
 // same as the table that contains the foreign key, such as:
 //    create table T(id primary key, id2 references T(id))
 // In that case T is not yet in the symbol table, as validation is incomplete.
-// That's ok, we known the node for the current table without having to look it up.
+// That's ok, we know the node for the current table without having to look it up.
+// Note: these validations run in the context of the table being validated before
+// that table is accepted, not later.  We're still "in" the table, if you will.
 void sem_validate_fk_attr(pending_table_validation *pending) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
 
   ast_node *fk = pending->fk;
   ast_node *def = pending->def;
   ast_node *ref_table_ast = pending->ref_table_ast;
-  ast_node *table_ast = pending->table_ast;
+  ast_node *src_table_ast = pending->table_ast;
 
   Contract(is_ast_create_table_stmt(ref_table_ast));
-  Contract(is_ast_create_table_stmt(table_ast));
+  Contract(is_ast_create_table_stmt(src_table_ast));
   Contract(is_ast_col_attrs_fk(fk));
   Contract(is_ast_col_def(def));
 
   EXTRACT_NOTNULL(fk_target_options, fk->left);
   EXTRACT_NOTNULL(fk_target, fk_target_options->left);
   EXTRACT_OPTION(flags, fk_target_options->right);
-  EXTRACT_STRING(table_name, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
   if (!sem_validate_name_list(ref_list, ref_table_ast->sem->jptr)) {
@@ -3989,6 +4012,8 @@ void sem_validate_fk_attr(pending_table_validation *pending) {
     record_error(fk);
     return;
   }
+
+  record_table_dependencies(src_table_ast, ref_table_ast);
 
   record_ok(fk);
 }
@@ -22400,6 +22425,28 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
     return;
   }
 
+  bytebuf *buf = symtab_ensure_bytebuf(ref_sources_for_target_table, name);
+  size_t ref_count = buf->used / sizeof(ast_node *);
+  ast_node **sources = (ast_node **)buf->ptr;
+
+  for (uint32_t i = 0; i < ref_count; i++) {
+    ast_node *src_table = sources[i];
+
+    // note this checks for both @deleted and @unsub tables
+    if (!is_deleted(src_table)) {
+      EXTRACT_NAMED_NOTNULL(src_create_table_name_flags, create_table_name_flags, src_table->left);
+      EXTRACT_STRING(src_table_name, src_create_table_name_flags->right);
+
+      // we're not going to return here so that we generate as many errors as needed
+      report_error(ast, "CQL0473: @unsub is invalid because the table is still used by", src_table_name);
+      record_error(ast);
+    }
+  }
+
+  if (is_error(ast)) {
+    return;
+  }
+
   table->sem->unsub_version = vers;
   last_sub_version = vers;
 
@@ -22426,6 +22473,28 @@ static void sem_schema_resub_stmt(ast_node *ast) {
   if (table->sem->resub_version > table->sem->unsub_version) {
     report_error(ast, "CQL0472: table is already resubscribed", name);
     record_error(ast);
+    return;
+  }
+
+  bytebuf *buf = symtab_ensure_bytebuf(ref_targets_for_source_table, name);
+  size_t ref_count = buf->used / sizeof(ast_node *);
+  ast_node **targets = (ast_node **)buf->ptr;
+
+  for (uint32_t i = 0; i < ref_count; i++) {
+    ast_node *ref_table = targets[i];
+
+    // note this checks for both @deleted and @unsub tables
+    if (is_deleted(ref_table)) {
+      EXTRACT_NAMED_NOTNULL(ref_create_table_name_flags, create_table_name_flags, ref_table->left);
+      EXTRACT_STRING(ref_table_name, ref_create_table_name_flags->right);
+
+      // we're not going to return here so that we generate as many errors as needed
+      report_error(ast, "CQL0474: @resub is invalid because the table references", ref_table_name);
+      record_error(ast);
+    }
+  }
+
+  if (is_error(ast)) {
     return;
   }
 
@@ -22704,6 +22773,8 @@ cql_noexport void sem_main(ast_node *ast) {
   extension_fragments = symtab_new();
   assembly_fragments = symtab_new();
   extensions_by_basename = symtab_new();
+  ref_sources_for_target_table = symtab_new();
+  ref_targets_for_source_table = symtab_new();
   builtin_aggregated_funcs = symtab_new();
   global_types = symtab_new();
   misc_attributes = symtab_new();
@@ -22998,6 +23069,8 @@ cql_noexport void sem_cleanup() {
 
   SYMTAB_CLEANUP(ad_hoc_migrates);
   SYMTAB_CLEANUP(extensions_by_basename);
+  SYMTAB_CLEANUP(ref_sources_for_target_table);
+  SYMTAB_CLEANUP(ref_targets_for_source_table);
   SYMTAB_CLEANUP(assembly_fragments);
   SYMTAB_CLEANUP(base_fragments);
   SYMTAB_CLEANUP(builtin_funcs);

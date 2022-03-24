@@ -1442,4 +1442,6 @@ test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0469: table is alread
 test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0472: table is already unsubscribed 'unsub_test_table'
 test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0472: table is already resubscribed 'unsub_test_table'
 test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0466: the table named in an @unsub/@resub directive does not exist 'not_a_table'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'sub_test_dependency'
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0474: @resub is invalid because the table references 'unsub_test_table'
 semantic errors present; no code gen.
