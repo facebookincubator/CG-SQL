@@ -17325,11 +17325,11 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', CAST(5 AS LONG_INT), CAST(nullable(5) AS LONG_INT), CAST(TRUE AS LONG_INT), 0L, CAST(FALSE AS INTEGER), 0, 6L, 7, 0.0, 0.0, NULL, CAST(8 AS REAL));
+  SET s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', CAST(4 AS LONG_INT), CAST(nullable(5) AS LONG_INT), CAST(TRUE AS LONG_INT), 0L, CAST(FALSE AS INTEGER), 0, 6L, 7, 0.0, 0.0, NULL, CAST(8 AS REAL));
   */
   {
   cql_set_notnull(_tmp_n_int64_2, ((cql_int64)(5)));
-    char *_printf_result = sqlite3_mprintf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", ((cql_int64)(5)), _tmp_n_int64_2.value, ((cql_int64)!!(1)), _64(0), ((cql_int32)!!(0)), 0, _64(6), 7, 0.0, 0.0, NULL, ((cql_double)(8)));
+    char *_printf_result = sqlite3_mprintf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", ((cql_int64)(4)), _tmp_n_int64_2.value, ((cql_int64)!!(1)), _64(0), ((cql_int32)!!(0)), 0, _64(6), 7, 0.0, 0.0, NULL, ((cql_double)(8)));
     cql_string_release(s);
     s = cql_string_ref_new(_printf_result);
     sqlite3_free(_printf_result);

@@ -681,6 +681,11 @@ cql_noexport bool_t is_table_blob_storage(ast_node *ast) {
   return misc_attrs && find_blob_storage_attr(misc_attrs);
 }
 
+// This can be easily called in the debugger
+cql_noexport void print_root_ast(ast_node *node) {
+  print_ast(node, NULL, 0, false);
+}
+
 cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_t flip) {
   if (pad == 0) {
     padbuffer[0] = '\0';

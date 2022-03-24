@@ -255,6 +255,7 @@ cql_noexport void ast_set_left(ast_node *_Nonnull parent, ast_node *_Nullable le
 cql_noexport bool_t print_ast_value(struct ast_node *_Nonnull node);
 cql_noexport void print_ast_type(ast_node *_Nonnull node);
 cql_noexport void print_ast(ast_node *_Nullable node, ast_node *_Nullable parent, int32_t pad, bool_t flip);
+cql_noexport void print_root_ast(ast_node *_Nullable node);
 
 cql_noexport void ast_reset_rewrite_info(void);
 cql_noexport CSTR _Nonnull convert_cstrlit(CSTR _Nonnull cstr);

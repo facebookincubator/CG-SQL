@@ -21568,3 +21568,105 @@ end;
 -- + error: % group not found 'not_a_var_group'
 -- +1 error:
 @emit_group not_a_var_group;
+
+create table unsub_test_table(id integer);
+
+create table unsub_test_table_deleted(id integer) @delete(2);
+
+create table unsub_test_table_late_create(id integer) @create(7);
+
+-- TEST: unsub directive invalid version number
+-- + {schema_unsub_stmt}: err
+-- + error: % version number in annotation must be positive
+-- +1 error:
+@unsub (0, unsub_test_table);
+
+-- TEST: unsub directive missing table
+-- standard version grammar means a specific error check and hence a better error
+-- this version format is valid in other contexts
+-- + {schema_unsub_stmt}: err
+-- + error: % @unsub directive must provide a table
+-- +1 error:
+@unsub (5);
+
+-- TEST: unsub directive invalid version number
+-- + {schema_unsub_stmt}: err
+-- + error: % the table named in an @unsub/@resub directive does not exist 'not_a_table'
+-- +1 error:
+@unsub (5, not_a_table);
+
+-- TEST: table is visible
+-- + {select_stmt}: select: { id: integer }
+-- - error:
+select * from unsub_test_table;
+
+-- TEST: successful unsub
+-- + {schema_unsub_stmt}: ok
+-- + 5
+-- + unsub_test_table
+-- - error:
+@unsub(5, unsub_test_table);
+
+-- TEST: table is not visible
+-- + {select_stmt}: err
+-- + error: % table/view not defined (hidden by @unsub) 'unsub_test_table'
+select * from unsub_test_table;
+
+-- TEST: duplicate unsub
+-- + {schema_unsub_stmt}: err
+-- + error: % table has another @unsub/@resub at this version number 'unsub_test_table'
+-- +1 error:
+@unsub(5, unsub_test_table);
+
+-- TEST: unsub from a view is illegal
+-- + {schema_unsub_stmt}: err
+-- + error: % cannot @unsub/@resub from a view 'MyView'
+-- +1 error:
+@unsub(5, MyView);
+
+-- TEST: unsub directives must be in ascending order
+-- + {schema_unsub_stmt}: err
+-- + error: % @unsub/@resub versions must be in non-decreasing order
+-- +1 error:
+@unsub (4, foo);
+
+-- TEST: table not created yet, can't unsub
+-- + {schema_unsub_stmt}: err
+-- + error: % table not yet created at indicated version 'unsub_test_table_late_create'
+-- +1 error:
+@unsub (5,unsub_test_table_late_create);
+
+-- TEST: already deleted table
+-- + {schema_unsub_stmt}: err
+-- + error: % table is already deleted 'unsub_test_table_deleted'
+-- +1 error:
+@unsub(6, unsub_test_table_deleted);
+
+-- TEST: already unsubscribed table
+-- + {schema_unsub_stmt}: err
+-- + error: % table is already unsubscribed 'unsub_test_table'
+-- +1 error:
+@unsub(6, unsub_test_table);
+
+-- TEST: I want it back!
+-- + {schema_resub_stmt}: ok
+-- - error:
+@resub(7, unsub_test_table);
+
+-- TEST: table is visible again
+-- + {select_stmt}: select: { id: integer }
+-- - error:
+select * from unsub_test_table;
+
+-- TEST: re-resub is not legal
+-- + {schema_resub_stmt}: err
+-- + error: % table is already resubscribed 'unsub_test_table'
+-- +1 error:
+@resub(8, unsub_test_table);
+
+-- TEST: common sub checks are done for resub too (all shared code)
+-- no need to recheck the sub sanity checks, they are the same for both
+-- + {schema_resub_stmt}: err
+-- + error: % the table named in an @unsub/@resub directive does not exist 'not_a_table'
+-- +1 error:
+@resub(8, not_a_table);

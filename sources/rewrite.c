@@ -1448,13 +1448,13 @@ cql_noexport void rewrite_printf_inserting_casts_as_needed(ast_node *ast, CSTR f
       // correct zero-valued literal instead, if needed.
       switch (sem_type) {
         case SEM_TYPE_INTEGER:
-          arg_item->left = new_ast_num(NUM_INT, "0");
+          ast_set_left(arg_item, new_ast_num(NUM_INT, "0"));
           break;
         case SEM_TYPE_LONG_INTEGER:
-          arg_item->left = new_ast_num(NUM_LONG, "0");
+          ast_set_left(arg_item, new_ast_num(NUM_LONG, "0"));
           break;
         case SEM_TYPE_REAL:
-          arg_item->left = new_ast_num(NUM_REAL, "0.0");
+          ast_set_left(arg_item, new_ast_num(NUM_REAL, "0.0"));
           break;
         default:
           // Reference types do not need to be casted.
@@ -1478,7 +1478,7 @@ cql_noexport void rewrite_printf_inserting_casts_as_needed(ast_node *ast, CSTR f
           type_ast = new_ast_type_real(NULL);
           break;
       }
-      arg_item->left = new_ast_cast_expr(arg, type_ast);
+      ast_set_left(arg_item, new_ast_cast_expr(arg, type_ast));
     }
     AST_REWRITE_INFO_RESET();
   }

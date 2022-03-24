@@ -322,7 +322,7 @@ program:
       rt->code_generator($opt_stmt_list);
     }
     else if (options.print_ast) {
-      print_ast($opt_stmt_list, NULL, 0, 0);
+      print_root_ast($opt_stmt_list);
       cql_output("\n");
     } else if (options.print_dot) {
       cql_output("\ndigraph parse {");

@@ -85309,3 +85309,269 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0464: group not found 'not_a_var_gr
   | {name_list}
     | {name not_a_var_group}
 
+The statement ending at line XXXX
+
+CREATE TABLE unsub_test_table(
+  id INTEGER
+);
+
+  {create_table_stmt}: unsub_test_table: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name unsub_test_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE unsub_test_table_deleted(
+  id INTEGER
+) @DELETE(2);
+
+  {create_table_stmt}: unsub_test_table_deleted: { id: integer } deleted @delete(2)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {delete_attr}
+  | |   | {version_annotation}
+  | |     | {int 2}
+  | | {name unsub_test_table_deleted}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE unsub_test_table_late_create(
+  id INTEGER
+) @CREATE(7);
+
+  {create_table_stmt}: unsub_test_table_late_create: { id: integer } @create(7)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 7}
+  | | {name unsub_test_table_late_create}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@UNSUB(0, unsub_test_table);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0025: version number in annotation must be positive
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 0}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+@UNSUB(5);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 5}
+
+The statement ending at line XXXX
+
+@UNSUB(5, not_a_table);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0466: the table named in an @unsub/@resub directive does not exist 'not_a_table'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 5}
+    | {name not_a_table}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM unsub_test_table;
+
+  {select_stmt}: select: { id: integer }
+  | {select_core_list}: select: { id: integer }
+  | | {select_core}: select: { id: integer }
+  |   | {select_expr_list_con}: select: { id: integer }
+  |     | {select_expr_list}: select: { id: integer }
+  |     | | {star}: select: { id: integer }
+  |     | {select_from_etc}: TABLE { unsub_test_table: unsub_test_table }
+  |       | {table_or_subquery_list}: TABLE { unsub_test_table: unsub_test_table }
+  |       | | {table_or_subquery}: TABLE { unsub_test_table: unsub_test_table }
+  |       |   | {name unsub_test_table}: TABLE { unsub_test_table: unsub_test_table }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@UNSUB(5, unsub_test_table);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 5}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM unsub_test_table;
+
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined (hidden by @unsub) 'unsub_test_table'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: err
+  |       | | {table_or_subquery}: err
+  |       |   | {name unsub_test_table}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@UNSUB(5, unsub_test_table);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0471: table has another @unsub/@resub at this version number 'unsub_test_table'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 5}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+@UNSUB(5, MyView);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0468: cannot @unsub/@resub from a view 'MyView'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 5}
+    | {name MyView}
+
+The statement ending at line XXXX
+
+@UNSUB(4, foo);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0467: @unsub/@resub versions must be in non-decreasing order
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 4}
+    | {name foo}
+
+The statement ending at line XXXX
+
+@UNSUB(5, unsub_test_table_late_create);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0470: table not yet created at indicated version 'unsub_test_table_late_create'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 5}
+    | {name unsub_test_table_late_create}
+
+The statement ending at line XXXX
+
+@UNSUB(6, unsub_test_table_deleted);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0469: table is already deleted 'unsub_test_table_deleted'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 6}
+    | {name unsub_test_table_deleted}
+
+The statement ending at line XXXX
+
+@UNSUB(6, unsub_test_table);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0472: table is already unsubscribed 'unsub_test_table'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 6}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+@RESUB(7, unsub_test_table);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 7}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM unsub_test_table;
+
+  {select_stmt}: select: { id: integer }
+  | {select_core_list}: select: { id: integer }
+  | | {select_core}: select: { id: integer }
+  |   | {select_expr_list_con}: select: { id: integer }
+  |     | {select_expr_list}: select: { id: integer }
+  |     | | {star}: select: { id: integer }
+  |     | {select_from_etc}: TABLE { unsub_test_table: unsub_test_table }
+  |       | {table_or_subquery_list}: TABLE { unsub_test_table: unsub_test_table }
+  |       | | {table_or_subquery}: TABLE { unsub_test_table: unsub_test_table }
+  |       |   | {name unsub_test_table}: TABLE { unsub_test_table: unsub_test_table }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@RESUB(8, unsub_test_table);
+
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0472: table is already resubscribed 'unsub_test_table'
+
+  {schema_resub_stmt}: err
+  | {version_annotation}
+    | {int 8}
+    | {name unsub_test_table}
+
+The statement ending at line XXXX
+
+@RESUB(8, not_a_table);
+
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0466: the table named in an @unsub/@resub directive does not exist 'not_a_table'
+
+  {schema_resub_stmt}: err
+  | {version_annotation}
+    | {int 8}
+    | {name not_a_table}
+

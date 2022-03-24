@@ -376,6 +376,10 @@ static bool_t validating_previous_schema;
 // The current annonation target in create proc statement
 static CSTR annotation_target;
 
+// @unsub and @resub must happen in version order to make sense
+// here we track the most recent number; these must be non-decreasing
+static int32_t last_sub_version;
+
 // True if we are analyzing a call to `cql_inferred_notnull`. This can happen
 // for three reasons:
 //
@@ -1146,7 +1150,17 @@ cql_noexport bool_t is_create_func(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_CREATE_FUNC);
 }
 
-static bool_t is_deleted(sem_t sem_type) {
+static bool_t is_deleted(ast_node *ast) {
+  Contract(ast->sem);
+  sem_node *sem = ast->sem;
+
+  // if unsubscribed it's logically deleted
+  if (sem->unsub_version > sem->resub_version) {
+    // note only tables ever set this so we just don't go here at all for columns
+    return true;
+  }
+
+  sem_t sem_type = sem->sem_type;
   return !!(sem_type & SEM_TYPE_DELETED);
 }
 
@@ -1713,14 +1727,19 @@ cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_
     return NULL;
   }
 
-  if (is_deleted(table_ast->sem->sem_type)) {
+  if (is_deleted(table_ast)) {
     if (err_target) {
       CHARBUF_OPEN(err_msg);
       if (schema_upgrade_version > 0) {
         bprintf(&err_msg, "%s (not visible in schema version %d)", msg, schema_upgrade_version);
       }
       else {
-        bprintf(&err_msg, "%s (hidden by @delete)", msg);
+        if (table_ast->sem->delete_version > table_ast->sem->unsub_version)  {
+          bprintf(&err_msg, "%s (hidden by @delete)", msg);
+        }
+        else {
+          bprintf(&err_msg, "%s (hidden by @unsub)", msg);
+        }
       }
       report_error(err_target, err_msg.ptr, name);
       CHARBUF_CLOSE(err_msg);
@@ -2265,6 +2284,8 @@ cql_noexport sem_node * new_sem(sem_t sem_type) {
   sem->jptr = NULL;
   sem->create_version = -1;
   sem->delete_version = -1;
+  sem->unsub_version = 0;
+  sem->resub_version = 0;
   sem->recreate = false;
   sem->recreate_group_name = NULL;
   sem->used_symbols = NULL;
@@ -3127,7 +3148,7 @@ static void sem_create_index_stmt(ast_node *ast) {
       table_name_ast,
       "CQL0019: create index table name not found");
 
-    if (is_deleted(table_ast->sem->sem_type)) {
+    if (is_deleted(table_ast)) {
       report_error(ast, "CQL0397: object is an orphan because its table is deleted. Remove rather than @delete", index_name);
       record_error(ast);
       return;
@@ -12520,7 +12541,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
       table_name_ast,
       "CQL0137: table/view not found");
 
-    if (is_deleted(target->sem->sem_type)) {
+    if (is_deleted(target)) {
       report_error(ast, "CQL0397: object is an orphan because its table is deleted. Remove rather than @delete", trigger_name);
       record_error(ast);
       return;
@@ -12900,7 +12921,7 @@ static void sem_create_table_stmt(ast_node *ast) {
         goto cleanup;;
       }
 
-      if (is_deleted(def->sem->sem_type)) {
+      if (is_deleted(def)) {
         continue;
       }
 
@@ -12953,7 +12974,7 @@ static void sem_create_table_stmt(ast_node *ast) {
         goto cleanup;;
       }
 
-      if (is_deleted(def->sem->sem_type)) {
+      if (is_deleted(def)) {
         continue;
       }
 
@@ -12999,7 +13020,7 @@ static void sem_create_table_stmt(ast_node *ast) {
     EXTRACT_ANY_NOTNULL(def, item->left);
 
     if (is_ast_col_def(def)) {
-      if (is_deleted(def->sem->sem_type)) {
+      if (is_deleted(def)) {
         continue;
       }
 
@@ -13212,7 +13233,7 @@ static void sem_alter_table_add_column_stmt(ast_node *ast) {
     }
 
     // if the column is logically deleted, it doesn't count
-    if (is_deleted(def->sem->sem_type)) {
+    if (is_deleted(def)) {
       continue;
     }
 
@@ -22283,6 +22304,137 @@ static void sem_validate_previous_ad_hoc(ast_node *prev, CSTR name, int32_t vers
   sem_add_flags(schema_ad_hoc_migration_stmt, SEM_TYPE_VALIDATED);
 }
 
+typedef struct subs_info {
+  ast_node *table_ast;
+  CSTR name;
+  int32_t vers;
+} subs_info;
+
+// These validations are common to both @unsub and @resub and they
+// mainly check generic things like the version numbers are reasonable,
+// the indicated table is a table, and stuff like that.  They need
+// follow-up to ensure that the particular operation makes sense.
+static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
+  Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+
+  EXTRACT_NOTNULL(version_annotation, ast->left);
+
+  EXTRACT_OPTION(vers, version_annotation->left);
+
+  if (vers < 1) {
+    report_error(ast, "CQL0025: version number in annotation must be positive", NULL);
+    record_error(ast);
+    return;
+  }
+
+  if (!version_annotation->right) {
+    report_error(ast, "CQL0465: @unsub directive must provide a table", NULL);
+    record_error(ast);
+    return;
+  }
+
+  EXTRACT_STRING(name, version_annotation->right);
+
+  ast_node *table = find_usable_table_or_view_even_deleted(
+    name, ast, "CQL0466: the table named in an @unsub/@resub directive does not exist");
+
+  if (!table) {
+    record_error(ast);
+    return;
+  }
+
+  if (vers < last_sub_version) {
+    report_error(ast, "CQL0467: @unsub/@resub versions must be in non-decreasing order", NULL);
+    record_error(ast);
+    return;
+  }
+
+  if (is_ast_create_view_stmt(table)) {
+    report_error(ast, "CQL0468: cannot @unsub/@resub from a view", name);
+    record_error(ast);
+    return;
+  }
+
+  if (table->sem->delete_version > 0 && table->sem->delete_version <= vers) {
+    report_error(ast, "CQL0469: table is already deleted", name);
+    record_error(ast);
+    return;
+  }
+
+  if (!table->sem->recreate && table->sem->create_version >= vers) {
+    report_error(ast, "CQL0470: table not yet created at indicated version", name);
+    record_error(ast);
+    return;
+  }
+
+  if (table->sem->unsub_version == vers || table->sem->resub_version == vers) {
+    report_error(ast, "CQL0471: table has another @unsub/@resub at this version number", name);
+    record_error(ast);
+    return;
+  }
+
+  info->table_ast = table;
+  info->vers = vers;
+  info->name = name;
+
+  record_ok(ast);
+}
+
+static void sem_schema_unsub_stmt(ast_node *ast) {
+  Contract(is_ast_schema_unsub_stmt(ast));
+
+  subs_info info;
+  sem_subs_validate_common(ast, &info);
+  if (is_error(ast)) {
+    return;
+  }
+
+  int32_t vers = info.vers;
+  ast_node *table = info.table_ast;
+  CSTR name = info.name;
+  Contract(table);
+
+  if (table->sem->unsub_version > table->sem->resub_version) {
+    report_error(ast, "CQL0472: table is already unsubscribed", name);
+    record_error(ast);
+    return;
+  }
+
+  table->sem->unsub_version = vers;
+  last_sub_version = vers;
+
+  record_ok(ast);
+}
+
+static void sem_schema_resub_stmt(ast_node *ast) {
+  Contract(is_ast_schema_resub_stmt(ast));
+
+  subs_info info;
+  sem_subs_validate_common(ast, &info);
+  if (is_error(ast)) {
+    return;
+  }
+
+  // just enough checks to safely resub a table so that we can test unsub better
+  // more checks needed here for the rest of the resub rules
+
+  int32_t vers = info.vers;
+  ast_node *table = info.table_ast;
+  CSTR name = info.name;
+  Contract(table);
+
+  if (table->sem->resub_version > table->sem->unsub_version) {
+    report_error(ast, "CQL0472: table is already resubscribed", name);
+    record_error(ast);
+    return;
+  }
+
+  table->sem->resub_version = vers;
+  last_sub_version = vers;
+
+  record_ok(ast);
+}
+
 static void sem_schema_ad_hoc_migration_stmt_for_version(ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
@@ -22650,6 +22802,8 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(begin_schema_region_stmt);
   STMT_INIT(end_schema_region_stmt);
   STMT_INIT(schema_ad_hoc_migration_stmt);
+  STMT_INIT(schema_unsub_stmt);
+  STMT_INIT(schema_resub_stmt);
   STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);
@@ -22905,6 +23059,7 @@ cql_noexport void sem_cleanup() {
   in_switch = false;
   in_upsert = false;
   loop_depth = 0;
+  last_sub_version = 1;
   in_proc_savepoint = false;
   max_previous_schema_version = -1;
   reset_enforcements();
