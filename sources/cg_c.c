@@ -133,10 +133,6 @@ static bool_t error_target_used = false;
 // If this is set we will emit that top level target even if there were no other uses.
 static bool_t return_used = false;
 
-// We use this table to track named scratch variables that we might need
-// this is used in cases where the name has to be computed and there may be several of them
-static symtab *named_temporaries;
-
 // String literals are frequently duplicated, we want a unique constant for each piece of text
 static symtab *string_literals;
 
@@ -3611,8 +3607,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   Invariant(!encode_context_column);
   Invariant(!encode_columns);
   encode_columns = symtab_new();
-  Invariant(named_temporaries == NULL);
-  named_temporaries = symtab_new();
 
   cg_scratch_masks masks;
   cg_current_masks = &masks;
@@ -3830,10 +3824,8 @@ static void cg_create_proc_stmt(ast_node *ast) {
   base_fragment_name = NULL;
 
   symtab_delete(encode_columns);
-  symtab_delete(named_temporaries);
   encode_context_column = NULL;
   encode_columns = NULL;
-  named_temporaries = NULL;
   error_target_used = saved_error_target_used;
   rcthrown_index = saved_rcthrown_index;
   rcthrown_used = saved_rcthrown_used;
@@ -5424,11 +5416,16 @@ static void cg_declare_cursor(ast_node *ast) {
     cg_declare_auto_cursor(cursor_name, name_ast->sem);
   }
   else {
-    // make the cursor_has_row hidden variable
-    CHARBUF_OPEN(temp);
-    bprintf(&temp, "_%s_has_row_", cursor_name);
-    cg_var_decl(cg_declarations_output, SEM_TYPE_BOOL | SEM_TYPE_NOTNULL, temp.ptr, CG_VAR_DECL_LOCAL);
-    CHARBUF_CLOSE(temp);
+    // if it's a global cursor (`!in_proc`) we have to assume we will need the
+    // variable eventually so we emit it now; if it's a local then we only emit
+    // it if we know it'll be used later on (as indicated by `SEM_TYPE_FETCH_INTO`)
+    if (!in_proc || name_ast->sem->sem_type & SEM_TYPE_FETCH_INTO) {
+      // make the cursor_has_row hidden variable
+      CHARBUF_OPEN(temp);
+      bprintf(&temp, "_%s_has_row_", cursor_name);
+      cg_var_decl(cg_declarations_output, SEM_TYPE_BOOL | SEM_TYPE_NOTNULL, temp.ptr, CG_VAR_DECL_LOCAL);
+      CHARBUF_CLOSE(temp);
+    }
   }
 }
 
@@ -5888,6 +5885,7 @@ static void cg_loop_stmt(ast_node *ast) {
     bprintf(cg_main_output, "if (!%s._has_row_) break;\n", cursor_name);
   }
   else {
+    // variable already emitted by the fetch statement above if needed
     bprintf(cg_main_output, "if (!_%s_has_row_) break;\n", cursor_name);
   }
 
@@ -8397,7 +8395,6 @@ cql_noexport void cg_c_init(void) {
 cql_noexport void cg_c_cleanup() {
   cg_common_cleanup();
 
-  SYMTAB_CLEANUP(named_temporaries);
   SYMTAB_CLEANUP(string_literals);
   SYMTAB_CLEANUP(text_pieces);
 

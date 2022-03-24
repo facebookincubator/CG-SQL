@@ -1146,7 +1146,6 @@ CQL_WARN_UNUSED cql_code easy_fetch(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
   easy_fetch_C_row C = { ._refs_count_ = 1, ._refs_offset_ = easy_fetch_C_refs_offset };
   sqlite3_stmt *C2_stmt = NULL;
-  cql_bool _C2_has_row_ = 0;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT id, name, rate, type, size "
@@ -1279,7 +1278,6 @@ CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_) {
   cql_nullable_int32 _tmp_n_int_0;
   cql_set_null(_tmp_n_int_0);
   sqlite3_stmt *xyzzy_cursor_stmt = NULL;
-  cql_bool _xyzzy_cursor_has_row_ = 0;
 
   cql_set_notnull(_tmp_n_int_0, 1);
   _rc_ = xyzzy(_db_, &xyzzy_cursor_stmt, _tmp_n_int_0);
@@ -4569,7 +4567,6 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
   cql_set_null(i);
   sqlite3_stmt *C_stmt = NULL;
   cql_object_ref C_object_ = NULL;
-  cql_bool _C_has_row_ = 0;
   cql_object_ref box = NULL;
   sqlite3_stmt *D_stmt = NULL;
   cql_object_ref D_object_ = NULL;
@@ -5874,7 +5871,6 @@ END;
 CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
-  cql_bool _C_has_row_ = 0;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT SUM(A.unread_pending_thread_count), SUM(A.switch_account_badge_count) "
@@ -6114,7 +6110,6 @@ END;
 CQL_WARN_UNUSED cql_code rowset_object_reader(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable rowset) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
-  cql_bool _C_has_row_ = 0;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT id "
@@ -9290,7 +9285,6 @@ CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Null
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
   cql_object_ref C_object_ = NULL;
-  cql_bool _C_has_row_ = 0;
 
   *(void **)result = NULL; // set out arg to non-garbage
   C_stmt = NULL;

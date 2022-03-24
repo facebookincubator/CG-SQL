@@ -14246,10 +14246,29 @@ set a_string := cql_cursor_diff_val(an_int, an_int2, 1);
 -- +1 error:
 create proc cql_cursor_diff_col_without_cursor_arg()
 begin
+  declare x integer not null;
+  declare y text not null;
   declare c1 cursor for select 1 x, 'y' y;
   declare c2 cursor for select 1 x, 'y' y;
+  fetch c1 into x, y; -- tricky, fetching but not with storage
   fetch c2;
   set a_string := cql_cursor_diff_col(c1, c2);
+end;
+
+-- TEST: try to use a cursor without fetching it
+-- neither storage type has been specified by the time
+-- we get to the if statement.  The error indicates the
+-- most probable mistake.
+-- + {create_proc_stmt}: err
+-- + {declare_cursor}: C: select: { x: integer notnull } variable dml_proc
+-- + {if_stmt}: err
+-- +  {name C}: err
+-- + error: % cursor was not used with 'fetch [cursor]' 'C'
+-- +1 error:
+create proc cql_cursor_unfetched()
+begin
+  declare C cursor for select 1 x;
+  if C then end if;
 end;
 
 -- TEST: call cql_cursor_diff_col with incompatible cursor types
@@ -14506,6 +14525,8 @@ end;
 create proc print_call_cql_not_fetch_cursor_format()
 begin
   declare c cursor for select 1;
+  declare x integer not null;
+  fetch C into x; -- tricky, fetching but not with storage
   set a_string := cql_cursor_format(c);
 end;
 

@@ -799,7 +799,9 @@ end;
 -- + #define easy_fetch_C_refs_offset cql_offsetof(easy_fetch_C_row, name) // count = 1
 -- + easy_fetch_C_row C = { ._refs_count_ = 1, ._refs_offset_ = easy_fetch_C_refs_offset };
 -- + sqlite3_stmt *C2_stmt = NULL;
--- + cql_bool _C2_has_row_ = 0;
+-- note that C2 is never fetched and therefore has no has_row, we don't want to generate
+-- this variable because with good warnings it will create an unused variable error
+-- - _C2_has_row_
 -- + C._has_row_ = _rc_ == SQLITE_ROW;
 -- + cql_multifetch(_rc_, C_stmt, 5,
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,

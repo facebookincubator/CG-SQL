@@ -170,7 +170,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_INLINE_CALL    _64(0x10000000000) // set when a proc_as_func call in SQL can be executed safely by inlining the SQL
 #define SEM_TYPE_SERIALIZE      _64(0x20000000000) // set when a cursor will need serialization features
 #define SEM_TYPE_HAS_ROW        _64(0x40000000000) // set on auto cursors to indicate that they are known to have a row
-#define SEM_TYPE_FLAGS          _64(0x7FFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_FETCH_INTO     _64(0x80000000000) // set if the cursor is used with fetch into
+#define SEM_TYPE_FLAGS          _64(0xFFFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002

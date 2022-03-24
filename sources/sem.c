@@ -2090,6 +2090,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_SERIALIZE) {
     bprintf(out, " serialize");
   }
+  if (sem_type & SEM_TYPE_FETCH_INTO) {
+    bprintf(out, " fetch_into");
+  }
 }
 
 // For debug/test output, prettyprint a structure type
@@ -5974,6 +5977,11 @@ static void sem_cursor_as_expression(ast_node *ast) {
   if (is_auto_cursor(ast->sem->sem_type)) {
     vname = dup_printf("%s._has_row_", ast->sem->name);
   } else {
+    if (!(ast->sem->sem_type & SEM_TYPE_FETCH_INTO)) {
+      report_error(ast, "CQL0067: cursor was not used with 'fetch [cursor]'", ast->sem->name);
+      record_error(ast);
+      return;
+    }
     vname = dup_printf("_%s_has_row_", ast->sem->name);
   }
   ast->sem = new_sem(SEM_TYPE_BOOL | SEM_TYPE_VARIABLE | SEM_TYPE_NOTNULL);
@@ -20171,7 +20179,17 @@ static void sem_fetch_stmt(ast_node *ast) {
     return;
   }
 
-  ast->sem = cursor->sem;
+  // Tag the cursor *variable* (i.e. the AST from the original definition site
+  // of the cursor) with FETCH_INTO. This is necessary because we need to
+  // have this information available during codegen before we see that the
+  // cursor was used in a fetch.  So we leave this breadcrumb.
+
+  ast_node *cursor_var = find_local_or_global_variable(cursor->sem->name);
+  Invariant(cursor_var);
+  Invariant(is_cursor(cursor_var->sem->sem_type));
+  sem_add_flags(cursor_var, SEM_TYPE_FETCH_INTO);
+
+  ast->sem = cursor_var->sem;
 }
 
 // In this form we're working on a cursor that is going to be loaded by making a call.  This call statement

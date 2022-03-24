@@ -6666,7 +6666,7 @@ The statement ending at line XXXX
 DECLARE my_cursor CURSOR FOR SELECT 1 AS one, 2 AS two;
 
   {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
   | {select_stmt}: select: { one: integer notnull, two: integer notnull }
     | {select_core_list}: select: { one: integer notnull, two: integer notnull }
     | | {select_core}: select: { one: integer notnull, two: integer notnull }
@@ -6777,7 +6777,7 @@ BEGIN
 END;
 
   {loop_stmt}: ok
-  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
   | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
   | | {name_list}
   |   | {name X}: X: integer variable
@@ -6826,8 +6826,8 @@ BEGIN
 END;
 
   {loop_stmt}: ok
-  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
   | | {name_list}
   |   | {name X}: X: integer variable
   |   | {name_list}
@@ -7038,8 +7038,8 @@ END;
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
   {loop_stmt}: err
-  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+  | | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
   | | {name_list}
   |   | {name X}: X: integer variable
   |   | {name_list}
@@ -7065,8 +7065,8 @@ The statement ending at line XXXX
 
 CLOSE my_cursor;
 
-  {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
 
 The statement ending at line XXXX
 
@@ -7632,7 +7632,7 @@ SET my_cursor := 1;
 test/sem_test.sql:XXXX:1: error: in assign : CQL0174: cannot set a cursor 'my_cursor'
 
   {assign}: err
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
   | {int 1}
 
 The statement ending at line XXXX
@@ -7669,7 +7669,7 @@ The statement ending at line XXXX
 DECLARE fetch_cursor CURSOR FOR SELECT 1, 'foo', NULL;
 
   {declare_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {select_stmt}: select: { _anon: integer notnull, _anon: text notnull, _anon: null }
     | {select_core_list}: select: { _anon: integer notnull, _anon: text notnull, _anon: null }
     | | {select_core}: select: { _anon: integer notnull, _anon: text notnull, _anon: null }
@@ -7749,7 +7749,7 @@ The statement ending at line XXXX
 
 FETCH fetch_cursor INTO an_int, a_string, a_nullable;
 
-  {fetch_stmt}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  {fetch_stmt}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
   | {name_list}
     | {name an_int}: an_int: integer variable
@@ -7765,7 +7765,7 @@ FETCH fetch_cursor INTO an_int, a_string;
 test/sem_test.sql:XXXX:1: error: in fetch_stmt : CQL0217: number of variables did not match count of columns in cursor 'fetch_cursor'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {name_list}
     | {name an_int}: an_int: integer variable
     | {name_list}
@@ -7778,7 +7778,7 @@ FETCH fetch_cursor INTO an_int, a_string, a_nullable, a_string2;
 test/sem_test.sql:XXXX:1: error: in fetch_stmt : CQL0217: number of variables did not match count of columns in cursor 'fetch_cursor'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {name_list}
     | {name an_int}: an_int: integer variable
     | {name_list}
@@ -7795,7 +7795,7 @@ FETCH fetch_cursor INTO a_string2, a_string, a_nullable;
 test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'a_string2'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {name_list}
     | {name a_string2}: err
     | {name_list}
@@ -7810,7 +7810,7 @@ FETCH fetch_cursor INTO an_int, an_int2, a_nullable;
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'an_int2'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {name_list}
     | {name an_int}: an_int: integer variable
     | {name_list}
@@ -7836,7 +7836,7 @@ FETCH fetch_cursor INTO non_existent_variable;
 test/sem_test.sql:XXXX:1: error: in str : CQL0216: FETCH variable not found 'non_existent_variable'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {name_list}
     | {name non_existent_variable}
 
@@ -7847,7 +7847,7 @@ FETCH fetch_cursor INTO var_id, var_id;
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'var_id'
 
   {fetch_stmt}: err
-  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
+  | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
   | {name_list}
     | {name var_id}
     | {name_list}
@@ -25939,7 +25939,7 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: cursor was not fetched w
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc fetch_into
       | | {select_stmt}: select: { A: integer notnull, B: integer notnull }
       |   | {select_core_list}: select: { A: integer notnull, B: integer notnull }
       |   | | {select_core}: select: { A: integer notnull, B: integer notnull }
@@ -25961,14 +25961,14 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: cursor was not fetched w
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+      | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc fetch_into
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
       | | {name_list}
       |   | {name a}: a: integer notnull variable
       |   | {name_list}
       |     | {name b}: b: integer notnull variable
       | {out_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
+        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc fetch_into
 
 The statement ending at line XXXX
 
@@ -27075,7 +27075,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for valu
 
   {fetch_values_stmt}: err
   | {name_columns_values}
-    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
     | {columns_values}
       | {insert_list}
         | {int 1}
@@ -27738,7 +27738,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor wit
       | | | {name Y}: Y: real variable
       | | {type_real}: real
       | {declare_cursor}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
-      | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc fetch_into
       | | {select_stmt}: select: { A: integer notnull, _anon: real notnull }
       |   | {select_core_list}: select: { A: integer notnull, _anon: real notnull }
       |   | | {select_core}: select: { A: integer notnull, _anon: real notnull }
@@ -27762,7 +27762,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor wit
       | | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
       | | {like}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
       |   | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
-      | {fetch_stmt}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      | {fetch_stmt}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc fetch_into
       | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
       | | {name_list}
       |   | {name X}: X: integer variable
@@ -29824,8 +29824,8 @@ DECLARE val_cursor CURSOR LIKE my_cursor;
 
   {declare_cursor_like_name}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
   | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
-  | {like}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {like}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
 
 The statement ending at line XXXX
 
@@ -52752,7 +52752,7 @@ UPDATE CURSOR my_cursor(LIKE not_a_symbol) FROM VALUES(1);
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 
   {update_cursor_stmt}: err
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
   | {columns_values}: err
     | {column_spec}
     | | {like}: err
@@ -58397,8 +58397,11 @@ The statement ending at line XXXX
 
 CREATE PROC cql_cursor_diff_col_without_cursor_arg ()
 BEGIN
+  DECLARE x INTEGER NOT NULL;
+  DECLARE y TEXT NOT NULL;
   DECLARE c1 CURSOR FOR SELECT 1 AS x, 'y' AS y;
   DECLARE c2 CURSOR FOR SELECT 1 AS x, 'y' AS y;
+  FETCH c1 INTO x, y;
   FETCH c2;
   SET a_string := cql_cursor_diff_col(c1, c2);
 END;
@@ -58409,8 +58412,18 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
   | {name cql_cursor_diff_col_without_cursor_arg}: err
   | {proc_params_stmts}
     | {stmt_list}: err
+      | {declare_vars_type}: integer notnull
+      | | {name_list}: x: integer notnull variable
+      | | | {name x}: x: integer notnull variable
+      | | {notnull}: integer notnull
+      |   | {type_int}: integer
+      | {declare_vars_type}: text notnull
+      | | {name_list}: y: text notnull variable init_required
+      | | | {name y}: y: text notnull variable init_required
+      | | {notnull}: text notnull
+      |   | {type_text}: text
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
-      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc fetch_into
       | | {select_stmt}: select: { x: integer notnull, y: text notnull }
       |   | {select_core_list}: select: { x: integer notnull, y: text notnull }
       |   | | {select_core}: select: { x: integer notnull, y: text notnull }
@@ -58455,6 +58468,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
+      | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc fetch_into
+      | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
+      | | {name_list}
+      |   | {name x}: x: integer notnull variable
+      |   | {name_list}
+      |     | {name y}: y: text notnull variable init_required
       | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {assign}: err
@@ -58467,6 +58486,44 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
               | {name c1}: err
               | {arg_list}
                 | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+CREATE PROC cql_cursor_unfetched ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x;
+  IF C THEN
+  END IF;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
+
+  {create_proc_stmt}: err
+  | {name cql_cursor_unfetched}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { x: integer notnull } variable dml_proc
+      | | {name C}: C: select: { x: integer notnull } variable dml_proc
+      | | {select_stmt}: select: { x: integer notnull }
+      |   | {select_core_list}: select: { x: integer notnull }
+      |   | | {select_core}: select: { x: integer notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     |   | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name x}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {if_stmt}: err
+        | {cond_action}: err
+        | | {name C}: err
+        | {if_alt}
 
 The statement ending at line XXXX
 
@@ -59869,6 +59926,8 @@ The statement ending at line XXXX
 CREATE PROC print_call_cql_not_fetch_cursor_format ()
 BEGIN
   DECLARE c CURSOR FOR SELECT 1;
+  DECLARE x INTEGER NOT NULL;
+  FETCH C INTO x;
   SET a_string := cql_cursor_format(c);
 END;
 
@@ -59879,7 +59938,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_cursor}: c: select: { _anon: integer notnull } variable dml_proc
-      | | {name c}: c: select: { _anon: integer notnull } variable dml_proc
+      | | {name c}: c: select: { _anon: integer notnull } variable dml_proc fetch_into
       | | {select_stmt}: select: { _anon: integer notnull }
       |   | {select_core_list}: select: { _anon: integer notnull }
       |   | | {select_core}: select: { _anon: integer notnull }
@@ -59894,6 +59953,15 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
+      | {declare_vars_type}: integer notnull
+      | | {name_list}: x: integer notnull variable
+      | | | {name x}: x: integer notnull variable
+      | | {notnull}: integer notnull
+      |   | {type_int}: integer
+      | {fetch_stmt}: c: select: { _anon: integer notnull } variable dml_proc fetch_into
+      | | {name C}: c: select: { _anon: integer notnull } variable dml_proc
+      | | {name_list}
+      |   | {name x}: x: integer notnull variable
       | {assign}: err
         | {name a_string}: a_string: text variable
         | {call}: err
@@ -70480,7 +70548,7 @@ END;
       | | | {name x}: x: integer variable
       | | {type_int}: integer
       | {declare_cursor}: c: select: { xn: integer, yn: integer } variable dml_proc
-      | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
       | | {select_stmt}: select: { xn: integer, yn: integer }
       |   | {select_core_list}: select: { xn: integer, yn: integer }
       |   | | {select_core}: select: { xn: integer, yn: integer }
@@ -70523,7 +70591,7 @@ END;
       | |   |     | {call_filter_clause}
       | |   |     | {arg_list}: ok
       | |   |       | {name b}: b: integer inferred_notnull variable
-      | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
       | |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
       | |   | | {name_list}
       | |   |   | {name x}: x: integer variable
@@ -70540,8 +70608,8 @@ END;
       | |   | {let_stmt}: y1: integer variable
       | |   | | {name y1}: y1: integer variable
       | |   | | {name b}: b: integer variable
-      | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc
-      | |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
+      | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
+      | |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
       | |   | | {name_list}
       | |   |   | {name a}: a: integer variable
       | |   |   | {name_list}
@@ -70579,8 +70647,8 @@ END;
         |   |     | {call_filter_clause}
         |   |     | {arg_list}: ok
         |   |       | {name b}: b: integer inferred_notnull variable
-        |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc
-        |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
+        |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
+        |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
         |   | | {name_list}
         |   |   | {name a}: a: integer variable
         |   |   | {name_list}
@@ -76029,7 +76097,7 @@ END;
       | | {notnull}: text notnull
       |   | {type_text}: text
       | {declare_cursor}: foo: select: { bar: text notnull } variable dml_proc
-      | | {name foo}: foo: select: { bar: text notnull } variable dml_proc
+      | | {name foo}: foo: select: { bar: text notnull } variable dml_proc fetch_into
       | | {select_stmt}: select: { bar: text notnull }
       |   | {select_core_list}: select: { bar: text notnull }
       |   | | {select_core}: select: { bar: text notnull }
@@ -76046,7 +76114,7 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: foo: select: { bar: text notnull } variable dml_proc
+      | {fetch_stmt}: foo: select: { bar: text notnull } variable dml_proc fetch_into
       | | {name foo}: foo: select: { bar: text notnull } variable dml_proc
       | | {name_list}
       |   | {name a}: a: text notnull variable init_required
