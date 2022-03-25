@@ -29719,6 +29719,63 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC insert_bar_locals (extra INTEGER, id INTEGER NOT NULL, name_ TEXT, rate LONG_INT)
+BEGIN
+  INSERT INTO bar(id, name, rate) VALUES(LOCALS.id, LOCALS.name, LOCALS.rate);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name insert_bar_locals}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: extra: integer variable in
+    | | | {param_detail}: extra: integer variable in
+    | |   | {name extra}: extra: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: id: integer notnull variable in
+    |   | | {param_detail}: id: integer notnull variable in
+    |   |   | {name id}: id: integer notnull variable in
+    |   |   | {notnull}: integer notnull
+    |   |     | {type_int}: integer
+    |   | {params}
+    |     | {param}: name_: text variable in
+    |     | | {param_detail}: name_: text variable in
+    |     |   | {name name_}: name_: text variable in
+    |     |   | {type_text}: text
+    |     | {params}
+    |       | {param}: rate: longint variable in
+    |         | {param_detail}: rate: longint variable in
+    |           | {name rate}: rate: longint variable in
+    |           | {type_long}: longint
+    | {stmt_list}: ok
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name id}: id: integer notnull
+            |   | {name_list}
+            |     | {name name}: name: text
+            |     | {name_list}
+            |       | {name rate}: rate: longint
+            | {insert_list}
+              | {dot}: id: integer notnull variable in
+              | | {name LOCALS}
+              | | {name id}
+              | {insert_list}
+                | {dot}: name_: text variable in
+                | | {name LOCALS}
+                | | {name name}
+                | {insert_list}
+                  | {dot}: rate: longint variable in
+                    | {name LOCALS}
+                    | {name rate}
+
+The statement ending at line XXXX
+
 CREATE PROC insert_bar_missing (extra INTEGER, id INTEGER NOT NULL)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id, ARGUMENTS.name, ARGUMENTS.rate);
@@ -85727,4 +85784,297 @@ The statement ending at line XXXX
   | {version_annotation}
     | {int 9}
     | {name sub_test_dependency}
+
+The statement ending at line XXXX
+
+DECLARE PROC any_args_at_all NO CHECK;
+
+  {declare_proc_no_check_stmt}: ok
+  | {name any_args_at_all}
+
+The statement ending at line XXXX
+
+CREATE PROC use_locals_expansion (x INTEGER<x> NOT NULL, y INTEGER<y>)
+BEGIN
+  CALL any_args_at_all(LOCALS.x, LOCALS.y);
+  LET z := locals.x;
+  CALL any_args_at_all(LOCALS.x, LOCALS.y, LOCALS.z);
+  LET u := locals.z;
+  CALL any_args_at_all(LOCALS.x, LOCALS.y, LOCALS.z, LOCALS.u);
+END;
+
+  {create_proc_stmt}: ok
+  | {name use_locals_expansion}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x: integer<x> notnull variable in
+    | | | {param_detail}: x: integer<x> notnull variable in
+    | |   | {name x}: x: integer<x> notnull variable in
+    | |   | {notnull}: integer<x> notnull
+    | |     | {type_int}: integer<x>
+    | |       | {name x}
+    | | {params}
+    |   | {param}: y: integer<y> variable in
+    |     | {param_detail}: y: integer<y> variable in
+    |       | {name y}: y: integer<y> variable in
+    |       | {type_int}: integer<y>
+    |         | {name y}
+    | {stmt_list}: ok
+      | {call_stmt}: ok
+      | | {name any_args_at_all}: ok
+      | | {expr_list}: ok
+      |   | {dot}: x: integer<x> notnull variable in
+      |   | | {name LOCALS}
+      |   | | {name x}
+      |   | {expr_list}
+      |     | {dot}: y: integer<y> variable in
+      |       | {name LOCALS}
+      |       | {name y}
+      | {let_stmt}: z: integer<x> notnull variable
+      | | {name z}: z: integer<x> notnull variable
+      | | {dot}: x: integer<x> notnull variable in
+      |   | {name locals}
+      |   | {name x}
+      | {call_stmt}: ok
+      | | {name any_args_at_all}: ok
+      | | {expr_list}: ok
+      |   | {dot}: x: integer<x> notnull variable in
+      |   | | {name LOCALS}
+      |   | | {name x}
+      |   | {expr_list}
+      |     | {dot}: y: integer<y> variable in
+      |     | | {name LOCALS}
+      |     | | {name y}
+      |     | {expr_list}
+      |       | {dot}: z: integer<x> notnull variable
+      |         | {name LOCALS}
+      |         | {name z}
+      | {let_stmt}: u: integer<x> notnull variable
+      | | {name u}: u: integer<x> notnull variable
+      | | {dot}: z: integer<x> notnull variable
+      |   | {name locals}
+      |   | {name z}
+      | {call_stmt}: ok
+        | {name any_args_at_all}: ok
+        | {expr_list}: ok
+          | {dot}: x: integer<x> notnull variable in
+          | | {name LOCALS}
+          | | {name x}
+          | {expr_list}
+            | {dot}: y: integer<y> variable in
+            | | {name LOCALS}
+            | | {name y}
+            | {expr_list}
+              | {dot}: z: integer<x> notnull variable
+              | | {name LOCALS}
+              | | {name z}
+              | {expr_list}
+                | {dot}: u: integer<x> notnull variable
+                  | {name LOCALS}
+                  | {name u}
+
+The statement ending at line XXXX
+
+CREATE PROC bogus_local_usage ()
+BEGIN
+  CALL any_args_at_all(locals.xyzzy);
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM LOCALS, there is no local matching 'xyzzy'
+
+  {create_proc_stmt}: err
+  | {name bogus_local_usage}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name any_args_at_all}: ok
+        | {expr_list}: err
+          | {dot}: err
+            | {name locals}
+            | {name xyzzy}
+
+The statement ending at line XXXX
+
+LET no_chance_of_this_working := locals.xyzzy;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM LOCALS, there is no local matching 'xyzzy'
+
+  {let_stmt}: err
+  | {name no_chance_of_this_working}
+  | {dot}: err
+    | {name locals}
+    | {name xyzzy}
+
+The statement ending at line XXXX
+
+CALL any_args_at_all(FROM locals);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'locals'
+
+  {call_stmt}: err
+  | {name any_args_at_all}
+  | {expr_list}: err
+    | {from_shape}
+      | {name locals}: err
+
+The statement ending at line XXXX
+
+CREATE PROC locals_work_with_nullability_improvements (a_ INTEGER)
+BEGIN
+  DECLARE b INTEGER;
+  DECLARE c_ INTEGER;
+  IF a_ IS NULL OR b IS NULL OR locals.c IS NULL THEN
+    RETURN;
+  END IF;
+  CALL requires_not_nulls(a_, b, c_);
+  CALL requires_not_nulls(LOCALS.a, LOCALS.b, LOCALS.c);
+  CALL requires_not_nulls(LOCALS.a_, LOCALS.b, LOCALS.c_);
+  CALL requires_not_nulls(LOCALS.a, LOCALS.b, LOCALS.c);
+END;
+
+  {create_proc_stmt}: ok
+  | {name locals_work_with_nullability_improvements}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: a_: integer variable in
+    |   | {param_detail}: a_: integer variable in
+    |     | {name a_}: a_: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: ok
+      | {declare_vars_type}: integer
+      | | {name_list}: b: integer variable
+      | | | {name b}: b: integer variable
+      | | {type_int}: integer
+      | {declare_vars_type}: integer
+      | | {name_list}: c_: integer variable
+      | | | {name c_}: c_: integer variable
+      | | {type_int}: integer
+      | {if_stmt}: bool notnull
+      | | {cond_action}: bool notnull
+      | | | {or}: bool notnull
+      | | | | {or}: bool notnull
+      | | | | | {is}: bool notnull
+      | | | | | | {name a_}: a_: integer variable in
+      | | | | | | {null}: null
+      | | | | | {is}: bool notnull
+      | | | |   | {name b}: b: integer variable
+      | | | |   | {null}: null
+      | | | | {is}: bool notnull
+      | | |   | {dot}: c_: integer variable
+      | | |   | | {name locals}
+      | | |   | | {name c}
+      | | |   | {null}: null
+      | | | {stmt_list}: ok
+      | |   | {return_stmt}: ok
+      | | {if_alt}: ok
+      | {call_stmt}: ok
+      | | {name requires_not_nulls}: ok
+      | | {expr_list}: ok
+      |   | {call}: a_: integer notnull variable in
+      |   | | {name cql_inferred_notnull}: a_: integer notnull variable in
+      |   | | {call_arg_list}
+      |   |   | {call_filter_clause}
+      |   |   | {arg_list}: ok
+      |   |     | {name a_}: a_: integer inferred_notnull variable in
+      |   | {expr_list}
+      |     | {call}: b: integer notnull variable
+      |     | | {name cql_inferred_notnull}: b: integer notnull variable
+      |     | | {call_arg_list}
+      |     |   | {call_filter_clause}
+      |     |   | {arg_list}: ok
+      |     |     | {name b}: b: integer inferred_notnull variable
+      |     | {expr_list}
+      |       | {call}: c_: integer notnull variable
+      |         | {name cql_inferred_notnull}: c_: integer notnull variable
+      |         | {call_arg_list}
+      |           | {call_filter_clause}
+      |           | {arg_list}: ok
+      |             | {name c_}: c_: integer inferred_notnull variable
+      | {call_stmt}: ok
+      | | {name requires_not_nulls}: ok
+      | | {expr_list}: ok
+      |   | {call}: a_: integer notnull variable in
+      |   | | {name cql_inferred_notnull}: a_: integer notnull variable in
+      |   | | {call_arg_list}
+      |   |   | {call_filter_clause}
+      |   |   | {arg_list}: ok
+      |   |     | {dot}: a_: integer variable in
+      |   |       | {name LOCALS}
+      |   |       | {name a}
+      |   | {expr_list}
+      |     | {call}: b: integer notnull variable
+      |     | | {name cql_inferred_notnull}: b: integer notnull variable
+      |     | | {call_arg_list}
+      |     |   | {call_filter_clause}
+      |     |   | {arg_list}: ok
+      |     |     | {dot}: b: integer variable
+      |     |       | {name LOCALS}
+      |     |       | {name b}
+      |     | {expr_list}
+      |       | {call}: c_: integer notnull variable
+      |         | {name cql_inferred_notnull}: c_: integer notnull variable
+      |         | {call_arg_list}
+      |           | {call_filter_clause}
+      |           | {arg_list}: ok
+      |             | {dot}: c_: integer variable
+      |               | {name LOCALS}
+      |               | {name c}
+      | {call_stmt}: ok
+      | | {name requires_not_nulls}: ok
+      | | {expr_list}: ok
+      |   | {call}: a_: integer notnull variable in
+      |   | | {name cql_inferred_notnull}: a_: integer notnull variable in
+      |   | | {call_arg_list}
+      |   |   | {call_filter_clause}
+      |   |   | {arg_list}: ok
+      |   |     | {dot}: a_: integer variable in
+      |   |       | {name LOCALS}
+      |   |       | {name a_}
+      |   | {expr_list}
+      |     | {call}: b: integer notnull variable
+      |     | | {name cql_inferred_notnull}: b: integer notnull variable
+      |     | | {call_arg_list}
+      |     |   | {call_filter_clause}
+      |     |   | {arg_list}: ok
+      |     |     | {dot}: b: integer variable
+      |     |       | {name LOCALS}
+      |     |       | {name b}
+      |     | {expr_list}
+      |       | {call}: c_: integer notnull variable
+      |         | {name cql_inferred_notnull}: c_: integer notnull variable
+      |         | {call_arg_list}
+      |           | {call_filter_clause}
+      |           | {arg_list}: ok
+      |             | {dot}: c_: integer variable
+      |               | {name LOCALS}
+      |               | {name c_}
+      | {call_stmt}: ok
+        | {name requires_not_nulls}: ok
+        | {expr_list}: ok
+          | {call}: a_: integer notnull variable in
+          | | {name cql_inferred_notnull}: a_: integer notnull variable in
+          | | {call_arg_list}
+          |   | {call_filter_clause}
+          |   | {arg_list}: ok
+          |     | {dot}: a_: integer variable in
+          |       | {name LOCALS}
+          |       | {name a}
+          | {expr_list}
+            | {call}: b: integer notnull variable
+            | | {name cql_inferred_notnull}: b: integer notnull variable
+            | | {call_arg_list}
+            |   | {call_filter_clause}
+            |   | {arg_list}: ok
+            |     | {dot}: b: integer variable
+            |       | {name LOCALS}
+            |       | {name b}
+            | {expr_list}
+              | {call}: c_: integer notnull variable
+                | {name cql_inferred_notnull}: c_: integer notnull variable
+                | {call_arg_list}
+                  | {call_filter_clause}
+                  | {arg_list}: ok
+                    | {dot}: c_: integer variable
+                      | {name LOCALS}
+                      | {name c}
 

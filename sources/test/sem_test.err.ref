@@ -1445,4 +1445,7 @@ test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0472: table is alread
 test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0466: the table named in an @unsub/@resub directive does not exist 'not_a_table'
 test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'sub_test_dependency'
 test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0474: @resub is invalid because the table references 'unsub_test_table'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM LOCALS, there is no local matching 'xyzzy'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM LOCALS, there is no local matching 'xyzzy'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'locals'
 semantic errors present; no code gen.

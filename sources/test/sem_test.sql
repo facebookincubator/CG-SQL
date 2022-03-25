@@ -7891,6 +7891,16 @@ begin
   insert into bar from arguments(like bar);
 end;
 
+-- TEST: use the locals like "bar" some have trailing _ and some do not
+-- AST rewritten, note some have _ and some do not
+-- + INSERT INTO bar(id, name, rate) VALUES(LOCALS.id, LOCALS.name, LOCALS.rate);
+-- + {create_proc_stmt}: ok
+-- - error:
+create proc insert_bar_locals(extra integer, id integer not null, name_ text, rate long integer)
+begin
+  insert into bar from locals(like bar);
+end;
+
 -- TEST: use the arguments like "bar" but some args are missing
 -- AST rewritten, note some have _ and some do not
 -- + {create_proc_stmt}: err
@@ -21728,3 +21738,60 @@ create table sub_test_dependency(
 -- + {schema_resub_stmt}: ok
 -- - error:
 @resub (9, sub_test_dependency);
+
+declare proc any_args_at_all no check;
+
+-- TEST: check locals rewrite
+-- verify the rewrites
+-- + CALL any_args_at_all(LOCALS.x, LOCALS.y);
+-- + CALL any_args_at_all(LOCALS.x, LOCALS.y, LOCALS.z);
+-- + CALL any_args_at_all(LOCALS.x, LOCALS.y, LOCALS.z, LOCALS.u);
+-- verify that type and kind flow correctly
+-- + {let_stmt}: z: integer<x> notnull variable
+-- + {let_stmt}: u: integer<x> notnull variable
+create proc use_locals_expansion(x integer<x> not null, y integer<y>)
+begin
+  call any_args_at_all(from locals);
+  let z := locals.x;
+  call any_args_at_all(from locals);
+  let u := locals.z;
+  call any_args_at_all(from locals);
+end;
+
+-- TEST: bogus scoped local
+-- + {call_stmt}: err
+-- + error: % expanding FROM LOCALS, there is no local matching 'xyzzy'
+-- +1 error:
+create proc bogus_local_usage()
+begin
+  call any_args_at_all(locals.xyzzy);
+end;
+
+-- TEST: there are no locals
+-- + {let_stmt}: err
+-- + error: % expanding FROM LOCALS, there is no local matching 'xyzzy'
+-- +1 error:
+let no_chance_of_this_working := locals.xyzzy;
+
+-- TEST: try to use locals scope with no locals
+-- + {call_stmt}: err
+-- + error: % name not found 'locals'
+-- +1 error:
+call any_args_at_all(from locals);
+
+-- TEST: locals work with nullability improvements
+-- + {create_proc_stmt}: ok
+-- +4 {call_stmt}: ok
+-- - error:
+create proc locals_work_with_nullability_improvements(a_ int)
+begin
+  declare b int;
+  declare c_ int;
+
+  if a_ is null or b is null or locals.c is null return;
+
+  call requires_not_nulls(a_, b, c_);
+  call requires_not_nulls(from locals like requires_not_nulls arguments);
+  call requires_not_nulls(from locals);
+  call requires_not_nulls(*);
+end;

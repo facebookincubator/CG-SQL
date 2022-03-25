@@ -108,6 +108,8 @@ typedef void (*sem_misc_attribute_callback)(
 
 static bytebuf *deployable_validations;
 
+static bytebuf *unitary_locals;
+
 // A list node holding the `sem_t *` for a nullability improvement of a global
 // variable. These are used for un-setting all improvements of globals at every
 // procedure call.
@@ -205,6 +207,7 @@ static void sem_declare_proc_stmt(ast_node *ast);
 static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name);
 static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_orderby);
 static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table);
+static ast_node *sem_synthesize_current_locals();
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -1791,7 +1794,6 @@ static ast_node *find_trigger(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-
 // wrapper for variable groups
 ast_node *find_variable_group(CSTR name) {
   symtab_entry *entry = symtab_find(variable_groups, name);
@@ -1842,6 +1844,9 @@ cql_noexport bool_t add_arg_bundle(ast_node *ast, CSTR name) {
 }
 
 cql_noexport ast_node *find_arg_bundle(CSTR name) {
+  if (!Strcasecmp(name,  "LOCALS")) {
+    return sem_synthesize_current_locals();
+  }
   symtab_entry *entry = symtab_find(arg_bundles, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
@@ -5326,7 +5331,40 @@ typedef enum {
   SEM_RESOLVE_STOP = 1
 } sem_resolve;
 
-static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope || Strcasecmp(scope, "LOCALS")) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  symtab_entry *entry = symtab_find(locals, name);
+  if (!entry) {
+    CHARBUF_OPEN(tmp);
+      bprintf(&tmp, "%s_", name);
+      entry = symtab_find(locals, tmp.ptr);
+    CHARBUF_CLOSE(tmp);
+
+    if (!entry) {
+      report_resolve_error(ast, "CQL0201: expanding FROM LOCALS, there is no local matching", name);
+      record_resolve_error(ast);
+      return SEM_RESOLVE_STOP;
+    }
+  }
+
+  ast_node *var = (ast_node *)entry->val;
+
+  if (ast) {
+    ast->sem = var->sem;
+  }
+
+  *type_ptr = &var->sem->sem_type;
+
+  return SEM_RESOLVE_STOP;
+}
+
+static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -5335,6 +5373,7 @@ static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scop
   }
 
   Invariant(current_proc);
+
   ast_node *params = get_proc_params(current_proc);
   Invariant(params);
 
@@ -5347,19 +5386,29 @@ static sem_resolve sem_try_resolve_arguments(ast_node *ast, CSTR name, CSTR scop
     CHARBUF_CLOSE(tmp);
   }
 
-  if (!param) {
-    report_resolve_error(ast, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", name);
-    record_resolve_error(ast);
+  if (param) {
+    if (ast) {
+      ast->sem = param->sem;
+    }
+
+    *type_ptr = &param->sem->sem_type;
+
     return SEM_RESOLVE_STOP;
   }
 
-  if (ast) {
-    ast->sem = param->sem;
+  report_resolve_error(ast, "CQL0201: expanding FROM ARGUMENTS, there is no argument matching", name);
+  record_resolve_error(ast);
+  return SEM_RESOLVE_STOP;
+}
+
+static void add_variable(CSTR name, ast_node *variable) {
+  if (current_variables == locals && unitary_locals) {
+    if (is_unitary(variable->sem->sem_type)) {
+      bytebuf_append(unitary_locals, &variable, sizeof(variable));
+    }
   }
 
-  *type_ptr = &param->sem->sem_type;
-
-  return SEM_RESOLVE_STOP;
+  symtab_add(current_variables, name, variable);
 }
 
 // Look for the given name as a local or global variable.  First local.
@@ -5825,7 +5874,8 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
   *type_ptr = NULL;
 
   sem_resolve (*resolver[])(ast_node *ast, CSTR, CSTR, sem_t **) = {
-    sem_try_resolve_arguments,
+    sem_try_resolve_arguments_bundle,
+    sem_try_resolve_locals_bundle,
     sem_try_resolve_column,
     sem_try_resolve_rowid,
     sem_try_resolve_variable,
@@ -15537,7 +15587,7 @@ static void sem_let_stmt(ast_node *ast) {
   variable->sem = ast->sem = new_sem(sem_type_var);
   variable->sem->name = name;
   variable->sem->kind = expr->sem->kind;
-  symtab_add(current_variables, name, variable);
+  add_variable(name, variable);
 }
 
 // In/out processing for a procedure just decodes the AST into the sem_type
@@ -15627,7 +15677,8 @@ static void sem_param(ast_node *ast) {
   ast->sem->name = name;
   ast->sem->kind = data_type->sem->kind;
 
-  symtab_add(locals, name, ast);
+  Invariant(current_variables == locals);
+  add_variable(name, ast);
 }
 
 // This handles the case where you are using the LIKE proc ARGUMENTS form
@@ -17707,6 +17758,9 @@ static void sem_create_proc_stmt(ast_node *ast) {
   // create local storage for named type defined in the proc
   local_types = symtab_new();
 
+  unitary_locals = _ast_pool_new(bytebuf);
+  bytebuf_open(unitary_locals);
+
   // CREATE PROC [name] ( [params] )
 
   if (find_func(name)) {
@@ -17900,6 +17954,7 @@ cleanup:
   current_proc = NULL;
   SYMTAB_CLEANUP(local_types);
   in_shared_fragment = false;
+  BYTEBUF_CLEANUP(unitary_locals);
 }
 
 // Validate the name is unique in the given name list and attach the type
@@ -18633,7 +18688,7 @@ static void sem_declare_vars_type(ast_node *declare_vars_type) {
     }
     variable->sem->name = name;
     variable->sem->kind = data_type->sem->kind;
-    symtab_add(current_variables, name, variable);
+    add_variable(name, variable);
   }
 
   if (error) {
@@ -18751,7 +18806,7 @@ static void sem_declare_cursor(ast_node *ast) {
   cursor->sem->name = name;
   ast->sem = cursor->sem;
 
-  symtab_add(current_variables, name, cursor);
+  add_variable(name, cursor);
 }
 
 // This is the "unboxing" primitive for cursors.  The idea here is that
@@ -18794,7 +18849,7 @@ static void sem_declare_cursor_for_name(ast_node *ast) {
   cursor->sem->name = name;
   ast->sem = cursor->sem;
 
-  symtab_add(current_variables, name, cursor);
+  add_variable(name, cursor);
 }
 
 // Verify that the indicated variable has a valid cursor type
@@ -18952,7 +19007,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   new_cursor_ast->sem->name = new_cursor_name;
   ast->sem = new_cursor_ast->sem;
 
-  symtab_add(current_variables, new_cursor_name, new_cursor_ast);
+  add_variable(new_cursor_name, new_cursor_ast);
 }
 
 // Here we make a value cursor from the template of a select statement.
@@ -19001,7 +19056,7 @@ static void sem_declare_cursor_like_select(ast_node *ast) {
   cursor->sem->name = name;
   ast->sem = cursor->sem;
 
-  symtab_add(current_variables, name, cursor);
+  add_variable(name, cursor);
 }
 
 // Here we're just checking that the proc mentioned in the call statement uses the OUT cursor form
@@ -19054,8 +19109,41 @@ static void sem_declare_value_cursor(ast_node *ast) {
   cursor->sem->sem_type |= call_stmt->sem->sem_type & SEM_TYPE_DML_PROC;
   ast->sem = cursor->sem;
 
-  symtab_add(current_variables, name, cursor);
+  add_variable(name, cursor);
 }
+
+static ast_node *sem_synthesize_current_locals() {
+  if (!current_proc) {
+    return NULL;
+  }
+
+  AST_REWRITE_INFO_SET(current_proc->lineno, current_proc->filename);
+  CSTR locals_name = "LOCALS";
+
+  uint32_t usable_locals = unitary_locals->used / sizeof(ast_node *);
+  ast_node **l_syms = (ast_node **)unitary_locals->ptr;
+
+  sem_struct *sptr = new_sem_struct(locals_name, usable_locals);
+
+  ast_node *ast_locals = new_ast_str(locals_name);
+  ast_locals->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_HAS_SHAPE_STORAGE);
+  ast_locals->sem->name = locals_name;
+  ast_locals->sem->sptr = sptr;
+
+  for (uint32_t i = 0; i < usable_locals; i++) {
+    ast_node *var = l_syms[i];
+    Invariant(is_unitary(var->sem->sem_type));
+
+    sptr->names[i] = var->sem->name;
+    sptr->kinds[i] = var->sem->kind;
+    sptr->semtypes[i] = var->sem->sem_type;
+  }
+
+  AST_REWRITE_INFO_RESET();
+
+  return ast_locals;
+}
+
 
 // Try to analyze the name first as an arg bundle, and that fails, then try as a cursor
 // these are the two shapes that hold data.
@@ -20923,7 +21011,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
       variable->sem = ast->sem = new_sem(sem_type_var);
       variable->sem->name = var_name;
       variable->sem->kind = param->sem->kind;
-      symtab_add(current_variables, var_name, variable);
+      add_variable(var_name, variable);
       AST_REWRITE_INFO_RESET();
     }
   }
@@ -23084,6 +23172,7 @@ cql_noexport void sem_cleanup() {
   BYTEBUF_CLEANUP(deployable_validations);
   BYTEBUF_CLEANUP(recreate_annotations);
   BYTEBUF_CLEANUP(schema_annotations);
+  BYTEBUF_CLEANUP(unitary_locals);
 
   SYMTAB_CLEANUP(ad_hoc_migrates);
   SYMTAB_CLEANUP(extensions_by_basename);
