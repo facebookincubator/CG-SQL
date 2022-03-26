@@ -498,6 +498,25 @@ create table gaining_group
   id integer
 ) @recreate(new_group);
 
+-- TEST table ok
+create table unsub_resub_trickery(id integer);
+
+-- TEST unsub valid
+-- - error:
+@unsub (20, unsub_resub_trickery);
+
+-- TEST resub valid
+-- - error:
+@resub (22, unsub_resub_trickery);
+
+-- TEST unsub valid
+-- - error:
+@unsub (24, unsub_resub_trickery);
+
+-- TEST resub valid
+-- - error:
+@resub (26, unsub_resub_trickery);
+
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
 ------------------------------------------------------------------------------------------------------------
@@ -1090,3 +1109,29 @@ create table gaining_group
 (
   id integer
 ) @recreate;
+
+-- TEST: table matches
+-- - error:
+create table unsub_resub_trickery(id integer);
+
+-- TEST: unsub matches
+-- - error:
+@unsub (20, unsub_resub_trickery);
+
+-- TEST: resub matches
+-- - error:
+@resub (22, unsub_resub_trickery);
+
+-- TEST: unsub matches
+-- - error:
+@unsub (24, unsub_resub_trickery);
+
+-- TEST: resub matches
+-- - error:
+@resub (26, unsub_resub_trickery);
+
+-- TEST: badly formed directive in previous section
+-- + {schema_unsub_stmt}: err
+-- + error: % @unsub directive must provide a table
+-- +1 error:
+@unsub (28);

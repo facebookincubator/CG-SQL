@@ -2165,6 +2165,60 @@ CREATE TABLE gaining_group(
 
 The statement ending at line XXXX
 
+CREATE TABLE unsub_resub_trickery(
+  id INTEGER
+);
+
+  {create_table_stmt}: unsub_resub_trickery: { id: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name unsub_resub_trickery}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@UNSUB(20, unsub_resub_trickery);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 20}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
+@RESUB(22, unsub_resub_trickery);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 22}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
+@UNSUB(24, unsub_resub_trickery);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 24}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
+@RESUB(26, unsub_resub_trickery);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 26}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok
@@ -4445,4 +4499,68 @@ CREATE TABLE gaining_group(
         | {col_def_name_type}
           | {name id}
           | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE unsub_resub_trickery(
+  id INTEGER
+);
+
+  {create_table_stmt}: unsub_resub_trickery: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name unsub_resub_trickery}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@UNSUB(20, unsub_resub_trickery);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 20}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
+@RESUB(22, unsub_resub_trickery);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 22}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
+@UNSUB(24, unsub_resub_trickery);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 24}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
+@RESUB(26, unsub_resub_trickery);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 26}
+    | {name unsub_resub_trickery}
+
+The statement ending at line XXXX
+
+@UNSUB(28);
+
+test/sem_test_prev.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 28}
 

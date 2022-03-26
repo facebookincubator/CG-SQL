@@ -115,12 +115,14 @@ typedef struct schema_annotation {
 #define SCHEMA_ANNOTATION_DELETE_COLUMN 6
 #define SCHEMA_ANNOTATION_DELETE_TABLE 7
 #define SCHEMA_ANNOTATION_AD_HOC 8
-#define SCHEMA_ANNOTATION_LAST 8
+#define SCHEMA_ANNOTATION_UNSUB 9
+#define SCHEMA_ANNOTATION_RESUB 10
+#define SCHEMA_ANNOTATION_LAST 10
 
 #define SEM_TYPE_NULL 0         // the subtree is a null literal (not just nullable)
 #define SEM_TYPE_BOOL 1         // the subtree is a bool
 #define SEM_TYPE_INTEGER 2      // the subtree is an integer
-#define SEM_TYPE_LONG_INTEGER 3 // the subtree is a long integer
+#define SEM_TYPE_LONG_INTEGER 3 // the subtree is a long_integer
 #define SEM_TYPE_REAL 4         // the subtree is a real
 #define SEM_TYPE_TEXT 5         // the subtree is a text type
 #define SEM_TYPE_BLOB 6         // the subtree is a blob type

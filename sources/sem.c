@@ -376,6 +376,10 @@ static uint32_t current_expr_context;
 // If we have started validating previous schema this will be true
 static bool_t validating_previous_schema;
 
+// When we're doing previous schema validation we will march through the unsub/resub
+// directives in order, this tells us the next one to consider.
+static size_t next_unsub_resub_index = 0;
+
 // The current annonation target in create proc statement
 static CSTR annotation_target;
 
@@ -20849,6 +20853,8 @@ static void sem_previous_schema_stmt(ast_node *ast) {
   deployable_validations = _ast_pool_new(bytebuf);
   bytebuf_open(deployable_validations);
 
+  last_sub_version = 1;
+
   record_ok(ast);
 }
 
@@ -22441,15 +22447,11 @@ typedef struct subs_info {
   int32_t vers;
 } subs_info;
 
-// These validations are common to both @unsub and @resub and they
-// mainly check generic things like the version numbers are reasonable,
-// the indicated table is a table, and stuff like that.  They need
-// follow-up to ensure that the particular operation makes sense.
-static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
+static void sem_subs_extract(ast_node *ast, subs_info *info) {
   Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+  CSTR directive = is_ast_schema_unsub_stmt(ast) ? "@unsub" : "@resub";
 
   EXTRACT_NOTNULL(version_annotation, ast->left);
-
   EXTRACT_OPTION(vers, version_annotation->left);
 
   if (vers < 1) {
@@ -22459,60 +22461,144 @@ static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
   }
 
   if (!version_annotation->right) {
-    report_error(ast, "CQL0465: @unsub directive must provide a table", NULL);
+    CSTR msg = dup_printf("CQL0465: %s directive must provide a table", directive);
+    report_error(ast, msg, NULL);
     record_error(ast);
     return;
   }
 
   EXTRACT_STRING(name, version_annotation->right);
 
-  ast_node *table = find_usable_table_or_view_even_deleted(
-    name, ast, "CQL0466: the table named in an @unsub/@resub directive does not exist");
-
-  if (!table) {
-    record_error(ast);
-    return;
-  }
-
-  if (vers < last_sub_version) {
-    report_error(ast, "CQL0467: @unsub/@resub versions must be in non-decreasing order", NULL);
-    record_error(ast);
-    return;
-  }
-
-  if (is_ast_create_view_stmt(table)) {
-    report_error(ast, "CQL0468: cannot @unsub/@resub from a view", name);
-    record_error(ast);
-    return;
-  }
-
-  if (table->sem->delete_version > 0 && table->sem->delete_version <= vers) {
-    report_error(ast, "CQL0469: table is already deleted", name);
-    record_error(ast);
-    return;
-  }
-
-  if (!table->sem->recreate && table->sem->create_version >= vers) {
-    report_error(ast, "CQL0470: table not yet created at indicated version", name);
-    record_error(ast);
-    return;
-  }
-
-  if (table->sem->unsub_version == vers || table->sem->resub_version == vers) {
-    report_error(ast, "CQL0471: table has another @unsub/@resub at this version number", name);
-    record_error(ast);
-    return;
-  }
-
-  info->table_ast = table;
   info->vers = vers;
   info->name = name;
 
   record_ok(ast);
 }
 
+// These validations are common to both @unsub and @resub and they
+// mainly check generic things like the version numbers are reasonable,
+// the indicated table is a table, and stuff like that.  They need
+// follow-up to ensure that the particular operation makes sense.
+static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
+  Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+
+  sem_subs_extract(ast, info);
+  if (is_error(ast)) {
+    return;
+  }
+
+  ast_node *table = find_usable_table_or_view_even_deleted(
+    info->name, ast, "CQL0466: the table named in an @unsub/@resub directive does not exist");
+
+  if (!table) {
+    record_error(ast);
+    return;
+  }
+
+  if (info->vers < last_sub_version) {
+    report_error(ast, "CQL0467: @unsub/@resub versions must be in non-decreasing order", NULL);
+    record_error(ast);
+    return;
+  }
+
+  if (is_ast_create_view_stmt(table)) {
+    report_error(ast, "CQL0468: cannot @unsub/@resub from a view", info->name);
+    record_error(ast);
+    return;
+  }
+
+  if (table->sem->delete_version > 0 && table->sem->delete_version <= info->vers) {
+    report_error(ast, "CQL0469: table is already deleted", info->name);
+    record_error(ast);
+    return;
+  }
+
+  if (!table->sem->recreate && table->sem->create_version >= info->vers) {
+    report_error(ast, "CQL0470: table not yet created at indicated version", info->name);
+    record_error(ast);
+    return;
+  }
+
+  if (table->sem->unsub_version == info->vers || table->sem->resub_version == info->vers) {
+    report_error(ast, "CQL0471: table has another @unsub/@resub at this version number", info->name);
+    record_error(ast);
+    return;
+  }
+
+  info->table_ast = table;
+
+  record_ok(ast);
+}
+
+// find the next unsub/resub annotation that we recorded, it has to match what we just saw
+static void validate_next_subs_annotation(ast_node *ast) {
+  Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+  subs_info info;
+
+  sem_subs_extract(ast, &info);
+  if (is_error(ast)) {
+    return;
+  }
+
+  uint32_t type = is_ast_schema_unsub_stmt(ast) ? SCHEMA_ANNOTATION_UNSUB : SCHEMA_ANNOTATION_RESUB;
+
+  size_t count = schema_annotations->used / sizeof(schema_annotation);
+  schema_annotation *notes = (schema_annotation *)schema_annotations->ptr;
+
+  if (next_unsub_resub_index <= count) {
+    for (size_t i = next_unsub_resub_index; i < count; i++) {
+      uint32_t found_type = notes[i].annotation_type;
+      int32_t found_vers = notes[i].version;
+      CSTR found_name = notes[i].target_name;
+
+      switch (found_type) {
+      default:
+        // skip other annotations
+        continue;
+
+      case SCHEMA_ANNOTATION_UNSUB:
+      case SCHEMA_ANNOTATION_RESUB:
+        if (found_type == type && !Strcasecmp(found_name, info.name) && found_vers == info.vers) {
+          next_unsub_resub_index = i + 1;
+          record_ok(ast);
+          return;
+        }
+
+        next_unsub_resub_index = count + 1;  // stop looking
+
+        CSTR found_kind = found_type == SCHEMA_ANNOTATION_UNSUB ? "@unsub" : "@resub";
+        CSTR reqd_kind = type == SCHEMA_ANNOTATION_UNSUB ? "@unsub" : "@resub";
+
+        CSTR msg = dup_printf(
+          "CQL0475: @unsub/@resub directives did not match between current and previous schema\n"
+          "looking for %s (%d, %s)\n"
+          "found %s(%d, %s)",
+            reqd_kind, info.vers, info.name,
+            found_kind, found_vers, found_name);
+
+        report_error(ast, msg, NULL);
+        record_error(ast);
+        return;
+      }
+    }
+
+    next_unsub_resub_index = count + 1;  // stop looking
+    report_error(ast, "CQL0476: previous schema had more unsub/resub directives than the current schema", NULL);
+    record_error(ast);
+    return;
+  }
+
+  // no more errors after the first is reported or there will be a cascade of mismatches
+  record_ok(ast);
+}
+
 static void sem_schema_unsub_stmt(ast_node *ast) {
   Contract(is_ast_schema_unsub_stmt(ast));
+
+  if (validating_previous_schema) {
+    validate_next_subs_annotation(ast);
+    return;
+  }
 
   subs_info info;
   sem_subs_validate_common(ast, &info);
@@ -22556,20 +22642,23 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
   table->sem->unsub_version = vers;
   last_sub_version = vers;
 
+  record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_UNSUB, NULL, ast->left, 0);
   record_ok(ast);
 }
 
 static void sem_schema_resub_stmt(ast_node *ast) {
   Contract(is_ast_schema_resub_stmt(ast));
 
+  if (validating_previous_schema) {
+    validate_next_subs_annotation(ast);
+    return;
+  }
+
   subs_info info;
   sem_subs_validate_common(ast, &info);
   if (is_error(ast)) {
     return;
   }
-
-  // just enough checks to safely resub a table so that we can test unsub better
-  // more checks needed here for the rest of the resub rules
 
   int32_t vers = info.vers;
   ast_node *table = info.table_ast;
@@ -22607,6 +22696,8 @@ static void sem_schema_resub_stmt(ast_node *ast) {
   table->sem->resub_version = vers;
   last_sub_version = vers;
 
+
+  record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_RESUB, NULL, ast->left, 0);
   record_ok(ast);
 }
 
@@ -23252,6 +23343,7 @@ cql_noexport void sem_cleanup() {
   sem_stmt_level = -1;
   sem_ok = NULL;
   validating_previous_schema = false;
+  next_unsub_resub_index = 0;
   between_count = 0;
   pending_table_validations_head = NULL;
   current_table_name = NULL;

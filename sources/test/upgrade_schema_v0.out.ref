@@ -70,6 +70,13 @@ CREATE TABLE test_create_table_A(
   colB LONG_INT,
   colC TEXT)
 
+----- test_for_unsub -----
+
+type: table
+tbl_name: test_for_unsub
+CREATE TABLE test_for_unsub(
+  unsub_id INTEGER)
+
 ----- test_recreate_table_A -----
 
 type: table

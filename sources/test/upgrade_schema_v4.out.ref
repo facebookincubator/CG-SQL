@@ -1,4 +1,4 @@
-reference results for version 3
+reference results for version 4
 
 ----- g1 -----
 
@@ -49,6 +49,13 @@ CREATE TABLE test_create_table_C(
   colA TEXT,
   colB LONG_INT,
   colC LONG_INT)
+
+----- test_for_unsub -----
+
+type: table
+tbl_name: test_for_unsub
+CREATE TABLE test_for_unsub(
+  unsub_id INTEGER)
 
 ----- test_recreate_table_B -----
 

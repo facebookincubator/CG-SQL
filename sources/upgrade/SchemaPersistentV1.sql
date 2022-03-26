@@ -49,6 +49,13 @@ CREATE TABLE test_this_table_will_become_create(
   id integer primary key
 ) @create(1, cql:from_recreate);
 
+-- we will be unsubscribing and resubscribing this table in later versions
+CREATE TABLE test_for_unsub(
+  unsub_id integer
+);
+
+@unsub(1, test_for_unsub);
+
 -- extra items that will disappear when we switch to exclusive mode
 CREATE VIEW extra_view AS SELECT * FROM g1;
 

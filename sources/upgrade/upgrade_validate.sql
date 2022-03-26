@@ -107,13 +107,13 @@ begin
       call printf("ERROR! test_this_table_will_become_create should have a column named id in v%d\n", version);
       throw;
     end if;
-  when 3 then
+  when 3,4 then
     if recreate_sql is not null then
       call printf("ERROR! test_this_table_will_become_create be deleted in v%d\n", version);
       throw;
     end if;
   else
-    call printf("ERROR! expected schema version v%d\n", version);
+    call printf("ERROR! unexpected schema version v%d\n", version);
     throw;
   end;
 end;

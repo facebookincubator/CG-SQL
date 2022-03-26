@@ -35,6 +35,11 @@ CREATE TABLE test_this_table_will_become_create(
   xyzzy integer -- we'll change the table in a significant way
 ) @recreate;
 
+-- we will be unsubscribing and resubscribing this table in later versions
+CREATE TABLE test_for_unsub(
+  unsub_id integer
+);
+
 -- extra items that will disappear when we switch to exclusive mode
 CREATE VIEW extra_view AS SELECT * FROM g1;
 

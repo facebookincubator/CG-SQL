@@ -791,9 +791,265 @@ schema_migration_test() {
     failed
   fi
 
+  echo '---------------------------------'
+  echo running semantic analysis for previous schema unsub/resub missing case
+  if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_unsub_missing.sql" >"${OUT_DIR}/sem_test_unsub_missing.out" 2>"${OUT_DIR}/sem_test_unsub_missing.err"
+  then
+     echo "CQL semantic analysis previous unsub/resub returned unexpected error code"
+     cat "${OUT_DIR}/sem_test_unsub_missing.err"
+     failed
+  fi;
+
+  echo validating output trees
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_unsub_missing.sql" "${OUT_DIR}/sem_test_unsub_missing.out"
+  then
+    echo failed verification
+    failed
+  fi
+
+  echo '---------------------------------'
+  echo running semantic analysis for previous schema unsub/resub mismatch case
+  if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_unsub_mismatch.sql" >"${OUT_DIR}/sem_test_unsub_mismatch.out" 2>"${OUT_DIR}/sem_test_unsub_mismatch.err"
+  then
+     echo "CQL semantic analysis previous unsub/resub returned unexpected error code"
+     cat "${OUT_DIR}/sem_test_unsub_mismatch.err"
+     failed
+  fi;
+
+  echo validating output trees
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_unsub_mismatch.sql" "${OUT_DIR}/sem_test_unsub_mismatch.out"
+  then
+    echo failed verification
+    failed
+  fi
+
   echo "  computing diffs (empty if none)"
   on_diff_exit sem_test_prev.out
   on_diff_exit sem_test_prev.err
+  on_diff_exit sem_test_unsub_missing.out
+  on_diff_exit sem_test_unsub_missing.err
+  on_diff_exit sem_test_unsub_mismatch.out
+  on_diff_exit sem_test_unsub_mismatch.err
+
+  echo '---------------------------------'
+  echo running code gen for migration test
+
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade 2>"${OUT_DIR}/cg_test_schema_upgrade.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_upgrade.err"
+    failed
+  fi
+
+  echo validating output trees
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_schema_upgrade.sql" "${OUT_DIR}/cg_test_schema_upgrade.out"
+  then
+    echo failed verification
+    failed
+  fi
+
+  echo "  compiling the upgrade script with CQL"
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_upgrade.h" "${OUT_DIR}/cg_test_schema_upgrade.c" --in "${OUT_DIR}/cg_test_schema_upgrade.out"
+  then
+    echo CQL compilation failed
+    failed;
+  fi
+
+  echo "  compiling the upgrade script with C"
+  if ! do_make cg_test_schema_upgrade
+  then
+    echo CQL migration script compilation failed.
+    failed;
+  fi
+
+  echo "  computing diffs (empty if none)"
+
+  on_diff_exit cg_test_schema_upgrade.out
+  on_diff_exit cg_test_schema_upgrade.err
+
+  echo '---------------------------------'
+  echo running code gen to produce previous schema
+
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_prev.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --rt schema 2>"${OUT_DIR}/cg_test_schema_prev.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_prev.err"
+    failed
+  fi
+
+  echo '---------------------------------'
+  echo running code gen to produce raw sqlite schema
+
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_sqlite.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --rt schema_sqlite 2>"${OUT_DIR}/cg_test_schema_sqlite.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_sqlite.err"
+    failed
+  fi
+
+  echo combining generated previous schema with itself to ensure it self validates
+
+  cat "${OUT_DIR}/cg_test_schema_prev.out" > "${OUT_DIR}/prev_loop.out"
+  echo "@previous_schema;" >> "${OUT_DIR}/prev_loop.out"
+  cat "${OUT_DIR}/cg_test_schema_prev.out" >> "${OUT_DIR}/prev_loop.out"
+
+  if ! ${CQL} --cg "${OUT_DIR}/prev_twice.out" --in "${OUT_DIR}/prev_loop.out" --rt schema 2>"${OUT_DIR}/cg_test_schema_prev_twice.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_prev_twice.err"
+    failed
+  fi
+
+  echo comparing the generated previous schema from that combination and it should be identical to the original
+
+  if ! ${CQL} --cg "${OUT_DIR}/prev_thrice.out" --in "${OUT_DIR}/prev_twice.out" --rt schema 2>"${OUT_DIR}/cg_test_schema_prev_thrice.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_prev_thrice.err"
+    failed
+  fi
+
+  echo "  computing diffs after several applications (empty if none)"
+  __on_diff_exit "${OUT_DIR}/cg_test_schema_prev.out" "${OUT_DIR}/prev_twice.out"
+  __on_diff_exit "${OUT_DIR}/prev_twice.out" "${OUT_DIR}/prev_thrice.out"
+
+  echo "  computing previous schema diffs from reference (empty if none)"
+  on_diff_exit cg_test_schema_prev.out
+  on_diff_exit cg_test_schema_prev.err
+
+  echo "  computing sqlite schema diffs from reference (empty if none)"
+  on_diff_exit cg_test_schema_sqlite.out
+  on_diff_exit cg_test_schema_sqlite.err
+
+  echo "  running schema migration with include/exclude args"
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions shared 2>"${OUT_DIR}/cg_test_schema_partial_upgrade.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_partial_upgrade.err"
+    failed
+  fi
+
+  echo "  compiling the upgrade script with CQL"
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.h" "${OUT_DIR}/cg_test_schema_partial_upgrade.c" --in "${OUT_DIR}/cg_test_schema_partial_upgrade.out"
+  then
+    echo CQL compilation failed
+    failed;
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_schema_partial_upgrade.out
+  on_diff_exit cg_test_schema_partial_upgrade.err
+
+  echo "  running schema migration with min version args"
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_min_version_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --min_schema_version 3 2>"${OUT_DIR}/cg_test_schema_min_version_upgrade.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_min_version_upgrade.err"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_schema_min_version_upgrade.out
+  on_diff_exit cg_test_schema_min_version_upgrade.err
+
+  echo "  running schema facet checker"
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_facet_checker.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_facet_checker 2>"${OUT_DIR}/cg_test_schema_facet_checker.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_schema_facet_checker.err"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_schema_facet_checker.out
+  on_diff_exit cg_test_schema_facet_checker.err
+}
+
+misc_cases() {
+  echo '--------------------------------- STAGE 10 -- MISC CASES'
+  echo running usage test
+  if ! ${CQL} >"${OUT_DIR}/usage.out" 2>"${OUT_DIR}/usage.err"
+  then
+    echo usage test failed
+    failed
+  fi
+  on_diff_exit usage.out
+
+  echo running simple error test
+  if ${CQL} --in "${TEST_DIR}/error.sql" >"${OUT_DIR}/error.out" 2>"${OUT_DIR}/simple_error.err"
+  then
+    echo simple error test failed
+    failed
+  fi
+
+  on_diff_exit simple_error.err
+
+  echo running previous schema and codegen incompatible test
+  if ${CQL} --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/cg_test_prev_invalid.sql" 2>"${OUT_DIR}/prev_and_codegen_incompat.err"
+  then
+    echo previous schema and codegen are supposed to be incompatible
+    failed
+  fi
+
+  on_diff_exit prev_and_codegen_incompat.err
+
+  echo running big quote test
+  if ! ${CQL} --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/bigquote.sql" --global_proc x >/dev/null 2>"${OUT_DIR}/bigquote.err"
+  then
+    echo big quote test failed
+    failed
+  fi
+
+  on_diff_exit bigquote.err
+
+  echo running alternate cqlrt.h test
+  if ! ${CQL} --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/cg_test.sql" --global_proc x --cqlrt alternate_cqlrt.h 2>"${OUT_DIR}/alt_cqlrt.err"
+  then
+    echo alternate cqlrt test failed
+    failed
+  fi
+
+  if ! grep alternate_cqlrt.h "${OUT_DIR}/__temp.h" >/dev/null
+  then
+    echo alternate cqlrt did not appear in the output header
+    failed
+  fi
+
+  on_diff_exit alt_cqlrt.err
+
+  echo running too few -cg arguments with --generate_exports test
+  if ${CQL} --cg "${OUT_DIR}/__temp.c" "${OUT_DIR}/__temp.h" --in "${TEST_DIR}/cg_test.sql" --global_proc x --generate_exports 2>"${OUT_DIR}/gen_exports_args.err"
+  then
+    echo too few --cg args test failed
+    failed
+  fi
+
+  on_diff_exit gen_exports_args.err
+
+  echo running invalid include regions test
+  if ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions bogus --exclude_regions shared 2>"${OUT_DIR}/inc_invalid_regions.err"
+  then
+    echo invalid include region test failed
+    failed
+  fi
+
+  on_diff_exit inc_invalid_regions.err
+
+  echo running invalid exclude regions test
+  if ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions bogus 2>"${OUT_DIR}/excl_invalid_regions.err"
+  then
+    echo invalid exclude region test failed
+    failed
+  fi
+
+  on_diff_exit excl_invalid_regions.err
+
+  echo running global proc is needed but not present test
+  if ${CQL} --cg "${OUT_DIR}/__temp.c" "${OUT_DIR}/__temp.h" --in "${TEST_DIR}/bigquote.sql" 2>"${OUT_DIR}/global_proc_needed.err"
+  then
+    echo global proc needed but absent failed
+    failed
+  fi
 
   echo '---------------------------------'
   echo running code gen for migration test

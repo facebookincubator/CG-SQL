@@ -646,6 +646,33 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       bprintf(output, "\n");
     }
   }
+
+  // there are no "temp" unsub/resub, so don't emit these at all if "temp required" is set
+  // likewise if the output is for sqlite these are not processed by sqlite so they should be ignored
+  if (!temp_required && !schema_sqlite) {
+    size_t count = schema_annotations->used / sizeof(schema_annotation);
+    schema_annotation *notes = (schema_annotation *)schema_annotations->ptr;
+
+    for (size_t i = 0; i < count; i++) {
+      uint32_t found_type = notes[i].annotation_type;
+
+      if (found_type != SCHEMA_ANNOTATION_UNSUB && found_type != SCHEMA_ANNOTATION_RESUB) {
+        continue;
+      }
+
+      ast_node *ast = notes[i].annotation_ast->parent;
+      ast_node *target_ast = notes[i].target_ast;
+      Invariant(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+
+      CSTR region = target_ast->sem->region;
+
+      if (include_from_region(region, mode)) {
+        gen_set_output_buffer(output);
+        gen_statement_with_callbacks(ast, use_callbacks);
+        bprintf(output, ";\n\n");
+      }
+    }
+  }
 }
 
 // This entry point is for generating a full image of the declared schema
@@ -1416,6 +1443,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
       continue;
     }
 
+    bool_t subscription_management = false;
+
     switch (type) {
       case SCHEMA_ANNOTATION_CREATE_COLUMN: {
         ast_node *def = note->column_ast;
@@ -1515,6 +1544,12 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         bprintf(&upgrade, "      -- delete migration proc for %s will run\n\n", target_name);
         break;
 
+      case SCHEMA_ANNOTATION_UNSUB:
+      case SCHEMA_ANNOTATION_RESUB:
+        // do nothing for now, but no error...
+        subscription_management = true;
+        break;
+
       case SCHEMA_ANNOTATION_AD_HOC:
         // no annotation based actions other than migration proc (handled below)
         Contract(version_annotation->right);
@@ -1523,7 +1558,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     }
 
     // handle any migration proc for any annotation
-    if (version_annotation->right) {
+    if (!subscription_management && version_annotation->right) {
       // call any non-builtin migrations the generic way, builtins get whatever special handling they need
       if (!is_ast_dot(version_annotation->right)) {
         EXTRACT_STRING(proc, version_annotation->right);

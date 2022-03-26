@@ -61,6 +61,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version not equal to previous delete version for 'delete_change_virtual'
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0448: table was marked @delete but it needs to be marked @recreate @delete 'dropping_this'
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'losing_group'
+test/sem_test_prev.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
 test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0310: new column must be added with @create(6) or later 'id3'

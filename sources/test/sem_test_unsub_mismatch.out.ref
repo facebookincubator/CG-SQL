@@ -1,0 +1,84 @@
+{stmt_list}: err
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER
+);
+
+  {create_table_stmt}: foo: { id: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@UNSUB(2, foo);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 2}
+    | {name foo}
+
+The statement ending at line XXXX
+
+@RESUB(3, foo);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 3}
+    | {name foo}
+
+The statement ending at line XXXX
+
+@PREVIOUS_SCHEMA;
+
+  {previous_schema_stmt}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER
+);
+
+  {create_table_stmt}: foo: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@UNSUB(1, foo);
+
+test/sem_test_unsub_mismatch.sql:XXXX:1: error: in schema_unsub_stmt : CQL0475: @unsub/@resub directives did not match between current and previous schema
+looking for @unsub (1, foo)
+found @unsub(2, foo)
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 1}
+    | {name foo}
+
+The statement ending at line XXXX
+
+@RESUB(3, foo);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 3}
+    | {name foo}
+
