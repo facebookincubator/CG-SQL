@@ -6481,6 +6481,100 @@ Once this is done it becomes an error to try to make new regions that peek into 
 So, in summary, to get true privacy, first make whatever logical regions you like that are helpful.  Put privacy where you need/want it.  Import logical regions as much as you want in your own bundle of regions.  Then wrap that bundle up in a deployable region (they nest) and then your private regions are safe from unwanted usage.
 
 
+### Unsubscription and Resubscription Features
+
+Any significant library that is centered around a database is likely to accrue significant amounts of schema to support its features.  
+Often users of the library don’t want all its features and therefore don’t want all of its schema.  CQL’s primary strategy is to allow
+the library author to divide the schema into regions and then the consumer of the library  may generate a suitable schema deployer
+that deploys only the desired regions.  You simply subscribe to the regions you want.
+
+The `@unsub`/`@resub` constructs  deal with the unfortunate situation of over-subscription.  In the event that a customer has subscribed to regions
+that it turns out they don’t need, or if indeed the regions are not fine-grained enough, they may wish to (possibly much later) unsubscribe
+from particular tables or entire regions that they previously had included.
+
+Unfortunately it’s not so trivial as to simply remove the regions after the fact. The problem is that there might be billions
+of devices that already have the undesired tables and are paying the initialization costs for them.  Affirmatively removing the tables
+is highly desirable and that means a forward-looking annotation is necessary to tell the upgrader to generate `DROP` statements at some point.
+Furthermore, a customer  might decide at some point later that now is the time they need the schema in question, so resubcription also
+has to be possible.
+
+#### Unsubscription and Resubscription
+To accomplish this we add the following constructs:
+
+```sql
+@unsub(version_number, table_name);
+```
+
+And its twin
+
+```sql
+@resub(version_number, table_name);
+```
+
+The effects of a valid `@unsub` are as follows:
+
+* The table is no longer accessible by statements
+* If the table is marked `@create`, then “DROP IF EXISTS table_name” is emitted into the upgrade steps for _version_number_
+* If the table is `@recreate` the table is unconditionally dropped as though it had been deleted
+* The JSON includes the unsub details in a new subscriptions section
+
+The effects of a valid `@resub` are as follows:
+* The table is once again accessible by statements
+* If the table is `@create` then `CREATE TABLE table_name ...` is emitted into the upgrade steps for _version_number_
+  * the emitted create is for the table as it would have existed at _version_number_.
+* If the table is `@recreate`, the table is recreated as usual
+* The JSON includes the resub details in a new subscriptions section
+
+The compiler ensures that the directives are valid and stay valid. 
+
+#### Validations for @unsub(_version_, _table_):
+
+* _version_ must be an integer greater or equal to 1
+* _version_ must be greater or equal to any unsub or resub version previously seen
+* _table_ must be a valid table name
+* _table_ may have no previous unsub/resub at _version_
+* _table_ must be marked with an `@create` version < _version_ or else be marked `@recreate`
+  * recall that unmarked (baseline) tables are the same as `@create(0)`
+* _table_ must not be already unsubscribed
+* If _table_ is marked with `@delete`, its delete version must be > _version_
+  * unsubscribing from a table after it’s been outright deleted is clearly a mistake
+  * deleting a table in the same version that it is unsubscribed makes the `@unsub` redundant
+  * _table_ might be later outright deleted, the `@unsub` at an earlier version stands
+* For every child table -- those that mention this table using `REFERENCES`
+  * The child must be already deleted or unsubscribed
+  * The deletion or unsubscription must have happened at a version <= _version_
+* _table_ is marked unsubscribed for purposes of further analysis
+
+####  Validations for @resub(_version_, _table_):
+
+* _version_ must be an integer greater or equal to 1
+* _version_ must be greater or equal to any unsub or resub version previously seen
+* _table_ must be a valid table name
+* _table_ may have no previous unsub/resub at _version_
+* _table_ must be marked with an `@create` version < _version_ or else be marked `@recreate`
+  * recall that unmarked (baseline) tables are the same as `@create(0)`
+* _table_ must currently be unsubscribed
+* If _table_ is marked with `@delete`, its delete version must be > _version_
+  * resubscribing from a table after it’s been outright deleted is clearly a mistake
+  * deleting a table in the same version that it is resubscribed makes the `@resub` redundant
+  * _table_ might be later outright deleted, the `@resub` at an earlier version stands
+* If _table_ is not currently deleted then
+  * For every parent table (i.e. the tables it REFERENCES)
+  * The parent table must not be deleted or unsubscribed
+* _table_ has its unsubscribed status removed for further analysis
+
+#### Previous Schema validations for @unsub/@resub
+
+In the presence of `@previous_schema;` the following additional validations must be made:
+
+* Every `@unsub` and `@resub` in the previous schema must exist in the current schema in the exact same order with the exact same parameters
+  * i.e. these operations are never revoked, they undo each other creating a linear history like every other annotation
+* Any `@unsub` or `@resub` not present in the previous schema version happens at a version number that is greater or equal to the largest version number that was present anywhere in the previous schema
+  * i.e. you cannot unsubscribe or subscribe in the past.
+
+These validations are sufficient to guarantee a constistent logical history for unsubscriptions.
+
+
 ## Chapter 11: Previous Schema Validation
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -9431,7 +9525,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Mar 21 09:32:33 EDT 2022
+Snapshot as of Sun Mar 27 10:14:38 PDT 2022
 
 ### Operators and Literals
 
@@ -9473,10 +9567,10 @@ REALLIT /* floating point literal */
 "@EMIT_ENUMS" "@EMIT_GROUP" "@END_SCHEMA_REGION"
 "@ENFORCE_NORMAL" "@ENFORCE_POP" "@ENFORCE_PUSH"
 "@ENFORCE_RESET" "@ENFORCE_STRICT" "@EPONYMOUS" "@FILE"
-"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE"
+"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE" "@RESUB"
 "@SCHEMA_AD_HOC_MIGRATION" "@SCHEMA_UPGRADE_SCRIPT"
-"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "ABORT" "ACTION"
-"ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
+"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "@UNSUB" "ABORT"
+"ACTION" "ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
 "AUTOINCREMENT" "BEFORE" "BEGIN" "BLOB" "BY" "CALL"
 "CASCADE" "CASE" "CAST" "CATCH" "CHECK" "CLOSE" "COLUMN"
 "COLUMNS" "COMMIT" "CONST" "CONSTRAINT" "CONTEXT COLUMN"
@@ -9589,6 +9683,8 @@ any_stmt:
   | savepoint_stmt
   | select_stmt
   | schema_ad_hoc_migration_stmt
+  | schema_resub_stmt
+  | schema_unsub_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
   | set_stmt
@@ -10319,6 +10415,14 @@ begin_schema_region_stmt:
 
 end_schema_region_stmt:
   "@END_SCHEMA_REGION"
+  ;
+
+schema_unsub_stmt:
+  "@UNSUB" version_annotation
+  ;
+
+schema_resub_stmt:
+  "@RESUB" version_annotation
   ;
 
 schema_ad_hoc_migration_stmt:
@@ -15442,6 +15546,110 @@ The indicated name was used in a context where a variable group name was expecte
 Perhaps the group was not included (missing an #include) or else there is a typo.
 
 
+### CQL0465: @unsub/@resub directive must provide a table
+
+The indicated schema subscription directive did not provide a table.  The
+directive is meaningless without one.
+
+
+### CQL0466: the table named in an @unsub/@resub directive does not exist 'table_name'
+
+The indicated name is not a valid table.
+
+
+### CQL0467: @unsub/@resub versions must be in non-decreasing order
+
+All of the schema subscription management directions must be in the order in which
+they should be applied. The version numbers can never go backward.
+
+This error might indicate directives that are trying to restate past subscriptions.
+The correct approach is to undo an @unsub with a @resub and vice versa.  Any existing
+directives should remain forever for logically consistent upgrade scripts.
+
+
+### CQL0468: cannot @unsub/@resub from a view 'view_name'
+
+In a @unsub/@resub` statement, the target of the operation must be a table, but the indicated name is a view.
+
+
+### CQL0469: table is already deleted 'table_name'
+
+In an @unsub/@resub directive, the indicated table has already been deleted. It can no longer
+be managed via subscriptions.
+
+
+### CQL0470: table not yet created at indicated version 'table_name'
+
+In an @unsub/@resub directive, the indicated table has an @create directive that comes later
+than the @unsub/@resub.  It's meaningless to unsubscribe or resubscribe before the
+table is even created.
+
+
+### CQL0471: table has another @unsub/@resub at this version number 'table_name'
+
+It doesn't make sense to @unsub in the same version that you @resub (as that
+would be redundant); likewise for @resub.  And it also makes no sense to @unsub or @resub
+twice in the same version.  This error indicates there are two subscription operations on the
+same table in the same version.
+
+
+### CQL0472: table is already unsubscribed 'table_name'
+
+In an @unsub directive, the indicated table has already been unsubscribed. It doesn't need
+another unsubscription.
+
+
+### CQL0473: @unsub is invalid because the table is still used by 'table_name'
+
+This error indicates that you are attempting to @unsub a table while there are still other
+tables with foreign keys that refer to it.  You must @unsub all of those as well
+in order to safely @unsub the present table.  All such tables will be listed.  Note that
+some of those might, in turn, have the same issue.  In short, a whole subtree has to
+be removed in order to do this operation safely.
+
+
+### CQL0474: @resub is invalid because the table references 'table_name'
+
+This error indicates that you are attempting to @resub a table while there are other
+tables to which it refers that have not also been resubscribed.  Those tables must
+first be resubscribed, thus creating a path to add the present table.
+
+
+### CQL0475: @unsub/@resub directives did not match between current and previous schema
+
+When validating the previous schema, the compiler enforces that all previous @unsub
+and @resub directives remained in the current schema, in the same order, with
+no changes. Any deviation results in this error indicating the offending directive.
+
+This error message includes extra information to indicate the nature of the mistake.
+An example might be
+
+```
+looking for @unsub (1, foo)
+found @unsub(2, foo)
+```
+
+The reasons for a difference can be complicated: perhaps a directive was removed,
+or one was added in the middle, or one was changed.  Any of these will result
+in a deviation and none are legal.
+
+The only allowable change is to add additional directives at the end, possibly
+undoing the effect of previous directives.
+
+
+### CQL0476: previous schema had more unsub/resub directives than the current schema
+
+When validating the previous schema, the compiler enforces that all previous @unsub
+and @resub directives remained in the current schema, in the same order, with
+no changes.
+
+This error means that the previous schema matched the current schema until the indicated
+point, however there should be more directives in the current schema to continue
+matching.
+
+The most likely cause of this error is that some directives were deleted in
+the current schema.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -15454,7 +15662,7 @@ Perhaps the group was not included (missing an #include) or else there is a typo
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Mar 21 09:32:34 EDT 2022
+Snapshot as of Sun Mar 27 10:14:38 PDT 2022
 
 ### Rules
 

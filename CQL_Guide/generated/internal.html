@@ -2582,18 +2582,20 @@ AST(or)</code></pre>
 <span id="cb104-19"><a href="#cb104-19" aria-hidden="true" tabindex="-1"></a>  ast_node <span class="op">*</span>column_ast<span class="op">;</span>           <span class="co">// a particular column if column annotation</span></span>
 <span id="cb104-20"><a href="#cb104-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> schema_annotation<span class="op">;</span></span>
 <span id="cb104-21"><a href="#cb104-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb104-22"><a href="#cb104-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: schema annotations are processed in the indicated order: the numbers matter</span></span>
+<span id="cb104-22"><a href="#cb104-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Note: schema annotations are processed in the indicated order: the numbers matter!</span></span>
 <span id="cb104-23"><a href="#cb104-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_INVALID 0</span></span>
 <span id="cb104-24"><a href="#cb104-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_FIRST 1</span></span>
-<span id="cb104-25"><a href="#cb104-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_CREATE_TABLE 1</span></span>
-<span id="cb104-26"><a href="#cb104-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_CREATE_COLUMN 2</span></span>
-<span id="cb104-27"><a href="#cb104-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_TRIGGER 3</span></span>
-<span id="cb104-28"><a href="#cb104-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_VIEW 4</span></span>
-<span id="cb104-29"><a href="#cb104-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_INDEX 5</span></span>
-<span id="cb104-30"><a href="#cb104-30" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_COLUMN 6</span></span>
-<span id="cb104-31"><a href="#cb104-31" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_TABLE 7</span></span>
-<span id="cb104-32"><a href="#cb104-32" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_AD_HOC 8</span></span>
-<span id="cb104-33"><a href="#cb104-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_LAST 8</span></span></code></pre></div>
+<span id="cb104-25"><a href="#cb104-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_UNSUB 1</span></span>
+<span id="cb104-26"><a href="#cb104-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_CREATE_TABLE 2</span></span>
+<span id="cb104-27"><a href="#cb104-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_CREATE_COLUMN 3</span></span>
+<span id="cb104-28"><a href="#cb104-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_TRIGGER 4</span></span>
+<span id="cb104-29"><a href="#cb104-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_VIEW 5</span></span>
+<span id="cb104-30"><a href="#cb104-30" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_INDEX 6</span></span>
+<span id="cb104-31"><a href="#cb104-31" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_COLUMN 7</span></span>
+<span id="cb104-32"><a href="#cb104-32" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_DELETE_TABLE 8</span></span>
+<span id="cb104-33"><a href="#cb104-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_AD_HOC 9</span></span>
+<span id="cb104-34"><a href="#cb104-34" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_RESUB 10</span></span>
+<span id="cb104-35"><a href="#cb104-35" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCHEMA_ANNOTATION_LAST 10</span></span></code></pre></div>
 <p>And of course, each “back end” is provided with the root of the AST so that it can also search and/or walk the AST in its own manner. We will see examples of this in later sections.</p>
 <h3 id="recap">Recap</h3>
 <p>At present, there are nearly 20000 lines in <code>sem.c</code> and it would no doubt take more than 20000 lines of text to explain what they all do, and that would be more imprecise than the source code, and probably less readable. <code>sem.c</code> includes over 4000 lines of comments, and probably should have more. While there is a lot of code there, it’s very readable and I encourage you to do just that – read it – to get your answers.</p>
@@ -2613,6 +2615,7 @@ AST(or)</code></pre>
 </ul></li>
 </ul>
 <p>This isn’t everything but it should leave you well armed to begin your own exploration of <code>sem.c</code>.</p>
+<p>Note: details on unsub/resub are forthcoming. This code is under development.</p>
 <h2 id="part-3-c-code-generation">Part 3: C Code Generation</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -2926,7 +2929,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li><code>value</code> : a character buffer that will get the <code>value</code> expression for this variable (more below)</li>
 </ul>
 <p>And this is a good time to talk about <code>is_null</code> and <code>value</code> because they will be everywhere.</p>
-<p>The codegen for expressions in the C code generator produces two results: * the text that corresponds to the current value so far (e.g. “(1+2)<em>3”), and, </em> the text that will tell you if the current value is null * this could be as simple as”0” for an expression that is known to be not null</p>
+<p>The codegen for expressions in the C code generator produces two results: * the text that corresponds to the current value so far (e.g. “(1+2)<em>3"), and, </em> the text that will tell you if the current value is null * this could be as simple as”0" for an expression that is known to be not null</p>
 <p>Let’s make this a little more concrete:</p>
 <p>Suppose we ask for a scratch “not null integer”, we get results like this:</p>
 <ul>
@@ -6377,7 +6380,7 @@ typedef struct cql_boxed_stmt {
 <li>this puts us in the write place to put an end marker such as ‘]’ or ‘}’</li>
 </ul></li>
 </ul>
-<p>So reviewing this bit of code, * emit the attribute name and start the array “[” * we start indenting * we start a list * we emit a comma if needed * we emit the new misc attribute * this will crack the AST, and get the attribute name and value * this can recurse * <code>cg_json_misc_attr</code> is pretty simple and a good exercise for the reader * repeat for all attributes * end the list * end the indenting * emit the attribute end ”]”</p>
+<p>So reviewing this bit of code, * emit the attribute name and start the array “[" * we start indenting * we start a list * we emit a comma if needed * we emit the new misc attribute * this will crack the AST, and get the attribute name and value * this can recurse * <code>cg_json_misc_attr</code> is pretty simple and a good exercise for the reader * repeat for all attributes * end the list * end the indenting * emit the attribute end "]”</p>
 <h4 id="quoted-text">Quoted Text</h4>
 <p>Most quoted text in the JSON output is either hard-coded constants, or else is a CQL identifier and therefore has no special characters. Those two cases are very simple and no escaping or special formatting is needed. We just emit the text with quotes around it. However, there are cases where general text that might have special characters in it needs to be emitted. When that happens a call like this is used:</p>
 <div class="sourceCode" id="cb306"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb306-1"><a href="#cb306-1" aria-hidden="true" tabindex="-1"></a>cg_pretty_quote_plaintext<span class="op">(</span></span>

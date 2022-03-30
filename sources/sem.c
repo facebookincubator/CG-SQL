@@ -5405,7 +5405,11 @@ static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CS
   return SEM_RESOLVE_STOP;
 }
 
+// This helper adds new variables global or local, it also tracks the unitary locals
+// so that we can do the LOCALS shape
 static void add_variable(CSTR name, ast_node *variable) {
+  // We could be working on locals and not unitary_locals inside of proc declarations
+  // so we have to check both things.
   if (current_variables == locals && unitary_locals) {
     if (is_unitary(variable->sem->sem_type)) {
       bytebuf_append(unitary_locals, &variable, sizeof(variable));

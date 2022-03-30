@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Mar 21 09:32:33 EDT 2022
+Snapshot as of Sun Mar 27 10:14:38 PDT 2022
 
 ### Operators and Literals
 
@@ -55,10 +55,10 @@ REALLIT /* floating point literal */
 "@EMIT_ENUMS" "@EMIT_GROUP" "@END_SCHEMA_REGION"
 "@ENFORCE_NORMAL" "@ENFORCE_POP" "@ENFORCE_PUSH"
 "@ENFORCE_RESET" "@ENFORCE_STRICT" "@EPONYMOUS" "@FILE"
-"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE"
+"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE" "@RESUB"
 "@SCHEMA_AD_HOC_MIGRATION" "@SCHEMA_UPGRADE_SCRIPT"
-"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "ABORT" "ACTION"
-"ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
+"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "@UNSUB" "ABORT"
+"ACTION" "ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
 "AUTOINCREMENT" "BEFORE" "BEGIN" "BLOB" "BY" "CALL"
 "CASCADE" "CASE" "CAST" "CATCH" "CHECK" "CLOSE" "COLUMN"
 "COLUMNS" "COMMIT" "CONST" "CONSTRAINT" "CONTEXT COLUMN"
@@ -171,6 +171,8 @@ any_stmt:
   | savepoint_stmt
   | select_stmt
   | schema_ad_hoc_migration_stmt
+  | schema_resub_stmt
+  | schema_unsub_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
   | set_stmt
@@ -901,6 +903,14 @@ begin_schema_region_stmt:
 
 end_schema_region_stmt:
   "@END_SCHEMA_REGION"
+  ;
+
+schema_unsub_stmt:
+  "@UNSUB" version_annotation
+  ;
+
+schema_resub_stmt:
+  "@RESUB" version_annotation
   ;
 
 schema_ad_hoc_migration_stmt:

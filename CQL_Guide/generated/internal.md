@@ -3158,18 +3158,20 @@ typedef struct schema_annotation {
   ast_node *column_ast;           // a particular column if column annotation
 } schema_annotation;
 
-// Note: schema annotations are processed in the indicated order: the numbers matter
+// Note: schema annotations are processed in the indicated order: the numbers matter!
 #define SCHEMA_ANNOTATION_INVALID 0
 #define SCHEMA_ANNOTATION_FIRST 1
-#define SCHEMA_ANNOTATION_CREATE_TABLE 1
-#define SCHEMA_ANNOTATION_CREATE_COLUMN 2
-#define SCHEMA_ANNOTATION_DELETE_TRIGGER 3
-#define SCHEMA_ANNOTATION_DELETE_VIEW 4
-#define SCHEMA_ANNOTATION_DELETE_INDEX 5
-#define SCHEMA_ANNOTATION_DELETE_COLUMN 6
-#define SCHEMA_ANNOTATION_DELETE_TABLE 7
-#define SCHEMA_ANNOTATION_AD_HOC 8
-#define SCHEMA_ANNOTATION_LAST 8
+#define SCHEMA_ANNOTATION_UNSUB 1
+#define SCHEMA_ANNOTATION_CREATE_TABLE 2
+#define SCHEMA_ANNOTATION_CREATE_COLUMN 3
+#define SCHEMA_ANNOTATION_DELETE_TRIGGER 4
+#define SCHEMA_ANNOTATION_DELETE_VIEW 5
+#define SCHEMA_ANNOTATION_DELETE_INDEX 6
+#define SCHEMA_ANNOTATION_DELETE_COLUMN 7
+#define SCHEMA_ANNOTATION_DELETE_TABLE 8
+#define SCHEMA_ANNOTATION_AD_HOC 9
+#define SCHEMA_ANNOTATION_RESUB 10
+#define SCHEMA_ANNOTATION_LAST 10
 ```
 
 And of course, each "back end" is provided with the root of the AST so that it can also search
@@ -3197,6 +3199,8 @@ as many semantic error checking functions, it is to showcase the key concepts sh
   * `sem_struct` or `sem_join` for the non-unitary types
 
 This isn't everything but it should leave you well armed to begin your own exploration of `sem.c`.
+
+Note: details on unsub/resub are forthcoming.  This code is under development.
 
 
 ## Part 3: C Code Generation
