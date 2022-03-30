@@ -1,0 +1,97 @@
+{stmt_list}: err
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER
+);
+
+  {create_table_stmt}: foo: { id: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE bar(
+  id INTEGER
+) @CREATE(10);
+
+  {create_table_stmt}: bar: { id: integer } validated @create(10)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 10}
+  | | {name bar}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@UNSUB(2, foo);
+
+test/sem_test_unsub_badorder.sql:XXXX:1: error: in schema_unsub_stmt : new @unsub/@resub must be added at version 10 or later
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 2}
+    | {name foo}
+
+The statement ending at line XXXX
+
+@PREVIOUS_SCHEMA;
+
+  {previous_schema_stmt}: ok
+
+The statement ending at line XXXX
+
+CREATE TABLE foo(
+  id INTEGER
+);
+
+  {create_table_stmt}: foo: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name foo}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE bar(
+  id INTEGER
+) @CREATE(10);
+
+  {create_table_stmt}: bar: { id: integer } @create(10)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 10}
+  | | {name bar}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+

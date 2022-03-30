@@ -619,7 +619,7 @@ CREATE TABLE t_additional_column_ok(
       |     | {version_annotation}
       |       | {int 2}
       | {col_key_list}
-        | {col_def}: c: integer @create(6)
+        | {col_def}: err
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name c}
@@ -659,15 +659,15 @@ The statement ending at line XXXX
 CREATE TABLE t_new_table_ok(
   a INTEGER NOT NULL,
   b INTEGER
-) @CREATE(6);
+) @CREATE(26);
 
-  {create_table_stmt}: t_new_table_ok: { a: integer notnull, b: integer } @create(6)
+  {create_table_stmt}: t_new_table_ok: { a: integer notnull, b: integer } @create(26)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 6}
+  | |     | {int 26}
   | | {name t_new_table_ok}
   | {col_key_list}
     | {col_def}: a: integer notnull
@@ -690,7 +690,7 @@ CREATE TABLE t_new_table_no_annotation(
   b INTEGER
 );
 
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_no_annotation'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(26) or later 't_new_table_no_annotation'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -718,7 +718,7 @@ CREATE TABLE t_new_table_stale_annotation(
   b INTEGER
 ) @CREATE(2);
 
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(6) or later 't_new_table_stale_annotation'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(26) or later 't_new_table_stale_annotation'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -794,7 +794,7 @@ CREATE TABLE t_new_legit_column(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {col_def}: b: integer @create(6)
+      | {col_def}: err
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name b}
@@ -1067,15 +1067,15 @@ The statement ending at line XXXX
 
 CREATE TABLE ok_to_create_recreate_table(
   id INTEGER
-) @CREATE(6, cql:from_recreate);
+) @CREATE(26, cql:from_recreate);
 
-  {create_table_stmt}: ok_to_create_recreate_table: { id: integer } validated @create(6)
+  {create_table_stmt}: ok_to_create_recreate_table: { id: integer } validated @create(26)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | | {create_attr}
   | |   | {version_annotation}
-  | |     | {int 6}
+  | |     | {int 26}
   | |     | {dot}: ok
   | |       | {name cql}
   | |       | {name from_recreate}
@@ -1134,7 +1134,7 @@ CREATE TABLE recreate_created_in_the_past(
   id INTEGER
 ) @CREATE(2, cql:from_recreate);
 
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0399: table must leave @recreate management with @create(6) or later 'recreate_created_in_the_past'
+test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0399: table must leave @recreate management with @create(26) or later 'recreate_created_in_the_past'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -1402,7 +1402,7 @@ The statement ending at line XXXX
 
 @SCHEMA_AD_HOC_MIGRATION(3, MigrateInThePast);
 
-test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : new ad hoc rule must be added at version 6 or later 'MigrateInThePast'
+test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : new ad hoc rule must be added at version 26 or later 'MigrateInThePast'
 
   {schema_ad_hoc_migration_stmt}: err
   | {version_annotation}
@@ -1411,11 +1411,11 @@ test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : new ad h
 
 The statement ending at line XXXX
 
-@SCHEMA_AD_HOC_MIGRATION(6, MigrateNewCurrent);
+@SCHEMA_AD_HOC_MIGRATION(26, MigrateNewCurrent);
 
-  {schema_ad_hoc_migration_stmt}: ok @create(6)
+  {schema_ad_hoc_migration_stmt}: ok @create(26)
   | {version_annotation}
-    | {int 6}
+    | {int 26}
     | {name MigrateNewCurrent}
 
 The statement ending at line XXXX

@@ -376,16 +376,20 @@ static uint32_t current_expr_context;
 // If we have started validating previous schema this will be true
 static bool_t validating_previous_schema;
 
-// When we're doing previous schema validation we will march through the unsub/resub
-// directives in order, this tells us the next one to consider.
-static size_t next_unsub_resub_index = 0;
-
 // The current annonation target in create proc statement
 static CSTR annotation_target;
 
 // @unsub and @resub must happen in version order to make sense
 // here we track the most recent number; these must be non-decreasing
 static int32_t last_sub_version;
+
+// When we're doing previous schema validation we will march through the unsub/resub
+// directives in order, this tells us the next one to consider.
+static list_item *next_subscription;
+
+// Once we've found an error during previous subscription validation, we don't report
+// any more to avoid crazy spam.  This is the mercy flag.
+static bool_t found_subscription_error;
 
 // True if we are analyzing a call to `cql_inferred_notnull`. This can happen
 // for three reasons:
@@ -1538,7 +1542,7 @@ enforce_encode_context_column_with_strict_mode(misc_attrs);
   }
 }
 
-void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg) {
+cql_noexport void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg) {
   *use_encode_arg = misc_attrs && exists_attribute_str(misc_attrs, "vault_sensitive");
   if (*use_encode_arg) {
     encode_info info;
@@ -1549,6 +1553,16 @@ void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode
     record_ok(misc_attrs);
   }
 }
+
+// subscription directives have the same kind of payload and need the same basic info
+typedef struct subs_info {
+  ast_node *table_ast;
+  CSTR name;
+  int32_t vers;
+} subs_info;
+
+// This extracts the basic info from a sub/unsub directive and does minimal sanity check.
+static void sem_subs_extract(ast_node *ast, subs_info *info);
 
 // This tells us if we're actually going to try to add the entity we are working on
 // to our tables and so forth.  The idea here is that a view/table/whatever might
@@ -20858,7 +20872,9 @@ static void sem_previous_schema_stmt(ast_node *ast) {
   deployable_validations = _ast_pool_new(bytebuf);
   bytebuf_open(deployable_validations);
 
-  last_sub_version = 1;
+  reverse_list(&all_subscriptions_list);
+  next_subscription = all_subscriptions_list;
+  found_subscription_error = false;
 
   record_ok(ast);
 }
@@ -21986,6 +22002,39 @@ static void sem_validate_all_ad_hoc_not_in_previous(ast_node *root) {
   CHARBUF_CLOSE(err_msg);
 }
 
+// At this point all processing of input is complete.  So now we walk all the ad hoc rules
+// that we ever saw and visit any that have not already been validated.  This is
+// the set of rules not present in the previous schema.  All of these must be
+// marked at the most recent version.
+//
+// Note: this processing does not happen in the context of a statement
+// so we have to do our own error capture logic.
+static void sem_validate_all_subscriptions_not_in_previous(ast_node *root) {
+  Contract(root);
+
+  // since we validate in order, we can start where we left off with validations
+  // anything else was already checked (we don't need a VALIDATED bit for these guys)
+  // also, these are already known to be in ascending order, so we only need to check
+  // the first one.
+  if (next_subscription && !found_subscription_error) {
+    ast_node *ast = next_subscription->ast;
+
+    subs_info info;
+    sem_subs_extract(ast, &info);
+
+    // * if the annotation has other errors we don't need to check its version info right now, that's just spurious
+    // * if the annotation is at or after the max previous schema version it's good
+
+    if (!is_error(ast) && info.vers < max_previous_schema_version) {
+      CSTR err_msg = dup_printf(
+        "new @unsub/@resub must be added at version %d or later",
+        max_previous_schema_version);
+
+      report_and_capture_error(root, ast, err_msg, NULL);
+    }
+  }
+}
+
 // switch to strict mode
 static void sem_enforce_strict_stmt(ast_node * ast) {
   Contract(is_ast_enforce_strict_stmt(ast));
@@ -22446,12 +22495,7 @@ static void sem_validate_previous_ad_hoc(ast_node *prev, CSTR name, int32_t vers
   sem_add_flags(schema_ad_hoc_migration_stmt, SEM_TYPE_VALIDATED);
 }
 
-typedef struct subs_info {
-  ast_node *table_ast;
-  CSTR name;
-  int32_t vers;
-} subs_info;
-
+// This extracts the basic info from a sub/unsub directive and does minimal sanity check.
 static void sem_subs_extract(ast_node *ast, subs_info *info) {
   Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
   CSTR directive = is_ast_schema_unsub_stmt(ast) ? "@unsub" : "@resub";
@@ -22476,6 +22520,7 @@ static void sem_subs_extract(ast_node *ast, subs_info *info) {
 
   info->vers = vers;
   info->name = name;
+  info->table_ast = NULL;  // not part of basic extraction
 
   record_ok(ast);
 }
@@ -22536,72 +22581,74 @@ static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
 }
 
 // find the next unsub/resub annotation that we recorded, it has to match what we just saw
-static void validate_next_subs_annotation(ast_node *ast) {
-  Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
-  subs_info info;
+static void validate_previous_schema_subscription_annotation(ast_node *previous_ast) {
+  Contract(is_ast_schema_unsub_stmt(previous_ast) || is_ast_schema_resub_stmt(previous_ast));
+  subs_info previous_info;
 
-  sem_subs_extract(ast, &info);
-  if (is_error(ast)) {
+  sem_subs_extract(previous_ast, &previous_info);
+  if (is_error(previous_ast)) {
     return;
   }
 
-  uint32_t type = is_ast_schema_unsub_stmt(ast) ? SCHEMA_ANNOTATION_UNSUB : SCHEMA_ANNOTATION_RESUB;
+  // we accumulate the biggest previous schema number we've ever see during prevous schema validation
+  if (previous_info.vers > max_previous_schema_version) {
+    max_previous_schema_version = previous_info.vers;
+  }
 
-  size_t count = schema_annotations->used / sizeof(schema_annotation);
-  schema_annotation *notes = (schema_annotation *)schema_annotations->ptr;
-
-  if (next_unsub_resub_index <= count) {
-    for (size_t i = next_unsub_resub_index; i < count; i++) {
-      uint32_t found_type = notes[i].annotation_type;
-      int32_t found_vers = notes[i].version;
-      CSTR found_name = notes[i].target_name;
-
-      switch (found_type) {
-      default:
-        // skip other annotations
-        continue;
-
-      case SCHEMA_ANNOTATION_UNSUB:
-      case SCHEMA_ANNOTATION_RESUB:
-        if (found_type == type && !Strcasecmp(found_name, info.name) && found_vers == info.vers) {
-          next_unsub_resub_index = i + 1;
-          record_ok(ast);
-          return;
-        }
-
-        next_unsub_resub_index = count + 1;  // stop looking
-
-        CSTR found_kind = found_type == SCHEMA_ANNOTATION_UNSUB ? "@unsub" : "@resub";
-        CSTR reqd_kind = type == SCHEMA_ANNOTATION_UNSUB ? "@unsub" : "@resub";
-
-        CSTR msg = dup_printf(
-          "CQL0475: @unsub/@resub directives did not match between current and previous schema\n"
-          "looking for %s (%d, %s)\n"
-          "found %s(%d, %s)",
-            reqd_kind, info.vers, info.name,
-            found_kind, found_vers, found_name);
-
-        report_error(ast, msg, NULL);
-        record_error(ast);
-        return;
-      }
-    }
-
-    next_unsub_resub_index = count + 1;  // stop looking
-    report_error(ast, "CQL0476: previous schema had more unsub/resub directives than the current schema", NULL);
-    record_error(ast);
+  // once we've found one delta against the subscription history we stop reporting errors
+  if (found_subscription_error) {
     return;
   }
 
-  // no more errors after the first is reported or there will be a cascade of mismatches
-  record_ok(ast);
+  if (!next_subscription) {
+    found_subscription_error = true;
+    report_error(previous_ast, "CQL0476: previous schema had more unsub/resub directives than the current schema", NULL);
+    record_error(previous_ast);
+    return;
+  }
+
+  // we advance in any case
+  ast_node *found_ast = next_subscription->ast;
+  next_subscription = next_subscription->next;
+
+  Invariant(is_ast_schema_unsub_stmt(found_ast) || is_ast_schema_resub_stmt(found_ast));
+
+  subs_info found_info;
+
+  sem_subs_extract(found_ast, &found_info);
+  Invariant(!is_error(found_ast)); // already checked
+
+  // normal case, it is all matching
+  if (!Strcasecmp(previous_info.name, found_info.name) &&
+      previous_info.vers == found_info.vers &&
+      previous_ast->type == found_ast->type) {
+    record_ok(previous_ast);
+    return;
+  }
+
+  // no more error checks regardless
+  found_subscription_error = true;
+
+  CSTR prev_directive = is_ast_schema_unsub_stmt(previous_ast) ? "@unsub" : "@resub";
+  CSTR found_directive = is_ast_schema_unsub_stmt(found_ast) ? "@unsub" : "@resub";
+
+  CSTR msg = dup_printf(
+    "CQL0475: @unsub/@resub directives did not match between current and previous schema\n"
+    "previous schema %s(%d, %s)\n"
+    "current schema %s(%d, %s)",
+      prev_directive, previous_info.vers, previous_info.name,
+      found_directive, found_info.vers, found_info.name);
+
+  report_error(previous_ast, msg, NULL);
+  record_error(previous_ast);
+  return;
 }
 
 static void sem_schema_unsub_stmt(ast_node *ast) {
   Contract(is_ast_schema_unsub_stmt(ast));
 
   if (validating_previous_schema) {
-    validate_next_subs_annotation(ast);
+    validate_previous_schema_subscription_annotation(ast);
     return;
   }
 
@@ -22646,8 +22693,15 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
 
   table->sem->unsub_version = vers;
   last_sub_version = vers;
+  ast->sem->region = table->sem->region;  // the unsub is in scope if its target table is in scope
 
-  record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_UNSUB, NULL, ast->left, 0);
+  add_item_to_list(&all_subscriptions_list, ast);
+
+  if (!table->sem->recreate) {
+    // recreate tables need no actions for unsubscription/resubscription
+    record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_UNSUB, NULL, ast->left, 0);
+  }
+
   record_ok(ast);
 }
 
@@ -22655,7 +22709,7 @@ static void sem_schema_resub_stmt(ast_node *ast) {
   Contract(is_ast_schema_resub_stmt(ast));
 
   if (validating_previous_schema) {
-    validate_next_subs_annotation(ast);
+    validate_previous_schema_subscription_annotation(ast);
     return;
   }
 
@@ -22676,21 +22730,43 @@ static void sem_schema_resub_stmt(ast_node *ast) {
     return;
   }
 
-  bytebuf *buf = symtab_ensure_bytebuf(ref_targets_for_source_table, name);
-  size_t ref_count = buf->used / sizeof(ast_node *);
-  ast_node **targets = (ast_node **)buf->ptr;
+  // This bit is tricky so it's worth a little explaination. The @resub is out of band with the
+  // the table -- we'll see it after the create table regardless of version history.  That means
+  // we could see such a directive on a table that's been marked with @delete.  Now the thing is
+  // this could be ok.  You might create a table in v10, unsubscribe in v20, resubscribe in v30
+  // and then finally delete the table in v40.  There were many versions where the resub made sense
+  // and that resub comes after the create table statement in the input  for sure.  Now, when validating
+  // resub we consider this table to be a "child" and ask the question "do all its parents exist?"
+  // so that if you resub a table you must first resub all its parents.  The exception to this is
+  // if the table becomes deleted where the parents are moot.  At one time the parents needed to exist
+  // but now they could be unsubscribed or deleted and it doesn't matter because this child is
+  // deleted.  So we only check the parent tables on undeleted children.  It's strange because
+  // we're resubscribing to a deleted table here but remember in this example we would still have to
+  // generate the create table at v30 so that the history is consistent even if the resub is effectively
+  // cancelled later by a delete.  The weird thing is we saw the v40 delete before we saw the
+  // v30 unsub because the unsubs are necessarily out of band with the table.  You could imagine
+  // putting @unsub/@resub on the table but if you did that it would not be possible for schema
+  // subscribers to @unsub without modifying the schema and the whole point is that *some*
+  // subscribers might want to unsubscribe so the annotation can't go on the table.  Which means
+  // we have to live with this out-of-order business.
 
-  for (uint32_t i = 0; i < ref_count; i++) {
-    ast_node *ref_table = targets[i];
+  if (table->sem->delete_version < 0) {
+    bytebuf *buf = symtab_ensure_bytebuf(ref_targets_for_source_table, name);
+    size_t ref_count = buf->used / sizeof(ast_node *);
+    ast_node **targets = (ast_node **)buf->ptr;
 
-    // note this checks for both @deleted and @unsub tables
-    if (is_deleted(ref_table)) {
-      EXTRACT_NAMED_NOTNULL(ref_create_table_name_flags, create_table_name_flags, ref_table->left);
-      EXTRACT_STRING(ref_table_name, ref_create_table_name_flags->right);
+    for (uint32_t i = 0; i < ref_count; i++) {
+      ast_node *ref_table = targets[i];
 
-      // we're not going to return here so that we generate as many errors as needed
-      report_error(ast, "CQL0474: @resub is invalid because the table references", ref_table_name);
-      record_error(ast);
+      // note this checks for both @deleted and @unsub tables
+      if (is_deleted(ref_table)) {
+        EXTRACT_NAMED_NOTNULL(ref_create_table_name_flags, create_table_name_flags, ref_table->left);
+        EXTRACT_STRING(ref_table_name, ref_create_table_name_flags->right);
+
+        // we're not going to return here so that we generate as many errors as needed
+        report_error(ast, "CQL0474: @resub is invalid because the table references", ref_table_name);
+        record_error(ast);
+      }
     }
   }
 
@@ -22700,9 +22776,15 @@ static void sem_schema_resub_stmt(ast_node *ast) {
 
   table->sem->resub_version = vers;
   last_sub_version = vers;
+  ast->sem->region = table->sem->region;  // the resub is in scope if its target table is in scope
 
+  add_item_to_list(&all_subscriptions_list, ast);
 
-  record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_RESUB, NULL, ast->left, 0);
+  if (!table->sem->recreate) {
+    // recreate tables need no actions for unsubscription/resubscription
+    record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_RESUB, NULL, ast->left, 0);
+  }
+
   record_ok(ast);
 }
 
@@ -23223,6 +23305,13 @@ cql_noexport void sem_main(ast_node *ast) {
   reverse_list(&all_enums_list);
   reverse_list(&all_select_functions_list);
 
+  // We want the list in order when validating previous schema
+  // to help us to do the validations, so we don't need to reverse it again
+  // but if we never hit @previous_schmea then reverse it now.
+  if (!validating_previous_schema) {
+    reverse_list(&all_subscriptions_list);
+  }
+
   // the index list in any given table needs to be reversed to get the natural order
   for (list_item *item = all_tables_list; item; item = item->next) {
     ast_node *table = item->ast;
@@ -23240,6 +23329,7 @@ cql_noexport void sem_main(ast_node *ast) {
     sem_validate_all_prev_recreate_tables(ast);
     sem_validate_all_ad_hoc_not_in_previous(ast);
     sem_validate_all_deployable_regions(ast);
+    sem_validate_all_subscriptions_not_in_previous(ast);
   }
 
   if (validating_previous_schema) {
@@ -23319,6 +23409,9 @@ cql_noexport void sem_cleanup() {
   all_regions_list = NULL;
   all_select_functions_list = NULL;
   all_tables_list = NULL;
+  all_subscriptions_list = NULL;
+  next_subscription = NULL;
+  found_subscription_error = false;
   all_triggers_list = NULL;
   all_views_list = NULL;
   created_columns = NULL;
@@ -23348,7 +23441,6 @@ cql_noexport void sem_cleanup() {
   sem_stmt_level = -1;
   sem_ok = NULL;
   validating_previous_schema = false;
-  next_unsub_resub_index = 0;
   between_count = 0;
   pending_table_validations_head = NULL;
   current_table_name = NULL;
@@ -23366,6 +23458,7 @@ cql_noexport void sem_cleanup() {
 // have been validated.  Any that are found in the old schema must match appropriately
 // and any that are not found must have suitable @create markers.
 cql_data_defn( list_item *all_tables_list );
+cql_data_defn( list_item *all_subscriptions_list );
 cql_data_defn( list_item *all_functions_list );
 cql_data_defn( list_item *all_views_list );
 cql_data_defn( list_item *all_indices_list );

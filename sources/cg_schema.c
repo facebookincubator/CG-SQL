@@ -671,21 +671,13 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   // there are no "temp" unsub/resub, so don't emit these at all if "temp required" is set
   // likewise if the output is for sqlite these are not processed by sqlite so they should be ignored
   if (!temp_required && !schema_sqlite) {
-    size_t count = schema_annotations->used / sizeof(schema_annotation);
-    schema_annotation *notes = (schema_annotation *)schema_annotations->ptr;
-
-    for (size_t i = 0; i < count; i++) {
-      uint32_t found_type = notes[i].annotation_type;
-
-      if (found_type != SCHEMA_ANNOTATION_UNSUB && found_type != SCHEMA_ANNOTATION_RESUB) {
-        continue;
-      }
-
-      ast_node *ast = notes[i].annotation_ast->parent;
-      ast_node *target_ast = notes[i].target_ast;
+    for (list_item *item = all_subscriptions_list; item; item = item->next) {
+      ast_node *ast = item->ast;
       Invariant(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
 
-      CSTR region = target_ast->sem->region;
+      // the node gets is region from its target, not from its own region
+
+      CSTR region = ast->sem->region;
 
       if (include_from_region(region, mode)) {
         gen_set_output_buffer(output);
@@ -1570,49 +1562,48 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         break;
 
       case SCHEMA_ANNOTATION_UNSUB:
-        // recreate tables do not need unsub, they will just delete like they usually do
-        // soon we will not generate this annotation at all for such tables but
-        // for now it's needed for previous schema verification
+        // @recreate tables do not need unsub, they will just delete like they usually do
+        // annotation not generated for such cases as it would be a no-op anyway
+        Invariant(!note->target_ast->sem->recreate);
 
-        if (!note->target_ast->sem->recreate) {
-          // unsub demands a drop
-          bprintf(&upgrade, "      -- unsubscription of %s\n\n", target_name);
-          bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n\n", target_name);
-        }
+        // unsub demands a drop
+        bprintf(&upgrade, "      -- unsubscription of %s\n\n", target_name);
+        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n\n", target_name);
+
+        // current status: unsubcribed
         note->target_ast->sem->sem_type |= SCHEMA_FLAG_UNSUB;
         subscription_management = true;
         break;
 
       case SCHEMA_ANNOTATION_RESUB:
-        // recreate tables do not need resub, they will just create like they usually do
-        // soon we will not generate this annotation at all for such tables but
-        // for now it's needed for previous schema verification
+        // @recreate tables do not need unsub, they will just delete like they usually do
+        // annotation not generated for such cases as it would be a no-op anyway
+        Invariant(!note->target_ast->sem->recreate);
 
-        if (!note->target_ast->sem->recreate) {
-          // emit a create if it does not exist at this version
-          // note that we do not (!) emit a drop here because it's possible that
-          // something else will be later added to this schema rev causing it
-          // to re-run and we want it to be idempotent
+        // emit a create if not exists at this version
+        // note that we do not (!) emit a drop here because it's possible that
+        // something else will be later added to this schema rev causing it
+        // to re-run and we want it to be idempotent
 
-          bprintf(&upgrade, "      -- resubscribe to %s\n\n", target_name);
+        bprintf(&upgrade, "      -- resubscribe to %s\n\n", target_name);
 
-          gen_sql_callbacks callbacks;
-          init_gen_sql_callbacks(&callbacks);
-          callbacks.col_def_callback = cg_suppress_col_def_by_version;
-          callbacks.col_def_context = &note->version;
-          callbacks.if_not_exists_callback = cg_schema_force_if_not_exists;
-          callbacks.mode = gen_mode_sql;
-          callbacks.long_to_int_conv = true;
-          CHARBUF_OPEN(sql_out);
-            gen_set_output_buffer(&sql_out);
-            // only the columns as of the current version
-            gen_statement_with_callbacks(note->target_ast, &callbacks);
+        gen_sql_callbacks callbacks;
+        init_gen_sql_callbacks(&callbacks);
+        callbacks.col_def_callback = cg_suppress_col_def_by_version;
+        callbacks.col_def_context = &note->version;
+        callbacks.if_not_exists_callback = cg_schema_force_if_not_exists;
+        callbacks.mode = gen_mode_sql;
+        callbacks.long_to_int_conv = true;
+        CHARBUF_OPEN(sql_out);
+          gen_set_output_buffer(&sql_out);
+          // only the columns as of the current version
+          gen_statement_with_callbacks(note->target_ast, &callbacks);
 
-            bindent(&upgrade, &sql_out, 6);
-            bprintf(&upgrade, ";\n\n");
-          CHARBUF_CLOSE(sql_out);
-        }
+          bindent(&upgrade, &sql_out, 6);
+          bprintf(&upgrade, ";\n\n");
+        CHARBUF_CLOSE(sql_out);
 
+        // current status: subcribed
         note->target_ast->sem->sem_type &= sem_not(SCHEMA_FLAG_UNSUB);
         subscription_management = true;
         break;

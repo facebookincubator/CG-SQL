@@ -86078,3 +86078,98 @@ END;
                       | {name LOCALS}
                       | {name c}
 
+The statement ending at line XXXX
+
+CREATE TABLE parent_subs_table(
+  id INTEGER PRIMARY KEY
+) @CREATE(9) @DELETE(12);
+
+  {create_table_stmt}: parent_subs_table: { id: integer notnull primary_key } deleted @create(9) @delete(12)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |   | | {int 9}
+  | |   | {delete_attr}
+  | |     | {version_annotation}
+  | |       | {int 12}
+  | | {name parent_subs_table}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+
+The statement ending at line XXXX
+
+CREATE TABLE child_subs_table(
+  id INTEGER PRIMARY KEY REFERENCES parent_subs_table (id)
+) @CREATE(9) @DELETE(12);
+
+  {create_table_stmt}: child_subs_table: { id: integer notnull primary_key foreign_key } deleted @create(9) @delete(12)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |   | | {int 9}
+  | |   | {delete_attr}
+  | |     | {version_annotation}
+  | |       | {int 12}
+  | | {name child_subs_table}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key foreign_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name id}
+        | | {type_int}: integer
+        | {col_attrs_pk}: ok
+          | {autoinc_and_conflict_clause}
+          | {col_attrs_fk}: ok
+            | {fk_target_options}
+              | {fk_target}
+              | | {name parent_subs_table}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {int 0}
+
+The statement ending at line XXXX
+
+@UNSUB(10, child_subs_table);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 10}
+    | {name child_subs_table}
+
+The statement ending at line XXXX
+
+@UNSUB(10, parent_subs_table);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 10}
+    | {name parent_subs_table}
+
+The statement ending at line XXXX
+
+@RESUB(11, parent_subs_table);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 11}
+    | {name parent_subs_table}
+
+The statement ending at line XXXX
+
+@RESUB(11, child_subs_table);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 11}
+    | {name child_subs_table}
+

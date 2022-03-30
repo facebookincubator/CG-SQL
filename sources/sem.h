@@ -303,6 +303,7 @@ cql_data_decl( bytebuf *schema_annotations );
 cql_data_decl( bytebuf *recreate_annotations );
 
 cql_data_decl( struct list_item *all_tables_list );
+cql_data_decl( struct list_item *all_subscriptions_list );
 cql_data_decl( struct list_item *all_functions_list );
 cql_data_decl( struct list_item *all_views_list );
 cql_data_decl( struct list_item *all_indices_list );

@@ -21795,3 +21795,38 @@ begin
   call requires_not_nulls(from locals);
   call requires_not_nulls(*);
 end;
+
+-- setup for the resub test
+-- - error:
+create table parent_subs_table (
+  id integer primary key
+) @create(9) @delete(12);
+
+-- setup for the resub test
+create table child_subs_table (
+  id integer primary key references parent_subs_table(id)
+) @create(9) @delete(12);
+
+-- standard unsub order
+-- - error:
+@unsub(10, child_subs_table);
+
+-- standard unsub order
+-- - error:
+@unsub(10, parent_subs_table);
+
+-- standad resub order
+-- - error:
+@resub(11, parent_subs_table);
+
+-- TEST: this is the actual test case, here we verify that we can do a resub
+-- even when parent table is deleted, provided of course that we are also
+-- deleted which we are. This covers the case where a resub table is later
+-- fully deleted.  Once the delete happens we can't, and don't need to,
+-- verify that the parent tables are subscribed, they're for sure deleted
+-- or the create table wouldn't have compiled in the first place
+-- this just means we loosen the validation so as to not produce
+-- "@resub is invalid because the table references 'deleted_parent'"
+-- + {schema_resub_stmt}: ok
+-- - error:
+@resub(11, child_subs_table);

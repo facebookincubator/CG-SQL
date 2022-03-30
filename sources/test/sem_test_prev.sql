@@ -108,21 +108,21 @@ create table t_additional_column_ok(a int not null, b int @create(2), c int @cre
 create TEMP table t_becomes_temp_table(a int not null, b int);
 
 -- TEST: create table and apply annotation
--- + {create_table_stmt}: t_new_table_ok: { a: integer notnull, b: integer } @create(6)
+-- + {create_table_stmt}: t_new_table_ok: { a: integer notnull, b: integer } @create(26)
 -- Not validated against previous schema since there was no previous schema
 -- - validated
 -- - error:
-create table t_new_table_ok(a int not null, b int) @create(6);
+create table t_new_table_ok(a int not null, b int) @create(26);
 
 -- TEST: create new table without annotation (error)
 -- + {create_table_stmt}: err
--- + error: % new table must be added with @create(6) or later 't_new_table_no_annotation'
+-- + error: % new table must be added with @create(26) or later 't_new_table_no_annotation'
 -- +1 error:
 create table t_new_table_no_annotation(a int not null, b int);
 
 -- TEST: create new table stale annotation (error)
 -- + {create_table_stmt}: err
--- + error: % new table must be added with @create(6) or later 't_new_table_stale_annotation'
+-- + error: % new table must be added with @create(26) or later 't_new_table_stale_annotation'
 -- +1 error:
 create table t_new_table_stale_annotation(a int not null, b int) @create(2);
 
@@ -204,7 +204,7 @@ create table ok_to_delete_recreate_table
 create table ok_to_create_recreate_table
 (
   id int
-) @create(6, cql:from_recreate);
+) @create(26, cql:from_recreate);
 
 -- the new version of this table is on the create plan, but attribute missing -> error
 -- - error:
@@ -223,7 +223,7 @@ create table recreate_deleted_in_the_past
 
 -- TEST : the new version of this table is ok on the create plan but the version number is too small
 -- + {create_table_stmt}: err
--- + error: % Table must leave @recreate management with @create(6) or later 'recreate_created_in_the_past'
+-- + error: % Table must leave @recreate management with @create(26) or later 'recreate_created_in_the_past'
 -- +1 error:
 create table recreate_created_in_the_past
 (
@@ -294,17 +294,17 @@ create table t_several_columns_added_interleaved(
 -- TEST: we're trying to create an ad hoc rule in the past... not allowed
 -- this item is not present in the previous schema
 -- + {schema_ad_hoc_migration_stmt}: err
--- + error: % new ad hoc rule must be added at version 6 or later 'MigrateInThePast'
+-- + error: % new ad hoc rule must be added at version 26 or later 'MigrateInThePast'
 -- +1 error:
 @schema_ad_hoc_migration(3, MigrateInThePast);
 
 -- TEST: create a new ad hoc rule in the present
--- this item is not present in the previous schema, but it's ok because it's current
--- + {schema_ad_hoc_migration_stmt}: ok @create(6)
+-- this item is not present in the previous schema, but it's ok because newer than any of the old items
+-- + {schema_ad_hoc_migration_stmt}: ok @create(26)
 -- + {version_annotation}
--- + {int 6}
+-- + {int 26}
 -- + {name MigrateNewCurrent}
-@schema_ad_hoc_migration(6, MigrateNewCurrent);
+@schema_ad_hoc_migration(26, MigrateNewCurrent);
 
 -- These two tables are changing from recreate group foo to create group bar
 -- this now generates errors as motion cannot be allowed due to possible FK
@@ -1091,7 +1091,6 @@ create table dropping_this
   f1 integer,
   f2 text
 ) @recreate(foo);
-
 
 -- TEST: this table had a group and losses it
 -- + {create_table_stmt}: err

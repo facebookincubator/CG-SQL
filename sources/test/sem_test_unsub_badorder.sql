@@ -7,13 +7,14 @@
 
 create table foo(id integer);
 
--- TEST: all good, one good unsub
--- - error:
+create table bar(id integer) @create(10);
+
+-- TEST: this unsub must happen at v10
+-- + {schema_unsub_stmt}: err
+-- + error: % new @unsub/@resub must be added at version 10 or later
+-- +1 error:
 @unsub(2, foo);
 
--- TEST: still good, no worries
--- - error:
-@resub(3, foo);
 
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
@@ -21,16 +22,4 @@ create table foo(id integer);
 
 create table foo(id integer);
 
--- TEST: mismatched directive
--- + {schema_unsub_stmt}: err
--- + error: % @unsub/@resub directives did not match between current and previous schema
--- + previous schema @unsub(1, foo)
--- + current schema @unsub(2, foo)
--- +1 error:
-@unsub(1, foo);
-
--- TEST: after this we stop reporting errors of this type to avoid spam
--- + {schema_resub_stmt}: ok
--- - error:
-@resub(3, foo);
-
+create table bar(id integer) @create(10);
