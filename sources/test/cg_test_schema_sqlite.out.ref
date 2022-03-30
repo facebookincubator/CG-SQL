@@ -118,6 +118,17 @@ CREATE TABLE create__second(
   id INTEGER REFERENCES create_first (id)
 );
 
+CREATE TABLE unsub_recreated(
+  anything TEXT
+);
+
+CREATE TABLE unsub_voyage(
+  v1 INTEGER,
+  v3 TEXT,
+  v5 TEXT,
+  v7 TEXT
+);
+
 CREATE VIEW shared_view AS
 SELECT *
   FROM foo;

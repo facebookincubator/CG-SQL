@@ -104,18 +104,18 @@ typedef struct schema_annotation {
   ast_node *column_ast;           // a particular column if column annotation
 } schema_annotation;
 
-// Note: schema annotations are processed in the indicated order: the numbers matter
+// Note: schema annotations are processed in the indicated order: the numbers matter!
 #define SCHEMA_ANNOTATION_INVALID 0
 #define SCHEMA_ANNOTATION_FIRST 1
-#define SCHEMA_ANNOTATION_CREATE_TABLE 1
-#define SCHEMA_ANNOTATION_CREATE_COLUMN 2
-#define SCHEMA_ANNOTATION_DELETE_TRIGGER 3
-#define SCHEMA_ANNOTATION_DELETE_VIEW 4
-#define SCHEMA_ANNOTATION_DELETE_INDEX 5
-#define SCHEMA_ANNOTATION_DELETE_COLUMN 6
-#define SCHEMA_ANNOTATION_DELETE_TABLE 7
-#define SCHEMA_ANNOTATION_AD_HOC 8
-#define SCHEMA_ANNOTATION_UNSUB 9
+#define SCHEMA_ANNOTATION_UNSUB 1
+#define SCHEMA_ANNOTATION_CREATE_TABLE 2
+#define SCHEMA_ANNOTATION_CREATE_COLUMN 3
+#define SCHEMA_ANNOTATION_DELETE_TRIGGER 4
+#define SCHEMA_ANNOTATION_DELETE_VIEW 5
+#define SCHEMA_ANNOTATION_DELETE_INDEX 6
+#define SCHEMA_ANNOTATION_DELETE_COLUMN 7
+#define SCHEMA_ANNOTATION_DELETE_TABLE 8
+#define SCHEMA_ANNOTATION_AD_HOC 9
 #define SCHEMA_ANNOTATION_RESUB 10
 #define SCHEMA_ANNOTATION_LAST 10
 
@@ -198,6 +198,7 @@ cql_noexport sem_t sensitive_flag(sem_t sem_type);
 cql_noexport CSTR coretype_string(sem_t sem_type);
 
 cql_noexport bool_t is_virtual_ast(ast_node *ast);
+cql_noexport bool_t is_deleted(ast_node *ast);
 cql_noexport bool_t is_single_flag(sem_t sem_type);
 cql_noexport bool_t is_bool(sem_t sem_type);
 cql_noexport bool_t is_string_compat(sem_t sem_type);

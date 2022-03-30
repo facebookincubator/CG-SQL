@@ -1049,7 +1049,7 @@ CREATE TABLE ok_to_delete_recreate_table(
   id INTEGER
 ) @RECREATE @DELETE;
 
-  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } validated @delete(1) @recreate
+  {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } deleted validated @delete(1) @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -1114,7 +1114,7 @@ CREATE TABLE recreate_deleted_in_the_past(
   id INTEGER
 ) @RECREATE @DELETE;
 
-  {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } validated @delete(1) @recreate
+  {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(1) @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -1790,7 +1790,7 @@ CREATE TABLE table_going(
   FOREIGN KEY (col2) REFERENCES table_staying (col1) ON UPDATE CASCADE ON DELETE CASCADE
 ) @RECREATE(my_recreate_group) @DELETE;
 
-  {create_table_stmt}: table_going: { col1: text, col2: integer foreign_key } validated @delete(1) @recreate(my_recreate_group)
+  {create_table_stmt}: table_going: { col1: text, col2: integer foreign_key } deleted validated @delete(1) @recreate(my_recreate_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}

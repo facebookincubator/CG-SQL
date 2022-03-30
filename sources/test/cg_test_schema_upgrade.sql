@@ -259,3 +259,20 @@ create table blob_storage_baseline_table(
   x integer,
   y text
 );
+
+create table unsub_recreated(
+ anything text
+) @recreate;
+
+@unsub(1, unsub_recreated);
+
+create table unsub_voyage(
+ v1 integer,
+ v3 text @create(3),
+ v5 text @create(5),
+ v7 text @create(7)
+);
+
+@unsub(1, unsub_voyage);
+@resub(5, unsub_voyage);
+

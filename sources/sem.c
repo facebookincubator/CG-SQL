@@ -1159,7 +1159,7 @@ cql_noexport bool_t is_create_func(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_CREATE_FUNC);
 }
 
-static bool_t is_deleted(ast_node *ast) {
+cql_noexport bool_t is_deleted(ast_node *ast) {
   Contract(ast->sem);
   sem_node *sem = ast->sem;
 
@@ -11768,6 +11768,7 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
 
         vers_info->delete_version_ast = version_annotation;
         vers_info->delete_version = 1;
+        vers_info->flags |= SEM_TYPE_DELETED;
       }
 
       // either way, we're done now

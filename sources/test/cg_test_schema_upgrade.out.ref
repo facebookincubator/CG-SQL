@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 2133565431963007342
+-- schema crc -4784197379006289089
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE LONG<facet_data> not null;
@@ -180,6 +180,17 @@ CREATE TABLE blob_storage_baseline_table(
   y TEXT
 );
 
+CREATE TABLE unsub_recreated(
+  anything TEXT
+) @RECREATE;
+
+CREATE TABLE unsub_voyage(
+  v1 INTEGER,
+  v3 TEXT @CREATE(3),
+  v5 TEXT @CREATE(5),
+  v7 TEXT @CREATE(7)
+);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *
@@ -272,6 +283,12 @@ END;
 @begin_schema_region shared;
 @SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigrationScript);
 @end_schema_region;
+
+@UNSUB(1, unsub_recreated);
+
+@UNSUB(1, unsub_voyage);
+
+@RESUB(5, unsub_voyage);
 
 -- facets table declaration --
 CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
@@ -420,6 +437,10 @@ BEGIN
     id INTEGER REFERENCES delete__second (id)
   );
 
+  CREATE TABLE IF NOT EXISTS unsub_voyage(
+    v1 INTEGER
+  );
+
 END;
 -- drop all the views we know
 @attribute(cql:private)
@@ -518,6 +539,10 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_tables()
 BEGIN
+  IF cql_facet_find(test_facets, 'unsub_recreated_table_crc') != 2282658103124508505 THEN
+    DROP TABLE IF EXISTS unsub_recreated;
+    CALL test_cql_set_facet_version('unsub_recreated_table_crc', 2282658103124508505);
+  END IF;
   IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != 5892669275896520096 THEN
     DROP TABLE IF EXISTS complex_virtual_table;
     CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
@@ -626,15 +651,6 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROC test_cleanup_unused_versions()
-BEGIN
-  WITH
-    V(v) AS (VALUES (1)),
-    F(f) AS (SELECT 'cql_schema_v'||v from V)
-  DELETE FROM test_cql_schema_facets WHERE facet IN (SELECT f from F);
-END;
-
-@attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps()
 BEGIN
   DECLARE schema_version LONG INTEGER NOT NULL;
@@ -650,9 +666,20 @@ BEGIN
     ---- install baseline schema if needed ----
 
     CALL test_cql_get_version_crc(0, schema_version);
-    IF schema_version != -1665480696371721609 THEN
+    IF schema_version != -7422945254120343080 THEN
       CALL test_cql_install_baseline_schema();
-      CALL test_cql_set_version_crc(0, -1665480696371721609);
+      CALL test_cql_set_version_crc(0, -7422945254120343080);
+    END IF;
+
+    ---- upgrade to schema version 1 ----
+
+    CALL test_cql_get_version_crc(1, schema_version);
+    IF schema_version != -2349632019219568254 THEN
+      -- unsubscription of unsub_voyage
+
+      DROP TABLE IF EXISTS unsub_voyage;
+
+      CALL test_cql_set_version_crc(1, -2349632019219568254);
     END IF;
 
     ---- upgrade to schema version 2 ----
@@ -761,7 +788,7 @@ BEGIN
     ---- upgrade to schema version 5 ----
 
     CALL test_cql_get_version_crc(5, schema_version);
-    IF schema_version != -1443842544793398626 THEN
+    IF schema_version != 850012853820741412 THEN
       -- altering table foo to add column name TEXT;
 
       IF NOT test_check_column_exists('foo', '*[( ]name TEXT*') THEN 
@@ -772,13 +799,21 @@ BEGIN
 
       -- ad hoc migration proc MyAdHocMigrationScript will run
 
+      -- resubscribe to unsub_voyage
+
+      CREATE TABLE IF NOT EXISTS unsub_voyage(
+        v1 INTEGER,
+        v3 TEXT,
+        v5 TEXT
+      );
+
       -- data migration procedures
       IF cql_facet_find(test_facets, 'MyAdHocMigrationScript') = -1 THEN
         CALL MyAdHocMigrationScript();
         CALL test_cql_set_facet_version('MyAdHocMigrationScript', 5);
       END IF;
 
-      CALL test_cql_set_version_crc(5, -1443842544793398626);
+      CALL test_cql_set_version_crc(5, 850012853820741412);
     END IF;
 
     ---- upgrade to schema version 6 ----
@@ -797,7 +832,7 @@ BEGIN
     ---- upgrade to schema version 7 ----
 
     CALL test_cql_get_version_crc(7, schema_version);
-    IF schema_version != 1426090987381496410 THEN
+    IF schema_version != 7516943593897393762 THEN
       -- creating table create_first
 
       CREATE TABLE IF NOT EXISTS create_first(
@@ -810,7 +845,13 @@ BEGIN
         id INTEGER REFERENCES create_first (id)
       );
 
-      CALL test_cql_set_version_crc(7, 1426090987381496410);
+      -- altering table unsub_voyage to add column v7 TEXT;
+
+      IF NOT test_check_column_exists('unsub_voyage', '*[( ]v7 TEXT*') THEN 
+        ALTER TABLE unsub_voyage ADD COLUMN v7 TEXT;
+      END IF;
+
+      CALL test_cql_set_version_crc(7, 7516943593897393762);
     END IF;
 
     CALL test_cql_drop_tables();
@@ -818,9 +859,8 @@ BEGIN
     CALL test_cql_create_all_views();
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
-    CALL test_cleanup_unused_versions();
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc', 2133565431963007342);
+    CALL test_cql_set_facet_version('cql_schema_crc', -4784197379006289089);
 END;
 
 CREATE PROCEDURE test_get_current_and_proposed_versions(
@@ -861,7 +901,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 2133565431963007342 THEN
+  IF schema_crc <> -4784197379006289089 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades();

@@ -51,6 +51,13 @@ static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, re
 // We emit for SQLite in this mode
 #define SCHEMA_FOR_SQLITE 8
 
+// rather than burning a new flag bit for tables for this one purpose
+// we can steal a bit that is useless on tables, tables can't be "notnull"
+// we'll use this flag to remember if the table is presently in the unsubscribed
+// state as we move through the upgrade process.  Tables can be resubscribed
+// so the state changes as we go along.
+#define SCHEMA_FLAG_UNSUB SEM_TYPE_NOTNULL
+
 // If the mode is SCHEMA_TO_DECLARE then we include all the regions we are upgrading
 // and all their dependencies.
 //
@@ -186,6 +193,20 @@ static bool_t cg_suppress_new_col_def(ast_node *ast, void *context, charbuf *buf
   // any column created in not the original schema is not emitted when creating the table during migration
   // later migration steps will add these columns
   return ast->sem->create_version != -1;
+}
+
+// This is the callback method handed to the gen_ method that creates SQL for us
+// it will call us every time it sees a col definition to give us a chance to suppress it
+static bool_t cg_suppress_col_def_by_version(ast_node *ast, void *context, charbuf *buffer) {
+  Contract(is_ast_col_def(ast));
+  Contract(ast->sem);
+
+  // signed conversion is fine because version numbers are ridiculously smaller than int32
+  int32_t vers = *(int32_t *)context;
+
+  // any column created in the indicated version or previously is emitted
+  // recall that baseline columns are at v == -1
+  return ast->sem->create_version > vers;
 }
 
 // This is the callback method handed to the gen_ method to force a
@@ -1057,11 +1078,11 @@ static void cg_schema_manage_recreate_tables(
     EXTRACT_NOTNULL(recreate_attr, note->annotation_ast);
     EXTRACT(delete_attr, recreate_attr->right);
 
-    // presence of a node on the right of the @recreate is the @delete
-    bool_t is_deleted = !!delete_attr;
+    // this coveres either deleted or unsubscribed
 
     ast_node *ast = note->target_ast;
     ast_node *ast_output = ast;
+    bool_t deleted = is_deleted(ast);
 
     Invariant(is_ast_create_table_stmt(ast));
 
@@ -1095,7 +1116,7 @@ static void cg_schema_manage_recreate_tables(
 
     CHARBUF_OPEN(make_table);
 
-    if (!is_deleted) {
+    if (!deleted) {
       gen_set_output_buffer(&make_table);
       gen_statement_with_callbacks(ast_output, &callbacks);
       bprintf(&make_table, ";\n");
@@ -1447,6 +1468,14 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
     switch (type) {
       case SCHEMA_ANNOTATION_CREATE_COLUMN: {
+
+        if (note->target_ast->sem->sem_type & SCHEMA_FLAG_UNSUB) {
+          // do not emit the alter table add column if we are
+          // currently unsubscribed, not that resub happens AFTER
+          // CREATE COLUMN and UNSUB happens before, this is important!
+          continue;
+        }
+
         ast_node *def = note->column_ast;
         Contract(is_ast_col_def(def));
         EXTRACT_NOTNULL(col_def_type_attrs, def->left);
@@ -1526,13 +1555,9 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         break;
       }
 
-      case SCHEMA_ANNOTATION_DELETE_TABLE: {
-        // this is all that's left
-        Contract(note->annotation_type == SCHEMA_ANNOTATION_DELETE_TABLE);
-
+      case SCHEMA_ANNOTATION_DELETE_TABLE:
         bprintf(&drops, "  DROP TABLE IF EXISTS %s;\n", target_name);
         break;
-      }
 
       // Note: @create is invalid for INDEX/VIEW/TRIGGER so there can be no such annotation
 
@@ -1545,8 +1570,50 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         break;
 
       case SCHEMA_ANNOTATION_UNSUB:
+        // recreate tables do not need unsub, they will just delete like they usually do
+        // soon we will not generate this annotation at all for such tables but
+        // for now it's needed for previous schema verification
+
+        if (!note->target_ast->sem->recreate) {
+          // unsub demands a drop
+          bprintf(&upgrade, "      -- unsubscription of %s\n\n", target_name);
+          bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n\n", target_name);
+        }
+        note->target_ast->sem->sem_type |= SCHEMA_FLAG_UNSUB;
+        subscription_management = true;
+        break;
+
       case SCHEMA_ANNOTATION_RESUB:
-        // do nothing for now, but no error...
+        // recreate tables do not need resub, they will just create like they usually do
+        // soon we will not generate this annotation at all for such tables but
+        // for now it's needed for previous schema verification
+
+        if (!note->target_ast->sem->recreate) {
+          // emit a create if it does not exist at this version
+          // note that we do not (!) emit a drop here because it's possible that
+          // something else will be later added to this schema rev causing it
+          // to re-run and we want it to be idempotent
+
+          bprintf(&upgrade, "      -- resubscribe to %s\n\n", target_name);
+
+          gen_sql_callbacks callbacks;
+          init_gen_sql_callbacks(&callbacks);
+          callbacks.col_def_callback = cg_suppress_col_def_by_version;
+          callbacks.col_def_context = &note->version;
+          callbacks.if_not_exists_callback = cg_schema_force_if_not_exists;
+          callbacks.mode = gen_mode_sql;
+          callbacks.long_to_int_conv = true;
+          CHARBUF_OPEN(sql_out);
+            gen_set_output_buffer(&sql_out);
+            // only the columns as of the current version
+            gen_statement_with_callbacks(note->target_ast, &callbacks);
+
+            bindent(&upgrade, &sql_out, 6);
+            bprintf(&upgrade, ";\n\n");
+          CHARBUF_CLOSE(sql_out);
+        }
+
+        note->target_ast->sem->sem_type &= sem_not(SCHEMA_FLAG_UNSUB);
         subscription_management = true;
         break;
 

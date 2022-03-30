@@ -101,7 +101,7 @@ typedef struct gen_sql_callbacks {
   bool_t convert_hex;
 
   // If true casts like "CAST(NULL as TEXT)" are reduced to just NULL.  The type information is not needed
-  // by SQLite so it just wasts space.
+  // by SQLite so it just wastes space.
   bool_t minify_casts;
 
   // If true then unused aliases in select statements are elided to save space.  This is safe because

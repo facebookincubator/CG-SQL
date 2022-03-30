@@ -214,7 +214,7 @@ create table not_ok_to_create_recreate_table
 ) @create(6);
 
 -- TEST : the new version of this table is ok the delete plan, the version number can be low, it's ok for deleted
--- + {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } validated @delete(1) @recreate
+-- + {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(1) @recreate
 -- - error:
 create table recreate_deleted_in_the_past
 (

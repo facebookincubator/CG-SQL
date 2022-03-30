@@ -87,6 +87,24 @@ begin
     call printf("\n");
   end;
 
+  let unsub_sql := (
+    select sql from sqlite_master
+    where name = 'test_for_unsub'
+    if nothing null);
+
+  switch version
+  when 0,2,4 then
+    if unsub_sql is null then 
+      call printf("ERROR! unsub_sql should have been present in v%d\n", version);
+      throw;
+    end if;
+  else
+    if unsub_sql is not null then 
+      call printf("ERROR! unsub_sql should have been unsubscribed in v%d\n", version);
+      throw;
+    end if;
+  end;
+
   let recreate_sql := (
     select sql from sqlite_master
     where name = 'test_this_table_will_become_create'

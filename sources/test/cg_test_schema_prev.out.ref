@@ -156,6 +156,17 @@ CREATE TABLE blob_storage_baseline_table(
   y TEXT
 );
 
+CREATE TABLE unsub_recreated(
+  anything TEXT
+) @RECREATE;
+
+CREATE TABLE unsub_voyage(
+  v1 INTEGER,
+  v3 TEXT @CREATE(3),
+  v5 TEXT @CREATE(5),
+  v7 TEXT @CREATE(7)
+);
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *
@@ -248,4 +259,10 @@ END;
 @begin_schema_region shared;
 @SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigrationScript);
 @end_schema_region;
+
+@UNSUB(1, unsub_recreated);
+
+@UNSUB(1, unsub_voyage);
+
+@RESUB(5, unsub_voyage);
 
