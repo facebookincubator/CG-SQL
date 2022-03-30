@@ -14,6 +14,9 @@ s/[[:<:]]ADDED_MIGRATION_PROC[[:>:]]/'"addedMigrationProc"' ':'/g
 s/[[:<:]]IS_DELETED[[:>:]]/'"isDeleted"' ':'/g
 s/[[:<:]]DELETED_VERSION[[:>:]]/'"deletedVersion"' ':'/g
 s/[[:<:]]DELETED_MIGRATION_PROC[[:>:]]/'"deletedMigrationProc"' ':'/g
+s/[[:<:]]SUBSCRIPTIONS[[:>:]]/'"subscriptions"' ':'/g
+s/[[:<:]]UNSUB_VERSION[[:>:]]/'"unsubscribedVersion"' ':'/g
+s/[[:<:]]RESUB_VERSION[[:>:]]/'"resubscribedVersion"' ':'/g
 s/[[:<:]]IS_RECREATED[[:>:]]/'"isRecreated"' ':'/g
 s/[[:<:]]RECREATE_GROUP_NAME[[:>:]]/'"recreateGroupName"' ':'/g
 s/[[:<:]]REGION[[:>:]]/'"region"' ':'/g
@@ -22,6 +25,7 @@ s/[[:<:]]COLUMNS[[:>:]]/'"columns"' ':'/g
 s/[[:<:]]TYPE[[:>:]]/'"type"' ':'/g
 s/[[:<:]]KIND[[:>:]]/'"kind"' ':'/g
 s/[[:<:]]IS_NOT_NULL[[:>:]]/'"isNotNull"' ':'/g
+s/[[:<:]]IS_EPONYMOUS[[:>:]]/'"isEponymous"' ':'/g
 s/[[:<:]]IS_SENSITIVE[[:>:]]/'"isSensitive"' ':'/g
 s/[[:<:]]IS_PRIMARY_KEY[[:>:]]/'"isPrimaryKey"' ':'/g
 s/[[:<:]]IS_UNIQUE_KEY[[:>:]]/'"isUniqueKey"' ':'/g

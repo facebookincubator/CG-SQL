@@ -1364,6 +1364,82 @@
       ],
       "checkExpressions" : [
       ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE t_for_unsub(
+      id INTEGER
+    )
+
+    {
+      "name" : "t_for_unsub",
+      "CRC" : "7980008419978162777",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "unsubscribedVersion" : 4,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE t_for_resub(
+      id INTEGER
+    )
+
+    {
+      "name" : "t_for_resub",
+      "CRC" : "-2093128921200616870",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "resubscribedVersion" : 5,
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
     }
   ],
   "virtualTables" : [
@@ -1386,6 +1462,7 @@
       "isDeleted" : 0,
       "isRecreated": 1,
       "isVirtual" : 1,
+      "isEponymous" : 0,
       "module" : "a_module",
       "moduleArgs" : "this, that, the_other",
       "attributes" : [
@@ -1443,6 +1520,7 @@
       "isDeleted" : 0,
       "isRecreated": 1,
       "isVirtual" : 1,
+      "isEponymous" : 0,
       "module" : "a_module",
       "columns" : [
         {
@@ -1495,6 +1573,7 @@
       "isDeleted" : 0,
       "isRecreated": 1,
       "isVirtual" : 1,
+      "isEponymous" : 0,
       "module" : "a_module",
       "moduleArgs" : "  id INTEGER,\n  t TEXT,\n  q REAL",
       "columns" : [
@@ -1560,6 +1639,7 @@
       "deletedMigrationProc" : "cql:module_must_not_be_deleted_see_docs_for_CQL0392",
       "isRecreated": 0,
       "isVirtual" : 1,
+      "isEponymous" : 0,
       "module" : "a_module",
       "moduleArgs" : "  id INTEGER,\n  t TEXT,\n  q REAL",
       "columns" : [
@@ -1587,6 +1667,58 @@
         {
           "name" : "q",
           "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE epon_virt_table(
+      id INTEGER,
+      t TEXT
+    ) WITHOUT ROWID @RECREATE
+
+    {
+      "name" : "epon_virt_table",
+      "CRC" : "-1341152214091400811",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 1,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 1,
+      "isVirtual" : 1,
+      "isEponymous" : 1,
+      "module" : "epon_virt_table",
+      "moduleArgs" : "this, that, the_other",
+      "columns" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "t",
+          "type" : "text",
           "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
@@ -3868,6 +4000,38 @@
           "value" : 1.000000e+00
         }
       ]
+    }
+  ],
+  "subscriptions" : [
+
+    The statement ending at line XXXX
+
+    @UNSUB(4, t_for_unsub)
+
+    {
+      "type" : "unsub",
+      "table" : "t_for_unsub",
+      "version" : 4
+    }
+    The statement ending at line XXXX
+
+    @UNSUB(4, t_for_resub)
+
+    ,
+    {
+      "type" : "unsub",
+      "table" : "t_for_resub",
+      "version" : 4
+    }
+    The statement ending at line XXXX
+
+    @RESUB(5, t_for_resub)
+
+    ,
+    {
+      "type" : "resub",
+      "table" : "t_for_resub",
+      "version" : 5
     }
   ],
   "tableUsers" : {

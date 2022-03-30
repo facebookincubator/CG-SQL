@@ -561,6 +561,37 @@ static void cg_json_constant_groups(charbuf* output) {
   bprintf(output, "]");
 }
 
+// Emits the JSON for all the subscription directives (@unsub/@resub)
+static void cg_json_subscriptions(charbuf* output) {
+  bprintf(output, "\"subscriptions\" : [\n");
+  BEGIN_INDENT(list, 2);
+  BEGIN_LIST;
+
+  for (list_item *item = all_subscriptions_list; item; item = item->next) {
+    ast_node *ast = item->ast;
+    Invariant(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+
+    EXTRACT_NOTNULL(version_annotation, ast->left);
+    EXTRACT_OPTION(vers, version_annotation->left);
+    EXTRACT_STRING(name, version_annotation->right);
+
+    cg_json_test_details(output, ast, NULL);
+
+    COMMA;
+    bprintf(output, "{\n");
+    BEGIN_INDENT(t, 2);
+    bprintf(output, "\"type\" : \"%s\",\n", is_ast_schema_unsub_stmt(ast) ? "unsub" : "resub");
+    bprintf(output, "\"table\" : \"%s\",\n", name);
+    bprintf(output, "\"version\" : %d\n", vers);
+    END_INDENT(t);
+    bprintf(output, "}");
+  }
+
+  END_LIST;
+  END_INDENT(list);
+  bprintf(output, "]");
+}
+
 static void cg_migration_proc(ast_node *ast, charbuf *output) {
   if (is_ast_dot(ast)) {
     EXTRACT_NOTNULL(dot, ast);
@@ -1544,12 +1575,21 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
     bprintf(output, ",\n\"recreateGroupName\" : \"%s\"", ast->sem->recreate_group_name);
   }
 
+  if (ast->sem->unsub_version > ast->sem->resub_version) {
+     bprintf(output, ",\n\"unsubscribedVersion\" : %d", ast->sem->unsub_version);
+  }
+
+  if (ast->sem->resub_version > ast->sem->unsub_version) {
+     bprintf(output, ",\n\"resubscribedVersion\" : %d", ast->sem->resub_version);
+  }
+
   if (ast->sem->region) {
     cg_json_emit_region_info(output, ast);
   }
 
   if (is_virtual_ast(ast)) {
     bprintf(output, ",\n\"isVirtual\" : 1");
+    bprintf(output, ",\n\"isEponymous\" : %d", !!(flags & VTAB_IS_EPONYMOUS));
     EXTRACT_NOTNULL(create_virtual_table_stmt, ast->parent);
     EXTRACT_NOTNULL(module_info, create_virtual_table_stmt->left);
     EXTRACT_STRING(module_name, module_info->left);
@@ -2390,6 +2430,8 @@ cql_noexport void cg_json_schema_main(ast_node *head) {
   cg_json_enums(output);
   bprintf(output, ",\n");
   cg_json_constant_groups( output);
+  bprintf(output, ",\n");
+  cg_json_subscriptions( output);
 
   if (options.test) {
     bprintf(output, ",\n");

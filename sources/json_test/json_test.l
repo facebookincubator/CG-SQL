@@ -43,6 +43,9 @@ int fileno(FILE *);
 \"addedMigrationProc\"[ \t]*:    { return ADDED_MIGRATION_PROC; }
 \"isDeleted\"[ \t]*:             { return IS_DELETED; }
 \"deletedVersion\"[ \t]*:        { return DELETED_VERSION;}
+\"subscriptions\"[ \t]*:         { return SUBSCRIPTIONS; }
+\"unsubscribedVersion\"[ \t]*:   { return UNSUB_VERSION;}
+\"resubscribedVersion\"[ \t]*:   { return RESUB_VERSION;}
 \"deletedMigrationProc\"[ \t]*:  { return DELETED_MIGRATION_PROC; }
 \"isRecreated\"[ \t]*:           { return IS_RECREATED; }
 \"recreateGroupName\"[ \t]*:     { return RECREATE_GROUP_NAME; }
@@ -53,6 +56,7 @@ int fileno(FILE *);
 \"kind\"[ \t]*:                  { return KIND; }
 \"isNotNull\"[ \t]*:             { return IS_NOT_NULL; }
 \"isSensitive\"[ \t]*:           { return IS_SENSITIVE; }
+\"isEponymous\"[ \t]*:           { return IS_EPONYMOUS; }
 \"isPrimaryKey\"[ \t]*:          { return IS_PRIMARY_KEY; }
 \"isUniqueKey\"[ \t]*:           { return IS_UNIQUE_KEY; }
 \"isAutoIncrement\"[ \t]*:       { return IS_AUTO_INCREMENT; }

@@ -1212,6 +1212,7 @@ declare enum some_longs long (
 -- + "ifNotExists" : 0,
 -- + "isRecreated": 1,
 -- + "isVirtual" : 1,
+-- + "isEponymous" : 0,
 -- + "module" : "a_module",
 -- + "moduleArgs" : "this, that, the_other",
 -- + "name" : "banana",
@@ -1440,3 +1441,47 @@ begin
   with deleted_view(*) as (select 1 x, 2 y)
   select * from deleted_view;
 end;
+
+-- TEST: we must emit eponymous as needed
+-- + "name" : "epon_virt_table",
+-- + "isVirtual" : 1,
+-- + "isEponymous" : 1,
+create virtual table @eponymous epon_virt_table using epon_virt_table ( this, that, the_other ) as (
+  id integer,
+  t text
+);
+
+-- TEST: unsubscription JSON info should be present
+-- + "name" : "t_for_unsub",
+-- + "unsubscribedVersion" : 4,
+-- - "resubscribedVersion"
+create table t_for_unsub(
+  id integer
+);
+
+-- TEST: record unsub 
+-- + "type" : "unsub",
+-- + "table" : "t_for_unsub",
+-- + "version" : 4
+@unsub(4, t_for_unsub);
+
+-- TEST: resubscription JSON info should be present
+-- we need a test where the end state is resubscribed
+-- + "name" : "t_for_resub",
+-- - "unsubscribedVersion"
+-- + "resubscribedVersion" : 5,
+create table t_for_resub(
+  id integer
+);
+
+-- TEST: record unsub prep for resub
+-- + "type" : "unsub",
+-- + "table" : "t_for_resub",
+-- + "version" : 4
+@unsub(4, t_for_resub);
+
+-- TEST: record resub
+-- + "type" : "resub",
+-- + "table" : "t_for_resub",
+-- + "version" : 5
+@resub(5, t_for_resub);

@@ -47,8 +47,9 @@ void yyset_lineno(int);
 %token TABLES CRC VIRTUAL_TABLES MODULE MODULE_ARGS
 %token NAME ARG_ORIGIN IS_TEMP IS_VIRTUAL IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
-%token COLUMNS
+%token COLUMNS UNSUB_VERSION RESUB_VERSION SUBSCRIPTIONS
 %token TYPE KIND IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
+%token IS_EPONYMOUS
 %token PRIMARY_KEY PRIMARY_KEY_SORT_ORDERS PRIMARY_KEY_NAME FOREIGN_KEYS UNIQUE_KEYS
 %token REFERENCE_TABLE REFERENCE_COLUMNS ON_UPDATE ON_DELETE IS_DEFERRED ON_RECREATE_OF
 %token ATTRIBUTES VALUE DEFAULT_VALUE VALUES
@@ -83,7 +84,8 @@ json_schema: '{'
          REGIONS '[' opt_regions ']' ','
          AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']' ','
          ENUMS  '[' opt_enums ']' ','
-         CONSTANT_GROUPS  '[' opt_const_groups ']'
+         CONSTANT_GROUPS  '[' opt_const_groups ']' ','
+         SUBSCRIPTIONS  '[' opt_subscriptions ']'
          '}'
   ;
 
@@ -108,6 +110,8 @@ table: '{'
        opt_deleted_version
        IS_RECREATED BOOL_LITERAL ','
        opt_recreate_group_name
+       opt_unsub_version
+       opt_resub_version
        opt_region_info
        opt_table_indices
        opt_attributes
@@ -135,7 +139,7 @@ virtual_table: '{'
        CRC STRING_LITERAL ','
        IS_TEMP '0' ','
        IF_NOT_EXISTS BOOL_LITERAL ','
-       WITHOUT_ROWID '0' ','
+       WITHOUT_ROWID BOOL_LITERAL ','
        IS_ADDED BOOL_LITERAL ','
        opt_added_version
        IS_DELETED BOOL_LITERAL ','
@@ -143,6 +147,7 @@ virtual_table: '{'
        IS_RECREATED BOOL_LITERAL ','
        opt_region_info
        IS_VIRTUAL '1' ','
+       IS_EPONYMOUS BOOL_LITERAL ','
        MODULE STRING_LITERAL ','
        opt_module_args
        opt_attributes
@@ -162,6 +167,12 @@ opt_added_version: | ADDED_VERSION any_integer ',' opt_added_migration_proc
   ;
 
 opt_added_migration_proc: | ADDED_MIGRATION_PROC STRING_LITERAL ','
+  ;
+
+opt_unsub_version: | UNSUB_VERSION any_integer ','
+  ;
+
+opt_resub_version: | RESUB_VERSION any_integer ','
   ;
 
 opt_deleted_version: | DELETED_VERSION any_integer ',' opt_deleted_migration_proc
@@ -660,6 +671,19 @@ enum_value: '{'
              NAME STRING_LITERAL ','
              VALUE num_literal
             '}'
+  ;
+
+opt_subscriptions: | subscriptions
+  ;
+
+subscriptions: subscription | subscription ',' subscriptions
+  ;
+
+subscription: '{'
+     TYPE STRING_LITERAL ','
+     TABLE STRING_LITERAL ','
+     VERSION any_integer
+     '}'
   ;
 
 opt_const_groups: | const_groups
