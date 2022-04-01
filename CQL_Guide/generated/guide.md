@@ -6483,7 +6483,7 @@ So, in summary, to get true privacy, first make whatever logical regions you lik
 
 ### Unsubscription and Resubscription Features
 
-Any significant library that is centered around a database is likely to accrue significant amounts of schema to support its features.  
+Any significant library that is centered around a database is likely to accrue significant amounts of schema to support its features.
 Often users of the library don’t want all its features and therefore don’t want all of its schema.  CQL’s primary strategy is to allow
 the library author to divide the schema into regions and then the consumer of the library  may generate a suitable schema deployer
 that deploys only the desired regions.  You simply subscribe to the regions you want.
@@ -6525,7 +6525,7 @@ The effects of a valid `@resub` are as follows:
 * If the table is `@recreate`, the table is recreated as usual
 * The JSON includes the resub details in a new subscriptions section
 
-The compiler ensures that the directives are valid and stay valid. 
+The compiler ensures that the directives are valid and stay valid.
 
 #### Validations for @unsub(_version_, _table_):
 
@@ -9525,7 +9525,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Mar 27 10:14:38 PDT 2022
+Snapshot as of Thu Mar 31 17:52:35 EDT 2022
 
 ### Operators and Literals
 
@@ -15662,7 +15662,7 @@ the current schema.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Mar 27 10:14:38 PDT 2022
+Snapshot as of Thu Mar 31 17:52:35 EDT 2022
 
 ### Rules
 
@@ -15685,7 +15685,8 @@ json_schema: '{'
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
          '"enums"' ':'  '[' opt_enums ']' ','
-         '"constantGroups"' ':'  '[' opt_const_groups ']'
+         '"constantGroups"' ':'  '[' opt_const_groups ']' ','
+         '"subscriptions"' ':'  '[' opt_subscriptions ']'
          '}'
   ;
 
@@ -15710,6 +15711,8 @@ table: '{'
        opt_deleted_version
        '"isRecreated"' ':' BOOL_LITERAL ','
        opt_recreate_group_name
+       opt_unsub_version
+       opt_resub_version
        opt_region_info
        opt_table_indices
        opt_attributes
@@ -15737,7 +15740,7 @@ virtual_table: '{'
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
-       '"withoutRowid"' ':' '0' ','
+       '"withoutRowid"' ':' BOOL_LITERAL ','
        '"isAdded"' ':' BOOL_LITERAL ','
        opt_added_version
        '"isDeleted"' ':' BOOL_LITERAL ','
@@ -15745,6 +15748,7 @@ virtual_table: '{'
        '"isRecreated"' ':' BOOL_LITERAL ','
        opt_region_info
        '"isVirtual"' ':' '1' ','
+       '"isEponymous"' ':' BOOL_LITERAL ','
        '"module"' ':' STRING_LITERAL ','
        opt_module_args
        opt_attributes
@@ -15764,6 +15768,12 @@ opt_added_version: | '"addedVersion"' ':' any_integer ',' opt_added_migration_pr
   ;
 
 opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ','
+  ;
+
+opt_unsub_version: | '"unsubscribedVersion"' ':' any_integer ','
+  ;
+
+opt_resub_version: | '"resubscribedVersion"' ':' any_integer ','
   ;
 
 opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc
@@ -16262,6 +16272,19 @@ enum_value: '{'
              '"name"' ':' STRING_LITERAL ','
              '"value"' ':' num_literal
             '}'
+  ;
+
+opt_subscriptions: | subscriptions
+  ;
+
+subscriptions: subscription | subscription ',' subscriptions
+  ;
+
+subscription: '{'
+     '"type"' ':' STRING_LITERAL ','
+     '"table"' ':' STRING_LITERAL ','
+     '"version"' ':' any_integer
+     '}'
   ;
 
 opt_const_groups: | const_groups

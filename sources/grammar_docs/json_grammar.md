@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Mar 27 10:14:38 PDT 2022
+Snapshot as of Thu Mar 31 17:52:35 EDT 2022
 
 ### Rules
 
@@ -35,7 +35,8 @@ json_schema: '{'
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
          '"enums"' ':'  '[' opt_enums ']' ','
-         '"constantGroups"' ':'  '[' opt_const_groups ']'
+         '"constantGroups"' ':'  '[' opt_const_groups ']' ','
+         '"subscriptions"' ':'  '[' opt_subscriptions ']'
          '}'
   ;
 
@@ -60,6 +61,8 @@ table: '{'
        opt_deleted_version
        '"isRecreated"' ':' BOOL_LITERAL ','
        opt_recreate_group_name
+       opt_unsub_version
+       opt_resub_version
        opt_region_info
        opt_table_indices
        opt_attributes
@@ -87,7 +90,7 @@ virtual_table: '{'
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
-       '"withoutRowid"' ':' '0' ','
+       '"withoutRowid"' ':' BOOL_LITERAL ','
        '"isAdded"' ':' BOOL_LITERAL ','
        opt_added_version
        '"isDeleted"' ':' BOOL_LITERAL ','
@@ -95,6 +98,7 @@ virtual_table: '{'
        '"isRecreated"' ':' BOOL_LITERAL ','
        opt_region_info
        '"isVirtual"' ':' '1' ','
+       '"isEponymous"' ':' BOOL_LITERAL ','
        '"module"' ':' STRING_LITERAL ','
        opt_module_args
        opt_attributes
@@ -114,6 +118,12 @@ opt_added_version: | '"addedVersion"' ':' any_integer ',' opt_added_migration_pr
   ;
 
 opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ','
+  ;
+
+opt_unsub_version: | '"unsubscribedVersion"' ':' any_integer ','
+  ;
+
+opt_resub_version: | '"resubscribedVersion"' ':' any_integer ','
   ;
 
 opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc
@@ -612,6 +622,19 @@ enum_value: '{'
              '"name"' ':' STRING_LITERAL ','
              '"value"' ':' num_literal
             '}'
+  ;
+
+opt_subscriptions: | subscriptions
+  ;
+
+subscriptions: subscription | subscription ',' subscriptions
+  ;
+
+subscription: '{'
+     '"type"' ':' STRING_LITERAL ','
+     '"table"' ':' STRING_LITERAL ','
+     '"version"' ':' any_integer
+     '}'
   ;
 
 opt_const_groups: | const_groups
