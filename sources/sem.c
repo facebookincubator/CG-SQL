@@ -15727,6 +15727,11 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeabl
     goto error;
   }
 
+  if (is_error(proc)) {
+    report_error(like_ast, "CQL0069: name not found (proc had errors, cannot be used)", like_name);
+    goto error;
+  }
+
   EXTRACT_STRING(proc_name, get_proc_name(proc));
 
   ast_node *result;

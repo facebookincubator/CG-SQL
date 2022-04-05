@@ -21830,3 +21830,18 @@ create table child_subs_table (
 -- + {schema_resub_stmt}: ok
 -- - error:
 @resub(11, child_subs_table);
+
+-- TEST: this generates an error and creates an unresolved arg list
+-- + {declare_proc_stmt}: err
+-- + {like}: err
+-- + error: % name not found 'does_not_exist'
+-- +1 error:
+DECLARE PROC broken_thing(LIKE does_not_exist ARGUMENTS);
+
+-- TEST: attempting to use a proc with errors for the arg list has to fail
+-- + {declare_proc_stmt}: err
+-- + {typed_name}: err
+-- + {like}: err
+-- + error: % name not found (proc had errors, cannot be used) 'broken_thing'
+-- +1 error:
+DECLARE PROC uses_broken_thing() (LIKE broken_thing ARGUMENTS);

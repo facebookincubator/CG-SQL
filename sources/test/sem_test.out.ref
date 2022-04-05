@@ -86173,3 +86173,38 @@ The statement ending at line XXXX
     | {int 11}
     | {name child_subs_table}
 
+The statement ending at line XXXX
+
+DECLARE PROC broken_thing (LIKE does_not_exist ARGUMENTS);
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'does_not_exist'
+
+  {declare_proc_stmt}: err
+  | {proc_name_type}
+  | | {name broken_thing}
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: err
+      | {param}: err
+        | {param_detail}
+          | {like}: err
+            | {name does_not_exist}: err
+            | {name does_not_exist}: err
+
+The statement ending at line XXXX
+
+DECLARE PROC uses_broken_thing () (LIKE broken_thing ARGUMENTS);
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had errors, cannot be used) 'broken_thing'
+
+  {declare_proc_stmt}: err
+  | {proc_name_type}
+  | | {name uses_broken_thing}
+  | | {int 3}
+  | {proc_params_stmts}
+    | {typed_names}: err
+      | {typed_name}: err
+        | {like}: err
+          | {name broken_thing}: err
+          | {name broken_thing}: err
+
