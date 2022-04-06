@@ -18,6 +18,7 @@ s/[[:<:]]SUBSCRIPTIONS[[:>:]]/'"subscriptions"' ':'/g
 s/[[:<:]]UNSUB_VERSION[[:>:]]/'"unsubscribedVersion"' ':'/g
 s/[[:<:]]RESUB_VERSION[[:>:]]/'"resubscribedVersion"' ':'/g
 s/[[:<:]]IS_RECREATED[[:>:]]/'"isRecreated"' ':'/g
+s/[[:<:]]ON_RECREATE_OF[[:>:]]/'"onRecreateOf"' ':'/g
 s/[[:<:]]RECREATE_GROUP_NAME[[:>:]]/'"recreateGroupName"' ':'/g
 s/[[:<:]]REGION[[:>:]]/'"region"' ':'/g
 s/[[:<:]]DEPLOYED_IN_REGION[[:>:]]/'"deployedInRegion"' ':'/g
@@ -28,6 +29,7 @@ s/[[:<:]]IS_NOT_NULL[[:>:]]/'"isNotNull"' ':'/g
 s/[[:<:]]IS_EPONYMOUS[[:>:]]/'"isEponymous"' ':'/g
 s/[[:<:]]IS_SENSITIVE[[:>:]]/'"isSensitive"' ':'/g
 s/[[:<:]]IS_PRIMARY_KEY[[:>:]]/'"isPrimaryKey"' ':'/g
+s/[[:<:]]PRIMARY_KEY_SORT_ORDERS[[:>:]]/'"primaryKeySortOrders"' ':'/g
 s/[[:<:]]IS_UNIQUE_KEY[[:>:]]/'"isUniqueKey"' ':'/g
 s/[[:<:]]IS_AUTO_INCREMENT[[:>:]]/'"isAutoIncrement"' ':'/g
 s/[[:<:]]IS_VIRTUAL[[:>:]]/'"isVirtual"' ':'/g

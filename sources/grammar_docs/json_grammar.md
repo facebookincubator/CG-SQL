@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar 31 17:52:35 EDT 2022
+Snapshot as of Tue Apr  5 15:36:00 PDT 2022
 
 ### Rules
 
@@ -68,7 +68,7 @@ table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
-       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
+       '"primaryKeySortOrders"' ':' '[' opt_sort_order_names ']' ','
        opt_primary_key_name
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
@@ -104,7 +104,7 @@ virtual_table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
-       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
+       '"primaryKeySortOrders"' ':' '[' opt_sort_order_names ']' ','
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
        '"checkExpressions"' ':' '[' opt_check_expressions ']'
@@ -633,6 +633,7 @@ subscriptions: subscription | subscription ',' subscriptions
 subscription: '{'
      '"type"' ':' STRING_LITERAL ','
      '"table"' ':' STRING_LITERAL ','
+     opt_region_info
      '"version"' ':' any_integer
      '}'
   ;
@@ -711,7 +712,7 @@ ad_hoc_migration: '{'
                   '"name"' ':' STRING_LITERAL ','
                   '"crc"' ':' STRING_LITERAL ','
                   opt_attributes
-                  ON_RECREATE_OF STRING_LITERAL
+                  '"onRecreateOf"' ':' STRING_LITERAL
                   '}'
   ;
 

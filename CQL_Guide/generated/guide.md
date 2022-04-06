@@ -7706,454 +7706,81 @@ is often desirable and the maintenance is not too bad.  You just use the `use_my
 -->
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)
 
-To use cql in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
+To use CQL in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
 
 ```
 cql --in input.sql --rt json_schema --cg out.json
 ```
 
-Below are some examples of the JSON output taken from a CQL test file.  Note that the JSON has free text inserted into it as part of the test output. That text obviously doesn't appear in the final output but it is especially illustrative here.  This example illustrates almost all of the possible JSON fragments.
+The output contains many different sections for the various types of entities that CQL can process.  There is a full description of
+the possible outputs available at https://cgsql.dev/json-diagram.
 
+In the balance of this chapter we'll deal with the contents of the sections and their meaning rather than the specifics of the format,
+which are better described with the grammar above.
+
+#### Tables
+
+The "tables" section has zero or more tables, each table is comprised of these fields:
+
+* name : the table name
+* crc : the schema CRC for the entire table definition, including columns and constraints
+* isTemp : true if this is a temporary table
+* ifNotExists : true if the table was created with "if not exists"
+* withoutRowid : true if the table was created using "without rowid"
+* isAdded : true if the table has an @create directive
+  * addedVersion : optional, the schema version number in the @create directive
+* isDeleted : true if the table was marked with @delete or is currently _unsubscribed_
+  * deletedVersion : optional, the schema version number in the @delete directive
+* isRecreated : true if the table is marked with @recreate
+  * recreateGroupName : optional, if the @recreate attribute specifies a group name, it is present here
+* unsubscribedVersion : optional, if the table was last unsubscribed, the version number when this happened
+* resubscribedVersion : optional, if the table was last resubscribed, the version number when this happened
+* _region information_ : optional, see the section on Region Info
+* indices : optional, a list of the names of the indices on this table, see the indices section
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* _columns_ : an array of column definitions, see the section on columns
+* primaryKey : a list of column names, possibly empty if no primary key
+* primaryKeySortOrders : a list of corresponding sort orders, possibly empty, for each column of the primary key if specified
+* primaryKeyName : optional, the name of the primary key, if it has one
+* _foreignKeys_ : a list of foreign keys for this table, possibly empty, see the foreign keys section
+* _uniqueKeys_ : a list of unique keys for this table, possibly empty, see the unique keys section
+* _checkExpressions_ : a list of check expressions for this table, possibly empty, see the check expression section
+
+
+Example:
+
+```sql
+@attribute(an_attribute=(1,('foo', 'bar')))
+CREATE TABLE foo(
+  id INTEGER,
+  name TEXT
+);
 ```
-{
-  "tables" : [
 
-```
-Each table appears fully formed in its own JSON hunk as below.  `isAdded` and `isDeleted` correspond to the presence of an `@create` or `@delete` annotation respectively.
+generates:
 
-```
-
-    CREATE TABLE Foo(
-      id INTEGER NOT NULL,
-      name TEXT
-    )
-
+```json
     {
-      "name" : "Foo",
-      "temp" : 0,
-      "ifNotExists" : 0,
-      "withoutRowid" : 0,
-      "isAdded" : 0,
-      "isDeleted" : 0,
-      "columns" : [
-        {
-          "name" : "id",
-          "type" : "integer",
-          "isNotNull" : 1,
-          "isAdded" : 0,
-          "isDeleted" : 0,
-          "isPrimaryKey" : 0,
-          "isUniqueKey" : 0,
-          "isAutoIncrement" : 0
-        },
-        {
-          "name" : "name",
-          "type" : "text",
-          "isNotNull" : 0,
-          "isAdded" : 0,
-          "isDeleted" : 0,
-          "isPrimaryKey" : 0,
-          "isUniqueKey" : 0,
-          "isAutoIncrement" : 0
-        }
-      ],
-      "primaryKey" : [  ],
-      "foreignKeys" : [
-      ],
-      "uniqueKeys" : [
-      ],
-      "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex" ]
-    },
-
-```
-Here we introduce a primary key and its JSON.
-```
-
-    CREATE TABLE T2(
-      id INTEGER PRIMARY KEY
-    )
-
-    {
-      "name" : "T2",
-      "temp" : 0,
-      "ifNotExists" : 0,
-      "withoutRowid" : 0,
-      "isAdded" : 0,
-      "isDeleted" : 0,
-      "columns" : [
-        {
-         ...
-        }
-      ],
-      "primaryKey" : [ "id" ],
-      ...
-    },
-
-```
-General purpose column information is also present.  Again we include a fragment for brevity.
-```
-
-    CREATE TABLE T3(
-      id INTEGER UNIQUE AUTOINCREMENT
-    )
-
-    {
-      "name" : "T3",
-       ...
-      "columns" : [
-        {
-          "name" : "id",
-          "type" : "integer",
-          "isNotNull" : 1,
-          "isAdded" : 0,
-          "isDeleted" : 0,
-          "isPrimaryKey" : 0,
-          "isUniqueKey" : 1,
-          "isAutoIncrement" : 1
-        }
-      ],
-     ...
-    },
-
-```
-Columns and tables can have flexible attributes which are used downstream.
-```
-
-    @ATTRIBUTE(foo=bar)
-    CREATE TABLE T4(
-      @ATTRIBUTE(cool)
-      id INTEGER
-    )
-
-    {
-      "name" : "T4",
-      ...
-      "columns" : [
-        {
-          "name" : "id",
-          "attributes" : [
-            {
-              "name" : "cool",
-              "value" : 1
-            }
-          ],
-          "type" : "integer",
-           ...
-        }
-      ],
-      ...
-      "attributes" : [
-        {
-          "name" : "foo",
-          "value" : "bar"
-        }
-      ]
-    },
-
-
-```
-Here's an example with revision marks
-```
-    CREATE TABLE T8(
-      id INTEGER
-    ) @CREATE(1) @DELETE(3)
-
-    {
-      "name" : "T8",
-      "temp" : 0,
-      "ifNotExists" : 0,
-      "withoutRowid" : 0,
-      "isAdded" : 1,
-      "isDeleted" : 1,
-      "columns" : [
-        {
-          "name" : "id",
-          "type" : "integer",
-          ...
-        }
-      ],
-      ...
-    },
-
-```
-The usual constraints are also recorded.   This example has a unqiue key on a column and foreign keys.  Note that the unique key is reported the same as if it had been declared in standalone fashion.  There is a lot of stuff in this table...
-```
-    CREATE TABLE T10(
-      id1 INTEGER UNIQUE,
-      id2 INTEGER,
-      id3 INTEGER,
-      id4 INTEGER UNIQUE,
-      PRIMARY KEY (id1, id2),
-      FOREIGN KEY (id1, id2) REFERENCES T9 (id2, id1),
-      CONSTRAINT uk1 UNIQUE (id2, id3),
-      CONSTRAINT uk2 UNIQUE (id3, id4)
-    )
-
-    {
-      "name" : "T10",
-      ...
-      "columns" : [
-        {
-          "name" : "id1",
-          "type" : "integer",
-          "isNotNull" : 0,
-          "isAdded" : 0,
-          "isDeleted" : 0,
-          "isPrimaryKey" : 0,
-          "isUniqueKey" : 1,
-          "isAutoIncrement" : 0
-        },
-        {
-          "name" : "id2",
-          "type" : "integer",
-          "isNotNull" : 0,
-          "isAdded" : 0,
-          "isDeleted" : 0,
-          "isPrimaryKey" : 0,
-          "isUniqueKey" : 0,
-          "isAutoIncrement" : 0
-        },
-        {
-          "name" : "id3",
-          "type" : "integer",
-          "isNotNull" : 0,
-          "isAdded" : 0,
-          "isDeleted" : 0,
-          "isPrimaryKey" : 0,
-          "isUniqueKey" : 0,
-          "isAutoIncrement" : 0
-        },
-        {
-          "name" : "id4",
-          "type" : "integer",
-          "isNotNull" : 0,
-          "isAdded" : 0,
-          "isDeleted" : 0,
-          "isPrimaryKey" : 0,
-          "isUniqueKey" : 1,
-          "isAutoIncrement" : 0
-        }
-      ],
-      "primaryKey" : [ "id1", "id2" ],
-      "foreignKeys" : [
-        {
-          "columns" : [ "id1", "id2" ],
-          "referenceTable" : "T9",
-          "referenceColumns" : [ "id2", "id1" ],
-          "onUpdate" : "NO ACTION",
-          "onDelete" : "NO ACTION",
-          "isDeferred" : 0
-        }
-      ],
-      "uniqueKeys" : [
-        {
-          "name" : "id1_uk",
-          "columns" : [ "id1" ]
-        },
-        {
-          "name" : "id4_uk",
-          "columns" : [ "id4" ]
-        },
-        {
-          "name" : "uk1",
-          "columns" : [ "id2", "id3" ]
-        },
-        {
-          "name" : "uk2",
-          "columns" : [ "id3", "id4" ]
-        }
-      ]
-    },
-
-```
-Foreign keys can include the full set of actions.  Here are a couple of examples:
-```
-
-    CREATE TABLE T11(
-      id1 INTEGER,
-      id2 INTEGER,
-      id3 INTEGER,
-      FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE CASCADE,
-      FOREIGN KEY (id1) REFERENCES T9 (id1) ON UPDATE SET NULL
-    )
-
-    {
-      "name" : "T11",
-       ...
-      "columns" : [
-        {
-          "name" : "id1",
-          "type" : "integer",
-          ...
-        },
-        {
-          "name" : "id2",
-          "type" : "integer",
-           ...
-        },
-        {
-          "name" : "id3",
-          "type" : "integer",
-          ...
-        }
-      ],
-      "primaryKey" : [  ],
-      "foreignKeys" : [
-        {
-          "columns" : [ "id1" ],
-          "referenceTable" : "T9",
-          "referenceColumns" : [ "id1" ],
-          "onUpdate" : "NO ACTION",
-          "onDelete" : "CASCADE",
-          "isDeferred" : 0
-        },
-        {
-          "columns" : [ "id1" ],
-          "referenceTable" : "T9",
-          "referenceColumns" : [ "id1" ],
-          "onUpdate" : "SET NULL",
-          "onDelete" : "NO ACTION",
-          "isDeferred" : 0
-        }
-      ],
-      ...
-    },
-
-```
-Deferred FK actions can also be specified.  Note: per the SQLite documentation, the norm is immediate on everything except `deferrable initially deferred`.
-```
-
-    CREATE TABLE T12(
-      id1 INTEGER,
-      id2 INTEGER,
-      id3 INTEGER,
-      FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE SET DEFAULT
-       DEFERRABLE INITIALLY DEFERRED,
-      FOREIGN KEY (id2) REFERENCES T9 (id1) ON UPDATE NO ACTION
-    )
-
-    {
-      "name" : "T12",
-      ...
-      "columns" : [
-        {
-          "name" : "id1",
-          ...
-        },
-        {
-          "name" : "id2",
-          ...
-        },
-        {
-          "name" : "id3",
-           ...
-        }
-      ],
-      ...
-      "foreignKeys" : [
-        {
-          "columns" : [ "id1" ],
-          "referenceTable" : "T9",
-          "referenceColumns" : [ "id1" ],
-          "onUpdate" : "NO ACTION",
-          "onDelete" : "SET DEFAULT",
-          "isDeferred" : 1
-        },
-        {
-          "columns" : [ "id2" ],
-          "referenceTable" : "T9",
-          "referenceColumns" : [ "id1" ],
-          "onUpdate" : "NO ACTION",
-          "onDelete" : "NO ACTION",
-          "isDeferred" : 0
-        }
-      ],
-    ...
-    },
-
-```
-Just like unique keys, foreign keys on the columns are moved down as though they had been independently declared.  There are 3 foreign keys below.
-```
-    CREATE TABLE with_fk_on_columns(
-      id1 INTEGER NOT NULL REFERENCES T2 (id) ON UPDATE CASCADE
-        DEFERRABLE INITIALLY DEFERRED,
-      id2 INTEGER NOT NULL REFERENCES T10 (id4) ON DELETE CASCADE,
-      FOREIGN KEY (id1, id2) REFERENCES T10 (id3, id4)
-    )
-
-    {
-      "name" : "with_fk_on_columns",
-      "temp" : 0,
-      "ifNotExists" : 0,
-      "withoutRowid" : 0,
-      "isAdded" : 0,
-      "isDeleted" : 0,
-      "columns" : [
-        {
-          "name" : "id1",
-          "type" : "integer",
-          "isNotNull" : 1,
-           ...
-        },
-        {
-          "name" : "id2",
-          "type" : "integer",
-          "isNotNull" : 1,
-           ...
-        }
-      ],
-      "primaryKey" : [  ],
-      "foreignKeys" : [
-        {
-          "columns" : [ "id1" ],
-          "referenceTable" : "T2",
-          "referenceColumns" : [ "id" ],
-          "onUpdate" : "CASCADE",
-          "onDelete" : "NO ACTION",
-          "isDeferred" : 1
-        },
-        {
-          "columns" : [ "id2" ],
-          "referenceTable" : "T10",
-          "referenceColumns" : [ "id4" ],
-          "onUpdate" : "NO ACTION",
-          "onDelete" : "CASCADE",
-          "isDeferred" : 0
-        },
-        {
-          "columns" : [ "id1", "id2" ],
-          "referenceTable" : "T10",
-          "referenceColumns" : [ "id3", "id4" ],
-          "onUpdate" : "NO ACTION",
-          "onDelete" : "NO ACTION",
-          "isDeferred" : 0
-        }
-      ],
-      "uniqueKeys" : [
-      ]
-    }
-```
-Columns can be marked with `@sensitive` for privacy reasons.  This declaration flows to the column description as `isSensitive`.  For economy, `isSensitive` is only emitted when true.
-
-```
-    CREATE TABLE radioactive(
-      id INTEGER NOT NULL,
-      danger TEXT @SENSITIVE
-    )
-
-   {
-      "name" : "radioactive",
+      "name" : "foo",
+      "CRC" : "-1869326768060696459",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
       "isAdded" : 0,
       "isDeleted" : 0,
       "isRecreated": 0,
+      "indices" : [ "foo_name" ],
+      "attributes" : [
+        {
+          "name" : "an_attribute",
+          "value" : [1, ["foo", "bar"]]
+        }
+      ],
       "columns" : [
         {
           "name" : "id",
           "type" : "integer",
-          "isNotNull" : 1,
+          "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
           "isPrimaryKey" : 0,
@@ -8161,10 +7788,9 @@ Columns can be marked with `@sensitive` for privacy reasons.  This declaration f
           "isAutoIncrement" : 0
         },
         {
-          "name" : "danger",
+          "name" : "name",
           "type" : "text",
           "isNotNull" : 0,
-          "isSensitive" : 1,
           "isAdded" : 0,
           "isDeleted" : 0,
           "isPrimaryKey" : 0,
@@ -8173,29 +7799,155 @@ Columns can be marked with `@sensitive` for privacy reasons.  This declaration f
         }
       ],
       "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
       ]
     }
-  ],
 ```
-The next major section is the views.  Each view includes its projection (that is the net columns it creates from the select clause) and its general statement information.  One example tells the story pretty clearly.  Views don't have arguments in any supported cases but the arguments are included for symmetry with the other forms.  Note: projection columns can be sensitive and will be so-marked if they are.
+
+#### Region Information
+
+Region Information can appear on many entities, it consists of two optional elements:
+
+* region : optional, the name of the region in which the entity was defined
+* deployedInRegion : optional, the deployment region in which that region is located
+
+#### Attributes
+
+Miscelleaneous attributes can be present on virtual every kind of entity.  They are optional.  The root node
+introduces the attributes:
+
+* attributes : a list at least one attribute
+
+Each attribute is a name and value pair:
+
+* name : any string
+  * attribute names are often compound like "cql:shared_fragment"
+  * they are otherwise simple identifiers
+* value : any _attribute value_
+
+Each _attribute value_ can be:
+
+* any literal
+* an array of _attribute values_
+
+Since the _attribute values_ can nest its possible to represent arbitrarily complex data types in an attribute.  You can even represent a LISP program.
+
+#### Foreign Keys
+
+Foreign keys appear only in tables, the list of keys contains zero or more entries of this form:
+
+* name : optional, the name of the foreign key if specified
+* columns : the names of the constrained columns in the current table (the "child" table)
+* referenceTable : the name of the table that came after REFERENCES in the foreign key
+* referenceColumns : the constraining columns in the referenced table
+* onUpdate : the ON UPDATE action (e.g. "CASCADE", "NO ACTION", etc.)
+* onDelete : the ON DELETE action (e.g. "CASCADE", "NO ACTION", etc.)
+* isDeferred : boolean, indicating the deferred or not deferred setting for this foreign key
+
+#### Unique Keys
+
+Unique keys appear only in tables, the list of keys contains zero or more entries of this form:
+
+* name : optional, the name of the unique key if specified
+* columns: a list of 1 or more contrained column names
+* sortOrders: a list of corresponding sort orders for the columns
+
+
+#### Check Expressions
+
+Check Expressions appear only in tables, the list of keys contains zero or more entries of this form:
+
+* name : optional, the name of the unique key if specified
+* checkExpr : the check expression in plain text
+* checkExprArgs: an array of zero or more local variables that should be bound to the `?` items in the check expression
+
+The checkExprArgs will almost certainly be the empty list `[]`.  In the exceedingly rare situation that the table
+in question was defined in a procedure and some of parts of the check expression were arguments to that procedure
+then the check expression is not fully known until that procedure runs and some of its literals will be decided
+at run time.  This is an extraordinary choice but technically possible.
+
+
+#### Columns
+
+Columns are themselves rather complex, there are 1 or more of them in each table.  The table will have
+a list of records of this form:
+
+* name : the name of the columns
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* type : the column type (e.g. bool, real, text, etc.)
+* kind : optional, if the type is qualified by a discriminator such as int<task_id> it appears here
+* isSensitive : optional, indicates a column that holds sensitive information such as PII
+* isNotNull : true if the column is not null
+* isAdded : true if the column has an @create directive
+  * addedVersion : optional, the schema version number in the @create directive
+* isDeleted : true if the column was marked with @delete
+  * deletedVersion : optional, the schema version number in the @delete directive
+* defaultValue : optional, can be any literal, the default value of the column
+* collate : optional, the collation string (e.g. nocase)
+* checkExpr : optional, the _check expression_ for this column (see the related section)
+* isPrimaryKey : true if the column was marked with PRIMARY KEY
+* isUniqueKey : true if the column was marked with UNIQUE
+* isAutoIncrement : true if the column was marked with AUTOINCREMENT
+
+
+#### Virtual Tables
+
+The "virtualTables" section is very similar to the "tables" section with zero or more virtual table entries.
+Virtual table entries are the same as table entries with the following additions:
+
+* module : the name of the module that manages this virtual table
+* isEponymous : true if the virtual table was declared eponymous
+* isVirtual : always true for virtual tables
+
+The JSON schema for these items was designed to be as similar as possible so that typically the same code can handle both
+with possibly a few extra tests of the isVirtual field.
+
+
+#### Views
+
+The views section contains the list of all views in the schema, it is zero or more view entires of this form.
+
+* name : the view name
+* crc : the schema CRC for the entire view definition
+* isTemp : true if this is a temporary view
+* isDeleted : true if the view was marked with @delete
+  * deletedVersion : optional, the schema version number in the @delete directive
+* _region information_ : optional, see the section on Region Info
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* _columns_ : an array of column definitions, see the section on columns
+* _projection_ : an array of projected columns from the view, the view result if you will, see the section on projections
+* select : the text of the select statement that defined the view
+* selectArgs : the names of arguments any unbound expressions ("?") in the view
+* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
+
+Note that the use of unbound expressions in a view truly extraordinary so selectArgs is essentially always going to be an empty list.
+
+Example:
+
+```sql
+CREATE VIEW MyView AS
+SELECT *
+  FROM foo
 ```
-  "views" : [
 
-    CREATE VIEW MyView AS
-    SELECT *
-      FROM Foo
+Generates:
 
+```json
     {
       "name" : "MyView",
-      "temp" : 0,
+      "CRC" : "5545408966671198580",
+      "isTemp" : 0,
+      "isDeleted" : 0,
       "projection" : [
         {
           "name" : "id",
           "type" : "integer",
-          "isNotNull" : 1
+          "isNotNull" : 0
         },
         {
           "name" : "name",
@@ -8203,137 +7955,141 @@ The next major section is the views.  Each view includes its projection (that is
           "isNotNull" : 0
         }
       ],
-      "select" : "SELECT id, name FROM Foo",
-      "selectArgs" : [  ]
+      "select" : "SELECT id, name FROM foo",
+      "selectArgs" : [  ],
+      "fromTables" : [ "foo" ],
+      "usesTables" : [ "foo" ]
     }
-  ],
-
 ```
-Likewise indices contain the table and indexed columns.  This one example illustrates things fairly clearly.
+
+#### Projections
+
+A projection defines the output shape of something that can return a table-like value such as a view or a procedure.
+
+The projection consists of a list of one or more _projected columns_, each of which is:
+
+* name : the name of the result column  (e.g. in select 2 as foo) the name is "foo"
+* type : the type of the column (e.g. text, real, etc.)
+* kind : optional, the discriminator of the type if it has one (e.g. if the result is an `int<job_id>` the kind is "job_id")
+* isSensitive : optional, true if the result is sensitive (e.g. PII or something like that)
+* isNotNull : true if the result is known to be not null
+
+#### Dependencies
+
+The dependencies section appears in many entities, it indicates things that were used by the object and how they were used.
+Most of the fields are optional, some fields are impossible in some contexts (e.g. inserts can happen inside of views).
+
+* insertTables : optional, a list of tables into which values were inserted
+* updateTables : optional, a list of tables whose values were updated
+* deleteTables : optional, a list of tables which had rows deleted
+* fromTables : optional, a list of tables that appeared in a FROM clause (maybe indirectly inside a VIEW or CTE)
+* usesProcedures : optional, a list of procedures that were accessed via CALL (not shared fragments, those are inlined)
+* usesViews : optional, a list of views which were accessed (these are recursively visited to get to tables)
+* usesTables : the list of tables that were used in any way at all by the current entity (i.e. the union of the previous table sections)
+
+#### Indices
+
+The indices section contains the list of all indices in the schema, it is zero or more view entires of this form:
+
+* name : the index name
+* crc : the schema CRC for the entire index definition
+* table : the name of the table with this index
+* isUnique : true if this is a unique index
+* ifNotExists : true if this index was created with IF NOT EXISTS
+* isDeleted : true if the view was marked with @delete
+  * deletedVersion : optional, the schema version number in the @delete directive
+* _region information_ : optional, see the section on Region Info
+* where : optional, if this is partial index then this has the partial index where expression
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* columns : the list of column names in the index
+* sortOrders : the list of corresponding sort orders
+
+Example:
+
+```sql
+create index foo_name on foo(name);
 ```
-  "indices" : [
 
-    CREATE UNIQUE INDEX IF NOT EXISTS MyIndex ON Foo (name DESC, id ASC)
+Generates:
 
+```json
     {
-      "name" : "MyIndex",
-      "table" : "Foo",
-      "isUnique" : 1,
-      "ifNotExists" : 1,
-      "columns" : [ "name", "id" ],
-      "sortOrders" : [ "desc", "asc" ]
+      "name" : "foo_name",
+      "CRC" : "6055860615770061843",
+      "table" : "foo",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "columns" : [ "name" ],
+      "sortOrders" : [ "" ]
     }
-  ],
-```
-It's sometimes useful to include some top level attributes about your system in the JSON.  By convention all the attributes on any global variables
-whose name ends in "database" (see example below) are emitted into the attributes section of the JSON.  This lets you easily contribute to this section
-from various schema fragments by providing "database" objects from each source. Any other globals are ignored.
-
-NOTE: attributes are very flexible, even allowing nesting of arrays.  Attribute values can either be any literal, or a name, or an array of values, recursively.
-```
-
-  @ATTRIBUTE(my_other_attribute=('any', ('tree', 'of'), 'values'))
-  @ATTRIBUTE(dbname='fred.sql')
-  @ATTRIBUTE(dbfile='cg_test_mlite_query.sql')
-  DECLARE database OBJECT
-
-  "attributes" : [
-    {
-      "name" : "my_other_attribute",
-      "value" : ["any", ["tree", "of"], "values"]
-    },
-    {
-      "name" : "dbname",
-      "value" : "fred.sql"
-    },
-    {
-      "name" : "dbfile",
-      "value" : "cg_test_mlite_query.sql"
-    }
-  ],
 
 ```
-The queries section corresponds to the stored procedures with a SELECT statement.  There is significant data provided about each one.
 
-* the name of the procedure
-* the number and type of arguments
-* the set of tables used anywhere in the query (for dependencies)
-  * this includes tables used within views that were used
-* the query projection (aka the result shape of the select)
-* the full SQL statement and the arguments that should be bound to each `?`
+#### Procedures
 
-There are two examples below:
+The next several sections:
 
+* Queries
+* Inserts
+* General Inserts
+* Updates
+* Deletes
+* General
+
+All provide information about various types of procedures.  Some "simple" procedures that consist only of the type of statement
+corresond to their section (and some other rules) present additional information about their contents.  This can sometimes
+be useful.  All the sections define certain common things about procedures so that basic information is available about
+all procedures.  This is is basically the contents of the "general" section which deals with procedures that have a complex
+body of which little can be said.
+
+
+#### Queries
+
+The queries section corresponds to the stored procedures that are a single SELECT statement with no fragments.
+
+The fields of a query record are:
+
+* name : the name of the procedure
+* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* args : _procedure arguments_ see the relevant section
+* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
+* _region information_ : optional, see the section on Region Info
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* _projection_ : an array of projected columns from the procedure, the view if you will, see the section on projections
+* statement : the text of the select statement that is the body of the procedure
+* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
+
+Example:
+
+```sql
+create proc p(name_ text)
+begin
+  select * from foo where name = name_;
+end;
 ```
-  "queries" : [
 
+Generates:
 
-    CREATE PROC a_query (pattern TEXT NOT NULL, reject TEXT)
-    BEGIN
-    SELECT id
-      FROM Foo
-      WHERE name LIKE pattern AND name <> reject;
-    END
-
+```json
     {
-      "name" : "a_query",
+      "name" : "p",
+      "definedInFile" : "x",
       "args" : [
         {
-          "name" : "pattern",
-          "type" : "text",
-          "isNotNull" : 1
-        },
-        {
-          "name" : "reject",
+          "name" : "name_",
+          "argOrigin" : "name_",
           "type" : "text",
           "isNotNull" : 0
         }
       ],
-      "usesTables" : [ "Foo" ],
+      "fromTables" : [ "foo" ],
+      "usesTables" : [ "foo" ],
       "projection" : [
         {
           "name" : "id",
           "type" : "integer",
-          "isNotNull" : 1
-        }
-      ],
-      "statement" : "SELECT id FROM Foo WHERE name LIKE ? AND name <> ?",
-      "statementArgs" : [ "pattern", "reject" ],
-    },
-
-
-    CREATE PROC bigger_query (pattern TEXT NOT NULL, reject TEXT)
-    BEGIN
-    SELECT DISTINCT *
-      FROM Foo
-      WHERE name LIKE pattern AND name <> reject
-      GROUP BY name
-      HAVING name > reject
-      ORDER BY pattern
-      LIMIT 1
-      OFFSET 3;
-    END
-
-    {
-      "name" : "bigger_query",
-      "args" : [
-        {
-          "name" : "pattern",
-          "type" : "text",
-          "isNotNull" : 1
-        },
-        {
-          "name" : "reject",
-          "type" : "text",
           "isNotNull" : 0
-        }
-      ],
-      "usesTables" : [ "Foo" ],
-      "projection" : [
-        {
-          "name" : "id",
-          "type" : "integer",
-          "isNotNull" : 1
         },
         {
           "name" : "name",
@@ -8341,55 +8097,181 @@ There are two examples below:
           "isNotNull" : 0
         }
       ],
-      "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND
-          name <> ? GROUP BY name HAVING name > ? ORDER BY ?
-          LIMIT 1 OFFSET 3",
-      "statementArgs" : [ "pattern", "reject", "reject", "pattern" ],
-    },
-
+      "statement" : "SELECT id, name FROM foo WHERE name = ?",
+      "statementArgs" : [ "name_" ]
+    }
 ```
-The section on insert statements is very similar in shape.  Again the fields are:
 
-* the name of the procedure
-* the arguments and argument types
-* the tables used by the insert statement (usually just the one but value expressions can be select statements so it can be more)
-* the table we are inserting into (certainly present in `usesTables`)
-* the overall statement and its arguments (easiest form to use)
-* the statement type (e.g. `INSERT` or `INSERT OR REPLACE`)
-* the inserted columns
-  * present even if the `insert into table values (...)` form was used
-* the array of value expressions and arguments, one for each value
+#### Procedure Arguments
 
-Again, simple insert forms are readily recognized and complex forms are supported.
+Procedure arguments have several generalities that don't come up very often but are important to describe.  The argument list
+of a procedure is 0 or more arguments of the form:
+
+* name : the argument name, any valid identifier
+* argOrigin : either the name repeated if it's just a name or a 3 part string if it came from a bundle, see below
+* type : the type of the argument (e.g. text, real, etc.)
+* kind : optional, the descriminated type if any e.g. in `int<job_id>` it's "job_id"
+* isSensitive : optional, true if the argument is marked with @sensitive (e.g. it has PII etc.)
+* isNotNull : true if the argument is declared not null
+
+An example of a simple argumenmt was shown above, if we change the example a little bit to use the argument bundle syntax
+(even though it's overkill) we can see the general form of argOrigin.
+
+Example:
+
+```sql
+create proc p(a_foo like foo)
+begin
+  select * from foo where name = a_foo.name or id = a_foo.id;
+end;
 ```
-  "inserts" : [
 
-    The statement ending at line 277
+Generates:
 
-    CREATE PROC insert_proc (id_ INTEGER NOT NULL, name_ TEXT)
-    BEGIN
-    INSERT OR REPLACE INTO Foo (id, name) VALUES (id_, name_);
-    END
-
+```json
     {
-      "name" : "insert_proc",
+      "name" : "p",
+      "definedInFile" : "x",
+      "args" : [
+        {
+          "name" : "a_foo_id",
+          "argOrigin" : "a_foo foo id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "a_foo_name",
+          "argOrigin" : "a_foo foo name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "fromTables" : [ "foo" ],
+      "usesTables" : [ "foo" ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "SELECT id, name FROM foo WHERE name = ? OR id = ?",
+      "statementArgs" : [ "a_foo_name", "a_foo_id" ]
+    }
+```
+
+Note the synthetic names `a_foo_id` and `a_foo_name` the argOrigin indicates that the bundle name is `a_foo`
+which could have been anything, the shape was `foo` and the column in `foo` was `id` or `name` as appropriate.
+
+The JSON is often used to generate glue code to call procedures from different languages.  The argOrigin can be useful if
+you want to codegen something other normal arguments in your code.
+
+
+#### General Inserts
+
+The general insert section corresponds to the stored procedures that are a single INSERT statement with no fragments.
+The fields of a general insert record are:
+
+* name : the name of the procedure
+* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* args : _procedure arguments_ see the relevant section
+* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
+* _region information_ : optional, see the section on Region Info
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* table : the name of the table the procedure inserts into
+* statement : the text of the select statement that is the body of the procedure
+* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
+* statementType : there are several insert forms such as "INSERT", "INSERT OR REPLACE", "REPLACE", etc.  the type is encoded here
+
+General inserts does not include the inserted values because they are not directly extractable in general.  This form is used if one of
+these is true:
+
+ * insert from multiple value rows
+ * insert from a select statement
+ * insert using a `WITH` clause
+ * insert using the upsert clause
+
+If fragments are in use then even "generalInsert" cannot capture everything and "general" must be used (see below).
+
+Example:
+
+```sql
+create proc p()
+begin
+  insert into foo values (1, "foo"), (2, "bar");
+end;
+```
+
+Generates:
+
+```json
+    {
+      "name" : "p",
+      "definedInFile" : "x",
+      "args" : [
+      ],
+      "insertTables" : [ "foo" ],
+      "usesTables" : [ "foo" ],
+      "table" : "foo",
+      "statement" : "INSERT INTO foo(id, name) VALUES(1, 'foo'), (2, 'bar')",
+      "statementArgs" : [  ],
+      "statementType" : "INSERT",
+      "columns" : [ "id", "name" ]
+    }
+```
+
+#### Simple Inserts
+
+The vanilla inserts section can be used for procedures that just insert a single row.  This is a
+very common case and if the JSON is being used to drive custom code generation it is useful
+to provide the extra information.  The data in this section is exactly the same as the General Inserts
+section except that includes the inserted values.  The "values" property has this extra information.
+
+Each value in the values list corresponds 1:1 with a column and has this form:
+
+* value : the expression for this value
+* valueArgs: the array of procedure arguments that should replace the "?" entries in the value
+
+Example:
+
+```sql
+create proc p(like foo)
+begin
+  insert into foo from arguments;
+end;
+```
+
+Generates:
+
+```json
+    {
+      "name" : "p",
+      "definedInFile" : "x",
       "args" : [
         {
           "name" : "id_",
+          "argOrigin" : "foo id",
           "type" : "integer",
-          "isNotNull" : 1
+          "isNotNull" : 0
         },
         {
           "name" : "name_",
+          "argOrigin" : "foo name",
           "type" : "text",
           "isNotNull" : 0
         }
       ],
-      "usesTables" : [ "Foo" ],
-      "table" : "Foo",
-      "statement" : "INSERT OR REPLACE INTO Foo (id, name) VALUES (?, ?)",
+      "insertTables" : [ "foo" ],
+      "usesTables" : [ "foo" ],
+      "table" : "foo",
+      "statement" : "INSERT INTO foo(id, name) VALUES(?, ?)",
       "statementArgs" : [ "id_", "name_" ],
-      "statementType" : "INSERT OR REPLACE",
+      "statementType" : "INSERT",
       "columns" : [ "id", "name" ],
       "values" : [
         {
@@ -8401,257 +8283,337 @@ Again, simple insert forms are readily recognized and complex forms are supporte
           "valueArgs" : [ "name_" ]
         }
       ]
-    },
-
-```
-As another example, this fairly easy to write CQL transparently creates dummy values.  Great for use in testing.  The JSON shows the net insert created from the original source below.
-```
-
-    CREATE PROC dummy_insert_proc (seed_ INTEGER NOT NULL)
-    BEGIN
-    INSERT INTO Foo () VALUES () @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
-    END
-
-    {
-      "name" : "dummy_insert_proc",
-      "args" : [
-        {
-          "name" : "seed_",
-          "type" : "integer",
-          "isNotNull" : 1
-        }
-      ],
-      "usesTables" : [ "Foo" ],
-      "table" : "Foo",
-      "statement" : "INSERT INTO Foo (id, name)
-            VALUES (?, printf('name_%d', ?))",
-      "statementArgs" : [ "_seed_", "_seed_" ],
-      "statementType" : "INSERT",
-      "columns" : [ "id", "name" ],
-      "values" : [
-        {
-          "value" : "?",
-          "valueArgs" : [ "_seed_" ]
-        },
-        {
-          "value" : "printf('name_%d', ?)",
-          "valueArgs" : [ "_seed_" ]
-        }
-      ]
     }
-  ],
-
 ```
-The above form can capture the simplest of the insert statements allowed in SQLite.  This is especially
-interesting because the JSON above can cleanly capture each value and the only place where there might be
-references to the procedure arguments is in the `valueArgs` portion. There is simply no room for any other
-kind of variability.   As a result, it's actually possible to take this type of insert and potentially
-re-codegen it into an upsert or something else starting from the JSON.  This is isn't in general possible
-with the other forms of insert.  More complicated forms of insert go into a section called "generalInserts"
-and this includes any other single insert statement such as these forms:
 
- * insert from multiple value rows
- * insert from a select statement
- * insert using a `WITH` clause
- * insert using the upsert clause
+#### Updates
 
-The "generalInserts" section looks exactly like the "inserts" section except that it does not include "values".
+The updates section corresponds to the stored procedures that are a single UPDATE statement with no fragments. The
+fields of an update record are:
 
-Here's an example:
+* name : the name of the procedure
+* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* args : _procedure arguments_ see the relevant section
+* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
+* _region information_ : optional, see the section on Region Info
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* table : the name of the table the procedure inserts into
+* statement : the text of the update statement that is the body of the procedure
+* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
 
+
+Example:
+
+```sql
+create proc p(like foo)
+begin
+  update foo set name = name_ where id = id_;
+end;
 ```
-  "generalInserts" : [
 
-   CREATE PROC insert_compound ()
-    BEGIN
-    INSERT INTO T3(id) VALUES(1)
-    UNION ALL
-    SELECT 1 AS column1;
-    END
+Generates:
 
+```json
     {
-      "name" : "insert_compound",
-      "definedInFile" : "cg_test_json_schema.sql",
-      "args" : [
-      ],
-      "insertTables" : [ "T3" ],
-      "usesTables" : [ "T3" ],
-      "table" : "T3",
-      "statement" : "INSERT INTO T3(id) VALUES(1) UNION ALL SELECT 1 AS column1",
-      "statementArgs" : [  ],
-      "statementType" : "INSERT",
-      "columns" : [ "id" ]
-    }
-    ...
-  ],
-```
-
-
-Update statements are handled very much like the others, but there are no statement fragments.  You get these pieces:
-* the name of the procedure and its arguments
-* dependency information
-* the statement text and its arguments
-
-This is the minimum information needed to bind and run the statement.  Note that arguments can be in any part of the update.
-```
-  "updates" : [
-
-    The statement ending at line 306
-
-    CREATE PROC update_proc (id_ INTEGER NOT NULL, name_ TEXT)
-    BEGIN
-    UPDATE Foo
-    SET name = name_
-      WHERE id = id_
-      ORDER BY name
-      LIMIT 1;
-    END
-
-    {
-      "name" : "update_proc",
+      "name" : "p",
+      "definedInFile" : "x",
       "args" : [
         {
           "name" : "id_",
+          "argOrigin" : "foo id",
           "type" : "integer",
-          "isNotNull" : 1
+          "isNotNull" : 0
         },
         {
           "name" : "name_",
+          "argOrigin" : "foo name",
           "type" : "text",
           "isNotNull" : 0
         }
       ],
-      "usesTables" : [ "Foo" ],
-      "table" : "Foo",
-      "statement" : "UPDATE Foo SET name = ?
-              WHERE id = ? ORDER BY name LIMIT 1",
+      "updateTables" : [ "foo" ],
+      "usesTables" : [ "foo" ],
+      "table" : "foo",
+      "statement" : "UPDATE foo SET name = ? WHERE id = ?",
       "statementArgs" : [ "name_", "id_" ]
     }
-  ],
-
 ```
-The delete section looks exactly like the update section.
-* procedure name and arguments
-* dependency information
-* statement and arguments
+
+
+#### Deletes
+
+The deletes section corresponds to the stored procedures that are a single DELETE statement with no fragments. The
+fields of a delete record are exactly the same as those of update.  Those are the basic fields needed to bind any
+statement.
+
+Example:
+
+```sql
+create proc delete_proc (name_ text)
+begin
+  delete from foo where name like name_;
+end;
 ```
-  "deletes" : [
 
-    The statement ending at line 297
+Generates:
 
-    CREATE PROC delete_proc (name_ TEXT)
-    BEGIN
-    DELETE FROM Foo WHERE name LIKE name_;
-    END
-
+```json
     {
       "name" : "delete_proc",
+      "definedInFile" : "x",
       "args" : [
         {
           "name" : "name_",
+          "argOrigin" : "name_",
           "type" : "text",
           "isNotNull" : 0
         }
       ],
-      "usesTables" : [ "Foo" ],
-      "table" : "Foo",
-      "statement" : "DELETE FROM Foo WHERE name LIKE ?",
+      "deleteTables" : [ "foo" ],
+      "usesTables" : [ "foo" ],
+      "table" : "foo",
+      "statement" : "DELETE FROM foo WHERE name LIKE ?",
       "statementArgs" : [ "name_" ]
     }
-  ],
-
 ```
+
+#### General
+
 And finally the section for procedures that were encountered that are not one of the simple prepared statement forms.  The principle reasons for being in this category are:
 * the procedure has out arguments
 * the procedure uses something other than a single DML statement
 * the procedure has no projection (no result of any type)
+* the procedure uses shared fragments and hence has complex argument binding
+
+The fields of a general procedure are something like a union of update and delete and query but with no statement info.  The are
+as follows:
+
+* name : the name of the procedure
+* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* args : _complex procedure arguments_ see the relevant section
+* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
+* _region information_ : optional, see the section on Region Info
+* _attributes_ : optional, see the section on attributes, they appear in many places
+* _projection_ : optional, an array of projected columns from the procedure, the view if you will, see the section on projections
+* _result_contract_ : optional,
+* table : the name of the table the procedure inserts into
+* statement : the text of the update statement that is the body of the procedure
+* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
+* usesDatabase : true if the procedure requires you to pass in a sqlite connection to call it
+
+The result contract is at most one of these:
+
+* hasSelectResult : true if the procedure generates its projection using SELECT
+* hasOutResult: true if the procedure generates its projection using OUT
+* hasOutUnionResult: true if the procedure generates its projection using OUT UNION
+
+A procedure that does not produce a result set in any way will set none of these and have no projection entry.
+
+Example:
+
 ```
-  "general" : [
+create proc with_complex_args (inout arg real)
+begin
+  set arg := (select arg+1 as a);
+  select "foo" bar;
+end;
+```
 
-    CREATE PROC with_complex_args (OUT pattern TEXT NOT NULL, INOUT arg REAL)
-    BEGIN
-      SELECT 1 AS a;
-    END
+Generates:
 
-    {
+```json
       "name" : "with_complex_args",
+      "definedInFile" : "x",
       "args" : [
         {
-          "name" : "pattern",
+          "binding" : "inout",
+          "name" : "arg",
+          "argOrigin" : "arg",
+          "type" : "real",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "projection" : [
+        {
+          "name" : "bar",
           "type" : "text",
-          "isNotNull" : 1,
-          "binding" : "out"
+          "isNotNull" : 1
+        }
+      ],
+      "hasSelectResult" : 1,
+      "usesDatabase" : 1
+    }
+```
+
+#### Complex Procedure Arguments
+
+The complex form of the arguments allows for an optional "binding"
+
+* binding : optional, if present it can take the value "out" or "inout"
+* if absent then binding is the usual "in"
+
+Note that atypical binding forces procedures into the "general" section.
+
+#### Regions
+
+The regions section contains a list of all the region definitions.  Each region is of the form:
+
+* name : the name of the region
+* isDeployableRoot : is this region itself a deployment region (declared with @declare_deployable_region)
+* deployedInRegion : name, the deployment region that contains this region or "(orphan)" if none
+   * note that deploymentRegions form a forest
+* using : a list of zero or more parent regions
+* usingPrivately: a list of zero more more booleans, one corresponding to each region
+  * the boolean is true if the inheritance is private, meaning that sub-regions cannot see the contents of the inherited region
+
+There are more details on regions and the meaning of these terms in Chapter 10.
+
+#### Ad Hoc Migrations
+
+This section lists all of the declared ad hoc migrations.  Each entry is of the form:
+
+* name : the name of the procedure to be called for the migration step
+* crc : the CRC of this migration step, a hash of the call
+* _attributes_ : optional, see the section on attributes, they appear in many places
+
+Exactly one of:
+
+* version: optional, any positive integer, the version at which the migration runs, OR
+* onRecreateOf: optional, if present indicates that the migration runs when the indicated group is recreated
+
+There are more details on ad hoc migrations in Chapter 10.
+
+#### Enums
+
+This section list all the enumeration types and values.  Each entry is of the form:
+
+* name : the name of the enumeration
+* type : the base type of the enumeration (e.g. INT, LONG)
+* isNotNull: always true, all enum values are not null (here for symmetry with other uses of "type")
+* values: a list of legal enumeration values
+
+Each enumeration value is of the form:
+
+* name : the name of the value
+* value : a numeric literal
+
+Example:
+
+```sql
+declare enum an_enumeration integer ( x = 5, y = 12 );
+```
+
+Generates:
+
+````json
+    {
+      "name" : "an_enumeration",
+      "type" : "integer",
+      "isNotNull" : 1,
+      "values" : [
+        {
+          "name" : "x",
+          "value" : 5
         },
         {
-          "name" : "arg",
-          "type" : "real",
-          "isNotNull" : 0,
-          "binding" : "inout"
+          "name" : "y",
+          "value" : 12
         }
-      ],
-      "usesTables" : [  ],
-      "hasSelectResult" : 1,
-      "projection" : [
-        {
-          "name" : "a",
-          "type" : "integer",
-          "isNotNull" : 1
-        }
-      ],
-      "usesDatabase" : 1
-    },
+      ]
+    }
+````
+
+#### Constant Groups
+
+This section list all the constant groups and values.  Each entry is of the form:
+
+* name : the name of the constant group
+* values: a list of declared constant values, this can be of mixed type
+
+Each constant value is of the form:
+
+* name : the name of the constant
+* type : the base type of the constant (e.g. LONG, REAL, etc.)
+* kind : optional, the type kind of the constant (this can be set with a CAST on a literal, e.g. CAST(1 as int<job_id>))
+* isNotNull : true if the constant type is not null (which is anything but the NULL literal)
+* value : the numeric or string literal value of the constant
 
 
-    CREATE PROC atypical_noreturn ()
-    BEGIN
-      DECLARE C CURSOR LIKE SELECT 1 AS A;
-    END
+Example:
 
-    {
-      "name" : "atypical_noreturn",
-      "args" : [
-      ],
-      "usesTables" : [  ],
-      "usesDatabase" : 0
-    },
-
-
-    CREATE PROC typical_outresult ()
-    BEGIN
-      DECLARE C CURSOR LIKE SELECT 1 AS A;
-      FETCH C (A) FROM VALUES (7);
-      OUT C;
-    END
-
-    {
-      "name" : "typical_outresult",
-      "args" : [
-      ],
-      "usesTables" : [  ],
-      "hasOutResult" : 1,
-      "projection" : [
-        {
-          "name" : "A",
-          "type" : "integer",
-          "isNotNull" : 1
-        }
-      ],
-      "usesDatabase" : 0
-    },
-
+```sql
+declare const group some_constants (
+  x = cast(5 as integer<job_id>),
+  y = 12.0,
+  z = 'foo'
+);
 ```
 
-Some additional properties not mentioned above that are worth noting:
+Generates:
 
-* where `usesTables` appears there will also be more detailed information about how the tables were used
-  * the `usesViews` key will give you an array of the views that were used (these lead to more views/tables also included)
-  * the `insertTables` key will give you an array of the tables that were used as the target of an `insert` statement
-  * the `updateTables` key will give you an array of the tables that were used as the target of an `update` statement
-  * the `deleteTables` key will give you an array of the tables that were used as the target of an `delete` statement
-  * the `fromTables` key will give you an array of tables that were used the the `from` clause of a select or some other `select`-ish context in which you only read from the table
-* the `usesProcedures` key for a given proc has an array of the procedures it calls, this allows for complete dependency analysis if needed
+```json
+    {
+      "name" : "some_constants",
+      "values" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "kind" : "job_id",
+          "isNotNull" : 1,
+          "value" : 5
+        },
+        {
+          "name" : "y",
+          "type" : "real",
+          "isNotNull" : 1,
+          "value" : 1.200000e+01
+        },
+        {
+          "name" : "z",
+          "type" : "text",
+          "isNotNull" : 1,
+          "value" : "foo"
+        }
+      ]
+    }
+```
 
-NOTE: `@ATTRIBUTE` can be applied any number of times to the entities here, including the procedures (i.e. immediately before the `CREATE PROCEDURE`.)  Those attributes appear in the JSON in an optional `attributes` chunk.  Attributes are quite flexible (you can easily encode a LISP program in attributes if you were so inclined) so you can use them very effectively to annotate your CQL entities as needed for downstream tools.
+#### Subscriptions
+
+This section list all the schema subscriptions in non-decreasing order by version.  Each entry is of the form:
+
+* type : either "unsub" or "resub"
+* table : the target of the subscription directive
+* version : the version at which this operation is to happen
+
+Example:
+
+```sql
+@unsub(10, foo);
+@resub(15, foo);
+```
+
+Generates:
+
+```json
+    {
+      "type" : "unsub",
+      "table" : "foo",
+      "version" : 10
+    },
+    {
+      "type" : "resub",
+      "table" : "foo",
+      "version" : 15
+    }
+```
+
+#### Summary
+
+These sections general provide all the information about everything that was declared in a translation unit.  Typically
+not the full body of what was declared but its interface.  The schema information provide the core type and context
+while the procedure information illuminates the code that was generated and how you might call it.
 
 
 ## Chapter 14: CQL Query Fragments
@@ -9525,7 +9487,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar 31 17:52:35 EDT 2022
+Snapshot as of Tue Apr  5 15:35:59 PDT 2022
 
 ### Operators and Literals
 
@@ -15662,7 +15624,7 @@ the current schema.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar 31 17:52:35 EDT 2022
+Snapshot as of Tue Apr  5 15:36:00 PDT 2022
 
 ### Rules
 
@@ -15718,7 +15680,7 @@ table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
-       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
+       '"primaryKeySortOrders"' ':' '[' opt_sort_order_names ']' ','
        opt_primary_key_name
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
@@ -15754,7 +15716,7 @@ virtual_table: '{'
        opt_attributes
        '"columns"' ':' '[' columns ']' ','
        '"primaryKey"' ':' '[' opt_column_names ']' ','
-       PRIMARY_KEY_SORT_ORDERS '[' opt_sort_order_names ']' ','
+       '"primaryKeySortOrders"' ':' '[' opt_sort_order_names ']' ','
        '"foreignKeys"' ':' '[' opt_foreign_keys ']' ','
        '"uniqueKeys"' ':' '[' opt_unique_keys ']' ','
        '"checkExpressions"' ':' '[' opt_check_expressions ']'
@@ -16283,6 +16245,7 @@ subscriptions: subscription | subscription ',' subscriptions
 subscription: '{'
      '"type"' ':' STRING_LITERAL ','
      '"table"' ':' STRING_LITERAL ','
+     opt_region_info
      '"version"' ':' any_integer
      '}'
   ;
@@ -16361,7 +16324,7 @@ ad_hoc_migration: '{'
                   '"name"' ':' STRING_LITERAL ','
                   '"crc"' ':' STRING_LITERAL ','
                   opt_attributes
-                  ON_RECREATE_OF STRING_LITERAL
+                  '"onRecreateOf"' ':' STRING_LITERAL
                   '}'
   ;
 
