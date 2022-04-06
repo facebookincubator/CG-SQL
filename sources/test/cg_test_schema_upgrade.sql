@@ -266,6 +266,8 @@ create table unsub_recreated(
 
 @unsub(1, unsub_recreated);
 
+@begin_schema_region other;
+
 create table unsub_voyage(
  v1 integer,
  v3 text @create(3),
@@ -276,3 +278,4 @@ create table unsub_voyage(
 @unsub(1, unsub_voyage);
 @resub(5, unsub_voyage);
 
+@end_schema_region;

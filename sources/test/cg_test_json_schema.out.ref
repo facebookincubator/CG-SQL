@@ -1382,6 +1382,8 @@
       "isDeleted" : 1,
       "isRecreated": 0,
       "unsubscribedVersion" : 4,
+      "region" : "region0",
+      "deployedInRegion" : "region2",
       "columns" : [
         {
           "name" : "id",
@@ -1420,6 +1422,8 @@
       "isDeleted" : 0,
       "isRecreated": 0,
       "resubscribedVersion" : 5,
+      "region" : "region0",
+      "deployedInRegion" : "region2",
       "columns" : [
         {
           "name" : "id",
@@ -4011,6 +4015,8 @@
     {
       "type" : "unsub",
       "table" : "t_for_unsub",
+      "region" : "region0",
+      "deployedInRegion" : "region2",
       "version" : 4
     }
     The statement ending at line XXXX
@@ -4021,6 +4027,8 @@
     {
       "type" : "unsub",
       "table" : "t_for_resub",
+      "region" : "region0",
+      "deployedInRegion" : "region2",
       "version" : 4
     }
     The statement ending at line XXXX
@@ -4031,6 +4039,8 @@
     {
       "type" : "resub",
       "table" : "t_for_resub",
+      "region" : "region0",
+      "deployedInRegion" : "region2",
       "version" : 5
     }
   ],

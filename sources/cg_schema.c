@@ -675,15 +675,24 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       ast_node *ast = item->ast;
       Invariant(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
 
-      // the node gets is region from its target, not from its own region
-
       CSTR region = ast->sem->region;
 
-      if (include_from_region(region, mode)) {
-        gen_set_output_buffer(output);
-        gen_statement_with_callbacks(ast, use_callbacks);
-        bprintf(output, ";\n\n");
+      if (!include_from_region(region, mode)) {
+        continue;
       }
+
+      if (region && schema_declare) {
+        bprintf(output, "@begin_schema_region %s;\n", region);
+      }
+
+      gen_set_output_buffer(output);
+      gen_statement_with_callbacks(ast, use_callbacks);
+      bprintf(output, ";\n");
+
+      if (region && schema_declare) {
+        bprintf(output, "@end_schema_region;\n");
+      }
+      bprintf(output, "\n");
     }
   }
 }
@@ -1447,7 +1456,15 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
     Invariant(type >= SCHEMA_ANNOTATION_FIRST && type <= SCHEMA_ANNOTATION_LAST);
 
-    if (!include_from_region(note->target_ast->sem->region, SCHEMA_TO_UPGRADE)) {
+    // if the target is out of scope we ignore this directive
+    bool_t directive_not_in_scope = !include_from_region(note->target_ast->sem->region, SCHEMA_TO_UPGRADE);
+
+    bool_t subscription_management = type == SCHEMA_ANNOTATION_RESUB || type == SCHEMA_ANNOTATION_UNSUB;
+
+    // for unsub/resub the region of the directive must also be in scope
+    directive_not_in_scope |= subscription_management && !include_from_region(version_annotation->parent->sem->region, SCHEMA_TO_UPGRADE);
+
+    if (directive_not_in_scope) {
       continue;
     }
 
@@ -1455,8 +1472,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     if (is_ast_create_table_stmt(note->target_ast) && is_table_blob_storage(note->target_ast)) {
       continue;
     }
-
-    bool_t subscription_management = false;
 
     switch (type) {
       case SCHEMA_ANNOTATION_CREATE_COLUMN: {
@@ -1572,7 +1587,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
         // current status: unsubcribed
         note->target_ast->sem->sem_type |= SCHEMA_FLAG_UNSUB;
-        subscription_management = true;
         break;
 
       case SCHEMA_ANNOTATION_RESUB:
@@ -1605,7 +1619,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
         // current status: subcribed
         note->target_ast->sem->sem_type &= sem_not(SCHEMA_FLAG_UNSUB);
-        subscription_management = true;
         break;
 
       case SCHEMA_ANNOTATION_AD_HOC:

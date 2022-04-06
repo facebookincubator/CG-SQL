@@ -184,12 +184,14 @@ CREATE TABLE unsub_recreated(
   anything TEXT
 ) @RECREATE;
 
+@begin_schema_region other;
 CREATE TABLE unsub_voyage(
   v1 INTEGER,
   v3 TEXT @CREATE(3),
   v5 TEXT @CREATE(5),
   v7 TEXT @CREATE(7)
 );
+@end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
@@ -286,9 +288,13 @@ END;
 
 @UNSUB(1, unsub_recreated);
 
+@begin_schema_region other;
 @UNSUB(1, unsub_voyage);
+@end_schema_region;
 
+@begin_schema_region other;
 @RESUB(5, unsub_voyage);
+@end_schema_region;
 
 -- facets table declaration --
 CREATE TABLE IF NOT EXISTS test_cql_schema_facets(

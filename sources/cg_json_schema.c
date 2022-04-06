@@ -574,6 +574,7 @@ static void cg_json_subscriptions(charbuf* output) {
     EXTRACT_NOTNULL(version_annotation, ast->left);
     EXTRACT_OPTION(vers, version_annotation->left);
     EXTRACT_STRING(name, version_annotation->right);
+    CSTR region = ast->sem->region;
 
     cg_json_test_details(output, ast, NULL);
 
@@ -581,8 +582,11 @@ static void cg_json_subscriptions(charbuf* output) {
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"type\" : \"%s\",\n", is_ast_schema_unsub_stmt(ast) ? "unsub" : "resub");
-    bprintf(output, "\"table\" : \"%s\",\n", name);
-    bprintf(output, "\"version\" : %d\n", vers);
+    bprintf(output, "\"table\" : \"%s\"", name);
+    if (region) {
+      cg_json_emit_region_info(output, ast);
+    }
+    bprintf(output, ",\n\"version\" : %d\n", vers);
     END_INDENT(t);
     bprintf(output, "}");
   }

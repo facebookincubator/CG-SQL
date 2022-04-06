@@ -22527,7 +22527,10 @@ static void sem_subs_extract(ast_node *ast, subs_info *info) {
   info->name = name;
   info->table_ast = NULL;  // not part of basic extraction
 
-  record_ok(ast);
+  // don't clobber existing semantic info
+  if (!ast->sem) {
+    record_ok(ast);
+  }
 }
 
 // These validations are common to both @unsub and @resub and they
@@ -22627,7 +22630,8 @@ static void validate_previous_schema_subscription_annotation(ast_node *previous_
   if (!Strcasecmp(previous_info.name, found_info.name) &&
       previous_info.vers == found_info.vers &&
       previous_ast->type == found_ast->type) {
-    record_ok(previous_ast);
+    // the previous item doesn't need any marking, it's all good already
+    Invariant(!is_error(previous_ast));
     return;
   }
 
@@ -22698,7 +22702,8 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
 
   table->sem->unsub_version = vers;
   last_sub_version = vers;
-  ast->sem->region = table->sem->region;  // the unsub is in scope if its target table is in scope
+  ast->sem = new_sem(SEM_TYPE_OK);
+  ast->sem->region = current_region;
 
   add_item_to_list(&all_subscriptions_list, ast);
 
@@ -22706,8 +22711,6 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
     // recreate tables need no actions for unsubscription/resubscription
     record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_UNSUB, NULL, ast->left, 0);
   }
-
-  record_ok(ast);
 }
 
 static void sem_schema_resub_stmt(ast_node *ast) {
@@ -22781,7 +22784,8 @@ static void sem_schema_resub_stmt(ast_node *ast) {
 
   table->sem->resub_version = vers;
   last_sub_version = vers;
-  ast->sem->region = table->sem->region;  // the resub is in scope if its target table is in scope
+  ast->sem = new_sem(SEM_TYPE_OK);
+  ast->sem->region = current_region;
 
   add_item_to_list(&all_subscriptions_list, ast);
 
@@ -22789,8 +22793,6 @@ static void sem_schema_resub_stmt(ast_node *ast) {
     // recreate tables need no actions for unsubscription/resubscription
     record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_RESUB, NULL, ast->left, 0);
   }
-
-  record_ok(ast);
 }
 
 static void sem_schema_ad_hoc_migration_stmt_for_version(ast_node *ast) {

@@ -1451,6 +1451,8 @@ create virtual table @eponymous epon_virt_table using epon_virt_table ( this, th
   t text
 );
 
+@begin_schema_region Region0;
+
 -- TEST: unsubscription JSON info should be present
 -- + "name" : "t_for_unsub",
 -- + "isDeleted" : 1,
@@ -1482,8 +1484,11 @@ create table t_for_resub(
 -- + "version" : 4
 @unsub(4, t_for_resub);
 
+
 -- TEST: record resub
 -- + "type" : "resub",
 -- + "table" : "t_for_resub",
 -- + "version" : 5
 @resub(5, t_for_resub);
+
+@end_schema_region;

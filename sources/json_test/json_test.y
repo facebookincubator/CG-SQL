@@ -682,6 +682,7 @@ subscriptions: subscription | subscription ',' subscriptions
 subscription: '{'
      TYPE STRING_LITERAL ','
      TABLE STRING_LITERAL ','
+     opt_region_info
      VERSION any_integer
      '}'
   ;
