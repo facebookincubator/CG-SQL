@@ -1453,6 +1453,7 @@ create virtual table @eponymous epon_virt_table using epon_virt_table ( this, th
 
 -- TEST: unsubscription JSON info should be present
 -- + "name" : "t_for_unsub",
+-- + "isDeleted" : 1,
 -- + "unsubscribedVersion" : 4,
 -- - "resubscribedVersion"
 create table t_for_unsub(
@@ -1470,6 +1471,7 @@ create table t_for_unsub(
 -- + "name" : "t_for_resub",
 -- - "unsubscribedVersion"
 -- + "resubscribedVersion" : 5,
+-- + "isDeleted" : 0,
 create table t_for_resub(
   id integer
 );

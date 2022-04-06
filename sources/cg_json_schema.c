@@ -1552,7 +1552,9 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   BEGIN_INDENT(table, 2);
 
   bool_t is_added = ast->sem->create_version > 0;
+
   bool_t is_deleted = ast->sem->delete_version > 0;
+  bool_t is_unsub = ast->sem->unsub_version > ast->sem->resub_version;
 
   bprintf(output, "\"name\" : \"%s\"", name);
   bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
@@ -1564,7 +1566,8 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
     bprintf(output, ",\n\"addedVersion\" : %d", ast->sem->create_version);
     cg_json_added_migration_proc(output, table_flags_attrs);
   }
-  bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
+  // deleted state includes deleted or unsubscribed
+    bprintf(output, ",\n\"isDeleted\" : %d", is_deleted || is_unsub);
   if (is_deleted) {
     bprintf(output, ",\n\"deletedVersion\" : %d", ast->sem->delete_version);
     cg_json_deleted_migration_proc(output, table_flags_attrs);

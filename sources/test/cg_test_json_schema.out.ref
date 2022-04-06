@@ -1379,7 +1379,7 @@
       "ifNotExists" : 0,
       "withoutRowid" : 0,
       "isAdded" : 0,
-      "isDeleted" : 0,
+      "isDeleted" : 1,
       "isRecreated": 0,
       "unsubscribedVersion" : 4,
       "columns" : [
