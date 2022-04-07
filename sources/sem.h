@@ -173,7 +173,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_SERIALIZE      _64(0x20000000000) // set when a cursor will need serialization features
 #define SEM_TYPE_HAS_ROW        _64(0x40000000000) // set on auto cursors to indicate that they are known to have a row
 #define SEM_TYPE_FETCH_INTO     _64(0x80000000000) // set if the cursor is used with fetch into
-#define SEM_TYPE_FLAGS          _64(0xFFFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_WAS_SET       _64(0x100000000000) // set on in args if they are set (hence we own the value)
+#define SEM_TYPE_FLAGS         _64(0x1FFFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
@@ -221,6 +222,7 @@ cql_noexport bool_t is_not_nullable(sem_t sem_type);
 cql_noexport bool_t is_variable(sem_t sem_type);
 cql_noexport bool_t is_in_parameter(sem_t sem_type);
 cql_noexport bool_t is_out_parameter(sem_t sem_type);
+cql_noexport bool_t was_set_variable(sem_t sem_type);
 cql_noexport bool_t is_inout_parameter(sem_t sem_type);
 cql_noexport bool_t is_dml_proc(sem_t sem_type);
 cql_noexport bool_t is_text(sem_t sem_type);

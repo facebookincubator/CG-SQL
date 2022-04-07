@@ -1133,6 +1133,10 @@ cql_noexport bool_t is_out_parameter(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_OUT_PARAMETER);
 }
 
+cql_noexport bool_t was_set_variable(sem_t sem_type) {
+  return !!(sem_type & SEM_TYPE_WAS_SET);
+}
+
 cql_noexport bool_t is_inout_parameter(sem_t sem_type) {
   return is_in_parameter(sem_type) && is_out_parameter(sem_type);
 }
@@ -2115,6 +2119,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_FETCH_INTO) {
     bprintf(out, " fetch_into");
+  }
+  if (sem_type & SEM_TYPE_WAS_SET) {
+    bprintf(out, " was_set");
   }
 }
 
@@ -15571,6 +15578,8 @@ static void sem_assign(ast_node *ast) {
     sem_unset_notnull_improved(name, NULL);
   }
 
+  variable->sem->sem_type |= SEM_TYPE_WAS_SET;
+
   sem_set_initialization_improved(name, NULL);
 }
 
@@ -15776,7 +15785,7 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeabl
       // strip VARIABLE and OUT, add IN
       // the cursor field will not be the out arg pointer version but the data version
       // and it's no longer a standalone variable
-      sem_type_param &= sem_not(SEM_TYPE_OUT_PARAMETER);
+      sem_type_param &= sem_not(SEM_TYPE_OUT_PARAMETER | SEM_TYPE_WAS_SET);
       sem_type_param |= SEM_TYPE_IN_PARAMETER;
     }
 

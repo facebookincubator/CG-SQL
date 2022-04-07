@@ -5241,6 +5241,20 @@ begin
   set b from cursor gr_blob_cursor;
 end;
 
+-- TEST: if we mutate a reference arg then we have to track its lifetime
+-- we cannot just borrow the reference, the parameter is not released
+-- nor can it be...  So convert this to a normal local pattern.
+-- + export: DECLARE PROC mutated_in_param_ref (x TEXT);
+-- + void mutated_in_param_ref(cql_string_ref _Nullable _in__x) {
+-- + cql_string_ref x = NULL;
+-- + cql_set_string_ref(&x, _in__x);
+-- + cql_set_string_ref(&x, _literal_25_hi_mutated_in_param_ref);
+-- + cql_string_release(x);
+create proc mutated_in_param_ref(x text)
+begin
+  set x := 'hi';
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

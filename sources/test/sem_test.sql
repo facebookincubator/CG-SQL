@@ -3157,7 +3157,7 @@ end;
 -- + error: % in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull variable in }
--- + {select_expr_list_con}: select: { A: integer variable }
+-- + {select_expr_list_con}: select: { A: integer variable was_set }
 create procedure with_wrong_flags(i integer not null)
 begin
   if i then
@@ -6688,7 +6688,7 @@ create table blob_table_test(
 );
 
 -- TEST: try to use a blob variable in a select statement
--- + {select_stmt}: select: { blob_var: blob variable }
+-- + {select_stmt}: select: { blob_var: blob variable was_set }
 -- - error:
 select blob_var;
 
@@ -13170,7 +13170,7 @@ select nullif(id) from bar;
 select nullif(id, 1) as n from bar;
 
 -- TEST: kind preserved and matches
--- + {select_stmt}: select: { p: real<dollars> variable }
+-- + {select_stmt}: select: { p: real<dollars> variable was_set }
 -- + {call}: real<dollars> variable
 -- - error:
 select nullif(price_d, price_d) as p;

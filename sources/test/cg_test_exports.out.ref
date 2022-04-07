@@ -226,4 +226,5 @@ DECLARE PROC blob_serialization_test () USING TRANSACTION;
 DECLARE PROC deserialize_func () USING TRANSACTION;
 DECLARE PROC bigstuff ();
 DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) USING TRANSACTION;
+DECLARE PROC mutated_in_param_ref (x TEXT);
 DECLARE PROC end_proc ();

@@ -4672,6 +4672,15 @@ BEGIN_TEST(clobber_blobs)
   call printf("1000 bad results is normal\n");
 END_TEST(clobber_blobs)
 
+create proc change_arg(x text)
+begin
+  set x := 'hi';
+end;
+
+BEGIN_TEST(arg_mutation)
+  call change_arg(null);
+END_TEST(arg_mutation)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

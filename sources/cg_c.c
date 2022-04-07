@@ -475,6 +475,12 @@ static void cg_result_set_type_decl(charbuf *output, CSTR sym, CSTR ref) {
 #define CG_VAR_DECL_PROTO 0
 #define CG_VAR_DECL_LOCAL 1
 
+// When emitting parameters we might need to use aliased names
+// for reference types that are mutated.  We only need to do this
+// when emitting the primary proc definition
+#define CG_PROC_PARAMS_NO_ALIAS 0
+#define CG_PROC_PARAMS_IN_ALIAS 1
+
 // Reference types and non-null locals begin at a zero value.  References are especially
 // crucial because if they started at something other than null then we would try to
 // release that pointer on exit which would be bad.  Note that this means that even
@@ -3021,7 +3027,7 @@ static void cg_let_stmt(ast_node *ast) {
 // This is the processing for a single parameter in a stored proc declaration.
 // All we have to do is emit the type signature of that parameter.  This is
 // precisely what cg_var_decl with CG_VAR_DECL_PROTO is for...
-static void cg_param(ast_node *ast, charbuf *decls) {
+static void cg_param(ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_ANY_NOTNULL(name_ast, param_detail->left)
@@ -3031,19 +3037,30 @@ static void cg_param(ast_node *ast, charbuf *decls) {
 
   sem_t sem_type = name_ast->sem->sem_type;
 
-  cg_var_decl(decls, sem_type, name, CG_VAR_DECL_PROTO);
+  // If this parameter will be mutated we have to own the reference, so we make an alias
+  // We'll initialize the alias from the argument during param init.
+
+  if (alias_in_ref && !is_out_parameter(sem_type) && was_set_variable(sem_type) && is_ref_type(sem_type)) {
+    CHARBUF_OPEN(alias);
+    bprintf(&alias, "_in__%s", name);
+    cg_var_decl(decls, sem_type, alias.ptr, CG_VAR_DECL_PROTO);
+    CHARBUF_CLOSE(alias);
+  }
+  else {
+    cg_var_decl(decls, sem_type, name, CG_VAR_DECL_PROTO);
+  }
 }
 
 // Walk all the params of a stored proc and emit each one with a comma where needed.
 // cg_param does all the hard work.
-static void cg_params(ast_node *ast, charbuf *decls) {
+static void cg_params(ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
   Contract(is_ast_params(ast));
 
   while (ast) {
     Contract(is_ast_params(ast));
     EXTRACT_NOTNULL(param, ast->left);
 
-    cg_param(param, decls);
+    cg_param(param, decls, alias_in_ref);
 
     if (ast->right) {
       bprintf(decls, ", ");
@@ -3079,6 +3096,20 @@ static void cg_param_init(ast_node *ast, charbuf *body) {
     else {
       bprintf(body, "  *%s = 0; // set out arg to non-garbage\n", name);
     }
+  }
+
+  // If this parameter will be mutated we have to own the reference, so we make an alias.
+  // here we initialize the alias from the in parameter.  The variable now has normal
+  // lifetime.
+
+  if (!is_out_parameter(sem_type) && was_set_variable(sem_type) && is_ref_type(sem_type)) {
+    cg_declare_simple_var(sem_type, name);
+
+    CHARBUF_OPEN(alias);
+    bprintf(&alias, "_in__%s", name);
+    bprintf(body, "  ");
+    cg_copy(body, name, sem_type, alias.ptr);
+    CHARBUF_CLOSE(alias);
   }
 }
 
@@ -3415,7 +3446,7 @@ static void cg_emit_fetch_results_prototype(
   // args to forward
   if (params) {
     bprintf(decl, ", ");
-    cg_params(params, decl);
+    cg_params(params, decl, CG_PROC_PARAMS_NO_ALIAS);
   }
 
   CHARBUF_CLOSE(result_set_ref);
@@ -3491,7 +3522,7 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
     if (need_comma) {
       bprintf(proc_decl, ", ");
     }
-    cg_params(params, proc_decl);
+    cg_params(params, proc_decl, CG_PROC_PARAMS_IN_ALIAS);
   }
 
   if (out_stmt_proc) {
@@ -3637,6 +3668,25 @@ static void cg_create_proc_stmt(ast_node *ast) {
     cg_proc_result_set(ast);
   }
 
+  if (options.test) {
+    // echo the export where it can be sanity checked
+    if (private_proc) {
+      bprintf(cg_declarations_output, "// private: ");
+    }
+    else {
+      bprintf(cg_declarations_output, "// export: ");
+    }
+
+    gen_set_output_buffer(cg_declarations_output);
+    gen_declare_proc_from_create_proc(ast);
+    bprintf(cg_declarations_output, ";\n");
+  }
+
+  cg_main_output = &proc_body;
+  cg_declarations_output = &proc_locals;
+  cg_scratch_vars_output = &proc_locals;
+  cg_cleanup_output = &proc_cleanup;
+
   CHARBUF_OPEN(proc_decl);
   cg_emit_proc_prototype(ast, &proc_decl);
 
@@ -3707,31 +3757,12 @@ static void cg_create_proc_stmt(ast_node *ast) {
     bprintf(exports_output, ";\n");
   }
 
-  if (options.test) {
-    // echo the export where it can be sanity checked
-    if (private_proc) {
-      bprintf(cg_declarations_output, "// private: ");
-    }
-    else {
-      bprintf(cg_declarations_output, "// export: ");
-    }
-
-    gen_set_output_buffer(cg_declarations_output);
-    gen_declare_proc_from_create_proc(ast);
-    bprintf(cg_declarations_output, ";\n");
-  }
-
   if (out_union_proc) {
     // clobber the out arg, it is assumed to be trash by convention
     bprintf(&proc_locals, "*_result_set_ = NULL;\n");
   }
 
   cg_fwd_ref_output = &proc_fwd_ref;
-  cg_main_output = &proc_body;
-  cg_declarations_output = &proc_locals;
-  cg_scratch_vars_output = &proc_locals;
-  cg_cleanup_output = &proc_cleanup;
-
   // BEGIN [stmt_list] END
   cg_stmt_list(stmt_list);
 
@@ -3852,7 +3883,7 @@ static void cg_declare_func_stmt(ast_node *ast) {
 
   // DECLARE FUNC [name] ( [params] ) returntype
   if (params) {
-    cg_params(params, &func_decl);
+    cg_params(params, &func_decl, CG_PROC_PARAMS_NO_ALIAS);
   }
   else {
     bprintf(&func_decl, "void");
