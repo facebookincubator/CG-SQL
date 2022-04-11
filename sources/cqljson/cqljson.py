@@ -305,6 +305,21 @@ def emit_schema():
             "  src_col text not null,\n"
             "  ref_col text not null);\n"
             "\n"
+            "create table procs(\n"
+            "  p_name text not null,\n"
+            "  category text not null,\n"
+            "  primary key (p_name));\n"
+            "\n"
+            "create table proc_projections(\n"
+            "  p_name text not null,\n"
+            "  icol integer not null,\n"
+            "  c_name text not null,\n"
+            "  type text not null,\n"
+            "  kind text,\n"
+            "  is_sensitive bool not null,\n"
+            "  is_not_null bool not null,\n"
+            "  primary key (p_name, icol));\n"
+            "\n"
             "create table proc_deps(\n"
             "  p_name text not null,\n"
             "  t_name text not null);\n"
@@ -324,18 +339,45 @@ def emit_schema():
     )
 
 
+# The procedure might have any number of projected columns if it has a result
+# We emit them all here
+# projected_column
+#  name : STRING
+#  type : STRING
+#  kind : STRING [optional]
+#  isSensitive : BOOL [optional]
+#  isNotNull" : BOOL
+def emit_projection(p_name, projection):
+    col = 0
+    for p in projection:
+        c_name = p["name"]
+        type = p["type"]
+        kind = "'" + p["kind"] + "'" if "kind" in p else "NULL"
+        isSensitive = p.get("isSensitive", 0)
+        isNotNull = p["isNotNull"]
+        print(
+            f"insert into proc_projections values('{p_name}', {col}, '{c_name}', '{type}', {kind}, {isSensitive}, {isNotNull});"
+        )
+        col = col + 1
+
+
+# Here we emit all the information for the procedures that are known
+# this is basic info about the name and arguments as well as dependencies.
 # For any chunk of JSON that has the "dependencies" sub-block
 # (see CQL JSON docs) we emit the table dependency info
 # by following the "usesTables" data.  Note that per docs
 # this entry is not optional!
-def emit_tabledep(section):
+def emit_procinfo(section, s_name):
     for src in section:
-        pname = src["name"]
+        p_name = src["name"]
+        print(f"insert into procs values('{p_name}', '{s_name}');")
+        if "projection" in src:
+            emit_projection(p_name, src["projection"])
         usesTables = src["usesTables"]
         for tdep in usesTables:
-            print(f"insert into proc_deps values('{pname}', '{tdep}');")
+            print(f"insert into proc_deps values('{p_name}', '{tdep}');")
         for vdep in src.get("usesViews", []):
-            print(f"insert into proc_view_deps values('{pname}', '{vdep}');")
+            print(f"insert into proc_view_deps values('{p_name}', '{vdep}');")
 
 
 # This walks the various JSON chunks and emits them into the equivalent table:
@@ -348,7 +390,7 @@ def emit_tabledep(section):
 #  * next walk the regions
 #     * emit one row per region in the region table
 #     * emit one row per dependency to region_deps table (r_name, rparent)
-#  * we use emit_tabledep for each chunk of procedures that has dependencies
+#  * we use emit_procinfo for each chunk of procedures that has dependencies
 #     * this is "queries", "inserts", "updates", "deletes", "general", and "generalInserts"
 #     * see the CQL JSON docs for the meaning of each of these sections
 #       * these all have the "dependencies" block in their JSON
@@ -401,12 +443,12 @@ def emit_sql(data):
             rparent = rdep[1]
             print(f"insert into region_deps values('{r_name}', '{rparent}');")
 
-    emit_tabledep(data["queries"])
-    emit_tabledep(data["deletes"])
-    emit_tabledep(data["inserts"])
-    emit_tabledep(data["generalInserts"])
-    emit_tabledep(data["updates"])
-    emit_tabledep(data["general"])
+    emit_procinfo(data["queries"], "queries")
+    emit_procinfo(data["deletes"], "deletes")
+    emit_procinfo(data["inserts"], "inserts")
+    emit_procinfo(data["generalInserts"], "generalInserts")
+    emit_procinfo(data["updates"], "updates")
+    emit_procinfo(data["general"], "general")
 
     for tup in enumerate(data["views"]):
         v = tup[1]
