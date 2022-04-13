@@ -2309,6 +2309,8 @@ static void parse_cmd(int argc, char **argv) {
     } else if (strcmp(arg, "--global_proc") == 0) {
       a = gather_arg_param(a, argc, argv, NULL,  "for the global proc name");
       global_proc_name = argv[a];
+    } else if (strcmp(arg, "--c_include_path") == 0) {
+      a = gather_arg_param(a, argc, argv, &options.c_include_path, "for the include path of a C header");
     } else if (strcmp(arg, "--objc_c_include_path") == 0) {
       a = gather_arg_param(a, argc, argv, &options.objc_c_include_path, "for the include path of a C header");
     } else if (strcmp(arg, "--c_include_namespace") == 0) {
@@ -2684,8 +2686,10 @@ static void cql_usage() {
     "  fully qualified name to import in the emitted java source\n"
     "--c_include_namespace\n"
     "  for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>\n"
+    "--c_include_path\n"
+    "  for C codegen runtimes this will be used to create the #include directive at the start of the C\n"
     "--objc_c_include_path\n"
-    "  for ObjC codegen runtimes this represents the header of the C generated code for the same file\n"
+    "  for ObjC codegen runtimes this represents the header of the C generated code for the same CQL source file\n"
     "--cqlrt foo.h\n"
     "  emits foo.h into the C output instead of cqlrt.h\n"
     "--generate_exports\n"

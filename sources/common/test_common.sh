@@ -263,6 +263,21 @@ code_gen_c_test() {
     failed
   fi
 
+  echo running codegen test with c_include_path specified
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_header.h" "${OUT_DIR}/cg_test_c_with_header.c" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --c_include_path "somewhere/something.h" 2>"${OUT_DIR}/cg_test_c.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_c.err"
+    failed
+  fi
+
+  echo validating codegen
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c_with_header.c"
+  then
+    echo "ERROR: failed verification"
+    failed
+  fi
+
   echo running codegen test for base query fragment
   if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_base_fragment_c.h" "${OUT_DIR}/cg_test_base_fragment_c.c" "${OUT_DIR}/cg_test_base_fragment_imports.ref" --in "${TEST_DIR}/cg_test_base_fragment.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
@@ -313,6 +328,8 @@ code_gen_c_test() {
   on_diff_exit cg_test_c.h
   on_diff_exit cg_test_c_with_namespace.c
   on_diff_exit cg_test_c_with_namespace.h
+  on_diff_exit cg_test_c_with_header.c
+  on_diff_exit cg_test_c_with_header.h
   on_diff_exit cg_test_c_with_type_getters.c
   on_diff_exit cg_test_c_with_type_getters.h
   on_diff_exit cg_test_exports.out

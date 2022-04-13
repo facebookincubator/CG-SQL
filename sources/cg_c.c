@@ -8166,9 +8166,20 @@ cql_noexport void cg_c_main(ast_node *head) {
 
   bprintf(&body_file, "%s", rt->source_prefix);
 
-  if (options.c_include_namespace) {
+  if (options.c_include_path) {
+    // If your output path has inconvenient prefixes you can specify everything.
+    // You use c_include_path to accomplish this.
+
+    bprintf(&body_file, "#include \"%s\"\n\n", options.c_include_path);
+  }
+  else if (options.c_include_namespace) {
+    // If your output is just a base name, you might want to prefix it.
+    // You can use c_include_namespace for this option.
+
     bprintf(&body_file, "#include \"%s/%s\"\n\n", options.c_include_namespace, options.file_names[0]);
   } else {
+    // If neither option specified then we use whatever was provided as the output path.
+    // This is the most common case.
     bprintf(&body_file, "#include \"%s\"\n\n", options.file_names[0]);
   }
 

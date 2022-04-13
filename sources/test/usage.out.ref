@@ -83,8 +83,10 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
   fully qualified name to import in the emitted java source
 --c_include_namespace
   for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>
+--c_include_path
+  for C codegen runtimes this will be used to create the #include directive at the start of the C
 --objc_c_include_path
-  for ObjC codegen runtimes this represents the header of the C generated code for the same file
+  for ObjC codegen runtimes this represents the header of the C generated code for the same CQL source file
 --cqlrt foo.h
   emits foo.h into the C output instead of cqlrt.h
 --generate_exports
