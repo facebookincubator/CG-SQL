@@ -3354,7 +3354,7 @@ static void cg_struct_teardown_info(charbuf *output, sem_struct *sptr, CSTR name
 
 // Emit the return code variables for the procedure
 // if the procedure uses throw then it needs the saved RC as well so we can re-throw it
-void cg_emit_rc_vars(charbuf *output) {
+static void cg_emit_rc_vars(charbuf *output) {
   bprintf(output, "  %s _rc_ = SQLITE_OK;\n", rt->cql_code);
 }
 

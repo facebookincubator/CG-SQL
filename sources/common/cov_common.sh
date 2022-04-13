@@ -4,6 +4,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+COV_ARGS="${COV_COVERAGE_ARGS}"
+
 OUT_DIR="out"
 
 coverage() {
@@ -18,6 +20,7 @@ coverage() {
             --html \
             --html-details \
             -o ${OUT_DIR}/report.html \
+            ${COV_ARGS} \
             -e test \
             -e tester \
             -e linetester \
@@ -40,6 +43,7 @@ coverage() {
   echo generating ${OUT_DIR}/report.txt
   if ! "$@" \
               -o ${OUT_DIR}/report.txt \
+              ${COV_ARGS} \
               -e test \
               -e tester \
               -e linetester \

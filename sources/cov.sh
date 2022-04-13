@@ -4,6 +4,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+COV_EXTRA_ARGS=""
+
 # shellcheck disable=SC1091
 source common/cov_common.sh || exit 1
 
