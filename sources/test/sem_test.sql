@@ -15081,6 +15081,22 @@ begin
    let z := C.x;
 end;
 
+-- TEST: declare a proc with an enum argument and output column
+-- + {declare_proc_stmt}: enum_users_out: { x: integer<integer_things> notnull } uses_out
+-- - error:
+declare proc enum_users_out(i integer_things) out (x integer_things);
+
+-- TEST: ensure that a proc defined with an enum argument and enum output column
+-- matches its previous declaration correctly
+-- + {create_proc_stmt}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage uses_out value_cursor
+-- - error:
+create proc enum_users_out(i integer_things)
+begin
+  declare C cursor like test_shape;
+  fetch C using i x;
+  out C;
+end;
+
 -- TEST: ensure that the type kind is preserved from an arg bundle
 -- proof that the cursor fields had the right type when extracted
 -- + {name u}: u: integer<integer_things> notnull variable

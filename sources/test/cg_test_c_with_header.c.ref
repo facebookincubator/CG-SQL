@@ -16334,6 +16334,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_int64 _tmp_int64_2 = 0;
   cql_double _tmp_double_2 = 0;
   cql_bool _tmp_bool_1 = 0;
+  cql_int32 _tmp_int_0 = 0;
 
   // The statement ending at line XXXX
 
@@ -18752,6 +18753,20 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET abs_val_nullable := abs(NULL);
   */
   cql_set_null(abs_val_nullable);
+
+  // The statement ending at line XXXX
+
+  /*
+  SET b2 := ( SELECT likely(1) );
+  */
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT likely(1)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    _tmp_int_0 = sqlite3_column_int(_temp_stmt, 0);
+  cql_finalize_stmt(&_temp_stmt);
+  b2 = !!(_tmp_int_0);
 
   // The statement ending at line XXXX
 

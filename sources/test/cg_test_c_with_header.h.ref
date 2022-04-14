@@ -3512,6 +3512,8 @@ extern CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnul
 extern void mutated_in_param_ref(cql_string_ref _Nullable _in__x);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

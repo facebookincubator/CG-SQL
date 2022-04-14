@@ -2889,6 +2889,7 @@ static void gen_create_proc_stmt(ast_node *ast) {
 
 cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
+  Contract(!for_sqlite());
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -2921,11 +2922,16 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
 
         gen_printf("%s", coretype_string(sem_type));
 
+        CSTR kind = sptr->kinds[i];
+        if (kind) {
+          gen_printf("<%s>", kind);
+        }
+
         if (is_not_nullable(sem_type)) {
           gen_printf(" NOT NULL");
         }
 
-        if (sensitive_flag(sem_type) && !for_sqlite()) {
+        if (sensitive_flag(sem_type)) {
           gen_printf(" @SENSITIVE");
         }
 
