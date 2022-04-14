@@ -3500,10 +3500,32 @@ extern CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_);
 extern void bigstuff(void);
 
 // The statement ending at line XXXX
+#ifndef _var_group_var_group_decl_
+#define _var_group_var_group_decl_ 1
+
+typedef struct gr_cursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_string_ref _Nonnull y;
+} gr_cursor_row;
+extern gr_cursor_row gr_cursor;
 extern cql_nullable_int32 gr_integer;
 
+typedef struct gr_blob_cursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_string_ref _Nonnull name;
+} gr_blob_cursor_row;
+extern gr_blob_cursor_row gr_blob_cursor;
+extern uint16_t gr_blob_cursor_cols[];
+extern uint8_t gr_blob_cursor_data_types[];
+#endif
+
 // The statement ending at line XXXX
-extern cql_nullable_int32 gr_integer;
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable *_Nonnull b);

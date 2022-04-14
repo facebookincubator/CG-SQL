@@ -3957,7 +3957,7 @@ static void cg_declare_simple_var(sem_t sem_type, CSTR name) {
   if (!in_var_group_decl) {
     cg_var_decl(cg_declarations_output, sem_type, name, CG_VAR_DECL_LOCAL);
   }
-  if (!in_proc) {
+  if (!in_proc && !in_var_group_emit) {
     bprintf(cg_header_output, "%s", rt->symbol_visibility);
     cg_var_decl(cg_header_output, sem_type, name, CG_VAR_DECL_PROTO);
     bprintf(cg_header_output, ";\n");
@@ -5040,7 +5040,8 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
 
   // when we do the variable group the struct has already been emitted
   if (!in_var_group_emit) {
-    cg_c_struct_for_sptr(cg_fwd_ref_output, sptr, cursor_name);
+    charbuf *out = in_var_group_decl ? cg_header_output : cg_fwd_ref_output;
+    cg_c_struct_for_sptr(out, sptr, cursor_name);
   }
 
   CSTR scope = current_proc_name();
@@ -5049,21 +5050,19 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
 
   CG_CHARBUF_OPEN_SYM(row_type, scope, suffix, cursor_name, "_row");
 
-  if (refs_count) {
+  if (in_var_group_decl) {
+    // only extern the cursor
+    bprintf(cg_header_output, "%s%s %s;\n",
+      rt->symbol_visibility, row_type.ptr, cursor_name);
+  }
+  else if (refs_count) {
     CG_CHARBUF_OPEN_SYM(refs_offset, scope, suffix, cursor_name, "_refs_offset");
 
-    if (in_var_group_decl) {
-      // only extern the cursor
-      bprintf(cg_declarations_output, "%s%s %s;\n",
-        rt->symbol_visibility, row_type.ptr, cursor_name);
-    }
-    else {
-      bprintf(cg_declarations_output, "%s %s = { ._refs_count_ = %d, ._refs_offset_ = %s };\n",
-        row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
-      bprintf(cg_cleanup_output, "  cql_teardown_row(%s);\n", cursor_name);
+    bprintf(cg_declarations_output, "%s %s = { ._refs_count_ = %d, ._refs_offset_ = %s };\n",
+      row_type.ptr, cursor_name, refs_count, refs_offset.ptr);
+    bprintf(cg_cleanup_output, "  cql_teardown_row(%s);\n", cursor_name);
       cg_struct_teardown_info(cg_fwd_ref_output, sptr, cursor_name);
 
-    }
     CHARBUF_CLOSE(refs_offset);
   }
   else {
@@ -5078,8 +5077,8 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
     bprintf(&types_name, "%s_data_types", cursor_name);
 
     if (in_var_group_decl) {
-      bprintf(cg_declarations_output, "%suint16_t %s[];\n", rt->symbol_visibility, cols_name.ptr);
-      bprintf(cg_declarations_output, "%suint8_t %s[];\n", rt->symbol_visibility, types_name.ptr);
+      bprintf(cg_header_output, "%suint16_t %s[];\n", rt->symbol_visibility, cols_name.ptr);
+      bprintf(cg_header_output, "%suint8_t %s[];\n", rt->symbol_visibility, types_name.ptr);
     }
     else {
       cg_col_offsets(cg_declarations_output, sptr, cols_name.ptr, row_type.ptr);
@@ -5114,18 +5113,14 @@ static void cg_declare_group_stmt(ast_node *ast) {
   // Note that the struct decls go into a different stream
   // so we wrap those, too.
 
-  bprintf(cg_declarations_output, "#ifndef _%s_var_group_decl_\n", name);
-  bprintf(cg_declarations_output, "#define _%s_var_group_decl_ 1\n", name);
-
-  bprintf(cg_fwd_ref_output, "#ifndef _%s_var_group_structs_\n", name);
-  bprintf(cg_fwd_ref_output, "#define _%s_var_group_structs_ 1\n", name);
+  bprintf(cg_header_output, "#ifndef _%s_var_group_decl_\n", name);
+  bprintf(cg_header_output, "#define _%s_var_group_decl_ 1\n", name);
 
   in_var_group_decl = true;
   cg_stmt_list(stmt_list);
   in_var_group_decl = false;
 
-  bprintf(cg_declarations_output, "#endif\n");
-  bprintf(cg_fwd_ref_output, "#endif\n");
+  bprintf(cg_header_output, "#endif\n");
 }
 
 static void cg_emit_group_stmt(ast_node *ast) {
