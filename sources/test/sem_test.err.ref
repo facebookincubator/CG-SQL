@@ -1132,6 +1132,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'changes'
 test/sem_test.sql:XXXX:1: error: in call : CQL0393: user function cannot appear in a constraint expression  'SqlUserFunc'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'random'
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'likely'
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'likely'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0394: nested select expressions may not appear inside of a constraint expression
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'strftime'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'date'

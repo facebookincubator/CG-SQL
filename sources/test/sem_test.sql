@@ -15568,6 +15568,31 @@ select random(5);
 -- - error:
 select random();
 
+
+-- TEST: likely takes exactly one argument successfully
+-- + {name likely}: bool notnull
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- - error:
+select likely(true);
+
+-- TEST: the return type of likely is the type of its argument
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- + {name likely}: integer notnull
+-- - error:
+select likely(42);
+
+-- TEST: likely fails with incorrect number of arguments
+-- + {select_stmt}: err
+-- + error: % function got incorrect number of arguments 'likely'
+-- +1 error:
+select likely();
+
+-- TEST: likely fails when used outside a SQL statement
+-- + {let_stmt}: err
+-- + error: % function may not appear in this context 'likely'
+-- +1 error:
+let test := likely(true);
+
 -- TEST: can't use nested select in a constraint expression
 -- + {create_table_stmt}: err
 -- + error: % Nested select expressions may not appear inside of a constraint expression
@@ -21570,7 +21595,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {declare_group_stmt}: err
 -- + error: % group declared variables must be top level 'var_group'
--- +1 error: 
+-- +1 error:
 create proc proc_contains_var_group()
 begin
   declare group var_group
@@ -21582,7 +21607,7 @@ end;
 -- TEST: variable group may contain errors
 -- + {declare_group_stmt}: err
 -- + error: % duplicate variable name in the same scope 'var_group_var_dup'
--- +1 error: 
+-- +1 error:
 declare group var_group_error
 begin
   declare var_group_var_dup integer;

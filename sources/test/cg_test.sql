@@ -5120,7 +5120,7 @@ declare const group some_constants (
 --   - For star slash, not doing so will result in the comment
 --     block ending prematurely, resulting in invalid C code that
 --     won't compile.
---   - For slash star, there is a high chance that the compiler 
+--   - For slash star, there is a high chance that the compiler
 --     will reject the generated code under certain configurations
 --     (-Werror and -Wcomment flags).
 create proc slash_star_and_star_slash()
@@ -5254,6 +5254,12 @@ create proc mutated_in_param_ref(x text)
 begin
   set x := 'hi';
 end;
+
+-- TEST: likely() is correctly emitted
+-- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- + "SELECT likely(1)");
+-- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+set b2 := ( select likely(1) );
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

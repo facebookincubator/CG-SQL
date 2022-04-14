@@ -63672,6 +63672,93 @@ SELECT random();
 
 The statement ending at line XXXX
 
+SELECT likely(TRUE);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {call}: bool notnull
+  |     |     | {name likely}: bool notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {bool 1}: bool notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT likely(42);
+
+  {select_stmt}: select: { _anon: integer notnull }
+  | {select_core_list}: select: { _anon: integer notnull }
+  | | {select_core}: select: { _anon: integer notnull }
+  |   | {select_expr_list_con}: select: { _anon: integer notnull }
+  |     | {select_expr_list}: select: { _anon: integer notnull }
+  |     | | {select_expr}: integer notnull
+  |     |   | {call}: integer notnull
+  |     |     | {name likely}: integer notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 42}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT likely();
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'likely'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name likely}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+LET test := likely(TRUE);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'likely'
+
+  {let_stmt}: err
+  | {name test}
+  | {call}: err
+    | {name likely}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {bool 1}: bool notnull
+
+The statement ending at line XXXX
+
 CREATE TABLE with_check_expr_select(
   v INTEGER,
   CHECK (v > ( SELECT 5 ))

@@ -8383,6 +8383,30 @@ static void sem_func_random(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
 }
 
+// The likely function is a no-op function used for query optimizations.
+// It tells the query planner that the given (one) argument is probably a boolean value of `true`.
+static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  ast_node *arg = first_arg(arg_list);
+
+  // the function return type matches the argument type
+  ast->sem = arg->sem;
+  name_ast->sem = ast->sem;
+}
+
 // The changes function is used to get the integer number of rows changed
 // by the most recent update/insert/delete.
 static void sem_func_changes(ast_node *ast, uint32_t arg_count) {
@@ -23227,6 +23251,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(last_value);
   FUNC_INIT(nth_value);
   FUNC_INIT(random);
+  FUNC_INIT(likely);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);
