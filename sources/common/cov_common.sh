@@ -20,7 +20,7 @@ coverage() {
             --html \
             --html-details \
             -o ${OUT_DIR}/report.html \
-            ${COV_ARGS} \
+            ${COV_EXTRA_ARGS} \
             -e test \
             -e tester \
             -e linetester \
@@ -43,7 +43,7 @@ coverage() {
   echo generating ${OUT_DIR}/report.txt
   if ! "$@" \
               -o ${OUT_DIR}/report.txt \
-              ${COV_ARGS} \
+              ${COV_EXTRA_ARGS} \
               -e test \
               -e tester \
               -e linetester \
