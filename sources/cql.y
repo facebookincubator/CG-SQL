@@ -2154,11 +2154,11 @@ void yyerror(const char *format, ...) {
   parse_error_occurred = true;
 }
 
-static unsigned long next_id = 0;
+static uint64_t next_id = 0;
 
 static void print_dot(struct ast_node *node) {
   assert(node);
-  unsigned long id = next_id++;
+  uint64_t id = next_id++;
 
   bool_t primitive = true;
 

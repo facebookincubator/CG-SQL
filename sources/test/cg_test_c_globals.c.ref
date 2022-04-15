@@ -1,0 +1,57 @@
+
+#include "out/cg_test_c_globals.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
+#pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
+#pragma clang diagnostic ignored "-Wshift-op-parentheses"
+#pragma clang diagnostic ignored "-Wlogical-not-parentheses"
+#pragma clang diagnostic ignored "-Wlogical-op-parentheses"
+#pragma clang diagnostic ignored "-Wliteral-conversion"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+#define serialized_cursor_refs_offset cql_offsetof(serialized_cursor_row, t) // count = 1
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC p (x BLOB<blobshape>)
+BEGIN
+  FETCH serialized_cursor FROM BLOB x;
+END;
+*/
+
+#define _PROC_ "p"
+// export: DECLARE PROC p (x BLOB<blobshape>) USING TRANSACTION;
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_deserialize_from_blob(x, &serialized_cursor, &serialized_cursor._has_row_, serialized_cursor_cols, serialized_cursor_data_types);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+c_row c = { 0 };
+cql_nullable_int32 x;
+serialized_cursor_row serialized_cursor = { ._refs_count_ = 1, ._refs_offset_ = serialized_cursor_refs_offset };
+
+cql_uint16 serialized_cursor_cols[] = { 2,
+  cql_offsetof(serialized_cursor_row, id),
+  cql_offsetof(serialized_cursor_row, t)
+};
+
+uint8_t serialized_cursor_data_types[] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
+  CQL_DATA_TYPE_STRING
+};
+#pragma clang diagnostic pop

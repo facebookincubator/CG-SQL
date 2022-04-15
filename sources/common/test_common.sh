@@ -225,6 +225,30 @@ code_gen_c_test() {
     failed
   fi
 
+  echo verifying globals codegen does not require a global proc
+  # this has no --test directive and no --nolines
+  if ! ${CQL} --cg "${OUT_DIR}/cg_test_c_globals.h" "${OUT_DIR}/cg_test_c_globals.c" --in "${TEST_DIR}/cg_test_c_globals.sql" 2>"${OUT_DIR}/cg_test_c.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_c.err"
+    failed
+  fi
+
+  echo running codegen test for global variables group
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_globals.h" "${OUT_DIR}/cg_test_c_globals.c" --in "${TEST_DIR}/cg_test_c_globals.sql" 2>"${OUT_DIR}/cg_test_c.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_c.err"
+    failed
+  fi
+
+  echo validating codegen for globals
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_c_globals.sql" "${OUT_DIR}/cg_test_c_globals.h"
+  then
+    echo "ERROR: failed verification"
+    failed
+  fi
+
   echo running codegen test with type getters enabled
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_type_getters.h" "${OUT_DIR}/cg_test_c_with_type_getters.c" --in "${TEST_DIR}/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_type_getters  2>"${OUT_DIR}/cg_test_c.err"
   then
@@ -326,6 +350,8 @@ code_gen_c_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_c.c
   on_diff_exit cg_test_c.h
+  on_diff_exit cg_test_c_globals.c
+  on_diff_exit cg_test_c_globals.h
   on_diff_exit cg_test_c_with_namespace.c
   on_diff_exit cg_test_c_with_namespace.h
   on_diff_exit cg_test_c_with_header.c

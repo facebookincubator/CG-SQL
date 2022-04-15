@@ -391,25 +391,6 @@ extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Non
 // static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 // The statement ending at line XXXX
-#ifndef _var_group_var_group_structs_
-#define _var_group_var_group_structs_ 1
-
-typedef struct gr_cursor_row {
-  cql_bool _has_row_;
-  cql_uint16 _refs_count_;
-  cql_uint16 _refs_offset_;
-  cql_int32 x;
-  cql_string_ref _Nonnull y;
-} gr_cursor_row;
-
-typedef struct gr_blob_cursor_row {
-  cql_bool _has_row_;
-  cql_uint16 _refs_count_;
-  cql_uint16 _refs_offset_;
-  cql_int32 id;
-  cql_string_ref _Nonnull name;
-} gr_blob_cursor_row;
-#endif
 
 // The statement ending at line XXXX
 
@@ -16213,13 +16194,6 @@ void bigstuff(void) {
 #undef _PROC_
 
 // The statement ending at line XXXX
-#ifndef _var_group_var_group_decl_
-#define _var_group_var_group_decl_ 1
-extern gr_cursor_row gr_cursor;
-extern gr_blob_cursor_row gr_blob_cursor;
-extern uint16_t gr_blob_cursor_cols[];
-extern uint8_t gr_blob_cursor_data_types[];
-#endif
 
 // The statement ending at line XXXX
 gr_cursor_row gr_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_cursor_refs_offset };

@@ -1,0 +1,34 @@
+#pragma once
+
+#include "cqlrt.h"
+
+
+// The statement ending at line XXXX
+#ifndef _foo_var_group_decl_
+#define _foo_var_group_decl_ 1
+
+typedef struct c_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} c_row;
+extern c_row c;
+extern cql_nullable_int32 x;
+
+typedef struct serialized_cursor_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_string_ref _Nullable t;
+} serialized_cursor_row;
+extern serialized_cursor_row serialized_cursor;
+extern uint16_t serialized_cursor_cols[];
+extern uint8_t serialized_cursor_data_types[];
+#endif
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x);
+
+// The statement ending at line XXXX

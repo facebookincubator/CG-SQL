@@ -5188,25 +5188,12 @@ begin
 end;
 
 -- TEST: variable group creates declarations only
--- + #ifndef _var_group_var_group_structs_
--- + #define _var_group_var_group_structs_ 1
--- + typedef struct gr_cursor_row {
--- +   cql_bool _has_row_;
--- +   cql_uint16 _refs_count_;
--- +   cql_uint16 _refs_offset_;
--- +   cql_int32 x;
--- +   cql_string_ref _Nonnull y;
--- + } gr_cursor_row;
--- + #endif
---
--- + #ifndef _var_group_var_group_decl_
--- + #define _var_group_var_group_decl_ 1
--- + extern gr_cursor_row gr_cursor;
--- additional stuff for a cursor that needs serialization
--- + extern gr_blob_cursor_row gr_blob_cursor;
--- + extern uint16_t gr_blob_cursor_cols[];
--- + extern uint8_t gr_blob_cursor_data_types[];
--- + #endif
+-- group produces nothing in the main stream!
+-- - struct
+-- - row
+-- - define
+-- - extern
+-- - error:
 declare group var_group
 begin
   declare gr_cursor cursor like select 1 x, "2" y;
