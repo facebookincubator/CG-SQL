@@ -5248,6 +5248,30 @@ end;
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 set b2 := ( select likely(1) );
 
+-- TEST: Declare an OUT proc that will be redeclared and then created to ensure
+-- that struct redeclarations are appropriately guarded against (and, thus, the
+-- result can be compiled successfully).
+declare proc some_redeclared_out_proc() out (x int) using transaction;
+declare proc some_redeclared_out_proc() out (x int) using transaction;
+create proc some_redeclared_out_proc()
+begin
+  declare c cursor for select nullable(1) x;
+  fetch c;
+  out c;
+end;
+
+-- TEST: Declare an OUT UNION proc that will be redeclared and then created to
+-- ensure that struct redeclarations are appropriately guarded against (and,
+-- thus, the result can be compiled successfully).
+declare proc some_redeclared_out_union_proc() out union (x int) using transaction;
+declare proc some_redeclared_out_union_proc() out union (x int) using transaction;
+create proc some_redeclared_out_union_proc()
+begin
+  declare c cursor for select nullable(1) x;
+  fetch c;
+  out union c;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

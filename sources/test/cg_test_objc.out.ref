@@ -4206,4 +4206,80 @@ static inline BOOL CGBUseNestedSelectSharedFragFormRowEqual(CGBUseNestedSelectSh
   return CGCUseNestedSelectSharedFragFormRowEqual(CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet1), row1, CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet2), row2);
 }
 
+@class CGBSomeRedeclaredOutProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSomeRedeclaredOutProc
+@end
+#endif
+
+static inline CGBSomeRedeclaredOutProc *CGBSomeRedeclaredOutProcFromCGCSomeRedeclaredOutProc(CGCSomeRedeclaredOutProcResultSetRef resultSet)
+{
+  return (__bridge CGBSomeRedeclaredOutProc *)resultSet;
+}
+
+static inline CGCSomeRedeclaredOutProcResultSetRef CGCSomeRedeclaredOutProcFromCGBSomeRedeclaredOutProc(CGBSomeRedeclaredOutProc *resultSet)
+{
+  return (__bridge CGCSomeRedeclaredOutProcResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBSomeRedeclaredOutProcGetX(CGBSomeRedeclaredOutProc *resultSet)
+{
+  CGCSomeRedeclaredOutProcResultSetRef cResultSet = CGCSomeRedeclaredOutProcFromCGBSomeRedeclaredOutProc(resultSet);
+  return CGCSomeRedeclaredOutProcGetXIsNull(cResultSet) ? nil : @(CGCSomeRedeclaredOutProcGetXValue(cResultSet));
+}
+
+static inline int32_t CGBSomeRedeclaredOutProcResultCount(CGBSomeRedeclaredOutProc *resultSet)
+{
+  return CGCSomeRedeclaredOutProcResultCount(CGCSomeRedeclaredOutProcFromCGBSomeRedeclaredOutProc(resultSet));
+}
+
+static inline NSUInteger CGBSomeRedeclaredOutProcHash(CGBSomeRedeclaredOutProc *resultSet)
+{
+  return CGCSomeRedeclaredOutProcHash(CGCSomeRedeclaredOutProcFromCGBSomeRedeclaredOutProc(resultSet));
+}
+
+static inline BOOL CGBSomeRedeclaredOutProcEqual(CGBSomeRedeclaredOutProc *resultSet1, CGBSomeRedeclaredOutProc *resultSet2)
+{
+  return CGCSomeRedeclaredOutProcEqual(CGCSomeRedeclaredOutProcFromCGBSomeRedeclaredOutProc(resultSet1), CGCSomeRedeclaredOutProcFromCGBSomeRedeclaredOutProc(resultSet2));
+}
+
+@class CGBSomeRedeclaredOutUnionProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSomeRedeclaredOutUnionProc
+@end
+#endif
+
+static inline CGBSomeRedeclaredOutUnionProc *CGBSomeRedeclaredOutUnionProcFromCGCSomeRedeclaredOutUnionProc(CGCSomeRedeclaredOutUnionProcResultSetRef resultSet)
+{
+  return (__bridge CGBSomeRedeclaredOutUnionProc *)resultSet;
+}
+
+static inline CGCSomeRedeclaredOutUnionProcResultSetRef CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(CGBSomeRedeclaredOutUnionProc *resultSet)
+{
+  return (__bridge CGCSomeRedeclaredOutUnionProcResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBSomeRedeclaredOutUnionProcGetX(CGBSomeRedeclaredOutUnionProc *resultSet, int32_t row)
+{
+  CGCSomeRedeclaredOutUnionProcResultSetRef cResultSet = CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet);
+  return CGCSomeRedeclaredOutUnionProcGetXIsNull(cResultSet, row) ? nil : @(CGCSomeRedeclaredOutUnionProcGetXValue(cResultSet, row));
+}
+
+static inline int32_t CGBSomeRedeclaredOutUnionProcResultCount(CGBSomeRedeclaredOutUnionProc *resultSet)
+{
+  return CGCSomeRedeclaredOutUnionProcResultCount(CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet));
+}
+
+static inline NSUInteger CGBSomeRedeclaredOutUnionProcRowHash(CGBSomeRedeclaredOutUnionProc *resultSet, int32_t row)
+{
+  return CGCSomeRedeclaredOutUnionProcRowHash(CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet), row);
+}
+
+static inline BOOL CGBSomeRedeclaredOutUnionProcRowEqual(CGBSomeRedeclaredOutUnionProc *resultSet1, int32_t row1, CGBSomeRedeclaredOutUnionProc *resultSet2, int32_t row2)
+{
+  return CGCSomeRedeclaredOutUnionProcRowEqual(CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet1), row1, CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END

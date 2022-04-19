@@ -3194,23 +3194,34 @@ static void cg_fields_in_canonical_order(charbuf *output, sem_struct *sptr) {
   }
 }
 
-// This function generates a struct definition into the indicated output.
-// The struct will be named for the current proc name and the given name
-// at least one of which must be non-null.  This is used for the result
-// type of procs with the OUT keyword and for automatic cursors.
-// The struct includes the _has_row_ boolean plus the fields of the
-// sem_struct provided.
-static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR name) {
+// This function generates a struct definition into the indicated output. If
+// `cursor_name` is NULL, as is the case for the result type of procs with the
+// OUT keyword, the struct will be named with the current proc name. If
+// `cursor_name` is not NULL, the struct will be named with both the current
+// proc name and the cursor name. The struct includes the _has_row_ boolean
+// plus the fields of the sem_struct provided.
+static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR cursor_name) {
   Invariant(sptr);
 
   CSTR scope = current_proc_name();
-  Contract(scope || name);  // no scope and no name makes no sense
-  CSTR suffix = (name && scope) ? "_" : "";
+  Contract(scope || cursor_name);  // no scope and no name makes no sense
+  bool_t is_out_proc = !cursor_name;
+  CSTR suffix = (cursor_name && scope) ? "_" : "";
   scope = scope ? scope : "";
-  name = name ? name : "";
+  cursor_name = cursor_name ? cursor_name : "";
 
-  CG_CHARBUF_OPEN_SYM(row_type, scope, suffix, name, "_row");
-  bprintf(output, "\ntypedef struct %s {\n", row_type.ptr);
+  CG_CHARBUF_OPEN_SYM(row_type, scope, suffix, cursor_name, "_row");
+
+  bprintf(output, "\n", NULL);
+
+  if (is_out_proc) {
+    // Since we emit this for each DECLARE PROC as well as CREATE PROC, we need
+    // a guard to avoid duplicate definitions
+    bprintf(output, "#ifndef row_type_decl_%s\n", row_type.ptr);
+    bprintf(output, "#define row_type_decl_%s 1\n", row_type.ptr);
+  }
+
+  bprintf(output, "typedef struct %s {\n", row_type.ptr);
 
   // emit the two standard fields, _has_row_, _refs_count_, and _refs_offset_
   bprintf(output, "  cql_bool _has_row_;\n");
@@ -3220,6 +3231,10 @@ static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR name) {
   cg_fields_in_canonical_order(output, sptr);
 
   bprintf(output, "} %s;\n", row_type.ptr);
+
+  if (is_out_proc) {
+    bprintf(output, "#endif\n", NULL);
+  }
 
   CHARBUF_CLOSE(row_type);
 }

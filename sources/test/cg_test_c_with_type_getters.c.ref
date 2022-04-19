@@ -11,20 +11,26 @@
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
+#ifndef row_type_decl_emit_object_result_set_row
+#define row_type_decl_emit_object_result_set_row 1
 typedef struct emit_object_result_set_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
   cql_uint16 _refs_offset_;
   cql_object_ref _Nonnull o;
 } emit_object_result_set_row;
+#endif
 extern CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
+#ifndef row_type_decl_emit_object_with_setters_row
+#define row_type_decl_emit_object_with_setters_row 1
 typedef struct emit_object_with_setters_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
   cql_uint16 _refs_offset_;
   cql_object_ref _Nonnull o;
 } emit_object_with_setters_row;
+#endif
 extern void emit_object_with_setters(cql_object_ref _Nonnull o, emit_object_with_setters_row *_Nonnull _result_);
 
 // The statement ending at line XXXX
