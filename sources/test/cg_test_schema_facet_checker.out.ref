@@ -20,7 +20,7 @@ BEGIN
   -- Fetch the last known schema CRC. Fail if it's out of date. --
   DECLARE OUT CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> -4784197379006289089 THEN
+  IF schema_crc <> 2186173751741017655 THEN
     THROW;
   END IF;
 END;

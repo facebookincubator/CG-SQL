@@ -20,6 +20,33 @@ create table sqlite_master (
   sql text
 );
 
+create proc verify_object_present_in_even_versions(
+  version_ int not null,
+  name_ text not null)
+begin
+  let present := (
+    select sql from sqlite_master
+    where name = name_
+    if nothing null);
+
+  switch version_
+  when 0,2,4 then
+    if present is null then
+      call printf("ERROR! %s should have been present in v%d\n", name_, version_);
+      throw;
+    end if;
+  else
+    if present is not null then
+      call printf("ERROR! %s should have been unsubscribed in v%d\n", name_, version_);
+      throw;
+    end if;
+  end;
+end;
+
+-- Note that the same validator runs against every version, the validator knows what
+-- to expect at each version and does different things.  This makes it a lot easier
+-- to build each upgrader with built-in validation.  There's one central place (here)
+-- where all validation happens.
 create proc validate_transition()
 begin
   let version := cast(test_cql_get_facet_version("cql_schema_version") as integer);
@@ -61,7 +88,7 @@ begin
     loop fetch lines
     begin
       let i := 0;
-      while i < indent 
+      while i < indent
       begin
         call printf("  ");
         set i := i + 1;
@@ -87,23 +114,14 @@ begin
     call printf("\n");
   end;
 
-  let unsub_sql := (
-    select sql from sqlite_master
-    where name = 'test_for_unsub'
-    if nothing null);
+  call verify_object_present_in_even_versions(version, 'test_for_unsub');
+  call verify_object_present_in_even_versions(version, 'test_for_unsub_index');
+  call verify_object_present_in_even_versions(version, 'test_for_unsub_trigger');
+  call verify_object_present_in_even_versions(version, 'recreate_test_for_unsub');
+  call verify_object_present_in_even_versions(version, 'recreate_test_for_unsub_index');
+  call verify_object_present_in_even_versions(version, 'recreate_test_for_unsub_trigger');
 
-  switch version
-  when 0,2,4 then
-    if unsub_sql is null then 
-      call printf("ERROR! unsub_sql should have been present in v%d\n", version);
-      throw;
-    end if;
-  else
-    if unsub_sql is not null then 
-      call printf("ERROR! unsub_sql should have been unsubscribed in v%d\n", version);
-      throw;
-    end if;
-  end;
+  -- ad hoc validations for various transforms that are supposed to happen at each version
 
   let recreate_sql := (
     select sql from sqlite_master

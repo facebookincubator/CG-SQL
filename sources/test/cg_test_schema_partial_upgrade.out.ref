@@ -11,6 +11,7 @@ DECLARE test_facets facet_data;
 DECLARE FUNCTION cql_facets_new() facet_data;
 DECLARE PROCEDURE cql_facets_delete(facets facet_data);
 DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
+DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
 DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
 
 -- declare sqlite_master -- 
@@ -217,6 +218,7 @@ END;
 CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES(_facet, _version);
+  LET added := cql_facet_upsert(test_facets, _facet, _version);
 END;
 
 -- helper proc for getting the schema version CRC for a version index
@@ -262,6 +264,7 @@ BEGIN
     FROM table2;
 END;
 
+
 -- drop all the indices that are deleted or changing
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_indices()
@@ -270,6 +273,7 @@ BEGIN
     DROP INDEX IF EXISTS not_shared_present_index;
   END IF;
   DROP INDEX IF EXISTS index_going_away;
+  CALL test_cql_set_facet_version('index_going_away_index_crc', -1);
 END;
 
 -- create all the indices we need

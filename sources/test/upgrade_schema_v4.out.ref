@@ -8,6 +8,27 @@ CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
   name TEXT)
 
+----- recreate_test_for_unsub -----
+
+type: table
+tbl_name: recreate_test_for_unsub
+CREATE TABLE recreate_test_for_unsub(
+  unsub_id INTEGER,
+  x TEXT)
+
+----- recreate_test_for_unsub_index -----
+
+type: index
+tbl_name: recreate_test_for_unsub
+CREATE INDEX recreate_test_for_unsub_index ON recreate_test_for_unsub (
+  x)
+
+----- recreate_test_for_unsub_trigger -----
+
+type: trigger
+tbl_name: recreate_test_for_unsub
+CREATE TRIGGER recreate_test_for_unsub_trigger  BEFORE DELETE ON recreate_test_for_unsub  WHEN old.unsub_id = 3 BEGIN DELETE FROM recreate_test_for_unsub WHERE unsub_id = 3; END
+
 ----- sqlite_autoindex_test_cql_schema_facets_1 -----
 
 type: index
@@ -55,7 +76,21 @@ CREATE TABLE test_create_table_C(
 type: table
 tbl_name: test_for_unsub
 CREATE TABLE test_for_unsub(
-  unsub_id INTEGER)
+  unsub_id INTEGER,
+  x TEXT)
+
+----- test_for_unsub_index -----
+
+type: index
+tbl_name: test_for_unsub
+CREATE INDEX test_for_unsub_index ON test_for_unsub (
+  x)
+
+----- test_for_unsub_trigger -----
+
+type: trigger
+tbl_name: test_for_unsub
+CREATE TRIGGER test_for_unsub_trigger  BEFORE DELETE ON test_for_unsub  WHEN old.unsub_id = 3 BEGIN DELETE FROM test_for_unsub WHERE unsub_id = 3; END
 
 ----- test_recreate_table_B -----
 

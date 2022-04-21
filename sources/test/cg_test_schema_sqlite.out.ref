@@ -157,6 +157,10 @@ CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 
 CREATE INDEX index_going_away ON table2 (name3);
 
+CREATE INDEX unsub_recreated_index ON unsub_recreated (anything);
+
+CREATE INDEX unsub_voyage_index ON unsub_voyage (v1);
+
 CREATE TRIGGER shared_trigger
   BEFORE INSERT ON foo
 BEGIN
@@ -188,6 +192,18 @@ CREATE TRIGGER trig_with_filter
   WHEN filter_(new.id) = 3
 BEGIN
 DELETE FROM foo WHERE id = 77;
+END;
+
+CREATE TRIGGER unsub_recreated_trigger
+  BEFORE INSERT ON unsub_recreated
+BEGIN
+SELECT 1;
+END;
+
+CREATE TRIGGER unsub_voyage_trigger
+  BEFORE INSERT ON unsub_voyage
+BEGIN
+SELECT 1;
 END;
 
 CREATE TEMP TABLE this_table_appears_in_temp_section(

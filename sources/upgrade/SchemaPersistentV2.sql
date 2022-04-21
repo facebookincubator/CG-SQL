@@ -57,11 +57,42 @@ CREATE TABLE test_this_table_will_become_create(
 
 -- we will be unsubscribing and resubscribing this table in later versions
 CREATE TABLE test_for_unsub(
-  unsub_id integer
+  unsub_id integer,
+  x text
 );
 
+-- making an index for the table, this will appear and disappear
+CREATE INDEX test_for_unsub_index ON test_for_unsub(x);
+
+-- making a trigger for the table, this will appear and disappear
+CREATE TRIGGER test_for_unsub_trigger
+  BEFORE DELETE ON test_for_unsub
+  WHEN old.unsub_id = 3
+BEGIN
+  DELETE FROM test_for_unsub WHERE unsub_id = 3;
+END;
+
+-- we will be unsubscribing and resubscribing this table in later versions
+CREATE TABLE recreate_test_for_unsub(
+  unsub_id integer,
+  x text
+) @recreate(a_recreate_group);
+
+-- making an index for the table, this will appear and disappear
+CREATE INDEX recreate_test_for_unsub_index ON recreate_test_for_unsub(x);
+
+-- making a trigger for the table, this will appear and disappear
+CREATE TRIGGER recreate_test_for_unsub_trigger
+  BEFORE DELETE ON recreate_test_for_unsub
+  WHEN old.unsub_id = 3
+BEGIN
+  DELETE FROM recreate_test_for_unsub WHERE unsub_id = 3;
+END;
+
 @unsub(1, test_for_unsub);
+@unsub(1, recreate_test_for_unsub);
 @resub(2, test_for_unsub);
+@resub(2, recreate_test_for_unsub);
 
 -- extra items that will disappear when we switch to exclusive mode
 CREATE VIEW extra_view AS SELECT * FROM g1;

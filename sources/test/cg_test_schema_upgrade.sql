@@ -264,6 +264,14 @@ create table unsub_recreated(
  anything text
 ) @recreate;
 
+create index unsub_recreated_index on unsub_recreated(anything);
+
+create trigger unsub_recreated_trigger
+  before insert on unsub_recreated
+begin
+  select 1;
+end;
+
 @unsub(1, unsub_recreated);
 
 @begin_schema_region other;
@@ -274,6 +282,14 @@ create table unsub_voyage(
  v5 text @create(5),
  v7 text @create(7)
 );
+
+create index unsub_voyage_index on unsub_voyage(v1);
+
+create trigger unsub_voyage_trigger
+  before insert on unsub_voyage
+begin
+  select 1;
+end;
 
 @unsub(1, unsub_voyage);
 @resub(5, unsub_voyage);

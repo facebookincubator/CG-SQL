@@ -217,6 +217,12 @@ CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 CREATE INDEX index_going_away ON table2 (name3) @DELETE(3);
 @end_schema_region;
 
+CREATE INDEX unsub_recreated_index ON unsub_recreated (anything);
+
+@begin_schema_region other;
+CREATE INDEX unsub_voyage_index ON unsub_voyage (v1);
+@end_schema_region;
+
 @begin_schema_region shared;
 CREATE TRIGGER shared_trigger
   BEFORE INSERT ON foo
@@ -257,6 +263,20 @@ CREATE TRIGGER trig_with_filter
 BEGIN
 DELETE FROM foo WHERE id = 77;
 END;
+
+CREATE TRIGGER unsub_recreated_trigger
+  BEFORE INSERT ON unsub_recreated
+BEGIN
+SELECT 1;
+END;
+
+@begin_schema_region other;
+CREATE TRIGGER unsub_voyage_trigger
+  BEFORE INSERT ON unsub_voyage
+BEGIN
+SELECT 1;
+END;
+@end_schema_region;
 
 @begin_schema_region shared;
 @SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigrationScript);

@@ -284,6 +284,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "CREATE PROCEDURE %s_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  INSERT OR REPLACE INTO %s_cql_schema_facets (facet, version) VALUES(_facet, _version);\n", global_proc_name);
+  bprintf(decls, "  LET added := cql_facet_upsert(%s_facets, _facet, _version);\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for getting the schema version CRC for a version index\n");
@@ -334,6 +335,7 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
   bprintf(decls, "DECLARE FUNCTION cql_facets_new() facet_data;\n");
   bprintf(decls, "DECLARE PROCEDURE cql_facets_delete(facets facet_data);\n");
   bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
   bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;\n\n");
 }
 
@@ -753,16 +755,27 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
     EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
     EXTRACT_STRING(name, trigger_name_ast);
+    EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
+    EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
+    EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
+    EXTRACT_STRING(table_name, trigger_target_action->left);
 
     if (flags & TRIGGER_IS_TEMP) {
       continue;
     }
 
+
+    // We need the table ast for various checks so get it eagerly
+    ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+
+    // This covers deleted or unsubscribed
+    bool_t table_deleted = is_deleted(table_ast);
+
     bprintf(&drop, "  DROP TRIGGER IF EXISTS %s;\n", name);
     (*drops)++;
 
     // if not deleted, emit the create
-    if (ast->sem->delete_version < 0) {
+    if (!table_deleted && ast->sem->delete_version < 0) {
       gen_set_output_buffer(&create);
       gen_statement_with_callbacks(ast, &callbacks);
       bprintf(&create, ";\n");
@@ -950,9 +963,16 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
       bprintf(&names, "\n      '%s'", index_name);
     }
 
-    if (ast->sem->delete_version > 0) {
+    // We need the table ast for various checks so get it eagerly
+    ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+
+    // This covers deleted or unsubscribed
+    bool_t table_deleted = is_deleted(table_ast);
+
+    if (table_deleted || ast->sem->delete_version > 0) {
       // delete only, we're done here
       bprintf(&drop, "  DROP INDEX IF EXISTS %s;\n", index_name);
+      bprintf(&drop, "  CALL %s_cql_set_facet_version('%s_index_crc', -1);\n", global_proc_name, index_name);
       (*drops)++;
       continue;
     }
@@ -960,7 +980,6 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     // If this index is attached to a table marked @recreate then we recreate the index with the table
     // as a unit so there is nothing to do here.  The index will be in the same @recreate group as
     // the table if it has one.
-    ast_node *table_ast = find_table_or_view_even_deleted(table_name);
 
     Invariant(table_ast);
     Invariant(table_ast->sem);
@@ -1031,7 +1050,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
   }
 
   if (*drops) {
-    bprintf(output, "-- drop all the indices that are deleted or changing\n");
+    bprintf(output, "\n-- drop all the indices that are deleted or changing\n");
     bprintf(output, "@attribute(cql:private)\n");
     bprintf(output, "CREATE PROCEDURE %s_cql_drop_all_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
@@ -1079,7 +1098,7 @@ static void cg_schema_manage_recreate_tables(
     EXTRACT_NOTNULL(recreate_attr, note->annotation_ast);
     EXTRACT(delete_attr, recreate_attr->right);
 
-    // this coveres either deleted or unsubscribed
+    // this covers either deleted or unsubscribed
 
     ast_node *ast = note->target_ast;
     ast_node *ast_output = ast;
@@ -1126,17 +1145,20 @@ static void cg_schema_manage_recreate_tables(
     // note that this will also drop any indices that are on the table
     bprintf(&update_tables, "    DROP TABLE IF EXISTS %s;\n", table_name);
 
-    list_item *index_list = ast->sem->index_list;
+    // if the table is deleted or unsubscribed don't restore its indices
+    if (!deleted) {
+      list_item *index_list = ast->sem->index_list;
 
-    // now create the various indices but not the deleted ones
-    for (list_item *item = index_list; item; item = item->next) {
-      ast_node *index = item->ast;
-      // deleted index, don't recreate it
-      if (index->sem->delete_version > 0) {
-        continue;
+      // now create the various indices but not the deleted ones
+      for (list_item *item = index_list; item; item = item->next) {
+        ast_node *index = item->ast;
+        // deleted index, don't recreate it
+        if (index->sem->delete_version > 0) {
+          continue;
+        }
+        gen_statement_with_callbacks(index, &callbacks);
+        bprintf(&make_table, ";\n");
       }
-      gen_statement_with_callbacks(index, &callbacks);
-      bprintf(&make_table, ";\n");
     }
 
     table_crc ^= crc_charbuf(&make_table);
@@ -1583,7 +1605,22 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
         // unsub demands a drop
         bprintf(&upgrade, "      -- unsubscription of %s\n\n", target_name);
-        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n\n", target_name);
+        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n", target_name);
+
+        list_item *index_list = note->target_ast->sem->index_list;
+
+        // the indices are logically deleted, blow away the facet
+        for (list_item *item = index_list; item; item = item->next) {
+          ast_node *index = item->ast;
+
+          EXTRACT_NOTNULL(create_index_on_list, index->left);
+          EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+          EXTRACT_STRING(index_name, index_name_ast);
+
+          bprintf(&upgrade, "      CALL %s_cql_set_facet_version('%s_index_crc', -1);\n", global_proc_name, index_name);
+        }
+
+        bprintf(&upgrade, "\n");
 
         // current status: unsubcribed
         note->target_ast->sem->sem_type |= SCHEMA_FLAG_UNSUB;

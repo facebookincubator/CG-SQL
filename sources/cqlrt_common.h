@@ -328,6 +328,7 @@ CQL_EXPORT cql_hashtab_entry *_Nullable cql_hashtab_find(cql_hashtab *_Nonnull h
 CQL_EXPORT cql_int64 cql_facets_new(void);
 CQL_EXPORT void cql_facets_delete(cql_int64 facets);
 CQL_EXPORT cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
+CQL_EXPORT cql_bool cql_facet_upsert(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
 CQL_EXPORT cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull key);
 
 CQL_EXTERN_C_END

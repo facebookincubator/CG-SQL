@@ -80,9 +80,9 @@ for i in {0..4}
 do
   echo "testing upgrade to v$i from scratch"
   if ! "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${OUT_DIR}/upgrade_schema_v$i.out"; then
-    echo "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${OUT_DIR}/upgrade_schema_v$i.out"
+    echo "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" ">" "${OUT_DIR}/upgrade_schema_v$i.out"
     echo "failed generating schema from scratch"
-    cat "${OUT_DIR}/upgrade_schema_v$i.out"
+    echo "see log file above for details"
     exit 1
   fi
 

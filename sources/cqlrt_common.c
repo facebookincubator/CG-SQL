@@ -2638,6 +2638,19 @@ cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull name) {
   return payload->val;
 }
 
+// Search for the facet value in the hash table, replace it if it exists
+// add it if it doesn't
+cql_bool cql_facet_upsert(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc) {
+  cql_hashtab_entry *payload = cql_hashtab_find((cql_hashtab *)facets, name);
+  if (!payload) {
+      // this will return true because we just checked and it's not there
+      return cql_hashtab_add((cql_hashtab *)facets, name, crc);
+  }
+  // did not add path
+  payload->val = crc;
+  return false;
+}
+
 #define cql_append_value(b, var) cql_bytebuf_append(&b, &var, sizeof(var))
 
 #define cql_append_nullable_value(b, var) \
