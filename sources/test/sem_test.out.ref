@@ -86368,3 +86368,31 @@ DECLARE FUNC external_cursor_func (x CURSOR) INTEGER;
     |     | {type_cursor}: cursor
     | {type_int}: integer
 
+The statement ending at line XXXX
+
+LET result := external_cursor_func(shape_storage);
+
+  {let_stmt}: result: integer variable
+  | {name result}: result: integer variable
+  | {call}: integer
+    | {name external_cursor_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+SET result := external_cursor_func(1);
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
+
+  {assign}: err
+  | {name result}: result: integer variable
+  | {call}: err
+    | {name external_cursor_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: err
+
