@@ -2006,6 +2006,7 @@ static void get_sem_core(sem_t sem_type, charbuf *out) {
     case SEM_TYPE_ERROR: bprintf(out, "err"); break;
     case SEM_TYPE_OK: bprintf(out, "ok"); break;
     case SEM_TYPE_REGION: bprintf(out, "region"); break;
+    case SEM_TYPE_CURSOR: bprintf(out, "cursor"); break;
   }
 }
 
@@ -2925,6 +2926,8 @@ static void sem_data_type_column(ast_node *ast) {
     ast->sem = new_sem(SEM_TYPE_LONG_INTEGER);
   } else if (is_ast_type_real(ast)) {
     ast->sem = new_sem(SEM_TYPE_REAL);
+  } else if (is_ast_type_cursor(ast)) {
+    ast->sem = new_sem(SEM_TYPE_CURSOR);
   } else {
     Contract(is_ast_type_bool(ast));
     ast->sem = new_sem(SEM_TYPE_BOOL);

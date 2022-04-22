@@ -1724,6 +1724,8 @@ END;
 
 @RESUB(2, foo);
 
+DECLARE FUNC foo (x CURSOR) INTEGER;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

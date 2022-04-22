@@ -268,7 +268,7 @@ static void cql_reset_globals(void);
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_proc_no_check_stmt declare_out_call_stmt
-%type <aval> arg_expr arg_list inout param params
+%type <aval> arg_expr arg_list inout param params func_params func_param
 
 /* statements */
 %type <aval> stmt
@@ -1681,13 +1681,13 @@ const_value:  name '=' expr { $const_value = new_ast_const_value($name, $expr); 
   ;
 
 declare_func_stmt:
-  DECLARE function name '(' params ')' data_type_with_options  {
-      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
+  DECLARE function name '(' func_params ')' data_type_with_options  {
+      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, $data_type_with_options)); }
   | DECLARE SELECT function name '(' params ')' data_type_with_options  {
       $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $data_type_with_options)); }
-  | DECLARE function name '(' params ')' CREATE data_type_with_options  {
+  | DECLARE function name '(' func_params ')' CREATE data_type_with_options  {
       ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
-      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($params, create_data_type)); }
+      $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, create_data_type)); }
   | DECLARE SELECT function name '(' params ')' '(' typed_names ')'  {
       $declare_func_stmt = new_ast_declare_select_func_stmt($name, new_ast_func_params_return($params, $typed_names)); }
   ;
@@ -1743,6 +1743,17 @@ typed_name:
 typed_names[result]:
   typed_name  { $result = new_ast_typed_names($typed_name, NULL); }
   | typed_name ',' typed_names[tn]  { $result = new_ast_typed_names($typed_name, $tn);}
+  ;
+
+func_param:
+  param { $func_param = $param; }
+  | name CURSOR { $func_param = new_ast_param(NULL, new_ast_param_detail($name, new_ast_type_cursor())); }
+  ;
+
+func_params[result]:
+  /* nil */  { $result = NULL; }
+  | func_param  { $result = new_ast_params($func_param, NULL); }
+  |  func_param ',' func_params[par]  { $result = new_ast_params($func_param, $par); }
   ;
 
 param:

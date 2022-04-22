@@ -21886,3 +21886,13 @@ DECLARE PROC broken_thing(LIKE does_not_exist ARGUMENTS);
 -- + error: % name not found (proc had errors, cannot be used) 'broken_thing'
 -- +1 error:
 DECLARE PROC uses_broken_thing() (LIKE broken_thing ARGUMENTS);
+
+-- TEST: declare an external function that accepts a cursor
+-- + {declare_func_stmt}: integer
+-- + {name external_cursor_func}: integer
+-- + {params}: ok
+-- + {param}: x: cursor variable in
+-- + {param_detail}: x: cursor variable in
+-- + {name x}: x: cursor variable in
+-- + {type_cursor}: cursor
+DECLARE FUNCTION external_cursor_func(x CURSOR) INTEGER;

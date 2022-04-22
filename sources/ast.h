@@ -734,6 +734,7 @@ AST(from_shape);
 AST(insert_dummy_spec);
 AST1(column_spec);
 AST0(star)
+AST0(type_cursor)
 AST(with_update_stmt)
 AST(update_stmt)
 AST(update_cursor_stmt)
