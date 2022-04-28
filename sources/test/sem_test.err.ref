@@ -1452,4 +1452,5 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM LOCALS, there 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'locals'
 test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'does_not_exist'
 test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had errors, cannot be used) 'broken_thing'
+test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
 semantic errors present; no code gen.

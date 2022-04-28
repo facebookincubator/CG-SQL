@@ -233,6 +233,8 @@ static void gen_data_type(ast_node *ast) {
     gen_printf("REAL");
   } else if (is_ast_type_bool(ast)) {
     gen_printf("BOOL");
+  } else if (is_ast_type_cursor(ast)) {
+    gen_printf("CURSOR");
   } else {
     Contract(is_ast_str(ast));
     EXTRACT_STRING(name, ast);

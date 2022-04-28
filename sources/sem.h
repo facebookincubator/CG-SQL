@@ -133,6 +133,7 @@ typedef struct schema_annotation {
 #define SEM_TYPE_OK 11          // sentinel for ok but no type info
 #define SEM_TYPE_PENDING 12     // sentinel for type calculation in flight
 #define SEM_TYPE_REGION 13      // the ast is a schema region
+#define SEM_TYPE_CURSOR_FORMAL 14 // this is used for the cursor parameter type uniquely
 #define SEM_TYPE_CORE 0xff      // bit mask for the core types
 
 #define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) // the last unitary type
@@ -222,6 +223,7 @@ cql_noexport bool_t is_not_nullable(sem_t sem_type);
 cql_noexport bool_t is_variable(sem_t sem_type);
 cql_noexport bool_t is_in_parameter(sem_t sem_type);
 cql_noexport bool_t is_out_parameter(sem_t sem_type);
+cql_noexport bool_t is_cursor_formal(sem_t sem_type);
 cql_noexport bool_t was_set_variable(sem_t sem_type);
 cql_noexport bool_t is_inout_parameter(sem_t sem_type);
 cql_noexport bool_t is_dml_proc(sem_t sem_type);

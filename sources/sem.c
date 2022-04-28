@@ -1133,6 +1133,10 @@ cql_noexport bool_t is_out_parameter(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_OUT_PARAMETER);
 }
 
+cql_noexport bool_t is_cursor_formal(sem_t sem_type) {
+  return core_type_of(sem_type) == SEM_TYPE_CURSOR_FORMAL;
+}
+
 cql_noexport bool_t was_set_variable(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_WAS_SET);
 }
@@ -2006,6 +2010,7 @@ static void get_sem_core(sem_t sem_type, charbuf *out) {
     case SEM_TYPE_ERROR: bprintf(out, "err"); break;
     case SEM_TYPE_OK: bprintf(out, "ok"); break;
     case SEM_TYPE_REGION: bprintf(out, "region"); break;
+    case SEM_TYPE_CURSOR_FORMAL: bprintf(out, "cursor"); break;
   }
 }
 
@@ -2538,6 +2543,11 @@ static bool_t sem_verify_compat(ast_node *ast, sem_t sem_type_needed, sem_t sem_
   sem_t core_type_needed = core_type_of(sem_type_needed);
   sem_t core_type_found = core_type_of(sem_type_found);
 
+  // Note that SEM_TYPE_CURSOR_FORMAL never gets here... by the time we've
+  // found a parameter slot that needs a cursor we already used sem_cursor
+  // and it's all been verified.  So even though the param list can have a non-unitary
+  // type we don't ever test non-unitary here.
+
   Invariant(is_unitary(core_type_needed));
   Invariant(is_unitary(core_type_found));
 
@@ -2925,6 +2935,8 @@ static void sem_data_type_column(ast_node *ast) {
     ast->sem = new_sem(SEM_TYPE_LONG_INTEGER);
   } else if (is_ast_type_real(ast)) {
     ast->sem = new_sem(SEM_TYPE_REAL);
+  } else if (is_ast_type_cursor(ast)) {
+    ast->sem = new_sem(SEM_TYPE_CURSOR_FORMAL);
   } else {
     Contract(is_ast_type_bool(ast));
     ast->sem = new_sem(SEM_TYPE_BOOL);
@@ -19245,6 +19257,13 @@ cql_noexport void sem_any_shape(ast_node *ast) {
 //  cases, the name of a cursor refers to a boolean that indicates whether the
 //  cursor presently has a value.
 cql_noexport void sem_cursor(ast_node *ast) {
+  if (!is_id(ast)) {
+    CSTR expr_text = dup_expr_text(ast);
+    report_error(ast, "CQL0205: not a cursor", expr_text);
+    record_error(ast);
+    return;
+  }
+
   EXTRACT_STRING(name, ast);
 
   sem_resolve_id(ast, name, NULL);
@@ -19814,8 +19833,11 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   sem_t sem_type_param = param->sem->sem_type;
 
   // As a first step, we check the argument itself.
-
-  if (is_out_parameter(sem_type_param)) {
+  if (is_cursor_formal(sem_type_param)) {
+    // a cursor arg demands a cursor expression, any such cursor will do
+    sem_cursor(arg);
+    return !is_error(arg);
+  } else if (is_out_parameter(sem_type_param)) {
     sem_arg_for_out_param(arg, param);
     if (is_error(arg)) {
       return false;

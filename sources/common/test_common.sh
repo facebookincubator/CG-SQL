@@ -1743,7 +1743,7 @@ line_number_test() {
 }
 
 amalgam_test() {
-  echo '--------------------------------- STAGE 17 -- TEST AMALGAM'
+  echo '--------------------------------- STAGE 18 -- TEST AMALGAM'
 
   if ! ("./${OUT_DIR}/amalgam_test" "${TEST_DIR}/cql_amalgam_test_success.sql" "${TEST_DIR}/cql_amalgam_test_semantic_error.sql" "${TEST_DIR}/cql_amalgam_test_syntax_error.sql" >"${OUT_DIR}/cql_amalgam_test.out" 2>"${OUT_DIR}/cql_amalgam_test.err")
   then
@@ -1767,7 +1767,7 @@ unit_tests() {
 }
 
 stats_test() {
-  echo '--------------------------------- STAGE 18 -- STATS OUTPUT TEST'
+  echo '--------------------------------- STAGE 17 -- STATS OUTPUT TEST'
   echo running status test
   if ! ${CQL} --cg "${OUT_DIR}/stats.csv" --in "${TEST_DIR}/stats_test.sql" --rt stats 2>"${OUT_DIR}/stats_test.err"
   then

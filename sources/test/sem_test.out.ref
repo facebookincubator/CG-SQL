@@ -86354,3 +86354,45 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
           | {name broken_thing}: err
           | {name broken_thing}: err
 
+The statement ending at line XXXX
+
+DECLARE FUNC external_cursor_func (x CURSOR) INTEGER;
+
+  {declare_func_stmt}: integer
+  | {name external_cursor_func}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: cursor variable in
+    |   | {param_detail}: x: cursor variable in
+    |     | {name x}: x: cursor variable in
+    |     | {type_cursor}: cursor
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET result := external_cursor_func(shape_storage);
+
+  {let_stmt}: result: integer variable
+  | {name result}: result: integer variable
+  | {call}: integer
+    | {name external_cursor_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+SET result := external_cursor_func(1);
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
+
+  {assign}: err
+  | {name result}: result: integer variable
+  | {call}: err
+    | {name external_cursor_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: err
+

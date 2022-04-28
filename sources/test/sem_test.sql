@@ -8,7 +8,7 @@
 -- TEST: we'll be using printf in lots of places in the tests as an external proc
 -- + {declare_proc_no_check_stmt}: ok
 -- - error:
-DECLARE PROCEDURE printf NO CHECK;
+declare procedure printf no check;
 
 -- TEST: try to declare printf as a normal proc too
 -- + {declare_proc_stmt}: err
@@ -21877,7 +21877,7 @@ create table child_subs_table (
 -- + {like}: err
 -- + error: % name not found 'does_not_exist'
 -- +1 error:
-DECLARE PROC broken_thing(LIKE does_not_exist ARGUMENTS);
+declare proc broken_thing(LIKE does_not_exist arguments);
 
 -- TEST: attempting to use a proc with errors for the arg list has to fail
 -- + {declare_proc_stmt}: err
@@ -21885,4 +21885,28 @@ DECLARE PROC broken_thing(LIKE does_not_exist ARGUMENTS);
 -- + {like}: err
 -- + error: % name not found (proc had errors, cannot be used) 'broken_thing'
 -- +1 error:
-DECLARE PROC uses_broken_thing() (LIKE broken_thing ARGUMENTS);
+declare proc uses_broken_thing() (LIKE broken_thing arguments);
+
+-- TEST: declare an external function that accepts a cursor
+-- + {declare_func_stmt}: integer
+-- + {name external_cursor_func}: integer
+-- + {params}: ok
+-- + {param}: x: cursor variable in
+-- + {param_detail}: x: cursor variable in
+-- + {name x}: x: cursor variable in
+-- + {type_cursor}: cursor
+declare function external_cursor_func(x cursor) integer;
+
+-- TEST: try to call a function with a cursor argument
+-- + {let_stmt}: result: integer variable
+-- + {name result}: result: integer variable
+-- + {name external_cursor_func}
+-- + {arg_list}: ok
+-- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+let result := external_cursor_func(shape_storage);
+
+-- TEST: bogus arg to cursor func
+-- +  {assign}: err
+-- +  | {call}: err
+-- + error: % not a cursor '1'
+set result := external_cursor_func(1);
