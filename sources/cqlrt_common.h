@@ -77,10 +77,10 @@ typedef struct cql_nullable_bool {
 } cql_nullable_bool;
 
 // These macros are only used when generate_type_getters is enabled.
-#define CQL_DATA_TYPE_INT32     1
-#define CQL_DATA_TYPE_INT64     2
-#define CQL_DATA_TYPE_DOUBLE    3
-#define CQL_DATA_TYPE_BOOL      4
+#define CQL_DATA_TYPE_INT32     1       // note these are array offsets, do not reorder them!
+#define CQL_DATA_TYPE_INT64     2       // note these are array offsets, do not reorder them!
+#define CQL_DATA_TYPE_DOUBLE    3       // note these are array offsets, do not reorder them!
+#define CQL_DATA_TYPE_BOOL      4       // note these are array offsets, do not reorder them!
 #define CQL_DATA_TYPE_STRING    5
 #define CQL_DATA_TYPE_BLOB      6
 #define CQL_DATA_TYPE_OBJECT    7
@@ -88,6 +88,15 @@ typedef struct cql_nullable_bool {
 #define CQL_DATA_TYPE_ENCODED   0x40    // set if and only if encode
 #define CQL_DATA_TYPE_NOT_NULL  0x80    // set if and only if null is not possible
 #define CQL_CORE_DATA_TYPE_OF(type) ((type) & CQL_DATA_TYPE_CORE)
+
+// This is the general shape for cursor metadata, it can describe the contents of any cursor
+// this is useful for generic cursor functions like "hash"
+typedef struct cql_dynamic_cursor {
+  void *_Nonnull cursor_data;
+  cql_bool *_Nonnull cursor_has_row;
+  cql_uint16 *_Nonnull cursor_col_offsets;
+  uint8_t *_Nonnull cursor_data_types;
+} cql_dynamic_cursor;
 
 CQL_EXPORT int cql_outstanding_refs;
 
@@ -237,6 +246,9 @@ CQL_EXPORT void cql_release_offsets(void *_Nonnull pv, cql_uint16 refs_count, cq
 // hash a row in a row set using the metadata
 CQL_EXPORT cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row);
 
+// hash a cursor using the metadata (CQL compatible types)
+cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor);
+
 // compare two rows for equality
 CQL_EXPORT cql_bool cql_rows_equal(cql_result_set_ref _Nonnull rs1, cql_int32 row1, cql_result_set_ref _Nonnull rs2, cql_int32 row2);
 
@@ -267,13 +279,6 @@ CQL_EXPORT void cql_result_set_set_double_col_not_null(cql_result_set_ref _Nonnu
 CQL_EXPORT void cql_result_set_set_string_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_string_ref _Nullable new_value);
 CQL_EXPORT void cql_result_set_set_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_object_ref _Nullable new_value);
 CQL_EXPORT void cql_result_set_set_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_blob_ref _Nullable new_value);
-
-typedef struct cql_dynamic_cursor {
-  void *_Nonnull cursor_data;
-  cql_bool *_Nonnull cursor_has_row;
-  cql_uint16 *_Nonnull cursor_col_offsets;
-  uint8_t *_Nonnull cursor_data_types;
-} cql_dynamic_cursor;
 
 // blob serialization and deserialization
 CQL_EXPORT cql_code cql_deserialize_from_blob(cql_blob_ref _Nullable b, cql_dynamic_cursor *_Nonnull dyn_cursor);

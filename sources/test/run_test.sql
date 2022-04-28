@@ -4588,7 +4588,7 @@ BEGIN_TEST(serialization_tricky_values)
   call round_trip_long(32769);
   call round_trip_long(-129);
   call round_trip_long(-32769);
-  call round_trip_long(0x7fffffffL); 
+  call round_trip_long(0x7fffffffL);
   call round_trip_long(-214783648L);
   call round_trip_long(0x7fffffffffffffffL);  -- max int64
   call round_trip_long(0x8000000000000000L);  -- min int64
@@ -4659,7 +4659,7 @@ BEGIN_TEST(clobber_blobs)
          -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
          fetch test_cursor_both from my_blob;
          set good := good + 1;
-       end try; 
+       end try;
        begin catch
          set bad := bad + 1;
        end catch;
@@ -4680,6 +4680,193 @@ end;
 BEGIN_TEST(arg_mutation)
   call change_arg(null);
 END_TEST(arg_mutation)
+
+declare proc lotsa_types() (
+  i integer not null,
+  l long not null,
+  b bool not null,
+  r real not null,
+  i0 integer,
+  l0 long,
+  b0 bool,
+  r0 real,
+  t text not null,
+  t0 text
+);
+
+declare function cql_cursor_hash(C cursor) long not null;
+
+BEGIN_TEST(cursor_hash)
+
+  declare C cursor like lotsa_types;
+  declare D cursor like C;
+
+  -- empty cursor hashes to nothing
+  EXPECT(0 == cql_cursor_hash(C));
+
+  let i := 0;
+  while i < 5
+  begin
+    -- no explicit values, all dummy
+    fetch C() from values () @DUMMY_SEED(i);
+    fetch D() from values () @DUMMY_SEED(i);
+
+    let hash0 := cql_cursor_hash(C);
+    let hash1 := cql_cursor_hash(C);
+    let hash2 := cql_cursor_hash(D);
+
+    EXPECT(hash0 == hash1);  -- control for sanity
+    EXPECT(hash1 == hash2);  -- equivalent data -> same hash (not strings are dynamic)
+
+    fetch C() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    set hash0 := cql_cursor_hash(C);
+    set hash1 := cql_cursor_hash(C);
+    set hash2 := cql_cursor_hash(D);
+
+    EXPECT(hash0 == hash1);  -- control for sanity
+    EXPECT(hash1 == hash2);  -- equivalent data -> same hash (not strings are dynamic)
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       not C.b as b;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.i + 1 as i;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.l + 1 as l;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.r + 1 as r;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       "different" as t;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       not C.b as b0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.i + 1 as i0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.l + 1 as l0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.r + 1 as r0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       "different" as t0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as b0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as i0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as l0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as r0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as t0;
+
+    set hash2 := cql_cursor_hash(D);
+    EXPECT(hash1 != hash2);  -- now different
+
+    set i := i + 1;
+  end;
+
+END_TEST(cursor_hash)
 
 END_SUITE()
 

@@ -1442,6 +1442,9 @@ cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row
     size = refs_offset;
   }
 
+  // Note that we hash even pad bytes because we always fully clear rows
+  // before set set them to anything so any pad bytes are known to be 0
+  // and hence will not randomize the hash (but they will change it).
   cql_hash_code hash = 0;
   unsigned char *bytes = (unsigned char *)data;
   hash = 5381;   // djb2
@@ -1521,20 +1524,21 @@ cql_bool cql_rows_equal(
 
 // sizes for the various data types (not null)
 static cql_int32 normal_datasizes[] = {
-  sizeof(cql_int32),
-  sizeof(cql_int64),
-  sizeof(double),
-  sizeof(cql_bool),
+  0,                             // 0: unused
+  sizeof(cql_int32),             // 1: CQL_DATA_TYPE_INT32
+  sizeof(cql_int64),             // 2: CQL_DATA_TYPE_INT64
+  sizeof(double),                // 3: CQL_DATA_TYPE_DOUBLE
+  sizeof(cql_bool),              // 4: CQL_DATA_TYPE_BOOL
 };
 
 // sizes for the various data types (nullable)
 static cql_int32 nullable_datasizes[] = {
-  sizeof(cql_nullable_int32),
-  sizeof(cql_nullable_int64),
-  sizeof(cql_nullable_double),
-  sizeof(cql_nullable_bool),
+  0,                             // 0: unused
+  sizeof(cql_nullable_int32),    // 1: CQL_DATA_TYPE_INT32 (nullable)
+  sizeof(cql_nullable_int64),    // 2: CQL_DATA_TYPE_INT64 (nullable)
+  sizeof(cql_nullable_double),   // 3: CQL_DATA_TYPE_DOUBLE (nullable)
+  sizeof(cql_nullable_bool),     // 4: CQL_DATA_TYPE_BOOL (nullable)
 };
-
 
 // This helper is a little trickier than the strict equality.  "Sameness"
 // is defined by a set of columns that correspond to the rows identity.
@@ -1599,7 +1603,7 @@ cql_bool cql_rows_same(
 }
 
 // This helper allows you to copy out some of the rows of a result set to make a new result set.
-// The helper uses only metadata to do its job so as with the others codegen
+// The helper uses only metadata to do its job so, as with the others, codegen
 // for this is very economical.  The result set includes in it already all the
 // metadata necessary to do the column.
 //  * allocate data for the row count times rowsize
@@ -2807,6 +2811,11 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
   } while (i);
 }
 
+// This standard helper walks any cursor and creates a versionable encoding of it
+// in a blob.  The dynamic cursor structure has all the necessary metadata
+// about the cursor.  By the time this is called many checks have been made
+// about the suitability of this cursor for serialization (e.g. no OBJECT fields).
+// As a consequence we get a nice simple strategy that is flexible.
 cql_code cql_serialize_to_blob(cql_blob_ref _Nullable *_Nonnull blob, cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
   if (!*dyn_cursor->cursor_has_row) {
@@ -2917,16 +2926,16 @@ cql_code cql_serialize_to_blob(cql_blob_ref _Nullable *_Nonnull blob, cql_dynami
       switch (core_data_type) {
         case CQL_DATA_TYPE_INT32: {
           cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
-          if (!int32_data.is_null) { 
-            cql_setbit(bits, nullable_index); 
+          if (!int32_data.is_null) {
+            cql_setbit(bits, nullable_index);
             cql_write_varint_32(&b, int32_data.value);
           }
           break;
         }
         case CQL_DATA_TYPE_INT64: {
           cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
-          if (!int64_data.is_null) { 
-            cql_setbit(bits, nullable_index); 
+          if (!int64_data.is_null) {
+            cql_setbit(bits, nullable_index);
             cql_write_varint_64(&b, int64_data.value);
           }
           break;
@@ -2983,6 +2992,50 @@ cql_code cql_serialize_to_blob(cql_blob_ref _Nullable *_Nonnull blob, cql_dynami
 
   cql_bytebuf_close(&b);
   return SQLITE_OK;
+}
+
+// Generic method to hash a dynamic cursor:
+// Note this code takes advantage of the fact that null valued primitives
+// are normalized to "isnull = 1" and "value = 0" so the whole thing can
+// be hashed with impunity even when it is in the null state.  With not
+// much work this assumption could be removed if needed at a later time.
+cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor)
+{
+  if (!*dyn_cursor->cursor_has_row) {
+    return 0;
+  }
+
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint16_t count = offsets[0];  // the first index is the count of fields
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+
+  cql_hash_code hash = 5381;
+
+  for (uint16_t i = 0; i < count; i++) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+    if (core_data_type <= CQL_DATA_TYPE_BOOL) {
+      // any value type
+      cql_bool notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
+      size_t size = notnull ? normal_datasizes[core_data_type] : nullable_datasizes[core_data_type];
+      uint8_t *bytes = cursor + offset;
+
+      while (size--) {
+        hash = ((hash << 5) + hash) + *bytes++; /* hash * 33 + c */
+      }
+    }
+    else {
+      // any reference type
+      cql_hash_code ref_hash = cql_ref_hash(*(cql_type_ref *)(cursor + offset));
+      hash = ((hash << 5) + hash) + ref_hash;
+    }
+  }
+
+  // we have to return a type that is compatible with CQL, and CQL does not have unsigned types
+  return (cql_int64)hash;
 }
 
 // release the references in a cursor using the types and offsets info
@@ -3159,7 +3212,7 @@ cql_code cql_deserialize_from_blob(cql_blob_ref _Nullable b, cql_dynamic_cursor 
           if (!cql_read_varint_32(&input, result)) {
             goto error;
           }
-          
+
           break;
         }
         case CQL_DATA_TYPE_INT64: {
