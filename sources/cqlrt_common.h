@@ -311,7 +311,7 @@ CQL_EXPORT void cql_results_from_data(
 
 // data entry for a closed hash table
 typedef struct cql_hashtab_entry {
- cql_string_ref _Nullable key;
+ cql_int64 key;
  cql_int64 val;
 } cql_hashtab_entry;
 
@@ -320,15 +320,15 @@ typedef struct cql_hashtab {
   cql_int32 count;
   cql_int32 capacity;
   cql_hashtab_entry *_Nullable payload;
+  uint64_t (*_Nonnull hash_key)(cql_int64 key);
+  bool (*_Nonnull compare_keys)(cql_int64 key1, cql_int64 key2);
+  void (*_Nonnull retain_key)(cql_int64 key);
+  void (*_Nonnull retain_val)(cql_int64 val);
+  void (*_Nonnull release_key)(cql_int64 key);
+  void (*_Nonnull release_val)(cql_int64 val);
 } cql_hashtab;
 
-// elementary hash table functions
-CQL_EXPORT cql_hashtab *_Nonnull cql_hashtab_new(void);
-CQL_EXPORT void cql_hashtab_delete(cql_hashtab *_Nonnull ht);
-CQL_EXPORT cql_bool cql_hashtab_add(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key, cql_int64 val);
-CQL_EXPORT cql_hashtab_entry *_Nullable cql_hashtab_find(cql_hashtab *_Nonnull ht, cql_string_ref _Nonnull key);
-
-// CQL friendly versions of the above, easy to call from CQL
+// CQL friendly versions of the hash table things, easy to call from CQL
 CQL_EXPORT cql_int64 cql_facets_new(void);
 CQL_EXPORT void cql_facets_delete(cql_int64 facets);
 CQL_EXPORT cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
