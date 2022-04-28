@@ -31,7 +31,7 @@ END;
 // export: DECLARE PROC p (x BLOB<blobshape>) USING TRANSACTION;
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x) {
   cql_code _rc_ = SQLITE_OK;
-  _rc_ = cql_deserialize_from_blob(x, &serialized_cursor, &serialized_cursor._has_row_, serialized_cursor_cols, serialized_cursor_data_types);
+  _rc_ = cql_deserialize_from_blob(x, &serialized_cursor_dyn);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -53,5 +53,11 @@ cql_uint16 serialized_cursor_cols[] = { 2,
 uint8_t serialized_cursor_data_types[] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
   CQL_DATA_TYPE_STRING
+};
+cql_dynamic_cursor serialized_cursor_dyn = {
+  .cursor_data = (void *)&serialized_cursor,
+  .cursor_has_row = (void *)&serialized_cursor._has_row_,
+  .cursor_data_types = serialized_cursor_data_types,
+  .cursor_col_offsets = serialized_cursor_cols,
 };
 #pragma clang diagnostic pop

@@ -5137,8 +5137,8 @@ create table structured_storage(
 );
 
 -- TEST: basic blob serialization case
--- + _rc_ = cql_serialize_to_blob(&B, &C, C._has_row_, C_cols, C_data_types);
--- + _rc_ = cql_deserialize_from_blob(B, &D, &D._has_row_, D_cols, D_data_types);
+-- + _rc_ = cql_serialize_to_blob(&B, &C_dyn);
+-- + _rc_ = cql_deserialize_from_blob(B, &D_dyn);
 create proc blob_serialization_test()
 begin
   declare C cursor for select 1 id, 'foo' name;
@@ -5159,7 +5159,7 @@ declare function make_blob() create blob<structured_storage>;
 -- func call is a good standing for general eval
 -- +  cql_blob_release(_tmp_n_blob_0);
 -- + _tmp_n_blob_0 = make_blob();
--- + _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, &C, &C._has_row_, C_cols, C_data_types);
+-- + _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, &C_dyn);
 create proc deserialize_func()
 begin
   declare C cursor like structured_storage;
@@ -5222,7 +5222,7 @@ end;
 -- This sets the SERIALIZATION bit on the cursor causing it to emit more stuff
 -- even though it's out of order the codegen will be affected
 -- the test cases above verify this
--- + _rc_ = cql_serialize_to_blob(b, &gr_blob_cursor, gr_blob_cursor._has_row_, gr_blob_cursor_cols, gr_blob_cursor_data_types);
+-- + _rc_ = cql_serialize_to_blob(b, &gr_blob_cursor_dyn);
 create proc use_gr_cursor_for_serialization(out b blob<structured_storage>)
 begin
   set b from cursor gr_blob_cursor;
@@ -5270,6 +5270,21 @@ begin
   declare c cursor for select nullable(1) x;
   fetch c;
   out union c;
+end;
+
+declare function external_cursor_func(x cursor) integer;
+
+-- TEST call a function that takes a generic cursor
+-- + cql_dynamic_cursor shape_storage_dyn = {
+-- + .cursor_data = (void *)&shape_storage,
+-- + .cursor_has_row = (void *)&shape_storage._has_row_,
+-- + .cursor_data_types = shape_storage_data_types,
+-- + .cursor_col_offsets = shape_storage_cols,
+-- + result = external_cursor_func(&shape_storage_dyn);
+create proc external_cursor_caller ()
+begin
+  declare shape_storage cursor like select 1 as x;
+  let result := external_cursor_func(shape_storage);
 end;
 
 --------------------------------------------------------------------

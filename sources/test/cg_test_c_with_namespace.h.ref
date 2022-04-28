@@ -3521,8 +3521,7 @@ typedef struct gr_blob_cursor_row {
   cql_string_ref _Nonnull name;
 } gr_blob_cursor_row;
 extern gr_blob_cursor_row gr_blob_cursor;
-extern uint16_t gr_blob_cursor_cols[];
-extern uint8_t gr_blob_cursor_data_types[];
+extern cql_dynamic_cursor gr_blob_cursor_dyn;
 #endif
 
 // The statement ending at line XXXX
@@ -3588,6 +3587,12 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   (cql_result_set_ref)(rs2), \
   row2)
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_union_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_union_proc_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+extern cql_nullable_int32 external_cursor_func(cql_dynamic_cursor *_Nonnull x);
+
+// The statement ending at line XXXX
+extern void external_cursor_caller(void);
 
 // The statement ending at line XXXX
 extern cql_int32 this_is_the_end;

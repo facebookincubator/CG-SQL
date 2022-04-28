@@ -24,8 +24,7 @@ typedef struct serialized_cursor_row {
   cql_string_ref _Nullable t;
 } serialized_cursor_row;
 extern serialized_cursor_row serialized_cursor;
-extern uint16_t serialized_cursor_cols[];
-extern uint8_t serialized_cursor_data_types[];
+extern cql_dynamic_cursor serialized_cursor_dyn;
 #endif
 
 // The statement ending at line XXXX

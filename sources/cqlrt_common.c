@@ -2807,18 +2807,16 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
   } while (i);
 }
 
-cql_code cql_serialize_to_blob(
-  cql_blob_ref _Nullable *_Nonnull blob,
-  void *_Nonnull cursor_raw,
-  cql_bool has_row,
-  uint16_t *_Nonnull offsets,
-  uint8_t *_Nonnull types)
+cql_code cql_serialize_to_blob(cql_blob_ref _Nullable *_Nonnull blob, cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
-  if (!has_row) {
+  if (!*dyn_cursor->cursor_has_row) {
     return SQLITE_ERROR;
   }
 
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
   uint16_t count = offsets[0];  // the first index is the count of fields
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
 
   cql_bytebuf b;
   cql_bytebuf_open(&b);
@@ -2826,7 +2824,6 @@ cql_code cql_serialize_to_blob(
   uint8_t code = 0;
   uint16_t nullable_count = 0;
   uint16_t bool_count = 0;
-  uint8_t *cursor = cursor_raw;  // we will be using char offsets
 
   for (uint16_t i = 0; i < count; i++) {
     uint8_t type = types[i];
@@ -2989,11 +2986,11 @@ cql_code cql_serialize_to_blob(
 }
 
 // release the references in a cursor using the types and offsets info
-static void cql_clear_references_before_deserialization(
-  unsigned char *_Nonnull cursor,
-  uint16_t *_Nonnull offsets,
-  uint8_t *_Nonnull types)
+static void cql_clear_references_before_deserialization(cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
   uint16_t count = offsets[0];
 
   for (uint16_t i = 0; i < count; i++) {
@@ -3014,18 +3011,18 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
-cql_code cql_deserialize_from_blob(
-  cql_blob_ref _Nullable b,
-  void *_Nonnull cursor_raw,
-  cql_bool *_Nonnull has_row,
-  uint16_t *_Nonnull offsets,
-  uint8_t *_Nonnull types)
+cql_code cql_deserialize_from_blob(cql_blob_ref _Nullable b, cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
+  cql_bool *has_row = dyn_cursor->cursor_has_row;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+
   // we have to release the existing cursor before we start
   // we'll be clobbering the field while we build it.
 
   *has_row = false;
-  cql_clear_references_before_deserialization(cursor_raw, offsets, types);
+  cql_clear_references_before_deserialization(dyn_cursor);
 
   if (!b) {
     goto error;
@@ -3043,7 +3040,6 @@ cql_code cql_deserialize_from_blob(
   uint16_t bool_count = 0;
   uint16_t actual_count = 0;
 
-  uint8_t *cursor = cursor_raw;  // we will be using char offsets
 
   uint16_t i = 0;
 
@@ -3278,6 +3274,6 @@ cql_code cql_deserialize_from_blob(
 
 error:
   *has_row = false;
-  cql_clear_references_before_deserialization(cursor_raw, offsets, types);
+  cql_clear_references_before_deserialization(dyn_cursor);
   return SQLITE_ERROR;
 }

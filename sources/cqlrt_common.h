@@ -268,20 +268,16 @@ CQL_EXPORT void cql_result_set_set_string_col(cql_result_set_ref _Nonnull result
 CQL_EXPORT void cql_result_set_set_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_object_ref _Nullable new_value);
 CQL_EXPORT void cql_result_set_set_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_blob_ref _Nullable new_value);
 
-// blob serialization and deserialization
-CQL_EXPORT cql_code cql_deserialize_from_blob(
-  cql_blob_ref _Nullable b,
-  void *_Nonnull cursor,
-  cql_bool *_Nonnull has_row,
-  uint16_t *_Nonnull col_offsets,
-  uint8_t *_Nonnull data_types);
+typedef struct cql_dynamic_cursor {
+  void *_Nonnull cursor_data;
+  cql_bool *_Nonnull cursor_has_row;
+  cql_uint16 *_Nonnull cursor_col_offsets;
+  uint8_t *_Nonnull cursor_data_types;
+} cql_dynamic_cursor;
 
-CQL_EXPORT cql_code cql_serialize_to_blob(
-  cql_blob_ref _Nullable *_Nonnull b,
-  void *_Nonnull cursor,
-  cql_bool has_row,
-  uint16_t *_Nonnull col_offsets,
-  uint8_t *_Nonnull data_types);
+// blob serialization and deserialization
+CQL_EXPORT cql_code cql_deserialize_from_blob(cql_blob_ref _Nullable b, cql_dynamic_cursor *_Nonnull dyn_cursor);
+CQL_EXPORT cql_code cql_serialize_to_blob(cql_blob_ref _Nullable *_Nonnull b, cql_dynamic_cursor *_Nonnull dyn_cursor);
 
 CQL_EXPORT cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 CQL_EXPORT cql_bool cql_result_set_get_is_encoded_col(cql_result_set_ref _Nonnull result_set, cql_int32 col);

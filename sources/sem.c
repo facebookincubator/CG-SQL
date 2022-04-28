@@ -19836,7 +19836,13 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
   if (is_cursor_formal(sem_type_param)) {
     // a cursor arg demands a cursor expression, any such cursor will do
     sem_cursor(arg);
-    return !is_error(arg);
+    if (is_error(arg)) {
+      return false;
+    }
+    ast_node *var = find_local_or_global_variable(arg->sem->name);
+    Invariant(var); // we know the cursor exists and is unique already
+    var->sem->sem_type |= SEM_TYPE_SERIALIZE;
+    return true;
   } else if (is_out_parameter(sem_type_param)) {
     sem_arg_for_out_param(arg, param);
     if (is_error(arg)) {

@@ -33,8 +33,7 @@ create table blobshape(
 -- + cql_string_ref _Nullable t;
 -- + } serialized_cursor_row;
 -- + extern serialized_cursor_row serialized_cursor;
--- + extern uint16_t serialized_cursor_cols[];
--- + extern uint8_t serialized_cursor_data_types[];
+-- + extern cql_dynamic_cursor serialized_cursor_dyn;
 declare group foo
 begin
   declare c cursor like select 1 x;

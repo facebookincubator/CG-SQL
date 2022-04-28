@@ -16216,6 +16216,12 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
     CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
     CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
   };
+  cql_dynamic_cursor C_dyn = {
+    .cursor_data = (void *)&C,
+    .cursor_has_row = (void *)&C._has_row_,
+    .cursor_data_types = C_data_types,
+    .cursor_col_offsets = C_cols,
+  };
   cql_blob_ref B = NULL;
   blob_serialization_test_D_row D = { ._refs_count_ = 1, ._refs_offset_ = blob_serialization_test_D_refs_offset };
 
@@ -16228,6 +16234,12 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
     CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
     CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
   };
+  cql_dynamic_cursor D_dyn = {
+    .cursor_data = (void *)&D,
+    .cursor_has_row = (void *)&D._has_row_,
+    .cursor_data_types = D_data_types,
+    .cursor_col_offsets = D_cols,
+  };
 
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1, 'foo'");
@@ -16238,9 +16250,9 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.name);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = cql_serialize_to_blob(&B, &C, C._has_row_, C_cols, C_data_types);
+  _rc_ = cql_serialize_to_blob(&B, &C_dyn);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = cql_deserialize_from_blob(B, &D, &D._has_row_, D_cols, D_data_types);
+  _rc_ = cql_deserialize_from_blob(B, &D_dyn);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -16288,11 +16300,17 @@ CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_) {
     CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
     CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
   };
+  cql_dynamic_cursor C_dyn = {
+    .cursor_data = (void *)&C,
+    .cursor_has_row = (void *)&C._has_row_,
+    .cursor_data_types = C_data_types,
+    .cursor_col_offsets = C_cols,
+  };
   cql_blob_ref _tmp_n_blob_0 = NULL;
 
   cql_blob_release(_tmp_n_blob_0);
   _tmp_n_blob_0 = make_blob();
-  _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, &C, &C._has_row_, C_cols, C_data_types);
+  _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, &C_dyn);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -16353,6 +16371,12 @@ uint8_t gr_blob_cursor_data_types[] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
   CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL
 };
+cql_dynamic_cursor gr_blob_cursor_dyn = {
+  .cursor_data = (void *)&gr_blob_cursor,
+  .cursor_has_row = (void *)&gr_blob_cursor._has_row_,
+  .cursor_data_types = gr_blob_cursor_data_types,
+  .cursor_col_offsets = gr_blob_cursor_cols,
+};
 
 // The statement ending at line XXXX
 
@@ -16370,7 +16394,7 @@ CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_,
 
   cql_code _rc_ = SQLITE_OK;
   *(void **)b = NULL; // set out arg to non-garbage
-  _rc_ = cql_serialize_to_blob(b, &gr_blob_cursor, gr_blob_cursor._has_row_, gr_blob_cursor_cols, gr_blob_cursor_data_types);
+  _rc_ = cql_serialize_to_blob(b, &gr_blob_cursor_dyn);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -16593,6 +16617,49 @@ cql_cleanup:
   some_redeclared_out_union_proc_info.db = NULL;
   cql_finalize_stmt(&c_stmt);
   return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC external_cursor_caller ()
+BEGIN
+  DECLARE shape_storage CURSOR LIKE SELECT 1 AS x;
+  LET result := external_cursor_func(shape_storage);
+END;
+*/
+
+#define _PROC_ "external_cursor_caller"
+// export: DECLARE PROC external_cursor_caller ();
+
+typedef struct external_cursor_caller_shape_storage_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} external_cursor_caller_shape_storage_row;
+void external_cursor_caller(void) {
+  external_cursor_caller_shape_storage_row shape_storage = { 0 };
+
+  static cql_uint16 shape_storage_cols[] = { 1,
+    cql_offsetof(external_cursor_caller_shape_storage_row, x)
+  };
+
+  static uint8_t shape_storage_data_types[] = {
+    CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL
+  };
+  cql_dynamic_cursor shape_storage_dyn = {
+    .cursor_data = (void *)&shape_storage,
+    .cursor_has_row = (void *)&shape_storage._has_row_,
+    .cursor_data_types = shape_storage_data_types,
+    .cursor_col_offsets = shape_storage_cols,
+  };
+  cql_nullable_int32 result;
+  cql_set_null(result);
+
+  result = external_cursor_func(&shape_storage_dyn);
+
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

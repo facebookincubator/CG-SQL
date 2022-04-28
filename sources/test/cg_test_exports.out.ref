@@ -229,4 +229,5 @@ DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) US
 DECLARE PROC mutated_in_param_ref (x TEXT);
 DECLARE PROC some_redeclared_out_proc () OUT (x INTEGER) USING TRANSACTION;
 DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INTEGER) USING TRANSACTION;
+DECLARE PROC external_cursor_caller ();
 DECLARE PROC end_proc ();

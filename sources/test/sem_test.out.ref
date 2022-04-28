@@ -11605,7 +11605,7 @@ The statement ending at line XXXX
 DECLARE shape_storage CURSOR FOR SELECT 1 AS one, 2 AS two;
 
   {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
+  | {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage serialize
   | {select_stmt}: select: { one: integer notnull, two: integer notnull }
     | {select_core_list}: select: { one: integer notnull, two: integer notnull }
     | | {select_core}: select: { one: integer notnull, two: integer notnull }

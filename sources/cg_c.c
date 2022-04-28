@@ -584,7 +584,7 @@ static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
 //  * text is always a reference, nullable or no.  But if you make a text local
 //    then we also gotta clean it up.
 static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_local) {
-  Contract(is_unitary(sem_type));
+  Contract(is_unitary(sem_type) || is_cursor_formal(sem_type));
   Contract(!is_null_type(sem_type));
   Contract(cg_main_output);
 
@@ -598,6 +598,9 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
   bprintf(&name, "%s", base_name);
 
   switch (core_type) {
+    case SEM_TYPE_CURSOR_FORMAL:
+      bprintf(output, "cql_dynamic_cursor *_Nonnull %s", name.ptr);
+      break;
     case SEM_TYPE_INTEGER:
       if (notnull) {
         bprintf(output, "%s %s", rt->cql_int32, name.ptr);
@@ -3283,6 +3286,15 @@ static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
   bprintf(output, "\n};\n");
 }
 
+static void cg_dynamic_cursor(charbuf *output, CSTR sym_name, CSTR cols_name, CSTR types_name) {
+  bprintf(output, "cql_dynamic_cursor %s_dyn = {\n", sym_name);
+  bprintf(output, "  .cursor_data = (void *)&%s,\n", sym_name);
+  bprintf(output, "  .cursor_has_row = (void *)&%s._has_row_,\n", sym_name);
+  bprintf(output, "  .cursor_data_types = %s,\n", types_name);
+  bprintf(output, "  .cursor_col_offsets = %s,\n", cols_name);
+  bprintf(output, "};\n");
+}
+
 // Emit the offsets for the reference types in the given struct type into the output
 static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym, CSTR struct_name) {
   int32_t refs_count = refs_count_sptr(sptr);
@@ -5092,12 +5104,12 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
     bprintf(&types_name, "%s_data_types", cursor_name);
 
     if (in_var_group_decl) {
-      bprintf(cg_header_output, "%suint16_t %s[];\n", rt->symbol_visibility, cols_name.ptr);
-      bprintf(cg_header_output, "%suint8_t %s[];\n", rt->symbol_visibility, types_name.ptr);
+      bprintf(cg_header_output, "%scql_dynamic_cursor %s_dyn;\n",  rt->symbol_visibility, cursor_name);
     }
     else {
       cg_col_offsets(cg_declarations_output, sptr, cols_name.ptr, row_type.ptr);
       cg_data_types(cg_declarations_output, sptr, types_name.ptr);
+      cg_dynamic_cursor(cg_declarations_output, cursor_name, cols_name.ptr, types_name.ptr);
     }
 
     CHARBUF_CLOSE(types_name);
@@ -5585,9 +5597,10 @@ static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
 
   CG_PUSH_EVAL(blob, C_EXPR_PRI_ROOT);
 
+  CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "*" : "";
+
   bprintf(cg_main_output,
-    "_rc_ = cql_deserialize_from_blob(%s, &%s, &%s._has_row_, %s_cols, %s_data_types);\n",
-    blob_value.ptr, cursor_name, cursor_name, cursor_name, cursor_name);
+    "_rc_ = cql_deserialize_from_blob(%s%s, &%s_dyn);\n", prefix, blob_value.ptr, cursor_name);
   cg_error_on_rc_notequal("SQLITE_OK");
 
   CG_POP_EVAL(blob);
@@ -5602,8 +5615,7 @@ static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
   CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "" : "&";
 
   bprintf(cg_main_output,
-    "_rc_ = cql_serialize_to_blob(%s%s, &%s, %s._has_row_, %s_cols, %s_data_types);\n",
-    prefix, blob_name, cursor_name, cursor_name, cursor_name, cursor_name);
+    "_rc_ = cql_serialize_to_blob(%s%s, &%s_dyn);\n", prefix, blob_name, cursor_name);
   cg_error_on_rc_notequal("SQLITE_OK");
 }
 
@@ -6236,6 +6248,11 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
       }
 
       cg_release_out_arg_before_call(sem_type_arg, sem_type_param, arg->sem->name);
+      break;
+    }
+
+    if (is_cursor_formal(sem_type_param)) {
+      bprintf(invocation, "&%s_dyn", arg->sem->name);
       break;
     }
 
