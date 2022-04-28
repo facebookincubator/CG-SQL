@@ -249,6 +249,9 @@ CQL_EXPORT cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cq
 // hash a cursor using the metadata (CQL compatible types)
 cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor);
 
+// compare cursors using metadata
+cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *_Nonnull c2);
+
 // compare two rows for equality
 CQL_EXPORT cql_bool cql_rows_equal(cql_result_set_ref _Nonnull rs1, cql_int32 row1, cql_result_set_ref _Nonnull rs2, cql_int32 row2);
 

@@ -4697,7 +4697,6 @@ declare proc lotsa_types() (
 declare function cql_cursor_hash(C cursor) long not null;
 
 BEGIN_TEST(cursor_hash)
-
   declare C cursor like lotsa_types;
   declare D cursor like C;
 
@@ -4867,6 +4866,174 @@ BEGIN_TEST(cursor_hash)
   end;
 
 END_TEST(cursor_hash)
+
+declare function cql_cursors_equal(C1 cursor, C2 cursor) bool not null;
+
+BEGIN_TEST(cursor_equal)
+  declare C cursor like lotsa_types;
+  declare D cursor like C;
+
+  -- empty cursor hashes to nothing
+  EXPECT(cql_cursors_equal(C, D));
+
+  -- one cursor empty
+  fetch C() from values () @DUMMY_SEED(0);
+  EXPECT(NOT cql_cursors_equal(C, D));
+  EXPECT(NOT cql_cursors_equal(D, C));
+
+  let i := 0;
+  while i < 5
+  begin
+    -- no explicit values, all dummy
+    fetch C() from values () @DUMMY_SEED(i);
+    fetch D() from values () @DUMMY_SEED(i);
+
+    EXPECT(cql_cursors_equal(C, C)); -- control for sanity
+    EXPECT(cql_cursors_equal(C, D)); -- control for sanity
+
+    fetch C() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    EXPECT(cql_cursors_equal(C, C)); -- control for sanity
+    EXPECT(cql_cursors_equal(C, D)); -- control for sanity
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       not C.b as b;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.i + 1 as i;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.l + 1 as l;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.r + 1 as r;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       "different" as t;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       not C.b as b0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.i + 1 as i0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.l + 1 as l0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       C.r + 1 as r0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       "different" as t0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as b0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as i0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as l0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as r0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    ---------
+    fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
+
+    update cursor D using
+       NULL as t0;
+
+    EXPECT(NOT cql_cursors_equal(C, D));
+
+    set i := i + 1;
+  end;
+
+  -- different number of columns
+  declare E cursor like select 1 x;
+  EXPECT(NOT cql_cursors_equal(C, E));
+
+  -- different types (same offset)
+  declare F cursor like select 1L x;
+  EXPECT(NOT cql_cursors_equal(E, F));
+
+  -- different offsets (this is checked before types)
+  declare G cursor like select 1L x, 1L y;
+  declare H cursor like select 1 x, 1 y;
+  EXPECT(NOT cql_cursors_equal(G, H));
+
+END_TEST(cursor_equal)
 
 END_SUITE()
 

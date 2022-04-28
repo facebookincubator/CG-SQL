@@ -3038,6 +3038,71 @@ cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor)
   return (cql_int64)hash;
 }
 
+
+// Generic method to compare two dynamic cursors
+// Note this code takes advantage of the fact that null valued primitives
+// are normalized to "isnull = 1" and "value = 0" so the whole thing can
+// be hashed with impunity even when it is in the null state.  With not
+// much work this assumption could be removed if needed at a later time.
+cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *_Nonnull c2)
+{
+  uint16_t *offsets = c1->cursor_col_offsets;
+  uint8_t *types = c1->cursor_data_types;
+  uint16_t count = offsets[0];  // the first index is the count of fields
+  uint8_t *data1 = c1->cursor_data;  // we will be using char offsets
+  uint8_t *data2 = c2->cursor_data;  // we will be using char offsets
+
+  // first check metadata for equivalence
+  if (count != c2->cursor_col_offsets[0]) {
+    return false;
+  }
+
+  // column positions differ (recall the first position in the array is the count)
+  // hence we compare count + 1 items
+  if (memcmp(offsets, c2->cursor_col_offsets, (1 + count) * sizeof(offsets[0]))) {
+    return false;
+  }
+
+  // data types positions differ
+  if (memcmp(types, c2->cursor_data_types, count * sizeof(types[0]))) {
+    return false;
+  }
+
+  // if metadata matches and neither has data that's a match (empty cursors are equal)
+  if (!*c1->cursor_has_row && !*c2->cursor_has_row) {
+    return true;
+  }
+
+  // if either has no data then not equal
+  if (!*c1->cursor_has_row || !*c2->cursor_has_row) {
+    return false;
+  }
+
+  for (uint16_t i = 0; i < count; i++) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+    if (core_data_type <= CQL_DATA_TYPE_BOOL) {
+      // any value type
+      cql_bool notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
+      size_t size = notnull ? normal_datasizes[core_data_type] : nullable_datasizes[core_data_type];
+      if (memcmp(data1 + offset, data2 + offset, size)) {
+        return false;
+      }
+    }
+    else {
+      // any reference type
+      if (!cql_ref_equal(*(cql_type_ref *)(data1 + offset), *(cql_type_ref *)(data2 + offset))) {
+        return false;
+      }
+    }
+  }
+
+  // all matched!
+  return true;
+}
+
 // release the references in a cursor using the types and offsets info
 static void cql_clear_references_before_deserialization(cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
