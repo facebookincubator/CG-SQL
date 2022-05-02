@@ -217,7 +217,7 @@ static bool_t cg_schema_force_if_not_exists(ast_node *ast, void *context, charbu
 }
 
 // Emit table definitions and procedures required solely to check whether an upgrade is needed
-static void cg_schema_facet_checker_helpers(charbuf *decls) {
+static void cg_schema_facet_checker_helpers(charbuf *decls, bool_t is_facet_checker) {
   bprintf(decls, "-- facets table declaration --\n");
   bprintf(decls, "CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
   bprintf(decls, "  facet TEXT NOT NULL PRIMARY KEY,\n");
@@ -229,6 +229,13 @@ static void cg_schema_facet_checker_helpers(charbuf *decls) {
   // We still use the IF NOTHING -1 pattern so that it doesn't produce spurious errors when there is no row, that's not an error.
 
   bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
+
+  // The facet checker's copy of this procedure is unused in tests and can conflict
+  // with the main schema deployer's copy unless this one is made private.
+  if (is_facet_checker) {
+    bprintf(decls, "@attribute(cql:private)\n");
+  }
+
   bprintf(decls, "CREATE PROCEDURE %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  BEGIN TRY\n");
@@ -242,7 +249,7 @@ static void cg_schema_facet_checker_helpers(charbuf *decls) {
 
 // Emit the helper procedures for the upgrade
 static void cg_schema_helpers(charbuf *decls) {
-  cg_schema_facet_checker_helpers(decls);
+  cg_schema_facet_checker_helpers(decls, false /* is_facet_checker */);
 
   bprintf(decls, "-- saved facets table declaration --\n");
   bprintf(decls, "CREATE TEMP TABLE %s_cql_schema_facets_saved(\n", global_proc_name);
@@ -1321,7 +1328,7 @@ cql_noexport void cg_schema_facet_checker_main(ast_node *head) {
 
   CHARBUF_OPEN(main);
 
-  cg_schema_facet_checker_helpers(&main);
+  cg_schema_facet_checker_helpers(&main, true /* is_facet_checker */);
 
   bprintf(&main, "CREATE PROCEDURE %s_facet_check()\n", global_proc_name);
   bprintf(&main, "BEGIN\n");

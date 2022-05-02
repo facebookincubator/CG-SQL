@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
 );
 
 -- helper proc for getting the schema version of a facet
+@attribute(cql:private)
 CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
