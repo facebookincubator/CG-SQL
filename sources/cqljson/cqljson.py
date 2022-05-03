@@ -335,6 +335,16 @@ def emit_schema():
             "  p_name text not null,\n"
             "  v_name text not null);\n"
             "\n"
+            "create table triggers(\n"
+            "  tr_name text primary key,\n"
+            "  t_name text,\n"
+            "  region text not null,\n"
+            "  deleted bool not null);\n"
+            "\n"
+            "create table trigger_deps(\n"
+            "  tr_name text not null,\n"
+            "  t_name text not null);\n"
+            "\n"
         )
     )
 
@@ -460,6 +470,19 @@ def emit_sql(data):
         print(
             f"insert into views values('{v_name}', '{region}', {deleted}, {createVersion}, {deleteVersion});"
         )
+
+    for tup in enumerate(data["triggers"]):
+        tr = tup[1]
+        tr_name = tr["name"]
+        t_name = tr["target"]
+        region = tr.get("region", "None")
+        deleted = 1 if tr["isDeleted"] else 0
+        print(
+            f"insert into triggers values('{tr_name}', '{t_name}', '{region}', {deleted});"
+        )
+        usesTables = tr["usesTables"]
+        for tdep in usesTables:
+            print(f"insert into trigger_deps values('{tr_name}', '{tdep}');")
 
 
 def get_fks(targets, tables, data, arg):
