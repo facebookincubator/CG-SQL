@@ -198,7 +198,7 @@ CQL_EXPORT void cql_column_blob_ref(sqlite3_stmt *_Nonnull stmt, cql_int32 index
 // Enforces (via `cql_tripwire`) that an argument passed in from C to a stored
 // procedure is not NULL. `position` indicates for which argument we're doing
 // the checking, counting from 1, *not* 0.
-CQL_EXPORT void cql_contract_argument_notnull(void *_Nullable argument, cql_uint32 position);
+void cql_contract_argument_notnull(void *_Nullable argument, cql_uint32 position);
 
 // Like `cql_contract_argument_notnull`, but also checks that `*argument` is not
 // NULL. This should only be used for INOUT arguments of a NOT NULL reference
