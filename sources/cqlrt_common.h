@@ -96,6 +96,9 @@ typedef struct cql_dynamic_cursor {
   cql_bool *_Nonnull cursor_has_row;
   cql_uint16 *_Nonnull cursor_col_offsets;
   uint8_t *_Nonnull cursor_data_types;
+  size_t cursor_size;
+  uint16_t cursor_refs_count;
+  uint16_t cursor_refs_offset;
 } cql_dynamic_cursor;
 
 CQL_EXPORT int cql_outstanding_refs;
@@ -320,12 +323,13 @@ typedef struct cql_hashtab {
   cql_int32 count;
   cql_int32 capacity;
   cql_hashtab_entry *_Nullable payload;
-  uint64_t (*_Nonnull hash_key)(cql_int64 key);
-  bool (*_Nonnull compare_keys)(cql_int64 key1, cql_int64 key2);
-  void (*_Nonnull retain_key)(cql_int64 key);
-  void (*_Nonnull retain_val)(cql_int64 val);
-  void (*_Nonnull release_key)(cql_int64 key);
-  void (*_Nonnull release_val)(cql_int64 val);
+  uint64_t (*_Nonnull hash_key)(void *_Nullable context, cql_int64 key);
+  bool (*_Nonnull compare_keys)(void *_Nullable context, cql_int64 key1, cql_int64 key2);
+  void (*_Nonnull retain_key)(void *_Nullable context, cql_int64 key);
+  void (*_Nonnull retain_val)(void *_Nullable context, cql_int64 val);
+  void (*_Nonnull release_key)(void *_Nullable context, cql_int64 key);
+  void (*_Nonnull release_val)(void *_Nullable context, cql_int64 val);
+  void *_Nullable context;
 } cql_hashtab;
 
 // CQL friendly versions of the hash table things, easy to call from CQL
@@ -334,5 +338,28 @@ CQL_EXPORT void cql_facets_delete(cql_int64 facets);
 CQL_EXPORT cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
 CQL_EXPORT cql_bool cql_facet_upsert(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
 CQL_EXPORT cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull key);
+
+typedef struct cql_partition {
+  cql_hashtab *_Nonnull ht;
+  cql_object_ref _Nullable empty_result;
+  cql_dynamic_cursor c_key;
+  cql_dynamic_cursor c_key2;
+  cql_dynamic_cursor c_val;
+  cql_bool has_row;
+} cql_partition;
+
+cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)());
+void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull obj);
+
+cql_object_ref _Nonnull cql_partition_create(void);
+
+cql_bool cql_partition_cursor(
+  cql_object_ref _Nonnull obj,
+  cql_dynamic_cursor *_Nonnull key,
+  cql_dynamic_cursor *_Nonnull val);
+
+cql_object_ref _Nonnull cql_extract_partition(
+  cql_object_ref _Nonnull obj,
+  cql_dynamic_cursor *_Nonnull key);
 
 CQL_EXTERN_C_END

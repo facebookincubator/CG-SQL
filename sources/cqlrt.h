@@ -64,7 +64,8 @@ cql_bool cql_ref_equal(cql_type_ref _Nullable typeref1, cql_type_ref _Nullable t
 typedef struct cql_object *cql_object_ref;
 typedef struct cql_object {
   cql_type base;
-  const void *_Nonnull ptr;
+  void *_Nonnull ptr;
+  void (*_Nonnull finalize)(void *_Nonnull ptr);
 } cql_object;
 #define cql_object_retain(object) cql_retain((cql_type_ref)object);
 #define cql_object_release(object) cql_release((cql_type_ref)object);
@@ -83,6 +84,13 @@ typedef struct cql_blob {
   const void *_Nonnull ptr;
   cql_uint32 size;
 } cql_blob;
+
+typedef struct cql_partitioning *cql_partitioning_ref;
+typedef struct cql_partitioning {
+  cql_type base;
+  const void *_Nonnull ptr;
+} cql_partitioning;
+
 #define cql_blob_retain(object) cql_retain((cql_type_ref)object);
 #define cql_blob_release(object) cql_release((cql_type_ref)object);
 cql_blob_ref _Nonnull cql_blob_ref_new(const void *_Nonnull data, cql_uint32 size);

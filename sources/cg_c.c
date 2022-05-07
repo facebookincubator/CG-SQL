@@ -3286,13 +3286,27 @@ static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
   bprintf(output, "\n};\n");
 }
 
-static void cg_dynamic_cursor(charbuf *output, CSTR sym_name, CSTR cols_name, CSTR types_name) {
+static void cg_dynamic_cursor(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR cols_name, CSTR types_name) {
+  CSTR scope = current_proc_name();
+  CSTR suffix = (sym_name && scope) ? "_" : "";
+  scope = scope ? scope : "";
+
+  CG_CHARBUF_OPEN_SYM(refs_offset, scope, suffix, sym_name, "_refs_offset");
+  int32_t refs_count = refs_count_sptr(sptr);
+
   bprintf(output, "cql_dynamic_cursor %s_dyn = {\n", sym_name);
   bprintf(output, "  .cursor_data = (void *)&%s,\n", sym_name);
   bprintf(output, "  .cursor_has_row = (void *)&%s._has_row_,\n", sym_name);
   bprintf(output, "  .cursor_data_types = %s,\n", types_name);
   bprintf(output, "  .cursor_col_offsets = %s,\n", cols_name);
+  bprintf(output, "  .cursor_size = sizeof(%s),\n", sym_name);
+  if (refs_count) {
+    bprintf(output, "  .cursor_refs_count = %d,\n", refs_count);
+    bprintf(output, "  .cursor_refs_offset = %s,\n", refs_offset.ptr);
+  }
   bprintf(output, "};\n");
+
+  CHARBUF_CLOSE(refs_offset);
 }
 
 // Emit the offsets for the reference types in the given struct type into the output
@@ -5109,7 +5123,7 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
     else {
       cg_col_offsets(cg_declarations_output, sptr, cols_name.ptr, row_type.ptr);
       cg_data_types(cg_declarations_output, sptr, types_name.ptr);
-      cg_dynamic_cursor(cg_declarations_output, cursor_name, cols_name.ptr, types_name.ptr);
+      cg_dynamic_cursor(cg_declarations_output, sem->sptr, cursor_name, cols_name.ptr, types_name.ptr);
     }
 
     CHARBUF_CLOSE(types_name);

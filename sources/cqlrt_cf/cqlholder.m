@@ -12,6 +12,7 @@
 @interface CQLHolder : NSObject
 
 @property (nonatomic) void *bytes;
+@property (nonatomic) void (*generic_finalizer)(void *);
 @property (nonatomic) int type;
 
 @end
@@ -34,10 +35,11 @@
   }
 }
 
-// The two kinds of things we know how to hold.
+// The kinds of things we know how to hold.
 
 #define CF_HELD_TYPE_RESULT_SET 1
 #define CF_HELD_TYPE_BOXED_STMT 2
+#define CF_HELD_TYPE_GENERIC 3
 
 - (void)dynamicTeardown
 {
@@ -57,6 +59,18 @@
       // note this is a no-op on null statements, and nulls stmt after finalization
       cql_finalize_stmt(&box->stmt);
       break;
+    }
+
+  case CF_HELD_TYPE_GENERIC:
+    {
+      // the generic finalizer frees the bytes as needed
+      if (self.generic_finalizer) {
+        self.generic_finalizer(self.bytes);
+      }
+      self.bytes = NULL;
+      self.type = 0;
+      self.generic_finalizer = NULL;
+      return;
     }
   }
 
@@ -110,3 +124,17 @@ cql_result_set *_Nonnull cql_get_result_set_from_ref(cql_result_set_ref _Nonnull
   return result_set;
 }
 
+cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data, void (*_Nonnull finalizer)(void *_Nonnull))
+{
+  cql_partition *self = (cql_partition *)calloc(1, sizeof(cql_partition));
+
+  CQLHolder *holder = [[CQLHolder alloc] initWithBytes:(void *)self andType:CF_HELD_TYPE_GENERIC];
+  holder.generic_finalizer = finalizer;
+  return (__bridge_retained cql_object_ref)holder;
+}
+
+void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull ref)
+{
+  CQLHolder *holder = (__bridge CQLHolder *)ref;
+  return holder.bytes;
+}

@@ -59,5 +59,8 @@ cql_dynamic_cursor serialized_cursor_dyn = {
   .cursor_has_row = (void *)&serialized_cursor._has_row_,
   .cursor_data_types = serialized_cursor_data_types,
   .cursor_col_offsets = serialized_cursor_cols,
+  .cursor_size = sizeof(serialized_cursor),
+  .cursor_refs_count = 1,
+  .cursor_refs_offset = serialized_cursor_refs_offset,
 };
 #pragma clang diagnostic pop

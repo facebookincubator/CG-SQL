@@ -379,4 +379,32 @@ cql_object_ref cql_copy_encoder(sqlite3* db) {
   return NULL;  // no encoder object needed
 }
 
+static void _cql_generic_finalize(cql_type_ref _Nonnull ref)
+{
+  cql_object_ref obj = (cql_object_ref)ref;
+  obj->finalize(obj->ptr);
+}
+
+cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data, void (*finalize)(void *_Nonnull))
+{
+  cql_contract(data);
+  cql_contract(finalize);
+
+  cql_object_ref obj = (cql_object_ref)calloc(sizeof(cql_object), 1);
+  obj->base.type = CQL_C_TYPE_OBJECT;
+  obj->base.ref_count = 1;
+  obj->base.finalize = _cql_generic_finalize;
+  obj->ptr = data;
+  obj->finalize = finalize;
+  cql_outstanding_refs++;
+  return obj;
+}
+
+void *_Nonnull _cql_generic_object_get_data(cql_object_ref obj)
+{
+  cql_contract(obj->base.type == CQL_C_TYPE_OBJECT);
+  cql_contract(obj->base.finalize == _cql_generic_finalize);
+  return (cql_partition *)obj->ptr;
+}
+
 #include "cqlrt_common.c"

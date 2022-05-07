@@ -16221,6 +16221,9 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
     .cursor_has_row = (void *)&C._has_row_,
     .cursor_data_types = C_data_types,
     .cursor_col_offsets = C_cols,
+    .cursor_size = sizeof(C),
+    .cursor_refs_count = 1,
+    .cursor_refs_offset = blob_serialization_test_C_refs_offset,
   };
   cql_blob_ref B = NULL;
   blob_serialization_test_D_row D = { ._refs_count_ = 1, ._refs_offset_ = blob_serialization_test_D_refs_offset };
@@ -16239,6 +16242,9 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
     .cursor_has_row = (void *)&D._has_row_,
     .cursor_data_types = D_data_types,
     .cursor_col_offsets = D_cols,
+    .cursor_size = sizeof(D),
+    .cursor_refs_count = 1,
+    .cursor_refs_offset = blob_serialization_test_D_refs_offset,
   };
 
   _rc_ = cql_prepare(_db_, &C_stmt,
@@ -16305,6 +16311,9 @@ CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_) {
     .cursor_has_row = (void *)&C._has_row_,
     .cursor_data_types = C_data_types,
     .cursor_col_offsets = C_cols,
+    .cursor_size = sizeof(C),
+    .cursor_refs_count = 1,
+    .cursor_refs_offset = deserialize_func_C_refs_offset,
   };
   cql_blob_ref _tmp_n_blob_0 = NULL;
 
@@ -16376,6 +16385,9 @@ cql_dynamic_cursor gr_blob_cursor_dyn = {
   .cursor_has_row = (void *)&gr_blob_cursor._has_row_,
   .cursor_data_types = gr_blob_cursor_data_types,
   .cursor_col_offsets = gr_blob_cursor_cols,
+  .cursor_size = sizeof(gr_blob_cursor),
+  .cursor_refs_count = 1,
+  .cursor_refs_offset = gr_blob_cursor_refs_offset,
 };
 
 // The statement ending at line XXXX
@@ -16654,6 +16666,7 @@ void external_cursor_caller(void) {
     .cursor_has_row = (void *)&shape_storage._has_row_,
     .cursor_data_types = shape_storage_data_types,
     .cursor_col_offsets = shape_storage_cols,
+    .cursor_size = sizeof(shape_storage),
   };
   cql_nullable_int32 result;
   cql_set_null(result);

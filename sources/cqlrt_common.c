@@ -1416,23 +1416,13 @@ void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set) {
   free(data);
 }
 
-// Hash the indicated row using a general purpose hash method and the reference
-// type hashers.
-// * the non-reference data is at the start of the row until the refs_offset
-// * the references follow and there are refs_count of them.
-// * these values are available in the metadata
-// This single function can hash any row of any result set, thereby saving a lot
-// of code generation.
-cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row) {
-  int32_t count = cql_result_set_get_count(result_set);
-  cql_contract(row < count);
-
-  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
-  cql_uint16 refs_count = meta->refsCount;
-  cql_uint16 refs_offset = meta->refsOffset;
-  size_t row_size = meta->rowsize;
-  char *data = ((char *)cql_result_set_get_data(result_set)) + row * row_size;
-
+// Hash a cursor or row as described by the buffer size and refs offset
+static cql_hash_code cql_hash_buffer(
+  const char *_Nonnull data,
+  size_t row_size,
+  cql_uint16 refs_count,
+  cql_uint16 refs_offset)
+{
   // we'll do a normal hash on everything up to the first reference type
   // note: the refs are all guaranteed to be at the end AND the padding
   // is guaranteed to be zero-filled.  These are important invariants that
@@ -1462,6 +1452,60 @@ cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row
   }
 
   return hash;
+}
+
+// Hash the indicated row using a general purpose hash method and the reference
+// type hashers.
+// * the non-reference data is at the start of the row until the refs_offset
+// * the references follow and there are refs_count of them.
+// * these values are available in the metadata
+// This single function can hash any row of any result set, thereby saving a lot
+// of code generation.
+cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row) {
+  int32_t count = cql_result_set_get_count(result_set);
+  cql_contract(row < count);
+
+  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
+  cql_uint16 refs_count = meta->refsCount;
+  cql_uint16 refs_offset = meta->refsOffset;
+  size_t row_size = meta->rowsize;
+  char *data = ((char *)cql_result_set_get_data(result_set)) + row * row_size;
+
+  return cql_hash_buffer(data, row_size, refs_count, refs_offset);
+}
+
+static cql_bool cql_buffers_equal(
+  const char *_Nonnull data1,
+  const char *_Nonnull data2,
+  size_t row_size,
+  cql_uint16 refs_count,
+  cql_uint16 refs_offset)
+{
+  // We'll do a normal memory comparison on everything up to the first reference type
+  // note: the refs are all guaranteed to be at the end AND the padding
+  // is guaranteed to be zero-filled.  These are important invariants that
+  // let us do a much simpler/faster/smaller comparison.
+  size_t size = row_size;
+  if (refs_count) {
+    size = refs_offset;
+  }
+
+  if (memcmp(data1, data2, size)) {
+    return false;
+  }
+
+  if (refs_count) {
+    // first entry is the count, then there are count more entries hence loop <= count
+    for (int32_t i = 0; i < refs_count; i++) {
+      if (!cql_ref_equal(*(cql_type_ref *)(data1 + refs_offset),
+                         *(cql_type_ref *)(data2 + refs_offset))) {
+        return false;
+      }
+      refs_offset += sizeof(cql_type_ref);
+    }
+  }
+
+  return true;
 }
 
 // Check for equality of rows using the metadata to drive the comparison.
@@ -1495,31 +1539,7 @@ cql_bool cql_rows_equal(
   char *data1 = ((char *)cql_result_set_get_data(rs1)) + row1 * row_size;
   char *data2 = ((char *)cql_result_set_get_data(rs2)) + row2 * row_size;
 
-  // We'll do a normal memory comparison on everything up to the first reference type
-  // note: the refs are all guaranteed to be at the end AND the padding
-  // is guaranteed to be zero-filled.  These are important invariants that
-  // let us do a much simpler/faster/smaller comparison.
-  size_t size = row_size;
-  if (refs_count) {
-    size = refs_offset;
-  }
-
-  if (memcmp(data1, data2, size)) {
-    return false;
-  }
-
-  if (refs_count) {
-    // first entry is the count, then there are count more entries hence loop <= count
-    for (int32_t i = 0; i < refs_count; i++) {
-      if (!cql_ref_equal(*(cql_type_ref *)(data1 + refs_offset),
-                         *(cql_type_ref *)(data2 + refs_offset))) {
-        return false;
-      }
-      refs_offset += sizeof(cql_type_ref);
-    }
-  }
-
-  return true;
+  return cql_buffers_equal(data1, data2, row_size, refs_count, refs_offset);
 }
 
 // sizes for the various data types (not null)
@@ -2524,8 +2544,8 @@ static void cql_hashtab_rehash(cql_hashtab *_Nonnull ht) {
     cql_int64 val = old_payload[i].val;
     if (key) {
       cql_hashtab_add(ht, key, val);
-      ht->release_key(key);
-      ht->release_val(val);
+      ht->release_key(ht->context, key);
+      ht->release_val(ht->context, val);
     }
   }
 
@@ -2534,12 +2554,13 @@ static void cql_hashtab_rehash(cql_hashtab *_Nonnull ht) {
 
 // Making a new hash table, initial size
 static cql_hashtab *_Nonnull cql_hashtab_new(
-  uint64_t (*_Nonnull hash_key)(cql_int64 key),
-  bool (*_Nonnull compare_keys)(cql_int64 key1, cql_int64 key2),
-  void (*_Nonnull retain_key)(cql_int64 key),
-  void (*_Nonnull retain_val)(cql_int64 val),
-  void (*_Nonnull release_key)(cql_int64 key),
-  void (*_Nonnull release_val)(cql_int64 val)
+  uint64_t (*_Nonnull hash_key)(void *_Nullable context, cql_int64 key),
+  bool (*_Nonnull compare_keys)(void *_Nullable context, cql_int64 key1, cql_int64 key2),
+  void (*_Nonnull retain_key)(void *_Nullable context, cql_int64 key),
+  void (*_Nonnull retain_val)(void *_Nullable context, cql_int64 val),
+  void (*_Nonnull release_key)(void *_Nullable context, cql_int64 key),
+  void (*_Nonnull release_val)(void *_Nullable context, cql_int64 val),
+  void *_Nullable context
 ) {
   cql_hashtab *ht = malloc(sizeof(cql_hashtab));
   ht->hash_key = hash_key;
@@ -2550,6 +2571,7 @@ static cql_hashtab *_Nonnull cql_hashtab_new(
   ht->release_val = release_val;
   ht->count = 0;
   ht->capacity = HASHTAB_INIT_SIZE;
+  ht->context = context;
   cql_hashtab_set_payload(ht);
   return ht;
 }
@@ -2561,10 +2583,10 @@ static void cql_hashtab_delete(cql_hashtab *_Nonnull ht) {
     cql_int64 key = ht->payload[i].key;
     cql_int64 val = ht->payload[i].val;
     if (key) {
-      ht->release_key(key);
+      ht->release_key(ht->context, key);
     }
     if (val) {
-      ht->release_val(val);
+      ht->release_val(ht->context, val);
     }
   }
 
@@ -2580,15 +2602,15 @@ static cql_bool cql_hashtab_add(
   cql_int64 key_new,
   cql_int64 val_new)
 {
-  uint32_t hash = (uint32_t)ht->hash_key(key_new);
+  uint32_t hash = (uint32_t)ht->hash_key(ht->context, key_new);
   uint32_t offset = hash % ht->capacity;
   cql_hashtab_entry *payload = ht->payload;
 
   for (;;) {
     cql_int64 key = payload[offset].key;
     if (!key) {
-      ht->retain_key(key_new);
-      ht->retain_val(val_new);
+      ht->retain_key(ht->context, key_new);
+      ht->retain_val(ht->context, val_new);
 
       payload[offset].key = key_new;
       payload[offset].val = val_new;
@@ -2601,7 +2623,7 @@ static cql_bool cql_hashtab_add(
       return true;
     }
 
-    if (ht->compare_keys(key, key_new)) {
+    if (ht->compare_keys(ht->context, key, key_new)) {
       return false;
     }
 
@@ -2618,7 +2640,7 @@ static cql_hashtab_entry *_Nullable cql_hashtab_find(
   cql_hashtab *_Nonnull ht,
   cql_int64 key_needed)
 {
-  uint32_t hash = (uint32_t)ht->hash_key(key_needed);
+  uint32_t hash = (uint32_t)ht->hash_key(ht->context, key_needed);
   uint32_t offset = hash % ht->capacity;
   cql_hashtab_entry *payload = ht->payload;
 
@@ -2628,7 +2650,7 @@ static cql_hashtab_entry *_Nullable cql_hashtab_find(
       return NULL;
     }
 
-    if (ht->compare_keys(key, key_needed)) {
+    if (ht->compare_keys(ht->context, key, key_needed)) {
       return &payload[offset];
     }
 
@@ -2641,26 +2663,26 @@ static cql_hashtab_entry *_Nullable cql_hashtab_find(
 
 // These are CQL friendly versions of the hashtable for a string to int map, these signatures are directly callable from CQL
 
-static void cql_no_op_retain_release(cql_int64 data) {
+static void cql_no_op_retain_release(void *_Nullable context, cql_int64 data) {
 }
 
-static void cql_key_retain_str(cql_int64 key) {
+static void cql_key_retain_str(void *_Nullable context, cql_int64 key) {
   if (key) {
     cql_retain((cql_type_ref)(key));
   }
 }
 
-static void cql_key_release_str(cql_int64 key) {
+static void cql_key_release_str(void *_Nullable context, cql_int64 key) {
   if (key) {
     cql_release((cql_type_ref)(key));
   }
 }
 
-static uint64_t cql_key_str_hash(cql_int64 key) {
+static uint64_t cql_key_str_hash(void *_Nullable context, cql_int64 key) {
   return cql_string_hash((cql_string_ref)key);
 }
 
-static bool cql_key_str_eq(cql_int64 key1, cql_int64 key2) {
+static bool cql_key_str_eq(void *_Nullable context, cql_int64 key1, cql_int64 key2) {
   return cql_string_equal((cql_string_ref)key1, (cql_string_ref)key2);
 }
 
@@ -2672,7 +2694,8 @@ cql_int64 cql_facets_new(void) {
     cql_key_retain_str,
     cql_no_op_retain_release,
     cql_key_release_str,
-    cql_no_op_retain_release
+    cql_no_op_retain_release,
+    NULL
   );
 }
 
@@ -3060,39 +3083,12 @@ cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor)
     return 0;
   }
 
-  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
-  uint8_t *types = dyn_cursor->cursor_data_types;
-  uint16_t count = offsets[0];  // the first index is the count of fields
-  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
-
-  cql_hash_code hash = 5381;
-
-  for (uint16_t i = 0; i < count; i++) {
-    uint16_t offset = offsets[i+1];
-    uint8_t type = types[i];
-
-    int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
-    if (core_data_type <= CQL_DATA_TYPE_BOOL) {
-      // any value type
-      cql_bool notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
-      size_t size = notnull ? normal_datasizes[core_data_type] : nullable_datasizes[core_data_type];
-      uint8_t *bytes = cursor + offset;
-
-      while (size--) {
-        hash = ((hash << 5) + hash) + *bytes++; /* hash * 33 + c */
-      }
-    }
-    else {
-      // any reference type
-      cql_hash_code ref_hash = cql_ref_hash(*(cql_type_ref *)(cursor + offset));
-      hash = ((hash << 5) + hash) + ref_hash;
-    }
-  }
-
-  // we have to return a type that is compatible with CQL, and CQL does not have unsigned types
-  return (cql_int64)hash;
+  return (cql_int64)cql_hash_buffer(
+    dyn_cursor->cursor_data,
+    dyn_cursor->cursor_size,
+    dyn_cursor->cursor_refs_count,
+    dyn_cursor->cursor_refs_offset);
 }
-
 
 // Generic method to compare two dynamic cursors
 // Note this code takes advantage of the fact that null valued primitives
@@ -3101,61 +3097,28 @@ cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor)
 // much work this assumption could be removed if needed at a later time.
 cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *_Nonnull c2)
 {
-  uint16_t *offsets = c1->cursor_col_offsets;
-  uint8_t *types = c1->cursor_data_types;
-  uint16_t count = offsets[0];  // the first index is the count of fields
-  uint8_t *data1 = c1->cursor_data;  // we will be using char offsets
-  uint8_t *data2 = c2->cursor_data;  // we will be using char offsets
+  // first check metadata for equivalence, and both must have a row, or not have a row
 
-  // first check metadata for equivalence
-  if (count != c2->cursor_col_offsets[0]) {
-    return false;
-  }
-
-  // column positions differ (recall the first position in the array is the count)
-  // hence we compare count + 1 items
-  if (memcmp(offsets, c2->cursor_col_offsets, (1 + count) * sizeof(offsets[0]))) {
-    return false;
-  }
-
-  // data types positions differ
-  if (memcmp(types, c2->cursor_data_types, count * sizeof(types[0]))) {
+  if (c1->cursor_size != c2->cursor_size ||
+      c1->cursor_refs_count != c2->cursor_refs_count ||
+      c1->cursor_refs_offset != c2->cursor_refs_offset ||
+      *c1->cursor_has_row != *c2->cursor_has_row) {
     return false;
   }
 
   // if metadata matches and neither has data that's a match (empty cursors are equal)
-  if (!*c1->cursor_has_row && !*c2->cursor_has_row) {
+  // note we already know their has_row values are the same
+  if (!*c1->cursor_has_row) {
+    cql_invariant(!*c2->cursor_has_row);
     return true;
   }
 
-  // if either has no data then not equal
-  if (!*c1->cursor_has_row || !*c2->cursor_has_row) {
-    return false;
-  }
-
-  for (uint16_t i = 0; i < count; i++) {
-    uint16_t offset = offsets[i+1];
-    uint8_t type = types[i];
-
-    int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
-    if (core_data_type <= CQL_DATA_TYPE_BOOL) {
-      // any value type
-      cql_bool notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
-      size_t size = notnull ? normal_datasizes[core_data_type] : nullable_datasizes[core_data_type];
-      if (memcmp(data1 + offset, data2 + offset, size)) {
-        return false;
-      }
-    }
-    else {
-      // any reference type
-      if (!cql_ref_equal(*(cql_type_ref *)(data1 + offset), *(cql_type_ref *)(data2 + offset))) {
-        return false;
-      }
-    }
-  }
-
-  // all matched!
-  return true;
+  return cql_buffers_equal(
+    c1->cursor_data,
+    c2->cursor_data,
+    c1->cursor_size,
+    c1->cursor_refs_count,
+    c1->cursor_refs_offset);
 }
 
 // release the references in a cursor using the types and offsets info
@@ -3449,4 +3412,264 @@ error:
   *has_row = false;
   cql_clear_references_before_deserialization(dyn_cursor);
   return SQLITE_ERROR;
+}
+
+// Any remaining keys should release their references and give back their memory.
+// We only have to release if there is at least one reference.
+static void cql_partition_key_release(void *_Nullable context, cql_int64 key) {
+  cql_partition *_Nonnull self = context;
+  void *pv = (void *)key;
+  if (self->c_key.cursor_refs_count) {
+    cql_release_offsets(pv, self->c_key.cursor_refs_count, self->c_key.cursor_refs_offset);
+  }
+  free((void *)pv);
+}
+
+// We're just going to look at the buffer and release any pointers in any rows
+// before releasing the buffer itself.  We only have to do the release operations
+// if there was at least one reference in the data.  Otherwise closing the buffer
+// releases its internal storage.  The buffer itself doesn't know what it's holding
+// so we have to do the internal releases for it.
+static void cql_partition_val_release(void *_Nullable context, cql_int64 val) {
+  cql_partition *_Nonnull self = context;
+  cql_bytebuf * buffer = (cql_bytebuf *)val;
+  int16_t refs_count = self->c_val.cursor_refs_count;
+
+  if (refs_count) {
+    int16_t refs_offset = self->c_val.cursor_refs_offset;
+    size_t rowsize = self->c_val.cursor_size;
+    int32_t count = buffer->used / rowsize;
+
+    char *row = buffer->ptr;
+    for (cql_int32 i = 0; i < count ; i++, row += rowsize) {
+      cql_release_offsets(row, refs_count, refs_offset);
+    }
+  }
+  // releases the internal buffer
+  cql_bytebuf_close(buffer);
+  free(buffer);
+}
+
+// When we're going to tear down the partition we want to release anything left in it.
+// We just change the release functions now so that they actually do something.  The
+// helpers above will free the keys/values including iterating the buffer contents if
+// there are any unused buffers left.
+static void cql_partition_finalize(void *_Nonnull data) {
+  // recover our type
+  cql_partition *_Nonnull self = data;
+
+  // we're doing final cleanup now so attach the release code
+  // these are not ref counted so normally you just copy them (hence no-op retain/release)
+  // but now we are doing for real cleanup.
+  self->ht->release_key = cql_partition_key_release;
+  self->ht->release_val = cql_partition_val_release;
+
+  if (self->empty_result) {
+    cql_object_release(self->empty_result);
+  }
+
+  cql_hashtab_delete(self->ht);
+
+  free(self);
+}
+
+// We just defer to the cursor helper using the stored key metadata
+static uint64_t cql_key_cursor_hash(void *_Nullable context, cql_int64 key) {
+  cql_contract(context);
+  cql_partition *_Nonnull self = context;
+
+  // c_key is preloaded with the unique meta data for this partition
+  // all we need to do is copy in the cursor data.  We already verified
+  // all metadata is the one and only legal metadata for this partitioning
+  self->c_key.cursor_data = (void *)key;
+  return cql_cursor_hash(&self->c_key);
+}
+
+// We just defer to the cursor helper using the stored key metadata
+static bool cql_key_cursor_eq(void *_Nullable context, cql_int64 key1, cql_int64 key2) {
+  cql_contract(context);
+  cql_partition *_Nonnull self = context;
+
+  // c_key and c_key2 are preloaded with the unique meta data for this partition
+  // all we need to do is copy in the cursor data.  We already verified
+  // all metadata is the one and only legal metadata for this partitioning
+  self->c_key.cursor_data = (void *)key1;
+  self->c_key2.cursor_data = (void *)key2;
+  return cql_cursors_equal(&self->c_key, &self->c_key2);
+}
+
+// This makes an empty partitioning object, which is basically just a configured
+// hash table.  The hash table is set to use the helpers above.  Normally there
+// is no need to retain/release when rehashing or copying as the hash table is
+// the one and only owner of this particular data.  However, we change the
+// finalization functions at shutdown to allow the hashtable to help us clean
+// up its contents when they are condemned.
+cql_object_ref _Nonnull cql_partition_create() {
+
+  cql_partition *_Nonnull self = calloc(1, sizeof(cql_partition));
+
+  cql_object_ref obj = _cql_generic_object_create(self, cql_partition_finalize);
+
+  self->has_row = true;  // we only store cursors with data in them
+
+  self->ht = cql_hashtab_new(
+      cql_key_cursor_hash,
+      cql_key_cursor_eq,
+      cql_no_op_retain_release,
+      cql_no_op_retain_release,
+      cql_no_op_retain_release,
+      cql_no_op_retain_release,
+      self
+    );
+
+  return obj;
+}
+
+// This is the main workhorse.  Here the idea is that we are given key columns
+// from a particular row as well as the whole row, later we will look up the row
+// by its key.  Of course the key doesn't have to be in the row but that's the normal
+// pattern.  That is, normally key and val are looking at the same data with key
+// being a subset of the columns of val. We are going to hash the key and then
+// append the val to a buffer associated with that key.  We make the buffers on
+// demand so, there are never really any empty buffers except for a brief instant.
+// Any missing keys will have no data.  We use the cursor hashing and equality helpers
+// to do the hash table work.  We use the usual retain/release helpers for cursors
+// to ensure that the right number of retain/release calls happen on each key/value.
+cql_bool cql_partition_cursor(
+  cql_object_ref _Nonnull obj,
+  cql_dynamic_cursor *_Nonnull key,
+  cql_dynamic_cursor *_Nonnull val)
+{
+  cql_partition *_Nonnull self = _cql_generic_object_get_data(obj);
+
+  if (self->c_key.cursor_size) {
+    // we're not seeing the first key/val cursor, all copies must be from the same metadata
+    cql_contract(self->c_key.cursor_size == key->cursor_size);
+    cql_contract(self->c_key.cursor_refs_count == key->cursor_refs_count);
+    cql_contract(self->c_key.cursor_refs_offset == key->cursor_refs_offset);
+    cql_contract(self->c_val.cursor_size == val->cursor_size);
+    cql_contract(self->c_val.cursor_refs_count == val->cursor_refs_count);
+    cql_contract(self->c_val.cursor_refs_offset == val->cursor_refs_offset);
+  }
+  else {
+    // we want 2 copies of the metadata for keys (for comparison)
+    // one copy of teh values shape will do.
+    self->c_key = *key;
+    self->c_key2 = *key;
+    self->c_val = *val;
+
+    // the pointer has to be fixed up to point to the shared (always true) has row
+    self->c_key.cursor_has_row = &self->has_row;
+    self->c_key2.cursor_has_row = &self->has_row;
+    self->c_val.cursor_has_row = &self->has_row;
+  }
+
+  if (!*key->cursor_has_row || !*val->cursor_has_row) {
+    return false;
+  }
+
+  // we want to avoid storing the whole dynamic cursor since they are all the same
+  // so we hash on the data and we use the context to get the cursor back
+  cql_hashtab_entry *entry = cql_hashtab_find(self->ht, (cql_int64)key->cursor_data);
+  cql_bytebuf *buf = NULL;
+
+  if (entry) {
+    // we already have a buffer, we can append
+    buf = (cql_bytebuf *)entry->val;
+  }
+  else {
+    // create buffer and add to hash table
+    buf = malloc(sizeof(*buf));
+    cql_bytebuf_open(buf);
+
+    char *k = malloc(key->cursor_size);
+    memcpy(k, key->cursor_data, key->cursor_size);
+    cql_retain_offsets(k, key->cursor_refs_count, key->cursor_refs_offset);
+
+    cql_bool added = cql_hashtab_add(self->ht, (cql_int64)k, (cql_int64)buf);
+    cql_invariant(added);
+  }
+
+  cql_invariant(buf);
+
+  // append this value to the growable buffer
+  char *new_data = cql_bytebuf_alloc(buf, (int)val->cursor_size);
+  memcpy(new_data, val->cursor_data, val->cursor_size);
+  cql_retain_offsets(new_data, val->cursor_refs_count, val->cursor_refs_offset);
+
+  return true;
+}
+
+// Here we have created partitions previously and we're going to look them up.
+// The idea is that if rows for a particular key combo exists then
+// we make a result set out of that bunch of rows. If not, we return an
+// empty result set (0 rows).  To save space we only create one empty result
+// set for all cases in any given partition because all empty results are the same.
+cql_object_ref _Nonnull cql_extract_partition(
+  cql_object_ref _Nonnull obj,
+  cql_dynamic_cursor *_Nonnull key)
+{
+  cql_partition *_Nonnull self = _cql_generic_object_get_data(obj);
+
+  if (self->c_key.cursor_size) {
+    cql_contract(self->c_key.cursor_size == key->cursor_size);
+    cql_contract(self->c_key.cursor_refs_count == key->cursor_refs_count);
+    cql_contract(self->c_key.cursor_refs_offset == key->cursor_refs_offset);
+    cql_contract(self->c_val.cursor_size);
+
+    cql_hashtab_entry *entry = cql_hashtab_find(self->ht, (cql_int64)key->cursor_data);
+    cql_bytebuf *buf = NULL;
+
+    if (entry) {
+      // we have data for this key
+      buf = (cql_bytebuf *)entry->val;
+
+      // if you hit this it means you tried to get the same partition data twice!  Not allowed!
+      cql_contract(buf);
+
+      cql_int32 count = (cql_int32)(buf->used / self->c_val.cursor_size);
+
+      cql_fetch_info info = {
+        .data_types = self->c_val.cursor_data_types,
+        .col_offsets = self->c_val.cursor_col_offsets,
+        .refs_count = self->c_val.cursor_refs_count,
+        .refs_offset = self->c_val.cursor_refs_offset,
+        .rowsize = (int32_t)self->c_val.cursor_size,
+        .encode_context_index = -1,
+      };
+
+      // make the meta from standard info
+      cql_result_set_meta meta;
+      cql_initialize_meta(&meta, &info);
+
+      void *data = buf->ptr;
+
+      // the bytebuf has been harvested, we can free it now.  We do not "close" it
+      // because the result set is taking over the growable buffer, we don't want
+      // the buffer to be freed.
+      free(buf);
+      entry->val = 0;
+      return (cql_object_ref)cql_result_set_create(data, count, meta);
+    }
+  }
+
+  if (!self->empty_result) {
+    static uint8_t empty_dataTypes[] = { };
+    static uint16_t empty_colOffsets[] = { 0 };
+
+    cql_fetch_info empty_info = {
+      .data_types = empty_dataTypes,
+      .col_offsets = empty_colOffsets,
+      .encode_context_index = -1,
+    };
+
+    // make the meta from standard info
+    cql_result_set_meta empty_meta;
+    cql_initialize_meta(&empty_meta, &empty_info);
+    self->empty_result = (cql_object_ref)cql_result_set_create(malloc(1), 0, empty_meta);
+  }
+
+  cql_invariant(self->empty_result);
+  cql_object_retain(self->empty_result);
+  return self->empty_result;
 }

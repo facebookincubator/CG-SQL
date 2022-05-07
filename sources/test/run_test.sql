@@ -5035,6 +5035,86 @@ BEGIN_TEST(cursor_equal)
 
 END_TEST(cursor_equal)
 
+-- cursor partitioning runtime functions (these will be builtin at some point)
+declare function cql_partition_create() create object not null;
+declare function cql_partition_cursor(partition_ object not null, key cursor, value cursor) bool not null;
+declare function cql_extract_partition(partition_ object not null, key cursor) create object not null;
+
+DECLARE PROC get_rows(result object not null) OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL, z BOOL);
+
+-- we need a shim to convert an object to a result set we can iterate, we make a fake "fetch_results" function for this purpose
+@echo c, "void get_rows_fetch_results(get_rows_result_set_ref _Nullable *_Nonnull _result_set_, cql_object_ref _Nonnull result)\n";
+@echo c, "{\n";
+@echo c, "  *_result_set_ = (get_rows_result_set_ref)result;\n";
+@echo c, "  cql_object_retain(result);\n";
+@echo c, "}\n";
+
+BEGIN_TEST(child_results)
+  let p := cql_partition_create();
+
+  declare K cursor like select 1 x, "2" y;
+  declare V cursor like select 1 x, "2" y, nullable(false) z;
+
+  -- empty cursors, not added to partition
+  let added := cql_partition_cursor(p, k, v);
+  EXPECT(not added);
+
+  let i := 0;
+
+  while i < 10
+  begin
+    fetch k() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch v() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    set added := cql_partition_cursor(p, k, v);
+    EXPECT(added);
+
+    if (i % 3 == 0) THEN
+      set added := cql_partition_cursor(p, k, v);
+      EXPECT(added);
+    end if;
+
+    if (i % 6 == 0) THEN
+      set added := cql_partition_cursor(p, k, v);
+      EXPECT(added);
+    end if;
+
+    set i := i + 1;
+  end;
+
+  set i := -2;
+  while i < 12
+  begin
+    /* don't join #6 to force cleanup */
+    if i != 6 then
+      fetch k() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
+      declare C cursor for call get_rows(cql_extract_partition(p, k));
+
+      let row_count := 0;
+      loop fetch C
+      begin
+        EXPECT(C.x == i);
+        EXPECT(C.y == printf("y_%d", i));
+        EXPECT(C.z == NOT NOT i);
+        set row_count := row_count + 1;
+      end;
+
+      switch i
+        when -2, -1, 10, 11
+          then EXPECT(row_count == 0);
+        when 1, 2, 4, 5, 7, 8
+          then EXPECT(row_count == 1);
+        when 3, 9
+          then EXPECT(row_count == 2);
+        when 0
+          then EXPECT(row_count == 3);
+      end;
+    end if;
+
+    set i := i + 1;
+  end;
+END_TEST(child_results)
+
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros
