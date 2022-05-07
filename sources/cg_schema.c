@@ -872,8 +872,10 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     bprintf(&drop, "  DROP VIEW IF EXISTS %s;\n", name);
     (*drops)++;
 
-    // if not deleted, emit the create
-    if (ast->sem->delete_version < 0) {
+    // This covers deleted or unsubscribed
+    bool_t view_deleted = is_deleted(ast);
+
+    if (!view_deleted) {
       gen_set_output_buffer(&create);
       gen_statement_with_callbacks(ast, &callbacks);
       bprintf(&create, ";\n");

@@ -169,6 +169,12 @@ CREATE TABLE unsub_voyage(
 );
 @end_schema_region;
 
+@begin_schema_region other;
+CREATE TABLE some_table(
+  id INTEGER
+);
+@end_schema_region;
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *
@@ -191,6 +197,18 @@ SELECT *
 CREATE VIEW another_live_view AS
 SELECT *
   FROM table2;
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE VIEW foo_view_unsubscribed AS
+SELECT *
+  FROM some_table;
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE VIEW foo_view_normal AS
+SELECT *
+  FROM some_table;
 @end_schema_region;
 
 @begin_schema_region shared;
@@ -290,5 +308,9 @@ END;
 
 @begin_schema_region other;
 @RESUB(5, unsub_voyage);
+@end_schema_region;
+
+@begin_schema_region other;
+@UNSUB(5, foo_view_unsubscribed);
 @end_schema_region;
 

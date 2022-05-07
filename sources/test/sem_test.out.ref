@@ -85657,7 +85657,7 @@ The statement ending at line XXXX
 
 @UNSUB(5);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table or view name
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -85667,7 +85667,7 @@ The statement ending at line XXXX
 
 @UNSUB(5, not_a_table);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0466: the table named in an @unsub/@resub directive does not exist 'not_a_table'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0466: the table/view named in an @unsub/@resub directive does not exist 'not_a_table'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -85733,23 +85733,12 @@ The statement ending at line XXXX
 
 @UNSUB(5, unsub_test_table);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0471: table has another @unsub/@resub at this version number 'unsub_test_table'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0471: table/view has another @unsub/@resub at this version number 'unsub_test_table'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
     | {int 5}
     | {name unsub_test_table}
-
-The statement ending at line XXXX
-
-@UNSUB(5, MyView);
-
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0468: cannot @unsub/@resub from a view 'MyView'
-
-  {schema_unsub_stmt}: err
-  | {version_annotation}
-    | {int 5}
-    | {name MyView}
 
 The statement ending at line XXXX
 
@@ -85766,7 +85755,7 @@ The statement ending at line XXXX
 
 @UNSUB(5, unsub_test_table_late_create);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0470: table not yet created at indicated version 'unsub_test_table_late_create'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0470: table/view not yet created at indicated version 'unsub_test_table_late_create'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -85777,7 +85766,7 @@ The statement ending at line XXXX
 
 @UNSUB(6, unsub_test_table_deleted);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0469: table is already deleted 'unsub_test_table_deleted'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0469: table/view is already deleted 'unsub_test_table_deleted'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -85788,7 +85777,7 @@ The statement ending at line XXXX
 
 @UNSUB(6, unsub_test_table);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0472: table is already unsubscribed 'unsub_test_table'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0472: table/view is already unsubscribed 'unsub_test_table'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -85830,7 +85819,7 @@ The statement ending at line XXXX
 
 @RESUB(8, unsub_test_table);
 
-test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0472: table is already resubscribed 'unsub_test_table'
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0472: table/view is already resubscribed 'unsub_test_table'
 
   {schema_resub_stmt}: err
   | {version_annotation}
@@ -85841,7 +85830,7 @@ The statement ending at line XXXX
 
 @RESUB(8, not_a_table);
 
-test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0466: the table named in an @unsub/@resub directive does not exist 'not_a_table'
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0466: the table/view named in an @unsub/@resub directive does not exist 'not_a_table'
 
   {schema_resub_stmt}: err
   | {version_annotation}
@@ -85877,7 +85866,7 @@ The statement ending at line XXXX
 
 @UNSUB(8, unsub_test_table);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'sub_test_dependency'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table/view is still used by 'sub_test_dependency'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -85906,7 +85895,7 @@ The statement ending at line XXXX
 
 @RESUB(9, sub_test_dependency);
 
-test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0474: @resub is invalid because the table references 'unsub_test_table'
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0474: @resub is invalid because the table/view references 'unsub_test_table'
 
   {schema_resub_stmt}: err
   | {version_annotation}
@@ -86030,7 +86019,7 @@ The statement ending at line XXXX
 
 @UNSUB(10, used_by_a_view);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'uses_a_table'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table/view is still used by 'uses_a_table'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -86161,7 +86150,7 @@ The statement ending at line XXXX
 
 @UNSUB(10, used_by_a_trigger);
 
-test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'trigger_uses_a_table'
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table/view is still used by 'trigger_uses_a_table'
 
   {schema_unsub_stmt}: err
   | {version_annotation}
@@ -86176,6 +86165,279 @@ The statement ending at line XXXX
   | {version_annotation}
     | {int 10}
     | {name used_by_a_deleted_trigger}
+
+The statement ending at line XXXX
+
+CREATE TABLE unsub_with_views_test_table(
+  id INTEGER
+);
+
+  {create_table_stmt}: unsub_with_views_test_table: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name unsub_with_views_test_table}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIEW unsub_with_views_v1 AS
+SELECT *
+  FROM unsub_with_views_test_table;
+
+  {create_view_stmt}: unsub_with_views_v1: { id: integer }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name unsub_with_views_v1}
+      | {select_stmt}: unsub_with_views_v1: { id: integer }
+        | {select_core_list}: unsub_with_views_v1: { id: integer }
+        | | {select_core}: unsub_with_views_v1: { id: integer }
+        |   | {select_expr_list_con}: unsub_with_views_v1: { id: integer }
+        |     | {select_expr_list}: unsub_with_views_v1: { id: integer }
+        |     | | {star}: unsub_with_views_v1: { id: integer }
+        |     | {select_from_etc}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       | {table_or_subquery_list}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       | | {table_or_subquery}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       |   | {name unsub_with_views_test_table}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW unsub_with_views_v2 AS
+SELECT *
+  FROM unsub_with_views_v1;
+
+  {create_view_stmt}: unsub_with_views_v2: { id: integer }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name unsub_with_views_v2}
+      | {select_stmt}: unsub_with_views_v2: { id: integer }
+        | {select_core_list}: unsub_with_views_v2: { id: integer }
+        | | {select_core}: unsub_with_views_v2: { id: integer }
+        |   | {select_expr_list_con}: unsub_with_views_v2: { id: integer }
+        |     | {select_expr_list}: unsub_with_views_v2: { id: integer }
+        |     | | {star}: unsub_with_views_v2: { id: integer }
+        |     | {select_from_etc}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       | {table_or_subquery_list}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       | | {table_or_subquery}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       |   | {name unsub_with_views_v1}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW unsub_with_views_v3 AS
+SELECT *
+  FROM unsub_with_views_v1;
+
+  {create_view_stmt}: unsub_with_views_v3: { id: integer }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name unsub_with_views_v3}
+      | {select_stmt}: unsub_with_views_v3: { id: integer }
+        | {select_core_list}: unsub_with_views_v3: { id: integer }
+        | | {select_core}: unsub_with_views_v3: { id: integer }
+        |   | {select_expr_list_con}: unsub_with_views_v3: { id: integer }
+        |     | {select_expr_list}: unsub_with_views_v3: { id: integer }
+        |     | | {star}: unsub_with_views_v3: { id: integer }
+        |     | {select_from_etc}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       | {table_or_subquery_list}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       | | {table_or_subquery}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       |   | {name unsub_with_views_v1}: TABLE { unsub_with_views_v1: unsub_with_views_v1 }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW unsub_with_views_v4 AS
+SELECT *
+  FROM unsub_with_views_test_table;
+
+  {create_view_stmt}: unsub_with_views_v4: { id: integer }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name unsub_with_views_v4}
+      | {select_stmt}: unsub_with_views_v4: { id: integer }
+        | {select_core_list}: unsub_with_views_v4: { id: integer }
+        | | {select_core}: unsub_with_views_v4: { id: integer }
+        |   | {select_expr_list_con}: unsub_with_views_v4: { id: integer }
+        |     | {select_expr_list}: unsub_with_views_v4: { id: integer }
+        |     | | {star}: unsub_with_views_v4: { id: integer }
+        |     | {select_from_etc}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       | {table_or_subquery_list}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       | | {table_or_subquery}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       |   | {name unsub_with_views_test_table}: TABLE { unsub_with_views_test_table: unsub_with_views_test_table }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW unsub_with_views_v5 AS
+SELECT *
+  FROM unsub_with_views_v4;
+
+  {create_view_stmt}: unsub_with_views_v5: { id: integer }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name unsub_with_views_v5}
+      | {select_stmt}: unsub_with_views_v5: { id: integer }
+        | {select_core_list}: unsub_with_views_v5: { id: integer }
+        | | {select_core}: unsub_with_views_v5: { id: integer }
+        |   | {select_expr_list_con}: unsub_with_views_v5: { id: integer }
+        |     | {select_expr_list}: unsub_with_views_v5: { id: integer }
+        |     | | {star}: unsub_with_views_v5: { id: integer }
+        |     | {select_from_etc}: TABLE { unsub_with_views_v4: unsub_with_views_v4 }
+        |       | {table_or_subquery_list}: TABLE { unsub_with_views_v4: unsub_with_views_v4 }
+        |       | | {table_or_subquery}: TABLE { unsub_with_views_v4: unsub_with_views_v4 }
+        |       |   | {name unsub_with_views_v4}: TABLE { unsub_with_views_v4: unsub_with_views_v4 }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TRIGGER unsub_with_views_annoying_trigger
+  BEFORE DELETE ON unsub_with_views_test_table
+BEGIN
+  DELETE FROM unsub_with_views_test_table WHERE ( SELECT id
+    FROM unsub_with_views_v3 );
+END;
+
+  {create_trigger_stmt}: ok
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name unsub_with_views_annoying_trigger}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name unsub_with_views_test_table}: unsub_with_views_test_table: { id: integer }
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}: ok
+                  | {delete_stmt}: ok
+                    | {name unsub_with_views_test_table}: unsub_with_views_test_table: { id: integer }
+                    | {opt_where}: id: integer
+                      | {select_stmt}: id: integer
+                        | {select_core_list}: select: { id: integer }
+                        | | {select_core}: select: { id: integer }
+                        |   | {select_expr_list_con}: select: { id: integer }
+                        |     | {select_expr_list}: select: { id: integer }
+                        |     | | {select_expr}: id: integer
+                        |     |   | {name id}: id: integer
+                        |     | {select_from_etc}: TABLE { unsub_with_views_v3: unsub_with_views_v3 }
+                        |       | {table_or_subquery_list}: TABLE { unsub_with_views_v3: unsub_with_views_v3 }
+                        |       | | {table_or_subquery}: TABLE { unsub_with_views_v3: unsub_with_views_v3 }
+                        |       |   | {name unsub_with_views_v3}: TABLE { unsub_with_views_v3: unsub_with_views_v3 }
+                        |       | {select_where}
+                        |         | {select_groupby}
+                        |           | {select_having}
+                        | {select_orderby}
+                          | {select_limit}
+                            | {select_offset}
+
+The statement ending at line XXXX
+
+@UNSUB(10, unsub_with_views_v2);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 10}
+    | {name unsub_with_views_v2}
+
+The statement ending at line XXXX
+
+@UNSUB(10, unsub_with_views_v1);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table/view is still used by 'unsub_with_views_v3'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 10}
+    | {name unsub_with_views_v1}
+
+The statement ending at line XXXX
+
+@RESUB(11, unsub_with_views_v2);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 11}
+    | {name unsub_with_views_v2}
+
+The statement ending at line XXXX
+
+@UNSUB(11, unsub_with_views_v3);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table/view is still used by 'unsub_with_views_annoying_trigger'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 11}
+    | {name unsub_with_views_v3}
+
+The statement ending at line XXXX
+
+@UNSUB(12, unsub_with_views_v5);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 12}
+    | {name unsub_with_views_v5}
+
+The statement ending at line XXXX
+
+@UNSUB(12, unsub_with_views_v4);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 12}
+    | {name unsub_with_views_v4}
+
+The statement ending at line XXXX
+
+@RESUB(13, unsub_with_views_v5);
+
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0474: @resub is invalid because the table/view references 'unsub_with_views_v4'
+
+  {schema_resub_stmt}: err
+  | {version_annotation}
+    | {int 13}
+    | {name unsub_with_views_v5}
 
 The statement ending at line XXXX
 
@@ -86474,9 +86736,9 @@ The statement ending at line XXXX
 
 CREATE TABLE parent_subs_table(
   id INTEGER PRIMARY KEY
-) @CREATE(9) @DELETE(12);
+) @CREATE(9) @DELETE(25);
 
-  {create_table_stmt}: parent_subs_table: { id: integer notnull primary_key } deleted @create(9) @delete(12)
+  {create_table_stmt}: parent_subs_table: { id: integer notnull primary_key } deleted @create(9) @delete(25)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -86485,7 +86747,7 @@ CREATE TABLE parent_subs_table(
   | |   | | {int 9}
   | |   | {delete_attr}
   | |     | {version_annotation}
-  | |       | {int 12}
+  | |       | {int 25}
   | | {name parent_subs_table}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key
@@ -86500,9 +86762,9 @@ The statement ending at line XXXX
 
 CREATE TABLE child_subs_table(
   id INTEGER PRIMARY KEY REFERENCES parent_subs_table (id)
-) @CREATE(9) @DELETE(12);
+) @CREATE(9) @DELETE(25);
 
-  {create_table_stmt}: child_subs_table: { id: integer notnull primary_key foreign_key } deleted @create(9) @delete(12)
+  {create_table_stmt}: child_subs_table: { id: integer notnull primary_key foreign_key } deleted @create(9) @delete(25)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -86511,7 +86773,7 @@ CREATE TABLE child_subs_table(
   | |   | | {int 9}
   | |   | {delete_attr}
   | |     | {version_annotation}
-  | |       | {int 12}
+  | |       | {int 25}
   | | {name child_subs_table}
   | {col_key_list}
     | {col_def}: id: integer notnull primary_key foreign_key
@@ -86531,38 +86793,38 @@ CREATE TABLE child_subs_table(
 
 The statement ending at line XXXX
 
-@UNSUB(10, child_subs_table);
+@UNSUB(20, child_subs_table);
 
   {schema_unsub_stmt}: ok
   | {version_annotation}
-    | {int 10}
+    | {int 20}
     | {name child_subs_table}
 
 The statement ending at line XXXX
 
-@UNSUB(10, parent_subs_table);
+@UNSUB(20, parent_subs_table);
 
   {schema_unsub_stmt}: ok
   | {version_annotation}
-    | {int 10}
+    | {int 20}
     | {name parent_subs_table}
 
 The statement ending at line XXXX
 
-@RESUB(11, parent_subs_table);
+@RESUB(21, parent_subs_table);
 
   {schema_resub_stmt}: ok
   | {version_annotation}
-    | {int 11}
+    | {int 21}
     | {name parent_subs_table}
 
 The statement ending at line XXXX
 
-@RESUB(11, child_subs_table);
+@RESUB(22, child_subs_table);
 
   {schema_resub_stmt}: ok
   | {version_annotation}
-    | {int 11}
+    | {int 22}
     | {name child_subs_table}
 
 The statement ending at line XXXX

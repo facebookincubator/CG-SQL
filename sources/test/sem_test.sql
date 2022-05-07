@@ -21663,7 +21663,7 @@ create table unsub_test_table_late_create(id integer) @create(7);
 
 -- TEST: unsub directive invalid version number
 -- + {schema_unsub_stmt}: err
--- + error: % the table named in an @unsub/@resub directive does not exist 'not_a_table'
+-- + error: % the table/view named in an @unsub/@resub directive does not exist 'not_a_table'
 -- +1 error:
 @unsub (5, not_a_table);
 
@@ -21686,15 +21686,9 @@ select * from unsub_test_table;
 
 -- TEST: duplicate unsub
 -- + {schema_unsub_stmt}: err
--- + error: % table has another @unsub/@resub at this version number 'unsub_test_table'
+-- + error: % table/view has another @unsub/@resub at this version number 'unsub_test_table'
 -- +1 error:
 @unsub(5, unsub_test_table);
-
--- TEST: unsub from a view is illegal
--- + {schema_unsub_stmt}: err
--- + error: % cannot @unsub/@resub from a view 'MyView'
--- +1 error:
-@unsub(5, MyView);
 
 -- TEST: unsub directives must be in ascending order
 -- + {schema_unsub_stmt}: err
@@ -21704,19 +21698,19 @@ select * from unsub_test_table;
 
 -- TEST: table not created yet, can't unsub
 -- + {schema_unsub_stmt}: err
--- + error: % table not yet created at indicated version 'unsub_test_table_late_create'
+-- + error: % table/view not yet created at indicated version 'unsub_test_table_late_create'
 -- +1 error:
 @unsub (5,unsub_test_table_late_create);
 
 -- TEST: already deleted table
 -- + {schema_unsub_stmt}: err
--- + error: % table is already deleted 'unsub_test_table_deleted'
+-- + error: % table/view is already deleted 'unsub_test_table_deleted'
 -- +1 error:
 @unsub(6, unsub_test_table_deleted);
 
 -- TEST: already unsubscribed table
 -- + {schema_unsub_stmt}: err
--- + error: % table is already unsubscribed 'unsub_test_table'
+-- + error: % table/view is already unsubscribed 'unsub_test_table'
 -- +1 error:
 @unsub(6, unsub_test_table);
 
@@ -21732,14 +21726,14 @@ select * from unsub_test_table;
 
 -- TEST: re-resub is not legal
 -- + {schema_resub_stmt}: err
--- + error: % table is already resubscribed 'unsub_test_table'
+-- + error: % table/view is already resubscribed 'unsub_test_table'
 -- +1 error:
 @resub(8, unsub_test_table);
 
 -- TEST: common sub checks are done for resub too (all shared code)
 -- no need to recheck the sub sanity checks, they are the same for both
 -- + {schema_resub_stmt}: err
--- + error: % the table named in an @unsub/@resub directive does not exist 'not_a_table'
+-- + error: % the table/view named in an @unsub/@resub directive does not exist 'not_a_table'
 -- +1 error:
 @resub(8, not_a_table);
 
@@ -21750,7 +21744,7 @@ create table sub_test_dependency(
 
 -- TEST: can't do this, unsub_test_table still refers to this table
 -- + {schema_unsub_stmt}: err
--- + error: % @unsub is invalid because the table is still used by 'sub_test_dependency'
+-- + error: % @unsub is invalid because the table/view is still used by 'sub_test_dependency'
 -- +1 error:
 @unsub (8, unsub_test_table);
 
@@ -21766,7 +21760,7 @@ create table sub_test_dependency(
 
 -- TEST: can't add the leaf table back first
 -- + {schema_resub_stmt}: err
--- + error: % @resub is invalid because the table references 'unsub_test_table'
+-- + error: % @resub is invalid because the table/view references 'unsub_test_table'
 -- +1 error:
 @resub (9, sub_test_dependency);
 
@@ -21779,7 +21773,6 @@ create table sub_test_dependency(
 -- + {schema_resub_stmt}: ok
 -- - error:
 @resub (9, sub_test_dependency);
-
 
 -- TEST: setup unsub test case for table in use by a view
 -- - error:
@@ -21803,7 +21796,7 @@ create view uses_a_table_but_deleted as select * from used_by_a_deleted_view @de
 
 -- TEST: can't delete this table, a view still uses it
 -- + {schema_unsub_stmt}: err
--- + error: % @unsub is invalid because the table is still used by 'uses_a_table'
+-- + error: % @unsub is invalid because the table/view is still used by 'uses_a_table'
 -- +1 error:
 @unsub (10, used_by_a_view);
 
@@ -21847,7 +21840,7 @@ end @delete(5);
 
 -- TEST: can't delete this table, a trigger still uses it
 -- + {schema_unsub_stmt}: err
--- + error: % @unsub is invalid because the table is still used by 'trigger_uses_a_table'
+-- + error: % @unsub is invalid because the table/view is still used by 'trigger_uses_a_table'
 -- +1 error:
 @unsub (10, used_by_a_trigger);
 
@@ -21855,6 +21848,65 @@ end @delete(5);
 -- + {schema_unsub_stmt}: ok
 -- - error:
 @unsub (10, used_by_a_deleted_trigger);
+
+
+-- TEST: this is just setup stuff
+-- - error:
+create table unsub_with_views_test_table(id integer);
+-- - error:
+create view unsub_with_views_v1 as select * from unsub_with_views_test_table;
+-- - error:
+create view unsub_with_views_v2 as select * from unsub_with_views_v1;
+-- - error:
+create view unsub_with_views_v3 as select * from unsub_with_views_v1;
+-- - error:
+create view unsub_with_views_v4 as select * from unsub_with_views_test_table;
+-- - error:
+create view unsub_with_views_v5 as select * from unsub_with_views_v4;
+
+-- - error:
+create trigger unsub_with_views_annoying_trigger
+  before delete on unsub_with_views_test_table
+begin
+  delete from unsub_with_views_test_table where (select id from unsub_with_views_v3);
+end;
+
+-- TEST: v2 can be removed, nothing depends on it
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (10, unsub_with_views_v2);
+
+-- TEST: v1 can't be removed because v3 depends on it
+-- + error: % @unsub is invalid because the table/view is still used by 'unsub_with_views_v3'
+-- +1 error:
+@unsub (10, unsub_with_views_v1);
+
+-- TEST: v2 can come back no problem
+-- + {schema_resub_stmt}: ok
+-- - error:
+@resub (11, unsub_with_views_v2);
+
+-- TEST: can't unsub v3 because of annoying trigger
+-- + {schema_unsub_stmt}: err
+-- + error: % @unsub is invalid because the table/view is still used by 'unsub_with_views_annoying_trigger'
+-- +1 error:
+@unsub (11, unsub_with_views_v3);
+
+-- TEST: v5 can be removed, nothing depends on it
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (12, unsub_with_views_v5);
+
+-- TEST: v4 can be removed, nothing depends on it but v5 which is gone already
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (12, unsub_with_views_v4);
+
+-- TEST: v5 can't come back until v4 returns
+-- + {schema_resub_stmt}: err
+-- + @resub is invalid because the table/view references 'unsub_with_views_v4'
+-- +1 error:
+@resub (13, unsub_with_views_v5);
 
 declare proc any_args_at_all no check;
 
@@ -21917,24 +21969,24 @@ end;
 -- - error:
 create table parent_subs_table (
   id integer primary key
-) @create(9) @delete(12);
+) @create(9) @delete(25);
 
 -- setup for the resub test
 create table child_subs_table (
   id integer primary key references parent_subs_table(id)
-) @create(9) @delete(12);
+) @create(9) @delete(25);
 
 -- standard unsub order
 -- - error:
-@unsub(10, child_subs_table);
+@unsub(20, child_subs_table);
 
 -- standard unsub order
 -- - error:
-@unsub(10, parent_subs_table);
+@unsub(20, parent_subs_table);
 
--- standad resub order
+-- standard resub order
 -- - error:
-@resub(11, parent_subs_table);
+@resub(21, parent_subs_table);
 
 -- TEST: this is the actual test case, here we verify that we can do a resub
 -- even when parent table is deleted, provided of course that we are also
@@ -21946,7 +21998,7 @@ create table child_subs_table (
 -- "@resub is invalid because the table references 'deleted_parent'"
 -- + {schema_resub_stmt}: ok
 -- - error:
-@resub(11, child_subs_table);
+@resub(22, child_subs_table);
 
 -- TEST: this generates an error and creates an unresolved arg list
 -- + {declare_proc_stmt}: err

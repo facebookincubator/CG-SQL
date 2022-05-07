@@ -1564,7 +1564,7 @@ cql_noexport void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg,
 
 // subscription directives have the same kind of payload and need the same basic info
 typedef struct subs_info {
-  ast_node *table_ast;
+  ast_node *target_ast;
   CSTR name;
   int32_t vers;
 } subs_info;
@@ -3652,17 +3652,15 @@ static CSTR sem_get_name(ast_node *ast) {
 // These symbol tables track ast dependencies by name
 // This tells use which tables refer to which other tables by FK (both directions)
 // And which views refer to which tables by name (both directions)
-static void record_table_dependencies(ast_node *src_ast, ast_node *ref_table_ast) {
-  Contract(is_ast_create_table_stmt(ref_table_ast));
+static void record_table_dependencies(ast_node *src_ast, ast_node *target_ast) {
+  Contract(is_ast_create_table_stmt(target_ast) || is_ast_create_view_stmt(target_ast));
 
   // note this will verify that it is one of the known dependency types also
-  CSTR canonical_src_name = sem_get_name(src_ast);
+  CSTR src_name = sem_get_name(src_ast);
+  CSTR target_name = sem_get_name(target_ast);
 
-  EXTRACT_NAMED_NOTNULL(ref_create_table_name_flags, create_table_name_flags, ref_table_ast->left);
-  EXTRACT_STRING(ref_table_name, ref_create_table_name_flags->right);
-
-  symtab_append_bytes(ref_sources_for_target_table, ref_table_name, &src_ast, sizeof(src_ast));
-  symtab_append_bytes(ref_targets_for_source_table, canonical_src_name, &ref_table_ast, sizeof(ref_table_ast));
+  symtab_append_bytes(ref_sources_for_target_table, target_name, &src_ast, sizeof(src_ast));
+  symtab_append_bytes(ref_targets_for_source_table, src_name, &target_ast, sizeof(target_ast));
 }
 
 // Similar to other constraints, we don't actually do anything with this
@@ -11727,11 +11725,11 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
 }
 
 // When we locate a table used by a view we simply add that info to the dependency map in both directions
-static void sem_found_table_in_view(CSTR _Nonnull table_name, ast_node *_Nonnull table_ast, void *_Nullable context) {
-  Contract(is_ast_create_table_stmt(table_ast));
+static void sem_found_dep_in_view(CSTR _Nonnull name, ast_node *_Nonnull target_ast, void *_Nullable context) {
+  Contract(is_ast_create_table_stmt(target_ast) || is_ast_create_view_stmt(target_ast));
   EXTRACT_NOTNULL(create_view_stmt, context);
 
-  record_table_dependencies(create_view_stmt, table_ast);
+  record_table_dependencies(create_view_stmt, target_ast);
 }
 
 // Here we peek into the view body and find the tables that it uses.
@@ -11743,7 +11741,8 @@ static void sem_record_view_dependencies(ast_node *ast) {
   Contract(is_ast_create_view_stmt(ast));
 
   table_callbacks callbacks = {
-    .callback_any_table = sem_found_table_in_view,
+    .callback_any_table = sem_found_dep_in_view,
+    .callback_any_view = sem_found_dep_in_view,
     .callback_context = ast,
     .do_not_recurse_views = true,
   };
@@ -11833,6 +11832,10 @@ static void sem_create_view_stmt(ast_node *ast) {
   ast->sem->sem_type |= vers_info.flags;
   ast->sem->delete_version = vers_info.delete_version;
   ast->sem->region = current_region;
+
+  if (ast->sem->delete_version > 0) {
+    ast->sem->sem_type |= SEM_TYPE_DELETED;
+  }
 
   if (existing_defn) {
     if (!sem_validate_identical_ddl(existing_defn, ast)) {
@@ -12669,16 +12672,16 @@ typedef struct trigger_dep_context {
 } trigger_dep_context;
 
 // When we locate a table used by a view we simply add that info to the dependency map in both directions
-static void sem_found_table_in_trigger(CSTR _Nonnull table_name, ast_node *_Nonnull table_ast, void *_Nullable context) {
-  Contract(is_ast_create_table_stmt(table_ast));
+static void sem_found_dep_in_trigger(CSTR _Nonnull target_name, ast_node *_Nonnull target_ast, void *_Nullable context) {
+  Contract(is_ast_create_table_stmt(target_ast) || is_ast_create_view_stmt(target_ast));
 
   trigger_dep_context *info  = context;
 
-  if (Strcasecmp(info->trigger_on_table_name, table_name)) {
+  if (Strcasecmp(info->trigger_on_table_name, target_name)) {
     // we don't have to record that the trigger depends on the table that it is on
     // if that table goes away the trigger is implicitly deleted anyway, it would
     // just give us a bunch of false positives.  It's the other tables that need searching
-    record_table_dependencies(info->trigger_ast, table_ast);
+    record_table_dependencies(info->trigger_ast, target_ast);
   }
 }
 
@@ -12704,7 +12707,8 @@ static void sem_record_trigger_dependencies(ast_node *ast) {
   };
 
   table_callbacks callbacks = {
-    .callback_any_table = sem_found_table_in_trigger,
+    .callback_any_table = sem_found_dep_in_trigger,
+    .callback_any_view = sem_found_dep_in_trigger,
     .callback_context = &context,
     .do_not_recurse_views = true,
   };
@@ -22690,7 +22694,7 @@ static void sem_subs_extract(ast_node *ast, subs_info *info) {
   }
 
   if (!version_annotation->right) {
-    CSTR msg = dup_printf("CQL0465: %s directive must provide a table", directive);
+    CSTR msg = dup_printf("CQL0465: %s directive must provide a table or view name", directive);
     report_error(ast, msg, NULL);
     record_error(ast);
     return;
@@ -22700,7 +22704,7 @@ static void sem_subs_extract(ast_node *ast, subs_info *info) {
 
   info->vers = vers;
   info->name = name;
-  info->table_ast = NULL;  // not part of basic extraction
+  info->target_ast = NULL;  // not part of basic extraction
 
   // don't clobber existing semantic info
   if (!ast->sem) {
@@ -22720,10 +22724,10 @@ static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
     return;
   }
 
-  ast_node *table = find_usable_table_or_view_even_deleted(
-    info->name, ast, "CQL0466: the table named in an @unsub/@resub directive does not exist");
+  ast_node *target = find_usable_table_or_view_even_deleted(
+    info->name, ast, "CQL0466: the table/view named in an @unsub/@resub directive does not exist");
 
-  if (!table) {
+  if (!target) {
     record_error(ast);
     return;
   }
@@ -22734,31 +22738,25 @@ static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
     return;
   }
 
-  if (is_ast_create_view_stmt(table)) {
-    report_error(ast, "CQL0468: cannot @unsub/@resub from a view", info->name);
+  if (target->sem->delete_version > 0 && target->sem->delete_version <= info->vers) {
+    report_error(ast, "CQL0469: table/view is already deleted", info->name);
     record_error(ast);
     return;
   }
 
-  if (table->sem->delete_version > 0 && table->sem->delete_version <= info->vers) {
-    report_error(ast, "CQL0469: table is already deleted", info->name);
+  if (!target->sem->recreate && target->sem->create_version >= info->vers) {
+    report_error(ast, "CQL0470: table/view not yet created at indicated version", info->name);
     record_error(ast);
     return;
   }
 
-  if (!table->sem->recreate && table->sem->create_version >= info->vers) {
-    report_error(ast, "CQL0470: table not yet created at indicated version", info->name);
+  if (target->sem->unsub_version == info->vers || target->sem->resub_version == info->vers) {
+    report_error(ast, "CQL0471: table/view has another @unsub/@resub at this version number", info->name);
     record_error(ast);
     return;
   }
 
-  if (table->sem->unsub_version == info->vers || table->sem->resub_version == info->vers) {
-    report_error(ast, "CQL0471: table has another @unsub/@resub at this version number", info->name);
-    record_error(ast);
-    return;
-  }
-
-  info->table_ast = table;
+  info->target_ast = target;
 
   record_ok(ast);
 }
@@ -22843,12 +22841,12 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
   }
 
   int32_t vers = info.vers;
-  ast_node *table = info.table_ast;
+  ast_node *target = info.target_ast;
   CSTR name = info.name;
-  Contract(table);
+  Contract(target);
 
-  if (table->sem->unsub_version > table->sem->resub_version) {
-    report_error(ast, "CQL0472: table is already unsubscribed", name);
+  if (target->sem->unsub_version > target->sem->resub_version) {
+    report_error(ast, "CQL0472: table/view is already unsubscribed", name);
     record_error(ast);
     return;
   }
@@ -22864,7 +22862,7 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
     if (!is_deleted(src_ast)) {
       // we're not going to return; we keep generating as many errors as needed
       CSTR src_name = sem_get_name(src_ast);
-      report_error(ast, "CQL0473: @unsub is invalid because the table is still used by", src_name);
+      report_error(ast, "CQL0473: @unsub is invalid because the table/view is still used by", src_name);
       record_error(ast);
     }
   }
@@ -22873,16 +22871,20 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
     return;
   }
 
-  table->sem->unsub_version = vers;
+  target->sem->unsub_version = vers;
   last_sub_version = vers;
   ast->sem = new_sem(SEM_TYPE_OK);
   ast->sem->region = current_region;
 
   add_item_to_list(&all_subscriptions_list, ast);
 
-  if (!table->sem->recreate) {
-    // recreate tables need no actions for unsubscription/resubscription
-    record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_UNSUB, NULL, ast->left, 0);
+  bool_t is_table = is_ast_create_table_stmt(target);
+  bool_t is_recreate = target->sem->recreate;
+
+  // recreate tables need no actions for unsubscription/resubscription
+  // views likewise need no actions (they are always recreate)
+  if (is_table && !is_recreate) {
+    record_schema_annotation(vers, target, name, SCHEMA_ANNOTATION_UNSUB, NULL, ast->left, 0);
   }
 }
 
@@ -22901,12 +22903,12 @@ static void sem_schema_resub_stmt(ast_node *ast) {
   }
 
   int32_t vers = info.vers;
-  ast_node *table = info.table_ast;
+  ast_node *target = info.target_ast;
   CSTR name = info.name;
-  Contract(table);
+  Contract(target);
 
-  if (table->sem->resub_version > table->sem->unsub_version) {
-    report_error(ast, "CQL0472: table is already resubscribed", name);
+  if (target->sem->resub_version > target->sem->unsub_version) {
+    report_error(ast, "CQL0472: table/view is already resubscribed", name);
     record_error(ast);
     return;
   }
@@ -22931,7 +22933,7 @@ static void sem_schema_resub_stmt(ast_node *ast) {
   // subscribers might want to unsubscribe so the annotation can't go on the table.  Which means
   // we have to live with this out-of-order business.
 
-  if (table->sem->delete_version < 0) {
+  if (target->sem->delete_version < 0) {
     bytebuf *buf = symtab_ensure_bytebuf(ref_targets_for_source_table, name);
     size_t ref_count = buf->used / sizeof(ast_node *);
     ast_node **targets = (ast_node **)buf->ptr;
@@ -22944,7 +22946,7 @@ static void sem_schema_resub_stmt(ast_node *ast) {
         CSTR ref_name = sem_get_name(ref_ast);
 
         // we're not going to return; we keep generating as many errors as needed
-        report_error(ast, "CQL0474: @resub is invalid because the table references", ref_name);
+        report_error(ast, "CQL0474: @resub is invalid because the table/view references", ref_name);
         record_error(ast);
       }
     }
@@ -22954,16 +22956,20 @@ static void sem_schema_resub_stmt(ast_node *ast) {
     return;
   }
 
-  table->sem->resub_version = vers;
+  target->sem->resub_version = vers;
   last_sub_version = vers;
   ast->sem = new_sem(SEM_TYPE_OK);
   ast->sem->region = current_region;
 
+  bool_t is_table = is_ast_create_table_stmt(target);
+  bool_t is_recreate = target->sem->recreate;
+
   add_item_to_list(&all_subscriptions_list, ast);
 
-  if (!table->sem->recreate) {
-    // recreate tables need no actions for unsubscription/resubscription
-    record_schema_annotation(vers, table, name, SCHEMA_ANNOTATION_RESUB, NULL, ast->left, 0);
+  // recreate tables need no actions for unsubscription/resubscription
+  // views are always recreate so they also need no actions.
+  if (is_table && !is_recreate)  {
+    record_schema_annotation(vers, target, name, SCHEMA_ANNOTATION_RESUB, NULL, ast->left, 0);
   }
 }
 

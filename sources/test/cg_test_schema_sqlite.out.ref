@@ -129,6 +129,10 @@ CREATE TABLE unsub_voyage(
   v7 TEXT
 );
 
+CREATE TABLE some_table(
+  id INTEGER
+);
+
 CREATE VIEW shared_view AS
 SELECT *
   FROM foo;
@@ -144,6 +148,14 @@ SELECT *
 CREATE VIEW another_live_view AS
 SELECT *
   FROM table2;
+
+CREATE VIEW foo_view_unsubscribed AS
+SELECT *
+  FROM some_table;
+
+CREATE VIEW foo_view_normal AS
+SELECT *
+  FROM some_table;
 
 CREATE INDEX shared_index ON foo (name, name_2);
 

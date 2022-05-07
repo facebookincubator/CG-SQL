@@ -294,4 +294,11 @@ end;
 @unsub(1, unsub_voyage);
 @resub(5, unsub_voyage);
 
+create table some_table(id integer);
+
+create view foo_view_unsubscribed as select * from some_table;
+create view foo_view_normal as select * from some_table;
+
+@unsub(5, foo_view_unsubscribed);
+
 @end_schema_region;

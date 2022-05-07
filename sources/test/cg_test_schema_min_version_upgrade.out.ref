@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 2186173751741017655
+-- schema crc -6259977074757541212
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE LONG<facet_data> not null;
@@ -194,6 +194,12 @@ CREATE TABLE unsub_voyage(
 );
 @end_schema_region;
 
+@begin_schema_region other;
+CREATE TABLE some_table(
+  id INTEGER
+);
+@end_schema_region;
+
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *
@@ -216,6 +222,18 @@ SELECT *
 CREATE VIEW another_live_view AS
 SELECT *
   FROM table2;
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE VIEW foo_view_unsubscribed AS
+SELECT *
+  FROM some_table;
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE VIEW foo_view_normal AS
+SELECT *
+  FROM some_table;
 @end_schema_region;
 
 @begin_schema_region shared;
@@ -315,6 +333,10 @@ END;
 
 @begin_schema_region other;
 @RESUB(5, unsub_voyage);
+@end_schema_region;
+
+@begin_schema_region other;
+@UNSUB(5, foo_view_unsubscribed);
 @end_schema_region;
 
 -- facets table declaration --
@@ -417,6 +439,8 @@ BEGIN
   DROP VIEW IF EXISTS live_view;
   DROP VIEW IF EXISTS dead_view;
   DROP VIEW IF EXISTS another_live_view;
+  DROP VIEW IF EXISTS foo_view_unsubscribed;
+  DROP VIEW IF EXISTS foo_view_normal;
 END;
 
 -- create all the views we know
@@ -432,6 +456,9 @@ BEGIN
   CREATE VIEW another_live_view AS
   SELECT *
     FROM table2;
+  CREATE VIEW foo_view_normal AS
+  SELECT *
+    FROM some_table;
 END;
 
 
@@ -802,7 +829,7 @@ BEGIN
     CALL test_cql_create_all_triggers();
     CALL test_cleanup_unused_versions();
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc', 2186173751741017655);
+    CALL test_cql_set_facet_version('cql_schema_crc', -6259977074757541212);
 END;
 
 CREATE PROCEDURE test_get_current_and_proposed_versions(
@@ -843,7 +870,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 2186173751741017655 THEN
+  IF schema_crc <> -6259977074757541212 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades();
