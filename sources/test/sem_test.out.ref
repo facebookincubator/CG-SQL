@@ -85933,6 +85933,252 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+CREATE TABLE used_by_a_view(
+  id INTEGER
+);
+
+  {create_table_stmt}: used_by_a_view: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name used_by_a_view}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIEW uses_a_table AS
+SELECT *
+  FROM used_by_a_view;
+
+  {create_view_stmt}: uses_a_table: { id: integer }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name uses_a_table}
+      | {select_stmt}: uses_a_table: { id: integer }
+        | {select_core_list}: uses_a_table: { id: integer }
+        | | {select_core}: uses_a_table: { id: integer }
+        |   | {select_expr_list_con}: uses_a_table: { id: integer }
+        |     | {select_expr_list}: uses_a_table: { id: integer }
+        |     | | {star}: uses_a_table: { id: integer }
+        |     | {select_from_etc}: TABLE { used_by_a_view: used_by_a_view }
+        |       | {table_or_subquery_list}: TABLE { used_by_a_view: used_by_a_view }
+        |       | | {table_or_subquery}: TABLE { used_by_a_view: used_by_a_view }
+        |       |   | {name used_by_a_view}: TABLE { used_by_a_view: used_by_a_view }
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE TABLE used_by_a_deleted_view(
+  id INTEGER
+);
+
+  {create_table_stmt}: used_by_a_deleted_view: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name used_by_a_deleted_view}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE VIEW uses_a_table_but_deleted AS
+SELECT *
+  FROM used_by_a_deleted_view @DELETE(2);
+
+  {create_view_stmt}: uses_a_table_but_deleted: { id: integer } deleted @delete(2)
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+    | | {name uses_a_table_but_deleted}
+    | | {select_stmt}: uses_a_table_but_deleted: { id: integer }
+    |   | {select_core_list}: uses_a_table_but_deleted: { id: integer }
+    |   | | {select_core}: uses_a_table_but_deleted: { id: integer }
+    |   |   | {select_expr_list_con}: uses_a_table_but_deleted: { id: integer }
+    |   |     | {select_expr_list}: uses_a_table_but_deleted: { id: integer }
+    |   |     | | {star}: uses_a_table_but_deleted: { id: integer }
+    |   |     | {select_from_etc}: TABLE { used_by_a_deleted_view: used_by_a_deleted_view }
+    |   |       | {table_or_subquery_list}: TABLE { used_by_a_deleted_view: used_by_a_deleted_view }
+    |   |       | | {table_or_subquery}: TABLE { used_by_a_deleted_view: used_by_a_deleted_view }
+    |   |       |   | {name used_by_a_deleted_view}: TABLE { used_by_a_deleted_view: used_by_a_deleted_view }
+    |   |       | {select_where}
+    |   |         | {select_groupby}
+    |   |           | {select_having}
+    |   | {select_orderby}
+    |     | {select_limit}
+    |       | {select_offset}
+    | {delete_attr}
+      | {version_annotation}
+        | {int 2}
+
+The statement ending at line XXXX
+
+@UNSUB(10, used_by_a_view);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'uses_a_table'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 10}
+    | {name used_by_a_view}
+
+The statement ending at line XXXX
+
+@UNSUB(10, used_by_a_deleted_view);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 10}
+    | {name used_by_a_deleted_view}
+
+The statement ending at line XXXX
+
+CREATE TABLE unrelated(
+  id INTEGER
+);
+
+  {create_table_stmt}: unrelated: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name unrelated}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE used_by_a_trigger(
+  id INTEGER
+);
+
+  {create_table_stmt}: used_by_a_trigger: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name used_by_a_trigger}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_uses_a_table
+  BEFORE DELETE ON unrelated
+BEGIN
+  DELETE FROM used_by_a_trigger;
+END;
+
+  {create_trigger_stmt}: ok
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name trigger_uses_a_table}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name unrelated}: unrelated: { id: integer }
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}: ok
+                  | {delete_stmt}: ok
+                    | {name used_by_a_trigger}: used_by_a_trigger: { id: integer }
+
+The statement ending at line XXXX
+
+CREATE TABLE used_by_a_deleted_trigger(
+  id INTEGER
+);
+
+  {create_table_stmt}: used_by_a_deleted_trigger: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name used_by_a_deleted_trigger}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TRIGGER trigger_uses_a_table_but_deleted
+  BEFORE DELETE ON unrelated
+BEGIN
+  DELETE FROM used_by_a_deleted_trigger;
+END @DELETE(5);
+
+  {create_trigger_stmt}: ok deleted @delete(5)
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+    | | {name trigger_uses_a_table_but_deleted}
+    | | {trigger_condition}
+    |   | {int 4}
+    |   | {trigger_op_target}
+    |     | {trigger_operation}
+    |     | | {int 64}
+    |     | {trigger_target_action}
+    |       | {name unrelated}: unrelated: { id: integer }
+    |       | {trigger_action}
+    |         | {int 0}
+    |         | {trigger_when_stmts}
+    |           | {stmt_list}: ok
+    |             | {delete_stmt}: ok
+    |               | {name used_by_a_deleted_trigger}: used_by_a_deleted_trigger: { id: integer }
+    | {delete_attr}
+      | {version_annotation}
+        | {int 5}
+
+The statement ending at line XXXX
+
+@UNSUB(10, used_by_a_trigger);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0473: @unsub is invalid because the table is still used by 'trigger_uses_a_table'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 10}
+    | {name used_by_a_trigger}
+
+The statement ending at line XXXX
+
+@UNSUB(10, used_by_a_deleted_trigger);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 10}
+    | {name used_by_a_deleted_trigger}
+
+The statement ending at line XXXX
+
 DECLARE PROC any_args_at_all NO CHECK;
 
   {declare_proc_no_check_stmt}: ok

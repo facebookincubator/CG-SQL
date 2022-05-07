@@ -1255,7 +1255,7 @@ BEGIN
   SELECT old.id;
 END @DELETE(2);
 
-  {create_trigger_stmt}: ok @delete(2)
+  {create_trigger_stmt}: ok deleted @delete(2)
   | {int 0}
   | {trigger_body_vers}
     | {trigger_def}

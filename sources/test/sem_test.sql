@@ -21780,6 +21780,82 @@ create table sub_test_dependency(
 -- - error:
 @resub (9, sub_test_dependency);
 
+
+-- TEST: setup unsub test case for table in use by a view
+-- - error:
+create table used_by_a_view(
+  id integer 
+);
+
+-- TEST: setup unsub test case for table in use by a view
+-- - error:
+create view uses_a_table as select * from used_by_a_view;
+
+-- TEST: setup unsub test case for table in use by a deleted view
+-- - error:
+create table used_by_a_deleted_view(
+  id integer 
+);
+
+-- TEST: setup unsub test case for table in use by a deleted view
+-- - error:
+create view uses_a_table_but_deleted as select * from used_by_a_deleted_view @delete(2);
+
+-- TEST: can't delete this table, a view still uses it
+-- + {schema_unsub_stmt}: err
+-- + error: % @unsub is invalid because the table is still used by 'uses_a_table'
+-- +1 error:
+@unsub (10, used_by_a_view);
+
+-- TEST: ok to delete this table, a view still uses it, but it's deleted
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (10, used_by_a_deleted_view);
+
+-- TEST: setup unsub test case for table in use by triggers
+create table unrelated(
+  id integer
+);
+
+-- TEST: setup unsub test case for table in use by a trigger
+-- - error:
+create table used_by_a_trigger(
+  id integer 
+);
+
+-- TEST: setup unsub test case for table in use by a trigger
+-- - error:
+create trigger trigger_uses_a_table
+  before delete on unrelated
+begin
+  delete from used_by_a_trigger;
+end;
+
+-- TEST: setup unsub test case for table in use by a deleted trigger
+-- - error:
+create table used_by_a_deleted_trigger(
+  id integer 
+);
+
+-- TEST: setup unsub test case for table in use by a deleted trigger
+-- - error:
+create trigger trigger_uses_a_table_but_deleted
+  before delete on unrelated
+begin
+  delete from used_by_a_deleted_trigger;
+end @delete(5);
+
+-- TEST: can't delete this table, a trigger still uses it
+-- + {schema_unsub_stmt}: err
+-- + error: % @unsub is invalid because the table is still used by 'trigger_uses_a_table'
+-- +1 error:
+@unsub (10, used_by_a_trigger);
+
+-- TEST: ok to delete this table, a trigger still uses it, but it's deleted
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (10, used_by_a_deleted_trigger);
+
 declare proc any_args_at_all no check;
 
 -- TEST: check locals rewrite

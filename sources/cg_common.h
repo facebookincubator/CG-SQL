@@ -270,26 +270,3 @@ cql_noexport void cg_no_op(ast_node *_Nonnull ast);
 cql_noexport bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
 
 cql_noexport crc_t crc_charbuf(charbuf *_Nonnull input);
-
-typedef struct table_callbacks {
-  bool_t notify_table_or_view_drops;
-  bool_t notify_fk;
-  bool_t notify_triggers;
-  symtab *_Nullable visited_any_table;
-  symtab *_Nullable visited_insert;
-  symtab *_Nullable visited_update;
-  symtab *_Nullable visited_delete;
-  symtab *_Nullable visited_from;
-  symtab *_Nullable visited_proc;
-  find_ast_str_node_callback _Nullable callback_any_table;
-  find_ast_str_node_callback _Nullable callback_any_view;
-  find_ast_str_node_callback _Nullable callback_inserts;
-  find_ast_str_node_callback _Nullable callback_updates;
-  find_ast_str_node_callback _Nullable callback_deletes;
-  find_ast_str_node_callback _Nullable callback_from;
-  find_ast_str_node_callback _Nullable callback_proc;
-  void *_Nullable callback_context;
-} table_callbacks;
-
-cql_noexport void find_table_refs(table_callbacks *_Nonnull data, ast_node *_Nonnull node);
-cql_noexport void continue_find_table_node(table_callbacks *_Nonnull callbacks, ast_node *_Nonnull node);

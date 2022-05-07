@@ -3622,17 +3622,47 @@ static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node
   return valid;
 }
 
-static void record_table_dependencies(ast_node *src_table_ast, ast_node *ref_table_ast) {
-  Contract(is_ast_create_table_stmt(src_table_ast));
+// Get the name string of the object, for a variety of objects (tables and views for now)
+static CSTR sem_get_name(ast_node *ast) {
+  CSTR name = NULL;
+
+  if (is_ast_create_view_stmt(ast)) {
+    EXTRACT_NOTNULL(view_and_attrs, ast->right);
+    EXTRACT_NOTNULL(name_and_select, view_and_attrs->left);
+    EXTRACT_STRING(view_name, name_and_select->left);
+    name = view_name;
+  }
+  else if (is_ast_create_table_stmt(ast)) {
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+    EXTRACT_STRING(table_name, create_table_name_flags->right);
+    name = table_name;
+  }
+  else if (is_ast_create_trigger_stmt(ast)) {
+    EXTRACT_NOTNULL(trigger_body_vers, ast->right);
+    EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
+    EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+    EXTRACT_STRING(trigger_name, trigger_name_ast);
+    name = trigger_name;
+  }
+
+  Contract(name); // failure means an invalid type was provided
+  return name;
+}
+
+// These symbol tables track ast dependencies by name
+// This tells use which tables refer to which other tables by FK (both directions)
+// And which views refer to which tables by name (both directions)
+static void record_table_dependencies(ast_node *src_ast, ast_node *ref_table_ast) {
   Contract(is_ast_create_table_stmt(ref_table_ast));
 
-  EXTRACT_NAMED_NOTNULL(src_create_table_name_flags, create_table_name_flags, src_table_ast->left);
-  EXTRACT_STRING(src_table_name, src_create_table_name_flags->right);
+  // note this will verify that it is one of the known dependency types also
+  CSTR canonical_src_name = sem_get_name(src_ast);
+
   EXTRACT_NAMED_NOTNULL(ref_create_table_name_flags, create_table_name_flags, ref_table_ast->left);
   EXTRACT_STRING(ref_table_name, ref_create_table_name_flags->right);
 
-  symtab_append_bytes(ref_sources_for_target_table, ref_table_name, &src_table_ast, sizeof(src_table_ast));
-  symtab_append_bytes(ref_targets_for_source_table, src_table_name, &ref_table_ast, sizeof(ref_table_ast));
+  symtab_append_bytes(ref_sources_for_target_table, ref_table_name, &src_ast, sizeof(src_ast));
+  symtab_append_bytes(ref_targets_for_source_table, canonical_src_name, &ref_table_ast, sizeof(ref_table_ast));
 }
 
 // Similar to other constraints, we don't actually do anything with this
@@ -11696,6 +11726,31 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
   enqueue_pending_region_validation(prev_trigger, ast, name);
 }
 
+// When we locate a table used by a view we simply add that info to the dependency map in both directions
+static void sem_found_table_in_view(CSTR _Nonnull table_name, ast_node *_Nonnull table_ast, void *_Nullable context) {
+  Contract(is_ast_create_table_stmt(table_ast));
+  EXTRACT_NOTNULL(create_view_stmt, context);
+
+  record_table_dependencies(create_view_stmt, table_ast);
+}
+
+// Here we peek into the view body and find the tables that it uses.
+// We're going to record those so that if a table is unsubscribed we can make sure
+// there are no lingering views still using it. We don't have to worry about nested views
+// because if the main view uses a nested view and that nested view uses the table then the nested view itself
+// will cause an error to be reported.
+static void sem_record_view_dependencies(ast_node *ast) {
+  Contract(is_ast_create_view_stmt(ast));
+
+  table_callbacks callbacks = {
+    .callback_any_table = sem_found_table_in_view,
+    .callback_context = ast,
+    .do_not_recurse_views = true,
+  };
+
+  find_table_refs(&callbacks, ast);
+}
+
 // Create view analysis is very simple because select does the heavy lifting.  All we
 // have to do is validate that the view is unique then validate the select statement.
 // The view will be added to the table/view list.
@@ -11798,6 +11853,9 @@ static void sem_create_view_stmt(ast_node *ast) {
 
     // and record the annotation
     sem_record_annotation_from_vers_info(&vers_info);
+
+    // record the tables used by this view (and cross link)
+    sem_record_view_dependencies(ast);
   }
 }
 
@@ -12605,6 +12663,55 @@ static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info) 
 
 }
 
+typedef struct trigger_dep_context {
+   ast_node *trigger_ast;
+   CSTR trigger_on_table_name;
+} trigger_dep_context;
+
+// When we locate a table used by a view we simply add that info to the dependency map in both directions
+static void sem_found_table_in_trigger(CSTR _Nonnull table_name, ast_node *_Nonnull table_ast, void *_Nullable context) {
+  Contract(is_ast_create_table_stmt(table_ast));
+
+  trigger_dep_context *info  = context;
+
+  if (Strcasecmp(info->trigger_on_table_name, table_name)) {
+    // we don't have to record that the trigger depends on the table that it is on
+    // if that table goes away the trigger is implicitly deleted anyway, it would
+    // just give us a bunch of false positives.  It's the other tables that need searching
+    record_table_dependencies(info->trigger_ast, table_ast);
+  }
+}
+
+// Here we peek into the trigger body and find the tables that it uses.
+// We're going to record those so that if a table is unsubscribed we can make sure
+// there are no lingering triggers still using it.  We don't have to worry about views inside
+// the body because if the trigger uses a view and the view uses a table then that view itself
+// will cause an error to be reported if you attempt to unsubscribe the table.
+static void sem_record_trigger_dependencies(ast_node *ast) {
+  Contract(is_ast_create_trigger_stmt(ast));
+
+  EXTRACT_NOTNULL(trigger_body_vers, ast->right);
+  EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
+  EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
+  EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
+  EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
+  EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+  EXTRACT_STRING(table_name, table_name_ast);
+
+  trigger_dep_context context = {
+    .trigger_ast = ast,
+    .trigger_on_table_name = table_name
+  };
+
+  table_callbacks callbacks = {
+    .callback_any_table = sem_found_table_in_trigger,
+    .callback_context = &context,
+    .do_not_recurse_views = true,
+  };
+
+  find_table_refs(&callbacks, ast);
+}
+
 // The create trigger statement is quite a beast, validations include:
 //  * the trigger name must be unique
 //  * For insert the "new.*" table is available in expressions/statement
@@ -12791,6 +12898,10 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   ast->sem->delete_version = vers_info.delete_version;
   ast->sem->region = current_region;
 
+  if (ast->sem->delete_version > 0) {
+    ast->sem->sem_type |= SEM_TYPE_DELETED;
+  }
+
   if (existing_defn) {
     if (!sem_validate_identical_ddl(existing_defn, ast)) {
       report_error(trigger_name_ast, "CQL0136: trigger already exists", trigger_name);
@@ -12806,6 +12917,9 @@ static void sem_create_trigger_stmt(ast_node *ast) {
 
     // and record the annotation
     sem_record_annotation_from_vers_info(&vers_info);
+
+    // record the tables used by this trigger (and cross link)
+    sem_record_trigger_dependencies(ast);
   }
 }
 
@@ -22744,15 +22858,13 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
   ast_node **sources = (ast_node **)buf->ptr;
 
   for (uint32_t i = 0; i < ref_count; i++) {
-    ast_node *src_table = sources[i];
+    ast_node *src_ast = sources[i];
 
-    // note this checks for both @deleted and @unsub tables
-    if (!is_deleted(src_table)) {
-      EXTRACT_NAMED_NOTNULL(src_create_table_name_flags, create_table_name_flags, src_table->left);
-      EXTRACT_STRING(src_table_name, src_create_table_name_flags->right);
-
-      // we're not going to return here so that we generate as many errors as needed
-      report_error(ast, "CQL0473: @unsub is invalid because the table is still used by", src_table_name);
+    // note this checks for both @deleted and @unsub
+    if (!is_deleted(src_ast)) {
+      // we're not going to return; we keep generating as many errors as needed
+      CSTR src_name = sem_get_name(src_ast);
+      report_error(ast, "CQL0473: @unsub is invalid because the table is still used by", src_name);
       record_error(ast);
     }
   }
@@ -22825,15 +22937,14 @@ static void sem_schema_resub_stmt(ast_node *ast) {
     ast_node **targets = (ast_node **)buf->ptr;
 
     for (uint32_t i = 0; i < ref_count; i++) {
-      ast_node *ref_table = targets[i];
+      ast_node *ref_ast = targets[i];
 
-      // note this checks for both @deleted and @unsub tables
-      if (is_deleted(ref_table)) {
-        EXTRACT_NAMED_NOTNULL(ref_create_table_name_flags, create_table_name_flags, ref_table->left);
-        EXTRACT_STRING(ref_table_name, ref_create_table_name_flags->right);
+      // note this checks for both @deleted and @unsub
+      if (is_deleted(ref_ast)) {
+        CSTR ref_name = sem_get_name(ref_ast);
 
-        // we're not going to return here so that we generate as many errors as needed
-        report_error(ast, "CQL0474: @resub is invalid because the table references", ref_table_name);
+        // we're not going to return; we keep generating as many errors as needed
+        report_error(ast, "CQL0474: @resub is invalid because the table references", ref_name);
         record_error(ast);
       }
     }

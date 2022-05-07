@@ -788,3 +788,232 @@ cql_noexport ast_node *copy_ast_tree(ast_node *_Nonnull node) {
   Invariant(new_node);
   return new_node;
 }
+
+// Recursively finds table nodes, executing the callback for each that is found.  The
+// callback will not be executed more than once for the same table name.
+cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node *node) {
+  // Check the type of node so that we can find the direct references to tables. We
+  // can't know the difference between a table or view in the ast, so we will need to
+  // later find the definition to see if it points to a create_table_stmt to distinguish
+  // from views.
+
+  find_ast_str_node_callback alt_callback = NULL;
+  symtab *alt_visited = NULL;
+  ast_node *table_or_view_name_ast = NULL;
+
+  if (is_ast_cte_table(node)) {
+    EXTRACT_ANY_NOTNULL(cte_body, node->right);
+
+    // this is a proxy node, it doesn't contribute anything
+    // any nested select does not run.
+    if (is_ast_like(cte_body)) {
+      return;
+    }
+  }
+  else if (is_ast_shared_cte(node)) {
+    // if we're on a shared CTE usage, then we recurse into the CALL and
+    // we recurse into the binding list.  The CALL should not be handled
+    // like a normal procedure call, the body is inlined.  Note that the
+    // existence of the fragment is meant to be transparent to anyone
+    // downstream -- this isn't a normal call that might be invisible to us
+    // we *must* have the fragment because we're talking about a semantically
+    // valid shared cte binding.
+
+    EXTRACT_NOTNULL(call_stmt, node->left);
+    EXTRACT(cte_binding_list, node->right);
+
+    EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+    EXTRACT_STRING(name, name_ast);
+    ast_node *proc = find_proc(name);
+    if (proc) {
+      // Look through the proc definition for tables. Just call through recursively.
+      continue_find_table_node(callbacks, proc);
+    }
+
+    if (cte_binding_list) {
+      continue_find_table_node(callbacks, cte_binding_list);
+    }
+
+    // no further recursion is needed
+    return;
+  }
+  else if (is_ast_declare_cursor_like_select(node)) {
+    // There is a select in this declaration but it doesn't really run, it's just type info
+    // so that doesn't count.  So we don't recurse here.
+    return;
+  }
+  else if (is_ast_cte_binding(node)) {
+    EXTRACT_ANY_NOTNULL(actual, node->left);
+
+    // handle this just like a normal table usage in a select statement (because it is)
+    table_or_view_name_ast = actual;
+    alt_callback = callbacks->callback_from;
+    alt_visited = callbacks->visited_from;
+  }
+  else if (is_ast_table_or_subquery(node)) {
+    EXTRACT_ANY_NOTNULL(factor, node->left);
+    if (is_ast_str(factor)) {
+      // the other table factor cases (there are several) do not have a string payload
+      table_or_view_name_ast = factor;
+      alt_callback = callbacks->callback_from;
+      alt_visited = callbacks->visited_from;
+    }
+  }
+  else if (is_ast_fk_target(node)) {
+    // if we're walking a table then we'll also walk its FK's
+    // normally we don't start by walking tables anyway so this doesn't
+    // run if you do a standard walk of a procedure
+    if (callbacks->notify_fk) {
+      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      table_or_view_name_ast = name_ast;
+    }
+  }
+  else if (is_ast_drop_view_stmt(node) || is_ast_drop_table_stmt(node)) {
+    if (callbacks->notify_table_or_view_drops) {
+      EXTRACT_ANY_NOTNULL(name_ast, node->right);
+      table_or_view_name_ast = name_ast;
+    }
+  }
+  else if (is_ast_trigger_target_action(node)) {
+    if (callbacks->notify_triggers) {
+      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      table_or_view_name_ast = name_ast;
+    }
+  }
+  else if (is_ast_delete_stmt(node)) {
+    EXTRACT_ANY_NOTNULL(name_ast, node->left);
+    table_or_view_name_ast = name_ast;
+    alt_callback = callbacks->callback_deletes;
+    alt_visited = callbacks->visited_delete;
+  }
+  else if (is_ast_insert_stmt(node)) {
+    EXTRACT(name_columns_values, node->right);
+    EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left);
+    table_or_view_name_ast = name_ast;
+    alt_callback = callbacks->callback_inserts;
+    alt_visited = callbacks->visited_insert;
+  }
+  else if (is_ast_update_stmt(node)) {
+    EXTRACT_ANY(name_ast, node->left);
+    // name_ast node is NULL if update statement is part of an upsert statement
+    if (name_ast) {
+      table_or_view_name_ast = name_ast;
+      alt_callback = callbacks->callback_updates;
+      alt_visited = callbacks->visited_update;
+    }
+  }
+  else if (is_ast_call_stmt(node) | is_ast_call(node)) {
+    // Both cases have the name in the node left so we can consolidate
+    // the check to see if it's a proc is redundant in the call_stmt case
+    // but it lets us share code so we just go with it.  The other case
+    // is a possible proc_as_func call so we must check if the target is a proc.
+
+    EXTRACT_ANY_NOTNULL(name_ast, node->left);
+    EXTRACT_STRING(name, name_ast);
+    ast_node *proc = find_proc(name);
+
+    if (proc) {
+      // this only happens for ast_call but this check is safe for both
+      if (name_ast->sem && (name_ast->sem->sem_type & SEM_TYPE_INLINE_CALL)) {
+        // Look through the proc definition for tables because the target will be inlined
+        continue_find_table_node(callbacks, proc);
+      }
+
+      EXTRACT_STRING(canon_name, get_proc_name(proc));
+      if (callbacks->callback_proc) {
+        if (symtab_add(callbacks->visited_proc, canon_name, name_ast)) {
+          callbacks->callback_proc(canon_name, name_ast, callbacks->callback_context);
+        }
+      }
+    }
+  }
+
+  if (table_or_view_name_ast) {
+    // Find the definition and see if we have a create_table_stmt.
+    EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
+    ast_node *table_or_view = find_table_or_view_even_deleted(table_or_view_name);
+
+    // It's not actually possible to use a deleted table or view in a procedure.
+    // If the name lookup here says that we found something deleted it means
+    // that we have actually found a CTE that is an alias for a deleted table
+    // or view. In that case, we don't want to add the thing we found to the dependency
+    // set we are creating.  We don't want to make this CTE an error because
+    // its reasonable to replace a deleted table/view with CTE of the same name.
+    // Hence we simply filter out deleted tables/views here.
+    if (table_or_view && table_or_view->sem->delete_version > 0) {
+      table_or_view = NULL;
+    }
+
+    // Make sure we don't process a table or view that we've already processed.
+    if (table_or_view) {
+      if (is_ast_create_table_stmt(table_or_view)) {
+        EXTRACT_NOTNULL(create_table_name_flags, table_or_view->left);
+        EXTRACT_STRING(canonical_name, create_table_name_flags->right);
+
+        // Found a table, execute the callback.
+        if (symtab_add(callbacks->visited_any_table, canonical_name, table_or_view)) {
+          callbacks->callback_any_table(canonical_name, table_or_view, callbacks->callback_context);
+        }
+
+        // Emit the second callback if any.
+        if (alt_callback && symtab_add(alt_visited, canonical_name, table_or_view)) {
+          alt_callback(canonical_name, table_or_view, callbacks->callback_context);
+        }
+      } else {
+        Contract(is_ast_create_view_stmt(table_or_view));
+        EXTRACT_NOTNULL(view_and_attrs, table_or_view->right);
+        EXTRACT_NOTNULL(name_and_select, view_and_attrs->left);
+        EXTRACT_STRING(canonical_name, name_and_select->left);
+
+        if (symtab_add(callbacks->visited_any_table, canonical_name, table_or_view)) {
+          // Report the view itself
+          if (callbacks->callback_any_view) {
+            callbacks->callback_any_view(canonical_name, table_or_view, callbacks->callback_context);
+          }
+
+          if (!callbacks->do_not_recurse_views) {
+            // Look through the view definition for tables. Just call through recursively.
+            continue_find_table_node(callbacks, table_or_view);
+          }
+        }
+      }
+    }
+  }
+
+  // Check the left and right nodes.
+  if (ast_has_left(node)) {
+    continue_find_table_node(callbacks, node->left);
+  }
+
+  if (ast_has_right(node)) {
+    continue_find_table_node(callbacks, node->right);
+  }
+}
+
+
+// Find references in a proc and invoke the corresponding callback on them
+// this is useful for dependency analysis.
+cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
+  // Each kind of callback needs its own symbol table because, for instance,
+  // you might see a table as an insert and also as an update. If we use
+  // a single visited table like we used to then the second kind of usage would
+  // not get recorded.
+
+  // Note: we don't need a seperate table for visiting views and visiting tables
+  // any given name can only be a view or a table, never both.
+  callbacks->visited_any_table = symtab_new();
+  callbacks->visited_insert = symtab_new();
+  callbacks->visited_update = symtab_new();
+  callbacks->visited_delete = symtab_new();
+  callbacks->visited_from = symtab_new();
+  callbacks->visited_proc = symtab_new();
+
+  continue_find_table_node(callbacks, node);
+
+  SYMTAB_CLEANUP(callbacks->visited_any_table);
+  SYMTAB_CLEANUP(callbacks->visited_insert);
+  SYMTAB_CLEANUP(callbacks->visited_update);
+  SYMTAB_CLEANUP(callbacks->visited_delete);
+  SYMTAB_CLEANUP(callbacks->visited_from);
+  SYMTAB_CLEANUP(callbacks->visited_proc);
+}
