@@ -92,6 +92,7 @@ s/[[:<:]]INSERT[[:>:]]/"INSERT"/g
 s/[[:<:]]INSTEAD[[:>:]]/"INSTEAD"/g
 s/[[:<:]]INT_[[:>:]]/"INT"/g
 s/[[:<:]]INTEGER[[:>:]]/"INTEGER"/g
+s/[[:<:]]INTERFACE[[:>:]]/"INTERFACE"/g
 s/[[:<:]]INTERSECT[[:>:]]/"INTERSECT"/g
 s/[[:<:]]INTLIT[[:>:]]/"integer-literal"/g
 s/[[:<:]]INTO[[:>:]]/"INTO"/g

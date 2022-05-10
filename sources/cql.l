@@ -172,6 +172,7 @@ PROC                         { return PROC; }
 @PROC                        { return AT_PROC; }
 @RC                          { return AT_RC; }
 PROCEDURE                    { return PROCEDURE; }
+INTERFACE                    { return INTERFACE; }
 FUNCTION                     { return FUNCTION; }
 FUNC                         { return FUNC; }
 BEGIN                        { return BEGIN_; }

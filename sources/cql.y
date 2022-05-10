@@ -210,7 +210,7 @@ static void cql_reset_globals(void);
 %token DESC INNER AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT AT_EPONYMOUS
 %token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-%token FUNC FUNCTION PROC PROCEDURE BEGIN_ "BEGIN" OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
+%token FUNC FUNCTION PROC PROCEDURE INTERFACE BEGIN_ "BEGIN" OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN COLUMNS RENAME ALTER
@@ -267,7 +267,7 @@ static void cql_reset_globals(void);
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
-%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_proc_no_check_stmt declare_out_call_stmt
+%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list inout param params func_params func_param
 
 /* statements */
@@ -406,6 +406,7 @@ any_stmt:
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
   | declare_proc_stmt
+  | declare_interface_stmt
   | declare_schema_region_stmt
   | declare_stmt
   | delete_stmt
@@ -1722,6 +1723,11 @@ declare_proc_stmt:
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   ;
+
+declare_interface_stmt:
+  DECLARE INTERFACE name '(' typed_names ')'  {
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE));
+      $declare_interface_stmt = new_ast_declare_interface_stmt(proc_name_flags, new_ast_proc_params_stmts(NULL, $typed_names)); }
 
 create_proc_stmt:
   CREATE procedure name '(' params ')' BEGIN_ opt_stmt_list END  {

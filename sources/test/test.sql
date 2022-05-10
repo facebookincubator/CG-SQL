@@ -649,6 +649,9 @@ declare proc decl3(id integer) out ( A integer not null, B bool);
 -- an out proc that uses the database
 declare proc decl4(id integer) out ( A integer not null, B bool) using transaction;
 
+-- declare interface
+declare interface decl5 ( A integer not null, B bool);
+
 -- an enumeration
 declare enum things integer (
   foo,
