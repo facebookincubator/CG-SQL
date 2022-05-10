@@ -1464,4 +1464,8 @@ test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE i
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INTEGER, name TEXT)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface declarations do not match 'interface1'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'name'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'id2'
 semantic errors present; no code gen.

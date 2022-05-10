@@ -87027,3 +87027,258 @@ END;
             | {name name_}: name_: text variable in
             | {type_text}: text
 
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface1)
+CREATE PROC test_interface1_implementation_correct (id_ INTEGER, name_ TEXT)
+BEGIN
+  SELECT id_ AS id, name_ AS name;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface1}: ok
+  | {create_proc_stmt}: select: { id: integer variable in, name: text variable in } dml_proc
+    | {name test_interface1_implementation_correct}: select: { id: integer variable in, name: text variable in } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer variable in
+      | | | {param_detail}: id_: integer variable in
+      | |   | {name id_}: id_: integer variable in
+      | |   | {type_int}: integer
+      | | {params}
+      |   | {param}: name_: text variable in
+      |     | {param_detail}: name_: text variable in
+      |       | {name name_}: name_: text variable in
+      |       | {type_text}: text
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer variable in, name: text variable in }
+          | {select_core_list}: select: { id: integer variable in, name: text variable in }
+          | | {select_core}: select: { id: integer variable in, name: text variable in }
+          |   | {select_expr_list_con}: select: { id: integer variable in, name: text variable in }
+          |     | {select_expr_list}: select: { id: integer variable in, name: text variable in }
+          |     | | {select_expr}: id: integer variable in
+          |     | | | {name id_}: id_: integer variable in
+          |     | | | {opt_as_alias}
+          |     | |   | {name id}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: name: text variable in
+          |     |     | {name name_}: name_: text variable in
+          |     |     | {opt_as_alias}
+          |     |       | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface1)
+CREATE PROC test_interface1_implementation_wrong_nullability (id_ INTEGER NOT NULL)
+BEGIN
+  SELECT id_ AS id, "5" AS col2;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface1}: ok
+  | {create_proc_stmt}: err
+    | {name test_interface1_implementation_wrong_nullability}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer notnull variable in
+      |   | {param_detail}: id_: integer notnull variable in
+      |     | {name id_}: id_: integer notnull variable in
+      |     | {notnull}: integer notnull
+      |       | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull variable in, col2: text notnull }
+          | {select_core_list}: select: { id: integer notnull variable in, col2: text notnull }
+          | | {select_core}: select: { id: integer notnull variable in, col2: text notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull variable in, col2: text notnull }
+          |     | {select_expr_list}: select: { id: integer notnull variable in, col2: text notnull }
+          |     | | {select_expr}: id: integer notnull variable in
+          |     | | | {name id_}: id_: integer notnull variable in
+          |     | | | {opt_as_alias}
+          |     | |   | {name id}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: col2: text notnull
+          |     |     | {strlit '5'}: text notnull
+          |     |     | {opt_as_alias}
+          |     |       | {name col2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface1)
+CREATE PROC test_interface1_implementation_wrong_type (id_ TEXT NOT NULL)
+BEGIN
+  SELECT id_ AS id, "5" AS col2;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface1}: ok
+  | {create_proc_stmt}: err
+    | {name test_interface1_implementation_wrong_type}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: text notnull variable in
+      |   | {param_detail}: id_: text notnull variable in
+      |     | {name id_}: id_: text notnull variable in
+      |     | {notnull}: text notnull
+      |       | {type_text}: text
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: text notnull variable in, col2: text notnull }
+          | {select_core_list}: select: { id: text notnull variable in, col2: text notnull }
+          | | {select_core}: select: { id: text notnull variable in, col2: text notnull }
+          |   | {select_expr_list_con}: select: { id: text notnull variable in, col2: text notnull }
+          |     | {select_expr_list}: select: { id: text notnull variable in, col2: text notnull }
+          |     | | {select_expr}: id: text notnull variable in
+          |     | | | {name id_}: id_: text notnull variable in
+          |     | | | {opt_as_alias}
+          |     | |   | {name id}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: col2: text notnull
+          |     |     | {strlit '5'}: text notnull
+          |     |     | {opt_as_alias}
+          |     |       | {name col2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface1)
+CREATE PROC test_interface1_implementation_wrong_order (id_ INTEGER, name_ TEXT)
+BEGIN
+  SELECT name_ AS name, id_ AS id;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'name'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface1}: ok
+  | {create_proc_stmt}: err
+    | {name test_interface1_implementation_wrong_order}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer variable in
+      | | | {param_detail}: id_: integer variable in
+      | |   | {name id_}: id_: integer variable in
+      | |   | {type_int}: integer
+      | | {params}
+      |   | {param}: name_: text variable in
+      |     | {param_detail}: name_: text variable in
+      |       | {name name_}: name_: text variable in
+      |       | {type_text}: text
+      | {stmt_list}: ok
+        | {select_stmt}: select: { name: text variable in, id: integer variable in }
+          | {select_core_list}: select: { name: text variable in, id: integer variable in }
+          | | {select_core}: select: { name: text variable in, id: integer variable in }
+          |   | {select_expr_list_con}: select: { name: text variable in, id: integer variable in }
+          |     | {select_expr_list}: select: { name: text variable in, id: integer variable in }
+          |     | | {select_expr}: name: text variable in
+          |     | | | {name name_}: name_: text variable in
+          |     | | | {opt_as_alias}
+          |     | |   | {name name}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: id: integer variable in
+          |     |     | {name id_}: id_: integer variable in
+          |     |     | {opt_as_alias}
+          |     |       | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface1)
+CREATE PROC test_interface1_implementation_name (id_ INTEGER, name_ TEXT)
+BEGIN
+  SELECT id_ AS id2, name_ AS name;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'id2'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface1}: ok
+  | {create_proc_stmt}: err
+    | {name test_interface1_implementation_name}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer variable in
+      | | | {param_detail}: id_: integer variable in
+      | |   | {name id_}: id_: integer variable in
+      | |   | {type_int}: integer
+      | | {params}
+      |   | {param}: name_: text variable in
+      |     | {param_detail}: name_: text variable in
+      |       | {name name_}: name_: text variable in
+      |       | {type_text}: text
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id2: integer variable in, name: text variable in }
+          | {select_core_list}: select: { id2: integer variable in, name: text variable in }
+          | | {select_core}: select: { id2: integer variable in, name: text variable in }
+          |   | {select_expr_list_con}: select: { id2: integer variable in, name: text variable in }
+          |     | {select_expr_list}: select: { id2: integer variable in, name: text variable in }
+          |     | | {select_expr}: id2: integer variable in
+          |     | | | {name id_}: id_: integer variable in
+          |     | | | {opt_as_alias}
+          |     | |   | {name id2}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: name: text variable in
+          |     |     | {name name_}: name_: text variable in
+          |     |     | {opt_as_alias}
+          |     |       | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+

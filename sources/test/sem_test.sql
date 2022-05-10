@@ -22067,3 +22067,33 @@ DECLARE INTERFACE interface2 (id INT, name TEXT);
 create proc interface_source(like interface2)
 begin
 end;
+
+@attribute(cql:implements=interface1)
+create proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
+begin
+  select id_ id, name_ name;
+end;
+
+@attribute(cql:implements=interface1)
+create proc test_interface1_implementation_wrong_nullability(id_ INT not null)
+begin
+  select id_ id, "5" col2;
+end;
+
+@attribute(cql:implements=interface1)
+create proc test_interface1_implementation_wrong_type(id_ TEXT not null)
+begin
+  select id_ id, "5" col2;
+end;
+
+@attribute(cql:implements=interface1)
+create proc test_interface1_implementation_wrong_order(id_ INT, name_ TEXT)
+begin
+  select name_ name, id_ id;
+end;
+
+@attribute(cql:implements=interface1)
+create proc test_interface1_implementation_name(id_ INT, name_ TEXT)
+begin
+  select id_ id2, name_ name;
+end;

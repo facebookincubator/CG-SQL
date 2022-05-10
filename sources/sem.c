@@ -17457,6 +17457,61 @@ static bool_t assembly_fragment_expand_cte_tables(
   return true;
 }
 
+static void sem_implements_interface(ast_node *misc_attrs, ast_node *create_proc_stmt) {
+  Contract(is_ast_misc_attrs(misc_attrs));
+  Contract(is_ast_create_proc_stmt(create_proc_stmt));
+
+  attr_value_record data;
+  find_named_cql_attribute(misc_attrs, "implements", &data);
+
+  CSTR interface_name = data.value;
+  ast_node *str_ast = data.ast;
+
+  ast_node *interface = find_interface_type(interface_name);
+  if (!interface) {
+    report_error(str_ast, "CQL0482: interface not found", interface_name);
+    goto error;
+  }
+
+  sem_struct *interface_sptr = interface->sem->sptr;
+  sem_struct *proc_sptr      = create_proc_stmt->sem->sptr;
+
+  if (proc_sptr->count < interface_sptr->count) {
+    report_error(str_ast, "CQL0483: procedure results should include all columns defined by the interface", interface_name);
+    goto error;
+  }
+
+  for (uint32_t i = 0; i < interface_sptr->count; ++i) {
+      CSTR proc_column_name = proc_sptr->names[i];
+      CSTR interface_column_name = interface_sptr->names[i];
+
+     if (Strcasecmp(proc_column_name, interface_column_name)) {
+        report_error(create_proc_stmt,
+          "CQL0484: name of the column must match the name of the column defined by interface", proc_column_name);
+        goto error;
+      }
+
+      sem_t actual_type = proc_sptr->semtypes[i];
+      sem_t expected_type = interface_sptr->semtypes[i];
+
+      if (
+        core_type_of(actual_type) != core_type_of(expected_type) ||
+        is_nullable(actual_type) != is_nullable(expected_type) ||
+        sensitive_flag(actual_type) != sensitive_flag(expected_type)
+      ) {
+        CSTR error = "CQL0485: column types returned by proc need to be the same as defined on the interface";
+        report_sem_type_mismatch(expected_type, actual_type, create_proc_stmt, error, proc_column_name);
+        goto error;
+      }
+  }
+
+  return;
+
+  error:
+  record_error(misc_attrs);
+  record_error(create_proc_stmt);
+}
+
 // The given procedure was marked with @attribute(cql:assembly_fragment=core)
 // validate that it is a well-formed query fragment
 static void sem_assembly_fragment(ast_node *misc_attrs, ast_node *stmt_list, ast_node *create_proc_stmt) {
@@ -18121,6 +18176,13 @@ static void sem_create_proc_stmt(ast_node *ast) {
     sem_autotests(misc_attrs);
     if (is_error(misc_attrs)) {
       goto cleanup;
+    }
+
+    if (exists_attribute_str(misc_attrs, "implements")) {
+      sem_implements_interface(misc_attrs, ast);
+      if (is_error(misc_attrs)) {
+        goto cleanup;
+      }
     }
 
     uint32_t autodrop_count = sem_autodrops(misc_attrs);
