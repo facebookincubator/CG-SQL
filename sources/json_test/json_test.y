@@ -59,7 +59,7 @@ void yyset_lineno(int);
 %token IS_INSTEAD_OF_TRIGGER IS_BEFORE_TRIGGER IS_DELETE_TRIGGER IS_AFTER_TRIGGER IS_INSERT_TRIGGER IS_UPDATE_TRIGGER
 %token STATEMENT STATEMENT_ARGS TARGET UPDATE_TABLES USES_PROCEDURES USES_VIEWS USES_TABLES WHEN_EXPR WHEN_EXPR_ARGS
 %token QUERIES ARGS DEFINED_IN_FILE VALUE_ARGS STATEMENT_TYPE INSERTS UPDATES DELETES GENERAL_INSERTS
-%token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL
+%token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL INTERFACES
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
 %token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS CHECK_EXPRESSIONS
 %token ENUMS CONSTANT_GROUPS
@@ -81,6 +81,7 @@ json_schema: '{'
          UPDATES '[' opt_updates ']' ','
          DELETES '[' opt_deletes ']' ','
          GENERAL '[' opt_generals ']' ','
+         INTERFACES '[' opt_interfaces ']' ','
          REGIONS '[' opt_regions ']' ','
          AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']' ','
          ENUMS  '[' opt_enums ']' ','
@@ -671,6 +672,19 @@ enum_value: '{'
              NAME STRING_LITERAL ','
              VALUE num_literal
             '}'
+  ;
+
+opt_interfaces: | interfaces
+  ;
+
+interfaces: interface | interface ',' interfaces
+  ;
+
+interface: '{'
+          NAME STRING_LITERAL ','
+          DEFINED_IN_FILE STRING_LITERAL ','
+          PROJECTION '[' projected_columns ']'
+         '}'
   ;
 
 opt_subscriptions: | subscriptions

@@ -1462,7 +1462,7 @@ create table t_for_unsub(
   id integer
 );
 
--- TEST: record unsub 
+-- TEST: record unsub
 -- + "type" : "unsub",
 -- + "table" : "t_for_unsub",
 -- + "version" : 4
@@ -1492,3 +1492,17 @@ create table t_for_resub(
 @resub(5, t_for_resub);
 
 @end_schema_region;
+
+-- TEST: more clauses, including having and others
+-- + "name" : "interface1"
+-- + "projection" : [
+-- + "name" : "id"
+-- + "type" : "integer",
+-- + "isNotNull" : 0
+DECLARE INTERFACE interface1 (id INT);
+
+@attribute(cql:implements=interface1)
+create proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
+begin
+  select id_ id, name_ name;
+end;

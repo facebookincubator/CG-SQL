@@ -133,6 +133,7 @@ int fileno(FILE *);
 \"checkExprArgs\"[ \t]*:         { return CHECK_EXPR_ARGS; }
 \"checkExpressions\"[ \t]*:      { return CHECK_EXPRESSIONS; }
 \"onRecreateOf\"[ \t]*:          { return ON_RECREATE_OF; }
+\"interfaces\"[ \t]*:            { return INTERFACES; }
 
 [01]                             { return yytext[0]; }
 [0-9]+L                          { return LONG_LITERAL; }
@@ -156,4 +157,3 @@ null				 { return NULL_LITERAL; }
                                  c2 = input();
                                }
                              }
-

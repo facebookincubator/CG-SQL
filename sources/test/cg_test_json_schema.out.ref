@@ -2923,6 +2923,54 @@
       ],
       "statement" : "WITH deleted_view (x, y) AS (SELECT 1 AS x, 2 AS y) SELECT x, y FROM deleted_view",
       "statementArgs" : [  ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:implements=interface1)
+    CREATE PROC test_interface1_implementation_correct (id_ INTEGER, name_ TEXT)
+    BEGIN
+    SELECT id_ AS id, name_ AS name;
+    END
+
+    {
+      "name" : "test_interface1_implementation_correct",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "args" : [
+        {
+          "name" : "id_",
+          "argOrigin" : "id_",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "name_",
+          "argOrigin" : "name_",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesTables" : [  ],
+      "attributes" : [
+        {
+          "name" : "cql:implements",
+          "value" : "interface1"
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "name",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "statement" : "SELECT ? AS id, ? AS name",
+      "statementArgs" : [ "id_", "name_" ]
     }
   ],
   "inserts" : [
@@ -3805,6 +3853,24 @@
         }
       ],
       "usesDatabase" : 0
+    }
+  ],
+  "interfaces" : [
+
+    The statement ending at line XXXX
+
+    DECLARE INTERFACE interface1 (id INTEGER)
+
+    {
+      "name" : "interface1",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ]
     }
   ],
   "regions" : [

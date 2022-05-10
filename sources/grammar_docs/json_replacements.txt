@@ -91,6 +91,7 @@ s/[[:<:]]HAS_SELECT_RESULT[[:>:]]/'"hasSelectResult"' ':'/g
 s/[[:<:]]HAS_OUT_UNION_RESULT[[:>:]]/'"hasOutUnionResult"' ':'/g
 s/[[:<:]]HAS_OUT_RESULT[[:>:]]/'"hasOutResult"' ':'/g
 s/[[:<:]]GENERAL[[:>:]]/'"general"' ':'/g
+s/[[:<:]]INTERFACES[[:>:]]/'"interfaces"' ':'/g
 s/[[:<:]]REGIONS[[:>:]]/'"regions"' ':'/g
 s/[[:<:]]USING[[:>:]]/'"using"' ':'/g
 s/[[:<:]]USING_PRIVATELY[[:>:]]/'"usingPrivately"' ':'/g

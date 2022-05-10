@@ -53,6 +53,8 @@ static charbuf *inserts;
 static charbuf *updates;
 static charbuf *general;
 static charbuf *general_inserts;
+static charbuf *interfaces_json;
+
 
 // We use this to track every table we've ever seen and we remember what stored procedures use it
 static symtab *tables_to_procs;
@@ -1952,8 +1954,7 @@ static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
 // Start a new section for a proc, if testing we spew the test info here
 // This lets us attribute the output to a particular line number in the test file.
 static void cg_begin_proc(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
-  Contract(is_ast_create_proc_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_interface_stmt(ast));
 
   if (output->used > 1) bprintf(output, ",\n");
   cg_json_test_details(output, ast, misc_attrs);
@@ -1977,7 +1978,7 @@ static bool_t cg_parameters(charbuf *output, ast_node *ast) {
   bytebuf *arg_info = find_proc_arg_info(name);
   CSTR *infos = arg_info ? (CSTR *)arg_info->ptr : NULL;
 
-  bprintf(output, "\"args\" : [\n");
+  bprintf(output, ",\n\"args\" : [\n");
   BEGIN_INDENT(parms, 2);
   simple = cg_json_params(output, params, infos);
   END_INDENT(parms);
@@ -2134,6 +2135,43 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
   CHARBUF_CLOSE(used_tables);
 }
 
+
+static void cg_defined_in_file(charbuf *output, ast_node *ast) {
+  CHARBUF_OPEN(tmp);
+    // quote the file as a json style literaj
+    CSTR filename = ast->filename;
+    #ifdef _WIN32
+    CSTR slash = strrchr(filename, '\\');
+    #else
+    CSTR slash = strrchr(filename, '/');
+    #endif
+    if (slash) {
+      filename = slash + 1;
+    }
+    cg_encode_json_string_literal(filename, &tmp);
+    bprintf(output, ",\n\"definedInFile\" : %s",  tmp.ptr);
+  CHARBUF_CLOSE(tmp);
+}
+
+static void cg_json_declare_interface(ast_node *ast) {
+  Contract(is_ast_declare_interface_stmt(ast));
+  EXTRACT_NOTNULL(proc_name_type, ast->left);
+  EXTRACT_STRING(name, proc_name_type->left);
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
+
+  charbuf *output = interfaces_json;
+  cg_begin_proc(output, ast, NULL);
+
+  BEGIN_INDENT(interface, 2);
+  bprintf(output, "\"name\" : \"%s\"", name);
+  cg_defined_in_file(output, ast);
+  cg_json_projection(output, ast);
+  END_INDENT(interface);
+
+  cg_end_proc(output, ast);
+}
+
 // If we find a procedure definition we crack its arguments and first statement
 // If it matches one of the known types we generate the details for it.  Otherwise
 // it goes into the general bucket.  The output is redirected to the appropriate
@@ -2158,22 +2196,8 @@ static void cg_json_create_proc(ast_node *ast, ast_node *misc_attrs) {
   CHARBUF_OPEN(param_buffer);
   charbuf *output = &param_buffer;
 
-  bprintf(output, "\"name\" : \"%s\",\n", name);
-
-  CHARBUF_OPEN(tmp);
-    // quote the file as a json style literaj
-    CSTR filename = name_ast->filename;
-    #ifdef _WIN32
-    CSTR slash = strrchr(filename, '\\');
-    #else
-    CSTR slash = strrchr(filename, '/');
-    #endif
-    if (slash) {
-      filename = slash + 1;
-    }
-    cg_encode_json_string_literal(filename, &tmp);
-    bprintf(output, "\"definedInFile\" : %s,\n",  tmp.ptr);
-  CHARBUF_CLOSE(tmp);
+  bprintf(output, "\"name\" : \"%s\"", name);
+  cg_defined_in_file(output, name_ast);
 
   bool_t simple = cg_parameters(output, ast);
 
@@ -2313,6 +2337,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   CHARBUF_OPEN(general_buf);
   CHARBUF_OPEN(general_inserts_buf);
   CHARBUF_OPEN(attributes_buf);
+  CHARBUF_OPEN(interfaces_buf);
 
   queries = &query_buf;
   inserts = &insert_buf;
@@ -2320,6 +2345,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   deletes = &delete_buf;
   general = &general_buf;
   general_inserts = &general_inserts_buf;
+  interfaces_json = &interfaces_buf;
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
@@ -2328,6 +2354,8 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
     }
     else if (is_ast_declare_vars_type(stmt)) {
       cg_json_declare_vars_type(&attributes_buf, stmt, misc_attrs);
+    } else if (is_ast_declare_interface_stmt(stmt)) {
+      cg_json_declare_interface(stmt);
     }
   }
 
@@ -2357,8 +2385,13 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
 
   bprintf(output, "\"general\" : [\n");
   bindent(output, general, 2);
+  bprintf(output, "\n],\n");
+
+  bprintf(output, "\"interfaces\" : [\n");
+  bindent(output, interfaces_json, 2);
   bprintf(output, "\n]");
 
+  CHARBUF_CLOSE(interfaces_buf);
   CHARBUF_CLOSE(attributes_buf);
   CHARBUF_CLOSE(general_inserts_buf);
   CHARBUF_CLOSE(general_buf);
@@ -2375,6 +2408,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   updates = NULL;
   general = NULL;
   general_inserts = NULL;
+  interfaces_json = NULL;
 }
 
 // Here we emit a top level fragment that has all the tables and
