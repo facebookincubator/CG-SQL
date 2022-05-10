@@ -22038,3 +22038,20 @@ let result := external_cursor_func(shape_storage);
 -- +  | {call}: err
 -- + error: % not a cursor '1'
 set result := external_cursor_func(1);
+DECLARE PROC uses_broken_thing() (LIKE broken_thing ARGUMENTS);
+
+-- TEST: attempting to define interface with the same name as proc
+-- + {declare_interface_stmt}: err
+DECLARE INTERFACE proc4 (id INT);
+
+-- TEST: attempting to define interface
+-- - error
+DECLARE INTERFACE interface1 (id INT);
+
+-- TEST: attempting to redefine interface with the same signature
+-- - error
+DECLARE INTERFACE interface1 (id INT);
+
+-- TEST: attempting to redefine interface with different signature
+-- + {declare_interface_stmt}: err
+DECLARE INTERFACE interface1 (id INT, name TEXT);

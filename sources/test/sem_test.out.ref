@@ -86904,3 +86904,88 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
       | {arg_list}: ok
         | {int 1}: err
 
+The statement ending at line XXXX
+
+DECLARE PROC uses_broken_thing () (LIKE broken_thing ARGUMENTS);
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had errors, cannot be used) 'broken_thing'
+
+  {declare_proc_stmt}: err
+  | {proc_name_type}
+  | | {name uses_broken_thing}
+  | | {int 3}
+  | {proc_params_stmts}
+    | {typed_names}: err
+      | {typed_name}: err
+        | {like}: err
+          | {name broken_thing}: err
+          | {name broken_thing}: err
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE proc4 (id INTEGER);
+
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface name conflicts with procedure name 'proc4'
+
+  {declare_interface_stmt}: err
+  | {proc_name_type}
+  | | {name proc4}
+  | | {int 1}
+  | {proc_params_stmts}
+    | {typed_names}
+      | {typed_name}
+        | {name id}
+        | {type_int}
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE interface1 (id INTEGER);
+
+  {declare_interface_stmt}: interface1: { id: integer }
+  | {proc_name_type}
+  | | {name interface1}
+  | | {int 1}
+  | {proc_params_stmts}
+    | {typed_names}: interface1: { id: integer }
+      | {typed_name}: id: integer
+        | {name id}
+        | {type_int}: id: integer
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE interface1 (id INTEGER);
+
+  {declare_interface_stmt}: interface1: { id: integer }
+  | {proc_name_type}
+  | | {name interface1}
+  | | {int 1}
+  | {proc_params_stmts}
+    | {typed_names}: interface1: { id: integer }
+      | {typed_name}: id: integer
+        | {name id}
+        | {type_int}: id: integer
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE interface1 (id INTEGER, name TEXT);
+
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INTEGER)
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INTEGER, name TEXT)
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface declarations do not match 'interface1'
+
+  {declare_interface_stmt}: err
+  | {proc_name_type}
+  | | {name interface1}
+  | | {int 1}
+  | {proc_params_stmts}
+    | {typed_names}: interface1: { id: integer, name: text }
+      | {typed_name}: id: integer
+      | | {name id}
+      | | {type_int}: id: integer
+      | {typed_names}
+        | {typed_name}: name: text
+          | {name name}
+          | {type_text}: name: text
+

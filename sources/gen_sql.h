@@ -26,6 +26,7 @@ cql_noexport void gen_root_expr(ast_node *_Nonnull ast);
 cql_noexport void gen_col_or_key(ast_node *_Nonnull ast);
 cql_noexport void gen_params(ast_node *_Nonnull ast);
 cql_noexport void gen_declare_proc_from_create_or_decl(ast_node *_Nonnull ast);
+cql_noexport void gen_declare_interface_stmt(ast_node *_Nonnull ast);
 cql_noexport void gen_one_stmt(ast_node *_Nonnull stmt);
 cql_noexport void gen_misc_attrs(ast_node *_Nonnull ast);
 cql_noexport void gen_misc_attr_value(ast_node *_Nonnull ast);

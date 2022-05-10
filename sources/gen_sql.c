@@ -2995,7 +2995,7 @@ static void gen_declare_proc_no_check_stmt(ast_node *ast) {
   gen_printf("DECLARE PROC %s NO CHECK", name);
 }
 
-static void gen_declare_interface_stmt(ast_node *ast) {
+cql_noexport void gen_declare_interface_stmt(ast_node *ast) {
   Contract(is_ast_declare_interface_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
   EXTRACT_STRING(name, proc_name_type->left);

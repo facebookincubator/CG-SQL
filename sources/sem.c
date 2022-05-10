@@ -489,6 +489,7 @@ static bool_t current_proc_contains_try_is_proc_body;
   monitor_symtab = monitor_symbtab_saved;
 
 // These are the various symbol tables we need, they are stored super dumbly.
+static symtab *interfaces;
 static symtab *procs;
 static symtab *unchecked_procs;
 static symtab *proc_arg_info;
@@ -1908,6 +1909,16 @@ static ast_node *find_upgrade_proc(CSTR name) {
 
 static ast_node *find_ad_hoc_migrate(CSTR name) {
   symtab_entry *entry = symtab_find(ad_hoc_migrates, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+// Wrappers for shape table
+static bool_t add_interface_type(ast_node *ast, CSTR name) {
+  return symtab_add(interfaces, name, ast);
+}
+
+ast_node *find_interface_type(CSTR name) {
+  symtab_entry *entry = symtab_find(interfaces, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
@@ -18698,11 +18709,17 @@ static void sem_declare_const_stmt(ast_node *ast) {
 // this is intended for procedures like `printf` that cannot be readily described with
 // CQL strict types.
 static void sem_declare_proc_no_check_stmt(ast_node *ast) {
- Contract(is_ast_declare_proc_no_check_stmt(ast));
+  Contract(is_ast_declare_proc_no_check_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   if (find_proc(name)) {
     report_error(ast, "CQL0404: procedure cannot be both a normal procedure and an unchecked procedure", name);
+    record_error(ast);
+    return;
+  }
+
+  if (find_interface_type(name)) {
+    report_error(ast, "CQL0481: proc name conflicts with interface name", name);
     record_error(ast);
     return;
   }
@@ -18747,6 +18764,12 @@ static void sem_declare_proc_stmt(ast_node *ast) {
 
   if (find_func(name)) {
     report_error(name_ast, "CQL0195: proc name conflicts with func name", name);
+    record_error(ast);
+    return;
+  }
+
+  if (find_interface_type(name)) {
+    report_error(ast, "CQL0481: proc name conflicts with interface name", name);
     record_error(ast);
     return;
   }
@@ -18813,6 +18836,64 @@ static void sem_declare_proc_stmt(ast_node *ast) {
       record_error(ast);
     }
   }
+}
+
+static void sem_declare_interface_stmt(ast_node *ast) {
+  Contract(!current_joinscope);  // I don't belong inside a select(!)
+  Contract(is_ast_declare_interface_stmt(ast));
+  EXTRACT_NOTNULL(proc_name_type, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_OPTION(type, proc_name_type->right);
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
+
+  if (current_proc) {
+    report_error(name_ast, "CQL0480: declared interface must be top level", name);
+    record_error(ast);
+    return;
+  }
+
+  Invariant(!locals);
+
+  if (find_unchecked_proc(name) || find_proc(name)) {
+    report_error(ast, "CQL0478: interface name conflicts with procedure name", name);
+    record_error(ast);
+    return;
+  }
+
+  if (find_func(name)) {
+    report_error(name_ast, "CQL0477: interface name conflicts with func name", name);
+    record_error(ast);
+    return;
+  }
+
+  ast_node *existing_interface = find_interface_type(name);
+  if (!existing_interface) {
+    bool_t added = add_interface_type(ast, name);
+    Invariant(added);
+  }
+
+  Contract(type == PROC_FLAG_STRUCT_TYPE);
+  sem_typed_names(typed_names);
+
+  if (is_error(typed_names)) {
+    record_error(ast);
+    return;
+  }
+
+  ast->sem = typed_names->sem;
+  ast->sem->sptr->struct_name = name;
+
+  if (existing_interface) {
+      bool_t matching = sem_validate_identical_text(existing_interface, ast, gen_declare_interface_stmt, NULL);
+
+      if (!matching) {
+        report_error(ast, "CQL0479: interface declarations do not match", name);
+        record_error(ast);
+      }
+    }
+
 }
 
 // This helper verifies that the name of a variable is ok in the current scope
@@ -23220,6 +23301,7 @@ cql_noexport void sem_main(ast_node *ast) {
   builtin_funcs = symtab_new();
   builtin_special_funcs = symtab_new();
   funcs = symtab_new();
+  interfaces = symtab_new();
   procs = symtab_new();
   unchecked_procs = symtab_new();
   proc_arg_info = symtab_new();
@@ -23278,6 +23360,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_enum_stmt);
   STMT_INIT(declare_const_stmt);
   STMT_INIT(declare_group_stmt);
+  STMT_INIT(declare_interface_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
@@ -23570,6 +23653,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(non_sql_stmts);
   SYMTAB_CLEANUP(procs);
   SYMTAB_CLEANUP(unchecked_procs);
+  SYMTAB_CLEANUP(interfaces);
   SYMTAB_CLEANUP(proc_arg_info);
   SYMTAB_CLEANUP(enums);
   SYMTAB_CLEANUP(schema_regions);
