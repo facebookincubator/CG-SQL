@@ -15978,6 +15978,7 @@ error:
 // It can be:
 //   * a cursor
 //   * a proc that returns a result set (or any proc if using ARGUMENTS form)
+//   * an interface
 //   * a table
 //   * a view
 //   * an arg bundle (even "ARGUMENTS")
@@ -16024,6 +16025,10 @@ cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeabl
         goto error;
       }
     }
+  }
+
+  if (!found_shape) {
+    found_shape = find_interface_type(like_name);
   }
 
   if (!found_shape || is_error(found_shape)) {

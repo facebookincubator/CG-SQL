@@ -22055,3 +22055,15 @@ DECLARE INTERFACE interface1 (id INT);
 -- TEST: attempting to redefine interface with different signature
 -- + {declare_interface_stmt}: err
 DECLARE INTERFACE interface1 (id INT, name TEXT);
+
+-- TEST: attempting to define interface with the same name as proc
+-- - error:
+DECLARE INTERFACE interface2 (id INT, name TEXT);
+
+-- TEST: this procedure uses interface for its args
+-- + CREATE PROC interface_source (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): ok
+-- - error:
+create proc interface_source(like interface2)
+begin
+end;

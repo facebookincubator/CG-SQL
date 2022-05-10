@@ -86989,3 +86989,41 @@ test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface 
           | {name name}
           | {type_text}: name: text
 
+The statement ending at line XXXX
+
+DECLARE INTERFACE interface2 (id INTEGER, name TEXT);
+
+  {declare_interface_stmt}: interface2: { id: integer, name: text }
+  | {proc_name_type}
+  | | {name interface2}
+  | | {int 1}
+  | {proc_params_stmts}
+    | {typed_names}: interface2: { id: integer, name: text }
+      | {typed_name}: id: integer
+      | | {name id}
+      | | {type_int}: id: integer
+      | {typed_names}
+        | {typed_name}: name: text
+          | {name name}
+          | {type_text}: name: text
+
+The statement ending at line XXXX
+
+CREATE PROC interface_source (id_ INTEGER, name_ TEXT)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name interface_source}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: id_: integer variable in
+      | | {param_detail}: id_: integer variable in
+      |   | {name id_}: id_: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: name_: text variable in
+          | {param_detail}: name_: text variable in
+            | {name name_}: name_: text variable in
+            | {type_text}: text
+
