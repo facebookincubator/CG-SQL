@@ -151,7 +151,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'R
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'X'
 test/sem_test.sql:XXXX:1: error: in str : CQL0198: global variable hides table/view name 'foo'
 test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable name in the same scope 'my_cursor'
+test/sem_test.sql:XXXX:1: error: in declare_cursor_like_typed_names : CQL0197: duplicate variable name in the same scope 'extended_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'x'
 test/sem_test.sql:XXXX:1: error: in leave_stmt : CQL0308: statement should be the last thing in a statement list
 test/sem_test.sql:XXXX:1: error: in continue_stmt : CQL0308: statement should be the last thing in a statement list
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'

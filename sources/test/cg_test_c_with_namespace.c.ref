@@ -3531,6 +3531,67 @@ void fetch_values_dummy(void) {
 // The statement ending at line XXXX
 
 /*
+CREATE PROC fetch_values_extended ()
+BEGIN
+  DECLARE C CURSOR LIKE (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, xx REAL, yy TEXT);
+  FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
+END;
+*/
+
+#define _PROC_ "fetch_values_extended"
+// export: DECLARE PROC fetch_values_extended ();
+
+typedef struct fetch_values_extended_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+  cql_nullable_int64 rate;
+  cql_nullable_int32 type;
+  cql_nullable_double size;
+  cql_nullable_double xx;
+  cql_string_ref _Nullable name;
+  cql_string_ref _Nullable yy;
+} fetch_values_extended_C_row;
+
+#define fetch_values_extended_C_refs_offset cql_offsetof(fetch_values_extended_C_row, name) // count = 2
+void fetch_values_extended(void) {
+  fetch_values_extended_C_row C = { ._refs_count_ = 2, ._refs_offset_ = fetch_values_extended_C_refs_offset };
+  cql_string_ref _tmp_text_0 = NULL;
+  cql_string_ref _tmp_text_1 = NULL;
+  cql_int32 _seed_ = 0;
+
+  _seed_ = 123;
+  C._has_row_ = 1;
+  C.id = _seed_;
+  {
+    char *_printf_result = sqlite3_mprintf("name_%d", _seed_);
+    cql_string_release(_tmp_text_0);
+    _tmp_text_0 = cql_string_ref_new(_printf_result);
+    sqlite3_free(_printf_result);
+  }
+  cql_set_string_ref(&C.name, _tmp_text_0);
+  cql_set_notnull(C.rate, _seed_);
+  cql_set_notnull(C.type, _seed_);
+  cql_set_notnull(C.size, _seed_);
+  cql_set_notnull(C.xx, _seed_);
+  {
+    char *_printf_result = sqlite3_mprintf("yy_%d", _seed_);
+    cql_string_release(_tmp_text_1);
+    _tmp_text_1 = cql_string_ref_new(_printf_result);
+    sqlite3_free(_printf_result);
+  }
+  cql_set_string_ref(&C.yy, _tmp_text_1);
+
+  cql_teardown_row(C);
+  cql_string_release(_tmp_text_0);
+  cql_string_release(_tmp_text_1);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC c_literal (OUT x TEXT)
 BEGIN
   SET x := "\"Testing\" \\''";

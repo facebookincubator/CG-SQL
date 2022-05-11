@@ -1824,12 +1824,27 @@ declare kind_cursor cursor for select * from with_kind;
 -- - error:
 declare kind_value_cursor cursor like kind_cursor;
 
+-- TEST: make a value cursor extending the above using typed names syntax
+-- verify the rewrite also
+-- + DECLARE extended_cursor CURSOR LIKE (id INTEGER<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
+-- + {declare_cursor_like_typed_names}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+-- + {name extended_cursor}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+-- + {typed_names}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
+-- - error:
+declare extended_cursor cursor like ( like kind_value_cursor, xx real, yy text);
+
 -- TEST: try to create a duplicate cursor
 -- + error: % duplicate variable name in the same scope 'my_cursor'
 -- +1 error:
 -- + {declare_cursor}: err
 -- + {name my_cursor}: err
 declare my_cursor cursor for select 1;
+
+-- TEST: try to create a duplicate cursor using like syntax
+-- + {declare_cursor_like_typed_names}: err
+-- + error: % duplicate variable name in the same scope 'extended_cursor'
+-- +1 error
+declare extended_cursor cursor like ( x integer );
 
 -- TEST: the select statement is bogus, error cascade halted so the duplicate name is not reported
 -- + error: % string operand not allowed in 'NOT'
@@ -1839,6 +1854,12 @@ declare my_cursor cursor for select 1;
 -- + {select_stmt}: err
 -- + {not}: err
 declare my_cursor cursor for select not 'x';
+
+-- TEST: the type list is bogus, this fails before the duplicate name detection
+-- + {declare_cursor_like_typed_names}: err
+-- + error: % duplicate column name 'x'
+-- +1 error
+declare extended_cursor cursor like ( x integer, x integer );
 
 -- TEST: standard loop with leave
 -- - error:

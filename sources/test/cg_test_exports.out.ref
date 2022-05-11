@@ -49,6 +49,7 @@ DECLARE PROC declare_cursor_then_fetch_from_proc () USING TRANSACTION;
 DECLARE PROC dml_user (OUT a_ INTEGER NOT NULL) USING TRANSACTION;
 DECLARE PROC thread_theme_info_list (thread_key_ LONG_INT NOT NULL) (thread_key LONG_INT NOT NULL);
 DECLARE PROC fetch_values_dummy ();
+DECLARE PROC fetch_values_extended ();
 DECLARE PROC c_literal (OUT x TEXT);
 DECLARE PROC no_cleanup_label_needed_proc () USING TRANSACTION;
 DECLARE PROC no_code_after_catch () USING TRANSACTION;

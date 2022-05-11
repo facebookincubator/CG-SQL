@@ -1728,6 +1728,10 @@ END;
 
 DECLARE FUNC foo (x CURSOR) INTEGER;
 
+DECLARE X CURSOR LIKE (x INTEGER, y REAL, LIKE goo);
+
+DECLARE X CURSOR LIKE (x INTEGER, y REAL, LIKE goo);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

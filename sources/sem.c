@@ -19364,7 +19364,7 @@ static void sem_declare_cursor_like_select(ast_node *ast) {
 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
 
-  // DECLARE [name] CURSOR FOR [select_stmt]
+  // DECLARE [name] CURSOR LIKE [select_stmt]
   {
     // the select statement doesn't count as DML because we won't be running it
     bool_t has_dml_saved = has_dml;
@@ -19391,12 +19391,47 @@ static void sem_declare_cursor_like_select(ast_node *ast) {
 
   // SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE <=> it's a cursor
   cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
-  cursor->sem->sptr = ast->right->sem->sptr;
+  cursor->sem->sptr = select_stmt->sem->sptr;
   cursor->sem->name = name;
   ast->sem = cursor->sem;
 
   add_variable(name, cursor);
 }
+
+
+// Here we make a value cursor from a list of typed names
+// * the typed names must be valid types/names with no duplicate column names etc.
+//   * they make include rewrites using LIKE internally
+// * The cursor name must be unique
+static void sem_declare_cursor_like_typed_names(ast_node *ast) {
+  Contract(is_ast_declare_cursor_like_typed_names(ast));
+  EXTRACT_NOTNULL(typed_names, ast->right);
+  EXTRACT_ANY_NOTNULL(cursor, ast->left);
+  EXTRACT_STRING(name, cursor);
+
+  // DECLARE [name] CURSOR LIKE ( [select_stmt] )
+
+  sem_typed_names(typed_names);
+  if (is_error(typed_names)) {
+    record_error(ast);
+    return;
+  }
+
+  if (!sem_verify_legal_variable_name(ast, name)) {
+    record_error(ast->left);
+    record_error(ast);
+    return;
+  }
+
+  // SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE <=> it's a cursor
+  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
+  cursor->sem->sptr = typed_names->sem->sptr;
+  cursor->sem->name = name;
+  ast->sem = cursor->sem;
+
+  add_variable(name, cursor);
+}
+
 
 // Here we're just checking that the proc mentioned in the call statement uses the OUT cursor form
 static void sem_call_stmt_has_out_stmt_result_for_cursor(ast_node *call_stmt, CSTR name) {
@@ -23439,6 +23474,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(fetch_values_stmt);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
+  STMT_INIT(declare_cursor_like_typed_names);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_named_type);

@@ -6724,6 +6724,36 @@ DECLARE kind_value_cursor CURSOR LIKE kind_cursor;
 
 The statement ending at line XXXX
 
+DECLARE extended_cursor CURSOR LIKE (id INTEGER<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
+
+  {declare_cursor_like_typed_names}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+  | {name extended_cursor}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+  | {typed_names}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
+    | {typed_name}: id: integer<some_key>
+    | | {name id}
+    | | {type_int}: id: integer<some_key>
+    |   | {name some_key}
+    | {typed_names}
+      | {typed_name}: cost: real<dollars>
+      | | {name cost}
+      | | {type_real}: cost: real<dollars>
+      |   | {name dollars}
+      | {typed_names}
+        | {typed_name}: value: real<dollars>
+        | | {name value}
+        | | {type_real}: value: real<dollars>
+        |   | {name dollars}
+        | {typed_names}
+          | {typed_name}: xx: real
+          | | {name xx}
+          | | {type_real}: xx: real
+          | {typed_names}
+            | {typed_name}: yy: text
+              | {name yy}
+              | {type_text}: yy: text
+
+The statement ending at line XXXX
+
 DECLARE my_cursor CURSOR FOR SELECT 1;
 
 test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable name in the same scope 'my_cursor'
@@ -6744,6 +6774,19 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable
     | {select_orderby}
       | {select_limit}
         | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE extended_cursor CURSOR LIKE (x INTEGER);
+
+test/sem_test.sql:XXXX:1: error: in declare_cursor_like_typed_names : CQL0197: duplicate variable name in the same scope 'extended_cursor'
+
+  {declare_cursor_like_typed_names}: err
+  | {name extended_cursor}: err
+  | {typed_names}: select: { x: integer }
+    | {typed_name}: x: integer
+      | {name x}
+      | {type_int}: x: integer
 
 The statement ending at line XXXX
 
@@ -6768,6 +6811,23 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     | {select_orderby}
       | {select_limit}
         | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE extended_cursor CURSOR LIKE (x INTEGER, x INTEGER);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'x'
+
+  {declare_cursor_like_typed_names}: err
+  | {name extended_cursor}
+  | {typed_names}: err
+    | {typed_name}: x: integer
+    | | {name x}
+    | | {type_int}: x: integer
+    | {typed_names}
+      | {typed_name}: err
+        | {name x}
+        | {type_int}
 
 The statement ending at line XXXX
 

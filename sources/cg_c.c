@@ -5547,6 +5547,14 @@ static void cg_declare_cursor_like_select(ast_node *ast) {
   cg_declare_cursor_like(name_ast);
 }
 
+static void cg_declare_cursor_like_typed_names(ast_node *ast) {
+  Contract(is_ast_declare_cursor_like_typed_names(ast));
+  Contract(is_ast_typed_names(ast->right));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+
+  cg_declare_cursor_like(name_ast);
+}
+
 // The value cursor form for sure will be fetched.   We emit the necessary locals
 // for the cursor here.  Those are one for "_has_row_" field and another for each
 // element of the structure the cursor holds.
@@ -8400,6 +8408,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
+  STMT_INIT(declare_cursor_like_typed_names);
   STMT_INIT(declare_value_cursor);
 
   STMT_INIT(loop_stmt);

@@ -1780,6 +1780,7 @@ declare_simple_var_stmt:
   DECLARE name_list data_type_with_options  { $declare_simple_var_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
   | DECLARE name CURSOR shape_def  { $declare_simple_var_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_simple_var_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  | DECLARE name CURSOR LIKE '(' typed_names ')' { $declare_simple_var_stmt = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
 /* the additional forms are just about storage */

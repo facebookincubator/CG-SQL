@@ -1626,6 +1626,28 @@ begin
   fetch C() from values() @dummy_seed(123) @dummy_nullables;
 end;
 
+-- TEST: value cursor fetch, using type syntax
+-- this cursor has the fields of bar plus xx and yy
+-- + cql_int32 id;
+-- + cql_nullable_int64 rate;
+-- + cql_nullable_int32 type;
+-- + cql_nullable_double size;
+-- + cql_nullable_double xx;
+-- + cql_string_ref _Nullable name;
+-- + cql_string_ref _Nullable yy;
+-- + fetch_values_extended_C_row C = { ._refs_count_ = 2, ._refs_offset_ = fetch_values_extended_C_refs_offset };
+-- + cql_set_string_ref(&C.name, _tmp_text_0);
+-- + cql_set_notnull(C.rate, _seed_);
+-- + cql_set_notnull(C.type, _seed_);
+-- + cql_set_notnull(C.size, _seed_);
+-- + cql_set_notnull(C.xx, _seed_);
+-- + fetch_values_extended(void)
+create proc fetch_values_extended()
+begin
+  declare C cursor like (like bar, xx real, yy text);
+  fetch C() from values() @dummy_seed(123) @dummy_nullables;
+end;
+
 -- TEST: c style literal
 -- + SET x := "\"Testing\" \\''";
 create proc c_literal(out x text)

@@ -3163,6 +3163,16 @@ static void gen_declare_cursor_like_select(ast_node *ast) {
   gen_one_stmt(stmt);
 }
 
+static void gen_declare_cursor_like_typed_names(ast_node *ast) {
+  Contract(is_ast_declare_cursor_like_typed_names(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(typed_names, ast->right);
+
+  gen_printf("DECLARE %s CURSOR LIKE (", name);
+  gen_typed_names(typed_names);
+  gen_printf(")");
+}
+
 static void gen_declare_named_type(ast_node *ast) {
   Contract(is_ast_declare_named_type(ast));
   EXTRACT_STRING(name, ast->left);
@@ -3951,6 +3961,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
+  STMT_INIT(declare_cursor_like_typed_names);
   STMT_INIT(declare_named_type);
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_proc_stmt);
