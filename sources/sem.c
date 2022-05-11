@@ -3097,6 +3097,16 @@ static void sem_validate_previous_index(ast_node *prev_index) {
   enqueue_pending_region_validation(prev_index, ast, index_name);
 }
 
+// We often need to find the index of a particular column
+cql_noexport int32_t find_col_in_sptr(sem_struct *sptr, CSTR name) {
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (!Strcasecmp(sptr->names[i], name)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 // Helper function to update the column type in a table node.
 static void sem_update_column_type(ast_node *table_ast, ast_node *columns, sem_t type) {
   Contract(is_ast_name_list(columns) || is_ast_indexed_columns(columns));
@@ -3111,13 +3121,12 @@ static void sem_update_column_type(ast_node *table_ast, ast_node *columns, sem_t
 
     if (is_ast_str(name_ast)) {
       EXTRACT_STRING(name, name_ast);
-      for (int32_t i = 0; i < sptr->count; i++) {
-        if (!Strcasecmp(name, sptr->names[i])) {
-          sptr->semtypes[i] |= type;
-          jptr->tables[0]->semtypes[i] |= type;
-          break;
-        }
-      }
+
+      // always a valid column name, it MUST match
+      int32_t i = find_col_in_sptr(sptr, name);
+      Invariant(i >= 0);
+      sptr->semtypes[i] |= type;
+      jptr->tables[0]->semtypes[i] |= type;
     }
   }
 }
@@ -11451,7 +11460,7 @@ static void sem_cte_table(ast_node *ast)  {
       // name alias
 
       // must be a valid shape
-      ast_node *found_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
+      ast_node *found_shape = sem_find_shape_def_base(like_ast, LIKEABLE_FOR_VALUES);
       if (!found_shape) {
         record_error(ast);
         return;
@@ -15986,7 +15995,7 @@ error:
 // we only need the names, not even the types.  But we might need either.
 // (e.g. declare cursor X like Y needs the type info)
 //
-cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeable_for) {
+cql_noexport ast_node *sem_find_shape_def_base(ast_node *like_ast, int32_t likeable_for) {
   Contract(is_ast_like(like_ast));
 
   if (like_ast->right) {
@@ -16055,6 +16064,72 @@ cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeabl
 error:
   record_error(like_ast);
   record_error(name_ast);
+  return NULL;
+}
+
+cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_for) {
+  Contract(is_ast_shape_def(shape_def));
+  EXTRACT_NOTNULL(like, shape_def->left);
+  EXTRACT(name_list, shape_def->right);
+
+  ast_node *base_shape = sem_find_shape_def_base(like, likeable_for);
+  if (!base_shape) {
+    goto error;
+  }
+
+  if (name_list) {
+    if (!sem_verify_no_duplicate_names(name_list)) {
+      goto error;
+    }
+
+    sem_struct *sptr_old = base_shape->sem->sptr;
+    Invariant(sptr_old);
+
+
+    ast_node *iter = name_list;
+    uint32_t count = 0;
+
+    while (iter) {
+      count++;
+      iter = iter->right;
+    }
+
+    Invariant(count >= 1);
+    sem_struct *sptr_new = new_sem_struct("select", count);
+
+    // rico
+
+    int32_t inew = 0;
+    iter = name_list;
+
+    while (iter) {
+      EXTRACT_STRING(name, iter->left);
+
+      int32_t iold = find_col_in_sptr(sptr_old, name);
+      if (iold < 0) {
+        report_error(iter->left, "CQL0069: name not found", name);
+        goto error;
+      }
+
+      sptr_new->names[inew] = sptr_old->names[iold];
+      sptr_new->semtypes[inew] = sptr_old->semtypes[iold];
+      sptr_new->kinds[inew] = sptr_old->kinds[iold];
+      iter = iter->right;
+      inew++;
+    }
+
+    AST_REWRITE_INFO_SET(base_shape->lineno, base_shape->filename);
+    ast_node *result = new_ast_shape_def(NULL, NULL);
+    result->sem = new_sem(SEM_TYPE_STRUCT);
+    result->sem->sptr = sptr_new;
+    AST_REWRITE_INFO_RESET();
+    return result;
+  }
+
+  return base_shape;
+
+error:
+  record_error(shape_def);
   return NULL;
 }
 
@@ -19233,7 +19308,7 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   CHARBUF_CLOSE(tmp);
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
-  ast_node *like_target = sem_find_likeable_ast(like_node, LIKEABLE_FOR_VALUES);
+  ast_node *like_target = sem_find_shape_def_base(like_node, LIKEABLE_FOR_VALUES);
   if (!like_target) {
     record_error(var);
     return NULL;
@@ -19321,9 +19396,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_ANY_NOTNULL(new_cursor_ast, ast->left);
   EXTRACT_STRING(new_cursor_name, new_cursor_ast);
-  EXTRACT_ANY_NOTNULL(like_ast, ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
-  EXTRACT_STRING(like_name, name_ast);
+  EXTRACT_ANY_NOTNULL(shape_def, ast->right);
 
   // no duplicates allowed
   if (!sem_verify_legal_variable_name(ast, new_cursor_name)) {
@@ -19333,14 +19406,14 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   }
 
   // must be a valid shape
-  ast_node *found_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
+  ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
   if (!found_shape) {
     record_error(ast);
     return;
   }
 
   // good to go, make our cursor, with storage.
-  name_ast->sem = like_ast->sem = found_shape->sem;
+  shape_def->sem = found_shape->sem;
   new_cursor_ast->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
   new_cursor_ast->sem->sptr = found_shape->sem->sptr;
   new_cursor_ast->sem->name = new_cursor_name;

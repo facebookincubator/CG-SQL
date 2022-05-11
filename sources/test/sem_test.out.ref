@@ -6719,8 +6719,9 @@ DECLARE kind_value_cursor CURSOR LIKE kind_cursor;
 
   {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
   | {name kind_value_cursor}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
-  | {like}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable dml_proc
-    | {name kind_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable dml_proc
+  | {shape_def}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable dml_proc
+    | {like}: ok
+      | {name kind_cursor}
 
 The statement ending at line XXXX
 
@@ -6751,6 +6752,52 @@ DECLARE extended_cursor CURSOR LIKE (id INTEGER<some_key>, cost REAL<dollars>, v
             | {typed_name}: yy: text
               | {name yy}
               | {type_text}: yy: text
+
+The statement ending at line XXXX
+
+DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, id);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
+
+  {declare_cursor_like_name}: err
+  | {name reduced_cursor}
+  | {shape_def}: err
+    | {like}: ok
+    | | {name extended_cursor}
+    | {name_list}
+      | {name id}
+      | {name_list}
+        | {name id}
+
+The statement ending at line XXXX
+
+DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, not_a_valid_name);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_valid_name'
+
+  {declare_cursor_like_name}: err
+  | {name reduced_cursor}
+  | {shape_def}: err
+    | {like}: ok
+    | | {name extended_cursor}
+    | {name_list}
+      | {name id}
+      | {name_list}
+        | {name not_a_valid_name}
+
+The statement ending at line XXXX
+
+DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, cost);
+
+  {declare_cursor_like_name}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
+  | {name reduced_cursor}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
+  | {shape_def}: select: { id: integer<some_key>, cost: real<dollars> }
+    | {like}: ok
+    | | {name extended_cursor}
+    | {name_list}
+      | {name id}
+      | {name_list}
+        | {name cost}
 
 The statement ending at line XXXX
 
@@ -25915,8 +25962,9 @@ DECLARE QQ CURSOR LIKE out_cursor_proc;
 
   {declare_cursor_like_name}: QQ: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
   | {name QQ}: QQ: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-  | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-    | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+  | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+    | {like}: ok
+      | {name out_cursor_proc}
 
 The statement ending at line XXXX
 
@@ -27001,8 +27049,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {like}: ok
+      |     | {name out_cursor_proc}
       | {fetch_call_stmt}: ok
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
@@ -27027,8 +27076,9 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
     | {stmt_list}: err
       | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {like}: ok
+      |     | {name out_cursor_proc}
       | {fetch_call_stmt}: err
       | | {name C}
       | | {call_stmt}: err
@@ -27435,8 +27485,9 @@ END;
       |       | {select_offset}
       | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {like}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {shape_def}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      |   | {like}: ok
+      |     | {name C0}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -27820,8 +27871,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor wit
       |       | {select_offset}
       | {declare_cursor_like_name}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
       | | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
-      | | {like}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
-      |   | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      | | {shape_def}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
+      |   | {like}: ok
+      |     | {name C0}
       | {fetch_stmt}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc fetch_into
       | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
       | | {name_list}
@@ -27863,8 +27915,9 @@ END;
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
         | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {like}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-          | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+        | {shape_def}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {like}: ok
+            | {name C0}
 
 The statement ending at line XXXX
 
@@ -27886,8 +27939,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0200: variable is not a cursor 'C0
       | | {type_int}: integer
       | {declare_cursor_like_name}: err
         | {name C1}
-        | {like}: err
-          | {name C0}: err
+        | {shape_def}: err
+          | {like}: err
+            | {name C0}: err
 
 The statement ending at line XXXX
 
@@ -27909,8 +27963,9 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor_like_name : CQL0197: duplicat
       |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_cursor_like_name}: err
         | {name C0}: err
-        | {like}
-          | {name C0}
+        | {shape_def}
+          | {like}
+            | {name C0}
 
 The statement ending at line XXXX
 
@@ -27927,8 +27982,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
     | {stmt_list}: err
       | {declare_cursor_like_name}: err
         | {name C1}
-        | {like}: err
-          | {name C0}: err
+        | {shape_def}: err
+          | {like}: err
+            | {name C0}: err
 
 The statement ending at line XXXX
 
@@ -27943,8 +27999,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable shape_storage value_cursor
         | {name C}: C: decl3: { A: integer notnull, B: bool } variable shape_storage value_cursor
-        | {like}: decl3: { A: integer notnull, B: bool } dml_proc
-          | {name decl3}: decl3: { A: integer notnull, B: bool } dml_proc
+        | {shape_def}: decl3: { A: integer notnull, B: bool } dml_proc
+          | {like}: ok
+            | {name decl3}
 
 The statement ending at line XXXX
 
@@ -27961,8 +28018,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'decl1'
     | {stmt_list}: err
       | {declare_cursor_like_name}: err
         | {name C}
-        | {like}: err
-          | {name decl1}: err
+        | {shape_def}: err
+          | {like}: err
+            | {name decl1}: err
 
 The statement ending at line XXXX
 
@@ -27977,8 +28035,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
         | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
-        | {like}: bar: { id: integer notnull, name: text, rate: longint }
-          | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+        | {shape_def}: bar: { id: integer notnull, name: text, rate: longint }
+          | {like}: ok
+            | {name bar}
 
 The statement ending at line XXXX
 
@@ -27993,8 +28052,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable shape_storage value_cursor
         | {name C}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable shape_storage value_cursor
-        | {like}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
-          | {name MyView}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+        | {shape_def}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+          | {like}: ok
+            | {name MyView}
 
 The statement ending at line XXXX
 
@@ -29595,8 +29655,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: curs: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {name curs}: curs: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
-      | | {like}: bar: { id: integer notnull, name: text, rate: longint }
-      |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+      | | {shape_def}: bar: { id: integer notnull, name: text, rate: longint }
+      |   | {like}: ok
+      |     | {name bar}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
           | {name curs}: curs: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
@@ -29931,8 +29992,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
             |       | {name rate}
             | {from_shape}: err
               | {column_spec}
-              | | {like}: err
-              |   | {name bogus_name_here}: err
+              | | {shape_def}: err
+              |   | {like}: err
+              |     | {name bogus_name_here}: err
               | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { extra: integer variable in, id: integer notnull variable in, name: text variable in, rate: longint variable in } shape_storage
 
 The statement ending at line XXXX
@@ -29941,8 +30003,9 @@ DECLARE val_cursor CURSOR LIKE my_cursor;
 
   {declare_cursor_like_name}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
   | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
-  | {like}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
-    | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+  | {shape_def}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+    | {like}: ok
+      | {name my_cursor}
 
 The statement ending at line XXXX
 
@@ -30263,8 +30326,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
     | {params}: err
     | | {param}: err
     |   | {param_detail}
-    |     | {like}: err
-    |       | {name garbonzo}: err
+    |     | {shape_def}: err
+    |       | {like}: err
+    |         | {name garbonzo}: err
     | {stmt_list}
       | {declare_vars_type}
         | {name_list}
@@ -30601,8 +30665,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {like}: ok
+      |     | {name out_cursor_proc}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -30638,8 +30703,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'proc1'
     | {params}: err
     | | {param}: err
     |   | {param_detail}
-    |     | {like}: err
-    |       | {name proc1}: err
+    |     | {shape_def}: err
+    |       | {like}: err
+    |         | {name proc1}: err
     | {stmt_list}
       | {declare_vars_type}
         | {name_list}
@@ -30766,8 +30832,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'proc1'
   | | | {int 1}
   | | {name table_like_proc_with_no_result}
   | {col_key_list}: err
-    | {like}: err
-      | {name proc1}: err
+    | {shape_def}: err
+      | {like}: err
+        | {name proc1}: err
 
 The statement ending at line XXXX
 
@@ -30783,8 +30850,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   | | | {int 1}
   | | {name table_like_nonexistent_view}
   | {col_key_list}: err
-    | {like}: err
-      | {name this_thing_doesnt_exist}: err
+    | {shape_def}: err
+      | {like}: err
+        | {name this_thing_doesnt_exist}: err
 
 The statement ending at line XXXX
 
@@ -49855,8 +49923,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {like}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {like}: ok
+      |     | {name out_cursor_proc}
       | {fetch_call_stmt}: ok
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
@@ -52520,8 +52589,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
       | | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
-      | | {like}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
-      |   | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
+      | | {shape_def}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
+      |   | {like}: ok
+      |     | {name referenceable}
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 1}: integer notnull
@@ -52584,8 +52654,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
       | | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
-      | | {like}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
-      |   | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
+      | | {shape_def}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
+      |   | {like}: ok
+      |     | {name referenceable}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
@@ -52620,8 +52691,9 @@ DECLARE c_bar CURSOR LIKE referenceable;
 
   {declare_cursor_like_name}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
   | {name c_bar}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
-  | {like}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
-    | {name referenceable}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
+  | {shape_def}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
+    | {like}: ok
+      | {name referenceable}
 
 The statement ending at line XXXX
 
@@ -52872,8 +52944,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
   | {columns_values}: err
     | {column_spec}
-    | | {like}: err
-    |   | {name not_a_symbol}: err
+    | | {shape_def}: err
+    |   | {like}: err
+    |     | {name not_a_symbol}: err
     | {insert_list}
       | {int 1}
 
@@ -53089,8 +53162,9 @@ DECLARE nully_cursor CURSOR LIKE foo_data;
 
   {declare_cursor_like_name}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
   | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
-  | {like}: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real }
-    | {name foo_data}: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real }
+  | {shape_def}: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real }
+    | {like}: ok
+      | {name foo_data}
 
 The statement ending at line XXXX
 
@@ -53405,8 +53479,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
     | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
     | {columns_values}: err
       | {column_spec}
-      | | {like}: err
-      |   | {name not_a_symbol}: err
+      | | {shape_def}: err
+      |   | {like}: err
+      |     | {name not_a_symbol}: err
       | {insert_list}
         | {int 1}
         | {insert_list}
@@ -53479,8 +53554,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
     | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
     | {columns_values}: err
       | {column_spec}
-      | | {like}: err
-      |   | {name not_a_symbol}: err
+      | | {shape_def}: err
+      |   | {like}: err
+      |     | {name not_a_symbol}: err
       | {select_stmt}
         | {select_core_list}
         | | {select_core}
@@ -53533,8 +53609,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
       |     | {name c7}
       | {from_shape}: err
         | {column_spec}
-        | | {like}: err
-        |   | {name not_a_symbol}: err
+        | | {shape_def}: err
+        |   | {like}: err
+        |     | {name not_a_symbol}: err
         | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
 
 The statement ending at line XXXX
@@ -55797,8 +55874,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   | {proc_params_stmts}
     | {typed_names}: err
       | {typed_name}: err
-        | {like}: err
-          | {name invalid_type_name}: err
+        | {shape_def}: err
+          | {like}: err
+            | {name invalid_type_name}: err
 
 The statement ending at line XXXX
 
@@ -57457,8 +57535,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
-      | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
-      |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
+      | | {shape_def}: shape: { x: integer notnull, y: text notnull } dml_proc
+      |   | {like}: ok
+      |     | {name shape}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
@@ -57581,8 +57660,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
-      | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
-      |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
+      | | {shape_def}: shape: { x: integer notnull, y: text notnull } dml_proc
+      |   | {like}: ok
+      |     | {name shape}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
@@ -57620,8 +57700,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
     | {stmt_list}: err
       | {declare_cursor_like_name}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
-      | | {like}: shape: { x: integer notnull, y: text notnull } dml_proc
-      |   | {name shape}: shape: { x: integer notnull, y: text notnull } dml_proc
+      | | {shape_def}: shape: { x: integer notnull, y: text notnull } dml_proc
+      |   | {like}: ok
+      |     | {name shape}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
@@ -57640,8 +57721,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
         | {expr_list}: err
           | {from_shape}
             | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
-            | {like}: err
-              | {name not_a_real_shape}: err
+            | {shape_def}: err
+              | {like}: err
+                | {name not_a_real_shape}: err
 
 The statement ending at line XXXX
 
@@ -58251,8 +58333,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
               | {expr_list}
                 | {from_shape}
                   | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer variable in } shape_storage
-                  | {like}: err
-                    | {name no_such_type_dude}: err
+                  | {shape_def}: err
+                    | {like}: err
+                      | {name no_such_type_dude}: err
 
 The statement ending at line XXXX
 
@@ -58369,8 +58452,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
             | {arg_list}: err
               | {from_shape}
                 | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer notnull variable in, y: text notnull variable in, z: integer notnull variable out } shape_storage
-                | {like}: err
-                  | {name not_a_shape}: err
+                | {shape_def}: err
+                  | {like}: err
+                    | {name not_a_shape}: err
 
 The statement ending at line XXXX
 
@@ -60473,8 +60557,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0261: cursor did not originate from
     | {stmt_list}: err
       | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
-      | | {like}: bar: { id: integer notnull, name: text, rate: longint }
-      |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+      | | {shape_def}: bar: { id: integer notnull, name: text, rate: longint }
+      |   | {like}: ok
+      |     | {name bar}
       | {set_from_cursor}: err
         | {name box}: box: object<bar CURSOR> variable out
         | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
@@ -60755,9 +60840,10 @@ DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
 
   {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
   | {name Q}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
-  | {like}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in }
-    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in }
-    | {name some_proc}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in }
+  | {shape_def}: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in }
+    | {like}
+      | {name some_proc}
+      | {name some_proc}
 
 The statement ending at line XXXX
 
@@ -60938,9 +61024,10 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'some_proc3'
     | {params}: err
     | | {param}: err
     |   | {param_detail}
-    |     | {like}: err
-    |       | {name some_proc3}: err
-    |       | {name some_proc3}: err
+    |     | {shape_def}: err
+    |       | {like}: err
+    |         | {name some_proc3}: err
+    |         | {name some_proc3}: err
     | {stmt_list}
       | {call_stmt}
         | {name some_proc}
@@ -60962,9 +61049,10 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0262: LIKE ... ARGUMENTS used on a
     | {params}: err
       | {param}: err
         | {param_detail}
-          | {like}: err
-            | {name proc1}: err
-            | {name proc1}: err
+          | {shape_def}: err
+            | {like}: err
+              | {name proc1}: err
+              | {name proc1}: err
 
 The statement ending at line XXXX
 
@@ -60972,9 +61060,10 @@ DECLARE cursor_with_object CURSOR LIKE obj_proc ARGUMENTS;
 
   {declare_cursor_like_name}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
   | {name cursor_with_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
-  | {like}: obj_proc[arguments]: { an_obj: object in }
-    | {name obj_proc}: obj_proc[arguments]: { an_obj: object in }
-    | {name obj_proc}: obj_proc[arguments]: { an_obj: object in }
+  | {shape_def}: obj_proc[arguments]: { an_obj: object in }
+    | {like}
+      | {name obj_proc}
+      | {name obj_proc}
 
 The statement ending at line XXXX
 
@@ -61004,8 +61093,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
-      | | {like}: bar: { id: integer notnull, name: text, rate: longint }
-      |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+      | | {shape_def}: bar: { id: integer notnull, name: text, rate: longint }
+      |   | {like}: ok
+      |     | {name bar}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
           | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
@@ -61038,8 +61128,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
       | | {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
-      | | {like}: bar: { id: integer notnull, name: text, rate: longint }
-      |   | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+      | | {shape_def}: bar: { id: integer notnull, name: text, rate: longint }
+      |   | {like}: ok
+      |     | {name bar}
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 9}: integer notnull
@@ -61789,8 +61880,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
       | | {name C}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
-      | | {like}: test_shape: { x: integer<integer_things> notnull } dml_proc
-      |   | {name test_shape}: test_shape: { x: integer<integer_things> notnull } dml_proc
+      | | {shape_def}: test_shape: { x: integer<integer_things> notnull } dml_proc
+      |   | {like}: ok
+      |     | {name test_shape}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
@@ -61851,8 +61943,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
       | | {name C}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
-      | | {like}: test_shape: { x: integer<integer_things> notnull } dml_proc
-      |   | {name test_shape}: test_shape: { x: integer<integer_things> notnull } dml_proc
+      | | {shape_def}: test_shape: { x: integer<integer_things> notnull } dml_proc
+      |   | {like}: ok
+      |     | {name test_shape}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name C}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage value_cursor
@@ -63035,8 +63128,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
-      | | {like}: AB: { a: integer, b: text }
-      |   | {name AB}: AB: { a: integer, b: text }
+      | | {shape_def}: AB: { a: integer, b: text }
+      |   | {like}: ok
+      |     | {name AB}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
           | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
@@ -63089,8 +63183,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
-      | | {like}: AB: { a: integer, b: text }
-      |   | {name AB}: AB: { a: integer, b: text }
+      | | {shape_def}: AB: { a: integer, b: text }
+      |   | {like}: ok
+      |     | {name AB}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
           | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
@@ -63143,8 +63238,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
-      | | {like}: AB: { a: integer, b: text }
-      |   | {name AB}: AB: { a: integer, b: text }
+      | | {shape_def}: AB: { a: integer, b: text }
+      |   | {like}: ok
+      |     | {name AB}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
           | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
@@ -63195,8 +63291,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
-      | | {like}: AB: { a: integer, b: text }
-      |   | {name AB}: AB: { a: integer, b: text }
+      | | {shape_def}: AB: { a: integer, b: text }
+      |   | {like}: ok
+      |     | {name AB}
       | {update_cursor_stmt}: ok
         | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
         | {columns_values}: ok
@@ -63248,8 +63345,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
-      | | {like}: AB: { a: integer, b: text }
-      |   | {name AB}: AB: { a: integer, b: text }
+      | | {shape_def}: AB: { a: integer, b: text }
+      |   | {like}: ok
+      |     | {name AB}
       | {update_cursor_stmt}: ok
         | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
         | {columns_values}: ok
@@ -63295,8 +63393,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
-      | | {like}: AB: { a: integer, b: text }
-      |   | {name AB}: AB: { a: integer, b: text }
+      | | {shape_def}: AB: { a: integer, b: text }
+      |   | {like}: ok
+      |     | {name AB}
       | {update_cursor_stmt}: ok
         | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
         | {columns_values}: ok
@@ -63348,8 +63447,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
       | | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
-      | | {like}: a1: AB: { a: integer, b: text } shape_storage
-      |   | {name a1}: a1: AB: { a: integer, b: text } shape_storage
+      | | {shape_def}: a1: AB: { a: integer, b: text } shape_storage
+      |   | {like}: ok
+      |     | {name a1}
       | {update_cursor_stmt}: ok
         | {name C}: C: AB: { a: integer, b: text } variable shape_storage value_cursor
         | {columns_values}: ok
@@ -64512,8 +64612,9 @@ DECLARE complex_attr_cursor CURSOR LIKE to_copy;
 
   {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
   | {name complex_attr_cursor}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
-  | {like}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
-    | {name to_copy}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
+  | {shape_def}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
+    | {like}: ok
+      | {name to_copy}
 
 The statement ending at line XXXX
 
@@ -65171,8 +65272,9 @@ DECLARE xy_curs CURSOR LIKE xy;
 
   {declare_cursor_like_name}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
   | {name xy_curs}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
-  | {like}: xy: { x: integer<x_coord>, y: integer<y_coord> }
-    | {name xy}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+  | {shape_def}: xy: { x: integer<x_coord>, y: integer<y_coord> }
+    | {like}: ok
+      | {name xy}
 
 The statement ending at line XXXX
 
@@ -70930,8 +71032,9 @@ DECLARE c_global CURSOR LIKE tnull;
 
   {declare_cursor_like_name}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
   | {name c_global}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
-  | {like}: tnull: { xn: integer, yn: integer }
-    | {name tnull}: tnull: { xn: integer, yn: integer }
+  | {shape_def}: tnull: { xn: integer, yn: integer }
+    | {like}: ok
+      | {name tnull}
 
 The statement ending at line XXXX
 
@@ -71056,8 +71159,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: c_local: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
       | | {name c_local}: c_local: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
-      | | {like}: tnull: { xn: integer, yn: integer }
-      |   | {name tnull}: tnull: { xn: integer, yn: integer }
+      | | {shape_def}: tnull: { xn: integer, yn: integer }
+      |   | {like}: ok
+      |     | {name tnull}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name c_local}: c_local: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
@@ -72512,8 +72616,9 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
       | | {name c}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
-      | | {like}: tnull: { xn: integer, yn: integer }
-      |   | {name tnull}: tnull: { xn: integer, yn: integer }
+      | | {shape_def}: tnull: { xn: integer, yn: integer }
+      |   | {like}: ok
+      |     | {name tnull}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name c}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
@@ -72563,8 +72668,9 @@ END;
         |   |         | {name yn}
         |   | {declare_cursor_like_name}: d: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
         |   | | {name d}: d: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
-        |   | | {like}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
-        |   |   | {name c}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   | | {shape_def}: c: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
+        |   |   | {like}: ok
+        |   |     | {name c}
         |   | {let_stmt}: x1: integer notnull variable
         |   | | {name x1}: x1: integer notnull variable
         |   | | {call}: c.xn: integer notnull variable
@@ -72619,9 +72725,10 @@ END;
     | {stmt_list}: ok
       | {declare_cursor_like_name}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
       | | {name c}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
-      | | {like}: improvements_work_for_in_args[arguments]: { a: integer in }
-      |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
-      |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+      | | {shape_def}: improvements_work_for_in_args[arguments]: { a: integer in }
+      |   | {like}
+      |     | {name improvements_work_for_in_args}
+      |     | {name improvements_work_for_in_args}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name c}: c: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
@@ -72651,9 +72758,10 @@ END;
         |   |         | {name a}
         |   | {declare_cursor_like_name}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
         |   | | {name d}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
-        |   | | {like}: improvements_work_for_in_args[arguments]: { a: integer in }
-        |   |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
-        |   |   | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |   | | {shape_def}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |   |   | {like}
+        |   |     | {name improvements_work_for_in_args}
+        |   |     | {name improvements_work_for_in_args}
         |   | {fetch_values_stmt}: ok
         |   | | {name_columns_values}
         |   |   | {name d}: d: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
@@ -72680,9 +72788,10 @@ END;
         |   |   | {name a}
         |   | {declare_cursor_like_name}: e: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
         |     | {name e}: e: improvements_work_for_in_args[arguments]: { a: integer in } variable shape_storage value_cursor
-        |     | {like}: improvements_work_for_in_args[arguments]: { a: integer in }
-        |       | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
-        |       | {name improvements_work_for_in_args}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |     | {shape_def}: improvements_work_for_in_args[arguments]: { a: integer in }
+        |       | {like}
+        |         | {name improvements_work_for_in_args}
+        |         | {name improvements_work_for_in_args}
         | {if_alt}: ok
 
 The statement ending at line XXXX
@@ -82085,8 +82194,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   |     |   | {col_calcs}
   |     |     | {col_calc}
   |     |       | {name simple_shape}
-  |     |       | {like}: err
-  |     |         | {name this_is_not_a_shape}: err
+  |     |       | {shape_def}: err
+  |     |         | {like}: err
+  |     |           | {name this_is_not_a_shape}: err
   |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
   |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
   |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
@@ -82113,8 +82223,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   |     | | {column_calculation}: err
   |     |   | {col_calcs}
   |     |     | {col_calc}
-  |     |       | {like}: err
-  |     |         | {name this_is_not_a_shape}: err
+  |     |       | {shape_def}: err
+  |     |         | {like}: err
+  |     |           | {name this_is_not_a_shape}: err
   |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
   |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
   |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
@@ -82131,7 +82242,7 @@ The statement ending at line XXXX
 SELECT COLUMNS(LIKE with_kind)
   FROM simple_shape;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'cost'
+test/sem_test.sql:XXXX:1: error: in shape_def : CQL0069: name not found 'cost'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -82141,8 +82252,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'cost'
   |     | | {column_calculation}: err
   |     |   | {col_calcs}
   |     |     | {col_calc}
-  |     |       | {like}: ok
-  |     |         | {name with_kind}
+  |     |       | {shape_def}
+  |     |         | {like}: ok
+  |     |           | {name with_kind}
   |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
   |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
   |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
@@ -82170,8 +82282,9 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found '
   |     |   | {col_calcs}
   |     |     | {col_calc}
   |     |       | {name simple_shape}
-  |     |       | {like}: ok
-  |     |         | {name with_kind}
+  |     |       | {shape_def}
+  |     |         | {like}: ok
+  |     |           | {name with_kind}
   |     | {select_from_etc}: TABLE { simple_shape: simple_shape }
   |       | {table_or_subquery_list}: TABLE { simple_shape: simple_shape }
   |       | | {table_or_subquery}: TABLE { simple_shape: simple_shape }
@@ -82197,8 +82310,9 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list_con : CQL0053: select colum
   |     | | {column_calculation}
   |     |   | {col_calcs}
   |     |     | {col_calc}
-  |     |       | {like}
-  |     |         | {name foo}
+  |     |       | {shape_def}
+  |     |         | {like}
+  |     |           | {name foo}
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -82345,8 +82459,9 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible typ
   |     |   | {col_calcs}
   |     |     | {col_calc}
   |     |       | {name two_col_v3}
-  |     |       | {like}: ok
-  |     |         | {name two_col_v1}
+  |     |       | {shape_def}
+  |     |         | {like}: ok
+  |     |           | {name two_col_v1}
   |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
   |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
   |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
@@ -82374,8 +82489,9 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0069: name not found '
   |     |   | {col_calcs}
   |     |     | {col_calc}
   |     |       | {name two_col_v3}
-  |     |       | {like}: ok
-  |     |         | {name two_col_v2}
+  |     |       | {shape_def}
+  |     |         | {like}: ok
+  |     |           | {name two_col_v2}
   |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
   |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
   |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
@@ -82402,8 +82518,9 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0012: incompatible typ
   |     | | {column_calculation}: err
   |     |   | {col_calcs}
   |     |     | {col_calc}
-  |     |       | {like}: ok
-  |     |         | {name two_col_v1}
+  |     |       | {shape_def}
+  |     |         | {like}: ok
+  |     |           | {name two_col_v1}
   |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
   |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
   |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
@@ -82420,7 +82537,7 @@ The statement ending at line XXXX
 SELECT COLUMNS(LIKE two_col_v2)
   FROM two_col_v3;
 
-test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 't'
+test/sem_test.sql:XXXX:1: error: in shape_def : CQL0069: name not found 't'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -82430,8 +82547,9 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 't'
   |     | | {column_calculation}: err
   |     |   | {col_calcs}
   |     |     | {col_calc}
-  |     |       | {like}: ok
-  |     |         | {name two_col_v2}
+  |     |       | {shape_def}
+  |     |         | {like}: ok
+  |     |           | {name two_col_v2}
   |     | {select_from_etc}: TABLE { two_col_v3: two_col_v3 }
   |       | {table_or_subquery_list}: TABLE { two_col_v3: two_col_v3 }
   |       | | {table_or_subquery}: TABLE { two_col_v3: two_col_v3 }
@@ -83353,8 +83471,9 @@ END;
       | | {name D}: D: select: { u: text, v: text } variable dml_proc shape_storage
       | {declare_cursor_like_name}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
       | | {name R}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
-      | | {like}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
-      |   | {name Shape_uvxy}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
+      | | {shape_def}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
+      |   | {like}: ok
+      |     | {name Shape_uvxy}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name R}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
@@ -83569,8 +83688,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
               |     | {insert_list}: err
               |       | {from_shape}
               |         | {name not_a_cursor}: err
-              |         | {like}
-              |           | {name Shape_xy}
+              |         | {shape_def}
+              |           | {like}
+              |             | {name Shape_xy}
               | {select_orderby}
                 | {select_limit}
                   | {select_offset}
@@ -83591,8 +83711,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
     | {stmt_list}: err
       | {declare_cursor_like_name}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
       | | {name R}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
-      | | {like}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
-      |   | {name Shape_uvxy}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
+      | | {shape_def}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
+      |   | {like}: ok
+      |     | {name Shape_uvxy}
       | {fetch_values_stmt}: err
         | {name_columns_values}
           | {name R}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
@@ -83627,8 +83748,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
     | {stmt_list}: err
       | {declare_cursor_like_name}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
       | | {name R}: R: Shape_uvxy: { x: integer, y: integer, u: text, v: text } variable shape_storage value_cursor
-      | | {like}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
-      |   | {name Shape_uvxy}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
+      | | {shape_def}: Shape_uvxy: { x: integer, y: integer, u: text, v: text }
+      |   | {like}: ok
+      |     | {name Shape_uvxy}
       | {fetch_values_stmt}: ok
       | | {insert_dummy_spec}: integer notnull
       | | | {int 1}: integer notnull
@@ -83705,8 +83827,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
               |       | {insert_list}: err
               |         | {from_shape}
               |           | {name not_a_cursor}: err
-              |           | {like}
-              |             | {name Shape_xy}
+              |           | {shape_def}
+              |             | {like}
+              |               | {name Shape_xy}
               | {select_orderby}
                 | {select_limit}
                   | {select_offset}
@@ -83876,8 +83999,9 @@ END;
       | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
       | {declare_cursor_like_name}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
       | | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
-      | | {like}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
-      |   | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      | | {shape_def}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      |   | {like}: ok
+      |     | {name C}
       | {fetch_cursor_from_blob_stmt}: ok
         | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
         | {name B}: B: blob<structured_storage> variable
@@ -84197,8 +84321,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not ma
       |   | {name foo}
       | {declare_cursor_like_name}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
       | | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
-      | | {like}: foo: { id: integer notnull primary_key autoinc }
-      |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+      | | {shape_def}: foo: { id: integer notnull primary_key autoinc }
+      |   | {like}: ok
+      |     | {name foo}
       | {fetch_values_stmt}: err
         | {name_columns_values}
           | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
@@ -84222,8 +84347,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     | {stmt_list}: err
       | {declare_cursor_like_name}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
       | | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
-      | | {like}: foo: { id: integer notnull primary_key autoinc }
-      |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+      | | {shape_def}: foo: { id: integer notnull primary_key autoinc }
+      |   | {like}: ok
+      |     | {name foo}
       | {fetch_cursor_from_blob_stmt}: err
         | {name C}
         | {not}: err
@@ -84245,8 +84371,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0461: fetch from blob operand is no
     | {stmt_list}: err
       | {declare_cursor_like_name}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
       | | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
-      | | {like}: foo: { id: integer notnull primary_key autoinc }
-      |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+      | | {shape_def}: foo: { id: integer notnull primary_key autoinc }
+      |   | {like}: ok
+      |     | {name foo}
       | {fetch_cursor_from_blob_stmt}: err
         | {name C}
         | {int 1}: integer notnull
@@ -85060,8 +85187,9 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
     | {stmt_list}: err
       | {declare_cursor_like_name}: c0: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
       | | {name c0}: c0: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
-      | | {like}: has_row_check_table: { a: text notnull, b: text }
-      |   | {name has_row_check_table}: has_row_check_table: { a: text notnull, b: text }
+      | | {shape_def}: has_row_check_table: { a: text notnull, b: text }
+      |   | {like}: ok
+      |     | {name has_row_check_table}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name c0}: c0: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
@@ -85082,8 +85210,9 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
       |   | {name a}
       | {declare_cursor_like_name}: c1: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
       | | {name c1}: c1: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
-      | | {like}: has_row_check_table: { a: text notnull, b: text }
-      |   | {name has_row_check_table}: has_row_check_table: { a: text notnull, b: text }
+      | | {shape_def}: has_row_check_table: { a: text notnull, b: text }
+      |   | {like}: ok
+      |     | {name has_row_check_table}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
       |   | {name c1}: c1: has_row_check_table: { a: text notnull, b: text } variable shape_storage value_cursor
@@ -85113,8 +85242,9 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
       |   | {name has_row_check_blob}
       | {declare_cursor_like_name}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor serialize
       | | {name c2}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor serialize
-      | | {like}: has_row_check_blob: { a: text notnull, b: text }
-      |   | {name has_row_check_blob}: has_row_check_blob: { a: text notnull, b: text }
+      | | {shape_def}: has_row_check_blob: { a: text notnull, b: text }
+      |   | {like}: ok
+      |     | {name has_row_check_blob}
       | {fetch_cursor_from_blob_stmt}: ok
       | | {name c2}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor
       | | {name b}: b: blob<has_row_check_blob> variable
@@ -85477,8 +85607,9 @@ END;
     | | {type_int}: integer
     | {declare_cursor_like_name}: var_group_var2: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
     | | {name var_group_var2}: var_group_var2: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
-    | | {like}: foo: { id: integer notnull primary_key autoinc }
-    |   | {name foo}: foo: { id: integer notnull primary_key autoinc }
+    | | {shape_def}: foo: { id: integer notnull primary_key autoinc }
+    |   | {like}: ok
+    |     | {name foo}
     | {declare_cursor_like_select}: var_group_var3: select: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | {name var_group_var3}: var_group_var3: select: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
       | {select_stmt}: select: { x: integer notnull, y: text notnull }
@@ -85521,8 +85652,9 @@ END;
     | | {type_int}
     | {declare_cursor_like_name}
     | | {name var_group_var2}
-    | | {like}
-    |   | {name foo}
+    | | {shape_def}
+    |   | {like}
+    |     | {name foo}
     | {declare_cursor_like_select}
       | {name var_group_var3}
       | {select_stmt}
@@ -86901,9 +87033,10 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'does_not_exi
     | {params}: err
       | {param}: err
         | {param_detail}
-          | {like}: err
-            | {name does_not_exist}: err
-            | {name does_not_exist}: err
+          | {shape_def}: err
+            | {like}: err
+              | {name does_not_exist}: err
+              | {name does_not_exist}: err
 
 The statement ending at line XXXX
 
@@ -86918,9 +87051,10 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
   | {proc_params_stmts}
     | {typed_names}: err
       | {typed_name}: err
-        | {like}: err
-          | {name broken_thing}: err
-          | {name broken_thing}: err
+        | {shape_def}: err
+          | {like}: err
+            | {name broken_thing}: err
+            | {name broken_thing}: err
 
 The statement ending at line XXXX
 
@@ -86977,9 +87111,10 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
   | {proc_params_stmts}
     | {typed_names}: err
       | {typed_name}: err
-        | {like}: err
-          | {name broken_thing}: err
-          | {name broken_thing}: err
+        | {shape_def}: err
+          | {like}: err
+            | {name broken_thing}: err
+            | {name broken_thing}: err
 
 The statement ending at line XXXX
 

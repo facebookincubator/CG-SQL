@@ -2155,7 +2155,7 @@ AST(or)</code></pre>
 <span id="cb89-19"><a href="#cb89-19"></a>  }</span>
 <span id="cb89-20"><a href="#cb89-20"></a></span>
 <span id="cb89-21"><a href="#cb89-21"></a>  <span class="co">// must be a valid shape</span></span>
-<span id="cb89-22"><a href="#cb89-22"></a>  ast_node *found_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);</span>
+<span id="cb89-22"><a href="#cb89-22"></a>  ast_node *found_shape = sem_find_shape_def(like_ast, LIKEABLE_FOR_VALUES);</span>
 <span id="cb89-23"><a href="#cb89-23"></a>  <span class="cf">if</span> (!found_shape) {</span>
 <span id="cb89-24"><a href="#cb89-24"></a>    record_error(ast);</span>
 <span id="cb89-25"><a href="#cb89-25"></a>    <span class="cf">return</span>;</span>
@@ -2173,7 +2173,7 @@ AST(or)</code></pre>
 <ul>
 <li><code>EXTRACT</code> : gets the pieces we need from the AST</li>
 <li><code>sem_verify_legal_variable_name</code> : makes sure the cursor name is unique and doesn’t hide a table name</li>
-<li><code>sem_find_likeable_ast</code> : searches for something with a suitable name that has a shape</li>
+<li><code>sem_find_shape_def</code> : searches for something with a suitable name that has a shape</li>
 <li>we populate the name node with the semantic type that we found</li>
 <li><code>new_sem</code> : makes a new <code>sem_node</code> for the cursor variable with <code>SEM_TYPE_STRUCT</code>
 <ul>
@@ -2181,7 +2181,7 @@ AST(or)</code></pre>
 </ul></li>
 </ul>
 <p>Note: <code>name_ast-&gt;sem</code> isn’t actually used for anything but it is helpful for debugging. If the AST is printed it shows the original unmodified semantic type which can be helpful.</p>
-<p>Briefly <code>sem_find_likeable_ast</code> does these steps:</p>
+<p>Briefly <code>sem_find_shape_def</code> does these steps:</p>
 <ul>
 <li>if the right of the <code>LIKE</code> refers to procedure arguments (e.g. C LIKE Foo ARGUMENTS), get the args of the named procedure and use them as a shape</li>
 <li>if the right is a local or global, and its a cursor, use the shape of that cursor for the new cursor</li>
@@ -2205,7 +2205,7 @@ AST(or)</code></pre>
 <span id="cb91-2"><a href="#cb91-2"></a><span class="cf">BEGIN</span></span>
 <span id="cb91-3"><a href="#cb91-3"></a>  <span class="kw">INSERT</span> <span class="kw">INTO</span> Foo <span class="kw">FROM</span> <span class="kw">row</span>;</span>
 <span id="cb91-4"><a href="#cb91-4"></a><span class="cf">END</span>;</span></code></pre></div>
-<p>Those two versions of <code>InsertIntoFoo</code> compile into the same code. The semantic analyzer expands the <code>(row LIKE Foo)</code> into <code>(row_id integer, row_t text, row_r real, row_b blob)</code> and then replaces <code>FROM row</code> with <code>(row_id, row_t, row_r, row_b)</code>. In both case it simply looked up the shape using <code>sem_find_likeable_ast</code> and then altered the AST to the canonical pattern. This kind of “shape sugar” is all over CQL and greatly increases maintainability while eliminating common errors. The most common operation is simply to expland a “shape” into a list of arguments or columns (maybe with or without type names). SQLite doesn’t know any of this shape magic so by the time SQLite sees the code it has to look “normal” – the shapes are all resolved.</p>
+<p>Those two versions of <code>InsertIntoFoo</code> compile into the same code. The semantic analyzer expands the <code>(row LIKE Foo)</code> into <code>(row_id integer, row_t text, row_r real, row_b blob)</code> and then replaces <code>FROM row</code> with <code>(row_id, row_t, row_r, row_b)</code>. In both case it simply looked up the shape using <code>sem_find_shape_def</code> and then altered the AST to the canonical pattern. This kind of “shape sugar” is all over CQL and greatly increases maintainability while eliminating common errors. The most common operation is simply to expland a “shape” into a list of arguments or columns (maybe with or without type names). SQLite doesn’t know any of this shape magic so by the time SQLite sees the code it has to look “normal” – the shapes are all resolved.</p>
 <h3 id="join-types">Join Types</h3>
 <p>The last of the type building data structure is the join type. Recall that we have this shape:</p>
 <div class="sourceCode" id="cb92"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb92-1"><a href="#cb92-1"></a><span class="co">// for the data type of (parts of) the FROM clause</span></span>

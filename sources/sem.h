@@ -267,6 +267,7 @@ cql_noexport ast_node *find_recreate_migrator(CSTR name);
 cql_noexport ast_node *find_constant_group(CSTR name);
 cql_noexport ast_node *find_variable_group(CSTR name);
 cql_noexport ast_node *find_constant(CSTR name);
+cql_noexport int32_t find_col_in_sptr(sem_struct *sptr, CSTR name);
 cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);
 cql_noexport void sem_accumulate_full_region_image(symtab *regions, CSTR name);
 cql_noexport void sem_accumulate_public_region_image(symtab *regions, CSTR name);
@@ -277,7 +278,8 @@ cql_noexport bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encod
 #define LIKEABLE_FOR_ARGS   1
 #define LIKEABLE_FOR_VALUES 2
 
-cql_noexport ast_node *sem_find_likeable_ast(ast_node *like_ast, int32_t likeable_for);
+cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_for);
+cql_noexport ast_node *sem_find_shape_def_base(ast_node *like_ast, int32_t likeable_for);
 cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var);
 cql_noexport ast_node *find_named_type(CSTR name);
 

@@ -144,16 +144,16 @@ cql_noexport void rewrite_insert_list_from_shape(ast_node *ast, ast_node *from_s
 cql_noexport void rewrite_like_column_spec_if_needed(ast_node *columns_values) {
   Contract(is_ast_columns_values(columns_values) || is_ast_from_shape(columns_values));
   EXTRACT_NOTNULL(column_spec, columns_values->left);
-  EXTRACT_ANY(like, column_spec->left);
+  EXTRACT_ANY(shape_def, column_spec->left);
 
-  if (is_ast_like(like)) {
-     ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+  if (is_ast_shape_def(shape_def)) {
+     ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
      if (!found_shape) {
        record_error(columns_values);
        return;
      }
 
-     AST_REWRITE_INFO_SET(like->lineno, like->filename);
+     AST_REWRITE_INFO_SET(shape_def->lineno, shape_def->filename);
 
      sem_struct *sptr = found_shape->sem->sptr;
      ast_node *name_list = rewrite_gen_full_column_list(sptr);
@@ -250,11 +250,11 @@ static void rewrite_from_shape_args(ast_node *head) {
         return;
       }
 
-      ast_node *like_ast = arg->right;
+      ast_node *shape_def = arg->right;
       ast_node *likeable_shape = NULL;
 
-      if (like_ast) {
-          likeable_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
+      if (shape_def) {
+          likeable_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
           if (!likeable_shape) {
             record_error(head);
             return;
@@ -303,7 +303,7 @@ cql_noexport bool_t rewrite_col_key_list(ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     Contract(is_ast_col_key_list(ast));
 
-    if (is_ast_like(ast->left)) {
+    if (is_ast_shape_def(ast->left)) {
       bool_t success = rewrite_one_def(ast);
       if (!success) {
         return false;
@@ -320,18 +320,16 @@ cql_noexport bool_t rewrite_col_key_list(ast_node *head) {
 // - Reconstruct the ast
 cql_noexport bool_t rewrite_one_def(ast_node *head) {
   Contract(is_ast_col_key_list(head));
-  Contract(is_ast_like(head->left));
-  EXTRACT_NOTNULL(like, head->left);
-  EXTRACT_STRING(like_name, like->left);
+  EXTRACT_NOTNULL(shape_def, head->left);
 
   // it's ok to use the LIKE construct on old tables
-  ast_node *likeable_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+  ast_node *likeable_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
   if (!likeable_shape) {
     record_error(head);
     return false;
   }
 
-  AST_REWRITE_INFO_SET(like->lineno, like->filename);
+  AST_REWRITE_INFO_SET(shape_def->lineno, shape_def->filename);
 
   // Store the remaining nodes while we reconstruct the AST
   EXTRACT_ANY(right_ast, head->right);
@@ -370,9 +368,9 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
       head = new_head;
     } else {
       Invariant(is_ast_col_key_list(head));
-      Invariant(is_ast_like(head->left));
+      Invariant(is_ast_shape_def(head->left));
 
-      // replace the like entry with a col_def
+      // replace the shape def entry with a col_def
       // on the next iteration, we will insert to the right of ast
       ast_set_right(head, NULL);
       ast_set_left(head, col_def);
@@ -418,16 +416,15 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
   Contract(is_ast_param(param));
   EXTRACT_NOTNULL(param_detail, param->right);
   EXTRACT_ANY(shape_name_ast, param_detail->left);
-  EXTRACT_NOTNULL(like, param_detail->right);
-  EXTRACT_STRING(like_name, like->left);
+  EXTRACT_NOTNULL(shape_def, param_detail->right);
 
-  ast_node *likeable_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_ARGS);
+  ast_node *likeable_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_ARGS);
   if (!likeable_shape) {
     record_error(param);
     return param;
   }
 
-  AST_REWRITE_INFO_SET(like->lineno, like->filename);
+  AST_REWRITE_INFO_SET(shape_def->lineno, shape_def->filename);
 
   // Nothing can go wrong from here on
   record_ok(param);
@@ -890,16 +887,15 @@ cql_noexport void rewrite_cte_name_list_from_columns(ast_node *ast, ast_node *se
 static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
   Contract(is_ast_typed_name(typed_name));
   EXTRACT_ANY(shape_name_ast, typed_name->left);
-  EXTRACT_NOTNULL(like, typed_name->right);
-  EXTRACT_STRING(like_name, like->left);
+  EXTRACT_NOTNULL(shape_def, typed_name->right);
 
-  ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+  ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
   if (!found_shape) {
     record_error(typed_name);
     return;
   }
 
-  AST_REWRITE_INFO_SET(like->lineno, like->filename);
+  AST_REWRITE_INFO_SET(shape_def->lineno, shape_def->filename);
 
   // Nothing can go wrong from here on
   record_ok(typed_name);
@@ -973,7 +969,7 @@ cql_noexport void rewrite_typed_names(ast_node *head) {
     Contract(is_ast_typed_names(ast));
     EXTRACT_NOTNULL(typed_name, ast->left);
 
-    if (is_ast_like(typed_name->right)) {
+    if (is_ast_shape_def(typed_name->right)) {
       rewrite_one_typed_name(typed_name, used_names);
       if (is_error(typed_name)) {
         record_error(head);
@@ -1002,7 +998,7 @@ cql_noexport void rewrite_params(ast_node *head, bytebuf *args_info) {
     EXTRACT_NOTNULL(param, ast->left)
     EXTRACT_NOTNULL(param_detail, param->right)
 
-    if (is_ast_like(param_detail->right)) {
+    if (is_ast_shape_def(param_detail->right)) {
       param = rewrite_one_param(param, param_names, args_info);
       if (is_error(param)) {
         record_error(head);
@@ -1524,23 +1520,10 @@ typedef struct jfind_t {
   symtab *tables;
 } jfind_t;
 
-
 // This just gives us easy access to the sem_struct or NULL
 static sem_struct *jfind_table(jfind_t *jfind, CSTR name) {
   symtab_entry *entry = symtab_find(jfind->tables, name);
   return entry ? (sem_struct *)(entry->val) : NULL;
-}
-
-// We often need to find the index of a particular column
-// because in X like Y the column order of X might be different
-// than Y and probably is.
-static int32_t find_col_in_sptr(sem_struct *sptr, CSTR name) {
-  for (int32_t i = 0; i < sptr->count; i++) {
-    if (!Strcasecmp(sptr->names[i], name)) {
-      return i;
-    }
-  }
-  return -1;
 }
 
 // If we need them we make these fast disambiguation tables so that
@@ -1680,12 +1663,12 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
         goto cleanup;
       }
 
-      EXTRACT(like, col_calc->right);
+      EXTRACT(shape_def, col_calc->right);
 
       sem_struct *sptr;
 
-      if (like) {
-        ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+      if (shape_def) {
+        ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
         if (!found_shape) {
           record_error(column_calculation);
           goto cleanup;
@@ -1715,9 +1698,9 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
     }
     else {
       // the other case has just a like expression
-      EXTRACT_NOTNULL(like, col_calc->right);
+      EXTRACT_NOTNULL(shape_def, col_calc->right);
 
-      ast_node *found_shape = sem_find_likeable_ast(like, LIKEABLE_FOR_VALUES);
+      ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
       if (!found_shape) {
         record_error(column_calculation);
         goto cleanup;
@@ -1738,7 +1721,7 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
           symtab_entry *entry = symtab_find(jfind->location, col);
 
           if (!entry) {
-            report_error(like, "CQL0069: name not found", col);
+            report_error(shape_def, "CQL0069: name not found", col);
             record_error(column_calculation);
             goto cleanup;
           }

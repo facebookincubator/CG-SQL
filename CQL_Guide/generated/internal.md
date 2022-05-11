@@ -2787,7 +2787,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   }
 
   // must be a valid shape
-  ast_node *found_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
+  ast_node *found_shape = sem_find_shape_def(like_ast, LIKEABLE_FOR_VALUES);
   if (!found_shape) {
     record_error(ast);
     return;
@@ -2806,7 +2806,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 
 * `EXTRACT` : gets the pieces we need from the AST
 * `sem_verify_legal_variable_name` : makes sure the cursor name is unique and doesn't hide a table name
-* `sem_find_likeable_ast` : searches for something with a suitable name that has a shape
+* `sem_find_shape_def` : searches for something with a suitable name that has a shape
 * we populate the name node with the  semantic type that we found
 * `new_sem` : makes a new `sem_node` for the cursor variable with `SEM_TYPE_STRUCT`
   * set the `sptr` field using the discovered shape
@@ -2814,7 +2814,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 Note: `name_ast->sem` isn't actually used for anything but it is helpful for debugging. If the AST is printed it
 shows the original unmodified semantic type which can be helpful.
 
-Briefly `sem_find_likeable_ast` does these steps:
+Briefly `sem_find_shape_def` does these steps:
 
 * if the right of the `LIKE` refers to procedure arguments (e.g. C LIKE Foo ARGUMENTS), get the args of the named procedure and use them as a shape
 * if the right is a local or global, and its a cursor, use the shape of that cursor for the new cursor
@@ -2848,7 +2848,7 @@ END;
 
 Those two versions of `InsertIntoFoo` compile into the same code.  The semantic analyzer expands the `(row LIKE Foo)` into
 `(row_id integer, row_t text, row_r real, row_b blob)` and then replaces `FROM row` with
-`(row_id, row_t, row_r, row_b)`.  In both case it simply looked up the shape using `sem_find_likeable_ast`
+`(row_id, row_t, row_r, row_b)`.  In both case it simply looked up the shape using `sem_find_shape_def`
 and then altered the AST to the canonical pattern.  This kind of "shape sugar" is all over CQL and
 greatly increases maintainability while eliminating common errors.  The most common operation is simply
 to expland a "shape" into a list of arguments or columns (maybe with or without type names).  SQLite doesn't
@@ -9291,5 +9291,3 @@ Topics covered included:
 As with the other parts, no attempt was made to cover every function in detail.  That is
 best done by reading the source code. But there is overall structure here and an understanding
 of the basic principles is helpful before diving into the source code.
-
-

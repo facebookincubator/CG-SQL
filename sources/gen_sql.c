@@ -678,7 +678,7 @@ cql_noexport void gen_col_or_key(ast_node *def) {
     gen_pk_def(def);
   } else if (is_ast_fk_def(def)) {
     gen_fk_def(def);
-  } else if (is_ast_like(def)) {
+  } else if (is_ast_shape_def(def)) {
     gen_shape_def(def);
   } else if (is_ast_check_def(def)) {
     gen_check_def(def);
@@ -2630,7 +2630,7 @@ static void gen_insert_dummy_spec(ast_node *ast) {
   }
 }
 
-static void gen_shape_def(ast_node *ast) {
+static void gen_shape_def_base(ast_node *ast) {
   Contract(is_ast_like(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY(from_args, ast->right);
@@ -2641,11 +2641,23 @@ static void gen_shape_def(ast_node *ast) {
   }
 }
 
+static void gen_shape_def(ast_node *ast) {
+  Contract(is_ast_shape_def(ast));
+  EXTRACT_NOTNULL(like, ast->left);
+  gen_shape_def_base(like);
+
+  if (ast->right) {
+    gen_printf("(");
+    gen_name_list(ast->right);
+    gen_printf(")");
+  }
+}
+
 static void gen_column_spec(ast_node *ast) {
   // allow null column_spec here so we don't have to test it everywhere
   if (ast) {
     gen_printf("(");
-    if (is_ast_like(ast->left)) {
+    if (is_ast_shape_def(ast->left)) {
       gen_shape_def(ast->left);
     }
     else {
@@ -2836,21 +2848,21 @@ static void gen_normal_param(ast_node *ast) {
 static void gen_like_param(ast_node *ast) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
-  EXTRACT_NOTNULL(like, param_detail->right);
+  EXTRACT_NOTNULL(shape_def, param_detail->right);
 
   if (param_detail->left) {
     EXTRACT_STRING(name, param_detail->left);
     gen_printf("%s ", name);
   }
 
-  gen_shape_def(like);
+  gen_shape_def(shape_def);
 }
 
 static void gen_param(ast_node *ast) {
   Contract(is_ast_param(ast));
 
   EXTRACT_NOTNULL(param_detail, ast->right);
-  if (is_ast_like(param_detail->right)) {
+  if (is_ast_shape_def(param_detail->right)) {
     gen_like_param(ast);
   }
   else {
@@ -2965,7 +2977,7 @@ static void gen_typed_name(ast_node *ast) {
     gen_printf("%s ", formal);
   }
 
-  if (is_ast_like(type)) {
+  if (is_ast_shape_def(type)) {
     gen_shape_def(type);
   }
   else {
@@ -3148,10 +3160,10 @@ static void gen_declare_cursor(ast_node *ast) {
 static void gen_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_STRING(new_cursor_name, ast->left);
-  EXTRACT_NOTNULL(like, ast->right);
+  EXTRACT_NOTNULL(shape_def, ast->right);
 
   gen_printf("DECLARE %s CURSOR ", new_cursor_name);
-  gen_shape_def(like);
+  gen_shape_def(shape_def);
 }
 
 static void gen_declare_cursor_like_select(ast_node *ast) {

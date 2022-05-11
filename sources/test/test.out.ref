@@ -1732,6 +1732,8 @@ DECLARE X CURSOR LIKE (x INTEGER, y REAL, LIKE goo);
 
 DECLARE X CURSOR LIKE (x INTEGER, y REAL, LIKE goo);
 
+DECLARE Z CURSOR LIKE foo(x, y);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

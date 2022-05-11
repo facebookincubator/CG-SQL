@@ -1833,6 +1833,25 @@ declare kind_value_cursor cursor like kind_cursor;
 -- - error:
 declare extended_cursor cursor like ( like kind_value_cursor, xx real, yy text);
 
+-- TEST: restriction syntax with duplicate name
+-- + {declare_cursor_like_name}: err
+-- + error: % duplicate name in list 'id'
+-- +1 error:
+declare reduced_cursor cursor like extended_cursor(id, id);
+
+-- TEST: restriction syntax with bogus name
+-- + {declare_cursor_like_name}: err
+-- + error: % name not found 'not_a_valid_name'
+-- +1 error:
+declare reduced_cursor cursor like extended_cursor(id, not_a_valid_name);
+
+-- TEST: now use the restriction syntax to get a smaller cursor
+-- + {declare_cursor_like_name}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
+-- + {name reduced_cursor}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
+-- + {shape_def}: select: { id: integer<some_key>, cost: real<dollars> }
+-- - error:
+declare reduced_cursor cursor like extended_cursor(id, cost);
+
 -- TEST: try to create a duplicate cursor
 -- + error: % duplicate variable name in the same scope 'my_cursor'
 -- +1 error:
@@ -14802,7 +14821,7 @@ end;
 
 -- TEST: object arguments are supported
 -- + {declare_cursor_like_name}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
--- + {like}: obj_proc[arguments]: { an_obj: object in }
+-- + {shape_def}: obj_proc[arguments]: { an_obj: object in }
 -- - error:
 declare cursor_with_object cursor like obj_proc arguments;
 

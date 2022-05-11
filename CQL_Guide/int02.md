@@ -2033,9 +2033,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_ANY_NOTNULL(new_cursor_ast, ast->left);
   EXTRACT_STRING(new_cursor_name, new_cursor_ast);
-  EXTRACT_ANY_NOTNULL(like_ast, ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
-  EXTRACT_STRING(like_name, name_ast);
+  EXTRACT_ANY_NOTNULL(shape_def, ast->right);
 
   // no duplicates allowed
   if (!sem_verify_legal_variable_name(ast, new_cursor_name)) {
@@ -2045,14 +2043,14 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   }
 
   // must be a valid shape
-  ast_node *found_shape = sem_find_likeable_ast(like_ast, LIKEABLE_FOR_VALUES);
+  ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
   if (!found_shape) {
     record_error(ast);
     return;
   }
 
   // good to go, make our cursor, with storage.
-  name_ast->sem = like_ast->sem = found_shape->sem;
+  shape_def->sem = found_shape->sem;
   new_cursor_ast->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
   new_cursor_ast->sem->sptr = found_shape->sem->sptr;
   new_cursor_ast->sem->name = new_cursor_name;
@@ -2064,7 +2062,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 
 * `EXTRACT` : gets the pieces we need from the AST
 * `sem_verify_legal_variable_name` : makes sure the cursor name is unique and doesn't hide a table name
-* `sem_find_likeable_ast` : searches for something with a suitable name that has a shape
+* `sem_find_shape_def` : searches for something with a suitable name that has a shape
 * we populate the name node with the  semantic type that we found
 * `new_sem` : makes a new `sem_node` for the cursor variable with `SEM_TYPE_STRUCT`
   * set the `sptr` field using the discovered shape
@@ -2072,7 +2070,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 Note: `name_ast->sem` isn't actually used for anything but it is helpful for debugging. If the AST is printed it
 shows the original unmodified semantic type which can be helpful.
 
-Briefly `sem_find_likeable_ast` does these steps:
+Briefly `sem_find_shape_def` does these steps:
 
 * if the right of the `LIKE` refers to procedure arguments (e.g. C LIKE Foo ARGUMENTS), get the args of the named procedure and use them as a shape
 * if the right is a local or global, and its a cursor, use the shape of that cursor for the new cursor
@@ -2106,7 +2104,7 @@ END;
 
 Those two versions of `InsertIntoFoo` compile into the same code.  The semantic analyzer expands the `(row LIKE Foo)` into
 `(row_id integer, row_t text, row_r real, row_b blob)` and then replaces `FROM row` with
-`(row_id, row_t, row_r, row_b)`.  In both case it simply looked up the shape using `sem_find_likeable_ast`
+`(row_id, row_t, row_r, row_b)`.  In both case it simply looked up the shape using `sem_find_shape_def`
 and then altered the AST to the canonical pattern.  This kind of "shape sugar" is all over CQL and
 greatly increases maintainability while eliminating common errors.  The most common operation is simply
 to expland a "shape" into a list of arguments or columns (maybe with or without type names).  SQLite doesn't

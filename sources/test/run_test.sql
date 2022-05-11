@@ -5052,8 +5052,8 @@ DECLARE PROC get_rows(result object not null) OUT UNION (x INTEGER NOT NULL, y T
 BEGIN_TEST(child_results)
   let p := cql_partition_create();
 
-  declare K cursor like select 1 x, "2" y;
-  declare V cursor like select 1 x, "2" y, nullable(false) z;
+  declare v cursor like (x integer not null, y text not null, z bool);
+  declare k cursor like v(x, y);
 
   -- empty cursors, not added to partition
   let added := cql_partition_cursor(p, k, v);
@@ -5063,8 +5063,8 @@ BEGIN_TEST(child_results)
 
   while i < 10
   begin
-    fetch k() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
     fetch v() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
+    fetch k from v(like k);
     set added := cql_partition_cursor(p, k, v);
     EXPECT(added);
 

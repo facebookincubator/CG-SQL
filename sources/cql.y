@@ -303,7 +303,7 @@ static void cql_reset_globals(void);
 %type <aval> version_annotation
 %type <aval> while_stmt
 %type <aval> enforce_strict_stmt enforce_normal_stmt enforce_reset_stmt enforce_push_stmt enforce_pop_stmt
-%type <aval> enforcement_options shape_def
+%type <aval> enforcement_options shape_def shape_def_base
 
 %start program
 
@@ -632,8 +632,13 @@ check_def:
   ;
 
 shape_def:
-    LIKE name { $shape_def = new_ast_like($name, NULL); }
-  | LIKE name ARGUMENTS { $shape_def = new_ast_like($name, $name); }
+    shape_def_base  { $shape_def = new_ast_shape_def($shape_def_base, NULL); }
+  | shape_def_base '(' name_list ')' { $shape_def = new_ast_shape_def($shape_def_base, $name_list); }
+  ;
+
+shape_def_base:
+    LIKE name { $shape_def_base = new_ast_like($name, NULL); }
+  | LIKE name ARGUMENTS { $shape_def_base = new_ast_like($name, $name); }
   ;
 
 col_name:
@@ -1805,7 +1810,8 @@ call_stmt:
       YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       // sugar form -- this is the same as
       // CALL name ( FROM LOCALS LIKE name ARGUMENTS) -- i.e. all arg names that match
-      ast_node *shape_def = new_ast_like($name, $name);
+      ast_node *like = new_ast_like($name, $name);
+      ast_node *shape_def = new_ast_shape_def(like, NULL);
       ast_node *call_expr = new_ast_from_shape(new_ast_str("LOCALS"), shape_def);
       ast_node *call_expr_list = new_ast_expr_list(call_expr, NULL);
       $call_stmt = new_ast_call_stmt($name, call_expr_list); }
