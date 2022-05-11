@@ -3598,6 +3598,24 @@ extern cql_nullable_int32 external_cursor_func(cql_dynamic_cursor *_Nonnull x);
 extern void external_cursor_caller(void);
 
 // The statement ending at line XXXX
+extern void clobber1(cql_string_ref _Nullable *_Nonnull x);
+
+// The statement ending at line XXXX
+extern void clobber2(cql_string_ref _Nullable *_Nonnull x);
+
+// The statement ending at line XXXX
+extern void mutated_in_arg1(cql_string_ref _Nullable _in__x);
+
+// The statement ending at line XXXX
+extern void mutated_in_arg2(cql_string_ref _Nullable _in__x);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code mutated_in_arg3(sqlite3 *_Nonnull _db_, cql_string_ref _Nullable _in__x);
+
+// The statement ending at line XXXX
+extern void mutated_not_null(cql_string_ref _Nonnull _in__x);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

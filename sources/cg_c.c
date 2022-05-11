@@ -3417,6 +3417,8 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   Contract(is_ast_params(ast));
   Contract(b);
 
+  CHARBUF_OPEN(alias);
+
   bool_t did_emit_contract = 0;
 
   int32_t position = 1;
@@ -3426,7 +3428,16 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
     EXTRACT_NOTNULL(param_detail, param->right);
     EXTRACT_ANY_NOTNULL(name_ast, param_detail->left);
     EXTRACT_STRING(name, name_ast);
+
     sem_t sem_type = name_ast->sem->sem_type;
+
+    // if the in_arg has been renamed, we use its alias here
+    if (!is_out_parameter(sem_type) && was_set_variable(sem_type) && is_ref_type(sem_type)) {
+      bclear(&alias);
+      bprintf(&alias, "_in__%s", name);
+      name = alias.ptr;
+    }
+
     bool_t is_nonnull_ref_type = is_not_nullable(sem_type) && is_ref_type(sem_type);
     if (is_inout_parameter(sem_type) && is_nonnull_ref_type) {
       // This is the special case of `INOUT arg R NOT NULL`, where `R` is a
@@ -3448,6 +3459,8 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   if (did_emit_contract) {
     bprintf(b, "\n");
   }
+
+  CHARBUF_CLOSE(alias);
 }
 
 #define EMIT_DML_PROC 1

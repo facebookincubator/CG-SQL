@@ -20121,6 +20121,11 @@ static void sem_arg_for_out_param(ast_node *arg, ast_node *param) {
   // or a TRY block in the caller or further up the stack will safely bound
   // the initialization improvement).
   sem_set_initialization_improved(name, scope);
+
+  ast_node *variable = find_local_or_global_variable(arg->sem->name);
+  if (variable) {
+    variable->sem->sem_type |= SEM_TYPE_WAS_SET;
+  }
 }
 
 // Given an argument that (typically) has not yet been checked and a formal
@@ -20649,6 +20654,8 @@ static void sem_fetch_stmt(ast_node *ast) {
     // fetch could have failed), which we also allow. Again, this will be
     // revisited in the future once has-row improvements have been added.
     sem_set_initialization_improved(name, NULL);
+
+    variable->sem->sem_type |= SEM_TYPE_WAS_SET;
   }
 
   if (icol != cols || item) {

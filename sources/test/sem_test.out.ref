@@ -7765,8 +7765,8 @@ The statement ending at line XXXX
 DECLARE an_int2 INTEGER;
 
   {declare_vars_type}: integer
-  | {name_list}: an_int2: integer variable
-  | | {name an_int2}: an_int2: integer variable
+  | {name_list}: an_int2: integer variable was_set
+  | | {name an_int2}: an_int2: integer variable was_set
   | {type_int}: integer
 
 The statement ending at line XXXX
@@ -7783,8 +7783,8 @@ The statement ending at line XXXX
 DECLARE a_string2 TEXT;
 
   {declare_vars_type}: text
-  | {name_list}: a_string2: text variable
-  | | {name a_string2}: a_string2: text variable
+  | {name_list}: a_string2: text variable was_set
+  | | {name a_string2}: a_string2: text variable was_set
   | {type_text}: text
 
 The statement ending at line XXXX
@@ -7792,8 +7792,8 @@ The statement ending at line XXXX
 DECLARE a_nullable TEXT;
 
   {declare_vars_type}: text
-  | {name_list}: a_nullable: text variable
-  | | {name a_nullable}: a_nullable: text variable
+  | {name_list}: a_nullable: text variable was_set
+  | | {name a_nullable}: a_nullable: text variable was_set
   | {type_text}: text
 
 The statement ending at line XXXX
@@ -7816,7 +7816,7 @@ FETCH fetch_cursor INTO an_int, a_string, a_nullable;
     | {name_list}
       | {name a_string}: a_string: text variable was_set
       | {name_list}
-        | {name a_nullable}: a_nullable: text variable
+        | {name a_nullable}: a_nullable: text variable was_set
 
 The statement ending at line XXXX
 
@@ -7844,7 +7844,7 @@ test/sem_test.sql:XXXX:1: error: in fetch_stmt : CQL0217: number of variables di
     | {name_list}
       | {name a_string}: a_string: text variable was_set
       | {name_list}
-        | {name a_nullable}: a_nullable: text variable
+        | {name a_nullable}: a_nullable: text variable was_set
         | {name_list}
           | {name a_string2}
 
@@ -9058,7 +9058,7 @@ CALL proc_with_output(1, X, Y);
     | {expr_list}
       | {name X}: X: integer variable was_set
       | {expr_list}
-        | {name Y}: Y: integer variable
+        | {name Y}: Y: integer variable was_set
 
 The statement ending at line XXXX
 
@@ -9071,10 +9071,10 @@ END;
   | {name test_proc2}: ok
   | {proc_params_stmts}
     | {params}: ok
-    | | {param}: arg1: integer variable in out
+    | | {param}: arg1: integer variable in out was_set
     |   | {inout}
-    |   | {param_detail}: arg1: integer variable in out
-    |     | {name arg1}: arg1: integer variable in out
+    |   | {param_detail}: arg1: integer variable in out was_set
+    |     | {name arg1}: arg1: integer variable in out was_set
     |     | {type_int}: integer
     | {stmt_list}: ok
       | {call_stmt}: ok
@@ -9097,10 +9097,10 @@ END;
   | {name test_proc3}: ok
   | {proc_params_stmts}
     | {params}: ok
-    | | {param}: arg1: integer variable out
+    | | {param}: arg1: integer variable out was_set
     |   | {out}
-    |   | {param_detail}: arg1: integer variable out
-    |     | {name arg1}: arg1: integer variable out
+    |   | {param_detail}: arg1: integer variable out was_set
+    |     | {name arg1}: arg1: integer variable out was_set
     |     | {type_int}: integer
     | {stmt_list}: ok
       | {call_stmt}: ok
@@ -9140,7 +9140,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
     | {expr_list}
       | {name X}: X: integer variable was_set
       | {expr_list}
-        | {name Y}: Y: integer variable
+        | {name Y}: Y: integer variable was_set
 
 The statement ending at line XXXX
 
@@ -9153,7 +9153,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
   | {expr_list}: ok
     | {name X}: X: integer variable was_set
     | {expr_list}
-      | {name Y}: Y: integer variable
+      | {name Y}: Y: integer variable was_set
       | {expr_list}
         | {name X}: X: integer variable was_set
 
@@ -9168,7 +9168,7 @@ CALL proc_with_output(1 + X, Y, X);
     | | {int 1}: integer notnull
     | | {name X}: X: integer variable was_set
     | {expr_list}
-      | {name Y}: Y: integer variable
+      | {name Y}: Y: integer variable was_set
       | {expr_list}
         | {name X}: X: integer variable was_set
 
@@ -11373,8 +11373,8 @@ The statement ending at line XXXX
 DECLARE my_int INTEGER NOT NULL;
 
   {declare_vars_type}: integer notnull
-  | {name_list}: my_int: integer notnull variable
-  | | {name my_int}: my_int: integer notnull variable
+  | {name_list}: my_int: integer notnull variable was_set
+  | | {name my_int}: my_int: integer notnull variable was_set
   | {notnull}: integer notnull
     | {type_int}: integer
 
@@ -12248,7 +12248,7 @@ SELECT coalesce(X, Y, 1.5);
   |     |       | {arg_list}: ok
   |     |         | {name X}: X: integer variable was_set
   |     |         | {arg_list}
-  |     |           | {name Y}: Y: integer variable
+  |     |           | {name Y}: Y: integer variable was_set
   |     |           | {arg_list}
   |     |             | {dbl 1.5}: real notnull
   |     | {select_from_etc}: ok
@@ -21913,12 +21913,12 @@ SELECT Y AS A;
   |     |         | {select_having}
   |     | {select_core_compound}
   |       | {int 2}
-  |       | {select_core_list}: select: { A: integer variable }
-  |         | {select_core}: select: { A: integer variable }
-  |           | {select_expr_list_con}: select: { A: integer variable }
-  |             | {select_expr_list}: select: { A: integer variable }
-  |             | | {select_expr}: A: integer variable
-  |             |   | {name Y}: Y: integer variable
+  |       | {select_core_list}: select: { A: integer variable was_set }
+  |         | {select_core}: select: { A: integer variable was_set }
+  |           | {select_expr_list_con}: select: { A: integer variable was_set }
+  |             | {select_expr_list}: select: { A: integer variable was_set }
+  |             | | {select_expr}: A: integer variable was_set
+  |             |   | {name Y}: Y: integer variable was_set
   |             |   | {opt_as_alias}
   |             |     | {name A}
   |             | {select_from_etc}: ok
@@ -25992,10 +25992,10 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: cursor was not fetched w
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_vars_type}: integer notnull
-      | | {name_list}: a: integer notnull variable
-      | | | {name a}: a: integer notnull variable
-      | | | {name_list}: b: integer notnull variable
-      | |   | {name b}: b: integer notnull variable
+      | | {name_list}: a: integer notnull variable was_set
+      | | | {name a}: a: integer notnull variable was_set
+      | | | {name_list}: b: integer notnull variable was_set
+      | |   | {name b}: b: integer notnull variable was_set
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
@@ -26024,9 +26024,9 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: cursor was not fetched w
       | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc fetch_into
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
       | | {name_list}
-      |   | {name a}: a: integer notnull variable
+      |   | {name a}: a: integer notnull variable was_set
       |   | {name_list}
-      |     | {name b}: b: integer notnull variable
+      |     | {name b}: b: integer notnull variable was_set
       | {out_stmt}: err
         | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc fetch_into
 
@@ -26740,7 +26740,7 @@ SET an_int := proc_with_single_output(1, an_int);
       | {arg_list}: ok
         | {int 1}: integer notnull
         | {arg_list}
-          | {name an_int}: an_int: integer variable
+          | {name an_int}: an_int: integer variable was_set
 
 The statement ending at line XXXX
 
@@ -27790,12 +27790,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor wit
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_vars_type}: integer
-      | | {name_list}: X: integer variable
-      | | | {name X}: X: integer variable
+      | | {name_list}: X: integer variable was_set
+      | | | {name X}: X: integer variable was_set
       | | {type_int}: integer
       | {declare_vars_type}: real
-      | | {name_list}: Y: real variable
-      | | | {name Y}: Y: real variable
+      | | {name_list}: Y: real variable was_set
+      | | | {name Y}: Y: real variable was_set
       | | {type_real}: real
       | {declare_cursor}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
       | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc fetch_into
@@ -27825,9 +27825,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor wit
       | {fetch_stmt}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc fetch_into
       | | {name C0}: C0: select: { A: integer notnull, _anon: real notnull } variable dml_proc
       | | {name_list}
-      |   | {name X}: X: integer variable
+      |   | {name X}: X: integer variable was_set
       |   | {name_list}
-      |     | {name Y}: Y: real variable
+      |     | {name Y}: Y: real variable was_set
       | {fetch_values_stmt}: err
         | {name_columns_values}
           | {name C1}: C1: select: { A: integer notnull, _anon: real notnull } variable shape_storage value_cursor
@@ -58470,7 +58470,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'an_int'
       | {arg_list}: ok
         | {name an_int}: err
         | {arg_list}
-          | {name an_int2}: an_int2: integer variable
+          | {name an_int2}: an_int2: integer variable was_set
 
 The statement ending at line XXXX
 
@@ -58487,7 +58487,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
       | {arg_list}: ok
         | {name an_int}: an_int: integer variable was_set
         | {arg_list}
-          | {name an_int2}: an_int2: integer variable
+          | {name an_int2}: an_int2: integer variable was_set
           | {arg_list}
             | {int 1}: integer notnull
 
@@ -58506,7 +58506,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
       | {arg_list}: ok
         | {name an_int}: an_int: integer variable was_set
         | {arg_list}
-          | {name an_int2}: an_int2: integer variable
+          | {name an_int2}: an_int2: integer variable was_set
           | {arg_list}
             | {int 1}: integer notnull
 
@@ -58530,13 +58530,13 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_vars_type}: integer notnull
-      | | {name_list}: x: integer notnull variable
-      | | | {name x}: x: integer notnull variable
+      | | {name_list}: x: integer notnull variable was_set
+      | | | {name x}: x: integer notnull variable was_set
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {declare_vars_type}: text notnull
-      | | {name_list}: y: text notnull variable init_required
-      | | | {name y}: y: text notnull variable init_required
+      | | {name_list}: y: text notnull variable init_required was_set
+      | | | {name y}: y: text notnull variable init_required was_set
       | | {notnull}: text notnull
       |   | {type_text}: text
       | {declare_cursor}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
@@ -58588,9 +58588,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
       | {fetch_stmt}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc fetch_into
       | | {name c1}: c1: select: { x: integer notnull, y: text notnull } variable dml_proc
       | | {name_list}
-      |   | {name x}: x: integer notnull variable
+      |   | {name x}: x: integer notnull variable was_set
       |   | {name_list}
-      |     | {name y}: y: text notnull variable init_required
+      |     | {name y}: y: text notnull variable init_required was_set
       | {fetch_stmt}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {assign}: err
@@ -60071,14 +60071,14 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
       |     | {select_limit}
       |       | {select_offset}
       | {declare_vars_type}: integer notnull
-      | | {name_list}: x: integer notnull variable
-      | | | {name x}: x: integer notnull variable
+      | | {name_list}: x: integer notnull variable was_set
+      | | | {name x}: x: integer notnull variable was_set
       | | {notnull}: integer notnull
       |   | {type_int}: integer
       | {fetch_stmt}: c: select: { _anon: integer notnull } variable dml_proc fetch_into
       | | {name C}: c: select: { _anon: integer notnull } variable dml_proc
       | | {name_list}
-      |   | {name x}: x: integer notnull variable
+      |   | {name x}: x: integer notnull variable was_set
       | {assign}: err
         | {name a_string}: a_string: text variable was_set
         | {call}: err
@@ -60791,10 +60791,10 @@ END;
     |       |   | {name b}: b: blob variable in
     |       |   | {type_blob}: blob
     |       | {params}
-    |         | {param}: x: integer notnull variable out
+    |         | {param}: x: integer notnull variable out was_set
     |           | {out}
-    |           | {param_detail}: x: integer notnull variable out
-    |             | {name x}: x: integer notnull variable out
+    |           | {param_detail}: x: integer notnull variable out was_set
+    |             | {name x}: x: integer notnull variable out was_set
     |             | {notnull}: integer notnull
     |               | {type_int}: integer
     | {stmt_list}: ok
@@ -60817,7 +60817,7 @@ END;
                 | | {name ARGUMENTS}
                 | | {name b}
                 | {expr_list}
-                  | {dot}: x: integer notnull variable out
+                  | {dot}: x: integer notnull variable out was_set
                     | {name ARGUMENTS}
                     | {name x}
 
@@ -60893,10 +60893,10 @@ END;
     |       |   | {name b}: b: blob variable in
     |       |   | {type_blob}: blob
     |       | {params}
-    |         | {param}: x: integer notnull variable out
+    |         | {param}: x: integer notnull variable out was_set
     |           | {out}
-    |           | {param_detail}: x: integer notnull variable out
-    |             | {name x}: x: integer notnull variable out
+    |           | {param_detail}: x: integer notnull variable out was_set
+    |             | {name x}: x: integer notnull variable out was_set
     |             | {notnull}: integer notnull
     |               | {type_int}: integer
     | {stmt_list}: ok
@@ -60919,7 +60919,7 @@ END;
                 | | {name ARGUMENTS}
                 | | {name b}
                 | {expr_list}
-                  | {dot}: x: integer notnull variable out
+                  | {dot}: x: integer notnull variable out was_set
                     | {name ARGUMENTS}
                     | {name x}
 
@@ -66767,7 +66767,7 @@ END;
   |     |           | {arg_list}: ok
   |     |             | {name x}: X: integer variable was_set
   |     |             | {arg_list}
-  |     |               | {name y}: Y: integer variable
+  |     |               | {name y}: Y: integer variable was_set
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -69064,9 +69064,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
     | {expr_list}: ok
       | {int 1}: integer notnull
       | {expr_list}
-        | {name u}: u: integer notnull variable implicit
+        | {name u}: u: integer notnull variable implicit was_set
         | {expr_list}
-          | {name u}: u: integer notnull variable implicit
+          | {name u}: u: integer notnull variable implicit was_set
 
 The statement ending at line XXXX
 
@@ -69242,9 +69242,9 @@ END;
           | {expr_list}: ok
             | {name x}: x: integer variable in
             | {expr_list}
-              | {name u}: u: integer notnull variable
+              | {name u}: u: integer notnull variable was_set
               | {expr_list}
-                | {name v}: v: integer notnull variable
+                | {name v}: v: integer notnull variable was_set
 
 The statement ending at line XXXX
 
@@ -70634,16 +70634,16 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
+      | | {name_list}: a: integer variable was_set
+      | | | {name a}: a: integer variable was_set
       | | {type_int}: integer
       | {declare_vars_type}: integer
-      | | {name_list}: b: integer variable
-      | | | {name b}: b: integer variable
+      | | {name_list}: b: integer variable was_set
+      | | | {name b}: b: integer variable was_set
       | | {type_int}: integer
       | {declare_vars_type}: integer
-      | | {name_list}: x: integer variable
-      | | | {name x}: x: integer variable
+      | | {name_list}: x: integer variable was_set
+      | | | {name x}: x: integer variable was_set
       | | {type_int}: integer
       | {if_stmt}: bool notnull
       | | {cond_action}: bool notnull
@@ -70687,58 +70687,58 @@ END;
       | |   |       | {name a}: a: integer inferred_notnull variable
       | |   | {let_stmt}: y1: integer variable
       | |   | | {name y1}: y1: integer variable
-      | |   | | {name b}: b: integer variable
+      | |   | | {name b}: b: integer variable was_set
       | |   | {call_stmt}: ok
       | |   | | {name sets_out}: ok
       | |   | | {expr_list}: ok
       | |   |   | {name a}: a: integer inferred_notnull variable
       | |   |   | {expr_list}
-      | |   |     | {name x}: x: integer variable
+      | |   |     | {name x}: x: integer variable was_set
       | |   | {let_stmt}: x2: integer variable
       | |   | | {name x2}: x2: integer variable
-      | |   | | {name a}: a: integer variable
+      | |   | | {name a}: a: integer variable was_set
       | |   | {let_stmt}: y2: integer variable
       | |     | {name y2}: y2: integer variable
-      | |     | {name b}: b: integer variable
+      | |     | {name b}: b: integer variable was_set
       | | {if_alt}: ok
       | {if_stmt}: bool notnull
         | {cond_action}: bool notnull
         | | {and}: bool notnull
         | | | {is_not}: bool notnull
-        | | | | {name a}: a: integer variable
+        | | | | {name a}: a: integer variable was_set
         | | | | {null}: null
         | | | {is_not}: bool notnull
-        | |   | {name b}: b: integer variable
+        | |   | {name b}: b: integer variable was_set
         | |   | {null}: null
         | | {stmt_list}: ok
         |   | {let_stmt}: x3: integer notnull variable
         |   | | {name x3}: x3: integer notnull variable
-        |   | | {call}: a: integer notnull variable
-        |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+        |   | | {call}: a: integer notnull variable was_set
+        |   |   | {name cql_inferred_notnull}: a: integer notnull variable was_set
         |   |   | {call_arg_list}
         |   |     | {call_filter_clause}
         |   |     | {arg_list}: ok
-        |   |       | {name a}: a: integer inferred_notnull variable
+        |   |       | {name a}: a: integer inferred_notnull variable was_set
         |   | {let_stmt}: y3: integer notnull variable
         |   | | {name y3}: y3: integer notnull variable
-        |   | | {call}: b: integer notnull variable
-        |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+        |   | | {call}: b: integer notnull variable was_set
+        |   |   | {name cql_inferred_notnull}: b: integer notnull variable was_set
         |   |   | {call_arg_list}
         |   |     | {call_filter_clause}
         |   |     | {arg_list}: ok
-        |   |       | {name b}: b: integer inferred_notnull variable
+        |   |       | {name b}: b: integer inferred_notnull variable was_set
         |   | {call_stmt}: ok
         |   | | {name sets_out}: ok
         |   | | {expr_list}: ok
-        |   |   | {name a}: a: integer inferred_notnull variable
+        |   |   | {name a}: a: integer inferred_notnull variable was_set
         |   |   | {expr_list}
-        |   |     | {name b}: b: integer inferred_notnull variable
+        |   |     | {name b}: b: integer inferred_notnull variable was_set
         |   | {let_stmt}: x4: integer variable
         |   | | {name x4}: x4: integer variable
-        |   | | {name a}: a: integer variable
+        |   | | {name a}: a: integer variable was_set
         |   | {let_stmt}: y4: integer variable
         |     | {name y4}: y4: integer variable
-        |     | {name b}: b: integer variable
+        |     | {name b}: b: integer variable was_set
         | {if_alt}: ok
 
 The statement ending at line XXXX
@@ -70799,16 +70799,16 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
+      | | {name_list}: a: integer variable was_set
+      | | | {name a}: a: integer variable was_set
       | | {type_int}: integer
       | {declare_vars_type}: integer
-      | | {name_list}: b: integer variable
-      | | | {name b}: b: integer variable
+      | | {name_list}: b: integer variable was_set
+      | | | {name b}: b: integer variable was_set
       | | {type_int}: integer
       | {declare_vars_type}: integer
-      | | {name_list}: x: integer variable
-      | | | {name x}: x: integer variable
+      | | {name_list}: x: integer variable was_set
+      | | | {name x}: x: integer variable was_set
       | | {type_int}: integer
       | {declare_cursor}: c: select: { xn: integer, yn: integer } variable dml_proc
       | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
@@ -70857,9 +70857,9 @@ END;
       | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
       | |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc
       | |   | | {name_list}
-      | |   |   | {name x}: x: integer variable
+      | |   |   | {name x}: x: integer variable was_set
       | |   |   | {name_list}
-      | |   |     | {name b}: b: integer variable
+      | |   |     | {name b}: b: integer variable was_set
       | |   | {let_stmt}: x1: integer notnull variable
       | |   | | {name x1}: x1: integer notnull variable
       | |   | | {call}: a: integer notnull variable
@@ -70870,58 +70870,58 @@ END;
       | |   |       | {name a}: a: integer inferred_notnull variable
       | |   | {let_stmt}: y1: integer variable
       | |   | | {name y1}: y1: integer variable
-      | |   | | {name b}: b: integer variable
+      | |   | | {name b}: b: integer variable was_set
       | |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
       | |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
       | |   | | {name_list}
-      | |   |   | {name a}: a: integer variable
+      | |   |   | {name a}: a: integer variable was_set
       | |   |   | {name_list}
-      | |   |     | {name x}: x: integer variable
+      | |   |     | {name x}: x: integer variable was_set
       | |   | {let_stmt}: x2: integer variable
       | |   | | {name x2}: x2: integer variable
-      | |   | | {name a}: a: integer variable
+      | |   | | {name a}: a: integer variable was_set
       | |   | {let_stmt}: y2: integer variable
       | |     | {name y2}: y2: integer variable
-      | |     | {name b}: b: integer variable
+      | |     | {name b}: b: integer variable was_set
       | | {if_alt}: ok
       | {if_stmt}: bool notnull
         | {cond_action}: bool notnull
         | | {and}: bool notnull
         | | | {is_not}: bool notnull
-        | | | | {name a}: a: integer variable
+        | | | | {name a}: a: integer variable was_set
         | | | | {null}: null
         | | | {is_not}: bool notnull
-        | |   | {name b}: b: integer variable
+        | |   | {name b}: b: integer variable was_set
         | |   | {null}: null
         | | {stmt_list}: ok
         |   | {let_stmt}: x3: integer notnull variable
         |   | | {name x3}: x3: integer notnull variable
-        |   | | {call}: a: integer notnull variable
-        |   |   | {name cql_inferred_notnull}: a: integer notnull variable
+        |   | | {call}: a: integer notnull variable was_set
+        |   |   | {name cql_inferred_notnull}: a: integer notnull variable was_set
         |   |   | {call_arg_list}
         |   |     | {call_filter_clause}
         |   |     | {arg_list}: ok
-        |   |       | {name a}: a: integer inferred_notnull variable
+        |   |       | {name a}: a: integer inferred_notnull variable was_set
         |   | {let_stmt}: y3: integer notnull variable
         |   | | {name y3}: y3: integer notnull variable
-        |   | | {call}: b: integer notnull variable
-        |   |   | {name cql_inferred_notnull}: b: integer notnull variable
+        |   | | {call}: b: integer notnull variable was_set
+        |   |   | {name cql_inferred_notnull}: b: integer notnull variable was_set
         |   |   | {call_arg_list}
         |   |     | {call_filter_clause}
         |   |     | {arg_list}: ok
-        |   |       | {name b}: b: integer inferred_notnull variable
+        |   |       | {name b}: b: integer inferred_notnull variable was_set
         |   | {fetch_stmt}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
         |   | | {name c}: c: select: { xn: integer, yn: integer } variable dml_proc fetch_into
         |   | | {name_list}
-        |   |   | {name a}: a: integer variable
+        |   |   | {name a}: a: integer variable was_set
         |   |   | {name_list}
-        |   |     | {name b}: b: integer variable
+        |   |     | {name b}: b: integer variable was_set
         |   | {let_stmt}: x4: integer variable
         |   | | {name x4}: x4: integer variable
-        |   | | {name a}: a: integer variable
+        |   | | {name a}: a: integer variable was_set
         |   | {let_stmt}: y4: integer variable
         |     | {name y4}: y4: integer variable
-        |     | {name b}: b: integer variable
+        |     | {name b}: b: integer variable was_set
         | {if_alt}: ok
 
 The statement ending at line XXXX
@@ -71502,8 +71502,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must 
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
+      | | {name_list}: a: integer variable was_set
+      | | | {name a}: a: integer variable was_set
       | | {type_int}: integer
       | {if_stmt}: err
         | {cond_action}: err
@@ -71551,8 +71551,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly n
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_vars_type}: integer
-      | | {name_list}: a: integer variable
-      | | | {name a}: a: integer variable
+      | | {name_list}: a: integer variable was_set
+      | | | {name a}: a: integer variable was_set
       | | {type_int}: integer
       | {if_stmt}: err
         | {cond_action}: err
@@ -76328,8 +76328,8 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: text notnull
-      | | {name_list}: a: text notnull variable init_required
-      | | | {name a}: a: text notnull variable init_required
+      | | {name_list}: a: text notnull variable init_required was_set
+      | | | {name a}: a: text notnull variable init_required was_set
       | | {notnull}: text notnull
       |   | {type_text}: text
       | {call_stmt}: ok
@@ -76338,7 +76338,7 @@ END;
       |   | {name a}: a: text notnull variable init_required
       | {let_stmt}: x: text notnull variable
         | {name x}: x: text notnull variable
-        | {name a}: a: text notnull variable
+        | {name a}: a: text notnull variable was_set
 
 The statement ending at line XXXX
 
@@ -76355,8 +76355,8 @@ END;
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: text notnull
-      | | {name_list}: a: text notnull variable init_required
-      | | | {name a}: a: text notnull variable init_required
+      | | {name_list}: a: text notnull variable init_required was_set
+      | | | {name a}: a: text notnull variable init_required was_set
       | | {notnull}: text notnull
       |   | {type_text}: text
       | {declare_cursor}: foo: select: { bar: text notnull } variable dml_proc
@@ -76380,10 +76380,10 @@ END;
       | {fetch_stmt}: foo: select: { bar: text notnull } variable dml_proc fetch_into
       | | {name foo}: foo: select: { bar: text notnull } variable dml_proc
       | | {name_list}
-      |   | {name a}: a: text notnull variable init_required
+      |   | {name a}: a: text notnull variable init_required was_set
       | {let_stmt}: x: text notnull variable
         | {name x}: x: text notnull variable
-        | {name a}: a: text notnull variable
+        | {name a}: a: text notnull variable was_set
 
 The statement ending at line XXXX
 
@@ -76729,17 +76729,17 @@ END;
   | {name forwarding_procs_handle_initialization}: ok
   | {proc_params_stmts}
     | {params}: ok
-    | | {param}: t: text notnull variable init_required out
+    | | {param}: t: text notnull variable init_required out was_set
     |   | {out}
-    |   | {param_detail}: t: text notnull variable init_required out
-    |     | {name t}: t: text notnull variable init_required out
+    |   | {param_detail}: t: text notnull variable init_required out was_set
+    |     | {name t}: t: text notnull variable init_required out was_set
     |     | {notnull}: text notnull
     |       | {type_text}: text
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name requires_out_text_notnull}: ok
         | {expr_list}: ok
-          | {dot}: t: text notnull variable init_required out
+          | {dot}: t: text notnull variable init_required out was_set
             | {name ARGUMENTS}
             | {name t}
 
@@ -76754,10 +76754,10 @@ END;
   | {name forwarding_procs_handle_initialization_named}: ok
   | {proc_params_stmts}
     | {params}: ok
-    | | {param}: bundle_t: text notnull variable init_required out
+    | | {param}: bundle_t: text notnull variable init_required out was_set
     |   | {out}
-    |   | {param_detail}: bundle_t: text notnull variable init_required out
-    |     | {name bundle_t}: bundle_t: text notnull variable init_required out
+    |   | {param_detail}: bundle_t: text notnull variable init_required out was_set
+    |     | {name bundle_t}: bundle_t: text notnull variable init_required out was_set
     |     | {notnull}: text notnull
     |       | {type_text}: text
     | {stmt_list}: ok
@@ -77108,10 +77108,10 @@ END;
   | {name dot_form_and_underscore_form_are_equivalent}: ok
   | {proc_params_stmts}
     | {params}: ok
-    | | {param}: b0_a: text notnull variable init_required out
+    | | {param}: b0_a: text notnull variable init_required out was_set
     | | | {out}
-    | | | {param_detail}: b0_a: text notnull variable init_required out
-    | |   | {name b0_a}: b0_a: text notnull variable init_required out
+    | | | {param_detail}: b0_a: text notnull variable init_required out was_set
+    | |   | {name b0_a}: b0_a: text notnull variable init_required out was_set
     | |   | {notnull}: text notnull
     | |     | {type_text}: text
     | | {params}
@@ -77148,13 +77148,13 @@ END;
       | {call_stmt}: ok
       | | {name requires_text_notnull}: ok
       | | {expr_list}: ok
-      |   | {dot}: b0_a: text notnull variable out
+      |   | {dot}: b0_a: text notnull variable out was_set
       |     | {name b0}
       |     | {name a}
       | {call_stmt}: ok
       | | {name requires_text_notnull}: ok
       | | {expr_list}: ok
-      |   | {name b0_a}: b0_a: text notnull variable out
+      |   | {name b0_a}: b0_a: text notnull variable out was_set
       | {call_stmt}: ok
       | | {name requires_text_notnull}: ok
       | | {expr_list}: ok
@@ -80371,7 +80371,7 @@ CALL proc_out_text_out_text(a_string, a_string2);
   | {expr_list}: ok
     | {name a_string}: a_string: text variable was_set
     | {expr_list}
-      | {name a_string2}: a_string2: text variable
+      | {name a_string2}: a_string2: text variable was_set
 
 The statement ending at line XXXX
 

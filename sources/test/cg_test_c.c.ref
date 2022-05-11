@@ -566,6 +566,7 @@ cql_string_literal(_literal_22_arguments_are_evaluated_left_to_right, "4");
 cql_string_literal(_literal_23_hello_sensitive_function_is_a_no_op, "hello");
 cql_string_literal(_literal_24_slash_star_and_star_slash, "/*  */");
 cql_string_literal(_literal_25_hi_mutated_in_param_ref, "hi");
+cql_string_literal(_literal_26_xyzzy_clobber1, "xyzzy");
 
 // The statement ending at line XXXX
 
@@ -16734,6 +16735,147 @@ void external_cursor_caller(void) {
 
   result = external_cursor_func(&shape_storage_dyn);
 
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC clobber1 (INOUT x TEXT)
+BEGIN
+  SET x := "xyzzy";
+END;
+*/
+
+#define _PROC_ "clobber1"
+// export: DECLARE PROC clobber1 (INOUT x TEXT);
+void clobber1(cql_string_ref _Nullable *_Nonnull x) {
+  cql_contract_argument_notnull((void *)x, 1);
+
+  cql_set_string_ref(&*x, _literal_26_xyzzy_clobber1);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC clobber2 (OUT x TEXT)
+BEGIN
+  SET x := "xyzzy";
+END;
+*/
+
+#define _PROC_ "clobber2"
+// export: DECLARE PROC clobber2 (OUT x TEXT);
+void clobber2(cql_string_ref _Nullable *_Nonnull x) {
+  cql_contract_argument_notnull((void *)x, 1);
+
+  *(void **)x = NULL; // set out arg to non-garbage
+  cql_set_string_ref(&*x, _literal_26_xyzzy_clobber1);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC mutated_in_arg1 (x TEXT)
+BEGIN
+  CALL clobber1(x);
+END;
+*/
+
+#define _PROC_ "mutated_in_arg1"
+// export: DECLARE PROC mutated_in_arg1 (x TEXT);
+void mutated_in_arg1(cql_string_ref _Nullable _in__x) {
+  cql_string_ref x = NULL;
+
+  cql_set_string_ref(&x, _in__x);
+  clobber1(&x);
+
+  cql_string_release(x);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC mutated_in_arg2 (x TEXT)
+BEGIN
+  CALL clobber2(x);
+END;
+*/
+
+#define _PROC_ "mutated_in_arg2"
+// export: DECLARE PROC mutated_in_arg2 (x TEXT);
+void mutated_in_arg2(cql_string_ref _Nullable _in__x) {
+  cql_string_ref x = NULL;
+
+  cql_set_string_ref(&x, _in__x);
+  cql_set_string_ref(&x, NULL);
+  clobber2(&x);
+
+  cql_string_release(x);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC mutated_in_arg3 (x TEXT)
+BEGIN
+  DECLARE C CURSOR FOR SELECT "x" AS x;
+  FETCH C INTO x;
+END;
+*/
+
+#define _PROC_ "mutated_in_arg3"
+// export: DECLARE PROC mutated_in_arg3 (x TEXT) USING TRANSACTION;
+CQL_WARN_UNUSED cql_code mutated_in_arg3(sqlite3 *_Nonnull _db_, cql_string_ref _Nullable _in__x) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_string_ref x = NULL;
+  sqlite3_stmt *C_stmt = NULL;
+  cql_bool _C_has_row_ = 0;
+
+  cql_set_string_ref(&x, _in__x);
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT 'x'");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(C_stmt);
+  _C_has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 1,
+                 CQL_DATA_TYPE_STRING, &x);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_string_release(x);
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC mutated_not_null (x TEXT NOT NULL)
+BEGIN
+  SET x := 'xyzzy';
+END;
+*/
+
+#define _PROC_ "mutated_not_null"
+// export: DECLARE PROC mutated_not_null (x TEXT NOT NULL);
+void mutated_not_null(cql_string_ref _Nonnull _in__x) {
+  cql_contract_argument_notnull((void *)_in__x, 1);
+
+  cql_string_ref x = NULL;
+
+  cql_set_string_ref(&x, _in__x);
+  cql_set_string_ref(&x, _literal_26_xyzzy_clobber1);
+
+  cql_string_release(x);
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

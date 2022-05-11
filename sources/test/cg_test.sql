@@ -5309,6 +5309,54 @@ begin
   let result := external_cursor_func(shape_storage);
 end;
 
+-- helper method that clobbers x (in out)
+create proc clobber1(inout x text)
+begin
+  set x := "xyzzy";
+end;
+
+-- helper method that clobbers x (out arg)
+create proc clobber2(out x text)
+begin
+  set x := "xyzzy";
+end;
+
+-- TEST: use of in arg at in/out position requires copy
+-- + void mutated_in_arg1(cql_string_ref _Nullable _in__x) {
+-- + cql_string_ref x = NULL;
+-- + cql_set_string_ref(&x, _in__x);
+create proc mutated_in_arg1(x text)
+begin
+  call clobber1(x);
+end;
+
+-- TEST: use of in arg at out position requires copy
+-- + void mutated_in_arg2(cql_string_ref _Nullable _in__x) {
+-- + cql_string_ref x = NULL;
+-- + cql_set_string_ref(&x, _in__x);
+create proc mutated_in_arg2(x text)
+begin
+  call clobber2(x);
+end;
+
+-- TEST: use of in arg for fetch into requires copy
+-- + CQL_WARN_UNUSED cql_code mutated_in_arg3(sqlite3 *_Nonnull _db_, cql_string_ref _Nullable _in__x) {
+-- + cql_string_ref x = NULL;
+-- + cql_set_string_ref(&x, _in__x);
+create proc mutated_in_arg3(x text)
+begin
+  declare C cursor for select "x" x;
+  fetch C into x;
+end;
+
+-- TEST: make sure the not null contract is renamed
+-- + void mutated_not_null(cql_string_ref _Nonnull _in__x) {
+-- + cql_contract_argument_notnull((void *)_in__x, 1);
+create proc mutated_not_null(x text not null)
+begin
+  set x := 'xyzzy';
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
