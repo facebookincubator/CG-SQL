@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Apr  5 15:35:59 PDT 2022
+Snapshot as of Tue May 10 11:15:11 PDT 2022
 
 ### Operators and Literals
 
@@ -71,19 +71,20 @@ TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
 "FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM
 BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING"
 "HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX" "INITIALLY"
-"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER" "INTO"
-"JOIN" "KEY" "LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
-"LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
-"NULL" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON" "OPEN"
-"ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
-"PRIMARY" "PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE"
-"RANGE" "REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
-"REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
-"ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
-"STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
-"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "UNBOUNDED"
-"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VIEW"
-"VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
+"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER"
+"INTERFACE" "INTO" "JOIN" "KEY" "LEAVE" "LEFT" "LET"
+"LIMIT" "LONG" "LONG_INT" "LONG_INTEGER" "LOOP" "NO" "NOT
+DEFERRABLE" "NOTHING" "NULL" "OBJECT" "OF" "OFFSET" "ON
+CONFLICT" "ON" "OPEN" "ORDER" "OUT" "OUTER" "OVER"
+"PARTITION" "PRECEDING" "PRIMARY" "PRIVATE" "PROC"
+"PROCEDURE" "QUERY PLAN" "RAISE" "RANGE" "REAL" "RECURSIVE"
+"REFERENCES" "RELEASE" "RENAME" "REPLACE" "RESTRICT"
+"RETURN" "RIGHT" "ROLLBACK" "ROWID" "ROWS" "SAVEPOINT"
+"SELECT" "SET" "SIGN FUNCTION" "STATEMENT" "SWITCH" "TABLE"
+"TEMP" "TEXT" "THEN" "THROW" "TO" "TRANSACTION" "TRIGGER"
+"TRY" "TYPE" "UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING"
+"VALUES" "VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW"
+"WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -132,6 +133,7 @@ any_stmt:
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
   | declare_proc_stmt
+  | declare_interface_stmt
   | declare_schema_region_stmt
   | declare_stmt
   | delete_stmt
@@ -1228,9 +1230,9 @@ const_value:  name '=' expr
   ;
 
 declare_func_stmt:
-  "DECLARE" function name '(' params ')' data_type_with_options
+  "DECLARE" function name '(' func_params ')' data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
-  | "DECLARE" function name '(' params ')' "CREATE" data_type_with_options
+  | "DECLARE" function name '(' func_params ')' "CREATE" data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
   ;
 
@@ -1251,6 +1253,9 @@ declare_proc_stmt:
   | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' "USING" "TRANSACTION"
   ;
 
+declare_interface_stmt:
+  "DECLARE" "INTERFACE" name '(' typed_names ')'
+
 create_proc_stmt:
   "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
   ;
@@ -1270,6 +1275,17 @@ typed_name:
 typed_names:
   typed_name
   | typed_name ',' typed_names
+  ;
+
+func_param:
+  param
+  | name "CURSOR"
+  ;
+
+func_params:
+  /* nil */
+  | func_param
+  |  func_param ',' func_params
   ;
 
 param:
