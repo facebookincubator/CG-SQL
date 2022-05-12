@@ -499,6 +499,7 @@ static symtab *ad_hoc_migrates;
 static symtab *builtin_funcs;
 static symtab *builtin_special_funcs;
 static symtab *funcs;
+static symtab *unchecked_funcs;
 static symtab *exprs;
 static symtab *tables;
 static symtab *indices;
@@ -997,6 +998,15 @@ static bool_t add_func(ast_node *ast, CSTR name) {
 
 ast_node *find_func(CSTR name) {
   symtab_entry *entry = symtab_find(funcs, name);
+  return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+static bool_t add_unchecked_func(ast_node *ast, CSTR name) {
+  return symtab_add(unchecked_funcs, name, ast);
+}
+
+cql_noexport ast_node *find_unchecked_func(CSTR name) {
+  symtab_entry *entry = symtab_find(unchecked_funcs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
@@ -8702,7 +8712,10 @@ static void sem_validate_args(ast_node *ast, ast_node *arg_list) {
 //  * args have to be checked and compatible with formals
 static void sem_user_func(ast_node *ast, ast_node *user_func) {
   Contract(is_ast_call(ast));
-  Contract(is_ast_declare_func_stmt(user_func) || is_ast_declare_select_func_stmt(user_func));
+  Contract(
+    is_ast_declare_func_stmt(user_func) ||
+    is_ast_declare_select_func_stmt(user_func) ||
+    is_ast_declare_select_func_no_check_stmt(user_func));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -8719,7 +8732,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
     }
   }
   else {
-    // Must be is_ast_declare_select_func case (verified above)
+    // Must be a select func (is_ast_declare_select_func or is_ast_declare_select_func_no_check) case (verified above)
     if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
       report_error(ast, "CQL0089: user function may only appear in the context of a SQL statement", name);
       record_error(ast);
@@ -8741,7 +8754,13 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
     return;
   }
 
-  sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
+  // Skip argument type checking for select_func_no_check
+  if (is_ast_declare_select_func_no_check_stmt(user_func)) {
+    record_ok(ast);
+  } else {
+    sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
+  }
+
   if (is_error(ast)) {
     return;
   }
@@ -8996,6 +9015,19 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   ast_node *user_func = find_func(name);
   if (user_func) {
     sem_user_func(ast, user_func);
+    call_aggr_or_user_def_func = 1;
+    goto additional_checks;
+  }
+
+  ast_node *unchecked_user_func = find_unchecked_func(name);
+  if (unchecked_user_func) {
+    sem_arg_list(arg_list, IS_NOT_COUNT);
+    if (arg_list && is_error(arg_list)) {
+      record_error(ast);
+      return;
+    }
+
+    sem_user_func(ast, unchecked_user_func);
     call_aggr_or_user_def_func = 1;
     goto additional_checks;
   }
@@ -9831,6 +9863,8 @@ static void sem_table_function(ast_node *ast) {
 
   // check for user defined functions
   ast_node *user_func = find_func(name);
+  ast_node *unchecked_user_func = find_unchecked_func(name);
+  user_func = user_func ? user_func : unchecked_user_func;
   if (!user_func) {
     report_error(name_ast, "CQL0250: table-valued function not declared", name);
     record_error(ast);
@@ -9843,14 +9877,23 @@ static void sem_table_function(ast_node *ast) {
     return;
   }
 
-  Contract(is_ast_declare_select_func_stmt(user_func));
+  Contract(is_ast_declare_select_func_stmt(user_func) || is_ast_declare_select_func_no_check_stmt(user_func));
   EXTRACT_NOTNULL(func_params_return, user_func->right);
   EXTRACT(params, func_params_return->left);
 
-  // SQL Func context is basically the same the ON context but allows for Object types
-  PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
-  sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
-  POP_EXPR_CONTEXT();
+  if (is_ast_declare_select_func_no_check_stmt(user_func)) {
+    sem_arg_list(arg_list, IS_NOT_COUNT);
+    if (arg_list && is_error(arg_list)) {
+      record_error(ast);
+      return;
+    }
+    record_ok(ast);
+  } else {
+    // SQL Func context is basically the same the ON context but allows for Object types
+    PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
+    sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
+    POP_EXPR_CONTEXT();
+  }
 
   if (is_error(ast)) {
     return;
@@ -18368,10 +18411,15 @@ static void sem_typed_names(ast_node *head) {
 
 // Function declarations are simpler than proc; there is
 // no possibility of a result set return, there must be a return type
-// (use proc if there is none).  Optional args as usual.
+// (use proc if there is none).  Optional args as usual. Also args can be unchecked.
 static void sem_declare_func_stmt(ast_node *ast) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
-  Contract(is_ast_declare_func_stmt(ast) || is_ast_declare_select_func_stmt(ast));
+  Contract(
+    is_ast_declare_func_stmt(ast) ||
+    is_ast_declare_select_func_stmt(ast) ||
+    is_ast_declare_select_func_no_check_stmt(ast)
+  );
+
   EXTRACT_ANY_NOTNULL(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -18395,10 +18443,29 @@ static void sem_declare_func_stmt(ast_node *ast) {
   }
 
   ast_node *existing_func = find_func(name);
-  if (!existing_func) {
-    // func doesn't exist, ok to add it
-    bool_t added = add_func(ast, name);
-    Invariant(added);
+  ast_node *existing_unchecked_func = find_unchecked_func(name);
+
+  // Prevent redeclaration of normal function to be unchecked and vice versa
+  if (
+    (is_ast_declare_select_func_no_check_stmt(ast) && existing_func) ||
+    (!is_ast_declare_select_func_no_check_stmt(ast) && existing_unchecked_func)
+  ) {
+      report_error(ast, "CQL0486: function cannot be both a normal function and an unchecked function", name);
+      record_error(ast);
+      return;
+  }
+
+  // Check if it's ok to add a checked/unchecked func to their repsective symtabs
+  if (is_ast_declare_select_func_no_check_stmt(ast)) {
+    if (!existing_unchecked_func) {
+      bool_t added = add_unchecked_func(ast, name);
+      Invariant(added);
+    }
+  } else {
+    if (!existing_func) {
+      bool_t added = add_func(ast, name);
+      Invariant(added);
+    }
   }
 
   if (params) {
@@ -18433,8 +18500,9 @@ static void sem_declare_func_stmt(ast_node *ast) {
   // this also promotes errors up from the return type
   name_ast->sem = ast->sem = ret_data_type->sem;
 
-  if (existing_func) {
-    bool_t matching = sem_validate_identical_funcs(existing_func, ast);
+  ast_node *matching_func = is_ast_declare_select_func_no_check_stmt(ast) ? existing_unchecked_func : existing_func;
+  if (matching_func) {
+    bool_t matching = sem_validate_identical_funcs(matching_func, ast);
     if (!matching) {
       report_error(name_ast, "CQL0193: duplicate function name", name);
       record_error(ast);
@@ -18446,12 +18514,9 @@ static void sem_declare_func_stmt(ast_node *ast) {
   }
 }
 
-// This declares a UDF that is known to SQLite.
-// Note that we cannot verify that SQLite actually knows this UDF
-// You have to take steps yourself to register the UDF or there will
-// be run time errors.
-static void sem_declare_select_func_stmt(ast_node *ast) {
-  Contract(is_ast_declare_select_func_stmt(ast));
+// This is a helper function for handling select function declarations
+static void sem_declare_select_func_stmt_common(ast_node *ast) {
+  Contract(is_ast_declare_select_func_stmt(ast) || is_ast_declare_select_func_no_check_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -18481,6 +18546,23 @@ static void sem_declare_select_func_stmt(ast_node *ast) {
   if (adding_current_entity) {
     add_item_to_list(&all_select_functions_list, ast);
   }
+}
+
+// This declares a UDF that is known to SQLite.
+// Note that we cannot verify that SQLite actually knows this UDF
+// You have to take steps yourself to register the UDF or there will
+// be run time errors.
+static void sem_declare_select_func_stmt(ast_node *ast) {
+  Contract(is_ast_declare_select_func_stmt(ast));
+  sem_declare_select_func_stmt_common(ast);
+}
+
+// This is similar to sem_declare_select_func_stmt, except
+// parameters are marked to be unchecked. So calls to this function
+// won't have their arguments type checked.
+static void sem_declare_select_func_no_check_stmt(ast_node *ast) {
+  Contract(is_ast_declare_select_func_no_check_stmt(ast));
+  sem_declare_select_func_stmt_common(ast);
 }
 
 // If we are processing an enumeration you are allowed to use the previous
@@ -23484,6 +23566,7 @@ cql_noexport void sem_main(ast_node *ast) {
   builtin_special_funcs = symtab_new();
   funcs = symtab_new();
   interfaces = symtab_new();
+  unchecked_funcs = symtab_new();
   procs = symtab_new();
   unchecked_procs = symtab_new();
   proc_arg_info = symtab_new();
@@ -23547,6 +23630,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
+  STMT_INIT(declare_select_func_no_check_stmt);
   STMT_INIT(echo_stmt);
   STMT_INIT(schema_upgrade_version_stmt);
   STMT_INIT(schema_upgrade_script_stmt);
@@ -23824,6 +23908,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(exprs);
   SYMTAB_CLEANUP(extension_fragments);
   SYMTAB_CLEANUP(funcs);
+  SYMTAB_CLEANUP(unchecked_funcs);
   SYMTAB_CLEANUP(globals);
   SYMTAB_CLEANUP(indices);
   SYMTAB_CLEANUP(locals);

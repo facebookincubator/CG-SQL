@@ -3112,6 +3112,26 @@ static void gen_declare_select_func_stmt(ast_node *ast) {
   }
 }
 
+static void gen_declare_select_func_no_check_stmt(ast_node *ast) {
+  Contract(is_ast_declare_select_func_no_check_stmt(ast));
+  EXTRACT_STRING(name, ast-> left);
+  EXTRACT_NOTNULL(func_params_return, ast->right);
+  EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
+
+  gen_printf("DECLARE SELECT FUNC %s NO CHECK ", name);
+
+  if (is_ast_typed_names(ret_data_type)) {
+    // table valued function
+    gen_printf("(");
+    gen_typed_names(ret_data_type);
+    gen_printf(")");
+  }
+  else {
+    // standard function
+    gen_data_type(ret_data_type);
+  }
+}
+
 static void gen_declare_func_stmt(ast_node *ast) {
   Contract(is_ast_declare_func_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -3981,6 +4001,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_interface_stmt);
   STMT_INIT(declare_func_stmt);
   STMT_INIT(declare_select_func_stmt);
+  STMT_INIT(declare_select_func_no_check_stmt);
   STMT_INIT(loop_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_call_stmt);

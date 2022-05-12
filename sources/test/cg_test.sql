@@ -5357,6 +5357,12 @@ begin
   set x := 'xyzzy';
 end;
 
+-- TEST: declaration of an unchecked select function
+declare select function no_check_select_fun no check text;
+
+-- TEST: declaration of an unchecked table-valued select function
+declare select function no_check_select_table_valued_fun no check (t text);
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

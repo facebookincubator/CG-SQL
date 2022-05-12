@@ -1517,6 +1517,9 @@ select null notnull;
 
 declare proc printf no check;
 
+declare select function no_check_select_fun no check text;
+declare select function no_check_select_table_valued_fun no check (t text);
+
 @enforce_strict is true;
 
 declare const group foo ( x = 'this', y = 5+3, z = 3.0 );

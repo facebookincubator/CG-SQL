@@ -21817,7 +21817,7 @@ create table sub_test_dependency(
 -- TEST: setup unsub test case for table in use by a view
 -- - error:
 create table used_by_a_view(
-  id integer 
+  id integer
 );
 
 -- TEST: setup unsub test case for table in use by a view
@@ -21827,7 +21827,7 @@ create view uses_a_table as select * from used_by_a_view;
 -- TEST: setup unsub test case for table in use by a deleted view
 -- - error:
 create table used_by_a_deleted_view(
-  id integer 
+  id integer
 );
 
 -- TEST: setup unsub test case for table in use by a deleted view
@@ -21853,7 +21853,7 @@ create table unrelated(
 -- TEST: setup unsub test case for table in use by a trigger
 -- - error:
 create table used_by_a_trigger(
-  id integer 
+  id integer
 );
 
 -- TEST: setup unsub test case for table in use by a trigger
@@ -21867,7 +21867,7 @@ end;
 -- TEST: setup unsub test case for table in use by a deleted trigger
 -- - error:
 create table used_by_a_deleted_trigger(
-  id integer 
+  id integer
 );
 
 -- TEST: setup unsub test case for table in use by a deleted trigger
@@ -22137,3 +22137,68 @@ create proc test_interface1_implementation_name(id_ INT, name_ TEXT)
 begin
   select id_ id2, name_ name;
 end;
+
+-- TEST: declare unchecked select functions (allows variadic UDF params)
+-- + {declare_select_func_no_check_stmt}: text select_func
+-- + {name no_check_select_fun}: text
+-- + {func_params_return}
+-- + {type_text}: text
+-- - error:
+declare select function no_check_select_fun no check text;
+
+-- TEST: redeclare unchecked select function
+-- - error:
+declare select function no_check_select_fun no check text;
+
+-- TEST: redeclare unchecked select function as checked fails
+-- error: in declare_select_func_stmt : CQL0486: function cannot be both a normal function and an unchecked function 'asdf'
+declare select function no_check_select_fun() text;
+
+-- TEST: calling unchecked function
+-- + {select_expr}: text
+-- + {call}: text
+-- + {name no_check_select_fun}
+-- + {call_arg_list}
+-- + {call_filter_clause}
+-- + {arg_list}: ok
+-- + {int 0}: integer notnull
+-- + {arg_list}
+-- + {strlit 'hello'}: text notnull
+-- - error:
+select no_check_select_fun(0, "hello");
+
+-- TEST: calling unchecked select function with invalid argument fails
+-- error: in star : CQL0051: argument can only be used in count(*) '*'
+select no_check_select_fun(0, *);
+
+-- TEST: declaring unchecked table valued select function
+-- + {declare_select_func_no_check_stmt}: select: { t: text, i: integer } select_func
+-- + {name no_check_select_table_valued_fun}: select: { t: text, i: integer }
+-- + {func_params_return}
+-- + {typed_names}: select: { t: text, i: integer }
+-- + {typed_name}: t: text
+-- + {name t}
+-- + {type_text}: t: text
+-- + {typed_names}
+-- + {typed_name}: i: integer
+-- + {name i}
+-- + {type_int}: i: integer
+-- - error:
+declare select function no_check_select_table_valued_fun no check (t text, i int);
+
+-- TEST: calling unchecked table valued select function
+-- + {select_from_etc}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+-- + {table_or_subquery_list}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+-- + {table_or_subquery}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+-- + {table_function}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+-- + {name no_check_select_table_valued_fun}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+-- + {arg_list}: ok
+-- + {int 0}: integer notnull
+-- + {arg_list}
+-- + {strlit 'hello'}: text notnull
+-- - error:
+select t, i from no_check_select_table_valued_fun(0, "hello");
+
+-- TEST: calling unchecked table valued function with invalid argument fails
+-- error: in star : CQL0051: argument can only be used in count(*) '*'
+select t, i from no_check_select_table_valued_fun(0, *);

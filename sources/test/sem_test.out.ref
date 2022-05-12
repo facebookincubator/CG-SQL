@@ -87477,3 +87477,166 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the colu
             | {select_limit}
               | {select_offset}
 
+The statement ending at line XXXX
+
+DECLARE SELECT FUNC no_check_select_fun NO CHECK TEXT;
+
+  {declare_select_func_no_check_stmt}: text select_func
+  | {name no_check_select_fun}: text
+  | {func_params_return}
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE SELECT FUNC no_check_select_fun NO CHECK TEXT;
+
+  {declare_select_func_no_check_stmt}: text select_func
+  | {name no_check_select_fun}: text
+  | {func_params_return}
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE SELECT FUNC no_check_select_fun () TEXT;
+
+test/sem_test.sql:XXXX:1: error: in declare_select_func_stmt : CQL0486: function cannot be both a normal function and an unchecked function 'no_check_select_fun'
+
+  {declare_select_func_stmt}: err
+  | {name no_check_select_fun}
+  | {func_params_return}
+    | {type_text}
+
+The statement ending at line XXXX
+
+SELECT no_check_select_fun(0, "hello");
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name no_check_select_fun}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 0}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT no_check_select_fun(0, *);
+
+test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name no_check_select_fun}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: err
+  |     |         | {int 0}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {star}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE SELECT FUNC no_check_select_table_valued_fun NO CHECK (t TEXT, i INTEGER);
+
+  {declare_select_func_no_check_stmt}: select: { t: text, i: integer } select_func
+  | {name no_check_select_table_valued_fun}: select: { t: text, i: integer }
+  | {func_params_return}
+    | {typed_names}: select: { t: text, i: integer }
+      | {typed_name}: t: text
+      | | {name t}
+      | | {type_text}: t: text
+      | {typed_names}
+        | {typed_name}: i: integer
+          | {name i}
+          | {type_int}: i: integer
+
+The statement ending at line XXXX
+
+SELECT t, i
+  FROM no_check_select_table_valued_fun(0, "hello");
+
+  {select_stmt}: select: { t: text, i: integer }
+  | {select_core_list}: select: { t: text, i: integer }
+  | | {select_core}: select: { t: text, i: integer }
+  |   | {select_expr_list_con}: select: { t: text, i: integer }
+  |     | {select_expr_list}: select: { t: text, i: integer }
+  |     | | {select_expr}: t: text
+  |     | | | {name t}: t: text
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: i: integer
+  |     |     | {name i}: i: integer
+  |     | {select_from_etc}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+  |       | {table_or_subquery_list}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+  |       | | {table_or_subquery}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+  |       |   | {table_function}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+  |       |     | {name no_check_select_table_valued_fun}: TABLE { no_check_select_table_valued_fun: select } table_valued_function
+  |       |     | {arg_list}: ok
+  |       |       | {int 0}: integer notnull
+  |       |       | {arg_list}
+  |       |         | {strlit 'hello'}: text notnull
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT t, i
+  FROM no_check_select_table_valued_fun(0, *);
+
+test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}
+  |     | | | {name t}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |     | {name i}
+  |     | {select_from_etc}: err
+  |       | {table_or_subquery_list}: err
+  |       | | {table_or_subquery}: err
+  |       |   | {table_function}: err
+  |       |     | {name no_check_select_table_valued_fun}
+  |       |     | {arg_list}: err
+  |       |       | {int 0}: integer notnull
+  |       |       | {arg_list}
+  |       |         | {star}: err
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

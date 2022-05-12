@@ -267,7 +267,7 @@ static void cql_reset_globals(void);
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
-%type <aval> create_proc_stmt declare_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
+%type <aval> create_proc_stmt declare_func_stmt declare_select_func_no_check_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list inout param params func_params func_param
 
 /* statements */
@@ -402,6 +402,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_const_stmt
   | declare_group_stmt
+  | declare_select_func_no_check_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -1684,6 +1685,13 @@ const_values[result]:
   ;
 
 const_value:  name '=' expr { $const_value = new_ast_const_value($name, $expr); }
+  ;
+
+declare_select_func_no_check_stmt:
+  DECLARE SELECT function name NO CHECK data_type_with_options {
+    $declare_select_func_no_check_stmt = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
+  | DECLARE SELECT function name NO CHECK '(' typed_names ')' {
+    $declare_select_func_no_check_stmt = new_ast_declare_select_func_no_check_stmt($name, new_ast_func_params_return(NULL, $typed_names)); }
   ;
 
 declare_func_stmt:
