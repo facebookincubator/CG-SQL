@@ -22092,11 +22092,15 @@ DECLARE INTERFACE interface1 (id INT);
 -- - error
 DECLARE INTERFACE interface1 (id INT);
 
+-- TEST: attempting to redefine column with the same name
+-- + {declare_interface_stmt}: err
+DECLARE INTERFACE interface1 (id INT, id TEXT);
+
 -- TEST: attempting to redefine interface with different signature
 -- + {declare_interface_stmt}: err
 DECLARE INTERFACE interface1 (id INT, name TEXT);
 
--- TEST: attempting to define interface with the same name as proc
+-- TEST: attempting to define interface with two columns
 -- - error:
 DECLARE INTERFACE interface2 (id INT, name TEXT);
 
@@ -22108,32 +22112,79 @@ create proc interface_source(like interface2)
 begin
 end;
 
+-- TEST: this procedure correctly implements interface
+-- + CREATE PROC test_interface1_implementation_correct (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): ok
+-- - error:
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
 begin
   select id_ id, name_ name;
 end;
 
+-- TEST: this procedure returns NOT NULL id column instead of NULLABLE
+-- + CREATE PROC test_interface1_implementation_wrong_nullability (id_ INTEGER NOT NULL)
+-- {create_proc_stmt): err
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_wrong_nullability(id_ INT not null)
 begin
   select id_ id, "5" col2;
 end;
 
+-- TEST: this procedure returns TEXT NOT NULL id column instead of INT NOT NULL
+-- + CREATE PROC test_interface1_implementation_wrong_type (id_ TEXT not null)
+-- {create_proc_stmt): err
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_wrong_type(id_ TEXT not null)
 begin
   select id_ id, "5" col2;
 end;
 
+-- TEST: this procedure returns id column as second column instead of first
+-- + CREATE PROC test_interface1_implementation_wrong_order (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): err
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_wrong_order(id_ INT, name_ TEXT)
 begin
   select name_ name, id_ id;
 end;
 
+-- TEST: first returned column has incorrect name
+-- + CREATE PROC test_interface1_implementation_wrong_name (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): err
 @attribute(cql:implements=interface1)
-create proc test_interface1_implementation_name(id_ INT, name_ TEXT)
+create proc test_interface1_implementation_wrong_name(id_ INT, name_ TEXT)
+begin
+  select id_ id2, name_ name;
+end;
+
+-- TEST: procedure does not return all columns from the interface
+-- + CREATE PROC test_interface1_missing_column (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): err
+@attribute(cql:implements=interface2)
+create proc test_interface1_missing_column(id_ INT, name_ TEXT)
+begin
+  select id_ id;
+end;
+
+-- TEST: implementing interface that's not defined
+-- + CREATE PROC test_interface1_missing_interface (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): err
+@attribute(cql:implements=missing_interface)
+create proc test_interface1_missing_interface(id_ INT, name_ TEXT)
+begin
+  select id_ id, name_ name;
+end;
+
+-- TEST: redefining interface as proc (declare)
+-- + DECLARE PROC interface1 (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): err
+declare proc interface1(id_ INT, name_ TEXT);
+
+-- TEST: redefining interface as proc (create)
+-- + CREATE PROC interface1 (id_ INTEGER, name_ TEXT)
+-- {create_proc_stmt): err
+create proc interface1(id_ INT, name_ TEXT)
 begin
   select id_ id2, name_ name;
 end;
@@ -22202,3 +22253,19 @@ select t, i from no_check_select_table_valued_fun(0, "hello");
 -- TEST: calling unchecked table valued function with invalid argument fails
 -- error: in star : CQL0051: argument can only be used in count(*) '*'
 select t, i from no_check_select_table_valued_fun(0, *);
+
+-- TEST: redefining interface as proc (declare ... no check)
+-- + {declare_proc_no_check_stmt}: err
+declare procedure interface1 no check;
+
+-- TEST: redefining func as interface
+-- + {declare_interface_stmt}: err
+DECLARE INTERFACE maybe_create_func_text (id INT, name TEXT);
+
+-- TEST: try to declare a interface inside a proc
+-- + error: % declared interface must be top level 'foo'
+-- +1 error:
+create proc nested_interface_wrapper()
+begin
+  declare interface foo(LIKE interface1);
+end;

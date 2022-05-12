@@ -87162,6 +87162,26 @@ DECLARE INTERFACE interface1 (id INTEGER);
 
 The statement ending at line XXXX
 
+DECLARE INTERFACE interface1 (id INTEGER, id TEXT);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
+
+  {declare_interface_stmt}: err
+  | {proc_name_type}
+  | | {name interface1}
+  | | {int 1}
+  | {proc_params_stmts}
+    | {typed_names}: err
+      | {typed_name}: id: integer
+      | | {name id}
+      | | {type_int}: id: integer
+      | {typed_names}
+        | {typed_name}: err
+          | {name id}
+          | {type_text}
+
+The statement ending at line XXXX
+
 DECLARE INTERFACE interface1 (id INTEGER, name TEXT);
 
 Incompatible declarations found
@@ -87427,7 +87447,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the colu
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_name (id_ INTEGER, name_ TEXT)
+CREATE PROC test_interface1_implementation_wrong_name (id_ INTEGER, name_ TEXT)
 BEGIN
   SELECT id_ AS id2, name_ AS name;
 END;
@@ -87442,7 +87462,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the colu
   |   | | {name implements}
   |   | {name interface1}: ok
   | {create_proc_stmt}: err
-    | {name test_interface1_implementation_name}: err
+    | {name test_interface1_implementation_wrong_name}: err
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer variable in
@@ -87476,6 +87496,174 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the colu
           | {select_orderby}
             | {select_limit}
               | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface2)
+CREATE PROC test_interface1_missing_column (id_ INTEGER, name_ TEXT)
+BEGIN
+  SELECT id_ AS id;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0483: procedure results should include all columns defined by the interface 'interface2'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name interface2}: ok
+  | {create_proc_stmt}: err
+    | {name test_interface1_missing_column}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer variable in
+      | | | {param_detail}: id_: integer variable in
+      | |   | {name id_}: id_: integer variable in
+      | |   | {type_int}: integer
+      | | {params}
+      |   | {param}: name_: text variable in
+      |     | {param_detail}: name_: text variable in
+      |       | {name name_}: name_: text variable in
+      |       | {type_text}: text
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer variable in }
+          | {select_core_list}: select: { id: integer variable in }
+          | | {select_core}: select: { id: integer variable in }
+          |   | {select_expr_list_con}: select: { id: integer variable in }
+          |     | {select_expr_list}: select: { id: integer variable in }
+          |     | | {select_expr}: id: integer variable in
+          |     |   | {name id_}: id_: integer variable in
+          |     |   | {opt_as_alias}
+          |     |     | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=missing_interface)
+CREATE PROC test_interface1_missing_interface (id_ INTEGER, name_ TEXT)
+BEGIN
+  SELECT id_ AS id, name_ AS name;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0482: interface not found 'missing_interface'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name implements}
+  |   | {name missing_interface}: ok
+  | {create_proc_stmt}: err
+    | {name test_interface1_missing_interface}: err
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: id_: integer variable in
+      | | | {param_detail}: id_: integer variable in
+      | |   | {name id_}: id_: integer variable in
+      | |   | {type_int}: integer
+      | | {params}
+      |   | {param}: name_: text variable in
+      |     | {param_detail}: name_: text variable in
+      |       | {name name_}: name_: text variable in
+      |       | {type_text}: text
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer variable in, name: text variable in }
+          | {select_core_list}: select: { id: integer variable in, name: text variable in }
+          | | {select_core}: select: { id: integer variable in, name: text variable in }
+          |   | {select_expr_list_con}: select: { id: integer variable in, name: text variable in }
+          |     | {select_expr_list}: select: { id: integer variable in, name: text variable in }
+          |     | | {select_expr}: id: integer variable in
+          |     | | | {name id_}: id_: integer variable in
+          |     | | | {opt_as_alias}
+          |     | |   | {name id}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: name: text variable in
+          |     |     | {name name_}: name_: text variable in
+          |     |     | {opt_as_alias}
+          |     |       | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE PROC interface1 (id_ INTEGER, name_ TEXT);
+
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name conflicts with interface name 'interface1'
+
+  {declare_proc_stmt}: err
+  | {proc_name_type}
+  | | {name interface1}
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}
+      | {param}
+      | | {param_detail}
+      |   | {name id_}
+      |   | {type_int}
+      | {params}
+        | {param}
+          | {param_detail}
+            | {name name_}
+            | {type_text}
+
+The statement ending at line XXXX
+
+CREATE PROC interface1 (id_ INTEGER, name_ TEXT)
+BEGIN
+  SELECT id_ AS id2, name_ AS name;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0481: proc name conflicts with interface name 'interface1'
+
+  {create_proc_stmt}: err
+  | {name interface1}: err
+  | {proc_params_stmts}
+    | {params}
+    | | {param}
+    | | | {param_detail}
+    | |   | {name id_}
+    | |   | {type_int}
+    | | {params}
+    |   | {param}
+    |     | {param_detail}
+    |       | {name name_}
+    |       | {type_text}
+    | {stmt_list}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {select_expr}
+        |     | | | {name id_}
+        |     | | | {opt_as_alias}
+        |     | |   | {name id2}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}
+        |     |     | {name name_}
+        |     |     | {opt_as_alias}
+        |     |       | {name name}
+        |     | {select_from_etc}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
 
 The statement ending at line XXXX
 
@@ -87639,4 +87827,57 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE PROC interface1 NO CHECK;
+
+test/sem_test.sql:XXXX:1: error: in declare_proc_no_check_stmt : CQL0481: proc name conflicts with interface name 'interface1'
+
+  {declare_proc_no_check_stmt}: err
+  | {name interface1}
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE maybe_create_func_text (id INTEGER, name TEXT);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with func name 'maybe_create_func_text'
+
+  {declare_interface_stmt}: err
+  | {proc_name_type}
+  | | {name maybe_create_func_text}
+  | | {int 1}
+  | {proc_params_stmts}
+    | {typed_names}
+      | {typed_name}
+      | | {name id}
+      | | {type_int}
+      | {typed_names}
+        | {typed_name}
+          | {name name}
+          | {type_text}
+
+The statement ending at line XXXX
+
+CREATE PROC nested_interface_wrapper ()
+BEGIN
+  DECLARE INTERFACE foo (LIKE interface1);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be top level 'foo'
+
+  {create_proc_stmt}: err
+  | {name nested_interface_wrapper}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_interface_stmt}: err
+        | {proc_name_type}
+        | | {name foo}
+        | | {int 1}
+        | {proc_params_stmts}
+          | {typed_names}
+            | {typed_name}
+              | {shape_def}
+                | {like}
+                  | {name interface1}
 

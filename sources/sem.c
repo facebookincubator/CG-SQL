@@ -18148,6 +18148,11 @@ static void sem_create_proc_stmt(ast_node *ast) {
     goto cleanup;
   }
 
+  if (find_interface_type(name)) {
+    report_error(name_ast, "CQL0481: proc name conflicts with interface name", name);
+    goto cleanup;
+  }
+
   ast_node *existing_proc = find_proc(name);
 
   if (is_ast_create_proc_stmt(existing_proc)) {

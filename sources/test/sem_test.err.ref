@@ -1463,6 +1463,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
 test/sem_test.sql:XXXX:1: error: in num : CQL0205: not a cursor '1'
 test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had errors, cannot be used) 'broken_thing'
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface name conflicts with procedure name 'proc4'
+test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INTEGER)
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INTEGER, name TEXT)
@@ -1472,7 +1473,14 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types ret
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'name'
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'id2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0483: procedure results should include all columns defined by the interface 'interface2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0482: interface not found 'missing_interface'
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name conflicts with interface name 'interface1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0481: proc name conflicts with interface name 'interface1'
 test/sem_test.sql:XXXX:1: error: in declare_select_func_stmt : CQL0486: function cannot be both a normal function and an unchecked function 'no_check_select_fun'
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
+test/sem_test.sql:XXXX:1: error: in declare_proc_no_check_stmt : CQL0481: proc name conflicts with interface name 'interface1'
+test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with func name 'maybe_create_func_text'
+test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be top level 'foo'
 semantic errors present; no code gen.
