@@ -304,10 +304,24 @@ BEGIN
   END;
 END;
 
+-- recreate all the non-virtual @recreate tables that might have changed
+@attribute(cql:private)
+CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
+BEGIN
+END;
+
+-- recreate all the virtual @recreate tables that might have changed
+@attribute(cql:private)
+CREATE PROCEDURE test_cql_recreate_virtual_tables()
+BEGIN
+END;
+
 -- recreate all the @recreate tables that might have changed
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_tables()
 BEGIN
+  CALL test_cql_recreate_non_virtual_tables();
+  CALL test_cql_recreate_virtual_tables();
 END;
 
 @attribute(cql:private)

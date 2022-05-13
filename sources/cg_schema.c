@@ -1081,6 +1081,17 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
   CHARBUF_CLOSE(create);
 }
 
+static void cg_schema_add_recreate_table(charbuf *buf, crc_t table_crc, charbuf facet, charbuf update_tables)
+{
+  bprintf(buf, "  IF cql_facet_find(%s_facets, '%s') != %lld THEN\n", global_proc_name,
+        facet.ptr, (llint_t)table_crc);
+  bprintf(buf, "%s", update_tables.ptr);
+  bprintf(buf, "    CALL %s_cql_set_facet_version('%s', %lld);\n", global_proc_name,
+    facet.ptr, (llint_t)table_crc);
+  bprintf(buf, "  END IF;\n");
+
+}
+
 static void cg_schema_manage_recreate_tables(
   charbuf *output,
   charbuf *decls,
@@ -1090,7 +1101,8 @@ static void cg_schema_manage_recreate_tables(
   Contract(notes);
   Contract(count);
 
-  CHARBUF_OPEN(recreate);
+  CHARBUF_OPEN(recreate_without_virtual_tables);
+  CHARBUF_OPEN(recreate_only_virtual_tables);
   CHARBUF_OPEN(update_tables);
   CHARBUF_OPEN(pending_table_creates);
 
@@ -1236,10 +1248,11 @@ static void cg_schema_manage_recreate_tables(
       CHARBUF_CLOSE(migrate_table);
     }
 
-    bprintf(&recreate, "  IF cql_facet_find(%s_facets, '%s') != %lld THEN\n", global_proc_name, facet.ptr, (llint_t)table_crc);
-    bprintf(&recreate, "%s", update_tables.ptr);
-    bprintf(&recreate, "    CALL %s_cql_set_facet_version('%s', %lld);\n", global_proc_name, facet.ptr, (llint_t)table_crc);
-    bprintf(&recreate, "  END IF;\n");
+    if (is_virtual_ast(ast)) {
+      cg_schema_add_recreate_table(&recreate_only_virtual_tables, table_crc, facet, update_tables);
+    } else {
+      cg_schema_add_recreate_table(&recreate_without_virtual_tables, table_crc, facet, update_tables);
+    }
 
     CHARBUF_CLOSE(facet);
 
@@ -1248,16 +1261,32 @@ static void cg_schema_manage_recreate_tables(
     bclear(&update_tables);
   }
 
+  bprintf(output, "-- recreate all the non-virtual @recreate tables that might have changed\n");
+  bprintf(output, "@attribute(cql:private)\n");
+  bprintf(output, "CREATE PROCEDURE %s_cql_recreate_non_virtual_tables()\n", global_proc_name);
+  bprintf(output, "BEGIN\n");
+  bprintf(output, "%s", recreate_without_virtual_tables.ptr);
+  bprintf(output, "END;\n\n");
+
+  bprintf(output, "-- recreate all the virtual @recreate tables that might have changed\n");
+  bprintf(output, "@attribute(cql:private)\n");
+  bprintf(output, "CREATE PROCEDURE %s_cql_recreate_virtual_tables()\n", global_proc_name);
+  bprintf(output, "BEGIN\n");
+  bprintf(output, "%s", recreate_only_virtual_tables.ptr);
+  bprintf(output, "END;\n\n");
+
   bprintf(output, "-- recreate all the @recreate tables that might have changed\n");
   bprintf(output, "@attribute(cql:private)\n");
   bprintf(output, "CREATE PROCEDURE %s_cql_recreate_tables()\n", global_proc_name);
   bprintf(output, "BEGIN\n");
-  bprintf(output, "%s", recreate.ptr);
+  bprintf(output, "  CALL %s_cql_recreate_non_virtual_tables();\n", global_proc_name);
+  bprintf(output, "  CALL %s_cql_recreate_virtual_tables();\n", global_proc_name);
   bprintf(output, "END;\n\n");
 
   CHARBUF_CLOSE(pending_table_creates);
   CHARBUF_CLOSE(update_tables);
-  CHARBUF_CLOSE(recreate);
+  CHARBUF_CLOSE(recreate_only_virtual_tables);
+  CHARBUF_CLOSE(recreate_without_virtual_tables);
 }
 
 static llint_t cg_schema_compute_crc(

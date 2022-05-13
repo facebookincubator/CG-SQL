@@ -548,29 +548,13 @@ BEGIN
   END;
 END;
 
--- recreate all the @recreate tables that might have changed
+-- recreate all the non-virtual @recreate tables that might have changed
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_recreate_tables()
+CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
 BEGIN
   IF cql_facet_find(test_facets, 'unsub_recreated_table_crc') != 2282658103124508505 THEN
     DROP TABLE IF EXISTS unsub_recreated;
     CALL test_cql_set_facet_version('unsub_recreated_table_crc', 2282658103124508505);
-  END IF;
-  IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != 5892669275896520096 THEN
-    DROP TABLE IF EXISTS complex_virtual_table;
-    CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
-      id INTEGER @SENSITIVE,
-      t TEXT
-    );
-    CALL test_cql_set_facet_version('complex_virtual_table_table_crc', 5892669275896520096);
-  END IF;
-  IF cql_facet_find(test_facets, 'a_virtual_table_table_crc') != -4813907186176555661 THEN
-    DROP TABLE IF EXISTS a_virtual_table;
-    CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
-      id INTEGER @SENSITIVE,
-      t TEXT
-    );
-    CALL test_cql_set_facet_version('a_virtual_table_table_crc', -4813907186176555661);
   END IF;
   IF cql_facet_find(test_facets, 'table_to_recreate_table_crc') != 3137661388576624799 THEN
     DROP TABLE IF EXISTS table_to_recreate;
@@ -617,6 +601,36 @@ BEGIN
     );
     CALL test_cql_set_facet_version('my_group_group_crc', 5282334304804635811);
   END IF;
+END;
+
+-- recreate all the virtual @recreate tables that might have changed
+@attribute(cql:private)
+CREATE PROCEDURE test_cql_recreate_virtual_tables()
+BEGIN
+  IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != 5892669275896520096 THEN
+    DROP TABLE IF EXISTS complex_virtual_table;
+    CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
+      id INTEGER @SENSITIVE,
+      t TEXT
+    );
+    CALL test_cql_set_facet_version('complex_virtual_table_table_crc', 5892669275896520096);
+  END IF;
+  IF cql_facet_find(test_facets, 'a_virtual_table_table_crc') != -4813907186176555661 THEN
+    DROP TABLE IF EXISTS a_virtual_table;
+    CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
+      id INTEGER @SENSITIVE,
+      t TEXT
+    );
+    CALL test_cql_set_facet_version('a_virtual_table_table_crc', -4813907186176555661);
+  END IF;
+END;
+
+-- recreate all the @recreate tables that might have changed
+@attribute(cql:private)
+CREATE PROCEDURE test_cql_recreate_tables()
+BEGIN
+  CALL test_cql_recreate_non_virtual_tables();
+  CALL test_cql_recreate_virtual_tables();
 END;
 
 CREATE PROCEDURE test_cql_install_temp_schema()
