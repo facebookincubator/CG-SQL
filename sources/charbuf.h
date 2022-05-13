@@ -54,4 +54,5 @@ cql_noexport bool_t breadline(charbuf *output, CSTR *data);
 #define END_INDENT(name) \
   output = name##_saved; \
   bindent(output, &name, name##_level); \
-  CHARBUF_CLOSE(name); \
+  CHARBUF_CLOSE(name);
+
