@@ -415,10 +415,16 @@ Next we'll run the insert statement:
 
 This will add a single row to the table.  Note that we have again used double quotes, meaning that this is a C string literal.  This is highly convenient given the escape sequences.  Normally SQLite text has the newlines directly embedded in it; that practice isn't very compiler friendly, hence the alternative.
 
-At this point, we can read back our data:
+Next we declare a local variable to hold our data:
 
 ```sql
-  let t := (select * from my_data);
+  declare t text not null;
+```
+
+Then, we can read back our data:
+
+```sql
+  set t := (select * from my_data);
 ```
 
 This form of database reading has very limited usability but it does work for this case and it is illustrative.
@@ -430,12 +436,12 @@ At run time, the `select` query must return exactly one row or an error code wil
 to see `(select ... limit 1)` to force the issue.  But that still leaves the possibility of zero rows, which would
 be an error.  We'll talk about more flexible ways to read from the database later.
 
-Note: you can declare a variable and assign it in one step with the `LET` keyword, e.g.
-```
-  let t := (select * from my_data);
-```
-
-The code would normally be written in this way but for discussion purposes, these examples continue to avoid `LET`.
+> Note: you can declare a variable and assign it in one step with the `LET` keyword, e.g.
+> ```sql
+>   let t := (select * from my_data);
+> ```
+>
+> The code would normally be written in this way but for discussion purposes, these examples continue to avoid `LET`.
 
 At this point it seems wise to bring up the unusual expression evaluation properties of CQL.
 CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for
@@ -2285,7 +2291,8 @@ WHEN expr1, expr2, ... THEN
   [statement_list]
 WHEN expr3, ... THEN
   [statement_list]
-WHEN expr4 NOTHING
+WHEN expr4 THEN
+  NOTHING
 ELSE
   [statement_list]
 END;
@@ -2297,7 +2304,7 @@ END;
 * within one of the interior statement lists the `LEAVE` keyword exits the `SWITCH` prematurely, just like `break` in C
    * a `LEAVE` is not required before the next `WHEN`
    * there are no fall-through semantics as you can find in `C`, if fall-through ever comes to `SWITCH` it will be explicit
-* if the keyword `NOTHING` is used instead of `THEN` it means there is no code for that case, which is useful with `ALL VALUES` (see below)
+* if the keyword `NOTHING` is used after `THEN` it means there is no code for that case, which is useful with `ALL VALUES` (see below)
 * the `ELSE` clause is optional and works just like `default` in `C`, covering any cases not otherwise explicitly listed
 * if you add `ALL VALUES` then:
    * the expression must be an from an enum type
@@ -2594,6 +2601,7 @@ So:
 ```sql
 declare C cursor like xy_table;
 declare C cursor like select 1 a, 'x' b;
+declare C cursor like (a integer not null, b text not null);
 declare C cursor like my_view;
 declare C cursor like my_other_cursor;
 declare C cursor like my_previously_declared_stored_proc;
@@ -2671,6 +2679,31 @@ The third type of cursor is a "result set" cursor but that won't make any sense
 until we've discussed result sets a little which requires `OUT` and/or `OUT UNION`
 and so we'll go on to those statements next.  As it happens, we are recapitulating
 the history of cursor features in the CQL language by exploring the system in this way.
+
+#### Benefits of using named typed to declare a cursor
+
+This form allows any kind of declaration, for instance:
+
+```
+declare C cursor like ( id integer not null, val real, flag boolean );
+```
+
+This wouldn't really give us much more than the other forms, however typed name lists can include LIKE in them again, as part of the list.  Which means you can do this kind of thing:
+
+```
+declare C cursor like (like D, extra1 real, extra2 bool)
+```
+
+You could then load that cursor like so:
+
+```
+fetch C from values (from D, 2.5, false);
+```
+
+and now you have D plus 2 more fields which maybe you want to output.
+
+Importantly this way of doing it means that C always includes D, even if D changes over time.  As long as the `extra1` and `extra2` fields don't conflict names it will always work.
+
 
 ### OUT Statement
 
@@ -9386,7 +9419,14 @@ NOTE: different result types require a different number of output files with dif
 * Fully qualified name to import in the emitted java source.
 
 ### --c_include_namespace
-* for the C codegen runtimes, it determines the header namespace (as in #include <namespace/file.h) that the headers will have to be referred when included from other sources.
+* for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
+* if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
+* if absent there is no "namespace/" prefix
+
+### --c_include_path
+* for the C codegen runtimes, it determines the full header path (as in #include "your_arg") that goes into the output C file
+* if this option is used, the first argment to --cg controls only the output path and does not appear in include path at all
+* this form overrides --c_include_namespace if both are specified
 
 ### --objc_c_include_path
 * for ObjC codegen runtimes that need to refer to the generated C code, this represents the header of the C generated code that will be used during inclusion from the ObjC file
@@ -9487,7 +9527,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Apr  5 15:35:59 PDT 2022
+Snapshot as of Thu May 12 14:16:07 PDT 2022
 
 ### Operators and Literals
 
@@ -9545,19 +9585,20 @@ TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
 "FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM
 BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING"
 "HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX" "INITIALLY"
-"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER" "INTO"
-"JOIN" "KEY" "LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
-"LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
-"NULL" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON" "OPEN"
-"ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
-"PRIMARY" "PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE"
-"RANGE" "REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
-"REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
-"ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
-"STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
-"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "UNBOUNDED"
-"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VIEW"
-"VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
+"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER"
+"INTERFACE" "INTO" "JOIN" "KEY" "LEAVE" "LEFT" "LET"
+"LIMIT" "LONG" "LONG_INT" "LONG_INTEGER" "LOOP" "NO" "NOT
+DEFERRABLE" "NOTHING" "NULL" "OBJECT" "OF" "OFFSET" "ON
+CONFLICT" "ON" "OPEN" "ORDER" "OUT" "OUTER" "OVER"
+"PARTITION" "PRECEDING" "PRIMARY" "PRIVATE" "PROC"
+"PROCEDURE" "QUERY PLAN" "RAISE" "RANGE" "REAL" "RECURSIVE"
+"REFERENCES" "RELEASE" "RENAME" "REPLACE" "RESTRICT"
+"RETURN" "RIGHT" "ROLLBACK" "ROWID" "ROWS" "SAVEPOINT"
+"SELECT" "SET" "SIGN FUNCTION" "STATEMENT" "SWITCH" "TABLE"
+"TEMP" "TEXT" "THEN" "THROW" "TO" "TRANSACTION" "TRIGGER"
+"TRY" "TYPE" "UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING"
+"VALUES" "VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW"
+"WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -9606,6 +9647,7 @@ any_stmt:
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
   | declare_proc_stmt
+  | declare_interface_stmt
   | declare_schema_region_stmt
   | declare_stmt
   | delete_stmt
@@ -9636,6 +9678,7 @@ any_stmt:
   | loop_stmt
   | out_stmt
   | out_union_stmt
+  | out_union_parent_child_stmt
   | previous_schema_stmt
   | proc_savepoint_stmt
   | release_savepoint_stmt
@@ -9811,6 +9854,11 @@ check_def:
   ;
 
 shape_def:
+    shape_def_base
+  | shape_def_base '(' name_list ')'
+  ;
+
+shape_def_base:
     "LIKE" name
   | "LIKE" name "ARGUMENTS"
   ;
@@ -10702,9 +10750,9 @@ const_value:  name '=' expr
   ;
 
 declare_func_stmt:
-  "DECLARE" function name '(' params ')' data_type_with_options
+  "DECLARE" function name '(' func_params ')' data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
-  | "DECLARE" function name '(' params ')' "CREATE" data_type_with_options
+  | "DECLARE" function name '(' func_params ')' "CREATE" data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
   ;
 
@@ -10724,6 +10772,9 @@ declare_proc_stmt:
   | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')'
   | "DECLARE" procedure name '(' params ')' "OUT" "UNION" '(' typed_names ')' "USING" "TRANSACTION"
   ;
+
+declare_interface_stmt:
+  "DECLARE" "INTERFACE" name '(' typed_names ')'
 
 create_proc_stmt:
   "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
@@ -10746,6 +10797,17 @@ typed_names:
   | typed_name ',' typed_names
   ;
 
+func_param:
+  param
+  | name "CURSOR"
+  ;
+
+func_params:
+  /* nil */
+  | func_param
+  |  func_param ',' func_params
+  ;
+
 param:
   name data_type_with_options
   | inout name data_type_with_options
@@ -10764,6 +10826,7 @@ declare_simple_var_stmt:
   "DECLARE" name_list data_type_with_options
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
+  | "DECLARE" name "CURSOR" "LIKE" '(' typed_names ')'
   ;
 
 /* the additional forms are just about storage */
@@ -10872,6 +10935,19 @@ out_stmt:
 
 out_union_stmt:
   "OUT" "UNION" name
+  ;
+
+out_union_parent_child_stmt:
+  "OUT" "UNION" call_stmt "JOIN" child_results
+  ;
+
+child_results:
+   child_result
+   | child_result "AND" child_results
+   ;
+
+child_result:
+  call_stmt "USING" '(' name_list ')'
   ;
 
 if_stmt:
@@ -15508,15 +15584,15 @@ The indicated name was used in a context where a variable group name was expecte
 Perhaps the group was not included (missing an #include) or else there is a typo.
 
 
-### CQL0465: @unsub/@resub directive must provide a table
+### CQL0465: @unsub/@resub directive must provide a table or view name
 
 The indicated schema subscription directive did not provide a table.  The
 directive is meaningless without one.
 
 
-### CQL0466: the table named in an @unsub/@resub directive does not exist 'table_name'
+### CQL0466: the table/view named in an @unsub/@resub directive does not exist 'name'
 
-The indicated name is not a valid table.
+The indicated name is not a valid table or view.
 
 
 ### CQL0467: @unsub/@resub versions must be in non-decreasing order
@@ -15529,52 +15605,50 @@ The correct approach is to undo an @unsub with a @resub and vice versa.  Any exi
 directives should remain forever for logically consistent upgrade scripts.
 
 
-### CQL0468: cannot @unsub/@resub from a view 'view_name'
-
-In a @unsub/@resub` statement, the target of the operation must be a table, but the indicated name is a view.
+CQL046 -- no longer an error
 
 
-### CQL0469: table is already deleted 'table_name'
+### CQL0469: table/view is already deleted 'name'
 
-In an @unsub/@resub directive, the indicated table has already been deleted. It can no longer
+In an @unsub/@resub directive, the indicated table/view has already been deleted. It can no longer
 be managed via subscriptions.
 
 
-### CQL0470: table not yet created at indicated version 'table_name'
+### CQL0470: table/view not yet created at indicated version 'name'
 
-In an @unsub/@resub directive, the indicated table has an @create directive that comes later
+In an @unsub/@resub directive, the indicated table/view has an @create directive that comes later
 than the @unsub/@resub.  It's meaningless to unsubscribe or resubscribe before the
 table is even created.
 
 
-### CQL0471: table has another @unsub/@resub at this version number 'table_name'
+### CQL0471: table/view has another @unsub/@resub at this version number 'name'
 
 It doesn't make sense to @unsub in the same version that you @resub (as that
 would be redundant); likewise for @resub.  And it also makes no sense to @unsub or @resub
 twice in the same version.  This error indicates there are two subscription operations on the
-same table in the same version.
+same table/view in the same version.
 
 
-### CQL0472: table is already unsubscribed 'table_name'
+### CQL0472: table/view is already unsubscribed 'name'
 
-In an @unsub directive, the indicated table has already been unsubscribed. It doesn't need
+In an @unsub directive, the indicated table/view has already been unsubscribed. It doesn't need
 another unsubscription.
 
 
-### CQL0473: @unsub is invalid because the table is still used by 'table_name'
+### CQL0473: @unsub is invalid because the table/view is still used by 'name'
 
-This error indicates that you are attempting to @unsub a table while there are still other
-tables with foreign keys that refer to it.  You must @unsub all of those as well
-in order to safely @unsub the present table.  All such tables will be listed.  Note that
+This error indicates that you are attempting to @unsub a table/view while there are still other
+tables/views that refer to it (e.g. by FK).  You must @unsub all of those as well
+in order to safely @unsub the present table/view.  All such dependencies  will be listed.  Note that
 some of those might, in turn, have the same issue.  In short, a whole subtree has to
 be removed in order to do this operation safely.
 
 
-### CQL0474: @resub is invalid because the table references 'table_name'
+### CQL0474: @resub is invalid because the table/view references 'name'
 
-This error indicates that you are attempting to @resub a table while there are other
-tables to which it refers that have not also been resubscribed.  Those tables must
-first be resubscribed, thus creating a path to add the present table.
+This error indicates that you are attempting to @resub a table/view while there are other
+tables/views to which it refers that have not also been resubscribed.  Those items must
+first be resubscribed, thus creating a path to add the present table/view.
 
 
 ### CQL0475: @unsub/@resub directives did not match between current and previous schema
@@ -15612,6 +15686,42 @@ matching.
 The most likely cause of this error is that some directives were deleted in
 the current schema.
 
+### CQL0477: interface name conflicts with func name 'name'
+
+In a `DECLARE INTERFACE` statement, the given name conflicts with an already declared function (`DECLARE FUNCTION` or `DECLARE SELECT FUNCTION`).  You'll have to choose a different name.
+
+### CQL0478: interface name conflicts with procedure name 'name'
+
+In a `DECLARE INTERFACE` statement, the indicated name already corresponds to a created or declared stored procedure.  You'll have to choose a different name.
+
+### CQL0479: interface declarations do not match 'name'
+
+The interface was previously declared with a `DECLARE INTERFACE` statement but when subsequent `DECLARE INTERFACE` was encountered, it did not match the previous declaration.
+
+### CQL0480: declared interface must be top level 'name'
+
+A `DECLARE INTERFACE` statement is happening inside of a procedure.  This is not legal.  To correct this move the declaration outside of the procedure.
+
+### CQL0481: proc name conflicts with interface name 'name'
+
+In a `CREATE PROCEDURE` / `DECLARE PROCEDURE` statement, the given name conflicts with an already declared interface (`DECLARE INTERFACE`).  You'll have to choose a different name.
+
+### CQL0482: interface not found 'name'
+
+Interface with the name provided in `cql:implements` attribute does not exist
+
+### CQL0483: procedure results should include all columns defined by the interface 'name'
+
+Procedure should return at least all columns defined by the interface.
+
+### CQL0484: name of the column must match the name of the column defined by interface
+
+Procedure should return at least all columns defined by the interface and column names should be the same (and defined in the same order).
+
+### CQL0485: column types returned by proc need to be the same as defined on the interface
+
+Procedure should return at least all columns defined by the interface and column type should be the same.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -15624,7 +15734,7 @@ the current schema.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Apr  5 15:36:00 PDT 2022
+Snapshot as of Thu May 12 14:16:08 PDT 2022
 
 ### Rules
 
@@ -15644,6 +15754,7 @@ json_schema: '{'
          '"updates"' ':' '[' opt_updates ']' ','
          '"deletes"' ':' '[' opt_deletes ']' ','
          '"general"' ':' '[' opt_generals ']' ','
+         '"interfaces"' ':' '[' opt_interfaces ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
          '"enums"' ':'  '[' opt_enums ']' ','
@@ -16234,6 +16345,19 @@ enum_value: '{'
              '"name"' ':' STRING_LITERAL ','
              '"value"' ':' num_literal
             '}'
+  ;
+
+opt_interfaces: | interfaces
+  ;
+
+interfaces: interface | interface ',' interfaces
+  ;
+
+interface: '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"definedInFile"' ':' STRING_LITERAL ','
+          '"projection"' ':' '[' projected_columns ']'
+         '}'
   ;
 
 opt_subscriptions: | subscriptions

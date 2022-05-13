@@ -834,9 +834,10 @@ AST(or)</code></pre>
 <span id="cb33-12"><a href="#cb33-12"></a><span class="pp">#define SEM_TYPE_OK 11          </span><span class="co">// sentinel for ok but no type info</span></span>
 <span id="cb33-13"><a href="#cb33-13"></a><span class="pp">#define SEM_TYPE_PENDING 12     </span><span class="co">// sentinel for type calculation in flight</span></span>
 <span id="cb33-14"><a href="#cb33-14"></a><span class="pp">#define SEM_TYPE_REGION 13      </span><span class="co">// the ast is a schema region</span></span>
-<span id="cb33-15"><a href="#cb33-15"></a><span class="pp">#define SEM_TYPE_CORE 0xff      </span><span class="co">// bit mask for the core types</span></span>
-<span id="cb33-16"><a href="#cb33-16"></a></span>
-<span id="cb33-17"><a href="#cb33-17"></a><span class="pp">#define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) </span><span class="co">// the last unitary type</span></span></code></pre></div>
+<span id="cb33-15"><a href="#cb33-15"></a><span class="pp">#define SEM_TYPE_CURSOR_FORMAL 14      </span><span class="co">// this is used for the cursor parameter type uniquely</span></span>
+<span id="cb33-16"><a href="#cb33-16"></a><span class="pp">#define SEM_TYPE_CORE 0xff      </span><span class="co">// bit mask for the core types</span></span>
+<span id="cb33-17"><a href="#cb33-17"></a></span>
+<span id="cb33-18"><a href="#cb33-18"></a><span class="pp">#define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) </span><span class="co">// the last unitary type</span></span></code></pre></div>
 <p>These break into a few categories: * <code>NULL</code> to <code>OBJECT</code> are the “unitary” types – these are the types that a single simple variable can be * a column can be any of these except <code>OBJECT</code> or <code>NULL</code> * the <code>NULL</code> type comes only from the <code>NULL</code> literal which has no type * instances of, say, a <code>TEXT</code> column might have a <code>NULL</code> value but they are known to be <code>TEXT</code> * <code>STRUCT</code> indicates that the object has many fields, like a table, or a cursor * <code>JOIN</code> indicates that the object is the concatenation of many <code>STRUCT</code> types * e.g. <code>T1 inner join T2</code> is a <code>JOIN</code> type with <code>T1</code> and <code>T2</code> being the parts * a <code>JOIN</code> could be flattened to <code>STRUCT</code>, but this is typically not done * the type of a <code>SELECT</code> statement will be a <code>STRUCT</code> representing the expressions that were selected * those expressions in turn used columns from the <code>JOIN</code> that was the <code>FROM</code> clause * <code>ERROR</code> indicates that the subtree had an error * the error will have been already reported * the error type generally cascades up the AST to the root * <code>OK</code> indicates that there is no type information but there was no problem * e.g. a correct <code>IF</code> statement will resolve to simply <code>OK</code> (no error) * <code>PENDING</code> is used sometimes while a type computation is in progress * this type doesn’t appear in the AST, but has its own unique value so as to not conflict with any others * <code>REGION</code> is used to identify AST fragments that correspond to schema regions * see <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> of the Guide for more information on regions * <code>CORE</code> is the mask for the core parts, <code>0xf</code> would do the job but for easy reading in the debugger we use <code>0xff</code> * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong</p>
 <p>The core type can be modified by various flags. The flags, in principle, can be combined in any way but in practice many combinations make no sense. For instance, <code>HAS_DEFAULT</code> is for table columns and <code>CREATE_FUNC</code> is for function declarations. There is no one object that could require both of these.</p>
 <p>The full list as of this writing is as follows:</p>
@@ -2143,33 +2144,31 @@ AST(or)</code></pre>
 <span id="cb89-7"><a href="#cb89-7"></a>  Contract(is_ast_declare_cursor_like_name(ast));</span>
 <span id="cb89-8"><a href="#cb89-8"></a>  EXTRACT_ANY_NOTNULL(new_cursor_ast, ast-&gt;left);</span>
 <span id="cb89-9"><a href="#cb89-9"></a>  EXTRACT_STRING(new_cursor_name, new_cursor_ast);</span>
-<span id="cb89-10"><a href="#cb89-10"></a>  EXTRACT_ANY_NOTNULL(like_ast, ast-&gt;right);</span>
-<span id="cb89-11"><a href="#cb89-11"></a>  EXTRACT_ANY_NOTNULL(name_ast, like_ast-&gt;left);</span>
-<span id="cb89-12"><a href="#cb89-12"></a>  EXTRACT_STRING(like_name, name_ast);</span>
-<span id="cb89-13"><a href="#cb89-13"></a></span>
-<span id="cb89-14"><a href="#cb89-14"></a>  <span class="co">// no duplicates allowed</span></span>
-<span id="cb89-15"><a href="#cb89-15"></a>  <span class="cf">if</span> (!sem_verify_legal_variable_name(ast, new_cursor_name)) {</span>
-<span id="cb89-16"><a href="#cb89-16"></a>    record_error(new_cursor_ast);</span>
-<span id="cb89-17"><a href="#cb89-17"></a>    record_error(ast);</span>
-<span id="cb89-18"><a href="#cb89-18"></a>    <span class="cf">return</span>;</span>
-<span id="cb89-19"><a href="#cb89-19"></a>  }</span>
-<span id="cb89-20"><a href="#cb89-20"></a></span>
-<span id="cb89-21"><a href="#cb89-21"></a>  <span class="co">// must be a valid shape</span></span>
-<span id="cb89-22"><a href="#cb89-22"></a>  ast_node *found_shape = sem_find_shape_def(like_ast, LIKEABLE_FOR_VALUES);</span>
-<span id="cb89-23"><a href="#cb89-23"></a>  <span class="cf">if</span> (!found_shape) {</span>
-<span id="cb89-24"><a href="#cb89-24"></a>    record_error(ast);</span>
-<span id="cb89-25"><a href="#cb89-25"></a>    <span class="cf">return</span>;</span>
-<span id="cb89-26"><a href="#cb89-26"></a>  }</span>
-<span id="cb89-27"><a href="#cb89-27"></a></span>
-<span id="cb89-28"><a href="#cb89-28"></a>  <span class="co">// good to go, make our cursor, with storage.</span></span>
-<span id="cb89-29"><a href="#cb89-29"></a>  name_ast-&gt;sem = like_ast-&gt;sem = found_shape-&gt;sem;</span>
-<span id="cb89-30"><a href="#cb89-30"></a>  new_cursor_ast-&gt;sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);</span>
-<span id="cb89-31"><a href="#cb89-31"></a>  new_cursor_ast-&gt;sem-&gt;sptr = found_shape-&gt;sem-&gt;sptr;</span>
-<span id="cb89-32"><a href="#cb89-32"></a>  new_cursor_ast-&gt;sem-&gt;name = new_cursor_name;</span>
-<span id="cb89-33"><a href="#cb89-33"></a>  ast-&gt;sem = new_cursor_ast-&gt;sem;</span>
-<span id="cb89-34"><a href="#cb89-34"></a></span>
-<span id="cb89-35"><a href="#cb89-35"></a>  symtab_add(current_variables, new_cursor_name, new_cursor_ast);</span>
-<span id="cb89-36"><a href="#cb89-36"></a>}</span></code></pre></div>
+<span id="cb89-10"><a href="#cb89-10"></a>  EXTRACT_ANY_NOTNULL(shape_def, ast-&gt;right);</span>
+<span id="cb89-11"><a href="#cb89-11"></a></span>
+<span id="cb89-12"><a href="#cb89-12"></a>  <span class="co">// no duplicates allowed</span></span>
+<span id="cb89-13"><a href="#cb89-13"></a>  <span class="cf">if</span> (!sem_verify_legal_variable_name(ast, new_cursor_name)) {</span>
+<span id="cb89-14"><a href="#cb89-14"></a>    record_error(new_cursor_ast);</span>
+<span id="cb89-15"><a href="#cb89-15"></a>    record_error(ast);</span>
+<span id="cb89-16"><a href="#cb89-16"></a>    <span class="cf">return</span>;</span>
+<span id="cb89-17"><a href="#cb89-17"></a>  }</span>
+<span id="cb89-18"><a href="#cb89-18"></a></span>
+<span id="cb89-19"><a href="#cb89-19"></a>  <span class="co">// must be a valid shape</span></span>
+<span id="cb89-20"><a href="#cb89-20"></a>  ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);</span>
+<span id="cb89-21"><a href="#cb89-21"></a>  <span class="cf">if</span> (!found_shape) {</span>
+<span id="cb89-22"><a href="#cb89-22"></a>    record_error(ast);</span>
+<span id="cb89-23"><a href="#cb89-23"></a>    <span class="cf">return</span>;</span>
+<span id="cb89-24"><a href="#cb89-24"></a>  }</span>
+<span id="cb89-25"><a href="#cb89-25"></a></span>
+<span id="cb89-26"><a href="#cb89-26"></a>  <span class="co">// good to go, make our cursor, with storage.</span></span>
+<span id="cb89-27"><a href="#cb89-27"></a>  shape_def-&gt;sem = found_shape-&gt;sem;</span>
+<span id="cb89-28"><a href="#cb89-28"></a>  new_cursor_ast-&gt;sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);</span>
+<span id="cb89-29"><a href="#cb89-29"></a>  new_cursor_ast-&gt;sem-&gt;sptr = found_shape-&gt;sem-&gt;sptr;</span>
+<span id="cb89-30"><a href="#cb89-30"></a>  new_cursor_ast-&gt;sem-&gt;name = new_cursor_name;</span>
+<span id="cb89-31"><a href="#cb89-31"></a>  ast-&gt;sem = new_cursor_ast-&gt;sem;</span>
+<span id="cb89-32"><a href="#cb89-32"></a></span>
+<span id="cb89-33"><a href="#cb89-33"></a>  symtab_add(current_variables, new_cursor_name, new_cursor_ast);</span>
+<span id="cb89-34"><a href="#cb89-34"></a>}</span></code></pre></div>
 <ul>
 <li><code>EXTRACT</code> : gets the pieces we need from the AST</li>
 <li><code>sem_verify_legal_variable_name</code> : makes sure the cursor name is unique and doesn’t hide a table name</li>

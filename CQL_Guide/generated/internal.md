@@ -885,6 +885,7 @@ The core bits are as follows:
 #define SEM_TYPE_OK 11          // sentinel for ok but no type info
 #define SEM_TYPE_PENDING 12     // sentinel for type calculation in flight
 #define SEM_TYPE_REGION 13      // the ast is a schema region
+#define SEM_TYPE_CURSOR_FORMAL 14      // this is used for the cursor parameter type uniquely
 #define SEM_TYPE_CORE 0xff      // bit mask for the core types
 
 #define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) // the last unitary type
@@ -2775,9 +2776,7 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_ANY_NOTNULL(new_cursor_ast, ast->left);
   EXTRACT_STRING(new_cursor_name, new_cursor_ast);
-  EXTRACT_ANY_NOTNULL(like_ast, ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
-  EXTRACT_STRING(like_name, name_ast);
+  EXTRACT_ANY_NOTNULL(shape_def, ast->right);
 
   // no duplicates allowed
   if (!sem_verify_legal_variable_name(ast, new_cursor_name)) {
@@ -2787,14 +2786,14 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
   }
 
   // must be a valid shape
-  ast_node *found_shape = sem_find_shape_def(like_ast, LIKEABLE_FOR_VALUES);
+  ast_node *found_shape = sem_find_shape_def(shape_def, LIKEABLE_FOR_VALUES);
   if (!found_shape) {
     record_error(ast);
     return;
   }
 
   // good to go, make our cursor, with storage.
-  name_ast->sem = like_ast->sem = found_shape->sem;
+  shape_def->sem = found_shape->sem;
   new_cursor_ast->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_VALUE_CURSOR | SEM_TYPE_HAS_SHAPE_STORAGE);
   new_cursor_ast->sem->sptr = found_shape->sem->sptr;
   new_cursor_ast->sem->name = new_cursor_name;
@@ -9291,3 +9290,5 @@ Topics covered included:
 As with the other parts, no attempt was made to cover every function in detail.  That is
 best done by reading the source code. But there is overall structure here and an understanding
 of the basic principles is helpful before diving into the source code.
+
+

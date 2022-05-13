@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue May 10 11:15:11 PDT 2022
+Snapshot as of Thu May 12 14:16:07 PDT 2022
 
 ### Operators and Literals
 
@@ -164,6 +164,7 @@ any_stmt:
   | loop_stmt
   | out_stmt
   | out_union_stmt
+  | out_union_parent_child_stmt
   | previous_schema_stmt
   | proc_savepoint_stmt
   | release_savepoint_stmt
@@ -339,6 +340,11 @@ check_def:
   ;
 
 shape_def:
+    shape_def_base
+  | shape_def_base '(' name_list ')'
+  ;
+
+shape_def_base:
     "LIKE" name
   | "LIKE" name "ARGUMENTS"
   ;
@@ -1306,6 +1312,7 @@ declare_simple_var_stmt:
   "DECLARE" name_list data_type_with_options
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
+  | "DECLARE" name "CURSOR" "LIKE" '(' typed_names ')'
   ;
 
 /* the additional forms are just about storage */
@@ -1414,6 +1421,19 @@ out_stmt:
 
 out_union_stmt:
   "OUT" "UNION" name
+  ;
+
+out_union_parent_child_stmt:
+  "OUT" "UNION" call_stmt "JOIN" child_results
+  ;
+
+child_results:
+   child_result
+   | child_result "AND" child_results
+   ;
+
+child_result:
+  call_stmt "USING" '(' name_list ')'
   ;
 
 if_stmt:
