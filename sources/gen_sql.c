@@ -3420,7 +3420,7 @@ static void gen_fetch_call_stmt(ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
   Contract(is_ast_call_stmt(ast->right));
   EXTRACT_STRING(cursor_name, ast->left);
-  EXTRACT_ANY_NOTNULL(call_stmt, ast->right);
+  EXTRACT_NOTNULL(call_stmt, ast->right);
 
   gen_printf("FETCH %s FROM ", cursor_name);
   gen_call_stmt(call_stmt);
@@ -3553,6 +3553,42 @@ static void gen_out_union_stmt(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
 
   gen_printf("OUT UNION %s", name);
+}
+
+static void gen_child_results(ast_node *ast) {
+  Contract(is_ast_child_results(ast));
+
+  ast_node *item = ast;
+  while (item) {
+    Contract(is_ast_child_results(item));
+
+    EXTRACT_NOTNULL(child_result, item->left);
+    EXTRACT_NOTNULL(call_stmt, child_result->left);
+    EXTRACT_NOTNULL(name_list, child_result->right);
+
+    gen_printf("\n  ");
+    gen_call_stmt(call_stmt);
+    gen_printf(" USING (");
+    gen_name_list(name_list);
+    gen_printf(")");
+
+    if (item->right) {
+      gen_printf(" AND");
+    }
+
+    item = item->right;
+  }
+}
+
+static void gen_out_union_parent_child_stmt(ast_node *ast) {
+  Contract(is_ast_out_union_parent_child_stmt(ast));
+  EXTRACT_NOTNULL(call_stmt, ast->left);
+  EXTRACT_NOTNULL(child_results, ast->right);
+
+  gen_printf("OUT UNION ");
+  gen_call_stmt(call_stmt);
+  gen_printf(" JOIN ");
+  gen_child_results(child_results);
 }
 
 static void gen_echo_stmt(ast_node *ast) {
@@ -4014,6 +4050,7 @@ cql_noexport void gen_init() {
   STMT_INIT(close_stmt);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_stmt);
+  STMT_INIT(out_union_parent_child_stmt);
   STMT_INIT(echo_stmt);
   STMT_INIT(schema_upgrade_version_stmt);
   STMT_INIT(schema_upgrade_script_stmt);

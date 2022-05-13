@@ -21361,6 +21361,15 @@ static void sem_out_union_stmt(ast_node *ast) {
   sem_out_any(ast);
 }
 
+static void sem_out_union_parent_child_stmt(ast_node *ast) {
+  Contract(is_ast_out_union_parent_child_stmt(ast));
+  rewrite_out_union_parent_child_stmt(ast);
+
+  // analyze the first statement of the rewrite
+  // the rest of the rewrite will proceed normally as we march through the statement list
+  sem_one_stmt(ast);
+}
+
 // echo is valid in any context
 static void sem_echo_stmt(ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
@@ -23649,6 +23658,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_named_type);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_stmt);
+  STMT_INIT(out_union_parent_child_stmt);
 
   syms = sql_stmts;
 

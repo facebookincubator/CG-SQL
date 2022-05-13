@@ -1912,5 +1912,411 @@ rewrite_or_fail:
   return true;
 }
 
+static int32_t cursor_base;
+
+// This creates the statements for each child partition creation
+static ast_node *rewrite_child_partition_creation(ast_node *child_results, int32_t cursor_num, ast_node *tail) {
+  if (!child_results) {
+    return tail;
+  }
+
+  // note that I have not included the numbers that get appended to the names
+  //
+  // let __partition__ := cql_partition_create();
+  // declare __child_cursor__ cursor for call child_proc();  -- args as needed
+  // loop fetch __child_cursor__
+  // begin
+  //   fetch __key__ from __child_cursor__(like __key__);
+  //   set result_ := cql_partition_cursor(__partition__, __key__, __child_cursor__));
+  // end;
+  //
+
+  EXTRACT_NOTNULL(child_result, child_results->left);
+  EXTRACT_NOTNULL(call_stmt, child_result->left);
+  EXTRACT_NOTNULL(name_list, child_result->right);
+  EXTRACT_STRING(proc_name, call_stmt->left);
+
+  CSTR key_name = dup_printf("__key__%d", cursor_num);
+  CSTR cursor_name = dup_printf("__child_cursor__%d", cursor_num);
+  CSTR partition_name = dup_printf("__partition__%d", cursor_num);
+  CSTR result_name = dup_printf("__result__%d", cursor_base);
+
+  return new_ast_stmt_list(
+      new_ast_declare_cursor_like_name(
+        new_ast_str(key_name),
+        new_ast_shape_def(
+          new_ast_like(
+            new_ast_str(proc_name),
+            NULL
+          ),
+          name_list
+        )
+      ),
+    new_ast_stmt_list(
+      new_ast_let_stmt(
+        new_ast_str(partition_name),
+        new_ast_call(
+          new_ast_str("cql_partition_create"),
+          new_ast_call_arg_list(
+            new_ast_call_filter_clause(NULL, NULL),
+            NULL
+          )
+        )
+      ),
+    new_ast_stmt_list(
+      new_ast_declare_cursor(
+        new_ast_str(cursor_name),
+        new_ast_call_stmt(
+          new_ast_str(proc_name),
+          NULL
+        )
+      ),
+    // loop fetch __child_cursor__
+    new_ast_stmt_list(
+      new_ast_loop_stmt(
+        new_ast_fetch_stmt(
+          new_ast_str(cursor_name),
+          NULL
+        ),
+        // FETCH __key_cursor FROM _child_cursor_(LIKE __key_cursor_);
+        new_ast_stmt_list(
+          new_ast_fetch_values_stmt(
+            NULL,  // no dummy values
+            new_ast_name_columns_values(
+              new_ast_str(key_name),
+              new_ast_columns_values(
+                NULL,
+                new_ast_from_shape(
+                  new_ast_column_spec(
+                    new_ast_shape_def(
+                      new_ast_like(
+                        new_ast_str(key_name),
+                        NULL
+                      ),
+                      NULL
+                    )
+                  ),
+                  new_ast_str(cursor_name)
+                )
+              )
+            )
+          ),
+          //  SET _add_result_ := cql_partition_cursor(__partition___, __key_cursor_, __child_cursor__);
+          new_ast_stmt_list(
+            new_ast_assign(
+              new_ast_str(result_name),
+              new_ast_call(
+                new_ast_str("cql_partition_cursor"),
+                new_ast_call_arg_list(
+                  new_ast_call_filter_clause(NULL, NULL),
+                  new_ast_arg_list(
+                    new_ast_str(partition_name),
+                    new_ast_arg_list(
+                      new_ast_str(key_name),
+                      new_ast_arg_list(
+                        new_ast_str(cursor_name),
+                        NULL
+                      )
+                    )
+                  )
+                )
+              )
+            ),
+            NULL
+          )
+        )
+      ),
+      rewrite_child_partition_creation(child_results->right, cursor_num + 1, tail)
+  ))));
+}
+
+static ast_node *build_child_typed_names(ast_node *child_results, int32_t child_index) {
+  if (!child_results) {
+    return NULL;
+  }
+
+  // named_type  child[n] object<child_proc result_set>, ...
+
+  Contract(is_ast_child_results(child_results));
+  EXTRACT_NOTNULL(child_result, child_results->left);
+  EXTRACT_NOTNULL(call_stmt, child_result->left);
+  EXTRACT_NOTNULL(name_list, child_result->right);
+  EXTRACT_STRING(proc_name, call_stmt->left);
+
+  CSTR child_column_name = dup_printf("child%d", child_index);
+
+  return new_ast_typed_names(
+    new_ast_typed_name(
+      new_ast_str(child_column_name),
+      new_ast_notnull(
+        new_ast_type_object(
+          new_ast_str(dup_printf("%s result_set", proc_name))
+        )
+      )
+    ),
+    build_child_typed_names(child_results->right, child_index + 1)
+  );
+}
+
+static ast_node *rewrite_out_cursor_declare(
+  CSTR parent_proc_name,
+  CSTR out_cursor_name,
+  ast_node *child_results,
+  ast_node *tail)
+{
+  // DECLARE __out_cursor__ CURSOR LIKE (LIKE __parent__,  .. child .. list)
+  return new_ast_stmt_list(
+    new_ast_declare_cursor_like_typed_names(
+      new_ast_str(out_cursor_name),
+      new_ast_typed_names(
+        new_ast_typed_name(
+          NULL,
+          new_ast_shape_def(
+            new_ast_like(
+              new_ast_str(parent_proc_name),
+              NULL
+            ),
+            NULL
+          )
+        ),
+        build_child_typed_names(child_results, 1)
+      )
+    ),
+    tail
+  );
+}
+
+ast_node *rewrite_load_child_keys_from_parent(
+  ast_node *child_results,
+  CSTR parent_cursor_name,
+  int32_t cursor_num,
+  ast_node *tail)
+{
+  if (!child_results) {
+    return tail;
+  }
+
+  // generates this pattern for each child
+  // fetch __key__ from __parent__0(like __key__);
+
+  CSTR key_name = dup_printf("__key__%d", cursor_num);
+
+  return new_ast_stmt_list(
+    new_ast_fetch_values_stmt(
+      NULL,  // no dummy values
+      new_ast_name_columns_values(
+        new_ast_str(key_name),
+        new_ast_columns_values(
+          NULL,
+          new_ast_from_shape(
+            new_ast_column_spec(
+              new_ast_shape_def(
+                new_ast_like(
+                  new_ast_str(key_name),
+                  NULL
+                ),
+                NULL
+              )
+            ),
+            new_ast_str(parent_cursor_name)
+          )
+        )
+      )
+    ),
+    rewrite_load_child_keys_from_parent(child_results->right, parent_cursor_name, cursor_num + 1, tail)
+  );
+}
+
+static ast_node *rewrite_insert_children_partitions(
+  ast_node *child_results,
+  int32_t cursor_num)
+{
+  if (!child_results) {
+    return NULL;
+  }
+
+  //  cql_partition_extract(__partition__, __key__)
+  CSTR partition_name = dup_printf("__partition__%d", cursor_num);
+  CSTR key_name = dup_printf("__key__%d", cursor_num);
+
+  return new_ast_insert_list(
+    new_ast_call(
+      new_ast_str("cql_extract_partition"),
+      new_ast_call_arg_list(
+        new_ast_call_filter_clause(NULL, NULL),
+        new_ast_arg_list(
+          new_ast_str(partition_name),
+          new_ast_arg_list(
+            new_ast_str(key_name),
+            NULL
+          )
+        )
+      )
+    ),
+    rewrite_insert_children_partitions(child_results->right, cursor_num + 1)
+  );
+}
+
+static ast_node *rewrite_declare_parent_cursor(
+  CSTR parent_cursor_name,
+  CSTR parent_proc_name,
+  ast_node *tail)
+{
+  // DECLARE CP CURSOR FOR CALL parent();
+
+  return new_ast_stmt_list(
+    new_ast_declare_cursor(
+      new_ast_str(parent_cursor_name),
+      new_ast_call_stmt(
+        new_ast_str(parent_proc_name),
+        NULL
+      )
+    ),
+    tail
+  );
+}
+
+static ast_node *rewrite_fetch_results(
+  CSTR out_cursor_name,
+  CSTR parent_cursor_name,
+  ast_node *child_results)
+{
+  Contract(is_ast_child_results(child_results));
+
+  //   -- load up the wider cursor
+  //   fetch __out_cursor__ from values(
+  //     from __parent__,
+  //     cql_partition_extract(__partition__1, __key__1),
+  //     cql_partition_extract(__partition__2, __key__2)
+  //   );
+
+  return new_ast_stmt_list(
+    new_ast_fetch_values_stmt(
+      NULL,  // no dummy values
+      new_ast_name_columns_values(
+        new_ast_str(out_cursor_name),
+        new_ast_columns_values(
+          NULL,
+          new_ast_insert_list(
+            new_ast_from_shape(
+              new_ast_str(parent_cursor_name),
+              NULL
+            ),
+            rewrite_insert_children_partitions(child_results, cursor_base)
+          )
+        )
+      )
+    ),
+    new_ast_stmt_list(
+      new_ast_out_union_stmt(
+        new_ast_str(out_cursor_name)
+      ),
+      NULL
+    )
+  );
+}
+
+static ast_node *rewrite_loop_fetch_parent_cursor(
+  CSTR parent_cursor_name,
+  CSTR out_cursor_name,
+  ast_node *child_results)
+{
+  // generate code to read rows from parent and attach the matching rows from each partition above via hash lookup
+  //
+  // declare __parent__ cursor for call parent();  -- args as needed
+  // loop fetch __parent__
+  // begin
+  //   -- look up key columns using the matching column names
+  //   fetch __key__1 from __parent__(like __key__1);
+  //   fetch __key__2 from __parent__(like __key__2);
+  //
+  //   -- load up the wider cursor
+  //   fetch __out_cursor__ from values(
+  //     from __parent__,
+  //     cql_partition_extract(__partition__1, __key__1),
+  //     cql_partition_extract(__partition__2, __key__2)
+  //   );
+  //   out union __out_cursor__;
+  // end;
+
+  return new_ast_stmt_list(
+    new_ast_loop_stmt(
+      new_ast_fetch_stmt(
+        new_ast_str(parent_cursor_name),
+        NULL
+      ),
+      rewrite_load_child_keys_from_parent(child_results, parent_cursor_name, cursor_base,
+        rewrite_fetch_results(out_cursor_name, parent_cursor_name, child_results)
+      )
+    ),
+    NULL
+  );
+}
+
+cql_noexport void rewrite_out_union_parent_child_stmt(ast_node *ast) {
+  Contract(is_ast_out_union_parent_child_stmt(ast));
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  CSTR result_name = dup_printf("__result__%d", cursor_base);
+  CSTR out_cursor_name = dup_printf("__out_cursor__%d", cursor_base);
+  CSTR parent_cursor_name = dup_printf("__parent__%d", cursor_base);
+
+  // DECLARE __result_ BOOL NOT NULL;
+  ast_node *result_var =
+    new_ast_declare_vars_type(
+      new_ast_name_list(
+        new_ast_str(result_name), NULL),
+      new_ast_notnull(new_ast_type_bool(NULL))
+    );
+
+  EXTRACT_NOTNULL(child_results, ast->right);
+  EXTRACT_NOTNULL(call_stmt, ast->left);
+  EXTRACT_STRING(parent_proc_name, call_stmt->left);
+
+  // we have to go up the ast to find the statement list, we need to insert ourselves here.
+  ast_node *stmt_tail = ast;
+  while (!is_ast_stmt_list(stmt_tail)) {
+    stmt_tail = stmt_tail->parent;
+  }
+
+  ast_node *result = rewrite_child_partition_creation(child_results, cursor_base,
+    rewrite_out_cursor_declare(parent_proc_name, out_cursor_name, child_results,
+      rewrite_declare_parent_cursor(parent_cursor_name, parent_proc_name,
+        rewrite_loop_fetch_parent_cursor(parent_cursor_name, out_cursor_name, child_results)
+      )
+    )
+  );
+
+  // now we find the last statement in the chain of statements we just generated
+  ast_node *end = result;
+  Invariant(is_ast_stmt_list(end));
+
+  while (end->right) {
+    end = end->right;
+    Invariant(is_ast_stmt_list(end));
+  }
+
+  Invariant(is_ast_stmt_list(end));
+
+  // we link our new stuff in and we're good to go
+  ast_set_right(end, stmt_tail->right);
+  ast_set_right(stmt_tail, result);
+
+  AST_REWRITE_INFO_RESET();
+
+  // the last thing we do is clobber the original statement node with the result variable assignment
+  // leaving no trace of the original ast
+  ast_set_left(ast, result_var->left);
+  ast_set_right(ast, result_var->right);
+  ast->type = result_var->type;
+
+  int32_t child_count = 0;
+  while (child_results) {
+    child_count++;
+    child_results = child_results->right;
+  }
+  cursor_base += child_count;
+}
 
 #endif

@@ -5043,11 +5043,21 @@ declare function cql_extract_partition(partition_ object not null, key cursor) c
 DECLARE PROC get_rows(result object not null) OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL, z BOOL);
 
 -- we need a shim to convert an object to a result set we can iterate, we make a fake "fetch_results" function for this purpose
-@echo c, "void get_rows_fetch_results(get_rows_result_set_ref _Nullable *_Nonnull _result_set_, cql_object_ref _Nonnull result)\n";
-@echo c, "{\n";
-@echo c, "  *_result_set_ = (get_rows_result_set_ref)result;\n";
-@echo c, "  cql_object_retain(result);\n";
-@echo c, "}\n";
+#define result_set_shim(shim_proc, source_proc) \
+  @echo c, "void "; \
+  @echo c, #shim_proc; \
+  @echo c, "_fetch_results("; \
+  @echo c, #shim_proc; \
+  @echo c, "_result_set_ref _Nullable *_Nonnull _result_set_, cql_object_ref _Nonnull result)\n"; \
+  @echo c, "{\n"; \
+  @echo c, "  *_result_set_ = ("; \
+  @echo c, #shim_proc; \
+  @echo c, "_result_set_ref)result;\n"; \
+  @echo c, "  cql_object_retain(result);\n"; \
+  @echo c, "}\n"; \
+  DECLARE PROC shim_proc(result object not null) OUT UNION (like source_proc)
+ 
+result_set_shim(get_rows, get_rows);
 
 BEGIN_TEST(child_results)
   let p := cql_partition_create();
@@ -5114,6 +5124,129 @@ BEGIN_TEST(child_results)
   end;
 END_TEST(child_results)
 
+create proc ch1()
+begin
+   let i := 0;
+   let base := 500;
+   declare C cursor like (k1 integer, k2 text, v1 bool, v2 text, v3 real);
+   declare K cursor like C(k1,k2);
+   while i < 10
+   begin
+      -- note that 1/3 of parents do not have this child
+      if i % 3 != 2 then
+        fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
+        fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
+        out union C;
+        fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
+        out union C;
+      end if;
+      set i := i + 1;
+   end;
+end;
+
+create proc ch2()
+begin
+   let i := 0;
+   let base := 1000;
+   declare C cursor like (k3 integer, k4 text, v1 bool, v2 text, v3 real);
+   declare K cursor like C(k3, k4);
+   while i < 10
+   begin
+      -- note that 1/3 of parents do not have this child
+      if i % 3 != 1 then
+        fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
+        fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
+        out union C;
+        fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
+        out union C;
+      end if;
+      set i := i + 1;
+   end;
+end;
+
+
+create proc parent()
+begin
+   let i := 0;
+   declare C cursor like (k1 integer, k2 text, k3 integer, k4 text, v1 bool, v2 text, v3 real);
+   declare D cursor like C;
+   while i < 10
+   begin
+      fetch C() from values() @dummy_seed(i) @dummy_nullables;
+
+      -- child1 keys are +500
+      fetch D() from values() @dummy_seed(i+500) @dummy_nullables;
+      update cursor C using D.k1 k1, D.k2 k2;
+
+      -- child2 keys are +1000
+      fetch D() from values() @dummy_seed(i+1000) @dummy_nullables;
+      update cursor C using D.k3 k3, D.k4 k4;
+
+      out union C;
+      set i := i + 1;
+   end;
+end;
+
+create proc parent_child()
+begin
+  OUT UNION CALL parent() JOIN
+     call ch1() USING (k1, k2) AND
+     call ch2() USING (k3, k4);
+end;
+
+result_set_shim(get_child1_rows, ch1);
+result_set_shim(get_child2_rows, ch2);
+
+BEGIN_TEST(parent_child_results)
+  let i := 0;
+  declare P cursor for call parent_child();
+  loop fetch P
+  begin
+     -- call printf("%d) %d %s %d %s\n", i, P.k1, P.k2, P.k3, P.k4);
+     EXPECT(P.k1 == i+500);
+     EXPECT(P.k2 == printf("k2_%d", i+500));
+     EXPECT(P.k3 == i+1000);
+     EXPECT(P.k4 == printf("k4_%d", i+1000));
+     EXPECT(P.k4 == printf("k4_%d", i+1000));
+     EXPECT(P.v1 == not not i);
+     EXPECT(P.v2 == printf("v2_%d", i));
+     EXPECT(P.v3 == i);
+
+     let count_rows := 0;
+     declare C1 cursor for call get_child1_rows(P.child1);
+     loop fetch C1
+     begin
+        -- call printf("  child1: %d %s %d %s %f\n", C1.k1, C1.k2, C1.v1, C1.v2, C1.v3);
+        EXPECT(P.k1 == C1.k1);
+        EXPECT(P.k2 == C1.k2);
+        EXPECT(C1.v1 == not not 500 + i*2 + count_rows);
+        EXPECT(C1.v2 == printf("v2_%d", 500 + i*2 + count_rows));
+        EXPECT(C1.v3 == 500 + i*2 + count_rows);
+        set count_rows := count_rows + 1;
+     end;
+
+     EXPECT(count_rows == case when i % 3 == 2 then 0 else 2 end);
+
+     set count_rows := 0;
+     declare C2 cursor for call get_child2_rows(P.child2);
+     loop fetch C2
+     begin
+        -- call printf("  child2: %d %s %d %s %f\n", C2.k3, C2.k4, C2.v1, C2.v2, C2.v3);
+        EXPECT(P.k3 == C2.k3);
+        EXPECT(P.k4 == C2.k4);
+        EXPECT(C2.v1 == not not 1000 + i*2 + count_rows);
+        EXPECT(C2.v2 == printf("v2_%d", 1000 + i*2 + count_rows));
+        EXPECT(C2.v3 == 1000 + i*2 + count_rows);
+        set count_rows := count_rows + 1;
+     end;
+
+     EXPECT(count_rows = case when i % 3 == 1 then 0 else 2 end);
+
+     set i := i + 1;
+  end;
+
+END_TEST(parent_child_results)
+
 
 END_SUITE()
 
@@ -5167,3 +5300,4 @@ end;
 @echo c,"#define cql_error_trace()\n";
 
 @emit_enums;
+

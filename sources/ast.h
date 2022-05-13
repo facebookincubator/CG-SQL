@@ -852,6 +852,9 @@ AST(guard_stmt)
 AST1(close_stmt)
 AST1(out_stmt)
 AST1(out_union_stmt)
+AST(out_union_parent_child_stmt)
+AST(child_results)
+AST(child_result)
 AST1(notnull);
 AST1(create_data_type);
 AST1(begin_trans_stmt);

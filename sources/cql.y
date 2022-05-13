@@ -289,7 +289,7 @@ static void cql_reset_globals(void);
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
-%type <aval> out_stmt out_union_stmt
+%type <aval> out_stmt out_union_stmt out_union_parent_child_stmt child_results child_result
 %type <aval> previous_schema_stmt
 %type <aval> release_savepoint_stmt
 %type <aval> rollback_trans_stmt rollback_return_stmt savepoint_name
@@ -438,6 +438,7 @@ any_stmt:
   | loop_stmt
   | out_stmt
   | out_union_stmt
+  | out_union_parent_child_stmt
   | previous_schema_stmt
   | proc_savepoint_stmt
   | release_savepoint_stmt
@@ -1933,6 +1934,19 @@ out_stmt:
 
 out_union_stmt:
   OUT UNION name  { $out_union_stmt = new_ast_out_union_stmt($name); }
+  ;
+
+out_union_parent_child_stmt:
+  OUT UNION call_stmt JOIN child_results { $out_union_parent_child_stmt = new_ast_out_union_parent_child_stmt($call_stmt, $child_results); }
+  ;
+
+child_results[result]:
+   child_result { $result = new_ast_child_results($child_result, NULL); }
+   | child_result AND child_results[next] { $result = new_ast_child_results($child_result, $next); }
+   ;
+
+child_result:
+  call_stmt USING '(' name_list ')' { $child_result = new_ast_child_result($call_stmt, $name_list); }
   ;
 
 if_stmt:

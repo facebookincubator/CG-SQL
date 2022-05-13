@@ -1593,6 +1593,8 @@ declare X cursor like (x integer, y real, LIKE goo);
 
 declare Z cursor like foo(x,y);
 
+out union call foo(a,b,c) JOIN call bar(a,b) USING (u,v) AND call baz(1,3) USING (x,y);
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"
