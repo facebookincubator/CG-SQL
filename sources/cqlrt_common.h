@@ -339,15 +339,6 @@ CQL_EXPORT cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name
 CQL_EXPORT cql_bool cql_facet_upsert(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
 CQL_EXPORT cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull key);
 
-typedef struct cql_partition {
-  cql_hashtab *_Nonnull ht;
-  cql_object_ref _Nullable empty_result;
-  cql_dynamic_cursor c_key;
-  cql_dynamic_cursor c_key2;
-  cql_dynamic_cursor c_val;
-  cql_bool has_row;
-} cql_partition;
-
 cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)());
 void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull obj);
 

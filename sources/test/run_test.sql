@@ -5056,7 +5056,7 @@ DECLARE PROC get_rows(result object not null) OUT UNION (x INTEGER NOT NULL, y T
   @echo c, "  cql_object_retain(result);\n"; \
   @echo c, "}\n"; \
   DECLARE PROC shim_proc(result object not null) OUT UNION (like source_proc)
- 
+
 result_set_shim(get_rows, get_rows);
 
 BEGIN_TEST(child_results)
@@ -5097,7 +5097,14 @@ BEGIN_TEST(child_results)
     /* don't join #6 to force cleanup */
     if i != 6 then
       fetch k() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
-      declare C cursor for call get_rows(cql_extract_partition(p, k));
+      let rs1 := cql_extract_partition(p, k);
+      let rs2 := cql_extract_partition(p, k);
+
+      -- if we ask for the same key more than once, we should get the exact same result
+      -- this is object identity we are checking here (i.e. it's the same pointer!)
+      EXPECT(rs1 == rs2);
+
+      declare C cursor for call get_rows(rs1);
 
       let row_count := 0;
       loop fetch C
@@ -5300,4 +5307,3 @@ end;
 @echo c,"#define cql_error_trace()\n";
 
 @emit_enums;
-

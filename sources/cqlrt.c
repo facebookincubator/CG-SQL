@@ -404,7 +404,7 @@ void *_Nonnull _cql_generic_object_get_data(cql_object_ref obj)
 {
   cql_contract(obj->base.type == CQL_C_TYPE_OBJECT);
   cql_contract(obj->base.finalize == _cql_generic_finalize);
-  return (cql_partition *)obj->ptr;
+  return obj->ptr;
 }
 
 #include "cqlrt_common.c"

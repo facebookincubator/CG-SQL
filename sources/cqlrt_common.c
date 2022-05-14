@@ -3414,6 +3414,18 @@ error:
   return SQLITE_ERROR;
 }
 
+// The outside world does not need to know the details of the partitioning
+// so it's defined locally.
+typedef struct cql_partition {
+  cql_hashtab *_Nonnull ht;
+  cql_object_ref _Nullable empty_result; // all empty result sets are the same
+  cql_dynamic_cursor c_key; // this captures the shape of the key, all must be the same
+  cql_dynamic_cursor c_key2; // two copies of the key shape (for equality checks)
+  cql_dynamic_cursor c_val; // row values must also be all the same
+  cql_bool has_row; // the stored dynamic cursors above need a has row field, it's here, always true
+  cql_bool did_extract; // true if we have begun extracting (no more adding after that)
+} cql_partition;
+
 // Any remaining keys should release their references and give back their memory.
 // We only have to release if there is at least one reference.
 static void cql_partition_key_release(void *_Nullable context, cql_int64 key) {
@@ -3431,6 +3443,13 @@ static void cql_partition_key_release(void *_Nullable context, cql_int64 key) {
 // releases its internal storage.  The buffer itself doesn't know what it's holding
 // so we have to do the internal releases for it.
 static void cql_partition_val_release(void *_Nullable context, cql_int64 val) {
+  if (val & 1) {
+    // this means there is a pre-allocated result set here, we just release it
+    cql_object_ref obj = (cql_object_ref)(val & ~(cql_int64)1);
+    cql_object_release(obj);
+    return;
+  }
+
   cql_partition *_Nonnull self = context;
   cql_bytebuf * buffer = (cql_bytebuf *)val;
   int16_t refs_count = self->c_val.cursor_refs_count;
@@ -3511,6 +3530,7 @@ cql_object_ref _Nonnull cql_partition_create() {
   cql_object_ref obj = _cql_generic_object_create(self, cql_partition_finalize);
 
   self->has_row = true;  // we only store cursors with data in them
+  self->did_extract = false;  // we haven't yet started extracting
 
   self->ht = cql_hashtab_new(
       cql_key_cursor_hash,
@@ -3542,6 +3562,10 @@ cql_bool cql_partition_cursor(
 {
   cql_partition *_Nonnull self = _cql_generic_object_get_data(obj);
 
+  // If this contract fails it means you tried to add more rows after extraction began.
+  // This is not allowed.  Look up the stack for the invalid call.
+  cql_contract(!self->did_extract);
+
   if (self->c_key.cursor_size) {
     // we're not seeing the first key/val cursor, all copies must be from the same metadata
     cql_contract(self->c_key.cursor_size == key->cursor_size);
@@ -3553,7 +3577,7 @@ cql_bool cql_partition_cursor(
   }
   else {
     // we want 2 copies of the metadata for keys (for comparison)
-    // one copy of teh values shape will do.
+    // one copy of the values shape will do.
     self->c_key = *key;
     self->c_key2 = *key;
     self->c_val = *val;
@@ -3611,6 +3635,8 @@ cql_object_ref _Nonnull cql_extract_partition(
 {
   cql_partition *_Nonnull self = _cql_generic_object_get_data(obj);
 
+  self->did_extract = true;
+
   if (self->c_key.cursor_size) {
     cql_contract(self->c_key.cursor_size == key->cursor_size);
     cql_contract(self->c_key.cursor_refs_count == key->cursor_refs_count);
@@ -3621,11 +3647,21 @@ cql_object_ref _Nonnull cql_extract_partition(
     cql_bytebuf *buf = NULL;
 
     if (entry) {
+      // If we've already computed the value then re-use what we returned before.
+      // When used for parent/child processing (the normal case) this would be like
+      // having a parent result set where two parent rows refer to the same child result.
+      if (entry->val & 1) {
+        // strip the lower bit and make the object
+        cql_object_ref result_set = (cql_object_ref)(entry->val & ~(cql_int64)1);
+        cql_object_retain(result_set);
+        return result_set;
+      }
+
       // we have data for this key
       buf = (cql_bytebuf *)entry->val;
 
-      // if you hit this it means you tried to get the same partition data twice!  Not allowed!
-      cql_contract(buf);
+      // We always load a valid buffer, if this is zero something very bad has happened.
+      cql_invariant(buf);
 
       cql_int32 count = (cql_int32)(buf->used / self->c_val.cursor_size);
 
@@ -3648,8 +3684,13 @@ cql_object_ref _Nonnull cql_extract_partition(
       // because the result set is taking over the growable buffer, we don't want
       // the buffer to be freed.
       free(buf);
-      entry->val = 0;
-      return (cql_object_ref)cql_result_set_create(data, count, meta);
+
+      // retain our copy in case we need it again
+      cql_object_ref result = (cql_object_ref)cql_result_set_create(data, count, meta);
+      cql_object_retain(result);
+
+      entry->val = 1|(cql_int64)result; // store the result but set the LSB so we know it's not a buffer
+      return result;
     }
   }
 
