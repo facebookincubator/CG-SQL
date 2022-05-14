@@ -1380,6 +1380,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0213: procedure had errors, can't 
 test/sem_test.sql:XXXX:1: error: in call : CQL0232: nested select expression must return exactly one column 'inline_math_bad4'
 test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided to procedure 'inline_math'
 test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
+test/sem_test.sql:XXXX:1: error: in str : CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'declared_shared_fragment'
 test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses 'inline_frag'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'

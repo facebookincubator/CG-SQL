@@ -11447,6 +11447,12 @@ static void sem_shared_cte(ast_node *cte_body) {
     goto cleanup;
   }
 
+  if (!is_ast_create_proc_stmt(proc_stmt)) {
+    report_error(proc_name_ast, "CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement", proc_name);
+    record_error(cte_body);
+    goto cleanup;
+  }
+
   if (cte_binding_list) {
     // if there is a binding list we have to ensure the number and type of bindings are correct
     sem_shared_fragment_table_binding(call_stmt, proc_stmt, cte_binding_list);
@@ -16139,8 +16145,6 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
 
     Invariant(count >= 1);
     sem_struct *sptr_new = new_sem_struct("select", count);
-
-    // rico
 
     int32_t inew = 0;
     iter = name_list;

@@ -83199,6 +83199,70 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call i
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:shared_fragment)
+DECLARE PROC declared_shared_fragment () (x INTEGER);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {declare_proc_stmt}: declared_shared_fragment: { x: integer } dml_proc
+    | {proc_name_type}
+    | | {name declared_shared_fragment}: declared_shared_fragment: { x: integer } dml_proc
+    | | {int 3}
+    | {proc_params_stmts}
+      | {typed_names}: declared_shared_fragment: { x: integer }
+        | {typed_name}: x: integer
+          | {name x}
+          | {type_int}: x: integer
+
+The statement ending at line XXXX
+
+CREATE PROC uses_declared_shared_fragment ()
+BEGIN
+  WITH
+  x (*) AS (CALL declared_shared_fragment())
+  SELECT *
+    FROM x;
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'declared_shared_fragment'
+
+  {create_proc_stmt}: err
+  | {name uses_declared_shared_fragment}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {with_select_stmt}: err
+        | {with}
+        | | {cte_tables}: err
+        |   | {cte_table}: err
+        |     | {cte_decl}
+        |     | | {name x}
+        |     | | {star}
+        |     | {shared_cte}: err
+        |       | {call_stmt}: declared_shared_fragment: { x: integer } dml_proc
+        |         | {name declared_shared_fragment}: declared_shared_fragment: { x: integer } dml_proc
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {star}
+          |     | {select_from_etc}
+          |       | {table_or_subquery_list}
+          |       | | {table_or_subquery}
+          |       |   | {name x}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 CREATE PROC do_inline_math_bad7 ()
 BEGIN
   SELECT 1

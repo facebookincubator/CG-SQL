@@ -21005,6 +21005,21 @@ begin
   select 1 where inline_frag(distinct 2);
 end;
 
+@attribute(cql:shared_fragment)
+declare proc declared_shared_fragment() (x integer);
+
+-- TEST: try declare a fragment and use it without doing create proc
+-- + {create_proc_stmt}: err
+-- + {shared_cte}: err
+-- + error: % @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'declared_shared_fragment'
+-- +1 error:
+create proc uses_declared_shared_fragment()
+begin
+  with
+  x(*) as (call declared_shared_fragment())
+  select * from x;
+end;
+
 -- TEST: invoke a shared fragment as an expression, try to use filter clause
 -- + {create_proc_stmt}: err
 -- + {call}: err
