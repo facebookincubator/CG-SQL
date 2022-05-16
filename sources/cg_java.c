@@ -465,9 +465,6 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
 
 static void cg_java_create_proc_stmt(ast_node *ast, cg_java_context *java_context) {
   Contract(is_ast_create_proc_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
-  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
-  EXTRACT(params, proc_params_stmts->left);
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
