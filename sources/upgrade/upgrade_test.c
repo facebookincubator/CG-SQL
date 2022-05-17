@@ -24,9 +24,43 @@ int32_t pre_validate(sqlite3* db, cql_int64 *version) {
   return rv;
 }
 
+static int32_t _vtab_connect(sqlite3 *_Nonnull db,
+                             void *_Nullable aux,
+                             int32_t argc,
+                             const char *_Nonnull const *_Nonnull argv,
+                             sqlite3_vtab *_Nullable *_Nonnull outVtable,
+                             char *_Nullable *_Nonnull outErrorString)
+{
+  return SQLITE_OK;
+}
+
+static int32_t _vtab_create(sqlite3 *_Nonnull db,
+                            void *_Nullable pAux,
+                            int32_t argc,
+                            const char *_Nonnull const *_Nonnull argv,
+                            sqlite3_vtab *_Nullable *_Nonnull ppVTab,
+                            char *_Nullable *_Nonnull outErrorString)
+{
+  return SQLITE_OK;
+}
+
 int32_t upgrade(sqlite3* db) {
+  int32_t rv;
+  sqlite3_module module;
+  module.iVersion = 1;
+  module.xConnect = _vtab_connect;
+  module.xCreate = _vtab_create;
+  rv = sqlite3_create_module(
+    db,
+   "test_module",
+    &module,
+    NULL
+  );
+  if (rv != SQLITE_OK) {
+    return rv;
+  }
   test_result_set_ref result_set;
-  int32_t rv = test_fetch_results(db, &result_set);
+  rv = test_fetch_results(db, &result_set);
   cql_result_set_release(result_set);
   return rv;
 }

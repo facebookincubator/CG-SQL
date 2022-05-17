@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+CREATE VIRTUAL TABLE test_virtual_table_A using test_module as (
+  name text
+);
 /* @create/@delete tables */
 CREATE TABLE test_create_table_A(
   colA    INT,
