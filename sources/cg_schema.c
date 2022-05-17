@@ -1261,18 +1261,32 @@ static void cg_schema_manage_recreate_tables(
     bclear(&update_tables);
   }
 
+  crc_t all_virtual_tables_crc = crc_charbuf(&recreate_only_virtual_tables);
+  crc_t all_nonvirtual_tables_crc = crc_charbuf(&recreate_without_virtual_tables);
   bprintf(output, "-- recreate all the non-virtual @recreate tables that might have changed\n");
   bprintf(output, "@attribute(cql:private)\n");
   bprintf(output, "CREATE PROCEDURE %s_cql_recreate_non_virtual_tables()\n", global_proc_name);
   bprintf(output, "BEGIN\n");
+  bprintf(output, "  IF cql_facet_find(%s_facets, 'all_nonvirtual_tables_crc') == %lld RETURN; \n",
+    global_proc_name,
+    (llint_t) all_nonvirtual_tables_crc);
   bprintf(output, "%s", recreate_without_virtual_tables.ptr);
+  bprintf(output, "  CALL %s_cql_set_facet_version('all_nonvirtual_tables_crc', %lld);\n",
+    global_proc_name,
+    (llint_t) all_nonvirtual_tables_crc);
   bprintf(output, "END;\n\n");
 
   bprintf(output, "-- recreate all the virtual @recreate tables that might have changed\n");
   bprintf(output, "@attribute(cql:private)\n");
   bprintf(output, "CREATE PROCEDURE %s_cql_recreate_virtual_tables()\n", global_proc_name);
   bprintf(output, "BEGIN\n");
+  bprintf(output, "  IF cql_facet_find(%s_facets, 'all_virtual_tables_crc') == %lld RETURN; \n",
+    global_proc_name,
+    (llint_t) all_virtual_tables_crc);
   bprintf(output, "%s", recreate_only_virtual_tables.ptr);
+  bprintf(output, "  CALL %s_cql_set_facet_version('all_virtual_tables_crc', %lld);\n",
+    global_proc_name,
+   (llint_t) all_virtual_tables_crc);
   bprintf(output, "END;\n\n");
 
   bprintf(output, "-- recreate all the @recreate tables that might have changed\n");

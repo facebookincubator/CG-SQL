@@ -308,12 +308,16 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
 BEGIN
+  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 2282658103124508505 RETURN; 
+  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', 2282658103124508505);
 END;
 
 -- recreate all the virtual @recreate tables that might have changed
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_virtual_tables()
 BEGIN
+  IF cql_facet_find(test_facets, 'all_virtual_tables_crc') == 2282658103124508505 RETURN; 
+  CALL test_cql_set_facet_version('all_virtual_tables_crc', 2282658103124508505);
 END;
 
 -- recreate all the @recreate tables that might have changed
