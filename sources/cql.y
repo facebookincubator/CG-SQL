@@ -2362,8 +2362,6 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_param(a, argc, argv, &options.c_include_namespace, "for the C include namespace");
     } else if (strcmp(arg, "--java_package_name") == 0) {
       a = gather_arg_param(a, argc, argv, &options.java_package_name, "for the Java package name");
-    } else if (strcmp(arg, "--java_fragment_interface") == 0) {
-      a = gather_arg_params(a, argc, argv, &options.java_fragment_interfaces_count, &options.java_fragment_interfaces);
     } else if (strcmp(arg, "--java_fragment_interface_mode") == 0) {
       options.java_fragment_interface_mode = true;
     } else {
@@ -2720,8 +2718,6 @@ static void cql_usage() {
     "  specifies the name of package a generated java class will be a part of\n"
     "--java_fragment_interface_mode\n"
     "  sets the Java codegen mode to generate interfaces for base and extension fragments\n"
-    "--java_fragment_interfaces interface\n"
-    "  fully qualified name of the generated Java interfaces for extension or assembly fragments\n"
     "--java_imports name\n"
     "  fully qualified name to import in the emitted java source\n"
     "--c_include_namespace\n"

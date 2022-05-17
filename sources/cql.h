@@ -100,8 +100,6 @@ typedef struct cmd_options {
   char *c_include_namespace;
   char *java_class_under_test;
   char *java_package_name;
-  char **java_fragment_interfaces;
-  int32_t java_fragment_interfaces_count;
   bool_t java_fragment_interface_mode;
   char **java_imports;
   int32_t java_imports_count;

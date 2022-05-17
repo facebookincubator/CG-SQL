@@ -1345,15 +1345,6 @@ misc_cases() {
 
   on_diff_exit write_fail.err
 
-  echo 'running missing --java_fragment_interface args for extension fragment codegen test'
-  if ${CQL} --test --cg "${OUT_DIR}/__temp.out" --in "${TEST_DIR}/cg_test_extension_java_fragment.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface 2>"${OUT_DIR}/java_fragment_interface_noargs.err"
-  then
-    echo '--java_fragment_interface had no arguments, this should have caused an error'
-    failed
-  fi
-
-  on_diff_exit java_fragment_interface_noargs.err
-
   echo 'testing the generated from comments in non-test environment.'
   if ! ${CQL} --cg "${OUT_DIR}/cg_test_generated_from.h" "${OUT_DIR}/cg_test_generated_from.c" "${OUT_DIR}/cg_test_generated_from.out" --in "${TEST_DIR}/cg_test_generated_from.sql" 2>"${OUT_DIR}/cg_test_generated_from.err"
   then
