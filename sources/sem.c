@@ -177,7 +177,7 @@ static bool_t sem_validate_identical_text(ast_node *prev_def, ast_node *def, gen
 static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev);
 static void sem_setup_region_filters(void);
 static void sem_inside_create_proc_stmt(ast_node *ast);
-static void sem_declare_cursor_for_name(ast_node *ast);
+static void sem_declare_cursor_for_expr(ast_node *ast);
 static sem_join * new_sem_join(uint32_t count);
 static void sem_validate_check_expr_for_table(ast_node *table, ast_node *expr, CSTR context);
 static void sem_validate_index_expr_for_jptr(sem_join *jptr, ast_node *expr);
@@ -19246,11 +19246,7 @@ static void sem_declare_cursor(ast_node *ast) {
 
   sem_t out_union_and_dml = 0;
 
-  if (is_ast_str(ast->right)) {
-    sem_declare_cursor_for_name(ast);
-    return;
-  }
-  else if (is_select_stmt(ast->right)) {
+  if (is_select_stmt(ast->right)) {
     EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
 
     // DECLARE [name] CURSOR FOR [select_stmt]
@@ -19267,7 +19263,7 @@ static void sem_declare_cursor(ast_node *ast) {
     // decided whether we can do encoding/decoding of result_set's fields.
     out_union_and_dml = SEM_TYPE_DML_PROC;
   }
-  else {
+  else if (is_ast_call_stmt(ast->right)) {
     EXTRACT_NOTNULL(call_stmt, ast->right);
 
     // DECLARE [name] CURSOR FOR [call_stmt]]
@@ -19295,6 +19291,10 @@ static void sem_declare_cursor(ast_node *ast) {
     // decided whether we can do encoding/decoding of result_set's fields.
     out_union_and_dml |= call_stmt->sem->sem_type & SEM_TYPE_DML_PROC;
   }
+  else {
+    sem_declare_cursor_for_expr(ast);
+    return;
+  }
 
   if (!sem_verify_legal_variable_name(ast, name)) {
     record_error(ast->left);
@@ -19314,14 +19314,13 @@ static void sem_declare_cursor(ast_node *ast) {
 // This is the "unboxing" primitive for cursors.  The idea here is that
 // you have an object variable with a statement in it and you want to
 // make a cursor over that statement.
-static void sem_declare_cursor_for_name(ast_node *ast) {
+static void sem_declare_cursor_for_expr(ast_node *ast) {
   Contract(is_ast_declare_cursor);
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
-  EXTRACT_ANY_NOTNULL(var, ast->right);
+  EXTRACT_ANY_NOTNULL(expr, ast->right);
   EXTRACT_STRING(name, cursor);
-  EXTRACT_STRING(var_name, var);
 
-  // DECLARE cursor_name CURSOR FOR var_name
+  // DECLARE cursor_name CURSOR FOR expr
 
   if (!sem_verify_legal_variable_name(ast, name)) {
     record_error(ast->left);
@@ -19329,15 +19328,14 @@ static void sem_declare_cursor_for_name(ast_node *ast) {
     return;
   }
 
-  // we know it's a simple identifier from the AST shape which was validated above
-  sem_expr(var);
-  if (is_error(var)) {
+  sem_root_expr(expr, SEM_EXPR_CONTEXT_NONE);
+  if (is_error(expr)) {
     record_error(ast);
     return;
   }
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
-  ast_node *like_target = sem_find_likeable_from_var_type(var);
+  ast_node *like_target = sem_find_likeable_from_expr_type(expr);
   if (!like_target) {
     record_error(ast);
     return;
@@ -19361,22 +19359,22 @@ static void sem_declare_cursor_for_name(ast_node *ast) {
 // there is some string massaging to check for and remove the
 // " CURSOR" and a temporary node is created so we can re-use
 // the usual likeable name check.
-cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
-  CSTR var_name = var->sem->name;
-
-  // it has to be a typed object variable
-  if (!is_object(var->sem->sem_type) || !var->sem->kind) {
-    report_error(var, "CQL0346: variable must be of type object<T cursor> where T is a valid shape name", var_name);
+cql_noexport ast_node *sem_find_likeable_from_expr_type(ast_node *expr) {
+  // it has to be a typed object expression
+  if (!is_object(expr->sem->sem_type) || !expr->sem->kind) {
+    CSTR expr_text = dup_expr_text(expr);
+    report_error(expr, "CQL0346: expression must be of type object<T cursor> where T is a valid shape name", expr_text);
     return NULL;
   }
 
-  CSTR kind = var->sem->kind;
+  CSTR kind = expr->sem->kind;
 
   size_t len = strlen(kind);
   CSTR tail = " CURSOR";
   size_t len_tail = strlen(tail);
   if (len < len_tail + 1 || strcmp(tail, kind + len - len_tail)) {
-    report_error(var, "CQL0343: variable must be of type object<T cursor> where T is a valid shape name", var_name);
+    CSTR expr_text = dup_expr_text(expr);
+    report_error(expr, "CQL0343: variable must be of type object<T cursor> where T is a valid shape name", expr_text);
     return NULL;
   }
 
@@ -19388,7 +19386,7 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
 
   // We make a like node for the object type (which is itself not in AST here)
   // so that we can use the standard likeable helpers for error checking
-  AST_REWRITE_INFO_SET(var->lineno, var->filename);
+  AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
   ast_node *type_node = new_ast_str(tmp.ptr);
   ast_node *like_node = new_ast_like(type_node, NULL);
   AST_REWRITE_INFO_RESET();
@@ -19398,7 +19396,7 @@ cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var) {
   // the indicated type must be a valid shape name (one we could use in LIKE T)
   ast_node *like_target = sem_find_shape_def_base(like_node, LIKEABLE_FOR_VALUES);
   if (!like_target) {
-    record_error(var);
+    record_error(expr);
     return NULL;
   }
 
@@ -19443,7 +19441,7 @@ static void sem_set_from_cursor(ast_node *ast) {
   ast->left->sem = var->sem;
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
-  ast_node *like_target = sem_find_likeable_from_var_type(var);
+  ast_node *like_target = sem_find_likeable_from_expr_type(var);
   if (!like_target) {
     record_error(ast);
     return;

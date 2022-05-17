@@ -280,7 +280,7 @@ cql_noexport bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encod
 
 cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_for);
 cql_noexport ast_node *sem_find_shape_def_base(ast_node *like_ast, int32_t likeable_for);
-cql_noexport ast_node *sem_find_likeable_from_var_type(ast_node *var);
+cql_noexport ast_node *sem_find_likeable_from_expr_type(ast_node *var);
 cql_noexport ast_node *find_named_type(CSTR name);
 
 cql_noexport void record_error(ast_node *ast);

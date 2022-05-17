@@ -2035,7 +2035,7 @@ static ast_node *build_child_typed_names(ast_node *child_results, int32_t child_
     return NULL;
   }
 
-  // named_type  child[n] object<child_proc result_set>, ...
+  // named_type  child[n] object<child_proc set>, ...
 
   Contract(is_ast_child_results(child_results));
   EXTRACT_NOTNULL(child_result, child_results->left);
@@ -2050,7 +2050,7 @@ static ast_node *build_child_typed_names(ast_node *child_results, int32_t child_
       new_ast_str(child_column_name),
       new_ast_notnull(
         new_ast_type_object(
-          new_ast_str(dup_printf("%s result_set", proc_name))
+          new_ast_str(dup_printf("%s SET", proc_name))
         )
       )
     ),

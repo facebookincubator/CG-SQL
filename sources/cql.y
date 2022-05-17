@@ -895,6 +895,9 @@ data_type_any:
   | OBJECT '<' name CURSOR '>' { /* special case for boxed cursor */
     CSTR type = dup_printf("%s CURSOR", AST_STR($name));
     $data_type_any = new_ast_type_object(new_ast_str(type)); }
+  | OBJECT '<' name SET '>' { /* special case for result sets */
+    CSTR type = dup_printf("%s SET", AST_STR($name));
+    $data_type_any = new_ast_type_object(new_ast_str(type)); }
   | ID { $data_type_any = new_ast_str($ID); }
   ;
 
@@ -1803,7 +1806,7 @@ declare_stmt:
   | DECLARE name CURSOR FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
   | DECLARE name CURSOR FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
   | DECLARE name CURSOR FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
-  | DECLARE name[id] CURSOR FOR name[obj] { $declare_stmt = new_ast_declare_cursor($id, $obj); }
+  | DECLARE name[id] CURSOR FOR expr { $declare_stmt = new_ast_declare_cursor($id, $expr); }
   | DECLARE name TYPE data_type_with_options { $declare_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
   ;
 

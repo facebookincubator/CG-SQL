@@ -2048,6 +2048,26 @@ begin
   close C;
 end;
 
+declare func get_boxed_cursor() object<foo cursor>;
+
+-- TEST: use boxed cursor from an expression
+-- + {declare_cursor}: C: foo: { id: integer notnull primary_key autoinc } variable boxed
+-- + {call}: object<foo CURSOR>
+-- - error:
+create proc boxed_cursor_expr()
+begin
+  declare C cursor for get_boxed_cursor();
+end;
+
+-- TEST: use boxed cursor from a bogus expression
+-- {declare_cursor}: err
+-- + error: % expression must be of type object<T cursor> where T is a valid shape name '12'
+-- +1 error:
+create proc bogus_boxed_cursor_expr()
+begin
+  declare C cursor for 12;
+end;
+
 -- TEST: a working delete
 -- - error:
 -- + {delete_stmt}: ok
@@ -14664,7 +14684,7 @@ begin
 end;
 
 -- TEST: unbox from an object that has no type spec
--- + error: % variable must be of type object<T cursor> where T is a valid shape name 'box'
+-- + error: % expression must be of type object<T cursor> where T is a valid shape name 'box'
 -- +1 error:
 create proc cursor_unbox_untyped(box object)
 begin

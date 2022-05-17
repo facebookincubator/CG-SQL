@@ -7213,6 +7213,51 @@ test/sem_test.sql:XXXX:1: error: in close_stmt : CQL0391: CLOSE cannot be used o
 
 The statement ending at line XXXX
 
+DECLARE FUNC get_boxed_cursor () OBJECT<foo CURSOR>;
+
+  {declare_func_stmt}: object<foo CURSOR>
+  | {name get_boxed_cursor}: object<foo CURSOR>
+  | {func_params_return}
+    | {type_object}: object<foo CURSOR>
+      | {name foo CURSOR}
+
+The statement ending at line XXXX
+
+CREATE PROC boxed_cursor_expr ()
+BEGIN
+  DECLARE C CURSOR FOR get_boxed_cursor();
+END;
+
+  {create_proc_stmt}: ok
+  | {name boxed_cursor_expr}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: foo: { id: integer notnull primary_key autoinc } variable boxed
+        | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable boxed
+        | {call}: object<foo CURSOR>
+          | {name get_boxed_cursor}
+          | {call_arg_list}
+            | {call_filter_clause}
+
+The statement ending at line XXXX
+
+CREATE PROC bogus_boxed_cursor_expr ()
+BEGIN
+  DECLARE C CURSOR FOR 12;
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0346: expression must be of type object<T cursor> where T is a valid shape name '12'
+
+  {create_proc_stmt}: err
+  | {name bogus_boxed_cursor_expr}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: err
+        | {name C}
+        | {int 12}: integer notnull
+
+The statement ending at line XXXX
+
 DELETE FROM foo WHERE id = 33;
 
   {delete_stmt}: ok
@@ -60429,7 +60474,7 @@ BEGIN
   DECLARE C CURSOR FOR box;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0346: variable must be of type object<T cursor> where T is a valid shape name 'box'
+test/sem_test.sql:XXXX:1: error: in str : CQL0346: expression must be of type object<T cursor> where T is a valid shape name 'box'
 
   {create_proc_stmt}: err
   | {name cursor_unbox_untyped}: err

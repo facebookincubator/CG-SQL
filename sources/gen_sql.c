@@ -3163,14 +3163,12 @@ static void gen_declare_cursor(ast_node *ast) {
 
   gen_printf("DECLARE %s CURSOR FOR ", name);
 
-  if (is_ast_str(source)) {
-    // The unboxing case gives a name rather than a statement
-    EXTRACT_STRING(var_name, ast->right);
-    gen_printf("%s", var_name);
-  }
-  else {
+  if (is_select_stmt(source) || is_ast_call_stmt(source)) {
     // The two statement cases are unified
     gen_one_stmt(source);
+  }
+  else {
+    gen_root_expr(source);
   }
 }
 

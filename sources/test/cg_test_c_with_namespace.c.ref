@@ -4770,8 +4770,8 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
     cql_object_release(C_object_);
     C_object_ = cql_box_stmt(C_stmt);
     cql_set_object_ref(&box, C_object_);
-    D_stmt = cql_unbox_stmt(box);
     cql_set_object_ref(&D_object_, box);
+    D_stmt = cql_unbox_stmt(D_object_);
     _rc_ = sqlite3_step(D_stmt);
     D._has_row_ = _rc_ == SQLITE_ROW;
     cql_multifetch(_rc_, D_stmt, 1,
@@ -9522,8 +9522,8 @@ CQL_WARN_UNUSED cql_code try_unboxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nu
   cql_object_ref C_object_ = NULL;
   try_unboxing_C_row C = { ._refs_count_ = 1, ._refs_offset_ = try_unboxing_C_refs_offset };
 
-  C_stmt = cql_unbox_stmt(boxed_cursor);
   cql_set_object_ref(&C_object_, boxed_cursor);
+  C_stmt = cql_unbox_stmt(C_object_);
   _rc_ = sqlite3_step(C_stmt);
   C._has_row_ = _rc_ == SQLITE_ROW;
   cql_multifetch(_rc_, C_stmt, 5,

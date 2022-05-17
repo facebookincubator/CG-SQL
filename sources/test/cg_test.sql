@@ -1989,7 +1989,7 @@ end;
 -- +1 cql_object_release(box);
 -- + C_object_ = cql_box_stmt(C_stmt);
 -- + cql_set_object_ref(&box, C_object_);
--- + D_stmt = cql_unbox_stmt(box);
+-- + D_stmt = cql_unbox_stmt(D_object_);
 -- + C_object_ = cql_box_stmt(C_stmt);
 create proc call_in_loop_boxed()
 begin
@@ -3212,7 +3212,7 @@ begin
 end;
 
 -- TEST: simple unbox
--- + C_stmt = cql_unbox_stmt(boxed_cursor);
+-- + C_stmt = cql_unbox_stmt(C_object_);
 -- + cql_set_object_ref(&C_object_, boxed_cursor);
 -- + _rc_ = sqlite3_step(C_stmt);
 -- + cql_object_release(C_object_);

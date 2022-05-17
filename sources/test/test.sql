@@ -1169,6 +1169,8 @@ declare obj object<foo cursor>;
 
 declare C cursor for obj;
 
+declare C cursor for some_func(obj);
+
 set X from cursor C;
 
 declare C cursor like P2 arguments;

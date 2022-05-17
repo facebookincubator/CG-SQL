@@ -5382,12 +5382,20 @@ static void cg_declare_cursor(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
 
+  bool_t is_for_select = false;
+  bool_t is_for_call = false;
   bool_t out_union_proc = false;
   bool_t is_boxed = !!(name_ast->sem->sem_type & SEM_TYPE_BOXED);
-  bool_t is_unboxing = is_ast_str(ast->right);
+  bool_t is_unboxing = true;
 
   if (is_ast_call_stmt(ast->right)) {
     out_union_proc = has_out_union_stmt_result(ast);
+    is_for_call = true;
+    is_unboxing = false;
+  }
+  else if (is_select_stmt(ast->right)) {
+    is_for_select = true;
+    is_unboxing = false;
   }
 
   // only one of these (is boxed makes no sense with out union)
@@ -5430,7 +5438,7 @@ static void cg_declare_cursor(ast_node *ast) {
     }
   }
 
-  if (is_select_stmt(ast->right)) {
+  if (is_for_select) {
     // DECLARE [name] CURSOR FOR [select_stmt]
     // or
     // DECLARE [name] CURSOR FOR [explain_stmt]
@@ -5444,15 +5452,21 @@ static void cg_declare_cursor(ast_node *ast) {
     cg_bound_sql_statement(cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
   }
   else if (is_unboxing) {
-    // DECLARE [name] CURSOR FOR [named_box_object]
+    // DECLARE [name] CURSOR FOR [box_object_expr]
+    EXTRACT_ANY_NOTNULL(expr, ast->right);
 
+    CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
     CHARBUF_OPEN(box_name);
-    bprintf(cg_main_output, "%s_stmt = cql_unbox_stmt(%s);\n", cursor_name, ast->right->sem->name);
+
     bprintf(&box_name, "%s_object_", cursor_name);
-    cg_copy(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, ast->right->sem->name);
+    cg_copy(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, expr_value.ptr);
+    bprintf(cg_main_output, "%s_stmt = cql_unbox_stmt(%s);\n", cursor_name, box_name.ptr);
+
     CHARBUF_CLOSE(box_name);
+    CG_POP_EVAL(expr);
   }
   else {
+    Invariant(is_for_call);
     // DECLARE [name] CURSOR FOR [call_stmt]]
     if (is_boxed) {
       // The next prepare will finalize the statement, we don't want to do that
