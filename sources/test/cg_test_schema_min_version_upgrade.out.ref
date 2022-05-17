@@ -629,14 +629,6 @@ BEGIN
   CALL test_cql_set_facet_version('all_virtual_tables_crc', -8099010085731497972);
 END;
 
--- recreate all the @recreate tables that might have changed
-@attribute(cql:private)
-CREATE PROCEDURE test_cql_recreate_tables()
-BEGIN
-  CALL test_cql_recreate_non_virtual_tables();
-  CALL test_cql_recreate_virtual_tables();
-END;
-
 CREATE PROCEDURE test_cql_install_temp_schema()
 BEGIN
   CREATE TEMP TABLE this_table_appears_in_temp_section(
@@ -691,9 +683,10 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROCEDURE test_perform_upgrade_steps()
+CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
-  DECLARE schema_version LONG INTEGER NOT NULL;
+  IF cql_facet_find(test_facets, 'cql_schema_crc_no_virtual') <> 5377774390710455553 THEN
+    DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
 
@@ -841,13 +834,19 @@ BEGIN
     END IF;
 
     CALL test_cql_drop_tables();
-    CALL test_cql_recreate_tables();
+    CALL test_cql_recreate_non_virtual_tables();
     CALL test_cql_create_all_views();
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
     CALL test_cleanup_unused_versions();
+
     CALL test_cql_set_facet_version('cql_schema_version', 7);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 5377774390710455553);
+  END IF;
+  IF include_virtual_tables THEN
+    CALL test_cql_recreate_virtual_tables();
     CALL test_cql_set_facet_version('cql_schema_crc', -6259977074757541212);
+  END IF;
 END;
 
 CREATE PROCEDURE test_get_current_and_proposed_versions(
@@ -859,7 +858,7 @@ BEGIN
     SET proposed := 7;
 END;
 @attribute(cql:private)
-CREATE PROCEDURE test_perform_needed_upgrades()
+CREATE PROCEDURE test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
 BEGIN
   -- check for downgrade --
   IF cql_facet_find(test_facets, 'cql_schema_version') > 7 THEN
@@ -867,7 +866,7 @@ BEGIN
   ELSE
     -- save the current facets so we can diff them later --
     CALL test_save_cql_schema_facets();
-    CALL test_perform_upgrade_steps();
+    CALL test_perform_upgrade_steps(include_virtual_tables);
 
     -- finally produce the list of differences
     SELECT T1.facet FROM
@@ -878,7 +877,8 @@ BEGIN
   END IF;
 END;
 
-CREATE PROCEDURE test()
+@attribute(cql:private)
+CREATE PROCEDURE test_helper(include_virtual_tables BOOL NOT NULL)
 BEGIN
   DECLARE schema_crc LONG INTEGER NOT NULL;
 
@@ -891,7 +891,7 @@ BEGIN
   IF schema_crc <> -6259977074757541212 THEN
     BEGIN TRY
       CALL test_setup_facets();
-      CALL test_perform_needed_upgrades();
+      CALL test_perform_needed_upgrades(include_virtual_tables);
     END TRY;
     BEGIN CATCH
       CALL cql_facets_delete(test_facets);
@@ -907,5 +907,15 @@ BEGIN
   ---- install temp schema after upgrade is complete ----
   CALL test_cql_install_temp_schema();
 
+END;
+
+CREATE PROCEDURE test()
+BEGIN
+  CALL test_helper(TRUE);
+END;
+
+CREATE PROCEDURE test_no_virtual_tables()
+BEGIN
+  CALL test_helper(FALSE);
 END;
 

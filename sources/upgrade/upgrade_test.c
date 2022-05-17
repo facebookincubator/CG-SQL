@@ -7,6 +7,7 @@
 
 #include <sqlite3.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 // All versions have the same signatures, include them all!
 // If we screwed this up the compiler will complain!
@@ -44,24 +45,30 @@ static int32_t _vtab_create(sqlite3 *_Nonnull db,
   return SQLITE_OK;
 }
 
-int32_t upgrade(sqlite3* db) {
+int32_t upgrade(sqlite3* db, bool should_use_virtual) {
   int32_t rv;
   sqlite3_module module;
-  module.iVersion = 1;
-  module.xConnect = _vtab_connect;
-  module.xCreate = _vtab_create;
-  rv = sqlite3_create_module(
-    db,
-   "test_module",
-    &module,
-    NULL
-  );
-  if (rv != SQLITE_OK) {
-    return rv;
+  if (should_use_virtual) {
+    module.iVersion = 1;
+    module.xConnect = _vtab_connect;
+    module.xCreate = _vtab_create;
+    rv = sqlite3_create_module(
+      db,
+     "test_module",
+      &module,
+      NULL
+    );
+    if (rv != SQLITE_OK) {
+      return rv;
+    }
+    test_result_set_ref result_set;
+    rv = test_fetch_results(db, &result_set);
+    cql_result_set_release(result_set);
+  } else {
+    test_no_virtual_tables_result_set_ref result_set;
+    rv = test_no_virtual_tables_fetch_results(db, &result_set);
+    cql_result_set_release(result_set);
   }
-  test_result_set_ref result_set;
-  rv = test_fetch_results(db, &result_set);
-  cql_result_set_release(result_set);
   return rv;
 }
 
@@ -102,6 +109,10 @@ int main(int argc, char *argv[]) {
     return SQLITE_ERROR;
   }
 
+  // Excluding virtual tables on v3 upgrade tests that no-vt and full upgrade
+  // function correctly between arbitrary schema versions
+  bool should_use_virtual_tables = strcmp(argv[0], "out/upgrade3");
+
   cql_int64 version = -1;
   if (pre_validate(db, &version)) {
     printf("Unable to validate DB contents pre-upgrade.\n");
@@ -120,7 +131,7 @@ int main(int argc, char *argv[]) {
     return SQLITE_ERROR;
   }
 
-  if (upgrade(db)) {
+  if (upgrade(db, should_use_virtual_tables)) {
     printf("Unable to upgrade DB.\n");
     return SQLITE_ERROR;
   }

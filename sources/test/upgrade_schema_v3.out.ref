@@ -86,12 +86,6 @@ tbl_name: test_view
 CREATE VIEW test_view AS SELECT colA,
 colB  FROM test_create_table_C
 
------ test_virtual_table_A -----
-
-type: table
-tbl_name: test_virtual_table_A
-CREATE VIRTUAL TABLE test_virtual_table_A USING test_module
-
 ----- use_g1 -----
 
 type: table

@@ -51,6 +51,9 @@ static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, re
 // We emit for SQLite in this mode
 #define SCHEMA_FOR_SQLITE 8
 
+// Supress virtual table output if this bit is set
+#define SCHEMA_SUPRESS_VIRTUAL_TABLES 16
+
 // rather than burning a new flag bit for tables for this one purpose
 // we can steal a bit that is useless on tables, tables can't be "notnull"
 // we'll use this flag to remember if the table is presently in the unsubscribed
@@ -475,6 +478,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   bool_t schema_declare = !!(mode & SCHEMA_TO_DECLARE);
   bool_t schema_upgrade = !!(mode & SCHEMA_TO_UPGRADE);
   bool_t schema_sqlite = !!(mode & SCHEMA_FOR_SQLITE);
+  bool_t supress_virtual_tables = !!(mode & SCHEMA_SUPRESS_VIRTUAL_TABLES);
 
   gen_sql_callbacks *use_callbacks = NULL;
 
@@ -548,18 +552,18 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       continue;
     }
 
-    if (region && schema_declare) {
-      bprintf(output, "@begin_schema_region %s;\n", region);
+    if ( !(is_virtual_ast(ast) && supress_virtual_tables)) {
+      if (region && schema_declare) {
+        bprintf(output, "@begin_schema_region %s;\n", region);
+      }
+      gen_set_output_buffer(output);
+      gen_statement_with_callbacks(ast_output, use_callbacks);
+      bprintf(output, ";\n");
+      if (region && schema_declare) {
+        bprintf(output, "@end_schema_region;\n");
+      }
+      bprintf(output, "\n");
     }
-
-    gen_set_output_buffer(output);
-    gen_statement_with_callbacks(ast_output, use_callbacks);
-    bprintf(output, ";\n");
-
-    if (region && schema_declare) {
-      bprintf(output, "@end_schema_region;\n");
-    }
-    bprintf(output, "\n");
   }
 
   for (list_item *item = all_views_list; item; item = item->next) {
@@ -1289,14 +1293,6 @@ static void cg_schema_manage_recreate_tables(
    (llint_t) all_virtual_tables_crc);
   bprintf(output, "END;\n\n");
 
-  bprintf(output, "-- recreate all the @recreate tables that might have changed\n");
-  bprintf(output, "@attribute(cql:private)\n");
-  bprintf(output, "CREATE PROCEDURE %s_cql_recreate_tables()\n", global_proc_name);
-  bprintf(output, "BEGIN\n");
-  bprintf(output, "  CALL %s_cql_recreate_non_virtual_tables();\n", global_proc_name);
-  bprintf(output, "  CALL %s_cql_recreate_virtual_tables();\n", global_proc_name);
-  bprintf(output, "END;\n\n");
-
   CHARBUF_CLOSE(pending_table_creates);
   CHARBUF_CLOSE(update_tables);
   CHARBUF_CLOSE(recreate_only_virtual_tables);
@@ -1308,7 +1304,8 @@ static llint_t cg_schema_compute_crc(
     size_t* schema_items_count,
     recreate_annotation** recreates,
     size_t* recreate_items_count,
-    int32_t* max_schema_version) {
+    int32_t* max_schema_version,
+    llint_t * _Nullable schema_crc_non_virtual) {
   // first sort the schema annotations according to version, type etc.
   // we want to process these in an orderly fashion and the upgrade rules
   // are nothing like the declared order.
@@ -1345,10 +1342,16 @@ static llint_t cg_schema_compute_crc(
   cg_generate_schema_by_mode(&all_schema, SCHEMA_TO_UPGRADE);
 
   // compute the master CRC using schema and migration scripts
-  llint_t schema_crc = (llint_t)crc_charbuf(&all_schema);
-
+  llint_t schema_crc = (llint_t) crc_charbuf(&all_schema);
   CHARBUF_CLOSE(all_schema);
 
+  // compute the non virtual CRC
+  if (schema_crc_non_virtual != NULL) {
+    CHARBUF_OPEN(all_schema_no_virtual_tables);
+    cg_generate_schema_by_mode(&all_schema_no_virtual_tables, SCHEMA_TO_UPGRADE | SCHEMA_SUPRESS_VIRTUAL_TABLES);
+    *schema_crc_non_virtual = (llint_t) crc_charbuf(&all_schema_no_virtual_tables);
+    CHARBUF_CLOSE(all_schema_no_virtual_tables);
+  }
   return schema_crc;
 }
 
@@ -1369,7 +1372,8 @@ cql_noexport void cg_schema_facet_checker_main(ast_node *head) {
      &schema_items_count,
      &recreates,
      &recreate_items_count,
-     &max_schema_version);
+     &max_schema_version,
+     NULL);
 
   CHARBUF_OPEN(main);
 
@@ -1401,12 +1405,15 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   recreate_annotation* recreates;
   size_t recreate_items_count;
   int32_t max_schema_version;
+  llint_t schema_crc_no_virtual;
+
   llint_t schema_crc = cg_schema_compute_crc(
-     &notes,
-     &schema_items_count,
-     &recreates,
-     &recreate_items_count,
-     &max_schema_version);
+    &notes,
+    &schema_items_count,
+    &recreates,
+    &recreate_items_count,
+    &max_schema_version,
+    &schema_crc_no_virtual);
 
   bytebuf version_bits;
   bytebuf_open(&version_bits);
@@ -1472,9 +1479,10 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   // the main upgrade worker
 
   bprintf(&main, "\n@attribute(cql:private)\n");
-  bprintf(&main, "CREATE PROCEDURE %s_perform_upgrade_steps()\n", global_proc_name);
+  bprintf(&main, "CREATE PROCEDURE %s_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  DECLARE schema_version LONG INTEGER NOT NULL;\n");
+  bprintf(&main, "  IF cql_facet_find(%s_facets, 'cql_schema_crc_no_virtual') <> %lld THEN\n", global_proc_name, (llint_t) schema_crc_no_virtual);
+  bprintf(&main, "    DECLARE schema_version LONG INTEGER NOT NULL;\n");
 
   if (view_drops) {
     bprintf(&main, "    -- dropping all views --\n");
@@ -1744,7 +1752,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   if (recreate_items_count) {
-    bprintf(&main, "    CALL %s_cql_recreate_tables();\n", global_proc_name);
+    bprintf(&main, "    CALL %s_cql_recreate_non_virtual_tables();\n", global_proc_name);
   }
 
   if (view_creates) {
@@ -1788,8 +1796,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   CHARBUF_CLOSE(missing_versions);
 
-  bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
+  bprintf(&main, "\n    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
+  bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc_no_virtual', %lld);\n", global_proc_name, schema_crc_no_virtual);
+  bprintf(&main, "  END IF;\n");
+  bprintf(&main, "  IF include_virtual_tables THEN\n");
+
+  if (recreate_items_count) {
+    bprintf(&main, "    CALL %s_cql_recreate_virtual_tables();\n", global_proc_name);
+  }
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc', %lld);\n", global_proc_name, schema_crc);
+  bprintf(&main, "  END IF;\n");
   bprintf(&main, "END;\n\n");
 
   bprintf(&main, "CREATE PROCEDURE %s_get_current_and_proposed_versions(\n", global_proc_name);
@@ -1802,7 +1818,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "END;\n");
 
   bprintf(&main, "@attribute(cql:private)\n");
-  bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades()\n", global_proc_name);
+  bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  -- check for downgrade --\n");
   bprintf(&main, "  IF cql_facet_find(%s_facets, 'cql_schema_version') > %d THEN\n", global_proc_name, max_schema_version);
@@ -1810,7 +1826,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "  ELSE\n");
   bprintf(&main, "    -- save the current facets so we can diff them later --\n");
   bprintf(&main, "    CALL %s_save_cql_schema_facets();\n", global_proc_name);
-  bprintf(&main, "    CALL %s_perform_upgrade_steps();\n\n", global_proc_name);
+  bprintf(&main, "    CALL %s_perform_upgrade_steps(include_virtual_tables);\n\n", global_proc_name);
   bprintf(&main, "    -- finally produce the list of differences\n");
   bprintf(&main, "    SELECT T1.facet FROM\n");
   bprintf(&main, "      %s_cql_schema_facets T1\n", global_proc_name);
@@ -1820,7 +1836,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "  END IF;\n");
   bprintf(&main, "END;\n\n");
 
-  bprintf(&main, "CREATE PROCEDURE %s()\n", global_proc_name);
+  bprintf(&main, "@attribute(cql:private)\n");
+  bprintf(&main, "CREATE PROCEDURE %s_helper(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "  DECLARE schema_crc LONG INTEGER NOT NULL;\n");
   bprintf(&main, "\n");
@@ -1831,7 +1848,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "  IF schema_crc <> %lld THEN\n", (llint_t)schema_crc);
   bprintf(&main, "    BEGIN TRY\n");
   bprintf(&main, "      CALL %s_setup_facets();\n", global_proc_name);
-  bprintf(&main, "      CALL %s_perform_needed_upgrades();\n", global_proc_name);
+  bprintf(&main, "      CALL %s_perform_needed_upgrades(include_virtual_tables);\n", global_proc_name);
   bprintf(&main, "    END TRY;\n");
   bprintf(&main, "    BEGIN CATCH\n");
   bprintf(&main, "      CALL cql_facets_delete(%s_facets);\n", global_proc_name);
@@ -1850,6 +1867,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     bprintf(&main, "  CALL %s_cql_install_temp_schema();\n\n", global_proc_name);
   }
 
+  bprintf(&main, "END;\n\n");
+
+  bprintf(&main, "CREATE PROCEDURE %s()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "  CALL %s_helper(TRUE);\n", global_proc_name);
+  bprintf(&main, "END;\n\n");
+
+  bprintf(&main, "CREATE PROCEDURE %s_no_virtual_tables()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "  CALL %s_helper(FALSE);\n", global_proc_name);
   bprintf(&main, "END;\n\n");
 
   if (one_time_drop_needed) {
