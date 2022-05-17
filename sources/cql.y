@@ -2362,8 +2362,6 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_param(a, argc, argv, &options.c_include_namespace, "for the C include namespace");
     } else if (strcmp(arg, "--java_package_name") == 0) {
       a = gather_arg_param(a, argc, argv, &options.java_package_name, "for the Java package name");
-    } else if (strcmp(arg, "--java_assembly_query_classname") == 0) {
-      a = gather_arg_param(a, argc, argv, &options.java_assembly_query_classname, "for the assembly query classname for extension fragment Java codegen");
     } else if (strcmp(arg, "--java_fragment_interface") == 0) {
       a = gather_arg_params(a, argc, argv, &options.java_fragment_interfaces_count, &options.java_fragment_interfaces);
     } else if (strcmp(arg, "--java_fragment_interface_mode") == 0) {
@@ -2720,9 +2718,6 @@ static void cql_usage() {
     "  used with --rt schema_upgrade\n"
     "--java_package_name name\n"
     "  specifies the name of package a generated java class will be a part of\n"
-    "--java_assembly_query_classname name\n"
-    "  fully qualified name of the parent class for the Java assembly\n"
-    "  used by java code generators when they output an extension fragment class\n"
     "--java_fragment_interface_mode\n"
     "  sets the Java codegen mode to generate interfaces for base and extension fragments\n"
     "--java_fragment_interfaces interface\n"
