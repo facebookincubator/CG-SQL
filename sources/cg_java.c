@@ -40,9 +40,6 @@ typedef struct cg_java_context {
   // the assembly.
   symtab *frag_assembly_interfaces;
 
-  // Table that maps a fragment name to the base interface that the extension will extend.
-  symtab *frag_extension_interfaces;
-
   // In the Java codegen pipeline, we support only one SP per codegen run. This is to acccomodate
   // the fact that in Java we can only generate one top level public class per file
   uint32_t generated_proc_count;
@@ -250,17 +247,13 @@ static void cg_java_write_implements_interface(
     Invariant(base_fragment_name);
 
     // Get the interface buffers
-    charbuf *frag_extension_interface;
-    frag_extension_interface = symtab_ensure_charbuf(java_context->frag_extension_interfaces, base_fragment_name);
     charbuf *frag_assembly_interface;
     frag_assembly_interface = symtab_ensure_charbuf(java_context->frag_assembly_interfaces, base_fragment_name);
 
     if (frag_type == FRAG_TYPE_BASE) {
       // The current class name should be registered to both the extension and assembly interfaces.  There should
       // be nothing in the interface buffers, as the base extension is the first declared semantically.
-      Invariant(frag_extension_interface->used == 1);
       Invariant(frag_assembly_interface->used == 1);
-      cg_sym_name(cg_symbol_case_pascal, frag_extension_interface, "", name, NULL);
       cg_sym_name(cg_symbol_case_pascal, frag_assembly_interface, "", name, NULL);
     }
     else if (frag_type == FRAG_TYPE_ASSEMBLY) {
@@ -541,18 +534,15 @@ cql_noexport void cg_java_main(ast_node *head) {
   cg_java_init();
 
   // gen java code ....
-  symtab *frag_extension_interfaces = symtab_new();
   symtab *frag_assembly_interfaces = symtab_new();
   CHARBUF_OPEN(frag_col_offsets_for_core);
   cg_java_context java_context = {
     .frag_col_offsets_for_core = &frag_col_offsets_for_core,
     .frag_assembly_interfaces = frag_assembly_interfaces,
-    .frag_extension_interfaces = frag_extension_interfaces,
   };
   cg_java_stmt_list(head, &java_context);
   CHARBUF_CLOSE(frag_col_offsets_for_core);
   symtab_delete(frag_assembly_interfaces);
-  symtab_delete(frag_extension_interfaces);
 }
 
 cql_noexport void cg_java_cleanup() {
