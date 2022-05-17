@@ -87187,9 +87187,7 @@ DECLARE INTERFACE proc4 (id INTEGER);
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface name conflicts with procedure name 'proc4'
 
   {declare_interface_stmt}: err
-  | {proc_name_type}
-  | | {name proc4}
-  | | {int 1}
+  | {name proc4}
   | {proc_params_stmts}
     | {typed_names}
       | {typed_name}
@@ -87201,9 +87199,7 @@ The statement ending at line XXXX
 DECLARE INTERFACE interface1 (id INTEGER);
 
   {declare_interface_stmt}: interface1: { id: integer }
-  | {proc_name_type}
-  | | {name interface1}
-  | | {int 1}
+  | {name interface1}
   | {proc_params_stmts}
     | {typed_names}: interface1: { id: integer }
       | {typed_name}: id: integer
@@ -87215,9 +87211,7 @@ The statement ending at line XXXX
 DECLARE INTERFACE interface1 (id INTEGER);
 
   {declare_interface_stmt}: interface1: { id: integer }
-  | {proc_name_type}
-  | | {name interface1}
-  | | {int 1}
+  | {name interface1}
   | {proc_params_stmts}
     | {typed_names}: interface1: { id: integer }
       | {typed_name}: id: integer
@@ -87231,9 +87225,7 @@ DECLARE INTERFACE interface1 (id INTEGER, id TEXT);
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 
   {declare_interface_stmt}: err
-  | {proc_name_type}
-  | | {name interface1}
-  | | {int 1}
+  | {name interface1}
   | {proc_params_stmts}
     | {typed_names}: err
       | {typed_name}: id: integer
@@ -87255,9 +87247,7 @@ The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface declarations do not match 'interface1'
 
   {declare_interface_stmt}: err
-  | {proc_name_type}
-  | | {name interface1}
-  | | {int 1}
+  | {name interface1}
   | {proc_params_stmts}
     | {typed_names}: interface1: { id: integer, name: text }
       | {typed_name}: id: integer
@@ -87273,9 +87263,7 @@ The statement ending at line XXXX
 DECLARE INTERFACE interface2 (id INTEGER, name TEXT);
 
   {declare_interface_stmt}: interface2: { id: integer, name: text }
-  | {proc_name_type}
-  | | {name interface2}
-  | | {int 1}
+  | {name interface2}
   | {proc_params_stmts}
     | {typed_names}: interface2: { id: integer, name: text }
       | {typed_name}: id: integer
@@ -87908,9 +87896,7 @@ DECLARE INTERFACE maybe_create_func_text (id INTEGER, name TEXT);
 test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with func name 'maybe_create_func_text'
 
   {declare_interface_stmt}: err
-  | {proc_name_type}
-  | | {name maybe_create_func_text}
-  | | {int 1}
+  | {name maybe_create_func_text}
   | {proc_params_stmts}
     | {typed_names}
       | {typed_name}
@@ -87935,9 +87921,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be to
   | {proc_params_stmts}
     | {stmt_list}: err
       | {declare_interface_stmt}: err
-        | {proc_name_type}
-        | | {name foo}
-        | | {int 1}
+        | {name foo}
         | {proc_params_stmts}
           | {typed_names}
             | {typed_name}

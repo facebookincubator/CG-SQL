@@ -1740,8 +1740,7 @@ declare_proc_stmt:
 
 declare_interface_stmt:
   DECLARE INTERFACE name '(' typed_names ')'  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE));
-      $declare_interface_stmt = new_ast_declare_interface_stmt(proc_name_flags, new_ast_proc_params_stmts(NULL, $typed_names)); }
+      $declare_interface_stmt = new_ast_declare_interface_stmt($name, new_ast_proc_params_stmts(NULL, $typed_names)); }
 
 create_proc_stmt:
   CREATE procedure name '(' params ')' BEGIN_ opt_stmt_list END  {

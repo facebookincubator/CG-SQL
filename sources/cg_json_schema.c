@@ -2155,8 +2155,7 @@ static void cg_defined_in_file(charbuf *output, ast_node *ast) {
 
 static void cg_json_declare_interface(ast_node *ast) {
   Contract(is_ast_declare_interface_stmt(ast));
-  EXTRACT_NOTNULL(proc_name_type, ast->left);
-  EXTRACT_STRING(name, proc_name_type->left);
+  EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 

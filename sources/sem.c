@@ -19074,10 +19074,8 @@ static void sem_declare_proc_stmt(ast_node *ast) {
 static void sem_declare_interface_stmt(ast_node *ast) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_declare_interface_stmt(ast));
-  EXTRACT_NOTNULL(proc_name_type, ast->left);
-  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_OPTION(type, proc_name_type->right);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 
@@ -19107,7 +19105,6 @@ static void sem_declare_interface_stmt(ast_node *ast) {
     Invariant(added);
   }
 
-  Contract(type == PROC_FLAG_STRUCT_TYPE);
   sem_typed_names(typed_names);
 
   if (is_error(typed_names)) {
