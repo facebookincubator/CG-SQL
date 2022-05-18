@@ -43,7 +43,7 @@ select (
 
 But each line will be its own string literal, so, more accurately, it will concatenate the following three strings:
 
-```C
+```c
 "select (",                                      // string1
 " select case when x >= y then x else y end",    // string2
 " from (select T1.column1 x, column2 y))"        // string3
@@ -63,8 +63,8 @@ A direct expansion of the above would result in something like this:
 
 ```sql
 case when (select max(T.m) from T) >= (select max(U.m) from U)
-   then (select max(T.m) from T) 
-   else (select max(U.m) from U) 
+   then (select max(T.m) from T)
+   else (select max(U.m) from U)
 end;
 ```
 
@@ -73,7 +73,7 @@ The above could be accomplished with a simple pre-processor macro, but the fragm
 
 ```sql
 select (
-  select case when x >= y then x else y end 
+  select case when x >= y then x else y end
     from select (select max(T.m) from T) x, (select max(U.m) from U) y))
 ```
 

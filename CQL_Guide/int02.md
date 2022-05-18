@@ -101,7 +101,7 @@ Keep these shapes in mind as we discuss the various sources of type information.
 
 First recall that every AST node has this field in it:
 
-```C
+```c
 struct sem_node *_Nullable sem;
 ```
 
@@ -111,14 +111,14 @@ if semantic analysis reported any errors.  Before we get into the shape of the s
 should start with the fundamental unit of type info `sem_t` which is usually stored in a variable
 called `sem_type`.
 
-```C
+```c
 typedef uint64_t sem_t;
 ```
 
 The low order bits of a `sem_t` encode the core type and indeed there is a helper function
 to extract the core type from a `sem_t`.
 
-```C
+```c
 // Strips out all the flag bits and gives you the base/core type.
 cql_noexport sem_t core_type_of(sem_t sem_type) {
   return sem_type & SEM_TYPE_CORE;
@@ -127,7 +127,7 @@ cql_noexport sem_t core_type_of(sem_t sem_type) {
 
 The core bits are as follows:
 
-```C
+```c
 #define SEM_TYPE_NULL 0         // the subtree is a null literal (not just nullable)
 #define SEM_TYPE_BOOL 1         // the subtree is a bool
 #define SEM_TYPE_INTEGER 2      // the subtree is an integer
@@ -176,7 +176,7 @@ For instance, `HAS_DEFAULT` is for table columns and `CREATE_FUNC` is for functi
 
 The full list as of this writing is as follows:
 
-```C
+```c
 #define SEM_TYPE_NOTNULL               _64(0x0100) // set if and only if null is not possible
 #define SEM_TYPE_HAS_DEFAULT           _64(0x0200) // set for table columns with a default
 #define SEM_TYPE_AUTOINCREMENT         _64(0x0400) // set for table columns with autoinc
@@ -227,7 +227,7 @@ There are many fields -- we'll talk about some of the most important ones here t
 
 Note that `CSTR` is simply an alias for `const char *`.  `CSTR` is used extensively in the codebase for brevity.
 
-```C
+```c
 typedef struct sem_node {
   sem_t sem_type;                   // core type plus flags
   CSTR name;                        // for named expressions in select columns, etc.
@@ -262,7 +262,7 @@ typedef struct sem_node {
 If the object is a structure type then this is simply an array of names, kinds, and semantic types.  In fact the semantic types will be all be unitary, possibly modified by `NOT_NULL` or `SENSITIVE` but none of the other flags apply.  A single `sptr` directly corresponds to the notion of a "shape" in the analyzer.  Shapes come from anything
 that looks like a table, such as a cursor, or the result of a `SELECT` statement.
 
-```C
+```c
 // for tables and views and the result of a select
 
 typedef struct sem_struct {
@@ -276,7 +276,7 @@ typedef struct sem_struct {
 
 If the object is a join type (such as the parts of the `FROM` clause) then the `jptr` field will be populated. This is nothing more than a named list of struct types.
 
-```C
+```c
 // for the data type of (parts of) the FROM clause
 // sometimes I refer to as a "joinscope"
 
@@ -294,7 +294,7 @@ With these building blocks we can represent the type of anything in the CQL lang
 The semantic analysis pass runs much the same way as the AST emitter.  In `sem.c` there is the essential function `sem_main`. It suffices
 to call `sem_main` on the root of the AST. That root node is expected to be a `stmt_list` node.
 
-```C
+```c
 // This method loads up the global symbol tables in either empty state or
 // with the appropriate tokens ready to go.  Using our own symbol tables for
 // dispatch saves us a lot of if/else string comparison verbosity.
@@ -314,7 +314,7 @@ The internal items are typically defined statically in `sem.c`. The essential ou
 
 The cleanup has this structure:
 
-```C
+```c
 // This method frees all the global state of the semantic analyzer
 cql_noexport void sem_cleanup() {
   eval_cleanup();
@@ -344,7 +344,7 @@ go over each kind with some examples.
 
 First we have the non-SQL statements, these are basic flow control or other things that SQLite will never see directly.
 
-```C
+```c
   symtab *syms = non_sql_stmts;
 
   STMT_INIT(if_stmt);
@@ -361,7 +361,7 @@ Next we have the SQL statements.  These get analyzed in the same way as the othe
 if you use one of these it means that procedure that contained this statement must get a database connection in order to run.  Use of the database
 will require the procedure's signature to change; this is recorded by the setting the `SEM_TYPE_DML_PROC` flag bit to be set on the procedure's AST node.
 
-```C
+```c
   syms = sql_stmts;
 
   STMT_INIT(create_table_stmt);
@@ -381,7 +381,7 @@ Next we have expression types. These are set up with `EXPR_INIT`.  Many of the o
 able to share the code, the expression analysis functions get an extra argument for the operator in question.  Typically the string of the operator
 is only needed to make a good quality error message with validation being otherwise identical.  Here are some samples...
 
-```C
+```c
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");
   EXPR_INIT(blob, sem_expr_blob, "BLB");
@@ -418,7 +418,7 @@ Let's quickly go over this list as these are the most important analyzers:
 
 The last group of normal associations are for builtin functions, like these:
 
-```C
+```c
   FUNC_INIT(changes);
   FUNC_INIT(printf);
   FUNC_INIT(strftime);
@@ -451,7 +451,7 @@ The "OK" type indicates no type information, but no errors either.  "OK" is help
 
 Perhaps the simplest analysis of all happens at the leaves of the AST.  By way of example, here is the code for expression nodes of type `num`, the numeric literals.
 
-```C
+```c
 // Expression type for numeric primitives
 static void sem_expr_num(ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
@@ -485,7 +485,7 @@ The `new_sem` function is used to make an empty `sem_node` with the `sem_type` f
 
 It doesn't get much simpler unless maybe...
 
-```C
+```c
 // Expression type for constant NULL
 static void sem_expr_null(ast_node *ast, CSTR cstr) {
   Contract(is_ast_null(ast));
@@ -502,7 +502,7 @@ Let's dive in to a simple case that does require some analysis -- the unary oper
 
 Here's the code for the unary math operators:
 
-```C
+```c
 // The only unary math operators are '-' and '~'
 // Reference types are not allowed
 static void sem_unary_math(ast_node *ast, CSTR op) {
@@ -538,7 +538,7 @@ OK already we need to pause because there is a "prep" pattern here common to mos
 The prep step takes care of most of the normal error handling which is the same for all the unary operators
 and the same pattern happens in binary operators.  Let's take a look at `sem_unary_prep`.
 
-```C
+```c
 // The unary operators all have a similar prep to the binary.  We need
 // to visit the left side (it's always the left node even if the operator goes on the right)
 // if that's ok then we need the combined_flags and core type.  There is only
@@ -593,7 +593,7 @@ Looking at the overall steps we see:
 
 These primitives are designed to combine well, for instance, consider `sem_unary_integer_math`
 
-```C
+```c
 static void sem_unary_integer_math(ast_node *ast, CSTR op) {
   sem_unary_math(ast, op);
   sem_reject_real(ast, op);
@@ -608,7 +608,7 @@ The steps are:
 Note that in all cases the `op` string simply gets pushed down to the place where the errors happen.  Let's take a quick look at one of
 the sources of errors in the above.  Here's the numeric validator:
 
-```C
+```c
 static bool_t sem_validate_numeric(ast_node *ast, sem_t core_type, CSTR op) {
   if (is_blob(core_type)) {
     report_error(ast->left, "CQL0045: blob operand not allowed in", op);
@@ -639,7 +639,7 @@ if anything goes wrong.
 
 It's not hard to guess how `sem_reject_real` works:
 
-```C
+```c
 // Some math operators like << >> & | % only make sense on integers
 // This function does the extra checking to ensure they do not get real values
 // as arguments.  It's a post-pass after the normal math checks.
@@ -665,7 +665,7 @@ static void sem_reject_real(ast_node *ast, CSTR op) {
 
 With the knowledge we have so far, this code pretty much speaks for itself, but we'll walk through it.
 
-```C
+```c
 // All the binary ops do the same preparation -- they evaluate the left and the
 // right expression, then they check those for errors.  Then they need
 // the types of those expressions and the combined_flags of the result.  This
@@ -710,7 +710,7 @@ and one check is needed to detect if anything went wrong.
 
 This analyzer is the simplest of all the binaries
 
-```C
+```c
 // IS and IS NOT are special in that they return a not null boolean.
 static void sem_binary_is_or_is_not(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
@@ -738,7 +738,7 @@ If either step goes wrong the error will naturally propagate.
 
 This is the general worker for binary math operations, the most common operations like '+', '-', '*' and so forth.
 
-```C
+```c
 // For all math operations, we combine the types and yield the type that
 // holds both using the helper.  If any text, that's an error.
 static void sem_binary_math(ast_node *ast, CSTR op) {
@@ -789,7 +789,7 @@ At this point it might help to look at a few more of the base validators -- they
 
 #### Example Validator: error_any_object
 
-```C
+```c
 // If either of the types is an object, then produce an error on the ast.
 static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
   if (is_object(core_type_left)) {
@@ -815,7 +815,7 @@ static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_t
 
 #### Example Validator: sem_combine_kinds
 
-```C
+```c
 // Here we check that type<Foo> only combines with type<Foo> or type.
 // If there is a current object type, then the next item must match
 // If there is no such type, then an object type that arrives becomes the required type
@@ -860,7 +860,7 @@ This one produces no errors, that's up to the caller. Often there is a numeric p
 and a non-numeric path so this helper can't create the errors as it doesn't yet know
 if anything bad has happened.  Most of the `is_something` functions are the same way.
 
-```C
+```c
 cql_noexport bool_t is_numeric_compat(sem_t sem_type) {
   sem_type = core_type_of(sem_type);
   return sem_type >= SEM_TYPE_NULL && sem_type <= SEM_TYPE_REAL;
@@ -874,7 +874,7 @@ the result is `NULL`.
 
 #### Example Validator : sem_combine_types
 
-```C
+```c
 // The second workhorse of semantic analysis, given two types that
 // are previously known to be compatible, it returns the smallest type
 // that holds both.  If either is nullable, the result is nullable.
@@ -921,7 +921,7 @@ This is a lot like normal binary operator compatibility with one extra rule: the
 not be a bigger type than the target.  e.g. you cannot assign a `long` to an `integer`, nor pass a long
 expression to a function that has an integer parameter.
 
-```C
+```c
 // This verifies that the types are compatible and that it's ok to assign
 // the expression to the variable.  In practice that means:
 // * the variable type core type and kind must be compatible with the expression core type and kind
@@ -963,7 +963,7 @@ With the expression building blocks, most of the usual kind of language statemen
 for correctness.  It's probably easiest to illustrate this with an example. Let's look at validation for
 the `WHILE` statement:
 
-```C
+```c
 // While semantic analysis is super simple.
 //  * the condition must be numeric
 //  * the statement list must be error-free
@@ -1017,7 +1017,7 @@ It turns out that in the SQL language some expression types are only valid in so
 
 The expression contexts are as follows:
 
-```C
+```c
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
 #define SEM_EXPR_CONTEXT_WHERE          0x0004
@@ -1041,7 +1041,7 @@ A zero result indicates that the operation is not valid in the current context.
 
 This bitwise "and" is performed by one of these two helper macros which makes the usage a little clearer:
 
-```C
+```c
 #define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
 #define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
 ```
@@ -1054,7 +1054,7 @@ this operator in a context where SQLite isn't going to be doing the concatenatio
 use "printf" instead to get formatting done outside of a SQL context.  The check for invalid use of `||` is very simple
 and it happens, of course, in `sem_concat`.
 
-```C
+```c
   if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
     report_error(ast, "CQL0241: CONCAT may only appear in the context of a SQL statement", NULL);
     record_error(ast);
@@ -1071,7 +1071,7 @@ instance, that form may not appear in the `LIMIT` or `OFFSET` sections of a SQLi
 
 We use this construct to do the validation:
 
-```C
+```c
     uint32_t valid = SEM_EXPR_CONTEXT_SELECT_LIST
                     |SEM_EXPR_CONTEXT_WHERE
                     |SEM_EXPR_CONTEXT_ON
@@ -1100,7 +1100,7 @@ This type, with a clear name category, is the easiest name resolutions, and ther
 
 #### Example: Index Name Resolution
 
-```C
+```c
 // This is the basic checking for the drop index statement
 // * the index must exist (have been declared) in some version
 // * it could be deleted now, that's ok, but the name has to be valid
@@ -1122,7 +1122,7 @@ static void sem_drop_index_stmt(ast_node *ast) {
 Well, this is interesting.  But what's going on with `find_usable_index`? What is usable?  Why aren't we just looking up the index
 name in some name table? Let's have a look at the details of `find_usable_index`.
 
-```C
+```c
 // returns the node only if it exists and is not restricted by the schema region.
 static ast_node *find_usable_index(CSTR name, ast_node *err_target, CSTR msg) {
   ast_node *index_ast = find_index(name);
@@ -1171,7 +1171,7 @@ but the search should continue.
 
 We can demystify this a bit by looking at the most common way to get name resolution done.
 
-```C
+```c
 // Resolves a (potentially qualified) identifier, writing semantic information
 // into `ast` if successful, or reporting and recording an error for `ast` if
 // not.
@@ -1192,7 +1192,7 @@ in the most common case where you don't need to be able to mutate the semantic t
 
 So let's move on to the "real" resolver.
 
-```C
+```c
 // This function is responsible for resolving both unqualified identifiers (ids)
 // and qualified identifiers (dots). It performs the following two roles:
 //
@@ -1268,7 +1268,7 @@ which attempt to find the name in order:
 
 These all use this enum to communicate progress:
 
-```C
+```c
 // All `sem_try_resolve_*` functions return either `SEM_RESOLVE_CONTINUE` to
 // indicate that another resolver should be tried, or `SEM_RESOLVE_STOP` to
 // indicate that the correct resolver was found. Continuing implies that no
@@ -1914,7 +1914,7 @@ That's all there is to it: "flow.c" does most of the hard work for us.
 
 Earlier we discussed `SEM_TYPE_STRUCT` briefly. Recall the basic notion of the `structure` type:
 
-```C
+```c
 // for tables and views and the result of a select
 
 typedef struct sem_struct {
@@ -1935,7 +1935,7 @@ The code that follows is the back end of `sem_create_table_stmt`.  At this point
 done and the columns all have their types.  We're about to build the struct type for the table.  Let's see how
 that goes.
 
-```C
+```c
   // now create a struct type with the correct number of columns
   // the types have already been computed so all we have to do is
   // check for duplicates
@@ -2023,7 +2023,7 @@ So, in the above, Foo could be a table, a view, a procedure with a result, anoth
 
 How might we do this?  This is the business of `sem_declare_cursor_like_name`
 
-```C
+```c
 // Here we're going to make a new value cursor using the indicated name for the shape.
 // The name has to be "likeable" meaning it refers to some named thing with a shape
 // such as a table, a view, another cursor, or a procedure that returns a result set.
@@ -2115,7 +2115,7 @@ are all resolved.
 
 The last of the type building data structure is the join type.  Recall that we have this shape:
 
-```C
+```c
 // for the data type of (parts of) the FROM clause
 // sometimes I refer to as a "joinscope"
 
@@ -2140,7 +2140,7 @@ with a `jptr` on the right.  For all this to work we have to start somewhere, us
 As we saw when we make a table we use `sem_join_from_sem_struct` to make its initial `jptr`.  Let's
 have a look at that now:
 
-```C
+```c
 // Create a base join type from a single struct.
 static sem_join *sem_join_from_sem_struct(sem_struct *sptr) {
   sem_join *jptr = new_sem_join(1);
@@ -2177,7 +2177,7 @@ use in expressions.  This changes again when there is a subquery, so the joinsco
 
 By way of example, you'll see these two patterns in the code:
 
-```C
+```c
   PUSH_JOIN(from_scope, select_from_etc->sem->jptr);
   error = sem_select_orderby(select_orderby);
   POP_JOIN();
@@ -2185,7 +2185,7 @@ By way of example, you'll see these two patterns in the code:
 
 * `PUSH_JOIN` : use the `jptr` from the `FROM` clause to put things back in scope for the `ORDER BY` clause
 
-```C
+```c
   PUSH_JOIN_BLOCK();
   sem_numeric_expr(ast->left, ast, "LIMIT", SEM_EXPR_CONTEXT_LIMIT);
   POP_JOIN();
@@ -2202,7 +2202,7 @@ In this section we'll deal with how they are implemented and what you should exp
 
 When a region declaration is found this method is used:
 
-```C
+```c
 // A schema region is an partitioning of the schema such that it
 // only uses objects in the same partition or one of its declared
 // dependencies.  One schema region may be upgraded independently
@@ -2234,7 +2234,7 @@ Now whatever happens to be in "your stuff" is:
 
 To see how this happens, let's have a look at `sem_begin_schema_region_stmt`.
 
-```C
+```c
 // Entering a schema region makes all the objects that follow part of that
 // region.  It also means that all the contained objects must refer to
 // only pieces of schema that are in the same region or a dependent region.
@@ -2303,7 +2303,7 @@ Now we're all set up.
 
 Recall that at the end of `sem_create_table_stmt` we do this:
 
-```C
+```c
   ast->sem = new_sem(SEM_TYPE_STRUCT);
   ast->sem->sptr = sptr;
   ast->sem->jptr = sem_join_from_sem_struct(sptr);
@@ -2314,7 +2314,7 @@ That should make a lot more sense now.
 
 When doing the symmetric check in `sem_validate_object_ast_in_current_region` we see this pattern:
 
-```C
+```c
 // Validate whether or not an object is usable with a schema region. The object
 // can only be a table, view, trigger or index.
 static bool_t sem_validate_object_ast_in_current_region(
@@ -2363,7 +2363,7 @@ Semantic Analysis leaves a lot of global state ready for the remaining stages to
 is defined in `sem.h` then it's ok to harvest.  Here we'll highlight some of the most important things you
 can use in later passes.  These are heavily used in the code generators.
 
-```C
+```c
 cql_data_decl( struct list_item *all_tables_list );
 cql_data_decl( struct list_item *all_functions_list );
 cql_data_decl( struct list_item *all_views_list );
@@ -2378,7 +2378,7 @@ cql_data_decl( struct list_item *all_enums_list );
 These linked lists are authoritiative; they let you easily enumerate all the objects of the specified type.  For
 instance, if you wanted to do some validation of all indices, you could simply walk `all_indices_list`.
 
-```C
+```c
 cql_noexport ast_node *find_proc(CSTR name);
 cql_noexport ast_node *find_region(CSTR name);
 cql_noexport ast_node *find_func(CSTR name);
@@ -2392,7 +2392,7 @@ tables, etc. by name.
 Finally, information about all the schema annotations is invaluable for building schema upgraders.  These
 two buffers hold dense arrays of annotation records as shown below.
 
-```C
+```c
 cql_data_decl( bytebuf *schema_annotations );
 cql_data_decl( bytebuf *recreate_annotations );
 

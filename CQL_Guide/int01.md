@@ -69,7 +69,7 @@ end there is a single root for the entire program in a binary tree.
 
 There are 4 kinds of AST nodes, they all begin with the following five fields. These represent the AST "base type", if you like.
 
-```C
+```c
   const char *_Nonnull type;
   struct sem_node *_Nullable sem;
   struct ast_node *_Nullable parent;
@@ -87,7 +87,7 @@ There are 4 kinds of AST nodes, they all begin with the following five fields. T
 
 #### The Generic Binary AST node `ast_node`
 
-```C
+```c
 typedef struct ast_node {
   ... the common fields
   struct ast_node *_Nullable left;
@@ -116,7 +116,7 @@ all the node fields and the type in human-readable form.
 
 #### The Grammar Code Node `int_ast_node`
 
-```C
+```c
 typedef struct int_ast_node {
   ... the common fields
   int64_t value;
@@ -126,7 +126,7 @@ typedef struct int_ast_node {
 This kind of node holds an integer that quantifies some kind of choice in the grammar.  Note that this does NOT hold numeric literals (see below).
 The file `ast.h` includes many `#define` constants for this purpose such as:
 
-```C
+```c
 define JOIN_INNER 1
 define JOIN_CROSS 2
 define JOIN_LEFT_OUTER 3
@@ -163,7 +163,7 @@ This node type is always a leaf.
 
 #### The String Node `str_ast_node`
 
-```C
+```c
 typedef struct str_ast_node {
   ... the common fields
   const char *_Nullable value;
@@ -190,7 +190,7 @@ This node type is always a leaf.
 
 #### The Number Node `num_ast_node`
 
-```C
+```c
 typedef struct num_ast_node {
   ... the common fields
   int32_t num_type;
@@ -388,7 +388,7 @@ is some arbitrary `void *` value that you provide, which will be given to your f
 relevant to the call.  The callback also gets the current output buffer so it can choose to emit something (like '?')
 into the stream.
 
-```C
+```c
 // signature for a callback, you get your context plus the ast
 // if you return true then the normal output is suppressed
 // in any case the output you provide is emitted
@@ -403,7 +403,7 @@ The meaning of the `bool_t` return value varies depend on which callback it is.
 
 The coarsest control is provided by the generation mode.  It is one of these values:
 
-```C
+```c
 // These modes control the overall style of the output
 enum gen_sql_mode {
   gen_mode_echo,          // Prints everything in the original, with standard whitespace and parentheses
@@ -417,7 +417,7 @@ enum gen_sql_mode {
 The actual callbacks structure is optional, if it is `NULL` then a full echo of the AST with no changes will
 be produced.  Otherwise the callbacks and flags alter the behavior of the echoer somewhat.
 
-```C
+```c
 // Callbacks allow you to significantly alter the generated sql, see the particular flags below.
 typedef struct gen_sql_callbacks {
   // Each time a local/global variable is encountered in the AST, this callback is invoked
@@ -509,7 +509,7 @@ of these options.
 There are several generation functions but they all follow a similar pattern, the differences are essentially what fragment of the AST
 they expect to begin on.  We'll just cover one here.
 
-```C
+```c
 cql_noexport void gen_statement_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 ```
 
@@ -520,7 +520,7 @@ This has the typical signature for all these generators:
 
 To use these you'll need to these functions as well:
 
-```C
+```c
 cql_noexport void gen_init(void);
 cql_noexport void gen_cleanup(void);
 ```
@@ -532,7 +532,7 @@ options, `cql_main()` assumes it might be called again and so it tidies things u
 
 With the one time initialization in place there are these preliminaries:
 
-```C
+```c
 cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *_Nullable callbacks);
 ```
 
@@ -541,7 +541,7 @@ To get a full echo, a `NULL` callback may be used.  And of course other options 
 
 Finally,
 
-```C
+```c
 cql_noexport void gen_set_output_buffer(struct charbuf *_Nonnull buffer);
 ```
 
@@ -552,7 +552,7 @@ a C style comment, or just right back to stdout.
 
 There are a few simplified versions of this sequence like this one:
 
-```C
+```c
 cql_noexport void gen_stmt_list_to_stdout(ast_node *_Nullable ast);
 ```
 
@@ -572,7 +572,7 @@ with a series of statements similar to these:
 
 #### Generating Expressions
 
-```C
+```c
 cql_noexport void gen_init() {
   gen_stmts = symtab_new();
   gen_exprs = symtab_new();
@@ -598,7 +598,7 @@ These statements populate the symbol tables.
 As you can see, nearly all binary operators are handled identically as are all unary operators.
 Let's look at those two in detail.
 
-```C
+```c
 static void gen_binary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   // We add parens if our priority is less than the parent priority
@@ -634,7 +634,7 @@ With parens taken care of, we emit the left expression, the operator, and the ri
 
 And as you can see below, unary operators are much the same.
 
-```C
+```c
 static void gen_unary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf("(");
   gen_printf("%s", op);
@@ -652,7 +652,7 @@ With no binding strength to worry about, statement processing is quite a bit sim
 
 Here's the code for the `IF` statement mentioned above.
 
-```C
+```c
 static void gen_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
   EXTRACT_NOTNULL(cond_action, ast->left);
@@ -693,7 +693,7 @@ The steps were:
 
 It might be instructive to include `gen_cond_action`; it is entirely unremarkable:
 
-```C
+```c
 static void gen_cond_action(ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);

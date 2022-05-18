@@ -33,7 +33,7 @@ worthy of detailed discussion the others, as we'll see, are very simple.
 
 The generator is wired like the others with a suitable main, this one is pretty simple:
 
-```C
+```c
 // Main entry point for test_helpers
 cql_noexport void cg_test_helpers_main(ast_node *head) {
   Contract(options.file_names_count == 1);
@@ -60,7 +60,7 @@ we saw.  This helps us to emit the right sections of output as we'll see.
 The code iterates the AST looking at the top level statement list only and in particular looking for `CREATE PROC`
 statements.
 
-```C
+```c
 // Iterate through statement list
 static void cg_test_helpers_stmt_list(ast_node *head) {
   Contract(is_ast_stmt_list(head));
@@ -103,7 +103,7 @@ There are some preliminaries:
 
 To do this we have to walk any misc attributes on the procedure we're looking for things of the form `@attribute(cql:autotest=xxx)`
 
-```C
+```c
 static void cg_test_helpers_create_proc_stmt(ast_node *stmt, ast_node *misc_attrs) {
   Contract(is_ast_create_proc_stmt(stmt));
 
@@ -123,7 +123,7 @@ static void cg_test_helpers_create_proc_stmt(ast_node *stmt, ast_node *misc_attr
 which kinds of helpers we have found to help us with the output.  This is where `helper_flags`
 comes in. The flags are:
 
-```C
+```c
 #define DUMMY_TABLE           1 // dummy_table attribute flag
 #define DUMMY_INSERT          2 // dummy_insert attribute flag
 #define DUMMY_SELECT          4 // dummy_select attribute flag
@@ -133,7 +133,7 @@ comes in. The flags are:
 
 And now we're ready for actual dispatch:
 
-```C
+```c
 // This is invoked for every misc attribute on every create proc statement
 // in this translation unit.  We're looking for attributes of the form cql:autotest=(...)
 // and we ignore anything else.
@@ -157,7 +157,7 @@ static void test_helpers_find_ast_misc_attr_callback(
 
 The main dispatch looks like this:
 
-```C
+```c
 // In principle, any option can be combined with any other but some only make sense for procs with
 // a result.
 
@@ -198,7 +198,7 @@ designed to make these patterns super simple.  You can see all the patterns
 in [Chapter 12](https://cgsql.dev/cql-guide/ch12) but let's look at the code for
 the first one.  This is "dummy table".
 
-```C
+```c
 // Emit an open proc which creates a temp table in the form of the original proc
 // Emit a close proc which drops the temp table
 static void cg_test_helpers_dummy_table(CSTR name) {
@@ -291,7 +291,7 @@ These are more fully discussed in [Chapter 12](https://cgsql.dev/cql-guide/ch12#
 In order to know which indices and triggers we might need we have to be able to map from the tables/views in `your_proc` to the indices.
 To set up for this a general purpose reverse mapping is created.  We'll look at the triggers version. The indices version is nearly identical.
 
-```C
+```c
 // Walk through all triggers and create a dictionnary of triggers per tables.
 static void init_all_trigger_per_table() {
   Contract(all_tables_with_triggers == NULL);
@@ -337,7 +337,7 @@ Sticking with our particular example, in order to determine that tables/views th
 the generator has to walk its entire body looking for things that are tables.  This is handled by the
 `find_all_table_nodes` function.
 
-```C
+```c
 static void find_all_table_nodes(dummy_test_info *info, ast_node *node) {
   table_callbacks callbacks = {
     .callback_any_table = found_table_or_view,
@@ -385,7 +385,7 @@ maintainence of the found items is done by the callback function `found_table_or
 is more descriptive comments than code but the code is included here as it is brief.
 
 
-```C
+```c
 // comments elided for brevity, the why of all this is described in the code
 static void found_table_or_view(
   CSTR _Nonnull table_or_view_name,
@@ -426,7 +426,7 @@ The `create index statement` is emitted by the usual `gen_statement_with_callbac
 
 The `drop index` can be trivially created by name.
 
-```C
+```c
 // Emit create and drop index statement for all indexes on a table.
 static void cg_emit_index_stmt(
   CSTR table_name,
@@ -500,7 +500,7 @@ this is way beyond the ability of a simple test helper.  When the code runs you'
 So keeping in mind this sort of "entry level data support" as the goal, we can take a look at how the system works -- it's all
 in the function `collect_dummy_test_info` which includes this helpful comment on structure.
 
-```C
+```c
 // the data attribute looks kind of like this:
 // @attribute(cql:autotest = (
 //   .. other auto test attributes
@@ -522,7 +522,7 @@ All of the data is in the symbol table `dummy_test_infos` which is indexed by ta
 we ensure there is a symbol table at that slot.  So `dummy_test_infos` is a symbol table of symbol tables.  It's actually
 going to be something like `value_list = dummy_test_infos['table']['column']`
 
-```C
+```c
   // collect table name from dummy_test info
   ast_node *table_list = dummy_attr->left;
   EXTRACT_STRING(table_name, table_list->left);
@@ -531,7 +531,7 @@ going to be something like `value_list = dummy_test_infos['table']['column']`
 
 Next we're going to find the column names, they are the next entry in the list so we go `right` to get the `column_name_list`
 
-```C
+```c
 // collect column names from dummy_test info
 ast_node *column_name_list = table_list->right;
 for (ast_node *list = column_name_list->left; list; list = list->right) {
@@ -588,7 +588,7 @@ if you add an initalizer to a leaf table you don't also have to add it to all th
 feature the manual data wouldn't be very useful at all, hand written `INSERT` statements would be just as good.
 
 
-```C
+```c
 // If a column value is added to dummy_test info for a foreign key column then
 // we need to make sure that same column value is also added as a value in the
 // the referenced table's dummy_test info.

@@ -69,7 +69,7 @@ Where `x` is an empty file, you'll get the following skeletal JSON, lightly refo
 
 From this we can deduce a great deal of the structure of the code:
 
-```C
+```c
 // Main entry point for json schema format
 cql_noexport void cg_json_schema_main(ast_node *head) {
   Contract(options.file_names_count == 1);
@@ -129,7 +129,7 @@ analysis.
 These are sufficiently easy that we can just walk through one of the procedures front to back.
 Let's look at the "views" section.
 
-```C
+```c
 // The set of views look rather like the query section in as much as
 // they are in fact nothing more than named select statements.  However
 // the output here is somewhat simplified.  We only emit the whole select
@@ -202,7 +202,7 @@ static void cg_json_views(charbuf *output) {
 Already we can see the structure emerging, and of course its nothing
 more than a bunch of `bprintf`.  Let's do it section by section:
 
-```C
+```c
 bprintf(output, "\"views\" : [\n");
 BEGIN_INDENT(views, 2);
 
@@ -227,7 +227,7 @@ we'll put 0 or more views in it.
 The next section extracts the necessary information and emits
 the test output:
 
-```C
+```c
     ast_node *ast = item->ast;
     Invariant(is_ast_create_view_stmt(ast));
 
@@ -259,7 +259,7 @@ way with `EXTRACT` macros for the view shape.
 
 #### Test Output
 
-```C
+```c
 static void cg_json_test_details(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   if (options.test) {
     bprintf(output, "\nThe statement ending at line %d\n", ast->lineno);
@@ -292,7 +292,7 @@ is not well-formed JSON in any way.  So use of --test is strictly for validation
 All of the things that go into the JSON have some attributes that are universally present
 and generally come directly from the AST.
 
-```C
+```c
   if (i > 0) {
     bprintf(output, ",\n");
   }
@@ -338,7 +338,7 @@ This part of the output is the simplest
 
 The next fragment emits two optional pieces that are present in many types of objects:
 
-```C
+```c
     if (ast->sem->region) {
       cg_json_emit_region_info(output, ast);
     }
@@ -362,7 +362,7 @@ The next fragment emits two optional pieces that are present in many types of ob
 
 There is very little left in the view emitting code:
 
-```C
+```c
   cg_json_projection(output, select_stmt);
   cg_fragment_with_params(output, "select", select_stmt, gen_one_stmt);
   cg_json_dependencies(output, ast);
@@ -389,7 +389,7 @@ the emitted text goes to a `charbuf` variable creatively called `output`.
 
 Here's a sample procedure that was mentioned earlier, it does the usual things:
 
-```C
+```c
 // Emit a list of attributes for the current entity, it could be any kind of entity.
 // Whatever it is we spit out the attributes here in array format.
 static void cg_json_misc_attrs(charbuf *output, ast_node *_Nonnull list) {
@@ -416,7 +416,7 @@ to do this formatting.
 
 From `charbuf.h`:
 
-```C
+```c
 // These helpers push a buffer and use it for the output temporarily.
 // When the buffer is finished (at END_INDENT) bindent is used to
 // indent it by the indicated amount.  They assume the output buffer is called
@@ -446,7 +446,7 @@ From `charbuf.h`:
 
 The rest of the helpers  manage the commas in the (nested) lists:
 
-```C
+```c
 // These little helpers are for handling comma seperated lists where you may or may
 // not need a comma in various places.  The local tracks if there is an item already
 // present and you either get ",\n"  or just "\n" as needed.
@@ -486,7 +486,7 @@ is needed.  We just emit the text with quotes around it. However,
 there are cases where general text that might have special characters
 in it needs to be emitted.  When that happens a call like this is used:
 
-```C
+```c
 cg_pretty_quote_plaintext(
     sql.ptr,
     output,
@@ -516,7 +516,7 @@ the C codegen.
 There are a number of places where dependencies have to be computed. To do this job,
 this function is used universally:
 
-```C
+```c
 // For procedures and triggers we want to walk the statement list and emit a set
 // of dependency entries that show what the code in question is using and how.
 // We track tables that are used and if they appear in say the FROM clause
@@ -543,7 +543,7 @@ because views can refer to other views and to tables.
 
 The primary code looks like this:
 
-```C
+```c
   table_callbacks callbacks = {
       .callback_any_table = cg_found_table,
       .callback_any_view = cg_found_view,
@@ -559,7 +559,7 @@ The primary code looks like this:
 
 And an example callback:
 
-```C
+```c
 // This is the callback function that tells us a view name was found in the body
 // of the stored proc we are currently examining.  The void context information
 // is how we remember which proc we were processing.   For each table we have
@@ -582,7 +582,7 @@ The callback gets the `pvContext` back, which is the `context` local variable
 from `cg_json_dependencies`.  This has all the buffers in it.  All
 we have to do is add the name to the buffer, which is done as follows:
 
-```C
+```c
 static void add_name_to_output(charbuf* output, CSTR table_name) {
   Contract(output);
   if (output->used > 1) {
@@ -602,7 +602,7 @@ So we can see that `find_table_refs` will tell us the kind of thing it found and
 
 When all this is done each kind of dependency is emitted if it exists, like so:
 
-```C
+```c
   if (used_views.used > 1) {
     bprintf(output, ",\n\"usesViews\" : [ %s ]", used_views.ptr);
   }
@@ -621,7 +621,7 @@ tables so that the same table/view/procedure is not reported twice.  After that
 it starts walking the AST recursively looking for the patterns.  Here's an example:
 
 
-```C
+```c
 
 // Recursively finds table nodes, executing the callback for each that is found.  The
 // callback will not be executed more than once for the same table name.

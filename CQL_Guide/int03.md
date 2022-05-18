@@ -52,7 +52,7 @@ have a main function like `cg_c_main` for the C code generator.  It gets the roo
 the AST and it can use the public interface of the semantic analyzer to get additional
 information.  See [Part 2](https://cgsql.dev/cql-guide/int02) for those details.
 
-```C
+```c
 // Main entry point for code-gen.  This will set up the buffers for the global
 // variables and any loose calls or DML.  Any code that needs to run in the
 // global scope will be added to the global_proc.  This is the only codegen
@@ -67,7 +67,7 @@ In addition to initializing its scratch storage, the main entry point also sets 
 symbol table for AST dispatch just like the `gen_` and `sem_` functions do.  Here
 are some samples from that table with the most common options:
 
-```C
+```c
   DDL_STMT_INIT(drop_table_stmt);
   DDL_STMT_INIT(drop_view_stmt);
   DDL_STMT_INIT(create_table_stmt);
@@ -77,7 +77,7 @@ The DDL (Data Definition Language) statements all get the same handling:  The te
 is generated from the AST. Any variables are bound and then the statement is executed.  The work
 is done with `cg_bound_sql_statement` which will be discussed later.
 
-```C
+```c
 // Straight up DDL invocation.  The ast has the statement, execute it!
 // We don't minify the aliases because DDL can have views and the view column names
 // can be referred to in users of the view.  Loose select statements can have
@@ -116,7 +116,7 @@ Next, the easiest case... there are a bunch of statements that create
 no code-gen at all.  These statements are type definitions that are interesting
 only to the semantic analyzer, or other control statements.  Some examples:
 
-```C
+```c
   NO_OP_STMT_INIT(declare_enum_stmt);
   NO_OP_STMT_INIT(declare_named_type);
 ```
@@ -124,7 +124,7 @@ only to the semantic analyzer, or other control statements.  Some examples:
 Next, the general purpose statement handler.  `STMT_INIT` creates mappings
 such as the `if_stmt` AST node mapping to `cg_if_stmt`.
 
-```C
+```c
   STMT_INIT(if_stmt);
   STMT_INIT(switch_stmt);
   STMT_INIT(while_stmt);
@@ -134,7 +134,7 @@ such as the `if_stmt` AST node mapping to `cg_if_stmt`.
 The next group of declarations are the expressions, with precedence and operator specified.
 There is a lot of code sharing between AST types as you can see from this sample:
 
-```C
+```c
   EXPR_INIT(num, cg_expr_num, "num", C_EXPR_PRI_ROOT);
   EXPR_INIT(str, cg_expr_str, "STR", C_EXPR_PRI_ROOT);
   EXPR_INIT(null, cg_expr_null, "NULL", C_EXPR_PRI_ROOT);
@@ -170,7 +170,7 @@ BEGIN
 END;
 ```
 
-```C
+```c
 void p(void) {
   cql_bool x = 0;
 
@@ -182,7 +182,7 @@ void p(void) {
 
 Finally, many built-in functions need special codegen, such as:
 
-```C
+```c
   FUNC_INIT(coalesce);
   FUNC_INIT(printf);
 ```
@@ -200,7 +200,7 @@ if we're going to understand the codegen passes.
 The public  interface for `charbuf` is in `charbuf.h` and it's really quite simple.  You allocate a `charbuf` and then you can
 `bprintf` into it. Let's be a bit more specific:
 
-```C
+```c
 #define CHARBUF_INTERNAL_SIZE 1024
 #define CHARBUF_GROWTH_SIZE 1024
 
@@ -223,7 +223,7 @@ cql_noexport void bprintf(charbuf *b, const char *format, ...);
 
 The typical pattern goes something like this:
 
-```C
+```c
   charbuf foo;
   bopen(&foo);
   bprintf(&foo, "Hello %s\n", "World");
@@ -241,7 +241,7 @@ To make sure buffers are consistently closed -- and this is a problem because
 there are often a lot of them -- they are allocated with these simple helper
 macros:
 
-```C
+```c
 #define CHARBUF_OPEN(x) \
   int32_t __saved_charbuf_count##x = charbuf_open_count; \
   charbuf x; \
@@ -254,7 +254,7 @@ macros:
 
 The earlier example would be written more properly:
 
-```C
+```c
   CHARBUF_OPEN(foo);
     bprintf(&foo, "Hello %s\n", "World");
     // do something with foo.ptr
@@ -268,7 +268,7 @@ become "globally" visible and get swapped out as needed.  For instance, the kind
 inside of `cg_create_proc_stmt` is normal, here is the sequence:
 
 Make new buffers...
-```C
+```c
   CHARBUF_OPEN(proc_fwd_ref);
   CHARBUF_OPEN(proc_body);
   CHARBUF_OPEN(proc_locals);
@@ -276,7 +276,7 @@ Make new buffers...
 ```
 
 Save the current buffer pointers...
-```C
+```c
   charbuf *saved_main = cg_main_output;
   charbuf *saved_decls = cg_declarations_output;
   charbuf *saved_scratch = cg_scratch_vars_output;
@@ -285,7 +285,7 @@ Save the current buffer pointers...
 ```
 
 Switch to the new buffers...
-```C
+```c
   cg_fwd_ref_output = &proc_fwd_ref;
   cg_main_output = &proc_body;
   cg_declarations_output = &proc_locals;
@@ -342,13 +342,13 @@ A simple CQL expression like:
 
 seems innocuous enough, and we'd like that expression to compile to this code:
 
-```C
+```c
   x = x + y;
 ```
 
 And indeed, it does.  Here's some actual output from the compiler:
 
-```C
+```c
 /*
 CREATE PROC p ()
 BEGIN
@@ -384,7 +384,7 @@ This doesn't work at all.
 
 To illustrate what goes wrong, we only have to change the test case a tiny bit.  The result is telling:
 
-```C
+```c
 /*
 CREATE PROC p ()
 BEGIN
@@ -411,7 +411,7 @@ removed from their declarations -- this makes all the difference in the world.
 
 Let's take a quick look at `cql_nullable_int32` and we'll see the crux of the problem immediately:
 
-```C
+```c
 typedef struct cql_nullable_int32 {
  cql_bool is_null;
  cql_int32 value;
@@ -426,7 +426,7 @@ are required to make all this work.
 
 Here's a more realistic example:
 
-```C
+```c
 /*
 CREATE PROC combine (x INTEGER, y INTEGER, OUT result INTEGER)
 BEGIN
@@ -465,7 +465,7 @@ and we need good mechanisms to manage that.  This is what we'll talk about in th
 
 The function that actually assigns scratch variables is `cg_scratch_var`
 
-```C
+```c
 // The scratch variable helper uses the given sem_type and the current
 // stack level to create a temporary variable name for that type at that level.
 // If the variable does not already have a declaration (as determined by the masks)
@@ -535,7 +535,7 @@ These temporaries are created with `CG_PUSH_TEMP` which simply creates the three
 scratch variable of the required type.  The variables follow a simple naming convention.  The stack level is increased after
 each temporary is allocated.
 
-```C
+```c
 // Create buffers for a temporary variable.  Use cg_scratch_var to fill in the buffers
 // with the text needed to refer to the variable.  cg_scratch_var picks the name
 // based on stack level-and type.
@@ -549,7 +549,7 @@ each temporary is allocated.
 
 Symmetrically, `CG_POP_TEMP` closes the `charbuf` variables and restores the stack level.
 
-```C
+```c
 // Release the buffers for the temporary, restore the stack level.
 #define CG_POP_TEMP(name) \
   CHARBUF_CLOSE(name##_value); \
@@ -571,7 +571,7 @@ and how the evaluation works within that pattern.  This is everywhere in `cg_c.c
 
 So let's look at an actual evaluator, the simplest of them all, this one does code generation for the `NULL` literal.
 
-```C
+```c
 static void cg_expr_null(
   ast_node *expr,
   CSTR op,
@@ -613,7 +613,7 @@ Let's look at one of the simplest operators: the `IS NULL` operator handled by `
 Note: this code has a simpler signature because it's actually part of codegen for `cg_expr_is` which
 has the general contract.
 
-```C
+```c
 // The code-gen for is_null is one of the easiest.  The recursive call
 // produces is_null as one of the outputs.  Use that.  Our is_null result
 // is always zero because IS NULL is never, itself, null.
@@ -650,7 +650,7 @@ Note: the code reveals one of the big CQL secrets -- that not null reference var
 
 Now let's look at those helper macros, they are pretty simple:
 
-```C
+```c
 // Make a temporary buffer for the evaluation results using the canonical
 // naming convention.  This might exit having burned some stack slots
 // for its result variables, that's normal.
@@ -681,7 +681,7 @@ function so there will always be parens hard-coded anyway".  However these thing
 Note that after calling `cg_expr` the temporary stack level might be increased.  We'll get to that in the next section.  For now, looking at `POP_EVAL` we
 can see it's very straightforward:
 
-```C
+```c
 // Close the buffers used for the above.
 // The scratch stack is not restored so that any temporaries used in
 // the evaluation of expr will not be re-used prematurely.  They
@@ -703,7 +703,7 @@ result variable of a suitable type.  This is the "other" reason for making scrat
 
 There are three macros that make this pretty simple.  The first is `CG_RESERVE_RESULT_VAR`
 
-```C
+```c
 // Make a scratch variable to hold the final result of an evaluation.
 // It may or may not be used.  It should be the first thing you put
 // so that it is on the top of your stack.  This only saves the slot.
@@ -731,7 +731,7 @@ that the scratch variable was actually used.
 
 The `CG_USE_RESULT_VAR` macro does exactly this operation.
 
-```C
+```c
 // If the result variable is going to be used, this writes its name
 // and .value and .is_null into the is_null and value fields.
 #define CG_USE_RESULT_VAR() \
@@ -753,7 +753,7 @@ There is a simpler macro that reserves and uses the result variable in one step,
 The "reserve" pattern is only necessary when there are some paths that need a result variable and some
 that don't.
 
-```C
+```c
 // This does reserve and use in one step
 #define CG_SETUP_RESULT_VAR(ast, sem_type) \
   CG_RESERVE_RESULT_VAR(ast, sem_type); \
@@ -762,7 +762,7 @@ that don't.
 
 And now armed with this knowledge we can look at the rest of the scratch stack management.
 
-```C
+```c
 // Release the buffer holding the name of the variable.
 // If the result variable was used, we can re-use any temporaries
 // with a bigger number.  They're no longer needed since they
@@ -795,7 +795,7 @@ the scratch variable API accept an AST pointer?
 The only place that AST pointer can be not null is in the `CG_USE_RESULT_VAR` macro, it was
 this line:
 
-```C
+```c
 cg_scratch_var(ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value);
 ```
 
@@ -803,7 +803,7 @@ And `ast_reserved` refers to the AST that we are trying to evaluate.  There's an
 special case that we want to optimize that saves a lot of scratch variables.  That case is handled
 by this code in `cg_scratch_var`:
 
-```C
+```c
   // try to avoid creating a scratch variable if we can use the target of an assignment in flight.
   if (is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
@@ -834,7 +834,7 @@ logic to handle the case where `x` is an out argument (hence call by reference, 
 
 To get a sense of how the compiler generates code for statements, we can look at some of the easiest cases.
 
-```C
+```c
 // "While" suffers from the same problem as IF and as a consequence
 // generating while (expression) would not generalize.
 // The overall pattern for while has to look like this:
@@ -902,7 +902,7 @@ END;
 
 which generates:
 
-```C
+```c
 void p(void) {
   cql_int32 x = 0;
 
@@ -932,7 +932,7 @@ END;
 
 which produces:
 
-```C
+```c
 void p(void) {
   cql_nullable_int32 x;
   cql_set_null(x);
@@ -988,7 +988,7 @@ END;
 
 Which generates:
 
-```C
+```c
 cql_string_literal(_literal_1_test_p, "test");
 
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
@@ -1028,7 +1028,7 @@ Let's look at those fragments carefully:
 
 The essential sequence is this one:
 
-```C
+```c
  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 ```
 
@@ -1058,7 +1058,7 @@ END;
 CQL doesn't have complicated exception objects or anything like that, exceptions are just simple
 control flow.  Here's the code for the above:
 
-```C
+```c
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull success) {
   cql_contract_argument_notnull((void *)success, 1);
 
@@ -1096,7 +1096,7 @@ The code in this case is nearly the same as the previous example.  Let's look at
 
 How does this happen?  Let's look at `cg_trycatch_helper` which does this work:
 
-```C
+```c
 // Very little magic is needed to do try/catch in our context.  The error
 // handlers for all the sqlite calls check _rc_ and if it's an error they
 // "goto" the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.
@@ -1131,7 +1131,7 @@ hit the catch block or else go to cleanup.
 
 The `THROW` operation illustrates this well:
 
-```C
+```c
 // Convert _rc_ into an error code.  If it already is one keep it.
 // Then go to the current error target.
 static void cg_throw_stmt(ast_node *ast) {
@@ -1172,7 +1172,7 @@ with new error labels.  All that together gives you very flexible try/catch beha
 Before we move on to more complex statements we have to discuss string literals a little bit.  We've mentioned before
 that the compiler is going to generate something like this:
 
-```C
+```c
 cql_string_literal(_literal_1_test_p, "test");
 ```
 
@@ -1194,7 +1194,7 @@ An example might make this clearer consider the following SQL:
 
 The generated text for this statement will be:
 
-```C
+```c
   "SELECT '\"x''y\"', '''y''\n'"
 ```
 
@@ -1237,7 +1237,7 @@ Consider:
 
 To do those assignments we need:
 
-```C
+```c
 cql_string_literal(_literal_1_x_y_p, "\"x'y\"");
 cql_string_literal(_literal_2_y_p, "'y'\n");
 ```
@@ -1289,7 +1289,7 @@ code we had to write in CQL was very clear and all the error checking is implici
 
 This is the generated code.  We'll walk through it and discuss how it is created.
 
-```C
+```c
 CQL_WARN_UNUSED cql_code p(
   sqlite3 *_Nonnull _db_,
   cql_nullable_int32 id_,
@@ -1342,7 +1342,7 @@ after the `multibind` call, so that's just boiler-plate the compiler can inject.
 We don't want to declare `_temp_stmt` over and over so there's a flag that records
 whether it has already been declared in the current procedure.
 
-```C
+```c
 // Emit a declaration for the temporary statement _temp_stmt_ if we haven't
 // already done so.  Also emit the cleanup once.
 static void ensure_temp_statement() {
@@ -1364,7 +1364,7 @@ So most of the above is just boiler-plate, the tricky part is:
 
 All of this is the business of this function:
 
-```C
+```c
 // This is the most important function for sqlite access;  it does the heavy
 // lifting of generating the C code to prepare and bind a SQL statement.
 // If cg_exec is true (CG_EXEC) then the statement is executed immediately
@@ -1385,7 +1385,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
 
 The core of this function looks like this:
 
-```C
+```c
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.variables_callback = cg_capture_variables;
@@ -1423,7 +1423,7 @@ head so the list will be in reverse order.
 With this done, we're pretty much set.  We'll produce the statement with a sequence
 like this one (there are a couple of variations, but this is the most general)
 
-```C
+```c
   bprintf(cg_main_output, "_rc_ = cql_prepare(_db_, %s%s_stmt,\n  ", amp, stmt_name);
   cg_pretty_quote_plaintext(temp.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
   bprintf(cg_main_output, ");\n");
@@ -1442,13 +1442,13 @@ The normal echo of the update statement in question looks like this:
 
 Note that it has indenting and newlines embedded in it.  The standard encoding of that would look like this:
 
-```C
+```c
 "  UPDATE foo\n  SET t = ?\n    WHERE id = ?;"
 ```
 
 That surely works, but it's wasteful and ugly. The pretty format instead produces:
 
-```C
+```c
     "UPDATE foo "
     "SET t = ? "
       "WHERE id = ?"
@@ -1461,7 +1461,7 @@ it's exclusively for SQLite formatting.
 
 All that's left to do is bind the arguments.  Remember that arg list is in reverse order:
 
-```C
+```c
   uint32_t count = 0;
   for (list_item *item = vars; item; item = item->next, count++) ;
 
@@ -1506,7 +1506,7 @@ END;
 
 This is going to be very similar to the examples we've seen so far:
 
-```C
+```c
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_string_ref _Nullable *_Nonnull t_) {
   cql_contract_argument_notnull((void *)t_, 2);
 
@@ -1570,7 +1570,7 @@ END;
 This simply changes the handling of the case where there is no row.  The that part of the code
 ends up looking like this:
 
-```C
+```c
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
   if (_rc_ == SQLITE_ROW) {
     cql_column_string_ref(_temp_stmt, 0, &_tmp_text_1);
@@ -1589,7 +1589,7 @@ ends up looking like this:
 There is also the `IF NOTHING OR NULL` variant which is left as an exercise to the reader.
 You can find all the flavors in `cg_c.c` in the this function:
 
-```C
+```c
 // This is a nested select expression.  To evaluate we will
 //  * prepare a temporary to hold the result
 //  * generate the bound SQL statement
@@ -1628,7 +1628,7 @@ Now in this case there can only be one row in the result, but it would be no dif
 
 Here's the C code:
 
-```C
+```c
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -1666,7 +1666,7 @@ first, and for a while only, type of cursor added to the CQL language.
 
 OK so how do we make a statement cursor.  It's once again `cg_bound_sql_statement` just like so:
 
-```C
+```c
 cg_bound_sql_statement(cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
 ```
 
@@ -1702,7 +1702,7 @@ END;
 
 For simplicity I will only include the code that is added.  The rest is the same.
 
-```C
+```c
   cql_int32 x = 0;
   cql_int32 y = 0;
 
@@ -1752,7 +1752,7 @@ END;
 
 Again here is what is now added, we've seen the `WHILE` pattern before:
 
-```C
+```c
   for (;;) {
   if (!(_C_has_row_)) break;
     printf("%d, %d\n", x, y);
@@ -1785,7 +1785,7 @@ END;
 
 The generated code is very similar:
 
-```C
+```c
   for (;;) {
     _rc_ = sqlite3_step(C_stmt);
     _C_has_row_ = _rc_ == SQLITE_ROW;
@@ -1826,7 +1826,7 @@ END;
 
 And the generated C code:
 
-```C
+```c
 typedef struct p_C_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
@@ -1890,7 +1890,7 @@ END;
 
 Note that the columns of the cursor were defined by the column aliases of the `SELECT`.
 
-```C
+```c
   for (;;) {
     _rc_ = sqlite3_step(C_stmt);
     C._has_row_ = _rc_ == SQLITE_ROW;
@@ -1967,7 +1967,7 @@ cql_cleanup:
 
 It's very similar to what we had before, let's quickly review the differences.
 
-```C
+```c
 typedef struct p_C_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
@@ -1985,13 +1985,13 @@ typedef struct p_C_row {
 
 Recall the reference types are always at the end and together.
 
-```C
+```c
   p_C_row C = { ._refs_count_ = 1, ._refs_offset_ = p_C_refs_offset };
 ```
 
 * `p_C_row` is now initialized to to ref count 1 and refs offset `p_C_refs_offset` defined above
 
-```C
+```c
   cql_multifetch(_rc_, C_stmt, 2,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.x,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
@@ -1999,7 +1999,7 @@ Recall the reference types are always at the end and together.
 
 * C.x is now of type string
 
-```C
+```c
     cql_alloc_cstr(_cstr_1, C.x);
     printf("%s, %d\n", _cstr_1, C.y);
     cql_free_cstr(_cstr_1, C.x);
@@ -2007,7 +2007,7 @@ Recall the reference types are always at the end and together.
 
 * C.x has to be converted to a C style string before it can be used with `printf` as a `%s` argument
 
-```C
+```c
   cql_teardown_row(C);
 ```
 
@@ -2043,7 +2043,7 @@ END;
 This is the first example of a procedure that return a result set that we've seen.  The wiring for this is
 very simple.
 
-```C
+```c
 static CQL_WARN_UNUSED cql_code q(
   sqlite3 *_Nonnull _db_,
   sqlite3_stmt *_Nullable *_Nonnull _result_stmt)
@@ -2083,7 +2083,7 @@ END;
 
 This generates:
 
-```C
+```c
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -2161,7 +2161,7 @@ generated code focusing just on the parts that involve `D`.
 First there is a row defintion for `D`. Unsurprisingly it is exactly the samea as the one for `C`.
 This must be the case since we specified `D CURSOR LIKE C`.
 
-```C
+```c
 typedef struct p_D_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
@@ -2175,19 +2175,19 @@ typedef struct p_D_row {
 
 Then the `D` cursor variables will be needed:
 
-```C
+```c
 p_D_row D = { ._refs_count_ = 1, ._refs_offset_ = p_D_refs_offset };
 ```
 
 The above also implies the cleanup code:
 
-```C
+```c
   cql_teardown_row(D);
 ```
 
 finally, we fetch `D` from `C`.  That's just some assignments:
 
-```C
+```c
   D._has_row_ = 1;
   cql_set_string_ref(&D.x, C.x);
   D.y = C.y;
@@ -2260,7 +2260,7 @@ Let's discuss some of what is above, first looking at `q`:
 
 Now let's look at the C for `q`
 
-```C
+```c
 typedef struct q_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
@@ -2321,7 +2321,7 @@ a hidden argument and it has retained references as appropriate.
 
 Now let's look at `p`:
 
-```C
+```c
 typedef struct p_C_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
@@ -2383,7 +2383,7 @@ END;
 
 The core generated function is this one:
 
-```C
+```c
 CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -2401,7 +2401,7 @@ cql_cleanup:
 We've seen this before, it creates the SQLite statement.  But that isn't all the code that was generated,
 let's have a look at what else we got in our outputs:
 
-```C
+```c
 CQL_WARN_UNUSED cql_code p_fetch_results(
   sqlite3 *_Nonnull _db_,
   p_result_set_ref _Nullable *_Nonnull result_set)
@@ -2436,7 +2436,7 @@ CQL_WARN_UNUSED cql_code p_fetch_results(
 
 Let's look at the things that are needed to load up that `info` structure.
 
-```C
+```c
 typedef struct p_row {
   cql_int32 y;
   cql_string_ref _Nonnull x;
@@ -2465,7 +2465,7 @@ Code generation creates a `.c` file and a `.h` file, we haven't talked much abou
 because it's mostly prototypes for the functions in the `.c` file.  But in this case we have
 a few more interesting things.  We need just two of them:
 
-```C
+```c
 #define CRC_p -6643602732498616851L
 
 #define p_data_types_count 2
@@ -2497,7 +2497,7 @@ With this data (which is in the end pretty small) the `cql_fetch_all_results` ca
 
 With this background, `cql_fetch_all_results` should be very approachable.  There's a good bit of work but it's all very simple.
 
-```C
+```c
 // By the time we get here, a CQL stored proc has completed execution and there is
 // now a statement (or an error result).  This function iterates the rows that
 // come out of the statement using the fetch info to describe the shape of the
@@ -2510,7 +2510,7 @@ cql_code cql_fetch_all_results(
 
 The core of that function looks like this:
 
-```C
+```c
   ...
   cql_bytebuf_open(&b);
   ...
@@ -2542,7 +2542,7 @@ if anything goes wrong.  There is not very much to it, and it's worth a read.
 
 Now recall that the way `cql_fetch_all_results` was used, was as follows:
 
-```C
+```c
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set)
 ```
 
@@ -2552,7 +2552,7 @@ So `p_fetch_results` is used to get that result set.  But what can you do with i
 Well, the result set contains copy of all the selected data, ready to use in with a C-friendly API.
 The interface is in the generated `.h` file.  Let's look at that now, it's the final piece of the puzzle.
 
-```C
+```c
 #ifndef result_set_type_decl_p_result_set
 #define result_set_type_decl_p_result_set 1
 cql_result_set_type_decl(p_result_set, p_result_set_ref);
@@ -2583,7 +2583,7 @@ extern CQL_WARN_UNUSED cql_code p_fetch_results(sqlite3 *_Nonnull _db_, p_result
 
 The getters are defined very simply:
 
-```C
+```c
 cql_string_ref _Nonnull p_get_x(p_result_set_ref _Nonnull result_set, cql_int32 row) {
   p_row *data = (p_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data[row].x;
@@ -2617,14 +2617,14 @@ is generated from such a method.  The C API is almost identical.  However, there
 
 The getters do not have the row number:
 
-```C
+```c
 extern cql_string_ref _Nonnull q_get_x(q_result_set_ref _Nonnull result_set);
 extern cql_int32 q_get_y(q_result_set_ref _Nonnull result_set);
 ```
 
 The actual getters are nearly the same as well
 
-```C
+```c
 cql_string_ref _Nonnull q_get_x(q_result_set_ref _Nonnull result_set) {
   q_row *data = (q_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data->x;
@@ -2641,7 +2641,7 @@ Virtually all the code for this is shared.
 
 You can find all this and more in `cg_c.c` by looking here:
 
-```C
+```c
 // If a stored procedure generates a result set then we need to do some extra work
 // to create the C friendly rowset creating and accessing helpers.  If stored
 // proc "foo" creates a row set then we need to:
@@ -2684,7 +2684,7 @@ END;
 
 Let's look at the code for the above, it will be very similar to other examples we've seen so far:
 
-```C
+```c
 typedef struct q_C_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
@@ -2748,7 +2748,7 @@ END;
 
 And the relevant code for this is as follows:
 
-```C
+```c
 typedef struct p_C_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;

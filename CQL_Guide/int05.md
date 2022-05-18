@@ -39,7 +39,7 @@ essentially what's going on.  And the essentials don't change very often.
 The rest of the system will use these, `cqlrt.h` is responsible for bringing in what you need
 later, or what `cqlrt_common.h` needs on your system.
 
-```C
+```c
 #pragma once
 
 #include <assert.h>
@@ -65,7 +65,7 @@ in production and continue.  This is a "softer" assertion.  Something that you'r
 that you'd like to be a `contract` but maybe there are lingering cases that have to be fixed
 first.
 
-```C
+```c
 #define cql_contract assert
 #define cql_invariant assert
 #define cql_tripwire assert
@@ -78,7 +78,7 @@ first.
 You can define these types to be whatever is appropriate on your system.
 Usually the mapping is pretty obvious.
 
-```C
+```c
 // value types
 typedef unsigned char cql_bool;
 #define cql_true (cql_bool)1
@@ -101,7 +101,7 @@ fact CQL doesn't actually create `CQL_C_TYPE_OBJECT` but the tests
 do.  CQL never creates raw object things, only external functions
 can do that.
 
-```C
+```c
 // metatypes for the straight C implementation
 #define CQL_C_TYPE_STRING 0
 #define CQL_C_TYPE_BLOB 1
@@ -117,7 +117,7 @@ to clean up their memory when the count goes to zero.
 
 You get to define `cql_type_ref` to be whatever you want.
 
-```C
+```c
 // base ref counting struct
 typedef struct cql_type *cql_type_ref;
 typedef struct cql_type {
@@ -131,7 +131,7 @@ Whatever you do with the types you'll need to define
 a retain and release method that uses them as the signature.
 Normal references should have a generic value comparison and a hash.
 
-```C
+```c
 void cql_retain(cql_type_ref _Nullable ref);
 void cql_release(cql_type_ref _Nullable ref);
 
@@ -149,7 +149,7 @@ The compiler emits different variations for readability only. It
 doesn't really work if they don't have common retain/release
 semantics.
 
-```C
+```c
 // builtin object
 typedef struct cql_object *cql_object_ref;
 typedef struct cql_object {
@@ -176,7 +176,7 @@ Same for blob, and blob has a couple of additional helper macros
 that are used to get information. Blobs also have hash and equality
 functions.
 
-```C
+```c
 // builtin blob
 typedef struct cql_blob *cql_blob_ref;
 typedef struct cql_blob {
@@ -196,7 +196,7 @@ cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blo
 Strings are the same as the others but they have many more functions
 associated with them.
 
-```C
+```c
 // builtin string
 typedef struct cql_string *cql_string_ref;
 typedef struct cql_string {
@@ -211,7 +211,7 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 The compiler uses this macro to create a named string literal. You decide
 how those will be implemented right here.
 
-```C
+```c
 #define cql_string_literal(name, text) \
   cql_string name##_ = { \
     .base = { \
@@ -226,7 +226,7 @@ how those will be implemented right here.
 
 Strings get assorted comparison and hashing functions. Note blob also had a hash.
 
-```C
+```c
 int cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
@@ -238,7 +238,7 @@ macros define how this is done.  Note that temporary allocations are possible
 here but the standard implementation does not actually need to do an alloc.  It
 stores UTF8 in the string pointer so it's ready to go.
 
-```C
+```c
 #define cql_alloc_cstr(cstr, str) const char *_Nonnull cstr = (str)->ptr
 #define cql_free_cstr(cstr, str) 0
 ```
@@ -259,7 +259,7 @@ is used in the event that you are moving ownership of the buffers from
 out of CQL's universe.  So like maybe JNI is absorbing the result, or
 Objective C is absorbing the result.  The default implementation is a no-op.
 
-```C
+```c
 // builtin result set
 typedef struct cql_result_set *cql_result_set_ref;
 
@@ -296,7 +296,7 @@ The CQL run test needs to do some mocking.  This bit is here for that test.  If 
 want to use the run test with your version of `cqlrt` you'll need to define a
 shim for `sqlite3_step` that can be intercepted.  This probably isn't going to come up.
 
-```C
+```c
 #ifdef CQL_RUN_TEST
 #define sqlite3_step mockable_sqlite3_step
 SQLITE_API cql_code mockable_sqlite3_step(sqlite3_stmt *_Nonnull);
@@ -312,7 +312,7 @@ your logging system.  Typically an integer.  This lets you assign indices to the
 you actually saw in any given run and then log them or something like that.  No data
 about parameters is provided, this is deliberate.
 
-```C
+```c
 // No-op implementation of profiling
 // * Note: we emit the crc as an expression just to be sure that there are no compiler
 //   errors caused by names being incorrect.  This improves the quality of the CQL
@@ -328,7 +328,7 @@ shared.  The rowset metadata will include the values for `getBoolean`, `getDoubl
 if `CQL_NO_GETTERS` is 0.  Getters are a little slower for C but give you a small number
 of functions that need to have JNI if you are targeting Java.
 
-```C
+```c
 // the basic version doesn't use column getters
 #define CQL_NO_GETTERS 1
 ```
@@ -344,7 +344,7 @@ decoded and that provides an audit trail.
 
 The default implementation of all this is a no-op.
 
-```C
+```c
 // implementation of encoding values. All sensitive values read from sqlite db will
 // be encoded at the source. CQL never decode encoded sensitive string unless the
 // user call explicitly decode function from code.
@@ -369,7 +369,7 @@ You must provide helpers to "box" and "unbox" a SQLite statement
 into a `cql_ref_type` of the appropriate type.  These are used
 to create boxed cursors.
 
-```C
+```c
 cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
 sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
 ```
@@ -385,7 +385,7 @@ other system specific things.  The result is that `cqlrt.h` is maybe a bit more
 verbose that it strictly needs to be.  Also some versions of cqlrt.h choose to
 implement some of the APIs as macros...
 
-```C
+```c
 // NOTE: This must be included *after* all of the above symbols/macros.
 #include "cqlrt_common.h"
 ```

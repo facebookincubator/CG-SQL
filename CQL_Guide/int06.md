@@ -46,7 +46,7 @@ one for things on the `@create` plan and one for the `@recreate` plan.  These wi
 At this point it's probably best to start looking at some of the code fragments. We're going to be looking
 at all the steps in the top level function:
 
-```C
+```c
 // Main entry point for schema upgrade code-gen.
 cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   Contract(options.file_names_count == 1);
@@ -66,7 +66,7 @@ as a prefix on all of the tables that the upgrader requires. This makes it possi
 if desired, to have separate upgraders for different parts of your schema, or to
 combine upgraders from two different unrelated subsystems in the same database.
 
-```C
+```c
   cql_exit_on_semantic_errors(head);
   exit_on_no_global_proc();
 ```
@@ -78,7 +78,7 @@ The item count can be easily computed using the allocated size of these items,
 both of which are of type `bytebuf`.  The comparators provided to `qsort`
 put these arrays in exactly the order needed.
 
-```C
+```c
   // first sort the schema annotations according to version, type etc.
   // we want to process these in an orderly fashion and the upgrade rules
   // are nothing like the declared order.
@@ -109,7 +109,7 @@ installed is already the latest version. To do this we compute a single global
 64-bit CRC for the current version of the schema.  This can be compared against a
 stored schema CRC from the last run. If the CRCs match, no work needs to be done.
 
-```C
+```c
   CHARBUF_OPEN(all_schema);
   // emit canonicalized schema for everything we will upgrade
   // this will include the schema declarations for the ad hoc migrations, too;
@@ -129,7 +129,7 @@ whole schema.
 
 A number of buffers will hold the various pieces of output.
 
-```C
+```c
   CHARBUF_OPEN(preamble);
   CHARBUF_OPEN(main);
   CHARBUF_OPEN(decls);
@@ -140,7 +140,7 @@ A number of buffers will hold the various pieces of output.
 
 These will be assembled as follows:
 
-```C
+```c
   CHARBUF_OPEN(output_file);
   bprintf(&output_file, "%s\n", decls.ptr);
   bprintf(&output_file, "%s", preamble.ptr);
@@ -165,7 +165,7 @@ The result type includes a customizable prefix string.  This is the first thing 
 Typically this is the appropriate copyright notice.  `rt.c` has this information and that
 file is replaceable.
 
-```C
+```c
   bprintf(&decls, "%s", rt->source_prefix);
 ```
 
@@ -181,7 +181,7 @@ that run in version 6, 7, 8, or 9 might use the contents of the column as part o
 We can never know what version we might find in a database that is being upgraded, it could be very far in
 the past, at a time where a deleted column still existed.
 
-```C
+```c
   bprintf(&decls, "-- no columns will be considered hidden in this script\n");
   bprintf(&decls, "-- DDL in procs will not count as declarations\n");
   bprintf(&decls, "@SCHEMA_UPGRADE_SCRIPT;\n\n");
@@ -189,7 +189,7 @@ the past, at a time where a deleted column still existed.
 
 A convenience comment goes in the `decls` section with the CRC.
 
-```C
+```c
   bprintf(&decls, "-- schema crc %lld\n\n", schema_crc);
 ```
 
@@ -197,19 +197,19 @@ There are a set of functions that allow the creation of, and access to, an in-me
 cache of the facet state.  These functions are all defined in `cqlrt_common.c`.  But
 they have to be declared to CQL to use them.
 
-```C
+```c
   cg_schema_emit_facet_functions(&decls);
 ```
 
 The table `sqlite_master` is used to read schema state.  That table has to be declared.
 
-```C
+```c
   cg_schema_emit_sqlite_master(&decls);
 ```
 
 The full schema may be used by the upgraders, we need a declaration of all of that.
 
-```C
+```c
   bprintf(&decls, "-- declare full schema of tables and views to be upgraded and their dependencies -- \n");
   cg_generate_schema_by_mode(&decls, SCHEMA_TO_DECLARE);
 ```
@@ -235,7 +235,7 @@ upgraders for the optional parts, there are two choices:
 
 The flag bits are these:
 
-```C
+```c
 // We declare all schema we might depend on in this upgrade (this is the include list)
 // e.g. we need all our dependent tables so that we can legally use them in an FK
 #define SCHEMA_TO_DECLARE 1
@@ -295,7 +295,7 @@ usual global prefix.  For ease of discussion I will elide the prefix for the res
   * this should really be removed from the OSS version but it's never been a priority
   * sorry...
 
-```C
+```c
   cg_schema_helpers(&decls);
 ```
 
@@ -307,7 +307,7 @@ been made to create/delete/move some data around in the new schema.  Each of the
 declared before it is used and the declarations will be here, at the end of the `decls` section
 after this introductory comment.
 
-```C
+```c
   bprintf(&decls, "-- declared upgrade procedures if any\n");
 ```
 
@@ -317,7 +317,7 @@ The main upgrader will invoke these key workers to do its job.  This is where th
 section starts. It contains the meat of the upgrade steps wrapped in procedures that do
 the job.
 
-```C
+```c
   cg_schema_emit_baseline_tables_proc(&preamble, &baseline);
 
   int32_t view_creates = 0, view_drops = 0;
@@ -377,7 +377,7 @@ and uses `cql_facet_add` to get them into a hash table.  This is the primary sou
 facets information during the run.  This is a good example of what the codegen looks like
 so we'll include this one in full.
 
-```C
+```c
   // code to read the facets into the hash table
 
   bprintf(&preamble, "@attribute(cql:private)\n");
@@ -404,7 +404,7 @@ We'll go over this section by section.
 
 #### Standard Steps
 
-```C
+```c
   // the main upgrade worker
 
   bprintf(&main, "\n@attribute(cql:private)\n");
@@ -459,7 +459,7 @@ We set up a loop to walk over the annotations and we flush if we ever encounter 
 a different version number.  We'll have to force a flush at the end as well.  `cg_schema_end_version`
 does the flush.
 
-```C
+```c
   int32_t prev_version = 0;
 
   for (int32_t i = 0; i < schema_items_count; i++) {
@@ -484,7 +484,7 @@ does the flush.
 
 If we find any item that is in a region we are not upgrading, we skip it.
 
-```C
+```c
     CSTR target_name = note->target_name;
 
     Invariant(type >= SCHEMA_ANNOTATION_FIRST && type <= SCHEMA_ANNOTATION_LAST);
@@ -496,7 +496,7 @@ If we find any item that is in a region we are not upgrading, we skip it.
 
 There are several annotation types.  Each one requires appropriate commands
 
-```C
+```c
     switch (type) {
       case SCHEMA_ANNOTATION_CREATE_COLUMN: {
         ... emit ALTER TABLE ADD COLUMN if the column does not already exist
@@ -556,7 +556,7 @@ At this point we can move on to the finalization steps.
 
 With the standard upgrade finished, there is just some house keeping left:
 
-```C
+```c
   if (recreate_items_count) {
     bprintf(&main, "    CALL %s_cql_recreate_tables();\n", global_proc_name);
   }
@@ -624,7 +624,7 @@ We're getting very close to the top level now
 At this point the main buffers `decls`, `preamble`, and `main` are ready to go.  We're back to where we started
 but we can quickly recap the overall flow.
 
-```C
+```c
   CHARBUF_OPEN(output_file);
   bprintf(&output_file, "%s\n", decls.ptr);
   bprintf(&output_file, "%s", preamble.ptr);

@@ -368,7 +368,7 @@ It might be helpful to look at the full output, which as always is in a `.ref` f
 In this case `cg_test.c.ref`.  Here is the full output with the line number
 normalized:
 
-```C
+```c
 // The statement ending at line XXXX
 
 /*
@@ -530,7 +530,7 @@ END_TEST(arithmetic)
 
 We should also reveal `EXPECT_SQL_TOO`, discussed below:
 
-```C
+```c
 -- use this for both normal eval and SQLite eval
 #define EXPECT_SQL_TOO(x) EXPECT(x); EXPECT((select x))
 ```

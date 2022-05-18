@@ -15,7 +15,7 @@ the error code if something had succeeded within the catch handler.
 
 The old codegen looked something like this:
 
-```C
+```c
   catch_start_1: {
     printf("error\n");
     cql_best_error(&_rc_)
@@ -29,7 +29,7 @@ a failure code (`SQLITE_ERROR`) but the original error code was lost.
 
 The new code looks like this:
 
-```C
+```c
   catch_start_1: {
     _rc_thrown_ = _rc_;
     printf("error\n");
@@ -45,7 +45,7 @@ This brings us to the second new thing: general purpose error traces.
 
 Error checking of result codes happens very consistently in CQL output.  The usual pattern looks something like this:
 
-```C
+```c
   _rc_ = cql_exec(_db_,
     "SAVEPOINT base_proc_savepoint");
   if (_rc_ != SQLITE_OK) goto cql_cleanup;
@@ -53,7 +53,7 @@ Error checking of result codes happens very consistently in CQL output.  The usu
 
 or if it's inside a try block a little different... very little actually
 
-```C
+```c
   // try
   {
     _rc_ = cql_exec(_db_,
@@ -69,7 +69,7 @@ catch block or else the procedure's cleanup code.
 We generalize this a bit now so that it looks like this:
 
 
-```C
+```c
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 
 -- or, in a catch...
@@ -84,7 +84,7 @@ while keeping `cqlrt_common.h` and `cqlrt_common.c` fixed.
 So for instance, your `cqlrt.h` could look like this:
 
 
-```C
+```c
 #ifndef CQL_TRACING_ENABLED
 #define cql_error_trace()
 #else
