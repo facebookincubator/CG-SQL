@@ -9,7 +9,7 @@
 
 module.exports = {
   someSidebar: {
-    'Quick Start': ['introduction', 'building', 'code-coverage', 'testing'],
-    Resources: ['dev-notes'],
+    'Quick Start': ['introduction', 'building'],
+    'Contributors': ['dev-notes', 'code-coverage', 'testing'],
   },
 };
