@@ -8663,8 +8663,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out
-  | {name throw_before_out}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out
+  {create_proc_stmt}: C: throw_before_out: { x: integer notnull } variable dml_proc shape_storage uses_out
+  | {name throw_before_out}: C: throw_before_out: { x: integer notnull } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {trycatch_stmt}: ok
@@ -10675,8 +10675,8 @@ BEGIN
     FROM bar;
 END;
 
-  {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-  | {name with_result_set}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  {create_proc_stmt}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {name with_result_set}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -10707,8 +10707,8 @@ BEGIN
   END IF;
 END;
 
-  {create_proc_stmt}: select: { A: integer notnull, B: real notnull } dml_proc
-  | {name with_matching_result}: select: { A: integer notnull, B: real notnull } dml_proc
+  {create_proc_stmt}: with_matching_result: { A: integer notnull, B: real notnull } dml_proc
+  | {name with_matching_result}: with_matching_result: { A: integer notnull, B: real notnull } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: i: integer variable in
@@ -10979,8 +10979,8 @@ BEGIN
   END IF;
 END;
 
-  {create_proc_stmt}: select: { A: integer notnull variable in } dml_proc
-  | {name with_ok_flags}: select: { A: integer notnull variable in } dml_proc
+  {create_proc_stmt}: with_ok_flags: { A: integer notnull } dml_proc
+  | {name with_ok_flags}: with_ok_flags: { A: integer notnull } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: i: integer notnull variable in
@@ -11130,10 +11130,10 @@ The statement ending at line XXXX
 
 DECLARE curs CURSOR FOR CALL with_result_set();
 
-  {declare_cursor}: curs: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
-  | {name curs}: curs: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
-  | {call_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name with_result_set}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  {declare_cursor}: curs: with_result_set: { id: integer notnull, name: text, rate: longint } variable dml_proc
+  | {name curs}: curs: with_result_set: { id: integer notnull, name: text, rate: longint } variable dml_proc
+  | {call_stmt}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name with_result_set}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
 
 The statement ending at line XXXX
 
@@ -11144,7 +11144,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
   {declare_cursor}: err
   | {name curs2}
   | {call_stmt}: err
-    | {name with_result_set}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name with_result_set}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
     | {expr_list}: ok
       | {int 1}
 
@@ -19011,8 +19011,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name does_not_shadow_an_existing_table}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
+    | {name does_not_shadow_an_existing_table}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -19086,12 +19086,12 @@ SELECT *
   | | {cte_tables}: ok
   |   | {cte_table}: does_not_shadow_an_existing_table: { x: integer notnull }
   |     | {cte_decl}: does_not_shadow_an_existing_table: { x: integer notnull }
-  |     | | {name does_not_shadow_an_existing_table}: select: { x: integer notnull } dml_proc
+  |     | | {name does_not_shadow_an_existing_table}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
   |     | | {name_list}
   |     |   | {name x}
-  |     | {shared_cte}: select: { x: integer notnull } dml_proc
-  |       | {call_stmt}: select: { x: integer notnull } dml_proc
-  |         | {name does_not_shadow_an_existing_table}: select: { x: integer notnull } dml_proc
+  |     | {shared_cte}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
+  |       | {call_stmt}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
+  |         | {name does_not_shadow_an_existing_table}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
   | {select_stmt}: select: { x: integer notnull }
     | {select_core_list}: select: { x: integer notnull }
     | | {select_core}: select: { x: integer notnull }
@@ -19142,8 +19142,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-    | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  | {create_proc_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: x: integer notnull variable in
@@ -19196,12 +19196,12 @@ SELECT *
   |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
   |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
   |     | | {star}: select: { x: integer notnull, y: integer notnull, z: real notnull }
-  |     | {select_from_etc}: TABLE { select: select }
-  |       | {table_or_subquery_list}: TABLE { select: select }
-  |       | | {table_or_subquery}: TABLE { select: select }
-  |       |   | {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |       |     | {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |       |       | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |     | {select_from_etc}: TABLE { a_shared_frag: a_shared_frag }
+  |       | {table_or_subquery_list}: TABLE { a_shared_frag: a_shared_frag }
+  |       | | {table_or_subquery}: TABLE { a_shared_frag: a_shared_frag }
+  |       |   | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |     | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |       | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       |       | {expr_list}: ok
   |       |         | {int 1}: integer notnull
   |       |         | {expr_list}
@@ -19231,7 +19231,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provi
   |       | | {table_or_subquery}: err
   |       |   | {shared_cte}: err
   |       |     | {call_stmt}: err
-  |       |       | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |       | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       | {select_where}
   |         | {select_groupby}
   |           | {select_having}
@@ -19307,8 +19307,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-    | {name ok_conditional_duplicate_cte_names}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  | {create_proc_stmt}: ok_conditional_duplicate_cte_names: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {name ok_conditional_duplicate_cte_names}: ok_conditional_duplicate_cte_names: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {if_stmt}: integer notnull
@@ -19722,8 +19722,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-    | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  | {create_proc_stmt}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: x: integer notnull variable in
@@ -19783,11 +19783,11 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0430: no actual table was pro
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}
-  |     | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |     | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |     | | {star}
   |     | {shared_cte}: err
   |       | {call_stmt}: err
-  |         | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {expr_list}: ok
   |           | {int 1}: integer notnull
   |           | {expr_list}
@@ -19845,8 +19845,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { id: integer<job>, name: text } dml_proc
-    | {name shared_frag3}: select: { id: integer<job>, name: text } dml_proc
+  | {create_proc_stmt}: shared_frag3: { id: integer<job>, name: text } dml_proc
+    | {name shared_frag3}: shared_frag3: { id: integer<job>, name: text } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { id: integer<job>, name: text }
@@ -19947,9 +19947,9 @@ SELECT *
   |     |   | {name id}
   |     |   | {name_list}
   |     |     | {name name}
-  |     | {shared_cte}: select: { id: integer<job>, name: text } dml_proc
-  |       | {call_stmt}: select: { id: integer<job>, name: text } dml_proc
-  |       | | {name shared_frag3}: select: { id: integer<job>, name: text } dml_proc
+  |     | {shared_cte}: shared_frag3: { id: integer<job>, name: text } dml_proc
+  |       | {call_stmt}: shared_frag3: { id: integer<job>, name: text } dml_proc
+  |       | | {name shared_frag3}: shared_frag3: { id: integer<job>, name: text } dml_proc
   |       | {cte_binding_list}
   |         | {cte_binding}
   |           | {name jobstuff}: jobstuff: { id: integer<job>, name: text }
@@ -19989,7 +19989,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
   |     | | {star}
   |     | {shared_cte}: err
   |       | {call_stmt}: err
-  |       | | {name shared_frag3}: select: { id: integer<job>, name: text } dml_proc
+  |       | | {name shared_frag3}: shared_frag3: { id: integer<job>, name: text } dml_proc
   |       | {cte_binding_list}
   |         | {cte_binding}
   |           | {name bad_jobstuff}: err
@@ -20219,7 +20219,7 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: called procedure
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -20300,7 +20300,7 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0430: no actual table 
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -20381,7 +20381,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0428: duplicate binding of table in
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -20466,7 +20466,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0431: an actual table was provided 
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -20551,7 +20551,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'bogus
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -20639,7 +20639,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0432: table provided must have the 
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -20720,7 +20720,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0433: table argument 'source' requi
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -20801,7 +20801,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
   |       | | {star}
   |       | {shared_cte}: err
   |         | {call_stmt}: err
-  |         | | {name shared_frag2}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | | {expr_list}: ok
   |         |   | {int 1}: integer notnull
   |         |   | {expr_list}
@@ -21070,9 +21070,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
   |     |   | {name id}
   |     |   | {name_list}
   |     |     | {name id}
-  |     | {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |       | {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |     | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {expr_list}: ok
   |           | {int 1}: integer notnull
   |           | {expr_list}
@@ -21282,9 +21282,9 @@ SELECT *
   |     |     | {name y}
   |     |     | {name_list}
   |     |       | {name z}
-  |     | {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |       | {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | {name a_shared_frag}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |     | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |         | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {expr_list}: ok
   |           | {int 1}: integer notnull
   |           | {expr_list}
@@ -21401,8 +21401,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_shared_fragment_with_CTEs}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_shared_fragment_with_CTEs: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_shared_fragment_with_CTEs}: test_shared_fragment_with_CTEs: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -21525,8 +21525,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name test_shared_fragment_without_CTEs}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: test_shared_fragment_without_CTEs: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name test_shared_fragment_without_CTEs}: test_shared_fragment_without_CTEs: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -24551,12 +24551,12 @@ BEGIN
   CALL with_result_set();
 END;
 
-  {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-  | {name uses_proc_for_result}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  {create_proc_stmt}: uses_proc_for_result: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {name uses_proc_for_result}: uses_proc_for_result: { id: integer notnull, name: text, rate: longint } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {call_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-        | {name with_result_set}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+      | {call_stmt}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
+        | {name with_result_set}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
 
 The statement ending at line XXXX
 
@@ -25969,8 +25969,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-  | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+  {create_proc_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+  | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
@@ -26005,9 +26005,9 @@ The statement ending at line XXXX
 
 DECLARE QQ CURSOR LIKE out_cursor_proc;
 
-  {declare_cursor_like_name}: QQ: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-  | {name QQ}: QQ: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-  | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+  {declare_cursor_like_name}: QQ: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+  | {name QQ}: QQ: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+  | {shape_def}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
     | {like}: ok
       | {name out_cursor_proc}
 
@@ -26020,7 +26020,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
   {fetch_call_stmt}: err
   | {name QQ}
   | {call_stmt}: err
-    | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+    | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
     | {expr_list}: ok
       | {int 1}
 
@@ -26031,8 +26031,8 @@ BEGIN
   SELECT 1 AS A, 2 AS B;
 END;
 
-  {create_proc_stmt}: select: { A: integer notnull, B: integer notnull } dml_proc
-  | {name not_out_cursor_proc}: select: { A: integer notnull, B: integer notnull } dml_proc
+  {create_proc_stmt}: not_out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc
+  | {name not_out_cursor_proc}: not_out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { A: integer notnull, B: integer notnull }
@@ -26066,7 +26066,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a proce
   {fetch_call_stmt}: err
   | {name QQ}
   | {call_stmt}: err
-    | {name not_out_cursor_proc}: select: { A: integer notnull, B: integer notnull } dml_proc
+    | {name not_out_cursor_proc}: not_out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc
 
 The statement ending at line XXXX
 
@@ -26432,8 +26432,8 @@ BEGIN
   OUT UNION C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
-  | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+  {create_proc_stmt}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+  | {name out_union_dml}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc
@@ -26473,8 +26473,8 @@ BEGIN
   OUT UNION C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
-  | {name out_union}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+  {create_proc_stmt}: C: out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+  | {name out_union}: C: out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor_like_select}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -26523,12 +26523,12 @@ BEGIN
   CALL out_union_dml();
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
-  | {name call_out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
+  {create_proc_stmt}: C: call_out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
+  | {name call_out_union_dml}: C: call_out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
-        | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+      | {call_stmt}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+        | {name out_union_dml}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
 
 The statement ending at line XXXX
 
@@ -26537,12 +26537,12 @@ BEGIN
   CALL out_union();
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union value_cursor
-  | {name call_out_union}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union value_cursor
+  {create_proc_stmt}: C: call_out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union value_cursor
+  | {name call_out_union}: C: call_out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
-        | {name out_union}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+      | {call_stmt}: C: out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
+        | {name out_union}: C: out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union value_cursor
 
 The statement ending at line XXXX
 
@@ -26588,7 +26588,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0063: can't mix and match out
       | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | {call_stmt}: err
-        | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+        | {name out_union_dml}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
 
 The statement ending at line XXXX
 
@@ -26631,8 +26631,8 @@ test/sem_test.sql:XXXX:1: error: in out_union_stmt : CQL0063: can't mix and matc
       |       | {select_offset}
       | {fetch_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
       | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
-      | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
-      | | {name out_union_dml}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+      | {call_stmt}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+      | | {name out_union_dml}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
       | {out_union_stmt}: err
         | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage
 
@@ -26677,10 +26677,10 @@ END;
   | {name result_reader}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+        | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+        | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+          | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 
 The statement ending at line XXXX
 
@@ -26696,12 +26696,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0215: value cursors are not used wi
   | {name fails_result_reader}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_stmt}: err
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+        | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -26785,14 +26785,14 @@ test/sem_test.sql:XXXX:1: error: in declare_value_cursor : CQL0197: duplicate va
   | {name fails_result_reader_double_decl}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_value_cursor}: err
         | {name C}: err
-        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+        | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+          | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 
 The statement ending at line XXXX
 
@@ -27028,13 +27028,13 @@ END;
   | {name fetch_values}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -27058,16 +27058,16 @@ END;
   | {name fetch_values_dummy}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
         | | {int 2}
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -27088,21 +27088,21 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out value_cursor
-  | {name fetch_from_call}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out value_cursor
+  {create_proc_stmt}: C: fetch_from_call: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out value_cursor
+  | {name fetch_from_call}: C: fetch_from_call: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_cursor_like_name}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {shape_def}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {like}: ok
       |     | {name out_cursor_proc}
       | {fetch_call_stmt}: ok
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {out_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -27119,19 +27119,19 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
   | {name fetch_from_call_to_proc_with_invalid_arguments}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_cursor_like_name}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {shape_def}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {like}: ok
       |     | {name out_cursor_proc}
       | {fetch_call_stmt}: err
       | | {name C}
       | | {call_stmt}: err
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {expr_list}: ok
       |     | {int 42}
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {out_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -27155,8 +27155,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
       | | {type_text}: text
       | {fetch_call_stmt}: err
       | | {name C}: err
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {out_stmt}: err
         | {name C}: err
 
@@ -27201,7 +27201,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from c
       | {fetch_call_stmt}: err
       | | {name C}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
       | | {call_stmt}: err
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {out_stmt}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
         | {name C}: C: select: { A: integer notnull, C: integer notnull } variable shape_storage value_cursor
 
@@ -27253,17 +27253,17 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | {name fetch_values_bogus_seed_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {insert_dummy_spec}: err
         | | {not}: err
         | | | {strlit 'x'}: text notnull
         | | {int 0}
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
 
@@ -27281,13 +27281,13 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0166: count of column
   | {name fetch_values_missing_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
               | {name_list}
@@ -27306,8 +27306,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
-  | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
+  {create_proc_stmt}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
+  | {name blob_out}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: select: { B: blob } variable dml_proc
@@ -27355,16 +27355,16 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: CQL has no good
   | {name fetch_values_blob_dummy}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
-      |   | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
+      |   | {name blob_out}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
         | | {int 2}
         | {name_columns_values}
-          | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
+          | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
 
@@ -27382,13 +27382,13 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column
   | {name fetch_values_missing_columns}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -27410,13 +27410,13 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   | {name fetch_values_bogus_value}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -27443,13 +27443,13 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
   | {name fetch_values_bogus_type}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: err
         | {name_columns_values}
-          | {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+          | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -27473,16 +27473,16 @@ END;
   | {name fetch_values_blob_dummy_with_null}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
-      | | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
-      |   | {name blob_out}: C: select: { B: blob } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
+      | | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
+      |   | {name blob_out}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
       | {fetch_values_stmt}: ok
         | {insert_dummy_spec}: integer notnull
         | | {int 123}: integer notnull
         | | {int 0}
         | {name_columns_values}
-          | {name C}: C: select: { B: blob } variable dml_proc shape_storage value_cursor
+          | {name C}: C: blob_out: { B: blob } variable dml_proc shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -27501,8 +27501,8 @@ BEGIN
   OUT C1;
 END;
 
-  {create_proc_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
-  | {name fetch_to_cursor_from_cursor}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
+  {create_proc_stmt}: C1: fetch_to_cursor_from_cursor: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
+  | {name fetch_to_cursor_from_cursor}: C1: fetch_to_cursor_from_cursor: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor_like_select}: C0: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -27954,13 +27954,13 @@ END;
   | {name declare_cursor_like_cursor}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      | {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {shape_def}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | {declare_value_cursor}: C0: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C0}: C0: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_cursor_like_name}: C1: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C1}: C1: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {shape_def}: C0: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
           | {like}: ok
             | {name C0}
 
@@ -28002,10 +28002,10 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor_like_name : CQL0197: duplicat
   | {name declare_cursor_like_cursor_with_same_name}: err
   | {proc_params_stmts}
     | {stmt_list}: err
-      | {declare_value_cursor}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {name C0}: C0: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_value_cursor}: C0: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {name C0}: C0: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | {declare_cursor_like_name}: err
         | {name C0}: err
         | {shape_def}
@@ -28110,8 +28110,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
-  | {name declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
+  {create_proc_stmt}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
+  | {name declare_cursor_like_select}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
@@ -28378,10 +28378,10 @@ END;
   | {name value_result_reader}: ok
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_value_cursor}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
-        | {call_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
-          | {name declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
+      | {declare_value_cursor}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+        | {name C}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+        | {call_stmt}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
+          | {name declare_cursor_like_select}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
 
 The statement ending at line XXXX
 
@@ -28749,8 +28749,8 @@ BEGIN
     FROM should_not_conflict;
 END;
 
-  {create_proc_stmt}: select: { a: integer notnull, b: integer notnull } dml_proc
-  | {name cte_test}: select: { a: integer notnull, b: integer notnull } dml_proc
+  {create_proc_stmt}: cte_test: { a: integer notnull, b: integer notnull } dml_proc
+  | {name cte_test}: cte_test: { a: integer notnull, b: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {with_select_stmt}: select: { a: integer notnull, b: integer notnull }
@@ -30561,8 +30561,8 @@ BEGIN
     WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
 END;
 
-  {create_proc_stmt}: select: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
-  | {name like_a_view}: select: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
+  {create_proc_stmt}: like_a_view: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
+  | {name like_a_view}: like_a_view: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: a_: bool notnull variable in
@@ -30692,8 +30692,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
-  | {name like_other_proc}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
+  {create_proc_stmt}: C: like_other_proc: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
+  | {name like_other_proc}: C: like_other_proc: { A: integer notnull, B: integer notnull } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: A_: integer notnull variable in
@@ -30708,14 +30708,14 @@ END;
     |       | {notnull}: integer notnull
     |         | {type_int}: integer
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_cursor_like_name}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {shape_def}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {like}: ok
       |     | {name out_cursor_proc}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      |   | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -30730,8 +30730,8 @@ END;
       |         | {dot}: B_: integer notnull variable in
       |           | {name ARGUMENTS}
       |           | {name B}
-      | {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {out_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -31370,8 +31370,8 @@ BEGIN
   ORDER BY bar_id;
 END;
 
-  {create_proc_stmt}: select: { bar_id: integer notnull } dml_proc
-  | {name simple_alias_order_by}: select: { bar_id: integer notnull } dml_proc
+  {create_proc_stmt}: simple_alias_order_by: { bar_id: integer notnull } dml_proc
+  | {name simple_alias_order_by}: simple_alias_order_by: { bar_id: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { bar_id: integer notnull }
@@ -31410,8 +31410,8 @@ BEGIN
   ORDER BY sort_order_value, id;
 END;
 
-  {create_proc_stmt}: UNION ALL: { sort_order_value: integer notnull, id: integer notnull } dml_proc
-  | {name complex_alias_order_by}: UNION ALL: { sort_order_value: integer notnull, id: integer notnull } dml_proc
+  {create_proc_stmt}: complex_alias_order_by: { sort_order_value: integer notnull, id: integer notnull } dml_proc
+  | {name complex_alias_order_by}: complex_alias_order_by: { sort_order_value: integer notnull, id: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: UNION ALL: { sort_order_value: integer notnull, id: integer notnull }
@@ -32753,8 +32753,8 @@ BEGIN
     FROM with_sensitive;
 END;
 
-  {create_proc_stmt}: select: { safe: integer notnull, sensitive_1: integer sensitive, sensitive_2: text sensitive, not_sensitive_1: text notnull, sensitive_3: integer sensitive, sensitive_4: bool sensitive } dml_proc
-  | {name get_sensitive}: select: { safe: integer notnull, sensitive_1: integer sensitive, sensitive_2: text sensitive, not_sensitive_1: text notnull, sensitive_3: integer sensitive, sensitive_4: bool sensitive } dml_proc
+  {create_proc_stmt}: get_sensitive: { safe: integer notnull, sensitive_1: integer sensitive, sensitive_2: text sensitive, not_sensitive_1: text notnull, sensitive_3: integer sensitive, sensitive_4: bool sensitive } dml_proc
+  | {name get_sensitive}: get_sensitive: { safe: integer notnull, sensitive_1: integer sensitive, sensitive_2: text sensitive, not_sensitive_1: text notnull, sensitive_3: integer sensitive, sensitive_4: bool sensitive } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { safe: integer notnull, sensitive_1: integer sensitive, sensitive_2: text sensitive, not_sensitive_1: text notnull, sensitive_3: integer sensitive, sensitive_4: bool sensitive }
@@ -35315,8 +35315,8 @@ END;
   |           | {name dummy_select}: ok
   |           | {misc_attr_value_list}
   |             | {name dummy_result_set}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name autotest_all_attribute}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: autotest_all_attribute: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name autotest_all_attribute}: autotest_all_attribute: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -35384,8 +35384,8 @@ END;
   |                 | {misc_attr_value_list}
   |                   | {misc_attr_value_list}: ok
   |                     | {int 777}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name autotest_dummy_test_with_others_attributes}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: autotest_dummy_test_with_others_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name autotest_dummy_test_with_others_attributes}: autotest_dummy_test_with_others_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -35435,8 +35435,8 @@ END;
   |               | {misc_attr_value_list}
   |                 | {misc_attr_value_list}: ok
   |                   | {int 2}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name autotest_dummy_test_without_other_attributes}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: autotest_dummy_test_without_other_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name autotest_dummy_test_without_other_attributes}: autotest_dummy_test_without_other_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -35585,8 +35585,8 @@ END;
   |             | {misc_attr_value_list}
   |               | {misc_attr_value_list}: ok
   |                 | {int 1}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name autotest_dummy_test_long_col_with_int_value}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: autotest_dummy_test_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name autotest_dummy_test_long_col_with_int_value}: autotest_dummy_test_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -35634,8 +35634,8 @@ END;
   |               | {misc_attr_value_list}: ok
   |                 | {uminus}: ok
   |                   | {int 1}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name autotest_dummy_test_neg_long_col_with_int_value}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: autotest_dummy_test_neg_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name autotest_dummy_test_neg_long_col_with_int_value}: autotest_dummy_test_neg_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -36589,8 +36589,8 @@ END;
   |     | {name table1}: ok
   |     | {misc_attr_value_list}
   |       | {name table2}: ok
-  | {create_proc_stmt}: select: { id: integer } dml_proc
-    | {name autodropper}: select: { id: integer } dml_proc
+  | {create_proc_stmt}: autodropper: { id: integer } dml_proc
+    | {name autodropper}: autodropper: { id: integer } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer }
@@ -37678,8 +37678,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_base_fragment}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_base_fragment: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_base_fragment}: test_base_fragment: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -37766,8 +37766,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_extension_fragment_union}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_extension_fragment_union: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_extension_fragment_union}: test_extension_fragment_union: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -37907,8 +37907,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_extension_fragment_union_two}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_extension_fragment_union_two: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_extension_fragment_union_two}: test_extension_fragment_union_two: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -38047,8 +38047,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name another_core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text } dml_proc
-    | {name test_base_fragment_two}: select: { x: integer notnull, y: text } dml_proc
+  | {create_proc_stmt}: test_base_fragment_two: { x: integer notnull, y: text } dml_proc
+    | {name test_base_fragment_two}: test_base_fragment_two: { x: integer notnull, y: text } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -38871,8 +38871,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
-    | {name test_extension_fragment}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+  | {create_proc_stmt}: test_extension_fragment: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+    | {name test_extension_fragment}: test_extension_fragment: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -41750,8 +41750,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
-    | {name test_bad_extension_fragment_nine_ok}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+  | {create_proc_stmt}: test_bad_extension_fragment_nine_ok: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+    | {name test_bad_extension_fragment_nine_ok}: test_bad_extension_fragment_nine_ok: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -42798,8 +42798,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name assembly_core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_assembly_base_fragment}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_assembly_base_fragment: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_assembly_base_fragment}: test_assembly_base_fragment: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -42886,8 +42886,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name assembly_core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_assembly_extension_fragment_one}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_assembly_extension_fragment_one: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_assembly_extension_fragment_one}: test_assembly_extension_fragment_one: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -43026,8 +43026,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name assembly_core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real } dml_proc
-    | {name test_assembly_extension_fragment_two}: select: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real } dml_proc
+  | {create_proc_stmt}: test_assembly_extension_fragment_two: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real } dml_proc
+    | {name test_assembly_extension_fragment_two}: test_assembly_extension_fragment_two: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -43199,8 +43199,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name assembly_core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, d: integer } dml_proc
-    | {name test_assembly_extension_fragment_three}: select: { x: integer notnull, y: text, z: longint, d: integer } dml_proc
+  | {create_proc_stmt}: test_assembly_extension_fragment_three: { x: integer notnull, y: text, z: longint, d: integer } dml_proc
+    | {name test_assembly_extension_fragment_three}: test_assembly_extension_fragment_three: { x: integer notnull, y: text, z: longint, d: integer } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -43347,8 +43347,8 @@ END;
   |   | | {name cql}
   |   | | {name assembly_fragment}
   |   | {name assembly_core}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real, d: integer } dml_proc
-    | {name assembly_core}: select: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real, d: integer } dml_proc
+  | {create_proc_stmt}: assembly_core: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real, d: integer } dml_proc
+    | {name assembly_core}: assembly_core: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real, d: integer } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -43693,8 +43693,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name for_bad}: ok
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name test_assembly_base_for_bad}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: test_assembly_base_for_bad: { x: integer notnull } dml_proc
+    | {name test_assembly_base_for_bad}: test_assembly_base_for_bad: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -44215,8 +44215,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name test_bad_assembly_base_fragment}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_bad_assembly_base_fragment}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_bad_assembly_base_fragment: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_bad_assembly_base_fragment}: test_bad_assembly_base_fragment: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -44358,8 +44358,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name assembly_core_bad_one}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name test_bad_assembly_base_fragment_one}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: test_bad_assembly_base_fragment_one: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name test_bad_assembly_base_fragment_one}: test_bad_assembly_base_fragment_one: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -44445,8 +44445,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name assembly_core_bad_one}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
-    | {name test_bad_assembly_extension_fragment_one}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+  | {create_proc_stmt}: test_bad_assembly_extension_fragment_one: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+    | {name test_bad_assembly_extension_fragment_one}: test_bad_assembly_extension_fragment_one: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -44590,8 +44590,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name assembly_core_bad_one}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
-    | {name test_bad_assembly_extension_fragment_two}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+  | {create_proc_stmt}: test_bad_assembly_extension_fragment_two: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+    | {name test_bad_assembly_extension_fragment_two}: test_bad_assembly_extension_fragment_two: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -44938,8 +44938,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name assembly_core_bad_two}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name create_bad_assembly_base_fragment_two}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: create_bad_assembly_base_fragment_two: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name create_bad_assembly_base_fragment_two}: create_bad_assembly_base_fragment_two: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -45108,8 +45108,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name assembly_core_bad_three}: ok
-  | {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
-    | {name create_bad_assembly_base_fragment_three}: select: { x: integer notnull, y: text, z: longint } dml_proc
+  | {create_proc_stmt}: create_bad_assembly_base_fragment_three: { x: integer notnull, y: text, z: longint } dml_proc
+    | {name create_bad_assembly_base_fragment_three}: create_bad_assembly_base_fragment_three: { x: integer notnull, y: text, z: longint } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -45281,8 +45281,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name assembly_core_simple}: ok
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name base_with_args}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: base_with_args: { x: integer notnull } dml_proc
+    | {name base_with_args}: base_with_args: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: idx_: integer notnull variable in
@@ -46256,8 +46256,8 @@ BEGIN
     FROM tvf(1);
 END;
 
-  {create_proc_stmt}: select: { foo: text } dml_proc
-  | {name using_tvf}: select: { foo: text } dml_proc
+  {create_proc_stmt}: using_tvf: { foo: text } dml_proc
+  | {name using_tvf}: using_tvf: { foo: text } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { foo: text }
@@ -46358,8 +46358,8 @@ BEGIN
     WHERE tvf.foo = 'x';
 END;
 
-  {create_proc_stmt}: select: { foo: text } dml_proc
-  | {name using_tvf_unaliased}: select: { foo: text } dml_proc
+  {create_proc_stmt}: using_tvf_unaliased: { foo: text } dml_proc
+  | {name using_tvf_unaliased}: using_tvf_unaliased: { foo: text } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { foo: text }
@@ -46397,8 +46397,8 @@ BEGIN
     WHERE T1.foo = 'x';
 END;
 
-  {create_proc_stmt}: select: { foo: text } dml_proc
-  | {name using_tvf_aliased}: select: { foo: text } dml_proc
+  {create_proc_stmt}: using_tvf_aliased: { foo: text } dml_proc
+  | {name using_tvf_aliased}: using_tvf_aliased: { foo: text } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { foo: text }
@@ -46523,8 +46523,8 @@ BEGIN
     FROM ReadFromRowset(rowset);
 END;
 
-  {create_proc_stmt}: select: { id: integer } dml_proc
-  | {name rowset_object_reader}: select: { id: integer } dml_proc
+  {create_proc_stmt}: rowset_object_reader: { id: integer } dml_proc
+  | {name rowset_object_reader}: rowset_object_reader: { id: integer } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: rowset: object<rowset> variable in
@@ -47615,8 +47615,8 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0270: use FETCH FROM for
     | {stmt_list}: err
       | {declare_cursor}: err
         | {name C}
-        | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-          | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+        | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+          | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 
 The statement ending at line XXXX
 
@@ -48577,8 +48577,8 @@ BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text notnull } dml_proc
-  | {name substr_test_notnull}: select: { t: text notnull } dml_proc
+  {create_proc_stmt}: substr_test_notnull: { t: text notnull } dml_proc
+  | {name substr_test_notnull}: substr_test_notnull: { t: text notnull } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text notnull variable in
@@ -48620,8 +48620,8 @@ BEGIN
   SELECT substr(t, 1) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text notnull } dml_proc
-  | {name substr_test_onearg}: select: { t: text notnull } dml_proc
+  {create_proc_stmt}: substr_test_onearg: { t: text notnull } dml_proc
+  | {name substr_test_onearg}: substr_test_onearg: { t: text notnull } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text notnull variable in
@@ -48661,8 +48661,8 @@ BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text } dml_proc
-  | {name substr_test_nullable_string}: select: { t: text } dml_proc
+  {create_proc_stmt}: substr_test_nullable_string: { t: text } dml_proc
+  | {name substr_test_nullable_string}: substr_test_nullable_string: { t: text } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text variable in
@@ -48703,8 +48703,8 @@ BEGIN
   SELECT substr(t, nullable(1), 2) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text } dml_proc
-  | {name substr_test_nullable_start}: select: { t: text } dml_proc
+  {create_proc_stmt}: substr_test_nullable_start: { t: text } dml_proc
+  | {name substr_test_nullable_start}: substr_test_nullable_start: { t: text } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text notnull variable in
@@ -48751,8 +48751,8 @@ BEGIN
   SELECT substr(t, 1, nullable(2)) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text } dml_proc
-  | {name substr_test_nullable_count}: select: { t: text } dml_proc
+  {create_proc_stmt}: substr_test_nullable_count: { t: text } dml_proc
+  | {name substr_test_nullable_count}: substr_test_nullable_count: { t: text } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text notnull variable in
@@ -48799,8 +48799,8 @@ BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text sensitive } dml_proc
-  | {name substr_test_sensitive_string}: select: { t: text sensitive } dml_proc
+  {create_proc_stmt}: substr_test_sensitive_string: { t: text sensitive } dml_proc
+  | {name substr_test_sensitive_string}: substr_test_sensitive_string: { t: text sensitive } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text variable in sensitive
@@ -48842,8 +48842,8 @@ BEGIN
   SELECT substr(t, sensitive(1), 2) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text sensitive } dml_proc
-  | {name substr_test_sensitive_start}: select: { t: text sensitive } dml_proc
+  {create_proc_stmt}: substr_test_sensitive_start: { t: text sensitive } dml_proc
+  | {name substr_test_sensitive_start}: substr_test_sensitive_start: { t: text sensitive } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text variable in
@@ -48889,8 +48889,8 @@ BEGIN
   SELECT substr(t, 1, sensitive(2)) AS t;
 END;
 
-  {create_proc_stmt}: select: { t: text sensitive } dml_proc
-  | {name substr_test_sensitive_count}: select: { t: text sensitive } dml_proc
+  {create_proc_stmt}: substr_test_sensitive_count: { t: text sensitive } dml_proc
+  | {name substr_test_sensitive_count}: substr_test_sensitive_count: { t: text sensitive } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: t: text variable in
@@ -49962,23 +49962,23 @@ BEGIN
   OUT UNION C;
 END;
 
-  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
-  | {name many_row_emitter}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
+  {create_proc_stmt}: C: many_row_emitter: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
+  | {name many_row_emitter}: C: many_row_emitter: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {shape_def}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {declare_cursor_like_name}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {shape_def}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       |   | {like}: ok
       |     | {name out_cursor_proc}
       | {fetch_call_stmt}: ok
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-      | {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
-        | {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | {out_union_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+      | {out_union_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+        | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 
@@ -50493,8 +50493,8 @@ BEGIN
   SELECT NULL AS X;
 END;
 
-  {create_proc_stmt}: UNION ALL: { X: text } dml_proc
-  | {name mixed_union}: UNION ALL: { X: text } dml_proc
+  {create_proc_stmt}: mixed_union: { X: text } dml_proc
+  | {name mixed_union}: mixed_union: { X: text } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: UNION ALL: { X: text }
@@ -50540,8 +50540,8 @@ BEGIN
     FROM core;
 END;
 
-  {create_proc_stmt}: select: { x: text } dml_proc
-  | {name mixed_union_cte}: select: { x: text } dml_proc
+  {create_proc_stmt}: mixed_union_cte: { x: text } dml_proc
+  | {name mixed_union_cte}: mixed_union_cte: { x: text } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {with_select_stmt}: select: { x: text }
@@ -52693,8 +52693,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage uses_out value_cursor
-  | {name fetch_from_empty_col_list}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage uses_out value_cursor
+  {create_proc_stmt}: C: fetch_from_empty_col_list: { a: integer notnull, b: real, c: text, d: text, e: longint } variable shape_storage uses_out value_cursor
+  | {name fetch_from_empty_col_list}: C: fetch_from_empty_col_list: { a: integer notnull, b: real, c: text, d: text, e: longint } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor_like_name}: C: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
@@ -53744,8 +53744,8 @@ END;
   |   | | {name autotest}
   |   | {misc_attr_value_list}: ok
   |     | {name dummy_test}: ok
-  | {create_proc_stmt}: select: { t: text sensitive } dml_proc
-    | {name sens_result_proc}: select: { t: text sensitive } dml_proc
+  | {create_proc_stmt}: sens_result_proc: { t: text sensitive } dml_proc
+    | {name sens_result_proc}: sens_result_proc: { t: text sensitive } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { t: text sensitive }
@@ -54031,8 +54031,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name blob_stuff}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, bl: blob notnull } dml_proc
-    | {name blob_base_fragment}: select: { id: integer notnull, bl: blob notnull } dml_proc
+  | {create_proc_stmt}: blob_base_fragment: { id: integer notnull, bl: blob notnull } dml_proc
+    | {name blob_base_fragment}: blob_base_fragment: { id: integer notnull, bl: blob notnull } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -54110,8 +54110,8 @@ END;
   |   | | {name cql}
   |   | | {name extension_fragment}
   |   | {name blob_stuff}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
-    | {name blob_ext_fragment}: select: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
+  | {create_proc_stmt}: blob_ext_fragment: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
+    | {name blob_ext_fragment}: blob_ext_fragment: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -54242,8 +54242,8 @@ END;
   |   | | {name cql}
   |   | | {name assembly_fragment}
   |   | {name blob_stuff}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
-    | {name blob_stuff}: select: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
+  | {create_proc_stmt}: blob_stuff: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
+    | {name blob_stuff}: blob_stuff: { id: integer notnull, bl: blob notnull, bl2: blob } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer notnull variable in
@@ -56191,8 +56191,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out
-  | {name basic_wrapper_out}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out
+  {create_proc_stmt}: C: basic_wrapper_out: { id: integer, name: text } variable dml_proc shape_storage uses_out
+  | {name basic_wrapper_out}: C: basic_wrapper_out: { id: integer, name: text } variable dml_proc shape_storage uses_out
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: basic_source: { id: integer, name: text } variable uses_out_union
@@ -56213,8 +56213,8 @@ BEGIN
   OUT UNION C;
 END;
 
-  {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
-  | {name basic_wrapper_out_union}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
+  {create_proc_stmt}: C: basic_wrapper_out_union: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
+  | {name basic_wrapper_out_union}: C: basic_wrapper_out_union: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor}: C: basic_source: { id: integer, name: text } variable uses_out_union
@@ -56480,8 +56480,8 @@ END;
   |                   | {int 2}: ok
   |                   | {misc_attr_value_list}
   |                     | {int 1}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, id2: integer } dml_proc
-    | {name self_ref_proc_table}: select: { id: integer notnull, id2: integer } dml_proc
+  | {create_proc_stmt}: self_ref_proc_table: { id: integer notnull, id2: integer } dml_proc
+    | {name self_ref_proc_table}: self_ref_proc_table: { id: integer notnull, id2: integer } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, id2: integer }
@@ -56517,8 +56517,8 @@ END;
   |   | | {name cql}
   |   | | {name ok_table_scan}
   |   | {name foo}: ok
-  | {create_proc_stmt}: select: { id: integer notnull } dml_proc
-    | {name ok_table_scan}: select: { id: integer notnull } dml_proc
+  | {create_proc_stmt}: ok_table_scan: { id: integer notnull } dml_proc
+    | {name ok_table_scan}: ok_table_scan: { id: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull }
@@ -57400,8 +57400,8 @@ BEGIN
   SELECT -9223372036854775808L AS x;
 END;
 
-  {create_proc_stmt}: select: { x: longint notnull } dml_proc
-  | {name min_int_64_test}: select: { x: longint notnull } dml_proc
+  {create_proc_stmt}: min_int_64_test: { x: longint notnull } dml_proc
+  | {name min_int_64_test}: min_int_64_test: { x: longint notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { x: longint notnull }
@@ -57429,8 +57429,8 @@ BEGIN
   SELECT 2147483647 AS a, 2147483648L AS b, 3.4e11 AS c, .001e+5 AS d, .4e-9 AS e;
 END;
 
-  {create_proc_stmt}: select: { a: integer notnull, b: longint notnull, c: real notnull, d: real notnull, e: real notnull } dml_proc
-  | {name exotic_literals}: select: { a: integer notnull, b: longint notnull, c: real notnull, d: real notnull, e: real notnull } dml_proc
+  {create_proc_stmt}: exotic_literals: { a: integer notnull, b: longint notnull, c: real notnull, d: real notnull, e: real notnull } dml_proc
+  | {name exotic_literals}: exotic_literals: { a: integer notnull, b: longint notnull, c: real notnull, d: real notnull, e: real notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { a: integer notnull, b: longint notnull, c: real notnull, d: real notnull, e: real notnull }
@@ -57477,8 +57477,8 @@ BEGIN
   SELECT 0x13aF AS a, 0x234L AS b, 0x123456789L AS c;
 END;
 
-  {create_proc_stmt}: select: { a: integer notnull, b: longint notnull, c: longint notnull } dml_proc
-  | {name hex_literals}: select: { a: integer notnull, b: longint notnull, c: longint notnull } dml_proc
+  {create_proc_stmt}: hex_literals: { a: integer notnull, b: longint notnull, c: longint notnull } dml_proc
+  | {name hex_literals}: hex_literals: { a: integer notnull, b: longint notnull, c: longint notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { a: integer notnull, b: longint notnull, c: longint notnull }
@@ -60496,7 +60496,7 @@ BEGIN
   DECLARE C CURSOR FOR box;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0343: variable must be of type object<T cursor> where T is a valid shape name 'box'
+test/sem_test.sql:XXXX:1: error: in str : CQL0343: variable must be of type object<T CURSOR> or object<T SET> where T is a valid shape name 'box'
 
   {create_proc_stmt}: err
   | {name cursor_unbox_not_cursor}: err
@@ -61117,8 +61117,8 @@ BEGIN
   OUT cursor_with_object;
 END;
 
-  {create_proc_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
-  | {name try_to_emit_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
+  {create_proc_stmt}: cursor_with_object: try_to_emit_object: { an_obj: object } variable shape_storage uses_out value_cursor
+  | {name try_to_emit_object}: cursor_with_object: try_to_emit_object: { an_obj: object } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {out_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
@@ -61975,8 +61975,8 @@ BEGIN
   OUT C;
 END;
 
-  {create_proc_stmt}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage uses_out value_cursor
-  | {name enum_users_out}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage uses_out value_cursor
+  {create_proc_stmt}: C: enum_users_out: { x: integer<integer_things> notnull } variable shape_storage uses_out value_cursor
+  | {name enum_users_out}: C: enum_users_out: { x: integer<integer_things> notnull } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: i: integer<integer_things> notnull variable in
@@ -65817,8 +65817,8 @@ END;
   |     | {name name}: ok
   |     | {misc_attr_value_list}
   |       | {name rate}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name vault_sensitive_with_valid_values}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: vault_sensitive_with_valid_values: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name vault_sensitive_with_valid_values}: vault_sensitive_with_valid_values: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -66267,8 +66267,8 @@ END;
   |         | {name name}: ok
   |         | {misc_attr_value_list}
   |           | {name title}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
-    | {name vault_sensitive_with_valid_context_and_encode_columns}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
+  | {create_proc_stmt}: vault_sensitive_with_valid_context_and_encode_columns: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
+    | {name vault_sensitive_with_valid_context_and_encode_columns}: vault_sensitive_with_valid_context_and_encode_columns: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
@@ -66434,8 +66434,8 @@ END;
   |     | {misc_attr_value_list}
   |       | {misc_attr_value_list}: ok
   |         | {name name}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name vault_sensitive_with_integer_encode_context}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: vault_sensitive_with_integer_encode_context: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name vault_sensitive_with_integer_encode_context}: vault_sensitive_with_integer_encode_context: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -66812,8 +66812,8 @@ END;
   |     | {misc_attr_value_list}
   |       | {misc_attr_value_list}: ok
   |         | {name rate}: ok
-  | {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {name vault_sensitive_with_text_encode_context_strict_mode}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+  | {create_proc_stmt}: vault_sensitive_with_text_encode_context_strict_mode: { id: integer notnull, name: text, rate: longint } dml_proc
+    | {name vault_sensitive_with_text_encode_context_strict_mode}: vault_sensitive_with_text_encode_context_strict_mode: { id: integer notnull, name: text, rate: longint } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
@@ -69793,8 +69793,8 @@ END;
   |   | | {name cql}
   |   | | {name base_fragment}
   |   | {name id_frag}: ok
-  | {create_proc_stmt}: select: { id: integer notnull } dml_proc
-    | {name id_frag_base}: select: { id: integer notnull } dml_proc
+  | {create_proc_stmt}: id_frag_base: { id: integer notnull } dml_proc
+    | {name id_frag_base}: id_frag_base: { id: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { id: integer notnull }
@@ -71725,8 +71725,8 @@ BEGIN
   END IF;
 END;
 
-  {create_proc_stmt}: select: { b: integer notnull } dml_proc
-  | {name improvements_work_in_sql}: select: { b: integer notnull } dml_proc
+  {create_proc_stmt}: improvements_work_in_sql: { b: integer notnull } dml_proc
+  | {name improvements_work_in_sql}: improvements_work_in_sql: { b: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: integer
@@ -71892,8 +71892,8 @@ BEGIN
   LET x13 := some_global;
 END;
 
-  {create_proc_stmt}: select: { a: longint notnull } dml_proc
-  | {name improvements_work_for_globals}: select: { a: longint notnull } dml_proc
+  {create_proc_stmt}: improvements_work_for_globals: { a: longint notnull } dml_proc
+  | {name improvements_work_for_globals}: improvements_work_for_globals: { a: longint notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {if_stmt}: bool notnull
@@ -72072,10 +72072,10 @@ END;
       | |   |         | {call_filter_clause}
       | |   |         | {arg_list}: ok
       | |   |           | {name some_global}: some_global: integer inferred_notnull variable
-      | |   | {declare_value_cursor}: c: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | |   | | {name c}: c: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
-      | |   | | {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      | |   |   | {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | |   | {declare_value_cursor}: c: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | |   | | {name c}: c: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+      | |   | | {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+      | |   |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
       | |   | {let_stmt}: x11: integer variable
       | |   | | {name x11}: x11: integer variable
       | |   | | {name some_global}: some_global: integer variable
@@ -72109,8 +72109,8 @@ BEGIN
     WHERE yn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { xn: integer, yn: integer notnull } dml_proc
-  | {name improvements_work_for_select_star}: select: { xn: integer, yn: integer notnull } dml_proc
+  {create_proc_stmt}: improvements_work_for_select_star: { xn: integer, yn: integer notnull } dml_proc
+  | {name improvements_work_for_select_star}: improvements_work_for_select_star: { xn: integer, yn: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { xn: integer, yn: integer notnull }
@@ -72169,8 +72169,8 @@ BEGIN
     WHERE tnull.xn IS NOT NULL AND yn IS NOT NULL AND zn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
-  | {name improvements_work_for_select_table_star}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
+  {create_proc_stmt}: improvements_work_for_select_table_star: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
+  | {name improvements_work_for_select_table_star}: improvements_work_for_select_table_star: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull }
@@ -72246,8 +72246,8 @@ BEGIN
     WHERE xn IS NOT NULL AND yn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull } dml_proc
-  | {name improvements_work_for_select_expressions}: select: { xn: integer notnull, yn: integer notnull } dml_proc
+  {create_proc_stmt}: improvements_work_for_select_expressions: { xn: integer notnull, yn: integer notnull } dml_proc
+  | {name improvements_work_for_select_expressions}: improvements_work_for_select_expressions: { xn: integer notnull, yn: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { xn: integer notnull, yn: integer notnull }
@@ -72301,8 +72301,8 @@ BEGIN
     WHERE xn IS NOT NULL AND yn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
-  | {name improvements_correctly_handle_nested_selects}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
+  {create_proc_stmt}: improvements_correctly_handle_nested_selects: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
+  | {name improvements_correctly_handle_nested_selects}: improvements_correctly_handle_nested_selects: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull }
@@ -72430,8 +72430,8 @@ BEGIN
     WHERE xn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { yn: integer notnull, yn0: integer } dml_proc
-  | {name improvements_apply_in_select_exprs}: select: { yn: integer notnull, yn0: integer } dml_proc
+  {create_proc_stmt}: improvements_apply_in_select_exprs: { yn: integer notnull, yn0: integer } dml_proc
+  | {name improvements_apply_in_select_exprs}: improvements_apply_in_select_exprs: { yn: integer notnull, yn0: integer } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { yn: integer notnull, yn0: integer }
@@ -72487,8 +72487,8 @@ BEGIN
     FROM tnull;
 END;
 
-  {create_proc_stmt}: select: { xn: integer, yn: integer } dml_proc
-  | {name local_variable_improvements_do_not_affect_result_columns}: select: { xn: integer, yn: integer } dml_proc
+  {create_proc_stmt}: local_variable_improvements_do_not_affect_result_columns: { xn: integer, yn: integer } dml_proc
+  | {name local_variable_improvements_do_not_affect_result_columns}: local_variable_improvements_do_not_affect_result_columns: { xn: integer, yn: integer } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: integer
@@ -72530,8 +72530,8 @@ BEGIN
     WHERE tnull.xn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
-  | {name improvements_work_on_join_results}: select: { xn0: integer notnull } dml_proc
+  {create_proc_stmt}: improvements_work_on_join_results: { xn0: integer notnull } dml_proc
+  | {name improvements_work_on_join_results}: improvements_work_on_join_results: { xn0: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { xn0: integer notnull }
@@ -72591,8 +72591,8 @@ BEGIN
     INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn AND tnull.xn IS NOT NULL;
 END;
 
-  {create_proc_stmt}: select: { xn0: integer } dml_proc
-  | {name improvements_do_not_work_for_on_clauses}: select: { xn0: integer } dml_proc
+  {create_proc_stmt}: improvements_do_not_work_for_on_clauses: { xn0: integer } dml_proc
+  | {name improvements_do_not_work_for_on_clauses}: improvements_do_not_work_for_on_clauses: { xn0: integer } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {select_stmt}: select: { xn0: integer }
@@ -72847,8 +72847,8 @@ BEGIN
   OUT c;
 END;
 
-  {create_proc_stmt}: c: select: { a: integer } variable shape_storage uses_out value_cursor
-  | {name returns_nullable_int}: c: select: { a: integer } variable shape_storage uses_out value_cursor
+  {create_proc_stmt}: c: returns_nullable_int: { a: integer } variable shape_storage uses_out value_cursor
+  | {name returns_nullable_int}: c: returns_nullable_int: { a: integer } variable shape_storage uses_out value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_cursor_like_select}: c: select: { a: integer } variable shape_storage value_cursor
@@ -72915,10 +72915,10 @@ END;
         |   |       | {dot}: args_a: integer inferred_notnull variable in
         |   |         | {name args}
         |   |         | {name a}
-        |   | {declare_value_cursor}: c: select: { a: integer } variable shape_storage value_cursor
-        |   | | {name c}: c: select: { a: integer } variable shape_storage value_cursor
-        |   | | {call_stmt}: c: select: { a: integer } variable shape_storage uses_out value_cursor
-        |   |   | {name returns_nullable_int}: c: select: { a: integer } variable shape_storage uses_out value_cursor
+        |   | {declare_value_cursor}: c: returns_nullable_int: { a: integer } variable shape_storage value_cursor
+        |   | | {name c}: c: returns_nullable_int: { a: integer } variable shape_storage value_cursor
+        |   | | {call_stmt}: c: returns_nullable_int: { a: integer } variable shape_storage uses_out value_cursor
+        |   |   | {name returns_nullable_int}: c: returns_nullable_int: { a: integer } variable shape_storage uses_out value_cursor
         |   | {let_stmt}: x1: integer variable
         |     | {name x1}: x1: integer variable
         |     | {dot}: c.a: integer variable
@@ -72939,8 +72939,8 @@ BEGIN
   END IF;
 END;
 
-  {create_proc_stmt}: select: { b: integer notnull } dml_proc
-  | {name improvements_work_within_ctes}: select: { b: integer notnull } dml_proc
+  {create_proc_stmt}: improvements_work_within_ctes: { b: integer notnull } dml_proc
+  | {name improvements_work_within_ctes}: improvements_work_within_ctes: { b: integer notnull } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: integer
@@ -80839,8 +80839,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { id: integer notnull } dml_proc
-    | {name conditional_frag}: select: { id: integer notnull } dml_proc
+  | {create_proc_stmt}: conditional_frag: { id: integer notnull } dml_proc
+    | {name conditional_frag}: conditional_frag: { id: integer notnull } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: bb: integer notnull variable in
@@ -80961,8 +80961,8 @@ BEGIN
     FROM D;
 END;
 
-  {create_proc_stmt}: select: { id: integer notnull } dml_proc
-  | {name conditional_user}: select: { id: integer notnull } dml_proc
+  {create_proc_stmt}: conditional_user: { id: integer notnull } dml_proc
+  | {name conditional_user}: conditional_user: { id: integer notnull } dml_proc
   | {proc_params_stmts}
     | {params}: ok
     | | {param}: xx: integer notnull variable in
@@ -80979,9 +80979,9 @@ END;
         |     | | {name D}
         |     | | {name_list}
         |     |   | {name id}
-        |     | {shared_cte}: select: { id: integer notnull } dml_proc
-        |       | {call_stmt}: select: { id: integer notnull } dml_proc
-        |       | | {name conditional_frag}: select: { id: integer notnull } dml_proc
+        |     | {shared_cte}: conditional_frag: { id: integer notnull } dml_proc
+        |       | {call_stmt}: conditional_frag: { id: integer notnull } dml_proc
+        |       | | {name conditional_frag}: conditional_frag: { id: integer notnull } dml_proc
         |       | | {expr_list}: ok
         |       |   | {int 1}: integer notnull
         |       | {cte_binding_list}
@@ -81028,8 +81028,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name fragtest_0_0}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: fragtest_0_0: { x: integer notnull } dml_proc
+    | {name fragtest_0_0}: fragtest_0_0: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -81114,8 +81114,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name fragtest_0_1}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: fragtest_0_1: { x: integer notnull } dml_proc
+    | {name fragtest_0_1}: fragtest_0_1: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -81146,12 +81146,12 @@ END;
           |   | {cte_tables}
           |     | {cte_table}: fragtest_0_0: { x: integer notnull }
           |       | {cte_decl}: fragtest_0_0: { x: integer notnull }
-          |       | | {name fragtest_0_0}: select: { x: integer notnull } dml_proc
+          |       | | {name fragtest_0_0}: fragtest_0_0: { x: integer notnull } dml_proc
           |       | | {name_list}
           |       |   | {name x}
-          |       | {shared_cte}: select: { x: integer notnull } dml_proc
-          |         | {call_stmt}: select: { x: integer notnull } dml_proc
-          |         | | {name fragtest_0_0}: select: { x: integer notnull } dml_proc
+          |       | {shared_cte}: fragtest_0_0: { x: integer notnull } dml_proc
+          |         | {call_stmt}: fragtest_0_0: { x: integer notnull } dml_proc
+          |         | | {name fragtest_0_0}: fragtest_0_0: { x: integer notnull } dml_proc
           |         | {cte_binding_list}
           |           | {cte_binding}
           |             | {name source}: source: { x: integer notnull }
@@ -81191,8 +81191,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name fragtest_0_2}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: fragtest_0_2: { x: integer notnull } dml_proc
+    | {name fragtest_0_2}: fragtest_0_2: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -81223,12 +81223,12 @@ END;
           |   | {cte_tables}
           |     | {cte_table}: fragtest_0_1: { x: integer notnull }
           |       | {cte_decl}: fragtest_0_1: { x: integer notnull }
-          |       | | {name fragtest_0_1}: select: { x: integer notnull } dml_proc
+          |       | | {name fragtest_0_1}: fragtest_0_1: { x: integer notnull } dml_proc
           |       | | {name_list}
           |       |   | {name x}
-          |       | {shared_cte}: select: { x: integer notnull } dml_proc
-          |         | {call_stmt}: select: { x: integer notnull } dml_proc
-          |         | | {name fragtest_0_1}: select: { x: integer notnull } dml_proc
+          |       | {shared_cte}: fragtest_0_1: { x: integer notnull } dml_proc
+          |         | {call_stmt}: fragtest_0_1: { x: integer notnull } dml_proc
+          |         | | {name fragtest_0_1}: fragtest_0_1: { x: integer notnull } dml_proc
           |         | {cte_binding_list}
           |           | {cte_binding}
           |             | {name source}: source: { x: integer notnull }
@@ -81299,7 +81299,7 @@ The above originated from CALL fragtest_0_2 USING possible_conflict AS source
     |       | | {table_or_subquery}: err
     |       |   | {shared_cte}: err
     |       |     | {call_stmt}: err
-    |       |     | | {name fragtest_0_2}: select: { x: integer notnull } dml_proc
+    |       |     | | {name fragtest_0_2}: fragtest_0_2: { x: integer notnull } dml_proc
     |       |     | {cte_binding_list}
     |       |       | {cte_binding}
     |       |         | {name possible_conflict}: possible_conflict: { x: integer notnull }
@@ -81348,12 +81348,12 @@ SELECT *
     |   | {select_expr_list_con}: select: { x: integer notnull }
     |     | {select_expr_list}: select: { x: integer notnull }
     |     | | {star}: select: { x: integer notnull }
-    |     | {select_from_etc}: TABLE { select: select }
-    |       | {table_or_subquery_list}: TABLE { select: select }
-    |       | | {table_or_subquery}: TABLE { select: select }
-    |       |   | {shared_cte}: select: { x: integer notnull } dml_proc
-    |       |     | {call_stmt}: select: { x: integer notnull } dml_proc
-    |       |     | | {name fragtest_0_2}: select: { x: integer notnull } dml_proc
+    |     | {select_from_etc}: TABLE { fragtest_0_2: fragtest_0_2 }
+    |       | {table_or_subquery_list}: TABLE { fragtest_0_2: fragtest_0_2 }
+    |       | | {table_or_subquery}: TABLE { fragtest_0_2: fragtest_0_2 }
+    |       |   | {shared_cte}: fragtest_0_2: { x: integer notnull } dml_proc
+    |       |     | {call_stmt}: fragtest_0_2: { x: integer notnull } dml_proc
+    |       |     | | {name fragtest_0_2}: fragtest_0_2: { x: integer notnull } dml_proc
     |       |     | {cte_binding_list}
     |       |       | {cte_binding}
     |       |         | {name source}: source: { x: integer notnull }
@@ -81384,8 +81384,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: fragtest_1_0: { x: integer notnull } dml_proc
+    | {name fragtest_1_0}: fragtest_1_0: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -81506,11 +81506,11 @@ The above originated from CALL fragtest_1_0 USING possible_conflict AS source
           |   | {cte_tables}: err
           |     | {cte_table}: err
           |       | {cte_decl}
-          |       | | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+          |       | | {name fragtest_1_0}: fragtest_1_0: { x: integer notnull } dml_proc
           |       | | {star}
           |       | {shared_cte}: err
           |         | {call_stmt}: err
-          |         | | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+          |         | | {name fragtest_1_0}: fragtest_1_0: { x: integer notnull } dml_proc
           |         | {cte_binding_list}
           |           | {cte_binding}
           |             | {name possible_conflict}: possible_conflict: { x: integer notnull }
@@ -81549,8 +81549,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name fragtest_2_0}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: fragtest_2_0: { x: integer notnull } dml_proc
+    | {name fragtest_2_0}: fragtest_2_0: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -81613,8 +81613,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name fragtest_2_1}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: fragtest_2_1: { x: integer notnull } dml_proc
+    | {name fragtest_2_1}: fragtest_2_1: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -81645,12 +81645,12 @@ END;
           |   | {cte_tables}
           |     | {cte_table}: fragtest_2_0: { x: integer notnull }
           |       | {cte_decl}: fragtest_2_0: { x: integer notnull }
-          |       | | {name fragtest_2_0}: select: { x: integer notnull } dml_proc
+          |       | | {name fragtest_2_0}: fragtest_2_0: { x: integer notnull } dml_proc
           |       | | {name_list}
           |       |   | {name x}
-          |       | {shared_cte}: select: { x: integer notnull } dml_proc
-          |         | {call_stmt}: select: { x: integer notnull } dml_proc
-          |           | {name fragtest_2_0}: select: { x: integer notnull } dml_proc
+          |       | {shared_cte}: fragtest_2_0: { x: integer notnull } dml_proc
+          |         | {call_stmt}: fragtest_2_0: { x: integer notnull } dml_proc
+          |           | {name fragtest_2_0}: fragtest_2_0: { x: integer notnull } dml_proc
           | {select_stmt}: select: { x: integer notnull }
             | {select_core_list}: select: { x: integer notnull }
             | | {select_core}: select: { x: integer notnull }
@@ -81714,12 +81714,12 @@ SELECT *
     |   | {select_expr_list_con}: select: { x: integer notnull }
     |     | {select_expr_list}: select: { x: integer notnull }
     |     | | {star}: select: { x: integer notnull }
-    |     | {select_from_etc}: TABLE { select: select }
-    |       | {table_or_subquery_list}: TABLE { select: select }
-    |       | | {table_or_subquery}: TABLE { select: select }
-    |       |   | {shared_cte}: select: { x: integer notnull } dml_proc
-    |       |     | {call_stmt}: select: { x: integer notnull } dml_proc
-    |       |     | | {name fragtest_2_1}: select: { x: integer notnull } dml_proc
+    |     | {select_from_etc}: TABLE { fragtest_2_1: fragtest_2_1 }
+    |       | {table_or_subquery_list}: TABLE { fragtest_2_1: fragtest_2_1 }
+    |       | | {table_or_subquery}: TABLE { fragtest_2_1: fragtest_2_1 }
+    |       |   | {shared_cte}: fragtest_2_1: { x: integer notnull } dml_proc
+    |       |     | {call_stmt}: fragtest_2_1: { x: integer notnull } dml_proc
+    |       |     | | {name fragtest_2_1}: fragtest_2_1: { x: integer notnull } dml_proc
     |       |     | {cte_binding_list}
     |       |       | {cte_binding}
     |       |         | {name possible_conflict}: possible_conflict: { x: integer notnull }
@@ -81748,8 +81748,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name frag_not_really_a_conflict}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: frag_not_really_a_conflict: { x: integer notnull } dml_proc
+    | {name frag_not_really_a_conflict}: frag_not_really_a_conflict: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {with_select_stmt}: select: { x: integer notnull }
@@ -81783,12 +81783,12 @@ END;
             |   | {select_expr_list_con}: select: { x: integer notnull }
             |     | {select_expr_list}: select: { x: integer notnull }
             |     | | {star}: select: { x: integer notnull }
-            |     | {select_from_etc}: TABLE { select: select }
-            |       | {table_or_subquery_list}: TABLE { select: select }
-            |       | | {table_or_subquery}: TABLE { select: select }
-            |       |   | {shared_cte}: select: { x: integer notnull } dml_proc
-            |       |     | {call_stmt}: select: { x: integer notnull } dml_proc
-            |       |     | | {name fragtest_1_0}: select: { x: integer notnull } dml_proc
+            |     | {select_from_etc}: TABLE { fragtest_1_0: fragtest_1_0 }
+            |       | {table_or_subquery_list}: TABLE { fragtest_1_0: fragtest_1_0 }
+            |       | | {table_or_subquery}: TABLE { fragtest_1_0: fragtest_1_0 }
+            |       |   | {shared_cte}: fragtest_1_0: { x: integer notnull } dml_proc
+            |       |     | {call_stmt}: fragtest_1_0: { x: integer notnull } dml_proc
+            |       |     | | {name fragtest_1_0}: fragtest_1_0: { x: integer notnull } dml_proc
             |       |     | {cte_binding_list}
             |       |       | {cte_binding}
             |       |         | {name possible_conflict}: possible_conflict: { x: integer notnull }
@@ -82673,8 +82673,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { result: integer } dml_proc
-    | {name inline_math}: select: { result: integer } dml_proc
+  | {create_proc_stmt}: inline_math: { result: integer } dml_proc
+    | {name inline_math}: inline_math: { result: integer } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: x_: integer variable in
@@ -82720,8 +82720,8 @@ BEGIN
     FROM N;
 END;
 
-  {create_proc_stmt}: select: { result: integer } dml_proc
-  | {name do_inline_math}: select: { result: integer } dml_proc
+  {create_proc_stmt}: do_inline_math: { result: integer } dml_proc
+  | {name do_inline_math}: do_inline_math: { result: integer } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {with_select_stmt}: select: { result: integer }
@@ -82813,8 +82813,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { sum: integer } dml_proc
-    | {name inline_math_bad}: select: { sum: integer } dml_proc
+  | {create_proc_stmt}: inline_math_bad: { sum: integer } dml_proc
+    | {name inline_math_bad}: inline_math_bad: { sum: integer } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: x: integer variable in
@@ -82917,8 +82917,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: UNION ALL: { x: integer notnull } dml_proc
-    | {name inline_math_bad2}: UNION ALL: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: inline_math_bad2: { x: integer notnull } dml_proc
+    | {name inline_math_bad2}: inline_math_bad2: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: UNION ALL: { x: integer notnull }
@@ -83070,8 +83070,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull, y: integer notnull } dml_proc
-    | {name inline_math_bad4}: select: { x: integer notnull, y: integer notnull } dml_proc
+  | {create_proc_stmt}: inline_math_bad4: { x: integer notnull, y: integer notnull } dml_proc
+    | {name inline_math_bad4}: inline_math_bad4: { x: integer notnull, y: integer notnull } dml_proc
     | {proc_params_stmts}
       | {stmt_list}: ok
         | {select_stmt}: select: { x: integer notnull, y: integer notnull }
@@ -83179,8 +83179,8 @@ END;
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: select: { x: integer notnull } dml_proc
-    | {name inline_frag}: select: { x: integer notnull } dml_proc
+  | {create_proc_stmt}: inline_frag: { x: integer notnull } dml_proc
+    | {name inline_frag}: inline_frag: { x: integer notnull } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: x: integer variable in
@@ -87354,8 +87354,8 @@ END;
   |   | | {name cql}
   |   | | {name implements}
   |   | {name interface1}: ok
-  | {create_proc_stmt}: select: { id: integer variable in, name: text variable in } dml_proc
-    | {name test_interface1_implementation_correct}: select: { id: integer variable in, name: text variable in } dml_proc
+  | {create_proc_stmt}: test_interface1_implementation_correct: { id: integer, name: text } dml_proc
+    | {name test_interface1_implementation_correct}: test_interface1_implementation_correct: { id: integer, name: text } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer variable in

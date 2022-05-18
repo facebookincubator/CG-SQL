@@ -2592,7 +2592,7 @@ end;
 
 -- TEST: the out statement will force the proc type to be recomputed, it must not lose the
 -- throw state when that happens.
--- + {create_proc_stmt}: C: select: { x: integer notnull } variable dml_proc shape_storage uses_out
+-- + {create_proc_stmt}: C: throw_before_out: { x: integer notnull } variable dml_proc shape_storage uses_out
 -- - error:
 create proc throw_before_out()
 begin
@@ -3166,7 +3166,7 @@ begin catch
 end catch;
 
 -- TEST: this procedure will have a structured semantic type
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
 -- +1 {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
 create procedure with_result_set()
@@ -3175,7 +3175,7 @@ begin
 end;
 
 -- TEST: this procedure will have a structured semantic type
--- + {create_proc_stmt}: select: { A: integer notnull, B: real notnull } dml_proc
+-- + {create_proc_stmt}: with_matching_result: { A: integer notnull, B: real notnull } dml_proc
 -- - error:
 -- +2 {select_stmt}: select: { A: integer notnull, B: real notnull }
 create procedure with_matching_result(i integer)
@@ -3228,7 +3228,7 @@ begin
 end;
 
 -- TEST: this procedure will match variables
--- + {create_proc_stmt}: select: { A: integer notnull variable in }
+-- + {create_proc_stmt}: with_ok_flags: { A: integer notnull }
 -- use the important fragment for the match, one is a variable so the tree is slightly different
 -- +2 {select_expr_list}: select: { A: integer notnull
 -- - error:
@@ -3266,8 +3266,8 @@ begin
 end;
 
 -- TEST: good cursor
--- + {declare_cursor}: curs: select: { id: integer notnull, name: text, rate: longint } variable
--- + {name with_result_set}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {declare_cursor}: curs: with_result_set: { id: integer notnull, name: text, rate: longint } variable
+-- + {name with_result_set}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
 declare curs cursor for call with_result_set();
 
@@ -5069,7 +5069,7 @@ end;
 -- that has yet to be defined; this applies to all procs, not just those that
 -- are shared fragments
 -- + {stmt_and_attr}: ok
--- + {create_proc_stmt}: select: { x: integer notnull } dml_proc
+-- + {create_proc_stmt}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc does_not_shadow_an_existing_table()
@@ -5105,7 +5105,7 @@ end;
 -- + {misc_attrs}: ok
 -- + {name cql}
 -- + {name shared_fragment}
--- + {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- + {create_proc_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc a_shared_frag(x integer not null, y integer not null)
@@ -5114,7 +5114,7 @@ begin
 end;
 
 -- TEST: use the fragment in a nested select : easiest option
--- + {shared_cte}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- + {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
 select * from (call a_shared_frag(1, 2));
 
@@ -5137,7 +5137,7 @@ begin
 end;
 
 -- TEST: create a conditional fragment with matching like clauses in both branches
--- + {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- + {create_proc_stmt}: ok_conditional_duplicate_cte_names: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc ok_conditional_duplicate_cte_names()
@@ -5238,7 +5238,7 @@ call a_shared_frag();
 -- + {misc_attrs}: ok
 -- + {name cql}
 -- + {name shared_fragment}
--- + {create_proc_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- + {create_proc_stmt}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc shared_frag2(x integer not null, y integer not null)
@@ -5264,7 +5264,7 @@ declare proc frag_type() (id integer<job>, name text);
 -- + {name cql}
 -- + {name shared_fragment}
 -- + {cte_table}: source: { id: integer<job>, name: text }
--- + {create_proc_stmt}: select: { id: integer<job>, name: text } dml_proc
+-- + {create_proc_stmt}: shared_frag3: { id: integer<job>, name: text } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc shared_frag3()
@@ -5462,7 +5462,7 @@ select * from some_cte;
 -- + {with_select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
 -- + {cte_tables}: ok
 -- + {cte_table}: some_cte: { x: integer notnull, y: integer notnull, z: real notnull }
--- + {call_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+-- + {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
 with some_cte(*) as (call a_shared_frag(1,2))
 select * from some_cte;
@@ -5482,7 +5482,7 @@ with some_cte(*) as (call this_is_not_even_a_proc())
 select * from some_cte;
 
 -- TEST: shared_fragment attribute (correct usage, has with clause)
--- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+-- + {create_proc_stmt}: test_shared_fragment_with_CTEs: { x: integer notnull, y: text, z: longint } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc test_shared_fragment_with_CTEs(id_ integer not null)
@@ -5494,7 +5494,7 @@ begin
 end;
 
 -- TEST: shared_fragment attribute (correct usage)
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: test_shared_fragment_without_CTEs: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc test_shared_fragment_without_CTEs(id_ integer not null)
@@ -6384,8 +6384,8 @@ drop table garbonzo;
 drop table MyView;
 
 -- TEST: use a proc to get the result set
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
--- + {call_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: uses_proc_for_result: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {call_stmt}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
 create procedure uses_proc_for_result()
 begin
@@ -6963,7 +6963,7 @@ begin
 end;
 
 -- TEST simple out union proc with dml
--- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
+-- + {create_proc_stmt}: C: out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union
 -- - error:
 create proc out_union_dml()
 begin
@@ -6973,7 +6973,7 @@ begin
 end;
 
 -- TEST simple out union proc no DML
--- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union
+-- + {create_proc_stmt}: C: out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union
 -- - error:
 create proc out_union()
 begin
@@ -6983,7 +6983,7 @@ begin
 end;
 
 -- TEST: pass through out union is and out union proc and marked "calls" (dml version)
--- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
+-- + {create_proc_stmt}: C: call_out_union_dml: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union calls_out_union
 -- - error:
 create proc call_out_union_dml()
 begin
@@ -6991,7 +6991,7 @@ begin
 end;
 
 -- TEST: pass through out union is and out union proc and marked "calls" (not dml version)
--- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union
+-- + {create_proc_stmt}: C: call_out_union: { A: integer notnull, B: integer notnull } variable shape_storage uses_out_union calls_out_union
 -- - error:
 create proc call_out_union()
 begin
@@ -7043,8 +7043,8 @@ out curs;
 
 -- TEST: read the result of a proc with an out cursor
 -- + {create_proc_stmt}: ok dml_proc
--- + {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
--- + {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+-- + {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+-- + {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 -- - error:
 create proc result_reader()
 begin
@@ -7090,7 +7090,7 @@ begin
 end;
 
 -- TEST: read the result of a proc with an out cursor, use same var twice
--- +1 {declare_value_cursor}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+-- +1 {declare_value_cursor}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- +1 {declare_value_cursor}: err
 -- + error: % duplicate variable name in the same scope 'C'
 -- +1 error:
@@ -7169,7 +7169,7 @@ begin
 end;
 
 -- TEST: fetch cursor from values
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+-- + {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 create proc fetch_values()
 begin
@@ -7179,7 +7179,7 @@ end;
 
 -- TEST: fetch cursor from values with dummy values
 -- + FETCH C(A, B) FROM VALUES(_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
+-- + {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
 -- +2 {name _seed_}: _seed_: integer notnull variable
 create proc fetch_values_dummy()
@@ -7191,9 +7191,9 @@ end;
 -- TEST: fetch cursor from call
 -- + FETCH C FROM CALL out_cursor_proc();
 -- + {fetch_call_stmt}: ok
--- + {name C}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
--- + {call_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
--- + {name out_cursor_proc}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+-- + {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {call_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
+-- + {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
 -- - error:
 create proc fetch_from_call()
 begin
@@ -7281,7 +7281,7 @@ end;
 
 
 -- TEST: helper proc that returns a blob
--- + {create_proc_stmt}: C: select: { B: blob } variable dml_proc shape_storage uses_out
+-- + {create_proc_stmt}: C: blob_out: { B: blob } variable dml_proc shape_storage uses_out
 create proc blob_out()
 begin
   -- cheesy nullable blob
@@ -7343,7 +7343,7 @@ end;
 -- TEST: fetch to a cursor from another cursor
 -- + FETCH C0(A, B) FROM VALUES(1, 2);
 -- + FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
--- + {create_proc_stmt}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out
+-- + {create_proc_stmt}: C1: fetch_to_cursor_from_cursor: { A: integer notnull, B: integer notnull } variable shape_storage uses_out
 -- + {fetch_values_stmt}: ok
 -- - error:
 create proc fetch_to_cursor_from_cursor()
@@ -7438,8 +7438,8 @@ end;
 -- TEST: declare a cursor like an existing cursor
 -- + {create_proc_stmt}: ok dml_proc
 -- + {name declare_cursor_like_cursor}: ok dml_proc
--- + {declare_cursor_like_name}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
--- + {name C1}: C1: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: C1: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {name C1}: C1: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- - error:
 create proc declare_cursor_like_cursor()
 begin
@@ -7589,8 +7589,8 @@ select rowid from foo T1, foo T2;
 -- TEST: read the result of a non-dml proc;  we must not become a dml proc for doing so
 -- - dml_proc
 -- + {create_proc_stmt}: ok
--- + declare_value_cursor}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
--- + call_stmt}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out
+-- + {declare_value_cursor}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
+-- + {call_stmt}: C: declare_cursor_like_select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage uses_out value_cursor
 -- - error:
 create proc value_result_reader()
 begin
@@ -7717,7 +7717,7 @@ create table column_marked_delete_on_recreate_table(
 ) @recreate;
 
 -- TEST: create a proc that uses the same CTE name twice, these should not conflict
--- + {create_proc_stmt}: select: { a: integer notnull, b: integer notnull } dml_proc
+-- + {create_proc_stmt}: cte_test: { a: integer notnull, b: integer notnull } dml_proc
 -- +2 {cte_tables}: ok
 -- +2 {cte_table}: should_not_conflict: { a: integer notnull, b: integer notnull }
 -- - error:
@@ -8119,7 +8119,7 @@ create view ViewShape as select TRUE a, 2.5 b, 'xyz' c;
 -- +   SELECT *
 -- +     FROM ViewShape AS v
 -- +     WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
--- +   {create_proc_stmt}: select: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
+-- +   {create_proc_stmt}: like_a_view: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
 create proc like_a_view(like ViewShape)
 begin
   select * from ViewShape v where v.a = a_ and v.b = b_ and v.c > c_;
@@ -8139,9 +8139,9 @@ end;
 create view MyBogusView as select 1, 2;
 
 -- TEST: make this proc accept args to fake the result of another proc
--- + {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage uses_out
--- + {declare_cursor_like_name}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
--- + {out_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {create_proc_stmt}: C: like_other_proc: { A: integer notnull, B: integer notnull } variable shape_storage uses_out
+-- + {declare_cursor_like_name}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {out_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- - error:
 create proc like_other_proc(like out_cursor_proc)
 begin
@@ -8351,7 +8351,7 @@ set X := 3.0 & 2;
 set X := ~3.0;
 
 -- TEST: use column aliases in ORDER BY statement
--- + {create_proc_stmt}: select: { bar_id: integer notnull } dml_proc
+-- + {create_proc_stmt}: simple_alias_order_by: { bar_id: integer notnull } dml_proc
 -- + {name bar_id}: bar_id: integer notnull
 -- - error:
 create proc simple_alias_order_by()
@@ -8362,7 +8362,7 @@ begin
 end;
 
 -- TEST: use column aliases for fabricated columns in ORDER BY statement
--- + {create_proc_stmt}: union_all: { sort_order_value: integer notnull, id: integer notnull } dml_proc
+-- + {create_proc_stmt}: complex_alias_order_by: { sort_order_value: integer notnull, id: integer notnull } dml_proc
 -- + {name sort_order_value}: sort_order_value: integer notnull
 -- - error:
 create proc complex_alias_order_by()
@@ -8534,7 +8534,7 @@ end;
 
 -- TEST: this proc is not a result proc even though it looks like it has a loose select...
 -- the select is inside a trigger, it is NOT a return for this proc
--- - {create_proc_stmt}: select: { id: integer notnull } dml_proc
+-- - {create_proc_stmt}: make_trigger: { id: integer notnull } dml_proc
 -- + {create_proc_stmt}: ok dml_proc
 -- - error:
 create proc make_trigger()
@@ -8697,7 +8697,7 @@ create table without_sensitive(
 );
 
 -- TEST: select out some
--- + {create_proc_stmt}: select: {
+-- + {create_proc_stmt}: get_sensitive: {
 -- + safe: integer notnull,
 -- + sensitive_1: integer sensitive,
 -- + sensitive_2: text sensitive,
@@ -9269,7 +9269,7 @@ end;
 -- + {name dummy_select}: ok
 -- + {name dummy_result_set}: ok
 -- + {name dummy_test}: ok
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: autotest_all_attribute: { id: integer notnull, name: text, rate: longint } dml_proc
 @attribute(cql:autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set))
 create proc autotest_all_attribute()
 begin
@@ -9296,7 +9296,7 @@ end;
 -- + {name foo}: ok
 -- + {name id}: ok
 -- + {int 777}: ok
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: autotest_dummy_test_with_others_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
 @attribute(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name), (1, 'Nelly'), (-2, 'Babeth')), (foo, (id), (777)))))
 create proc autotest_dummy_test_with_others_attributes()
 begin
@@ -9315,7 +9315,7 @@ end;
 -- + {name id}: ok
 -- + {int 1}: ok
 -- + {int 2}: ok
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: autotest_dummy_test_without_other_attributes: { id: integer notnull, name: text, rate: longint } dml_proc
 @attribute(cql:autotest=((dummy_test, (bar, (id), (1), (2)))))
 create proc autotest_dummy_test_without_other_attributes()
 begin
@@ -9349,7 +9349,7 @@ begin
 end;
 
 -- TEST: dummy_test info with int value for a long column
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: autotest_dummy_test_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
 -- + {misc_attrs}: ok
 -- - error:
 @attribute(cql:autotest=((dummy_test, (bar, (rate), (1)))))
@@ -9359,7 +9359,7 @@ begin
 end;
 
 -- TEST: dummy_test info with int value for a negative long column
--- + {create_proc_stmt}: select: { id: integer notnull, name: text, rate: longint } dml_proc
+-- + {create_proc_stmt}: autotest_dummy_test_neg_long_col_with_int_value: { id: integer notnull, name: text, rate: longint } dml_proc
 -- + {misc_attrs}: ok
 -- + {uminus}
 -- + | {int 1}
@@ -9599,8 +9599,8 @@ create table not_a_temp_table( id integer);
 -- + {name autodrop}
 -- +  {name table1}: ok
 -- + {name table2}: ok
--- + {create_proc_stmt}: select: { id: integer } dml_proc
--- + {name autodropper}: select: { id: integer } dml_proc
+-- + {create_proc_stmt}: autodropper: { id: integer } dml_proc
+-- + {name autodropper}: autodropper: { id: integer } dml_proc
 @attribute(cql:autodrop=(table1, table2))
 create proc autodropper()
 begin
@@ -9909,7 +9909,7 @@ end;
 
 
 -- TEST: base_fragment attribute (correct usage)
--- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+-- + {create_proc_stmt}: test_base_fragment: { x: integer notnull, y: text, z: longint } dml_proc
 -- - error:
 @attribute(cql:base_fragment=core)
 create proc test_base_fragment(id_ integer not null)
@@ -9920,7 +9920,7 @@ begin
 end;
 
 -- TEST: extension_fragment attribute (correct usage)
--- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+-- + {create_proc_stmt}: test_extension_fragment_union: { x: integer notnull, y: text, z: longint } dml_proc
 -- + {select_stmt}: select: { x: integer notnull, y: text, z: longint }
 -- + {select_core_list}: union_all: { x: integer notnull, y: text, z: longint }
 -- + {select_core_compound}
@@ -9939,7 +9939,7 @@ begin
 end;
 
 -- TEST: a second extension_fragment attribute (correct usage) (verify you can add several out union in a row)
--- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint } dml_proc
+-- + {create_proc_stmt}: test_extension_fragment_union_two: { x: integer notnull, y: text, z: longint } dml_proc
 -- + {select_stmt}: select: { x: integer notnull, y: text, z: longint }
 -- + {select_core_list}: union_all: { x: integer notnull, y: text, z: longint }
 -- + {select_core_compound}
@@ -10348,7 +10348,7 @@ begin
 end;
 
 -- TEST: create plugin_wrong_nine extension, using up the name plugin_wrong_nine
--- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
+-- + {create_proc_stmt}: test_bad_extension_fragment_nine_ok: { x: integer notnull, y: text, z: longint, a: bool } dml_proc
 -- - error:
 @attribute(cql:extension_fragment=core)
 create proc test_bad_extension_fragment_nine_ok(id_ integer not null)
@@ -10526,7 +10526,7 @@ end;
 -- - error:
 -- + {misc_attrs}: ok
 -- + {name assembly_fragment}
--- + {create_proc_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real, d: integer } dml_proc
+-- + {create_proc_stmt}: assembly_core: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real, d: integer } dml_proc
 -- + {select_stmt}: select: { x: integer notnull, y: text, z: longint, a: bool, b: longint, c: real, d: integer }
 -- + {cte_table}: assembly_core: { x: integer notnull, y: text, z: longint }
 -- + {cte_table}: assembly_one: { x: integer notnull, y: text, z: longint }
@@ -11032,7 +11032,7 @@ declare select function tvf(id integer) (foo text);
 select 1 where tvf(5) = 1;
 
 -- TEST: use a table valued function
--- + {create_proc_stmt}: select: { foo: text } dml_proc
+-- + {create_proc_stmt}: using_tvf: { foo: text } dml_proc
 -- + {select_stmt}: select: { foo: text }
 -- - error:
 create proc using_tvf()
@@ -11061,7 +11061,7 @@ begin
 end;
 
 -- TEST: use a table valued function
--- + {create_proc_stmt}: select: { foo: text } dml_proc
+-- + {create_proc_stmt}: using_tvf_unaliased: { foo: text } dml_proc
 -- + {select_stmt}: select: { foo: text }
 -- + {dot}: foo: text
 -- - error:
@@ -11071,7 +11071,7 @@ begin
 end;
 
 -- TEST: use a table valued function aliased
--- + {create_proc_stmt}: select: { foo: text } dml_proc
+-- + {create_proc_stmt}: using_tvf_aliased: { foo: text } dml_proc
 -- + {select_stmt}: select: { foo: text }
 -- + {dot}: foo: text
 -- - error:
@@ -11108,7 +11108,7 @@ end;
 declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
 
 -- TEST: use a table valued function that consumes an object
--- + {create_proc_stmt}: select: { id: integer } dml_proc
+-- + {create_proc_stmt}: rowset_object_reader: { id: integer } dml_proc
 -- + {table_function}: TABLE { ReadFromRowset: select }
 -- + {name ReadFromRowset}: TABLE { ReadFromRowset: select }
 -- + {name rowset}: rowset: object<rowset> variable in
@@ -11657,7 +11657,7 @@ set X := max(1,2);
 set a_string := substr('x', 1, 2);
 
 -- TEST: simple success -- substr not nullable string
--- + {create_proc_stmt}: select: { t: text notnull } dml_proc
+-- + {create_proc_stmt}: substr_test_notnull: { t: text notnull } dml_proc
 -- + {name substr}: text notnull
 -- - error:
 create proc substr_test_notnull(t text not null)
@@ -11666,7 +11666,7 @@ begin
 end;
 
 -- TEST: simple success -- substr not nullable string one arg
--- + {create_proc_stmt}: select: { t: text notnull } dml_proc
+-- + {create_proc_stmt}: substr_test_onearg: { t: text notnull } dml_proc
 -- + {name substr}: text notnull
 -- - error:
 create proc substr_test_onearg(t text not null)
@@ -11675,7 +11675,7 @@ begin
 end;
 
 -- TEST: simple success -- substr nullable string
--- + {create_proc_stmt}: select: { t: text } dml_proc
+-- + {create_proc_stmt}: substr_test_nullable_string: { t: text } dml_proc
 -- + {name substr}: text
 -- - error:
 create proc substr_test_nullable_string(t text)
@@ -11684,7 +11684,7 @@ begin
 end;
 
 -- TEST: simple success -- substr nullable start
--- + {create_proc_stmt}: select: { t: text } dml_proc
+-- + {create_proc_stmt}: substr_test_nullable_start: { t: text } dml_proc
 -- + {name substr}: text
 -- - error:
 create proc substr_test_nullable_start(t text not null)
@@ -11693,7 +11693,7 @@ begin
 end;
 
 -- TEST: simple success -- substr nullable count
--- + {create_proc_stmt}: select: { t: text } dml_proc
+-- + {create_proc_stmt}: substr_test_nullable_count: { t: text } dml_proc
 -- + {name substr}: text
 -- - error:
 create proc substr_test_nullable_count(t text not null)
@@ -11702,7 +11702,7 @@ begin
 end;
 
 -- TEST: simple success -- substr sensitive string
--- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
+-- + {create_proc_stmt}: substr_test_sensitive_string: { t: text sensitive } dml_proc
 -- + {name substr}: text sensitive
 -- - error:
 create proc substr_test_sensitive_string(t text @sensitive)
@@ -11711,7 +11711,7 @@ begin
 end;
 
 -- TEST: simple success -- substr sensitive start
--- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
+-- + {create_proc_stmt}: substr_test_sensitive_start: { t: text sensitive } dml_proc
 -- + {name substr}: text sensitive
 -- - error:
 create proc substr_test_sensitive_start(t text)
@@ -11720,7 +11720,7 @@ begin
 end;
 
 -- TEST: simple success -- substr sensitive count
--- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
+-- + {create_proc_stmt}: substr_test_sensitive_count: { t: text sensitive } dml_proc
 -- + {name substr}: text sensitive
 -- - error:
 create proc substr_test_sensitive_count(t text)
@@ -12059,8 +12059,8 @@ DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTI
 @declare_schema_region error_region using leaf1;
 
 -- TEST: this is a procedure that emits several rows "manually"
--- +  {create_proc_stmt}: C: select: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
--- +2 {out_union_stmt}: C: select: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
+-- + {create_proc_stmt}: C: many_row_emitter: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out_union value_cursor
+-- +2 {out_union_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
 -- - error:
 create proc many_row_emitter()
 begin
@@ -12231,8 +12231,8 @@ union all
 select null as X;
 
 -- TEST: test nullability result on column X in a union select without alias
--- + {create_proc_stmt}: union_all: { X: text } dml_proc
--- + {name mixed_union}: union_all: { X: text } dml_proc
+-- + {create_proc_stmt}: mixed_union: { X: text } dml_proc
+-- + {name mixed_union}: mixed_union: { X: text } dml_proc
 -- + {select_stmt}: union_all: { X: text }
 -- + {select_core_list}: union_all: { X: text }
 -- + {select_core}: select: { X: text notnull }
@@ -12246,8 +12246,8 @@ begin
 end;
 
 -- TEST: test nullability result on column X in a union select without alias
--- + {create_proc_stmt}: select: { X: text } dml_proc
--- + {name mixed_union_cte}: select: { x: text }
+-- + {create_proc_stmt}: mixed_union_cte: { X: text } dml_proc
+-- + {name mixed_union_cte}: mixed_union_cte: { x: text } dml_proc
 -- + {with_select_stmt}: select: { X: text }
 -- + {select_stmt}: union_all: { X: text }
 -- + {select_core_list}: union_all: { X: text }
@@ -13076,7 +13076,7 @@ create table sens_table(t text @sensitive);
 declare proc sens_result_proc () (t text @sensitive);
 
 -- TEST this is compatible with the above declaration, it won't be if SENSITIVE is not preserved.
--- + {create_proc_stmt}: select: { t: text sensitive } dml_proc
+-- + {create_proc_stmt}: sens_result_proc: { t: text sensitive } dml_proc
 -- - error:
 @attribute(cql:autotest=(dummy_test))
 create proc sens_result_proc()
@@ -13643,7 +13643,7 @@ create table in_the_future(
 declare proc basic_source() out union (id integer, name text);
 
 -- TEST: this proc should be OUT not OUT UNION
--- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out
+-- + {create_proc_stmt}: C: basic_wrapper_out: { id: integer, name: text } variable dml_proc shape_storage uses_out
 -- - {create_proc_stmt}: % uses_out_union
 -- - error:
 create proc basic_wrapper_out()
@@ -13654,7 +13654,7 @@ begin
 end;
 
 -- TEST: this proc should be OUT not OUT UNION
--- + {create_proc_stmt}: C: basic_source: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
+-- + {create_proc_stmt}: C: basic_wrapper_out_union: { id: integer, name: text } variable dml_proc shape_storage uses_out_union
 -- - {create_proc_stmt}: % uses_out %uses_out_union
 -- - {create_proc_stmt}: % uses_out_union %uses_out
 -- - error:
@@ -13720,7 +13720,7 @@ create table fk_to_non_key(
 );
 
 -- TEST: make sure we can parse the dummy test params that include null
--- + {create_proc_stmt}: select: { id: integer notnull, id2: integer } dml_proc
+-- + {create_proc_stmt}: self_ref_proc_table: { id: integer notnull, id2: integer } dml_proc
 -- + | {null}: ok
 -- - error:
 @attribute(cql:autotest=((dummy_test, (self_ref1, (id, id2), (1, null), (2, 1)))))
@@ -13992,7 +13992,7 @@ create table table_with_valid_without_rowid_mode(
 -- the positive version of the integer does not and there is
 -- no kidding around negation going on here.
 -- + SELECT -9223372036854775808L AS x;
--- + {create_proc_stmt}: select: { x: longint notnull } dml_proc
+-- + {create_proc_stmt}: min_int_64_test: { x: longint notnull } dml_proc
 -- + {uminus}: longint notnull
 -- + {longint 9223372036854775808}: longint notnull
 CREATE PROC min_int_64_test ()
@@ -14692,7 +14692,7 @@ begin
 end;
 
 -- TEST: unbox from an object that is not marked CURSOR
--- + error: % variable must be of type object<T cursor> where T is a valid shape name 'box'
+-- + error: % variable must be of type object<T CURSOR> or object<T SET> where T is a valid shape name 'box'
 -- +1 error:
 create proc cursor_unbox_not_cursor(box object<bar>)
 begin
@@ -14847,9 +14847,9 @@ declare cursor_with_object cursor like obj_proc arguments;
 
 -- TEST: try to make a proc that emits a cursor with an object in it
 -- + {stmt_list}: ok
--- + {create_proc_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
+-- + {create_proc_stmt}: cursor_with_object: try_to_emit_object: { an_obj: object } variable shape_storage uses_out value_cursor
 -- + {out_stmt}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
--- + {name try_to_emit_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage uses_out value_cursor
+-- + {name try_to_emit_object}: cursor_with_object: try_to_emit_object: { an_obj: object } variable shape_storage uses_out value_cursor
 -- - error:
 create proc try_to_emit_object()
 begin
@@ -15148,7 +15148,7 @@ declare proc enum_users_out(i integer_things) out (x integer_things);
 
 -- TEST: ensure that a proc defined with an enum argument and enum output column
 -- matches its previous declaration correctly
--- + {create_proc_stmt}: C: test_shape: { x: integer<integer_things> notnull } variable shape_storage uses_out value_cursor
+-- + {create_proc_stmt}: C: enum_users_out: { x: integer<integer_things> notnull } variable shape_storage uses_out value_cursor
 -- - error:
 create proc enum_users_out(i integer_things)
 begin
@@ -18024,7 +18024,7 @@ begin
 end;
 
 -- TEST: Improvements work in SQL.
--- + {create_proc_stmt}: select: { b: integer notnull } dml_proc
+-- + {create_proc_stmt}: improvements_work_in_sql: { b: integer notnull } dml_proc
 -- - error:
 create proc improvements_work_in_sql()
 begin
@@ -18129,7 +18129,7 @@ begin
 end;
 
 -- TEST: Improvements work on columns resulting from a select *.
--- + {create_proc_stmt}: select: { xn: integer, yn: integer notnull } dml_proc
+-- + {create_proc_stmt}: improvements_work_for_select_star: { xn: integer, yn: integer notnull } dml_proc
 -- - error:
 create proc improvements_work_for_select_star()
 begin
@@ -18141,7 +18141,7 @@ end;
 create table another_table_with_nullables (xn integer, zn integer);
 
 -- TEST: Improvements work on columns resulting from a SELECT table.*.
--- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
+-- + {create_proc_stmt}: improvements_work_for_select_table_star: { xn: integer notnull, yn: integer notnull, xn0: integer, zn: integer notnull } dml_proc
 -- - error:
 create proc improvements_work_for_select_table_star()
 begin
@@ -18156,7 +18156,7 @@ begin
 end;
 
 -- TEST: Improvements work for select expressions.
--- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer notnull } dml_proc
+-- + {create_proc_stmt}: improvements_work_for_select_expressions: { xn: integer notnull, yn: integer notnull } dml_proc
 -- - error:
 create proc improvements_work_for_select_expressions()
 begin
@@ -18164,7 +18164,7 @@ begin
 end;
 
 -- TEST: Improvements correctly handle nested selects.
--- + {create_proc_stmt}: select: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
+-- + {create_proc_stmt}: improvements_correctly_handle_nested_selects: { xn: integer notnull, yn: integer, yn0: integer, yn1: integer notnull } dml_proc
 -- - error:
 create proc improvements_correctly_handle_nested_selects()
 begin
@@ -18181,7 +18181,7 @@ end;
 -- not null` because `yn` is an alias for `xn + xn` and `xn is not null`. `yn0`
 -- should not be improved even though it is an alias for `yn` because that is a
 -- different `yn` from the one we're improving (it's actually `tnull.yn`).
--- + {create_proc_stmt}: select: { yn: integer notnull, yn0: integer } dml_proc
+-- + {create_proc_stmt}: improvements_apply_in_select_exprs: { yn: integer notnull, yn0: integer } dml_proc
 -- - error:
 create proc improvements_apply_in_select_exprs()
 begin
@@ -18190,7 +18190,7 @@ end;
 
 -- TEST: We do not improve a result column merely because a variable with the
 -- same name is improved in an enclosing scope.
--- + {create_proc_stmt}: select: { xn: integer, yn: integer } dml_proc
+-- + {create_proc_stmt}: local_variable_improvements_do_not_affect_result_columns: { xn: integer, yn: integer } dml_proc
 -- - error:
 create proc local_variable_improvements_do_not_affect_result_columns()
 begin
@@ -18200,7 +18200,7 @@ begin
 end;
 
 -- TEST: Improvements work on the result of joins.
--- + {create_proc_stmt}: select: { xn0: integer notnull } dml_proc
+-- + {create_proc_stmt}: improvements_work_on_join_results: { xn0: integer notnull } dml_proc
 -- - error:
 create proc improvements_work_on_join_results()
 begin
@@ -18212,7 +18212,7 @@ begin
 end;
 
 -- TEST: Improvements do not work for ON clauses.
--- + {create_proc_stmt}: select: { xn0: integer } dml_proc
+-- + {create_proc_stmt}: improvements_do_not_work_for_on_clauses: { xn0: integer } dml_proc
 -- - error:
 create proc improvements_do_not_work_for_on_clauses()
 begin
@@ -18296,7 +18296,7 @@ end;
 
 -- TEST: Verify that rewrites for nullability work correctly within CTEs and do
 -- not get applied twice.
--- + {create_proc_stmt}: select: { b: integer notnull } dml_proc
+-- + {create_proc_stmt}: improvements_work_within_ctes: { b: integer notnull } dml_proc
 -- +1 {name cql_inferred_notnull}: a: integer notnull variable
 -- - error:
 create proc improvements_work_within_ctes()
@@ -20584,7 +20584,7 @@ end;
 @emit_constants not_found;
 
 -- TEST: verify that we can identify a well shaped conditional fragment
--- + {create_proc_stmt}: select: { id: integer notnull } dml_proc
+-- + {create_proc_stmt}: conditional_frag: { id: integer notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc conditional_frag(bb integer not null)
@@ -20602,9 +20602,9 @@ begin
 end;
 
 -- TEST: verify that we can use parameters in a conditional
--- + {create_proc_stmt}: select: { id: integer notnull } dml_proc
--- + {call_stmt}: select: { id: integer notnull } dml_proc
--- + {name conditional_frag}: select: { id: integer notnull } dml_proc
+-- + {create_proc_stmt}: conditional_user: { id: integer notnull } dml_proc
+-- + {call_stmt}: conditional_frag: { id: integer notnull } dml_proc
+-- + {name conditional_frag}: conditional_frag: { id: integer notnull } dml_proc
 -- - error:
 create proc conditional_user(xx integer not null)
 begin
@@ -20704,7 +20704,7 @@ end;
 
 -- TEST: we're going to use a fragment with possible_conflict but it's entirely local
 -- that will not cause any issues
--- +  {create_proc_stmt}: select: { x: integer notnull } dml_proc
+-- +  {create_proc_stmt}: fragtest_2_1: { x: integer notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc fragtest_2_1()
@@ -20903,7 +20903,7 @@ declare proc arg_shape(xyzzy integer);
 select columns(like arg_shape arguments) from (select 1 xyzzy);
 
 -- TEST: create a shared fragment with no from clause
--- + {create_proc_stmt}: select: { result: integer } dml_proc
+-- + {create_proc_stmt}: inline_math: { result: integer } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
 create proc inline_math(x_ integer, y_ integer)
@@ -20912,10 +20912,10 @@ begin
 end;
 
 -- TEST: invoke a shared fragment as an expression
-create proc do_inline_math()
--- + {create_proc_stmt}: select: { result: integer } dml_proc
+-- + {create_proc_stmt}: do_inline_math: { result: integer } dml_proc
 -- + {name inline_math}: integer inline_call
 -- - error:
+create proc do_inline_math()
 begin
   with N(i) as (
     select 1 i

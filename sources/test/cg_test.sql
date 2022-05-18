@@ -2593,7 +2593,7 @@ end;
 
 -- TEST: read back the two rows from the above
 -- + CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_) {
--- + out_union_two_result_set_ref c_result_set_ = NULL;
+-- + out_union_two_result_set_ref c_result_set_ = NULL
 -- + cql_int32 c_row_num_ = 0;
 -- + cql_int32 c_row_count_ = 0;
 -- + out_union_reader_c_row c = { ._refs_count_ = 1, ._refs_offset_ = out_union_reader_c_refs_offset };
@@ -2601,14 +2601,14 @@ end;
 -- + c_row_num_ = c_row_count_ = -1;
 -- + c_row_count_ = cql_result_set_get_count((cql_result_set_ref)c_result_set_);
 -- + for (;;) {
--- +   C_row_num_++;
--- +   C._has_row_ = C_row_num_ < C_row_count_;
--- +   cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
--- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
--- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.y);
+-- +   c_row_num_++;
+-- +   c._has_row_ = c_row_num_ < c_row_count_;
+-- +   cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, c_row_num_, 2,
+-- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &c.x,
+-- +                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &c.y);
 -- NOT PRESENT !!
 -- -   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
--- +   if (!C._has_row_) break;
+-- +   if (!c._has_row_) break;
 -- + }
 -- + cql_object_release(c_result_set_);
 -- + cql_teardown_row(c);

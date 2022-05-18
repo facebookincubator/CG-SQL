@@ -5042,23 +5042,6 @@ declare function cql_extract_partition(partition_ object not null, key cursor) c
 
 DECLARE PROC get_rows(result object not null) OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL, z BOOL);
 
--- we need a shim to convert an object to a result set we can iterate, we make a fake "fetch_results" function for this purpose
-#define result_set_shim(shim_proc, source_proc) \
-  @echo c, "void "; \
-  @echo c, #shim_proc; \
-  @echo c, "_fetch_results("; \
-  @echo c, #shim_proc; \
-  @echo c, "_result_set_ref _Nullable *_Nonnull _result_set_, cql_object_ref _Nonnull result)\n"; \
-  @echo c, "{\n"; \
-  @echo c, "  *_result_set_ = ("; \
-  @echo c, #shim_proc; \
-  @echo c, "_result_set_ref)result;\n"; \
-  @echo c, "  cql_object_retain(result);\n"; \
-  @echo c, "}\n"; \
-  DECLARE PROC shim_proc(result object not null) OUT UNION (like source_proc)
-
-result_set_shim(get_rows, get_rows);
-
 BEGIN_TEST(child_results)
   let p := cql_partition_create();
 
@@ -5097,14 +5080,15 @@ BEGIN_TEST(child_results)
     /* don't join #6 to force cleanup */
     if i != 6 then
       fetch k() from values() @DUMMY_SEED(i) @DUMMY_NULLABLES;
-      let rs1 := cql_extract_partition(p, k);
+      declare rs1 object<get_rows set>;
+      set rs1 := cql_extract_partition(p, k);
       let rs2 := cql_extract_partition(p, k);
 
       -- if we ask for the same key more than once, we should get the exact same result
       -- this is object identity we are checking here (i.e. it's the same pointer!)
       EXPECT(rs1 == rs2);
 
-      declare C cursor for call get_rows(rs1);
+      declare C cursor for rs1;
 
       let row_count := 0;
       loop fetch C
@@ -5201,9 +5185,6 @@ begin
      call ch2() USING (k3, k4);
 end;
 
-result_set_shim(get_child1_rows, ch1);
-result_set_shim(get_child2_rows, ch2);
-
 BEGIN_TEST(parent_child_results)
   let i := 0;
   declare P cursor for call parent_child();
@@ -5220,7 +5201,7 @@ BEGIN_TEST(parent_child_results)
      EXPECT(P.v3 == i);
 
      let count_rows := 0;
-     declare C1 cursor for call get_child1_rows(P.child1);
+     declare C1 cursor for P.child1;
      loop fetch C1
      begin
         -- call printf("  child1: %d %s %d %s %f\n", C1.k1, C1.k2, C1.v1, C1.v2, C1.v3);
@@ -5235,7 +5216,7 @@ BEGIN_TEST(parent_child_results)
      EXPECT(count_rows == case when i % 3 == 2 then 0 else 2 end);
 
      set count_rows := 0;
-     declare C2 cursor for call get_child2_rows(P.child2);
+     declare C2 cursor for P.child2;
      loop fetch C2
      begin
         -- call printf("  child2: %d %s %d %s %f\n", C2.k3, C2.k4, C2.v1, C2.v2, C2.v3);

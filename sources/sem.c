@@ -17886,6 +17886,12 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
     if (is_error(stmt_list)) {
       goto error;
     }
+
+    if (ast->sem && ast->sem->sptr) {
+      ast->sem->sptr = new_sem_struct_strip_table_flags(ast->sem->sptr);
+      ast->sem->sptr->struct_name = proc_name;
+    }
+
     if (has_dml) {
       Invariant(ast->sem);
       ast->sem->sem_type |= SEM_TYPE_DML_PROC;
@@ -19341,10 +19347,15 @@ static void sem_declare_cursor_for_expr(ast_node *ast) {
     return;
   }
 
+  sem_t cursor_flags = SEM_TYPE_BOXED;
+  if (sem_ends_in_set(expr->sem->kind)) {
+    cursor_flags = SEM_TYPE_USES_OUT_UNION;
+  }
+
   // the cursor is marked as BOXED because there is a boxed object controlling its lifetime
 
   // SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE <=> it's a cursor
-  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | SEM_TYPE_BOXED);
+  cursor->sem = new_sem(SEM_TYPE_STRUCT | SEM_TYPE_VARIABLE | cursor_flags);
   cursor->sem->sptr = like_target->sem->sptr;
   cursor->sem->name = name;
   ast->sem = cursor->sem;
@@ -19352,12 +19363,32 @@ static void sem_declare_cursor_for_expr(ast_node *ast) {
   add_variable(name, cursor);
 }
 
+cql_noexport size_t sem_ends_in_cursor(CSTR str) {
+  size_t len = strlen(str);
+  CSTR tail = " CURSOR";
+  size_t len_tail = strlen(tail);
+  if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
+    return false;
+  }
+  return len_tail;
+}
+
+cql_noexport size_t sem_ends_in_set(CSTR str) {
+  size_t len = strlen(str);
+  CSTR tail = " SET";
+  size_t len_tail = strlen(tail);
+  if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
+    return false;
+  }
+  return len_tail;
+}
+
 // Verify that the indicated variable has a valid cursor type
 // and return the type associated with it.  The rules are:
-//  * the variable must be of type object<T CURSOR>  for some T
+//  * the variable must be of type object<T CURSOR> or object<T SET> for some T
 //  * the T part must be a "likeable" expression (i.e. a shape)
 // there is some string massaging to check for and remove the
-// " CURSOR" and a temporary node is created so we can re-use
+// " CURSOR" or " SET" and a temporary node is created so we can re-use
 // the usual likeable name check.
 cql_noexport ast_node *sem_find_likeable_from_expr_type(ast_node *expr) {
   // it has to be a typed object expression
@@ -19370,12 +19401,14 @@ cql_noexport ast_node *sem_find_likeable_from_expr_type(ast_node *expr) {
   CSTR kind = expr->sem->kind;
 
   size_t len = strlen(kind);
-  CSTR tail = " CURSOR";
-  size_t len_tail = strlen(tail);
-  if (len < len_tail + 1 || strcmp(tail, kind + len - len_tail)) {
-    CSTR expr_text = dup_expr_text(expr);
-    report_error(expr, "CQL0343: variable must be of type object<T cursor> where T is a valid shape name", expr_text);
-    return NULL;
+  size_t len_tail = sem_ends_in_cursor(kind);
+  if (!len_tail) {
+    len_tail = sem_ends_in_set(kind);
+    if (!len_tail) {
+      CSTR expr_text = dup_expr_text(expr);
+      report_error(expr, "CQL0343: variable must be of type object<T CURSOR> or object<T SET> where T is a valid shape name", expr_text);
+      return NULL;
+    }
   }
 
   // now we extract just the type name having ignored the " CURSOR" part.

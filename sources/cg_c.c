@@ -5384,42 +5384,63 @@ static void cg_declare_cursor(ast_node *ast) {
 
   bool_t is_for_select = false;
   bool_t is_for_call = false;
-  bool_t out_union_proc = false;
+  bool_t is_for_expr = false;
+  bool_t out_union_processing = false;
   bool_t is_boxed = !!(name_ast->sem->sem_type & SEM_TYPE_BOXED);
   bool_t is_unboxing = true;
+  CSTR out_union_result_name = "";
 
   if (is_ast_call_stmt(ast->right)) {
-    out_union_proc = has_out_union_stmt_result(ast);
+    out_union_processing = has_out_union_stmt_result(ast);
     is_for_call = true;
     is_unboxing = false;
+    EXTRACT_STRING(name, ast->right->left);
+    out_union_result_name = name;
   }
   else if (is_select_stmt(ast->right)) {
     is_for_select = true;
     is_unboxing = false;
   }
+  else {
+    is_for_expr = true;
+    if (sem_ends_in_set(ast->right->sem->kind)) {
+      out_union_processing = true;
+      out_union_result_name = ast->left->sem->sptr->struct_name;
+      is_unboxing = false;
+    }
+  }
 
   // only one of these (is boxed makes no sense with out union)
-  Invariant(!out_union_proc || !is_boxed);
+  Invariant(!out_union_processing || !is_boxed);
 
   // can't be both of these either
-  Invariant(!out_union_proc || !is_unboxing);
+  Invariant(!out_union_processing || !is_unboxing);
 
   // unboxing implies is_boxed   a->b <==> (!a | b)
   Invariant(!is_unboxing || is_boxed);
 
-  if (out_union_proc) {
-    EXTRACT_STRING(name, ast->right->left);
-
-    CG_CHARBUF_OPEN_SYM(result_ref, name, "_result_set_ref");
+  if (out_union_processing) {
+    CG_CHARBUF_OPEN_SYM(result_ref, out_union_result_name, "_result_set_ref");
 
     bprintf(cg_declarations_output, "%s %s_result_set_ = NULL;\n", result_ref.ptr, cursor_name);
     bprintf(cg_declarations_output, "%s %s_row_num_ = 0;\n", rt->cql_int32, cursor_name);
     bprintf(cg_declarations_output, "%s %s_row_count_ = 0;\n", rt->cql_int32, cursor_name);
     bprintf(cg_cleanup_output, "  cql_object_release(%s_result_set_);\n", cursor_name);
 
-    if (cg_in_loop) {
+    if (cg_in_loop && is_for_call) {
       // tricky case, the call might iterate so we have to clean up the cursor before we do the call
       bprintf(cg_main_output, "cql_object_release(%s_result_set_);\n", cursor_name);
+    }
+
+    if (is_for_expr) {
+      EXTRACT_ANY_NOTNULL(expr, ast->right);
+      CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+      bprintf(cg_main_output, "cql_set_object_ref((cql_object_ref *)&%s_result_set_, %s);\n", cursor_name, expr_value.ptr);
+      bprintf(cg_main_output, "%s_row_num_ = -1;\n", cursor_name);
+      bprintf(cg_main_output, "%s_row_count_ = cql_result_set_get_count((cql_result_set_ref)%s_result_set_);\n", cursor_name, cursor_name);
+
+      CG_POP_EVAL(expr);
     }
 
     CHARBUF_CLOSE(result_ref);
@@ -5452,6 +5473,8 @@ static void cg_declare_cursor(ast_node *ast) {
     cg_bound_sql_statement(cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
   }
   else if (is_unboxing) {
+    Invariant(is_for_expr);
+
     // DECLARE [name] CURSOR FOR [box_object_expr]
     EXTRACT_ANY_NOTNULL(expr, ast->right);
 
@@ -5464,6 +5487,8 @@ static void cg_declare_cursor(ast_node *ast) {
 
     CHARBUF_CLOSE(box_name);
     CG_POP_EVAL(expr);
+  }
+  else if (is_for_expr) {
   }
   else {
     Invariant(is_for_call);

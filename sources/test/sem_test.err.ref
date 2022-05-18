@@ -1072,7 +1072,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'length'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'length'
 test/sem_test.sql:XXXX:1: error: in str : CQL0346: expression must be of type object<T cursor> where T is a valid shape name 'box'
-test/sem_test.sql:XXXX:1: error: in str : CQL0343: variable must be of type object<T cursor> where T is a valid shape name 'box'
+test/sem_test.sql:XXXX:1: error: in str : CQL0343: variable must be of type object<T CURSOR> or object<T SET> where T is a valid shape name 'box'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
 test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable name in the same scope 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'box'
