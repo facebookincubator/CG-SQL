@@ -176,8 +176,8 @@ static void cg_java_proc_result_set_getter(
   // patternlint-disable-next-line prefer-sized-ints-in-msys
   cg_java_getter_sig(&getter_sig, return_type, col_name_camel.ptr, fetch_proc ? "" : "int row");
 
-  bool is_query_proc = cg_java_frag_type_query_proc(frag_type) && !is_ast_declare_interface_stmt(ast);
-  if (!options.java_fragment_interface_mode || is_query_proc) {
+  if ((!options.java_fragment_interface_mode || cg_java_frag_type_query_proc(frag_type))
+        && !is_ast_declare_interface_stmt(ast)) {
     bprintf(java,
             rt->cql_result_set_get_data,
             getter_sig.ptr,
@@ -276,20 +276,20 @@ static void cg_java_write_implements_interface(
         bprintf(&interfaces, "%s", frag_assembly_interface->ptr);
       }
     }
+  }
 
-    if (exists_attribute_str(misc_attrs, "implements")) {
-      CSTR implemented_cql_interface_class = NULL;
+  if (exists_attribute_str(misc_attrs, "implements")) {
+    CSTR implemented_cql_interface_class = NULL;
 
-      find_attribute_str(misc_attrs, cg_set_value, &implemented_cql_interface_class, "implements");
+    find_attribute_str(misc_attrs, cg_set_value, &implemented_cql_interface_class, "implements");
 
-      if (interfaces.used > 1) {
-        bprintf(&interfaces, ", ");
-      }
-
-      charbuf *interface = symtab_ensure_charbuf(java_context->cql_interfaces_fqcn, implemented_cql_interface_class);
-      Invariant(interface->used > 0);
-      bprintf(&interfaces, "%s", interface->ptr);
+    if (interfaces.used > 1) {
+      bprintf(&interfaces, ", ");
     }
+
+    charbuf *interface = symtab_ensure_charbuf(java_context->cql_interfaces_fqcn, implemented_cql_interface_class);
+    Invariant(interface->used > 0);
+    bprintf(&interfaces, "%s", interface->ptr);
   }
 
   if (interfaces.used > 1) {
@@ -398,7 +398,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   CHARBUF_OPEN(class_name);
   extract_base_path_without_extension(&class_name, options.file_names[0]);
   CHARBUF_OPEN(implements_interface);
-  if (options.java_fragment_interface_mode && (frag_type != FRAG_TYPE_NONE || implements_cql_interface)) {
+  if ((options.java_fragment_interface_mode && frag_type != FRAG_TYPE_NONE) || implements_cql_interface) {
     cg_java_write_implements_interface(&implements_interface, name, java_context, frag_type, misc_attrs);
   }
 
@@ -410,7 +410,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
     bprintf(&body, "public static final String STORED_PROCEDURE_NAME = \"%s\";\n\n", name);
   }
 
-  if (!options.java_fragment_interface_mode) {
+  if (!options.java_fragment_interface_mode && !is_ast_declare_interface_stmt(ast)) {
     cg_java_write_fragment_class_accessors(&body, name, frag_type, java_context, col_count_for_base);
   }
 
@@ -446,7 +446,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   CG_CHARBUF_OPEN_SYM(get_count, "", "get_count");
   CHARBUF_OPEN(get_count_sig);
   cg_java_getter_sig(&get_count_sig, rt->cql_int32, get_count.ptr, "");
-  if (!options.java_fragment_interface_mode || is_query_proc) {
+  if ((!options.java_fragment_interface_mode || is_query_proc) && !is_ast_declare_interface_stmt(ast)) {
     bprintf(&body, rt->cql_result_set_get_count, get_count_sig.ptr);
   } else {
     bprintf(&body, "%s;\n\n", get_count_sig.ptr);
@@ -462,7 +462,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
     bprintf(&body, rt->cql_result_set_has_identity_columns, include_identity_columns ? "true" : "false");
   }
 
-  if (options.java_fragment_interface_mode && is_ast_declare_interface_stmt(ast)) {
+  if (is_ast_declare_interface_stmt(ast)) {
       charbuf* fqcn = symtab_ensure_charbuf(java_context->cql_interfaces_fqcn, name);
 
       if (misc_attrs) {

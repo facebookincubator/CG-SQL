@@ -495,14 +495,14 @@ code_gen_java_test() {
   on_diff_exit cg_test_java_out_union.out
 
   echo running java codegen test for interface
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_interface_definition.out" --in "${TEST_DIR}/cg_test_interface_definition.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode 2>"${OUT_DIR}/cg_test_interface_definition.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_interface_definition.out" --in "${TEST_DIR}/cg_test_interface_definition.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_interface_definition.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_interface_definition.err"
     failed
   fi
 
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_interface_implements.out" --in "${TEST_DIR}/cg_test_interface_implements.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode 2>"${OUT_DIR}/cg_test_interface_implements.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_interface_implements.out" --in "${TEST_DIR}/cg_test_interface_implements.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_interface_implements.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_interface_implements.err"
@@ -516,9 +516,25 @@ code_gen_java_test() {
     failed
   fi
 
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_interface_assembly.out" --in "${TEST_DIR}/cg_test_interface_assembly.sql" --rt java --java_package_name com.facebook.cqlviewmodels --java_fragment_interface_mode 2>"${OUT_DIR}/cg_test_interface_assembly.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_interface_assembly.err"
+    failed
+  fi
+
+  echo ${CQL} --test --cg "${OUT_DIR}/cg_test_interface_assembly_no_flag.out" --in "${TEST_DIR}/cg_test_interface_assembly.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_interface_assembly_no_flag.err"
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_interface_assembly_no_flag.out" --in "${TEST_DIR}/cg_test_interface_assembly.sql" --rt java --java_package_name com.facebook.cqlviewmodels 2>"${OUT_DIR}/cg_test_interface_assembly_no_flag.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_interface_assembly_no_flag.err"
+    failed
+  fi
+
   on_diff_exit cg_test_interface_definition.out
   on_diff_exit cg_test_interface_implements.out
   on_diff_exit cg_test_interface_assembly.out
+  on_diff_exit cg_test_interface_assembly_no_flag.out
 }
 
 code_gen_objc_test() {
