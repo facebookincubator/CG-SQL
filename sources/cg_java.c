@@ -22,6 +22,7 @@ cql_noexport void cg_java_cleanup() {}
 #include "cg_common.h"
 #include "charbuf.h"
 #include "cql.h"
+#include "encoders.h"
 #include "gen_sql.h"
 #include "list.h"
 #include "sem.h"
@@ -39,6 +40,10 @@ typedef struct cg_java_context {
   // are collected from the in-scope base and extension fragments that have been parsed before
   // the assembly.
   symtab *frag_assembly_interfaces;
+
+  // Table that maps a interface name to the fully qualified name (package + class name).  These
+  // are collected from the in-scope interfaces that have been parsed before.
+  symtab *cql_interfaces_fqcn;
 
   // In the Java codegen pipeline, we support only one SP per codegen run. This is to acccomodate
   // the fact that in Java we can only generate one top level public class per file
@@ -78,6 +83,7 @@ static void cg_java_getter_sig(charbuf *buf, CSTR return_type, CSTR name, CSTR p
 }
 
 static void cg_java_proc_result_set_getter(
+  ast_node* ast,
   bool_t fetch_proc,
   CSTR name,
   CSTR col_name,
@@ -169,7 +175,9 @@ static void cg_java_proc_result_set_getter(
   CHARBUF_OPEN(getter_sig);
   // patternlint-disable-next-line prefer-sized-ints-in-msys
   cg_java_getter_sig(&getter_sig, return_type, col_name_camel.ptr, fetch_proc ? "" : "int row");
-  if (!options.java_fragment_interface_mode || cg_java_frag_type_query_proc(frag_type)) {
+
+  bool is_query_proc = cg_java_frag_type_query_proc(frag_type) && !is_ast_declare_interface_stmt(ast);
+  if (!options.java_fragment_interface_mode || is_query_proc) {
     bprintf(java,
             rt->cql_result_set_get_data,
             getter_sig.ptr,
@@ -196,8 +204,8 @@ static void no_op(CSTR _Nonnull name, ast_node *_Nonnull attr, void *_Nullable c
   return;
 }
 
-static void cg_java_validate_proc_count(cg_java_context *java_context, uint32_t frag_type) {
-  if (java_context->generated_proc_count == 1 && frag_type == FRAG_TYPE_NONE) {
+static void cg_java_validate_proc_count(cg_java_context *java_context, uint32_t frag_type, bool implements_interface) {
+  if (java_context->generated_proc_count == 1 && frag_type == FRAG_TYPE_NONE && !implements_interface) {
     // We've already generated a Java SP. More SPs are not allowed unless
     // this is for either assembly query or fragments supplied for it
     cql_error(
@@ -231,34 +239,56 @@ static void cg_java_fragment_columns(
   *count = frag_type == FRAG_TYPE_ASSEMBLY ? *col_count_for_base : *count;
 }
 
+static void cg_set_value(CSTR _Nonnull val, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
+  if (_context) {
+    CSTR *output = (CSTR *)_context;
+    *output = val;
+  }
+}
+
 static void cg_java_write_implements_interface(
   charbuf *buf,
   CSTR name,
   cg_java_context *java_context,
-  uint32_t frag_type)
+  uint32_t frag_type,
+  ast_node* misc_attrs)
 {
-  Contract(frag_type != FRAG_TYPE_NONE);
   Contract(frag_type != FRAG_TYPE_SHARED);
   Contract(frag_type != FRAG_TYPE_EXTENSION);
 
   CHARBUF_OPEN(interfaces);
 
   if (options.java_fragment_interface_mode) {
-    Invariant(base_fragment_name);
+    // base_fragment_name will only be only set for base and assembly fragments, but not for interfaces
+    if (base_fragment_name) {
+      // Get the interface buffers
+      charbuf *frag_assembly_interface;
+      frag_assembly_interface = symtab_ensure_charbuf(java_context->frag_assembly_interfaces, base_fragment_name);
 
-    // Get the interface buffers
-    charbuf *frag_assembly_interface;
-    frag_assembly_interface = symtab_ensure_charbuf(java_context->frag_assembly_interfaces, base_fragment_name);
-
-    if (frag_type == FRAG_TYPE_BASE) {
-      // The current class name should be registered to both the extension and assembly interfaces.  There should
-      // be nothing in the interface buffers, as the base extension is the first declared semantically.
-      Invariant(frag_assembly_interface->used == 1);
-      cg_sym_name(cg_symbol_case_pascal, frag_assembly_interface, "", name, NULL);
+      if (frag_type == FRAG_TYPE_BASE) {
+        // The current class name should be registered to both the extension and assembly interfaces.  There should
+        // be nothing in the interface buffers, as the base extension is the first declared semantically.
+        Invariant(frag_assembly_interface->used == 1);
+        cg_sym_name(cg_symbol_case_pascal, frag_assembly_interface, "", name, NULL);
+      }
+      else if (frag_type == FRAG_TYPE_ASSEMBLY) {
+        // This interface extends the base interface.
+        bprintf(&interfaces, "%s", frag_assembly_interface->ptr);
+      }
     }
-    else if (frag_type == FRAG_TYPE_ASSEMBLY) {
-      // This interface extends the base interface.
-      bprintf(&interfaces, "%s", frag_assembly_interface->ptr);
+
+    if (exists_attribute_str(misc_attrs, "implements")) {
+      CSTR implemented_cql_interface_class = NULL;
+
+      find_attribute_str(misc_attrs, cg_set_value, &implemented_cql_interface_class, "implements");
+
+      if (interfaces.used > 1) {
+        bprintf(&interfaces, ", ");
+      }
+
+      charbuf *interface = symtab_ensure_charbuf(java_context->cql_interfaces_fqcn, implemented_cql_interface_class);
+      Invariant(interface->used > 0);
+      bprintf(&interfaces, "%s", interface->ptr);
     }
   }
 
@@ -298,14 +328,19 @@ static void cg_java_write_fragment_class_accessors(
   }
 }
 
+static bool cg_java_should_generate_interface(uint32_t frag_type) {
+  return options.java_fragment_interface_mode && !cg_java_frag_type_query_proc(frag_type);
+}
+
 static void cg_java_write_class_or_interface(
+  ast_node *ast,
   charbuf *buf,
   uint32_t frag_type,
   charbuf *name,
   charbuf *implements_interface,
   charbuf *body)
 {
-  if (!options.java_fragment_interface_mode || cg_java_frag_type_query_proc(frag_type)) {
+  if (!cg_java_should_generate_interface(frag_type) && !is_ast_declare_interface_stmt(ast)) {
     bprintf(buf,
             "public final class %s extends CQLViewModel%s {\n\n",
             name->ptr,
@@ -342,12 +377,12 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   encode_columns = symtab_new();
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
+  bool_t implements_cql_interface = !!exists_attribute_str(misc_attrs, "implements");;
   bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
   uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
-  bool_t is_query_proc = cg_java_frag_type_query_proc(frag_type);
-  cg_java_validate_proc_count(java_context, frag_type);
+  bool_t is_query_proc = cg_java_frag_type_query_proc(frag_type) && !is_ast_declare_interface_stmt(ast);
+  cg_java_validate_proc_count(java_context, frag_type, implements_cql_interface);
 
-  Contract(is_ast_create_proc_stmt(ast));
   Contract(is_struct(ast->sem->sem_type));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -362,10 +397,9 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   CHARBUF_OPEN(body);
   CHARBUF_OPEN(class_name);
   extract_base_path_without_extension(&class_name, options.file_names[0]);
-
   CHARBUF_OPEN(implements_interface);
-  if (options.java_fragment_interface_mode && frag_type != FRAG_TYPE_NONE) {
-    cg_java_write_implements_interface(&implements_interface, name, java_context, frag_type);
+  if (options.java_fragment_interface_mode && (frag_type != FRAG_TYPE_NONE || implements_cql_interface)) {
+    cg_java_write_implements_interface(&implements_interface, name, java_context, frag_type, misc_attrs);
   }
 
   bool_t out_stmt_proc = has_out_stmt_result(ast);
@@ -380,7 +414,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
     cg_java_write_fragment_class_accessors(&body, name, frag_type, java_context, col_count_for_base);
   }
 
-  if (!options.java_fragment_interface_mode || is_query_proc) {
+  if (!cg_java_should_generate_interface(frag_type) && !is_ast_declare_interface_stmt(ast)) {
     bprintf(&body,
             "public %s(CQLResultSet resultSet) {\n"
             "  super(resultSet);\n"
@@ -396,6 +430,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
     bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
     is_string_column_encoded += custom_type_for_encoded_column && encode && core_type_of(sem_type) == SEM_TYPE_TEXT;
     cg_java_proc_result_set_getter(
+        ast,
         out_stmt_proc,
         name,
         col,
@@ -422,9 +457,29 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
     bprintf(&body, rt->cql_result_set_copy, class_name.ptr, class_name.ptr);
   }
 
-  if (!options.java_fragment_interface_mode || is_query_proc) {
+  if (!cg_java_should_generate_interface(frag_type) && !is_ast_declare_interface_stmt(ast)) {
     bool_t include_identity_columns = misc_attrs != NULL ? find_identity_columns(misc_attrs, no_op, NULL) != 0 : 0;
     bprintf(&body, rt->cql_result_set_has_identity_columns, include_identity_columns ? "true" : "false");
+  }
+
+  if (options.java_fragment_interface_mode && is_ast_declare_interface_stmt(ast)) {
+      charbuf* fqcn = symtab_ensure_charbuf(java_context->cql_interfaces_fqcn, name);
+
+      if (misc_attrs) {
+        CSTR package_attribute = NULL;
+        uint32_t found_package = find_attribute_str(misc_attrs, cg_set_value, &package_attribute, "java_package");
+
+        if (found_package) {
+          if (package_attribute[0] == '\'') {
+            cg_decode_string_literal(package_attribute, fqcn);
+            bputc(fqcn, '.');
+          } else {
+            bprintf(fqcn, "%s.", package_attribute);
+          }
+        }
+      }
+
+      cg_sym_name(cg_symbol_case_pascal, fqcn, "", name, NULL);
   }
 
   CHARBUF_OPEN(cg_java_output);
@@ -433,6 +488,7 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
   bprintf(&cg_java_output, rt->source_wrapper_begin, options.java_package_name, custom_class_import);
   cg_java_write_imports(&cg_java_output, frag_type);
   cg_java_write_class_or_interface(
+    ast,
     &cg_java_output,
     frag_type,
     &class_name,
@@ -457,7 +513,8 @@ static void cg_java_proc_result_set(ast_node *ast, cg_java_context *java_context
 }
 
 static void cg_java_create_proc_stmt(ast_node *ast, cg_java_context *java_context) {
-  Contract(is_ast_create_proc_stmt(ast));
+  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_interface_stmt(ast));
+
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
@@ -481,7 +538,7 @@ static void cg_java_create_proc_stmt(ast_node *ast, cg_java_context *java_contex
 
 // java codegen only deals with the create proc statement so use an easy dispatch
 static void cg_java_one_stmt(ast_node *stmt, cg_java_context *java_context) {
-  if (is_ast_create_proc_stmt(stmt)) {
+  if (is_ast_create_proc_stmt(stmt) || is_ast_declare_interface_stmt(stmt)) {
     cg_java_create_proc_stmt(stmt, java_context);
   }
 }
@@ -535,13 +592,17 @@ cql_noexport void cg_java_main(ast_node *head) {
 
   // gen java code ....
   symtab *frag_assembly_interfaces = symtab_new();
+  symtab *cql_interfaces_fqcn = symtab_new();
+
   CHARBUF_OPEN(frag_col_offsets_for_core);
   cg_java_context java_context = {
     .frag_col_offsets_for_core = &frag_col_offsets_for_core,
     .frag_assembly_interfaces = frag_assembly_interfaces,
+    .cql_interfaces_fqcn = cql_interfaces_fqcn,
   };
   cg_java_stmt_list(head, &java_context);
   CHARBUF_CLOSE(frag_col_offsets_for_core);
+  symtab_delete(cql_interfaces_fqcn);
   symtab_delete(frag_assembly_interfaces);
 }
 
