@@ -67456,6 +67456,428 @@ SET price_d := ( SELECT id
 
 The statement ending at line XXXX
 
+LET val_count := ( SELECT count(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_count: integer notnull variable
+  | {name val_count}: val_count: integer notnull variable
+  | {select_stmt}: _anon: integer notnull
+    | {select_core_list}: select: { _anon: integer notnull }
+    | | {select_core}: select: { _anon: integer notnull }
+    |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    |     | {select_expr_list}: select: { _anon: integer notnull }
+    |     | | {select_expr}: integer notnull
+    |     |   | {call}: integer notnull
+    |     |     | {name count}: integer notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET val_total := ( SELECT total(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_total: real notnull variable
+  | {name val_total}: val_total: real notnull variable
+  | {select_stmt}: _anon: real notnull
+    | {select_core_list}: select: { _anon: real notnull }
+    | | {select_core}: select: { _anon: real notnull }
+    |   | {select_expr_list_con}: select: { _anon: real notnull }
+    |     | {select_expr_list}: select: { _anon: real notnull }
+    |     | | {select_expr}: real notnull
+    |     |   | {call}: real notnull
+    |     |     | {name total}: real notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET val_average := ( SELECT average(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_average: real variable
+  | {name val_average}: val_average: real variable
+  | {select_stmt}: _anon: real
+    | {select_core_list}: select: { _anon: real }
+    | | {select_core}: select: { _anon: real }
+    |   | {select_expr_list_con}: select: { _anon: real }
+    |     | {select_expr_list}: select: { _anon: real }
+    |     | | {select_expr}: real
+    |     |   | {call}: real
+    |     |     | {name average}: real
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET val_avg := ( SELECT avg(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_avg: real variable
+  | {name val_avg}: val_avg: real variable
+  | {select_stmt}: _anon: real
+    | {select_core_list}: select: { _anon: real }
+    | | {select_core}: select: { _anon: real }
+    |   | {select_expr_list_con}: select: { _anon: real }
+    |     | {select_expr_list}: select: { _anon: real }
+    |     | | {select_expr}: real
+    |     |   | {call}: real
+    |     |     | {name avg}: real
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET val_sum := ( SELECT sum(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_sum: integer variable
+  | {name val_sum}: val_sum: integer variable
+  | {select_stmt}: _anon: integer
+    | {select_core_list}: select: { _anon: integer }
+    | | {select_core}: select: { _anon: integer }
+    |   | {select_expr_list_con}: select: { _anon: integer }
+    |     | {select_expr_list}: select: { _anon: integer }
+    |     | | {select_expr}: integer
+    |     |   | {call}: integer
+    |     |     | {name sum}: integer
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET val_group_concat := ( SELECT group_concat(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_group_concat: text variable
+  | {name val_group_concat}: val_group_concat: text variable
+  | {select_stmt}: _anon: text
+    | {select_core_list}: select: { _anon: text }
+    | | {select_core}: select: { _anon: text }
+    |   | {select_expr_list_con}: select: { _anon: text }
+    |     | {select_expr_list}: select: { _anon: text }
+    |     | | {select_expr}: text
+    |     |   | {call}: text
+    |     |     | {name group_concat}: text
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET val_max := ( SELECT max(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_max: integer variable
+  | {name val_max}: val_max: integer variable
+  | {select_stmt}: _anon: integer
+    | {select_core_list}: select: { _anon: integer }
+    | | {select_core}: select: { _anon: integer }
+    |   | {select_expr_list_con}: select: { _anon: integer }
+    |     | {select_expr_list}: select: { _anon: integer }
+    |     | | {select_expr}: integer
+    |     |   | {call}: integer
+    |     |     | {name max}: integer
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET val_min := ( SELECT min(1)
+  FROM foo
+  WHERE 0 );
+
+  {let_stmt}: val_min: integer variable
+  | {name val_min}: val_min: integer variable
+  | {select_stmt}: _anon: integer
+    | {select_core_list}: select: { _anon: integer }
+    | | {select_core}: select: { _anon: integer }
+    |   | {select_expr_list_con}: select: { _anon: integer }
+    |     | {select_expr_list}: select: { _anon: integer }
+    |     | | {select_expr}: integer
+    |     |   | {call}: integer
+    |     |     | {name min}: integer
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET val_max := ( SELECT max(1, 2, 3)
+  FROM foo
+  WHERE 0 );
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name val_max}: val_max: integer variable
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {call}
+    |     |     | {name max}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}
+    |     |         | {int 1}
+    |     |         | {arg_list}
+    |     |           | {int 2}
+    |     |           | {arg_list}
+    |     |             | {int 3}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {opt_where}
+    |         | | {int 0}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET val_min := ( SELECT min(1, 2, 3)
+  FROM foo
+  WHERE 0 );
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name val_min}: val_min: integer variable
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {call}
+    |     |     | {name min}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}
+    |     |         | {int 1}
+    |     |         | {arg_list}
+    |     |           | {int 2}
+    |     |           | {arg_list}
+    |     |             | {int 3}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {opt_where}
+    |         | | {int 0}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET val_min := ( SELECT min(1)
+  FROM foo
+  WHERE 0
+  GROUP BY id );
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name val_min}: val_min: integer variable
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {call}
+    |     |     | {name min}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}
+    |     |         | {int 1}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {opt_where}
+    |         | | {int 0}
+    |         | {select_groupby}
+    |           | {opt_groupby}
+    |           | | {groupby_list}
+    |           |   | {groupby_item}
+    |           |     | {name id}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET val_sum := ( SELECT sum(1)
+  FROM foo
+  WHERE 0
+  GROUP BY id );
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name val_sum}: val_sum: integer variable
+  | {select_stmt}: err
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {call}
+    |     |     | {name sum}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}
+    |     |         | {int 1}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {opt_where}
+    |         | | {int 0}
+    |         | {select_groupby}
+    |           | {opt_groupby}
+    |           | | {groupby_list}
+    |           |   | {groupby_item}
+    |           |     | {name id}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 @ENFORCE_NORMAL SELECT IF NOTHING;
 
   {enforce_normal_stmt}: ok

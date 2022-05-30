@@ -16868,6 +16868,54 @@ set price_d := (select 1 if nothing (select 1));
 -- - error:
 set price_d := (select id from foo if nothing throw);
 
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - count
+-- - error:
+let val_count := (select count(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - total
+-- - error:
+let val_total := (select total(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - average
+-- - error:
+let val_average := (select average(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - avg
+-- - error:
+let val_avg := (select avg(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - sum
+-- - error:
+let val_sum := (select sum(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - group_concat
+-- - error:
+let val_group_concat := (select group_concat(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - max
+-- - error:
+let val_max := (select max(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement not enforced for built-in aggregate function - min
+-- - error:
+let val_min := (select min(1) from foo where 0);
+
+--- TEST: IF NOTHING requirement is enforced for multi-argument scalar function max
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+set val_max := (select max(1, 2, 3) from foo where 0);
+
+--- TEST: IF NOTHING requirement is enforced for multi-argument scalar function min
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+set val_min := (select min(1, 2, 3) from foo where 0);
+
+--- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - min
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+set val_min := (select min(1) from foo where 0 group by id);
+
+--- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - sum
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+set val_sum := (select sum(1) from foo where 0 group by id);
+
 -- TEST: normal if nothing
 -- + {enforce_normal_stmt}: ok
 -- - error:;

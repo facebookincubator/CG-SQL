@@ -22157,10 +22157,37 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
     return false;
   }
 
-  // we could generalize into more functions that for sure return a result, but these are the big ones
+  EXTRACT_NOTNULL(select_groupby, select_where->right);
+  EXTRACT(opt_groupby, select_groupby->left);
+
+  // built-in aggregate functions without GROUP BY clause return at least one row
   EXTRACT_STRING(name, expr->left);
-  if (!Strcasecmp("count", name) || !Strcasecmp("total", name)) {
+  if (!is_ast_opt_groupby(opt_groupby) && (
+    !Strcasecmp("average", name) ||
+    !Strcasecmp("avg", name) ||
+    !Strcasecmp("count", name) ||
+    !Strcasecmp("group_concat", name) ||
+    !Strcasecmp("sum", name) ||
+    !Strcasecmp("total", name)
+  )) {
     return true;
+  }
+
+  // min and max are aggregate functions if and only if they have exactly one argument, they are scalar functions if
+  // they have two or more arguments
+  if (!is_ast_opt_groupby(opt_groupby) && (
+    !Strcasecmp("max", name) ||
+    !Strcasecmp("min", name)
+  )) {
+      EXTRACT_ANY_NOTNULL(call_arg_list, expr->right);
+      EXTRACT_ANY_NOTNULL(arg_list, call_arg_list->right);
+
+      uint32_t arg_count = 0;
+      for (ast_node *item = arg_list; item; item = item->right) arg_count++;
+
+      if (arg_count == 1) {
+        return true;
+      }
   }
 
   return false;
