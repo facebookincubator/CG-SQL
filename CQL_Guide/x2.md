@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu May 12 14:16:07 PDT 2022
+Snapshot as of Tue May 31 09:23:31 PDT 2022
 
 ### Operators and Literals
 
@@ -129,6 +129,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_const_stmt
   | declare_group_stmt
+  | declare_select_func_no_check_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -557,6 +558,7 @@ data_type_any:
   | "BLOB"  opt_kind
   | "OBJECT" opt_kind
   | "OBJECT" '<' name "CURSOR" '>'
+  | "OBJECT" '<' name "SET" '>'
   | "ID"
   ;
 
@@ -1235,6 +1237,11 @@ const_values:
 const_value:  name '=' expr
   ;
 
+declare_select_func_no_check_stmt:
+  "DECLARE" "SELECT" function name "NO" "CHECK" data_type_with_options
+  | "DECLARE" "SELECT" function name "NO" "CHECK" '(' typed_names ')'
+  ;
+
 declare_func_stmt:
   "DECLARE" function name '(' func_params ')' data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
@@ -1322,7 +1329,7 @@ declare_stmt:
   | "DECLARE" name "CURSOR" "FOR" explain_stmt
   | "DECLARE" name "CURSOR" "FOR" call_stmt
   | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
-  | "DECLARE" name "CURSOR" "FOR" name
+  | "DECLARE" name "CURSOR" "FOR" expr
   | "DECLARE" name "TYPE" data_type_with_options
   ;
 

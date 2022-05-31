@@ -24,14 +24,17 @@ checks, error checks, and the other miscellany needed to use SQLite correctly.
 CQL is also strongly typed, whereas SQLite is very forgiving with regard to what operations
 are allowed on which data.  Strict type checking is much more reasonable given CQL's compiled programming model.
 
-NOTE: CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this content is free from references to Messenger. The CQL code generation here is done in the simplest
-mode with the fewest runtime dependencies allowed for illustration.
+> NOTE: CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this
+> content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the
+> fewest runtime dependencies allowed for illustration.
 
 ### Getting Started
 
+Before starting this tutorial, make sure you have built the `cql` executable first in [Building CG/SQL](https://cgsql.dev/docs/building).
+
 The "Hello World" program rendered in CQL looks like this:
 
-```sql
+```sql title="hello.sql"
 -- needed to allow vararg calls to C functions
 declare procedure printf no check;
 
@@ -42,26 +45,30 @@ end;
 ```
 
 This very nearly works exactly as written but we'll need a little bit of glue to wire it all up.
-Let's talk about that glue.
 
-First, to build this example we'll use cql in its simplest mode.  You may need to build the `cql` executable first.
-From a source distribution you can run `make` in the `cql` directory to do the job.  You can get the binary from the `out` directory after the build.  Arrange for `cql` to be on your PATH.
+First, assuming you have [built](https://cgsql.dev/docs/building) `cql`, you should have the power to do this:
 
-With that done you should have the power to do this:
-
-```sh
-cql --in hello.sql --cg hello.h hello.c
+```bash
+$ cql --in hello.sql --cg hello.h hello.c
 ```
 
 This will produce the C output files `hello.c` and `hello.h` which can be readily compiled.
 
 However, hello.c will not have a `main` -- rather it will have a function like this:
 
-```C
+```c title="hello.c"
+...
 void hello(void);
+...
 ```
 
 The declaration of this function can be found in `hello.h`.
+
+
+> Note: hello.h tries to include [`cqlrt.h`](https://github.com/facebookincubator/CG-SQL/blob/main/sources/cqlrt.h). To
+> avoid configuring include paths for the compiler, you might keep `cqlrt.h` in the same directory as the examples and
+> avoid that complication. Otherwise you must make arrangements for the compiler to be able to find `cqlrt.h` either by
+> adding it to an `INCLUDE` path or by adding some `-I` options to help the compiler find the source.
 
 That `hello` function is not quite adequate to get a running program, which brings us to the next step in
 getting things running.  Typically you have some kind of client program that will execute the procedures you
@@ -69,7 +76,7 @@ create in CQL.  Let's create a simple one in a file we'll creatively name `main.
 
 A very simple CQL main might look like this:
 
-```C
+```c title="main.c"
 #include <stdlib.h>
 #include "hello.h"
 int main(int argc, char **argv)
@@ -87,10 +94,7 @@ $ ./hello
 Hello, world
 ```
 
-NOTE: hello.c will attempt to `#include "cqlrt.h"` the declarations for CQL runtime functions.
-You must make arrangements for the compiler to be able to find `cqlrt.h` either by adding it to an
-`INCLUDE` path or by adding some -I options to help the compiler find the source.  For now you might
-keep `cqlrt.h` in the same directory as the examples and avoid that complication.
+Congratulations, you've printed `"Hello, world"` with CG/SQL!
 
 ### Why did this work?
 
@@ -185,9 +189,9 @@ non-reference type, however: They are automatically assigned an initial value of
 The programs execution begins with three assignments:
 
 ```sql
-  set lower := 0;
-  set upper := 300;
-  set step := 20;
+set lower := 0;
+set upper := 300;
+set step := 20;
 ```
 
 This initializes the variables just like in the isomorphic C code.  Statements are seperated by semicolons,
@@ -196,10 +200,10 @@ just like in C.
 The table is then printed using a `while` loop
 
 ```sql
-  while fahr <= upper
-  begin
-    ...
-  end;
+while fahr <= upper
+begin
+  ...
+end;
 ```
 
 This has the usual meaning, with the statements in the `begin/end` block being executed repeatedly
@@ -210,9 +214,9 @@ The body of a `begin/end` block such as the one in the `while` statement can con
 The typical computation of Celsius temperature ensues with this code:
 
 ```sql
-  set celsius := 5 * (fahr - 32) / 9;
-  call printf("%d\t%d\n", fahr, celsius);
-  set fahr := fahr + step;
+set celsius := 5 * (fahr - 32) / 9;
+call printf("%d\t%d\n", fahr, celsius);
+set fahr := fahr + step;
 ```
 
 This computes the celsuis and then prints it out, moving on to the next entry in the table.
@@ -248,7 +252,7 @@ they might be applied when performing a `+` operation.
 CQL does not include its own pre-processor but it is designed to consume the output of the C pre-processor.  To do this, you can either write the output of the pre-processor to a temporary file and read it into CQL as usual or you can set up a pipeline something like this:
 
 ```bash
-cc -x c -E your_program.sql | cql --cg your_program.h your_program.c
+$ cc -x c -E your_program.sql | cql --cg your_program.h your_program.c
 ```
 
 The above causes the C compiler to invoke only the pre-processor `-E` and to treat the input as though it were C code `-x c` even though it is in a `.sql` file. Later examples will assume that you have configured CQL to be used with the C pre-processor as above.
@@ -270,7 +274,7 @@ on the meaning of the SQL statements used here if you are new to SQL.
 
 Suppose we have the following program:
 
-```sql
+```sql title="hello.sql"
 -- needed to allow vararg calls to C functions
 declare procedure printf no check;
 
@@ -299,7 +303,7 @@ return code.
 
 A new minimal `main` program might look something like this:
 
-```C
+```c title="main.c"
 #include <stdlib.h>
 #include <sqlite3.h>
 
@@ -323,8 +327,10 @@ int main(int argc, char **argv)
 
 If we re-run CQL and look in the `hello.h` output file we'll see that the declaration of the `hello` function is now:
 
-```C
+```c title="hello.h"
+...
 extern CQL_WARN_UNUSED cql_code hello(sqlite3 *_Nonnull _db_);
+...
 ```
 
 This indicates that the database is used and a SQLite return code is provided.  We're nearly there.  If you attempt
@@ -358,7 +364,7 @@ created when the procedure is executed.
 
 We need to change our program a tiny bit.
 
-```sql
+```sql title="hello.sql"
 -- needed to allow vararg calls to C functions
 declare procedure printf no check;
 
@@ -379,8 +385,8 @@ If we rebuild the program, it will now behave as expected.
 
 Let's go over every important line of the new program, starting from main.
 
-```C
-  int rc = sqlite3_open(":memory:", &db);
+```c
+int rc = sqlite3_open(":memory:", &db);
 ```
 
 This statement gives us an empty, private, in-memory only database to work with.  This is the simplest case
@@ -389,8 +395,8 @@ databases per the SQLite documentation.
 
 We'll need such a database to use our procedure, and we use it in the call here:
 
-```C
-  rc = hello(db);
+```c
+rc = hello(db);
 ```
 
 This provides a valid db handle to our procedure.  Note that the procedure doesn't know what database it is
@@ -401,7 +407,7 @@ database setup; it does what you tell it to.
 When `hello` runs we begin with
 
 ```sql
-  create table my_data(t text not null);
+create table my_data(t text not null);
 ```
 
 This will create the `my_data` table with a single column `t`, of type `text not null`.  That will work because
@@ -410,7 +416,7 @@ we know we're going to call this with a fresh/empty database.  More typically yo
 Next we'll run the insert statement:
 
 ```sql
-  insert into my_data(t) values("Hello, world\n");
+insert into my_data(t) values("Hello, world\n");
 ```
 
 This will add a single row to the table.  Note that we have again used double quotes, meaning that this is a C string literal.  This is highly convenient given the escape sequences.  Normally SQLite text has the newlines directly embedded in it; that practice isn't very compiler friendly, hence the alternative.
@@ -418,13 +424,13 @@ This will add a single row to the table.  Note that we have again used double qu
 Next we declare a local variable to hold our data:
 
 ```sql
-  declare t text not null;
+declare t text not null;
 ```
 
 Then, we can read back our data:
 
 ```sql
-  set t := (select * from my_data);
+set t := (select * from my_data);
 ```
 
 This form of database reading has very limited usability but it does work for this case and it is illustrative.
@@ -436,12 +442,14 @@ At run time, the `select` query must return exactly one row or an error code wil
 to see `(select ... limit 1)` to force the issue.  But that still leaves the possibility of zero rows, which would
 be an error.  We'll talk about more flexible ways to read from the database later.
 
-> Note: you can declare a variable and assign it in one step with the `LET` keyword, e.g.
+
+> You can declare a variable and assign it in one step with the `LET` keyword, e.g.
 > ```sql
->   let t := (select * from my_data);
+> let t := (select * from my_data);
 > ```
 >
 > The code would normally be written in this way but for discussion purposes, these examples continue to avoid `LET`.
+
 
 At this point it seems wise to bring up the unusual expression evaluation properties of CQL.
 CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for
@@ -451,7 +459,7 @@ execution.  Alternately, anything that is inside of a piece of SQL is necessaril
 To make this clearer let's change the example a little bit before we move on.
 
 ```sql
-  set t := (select "__"||t||' '||1.234 from my_data);
+set t := (select "__"||t||' '||1.234 from my_data);
 ```
 
 This is a somewhat silly example but it illustrates some important things:
@@ -465,7 +473,7 @@ This is a somewhat silly example but it illustrates some important things:
 Returning now to our code as written, we see something very familiar:
 
 ```sql
-  call printf('%s', t);
+call printf('%s', t);
 ```
 
 Note that we've used the single quote syntax here for no good reason other than illustration. There are no escape
@@ -480,7 +488,7 @@ Also, note that CQL assumes that calls to "no check" functions should be emitted
 Lastly we have:
 
 ```sql
-  drop table my_data;
+drop table my_data;
 ```
 
 This is not strictly necessary because the database is in memory anyway and the program is about to exit but there
@@ -525,16 +533,16 @@ end;
 Reviewing the essential parts of the above.
 
 ```sql
-  create table my_data(
-    pos integer not null primary key,
-    txt text not null
-  );
+create table my_data(
+  pos integer not null primary key,
+  txt text not null
+);
 ```
 
 The table now includes a position column to give us some ordering.  That is the primary key.
 
 ```sql
-  insert into my_data values(2, 'World');
+insert into my_data values(2, 'World');
 ```
 
 The insert statements provide both columns, not in the printed order.  The insert form where the columns are not
@@ -543,16 +551,16 @@ specified indicates that all the columns will be present, in order; this is more
 The most important change is here:
 
 ```sql
-  declare C cursor for select * from my_data order by pos;
+declare C cursor for select * from my_data order by pos;
 ```
 
 We've created a non-scalar variable `C`, a cursor over the indicated result set.  The results will be ordered by `pos`.
 
 ```sql
-  loop fetch C
-  begin
-   ...
-  end;
+loop fetch C
+begin
+  ...
+end;
 ```
 
 This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error).
@@ -564,14 +572,14 @@ An integer and a string reference.  Both not null.
 
 
 ```sql
-  call printf("%d: %s\n", C.pos, C.txt);
+call printf("%d: %s\n", C.pos, C.txt);
 ```
 
 The storage for the cursor is given the same names as the columns of the projection of the select, in this case the columns were not renamed so `pos` and `txt` are the fields in the cursor.
 Double quotes were used in the format string to get the newline in there easily.
 
 ```sql
-  close C;
+close C;
 ```
 
 The cursor is automatically released at the end of the procedure but in this case we'd like to release it before the
@@ -867,7 +875,7 @@ There are a number of literal objects that may be expressed in CQL.  These are a
 
 Examples:
 
-```
+```sql
   1.3            -- real
   2L             -- long
   123456789123   -- long
@@ -902,7 +910,7 @@ in the JSON output for instance.
 To help with this problem, CQL includes constants, note, this is not the same as enumerated types as we'll
 see later.  You can now write something like this:
 
-```
+```sql
 declare enum business_type integer (
   restaurant,
   laundromat,
@@ -912,19 +920,19 @@ declare enum business_type integer (
 
 After this enum is declared, this:
 
-```
+```sql
 select business_type.corner_store;
 ```
 is the same as this:
 
-```
+```sql
 select 14;
 ```
 
 And that is exactly what SQLite will see, the literal `14`.
 
 You can also use the enum to define column types:
-```
+```sql
 CREATE TABLE businesses (
 name  TEXT,
 type  business_type
@@ -932,12 +940,12 @@ type  business_type
 ```
 
 CQL will then enforce that you use the correct enum to access those columns. For example, this is valid:
-```
+```sql
 SELECT * FROM businesses WHERE type = business_type.laundromat;
 ```
 
 While this does not type check:
-```
+```sql
 SELECT * FROM businesses WHERE type = business_corp_state.delaware;
 ```
 
@@ -955,7 +963,7 @@ With these forms you get some additional useful output:
 * the JSON includes the enumerations and their values in their own section
 * you can use the `@emit_enums` directive to put declarations like this into the `.h` file that corresponds to the current compiland
 
-```
+```c
 enum business_type {
   business_type__restaurant = 1,
   business_type__laundromat = 2,
@@ -965,7 +973,7 @@ enum business_type {
 
 Note that C does not allow for floating point enumerations, so in case of floating point values such as:
 
-```
+```sql
 declare enum floating real (
   one = 1.0,
   two = 2.0,
@@ -976,7 +984,7 @@ declare enum floating real (
 
 you get:
 
-```
+```c
 // enum floating (floating point values)
 #define floating__one 1.000000e+00
 #define floating__two 2.000000e+00
@@ -994,7 +1002,7 @@ which are evaluated at compile time.
 Constant folding was added to allow for rich `enum` expressions, but there is also the `const()` primitive in the
 language which can appear anywhere a literal could appear.  This allows you do things like:
 
-```
+```sql
 create table something(
   x integer default const((1<<16)|0xf) /*  again the math is just for illustration */
 );
@@ -1002,7 +1010,7 @@ create table something(
 
 The `const` form is also very useful in macros:
 
-```
+```c
 #define SOMETHING const(12+3)
 ```
 This form ensures that the constant will be evaluated at compile time. The `const` psuedo-function can also nest
@@ -1020,7 +1028,7 @@ the C language.  They do not create different incompatible types but they do let
 
 You can now write these sorts of forms:
 
-```
+```sql
 declare foo_id type long not null;
 
 create table foo(
@@ -1041,7 +1049,7 @@ declare var foo_id;
 
 Additionally any enumerated type can be used as a type name.  e.g.
 
-```
+```sql
 declare enum thing integer (
   thing1,
   thing2
@@ -1901,14 +1909,14 @@ Now we come to enforcement, which boils down to what assignments or "assignment-
 
 If we have these:
 
-```
+```sql
 declare sens integer @sensitive;
 declare not_sens integer;
 ```
 
 We can use those as stand-ins for lots of expressions, but the essential calculus goes like this:
 
-```
+```sql
 -- assigning a sensitive to a sensitive is ok
 set sens := sens + 1;
 
@@ -1969,7 +1977,7 @@ Stored procedures do not return values, they only have `out` arguments and those
 
 If you declare a function like so:
 
-```
+```sql
 declare function Getter() object;
 ```
 
@@ -1979,7 +1987,7 @@ Then CQL assumes that the returned object should follow the normal rules above, 
 
 If you declare a function like so:
 
-```
+```sql
 declare function Getter() create text;
 ```
 
@@ -2040,14 +2048,16 @@ The net comparison behavior is otherwise just like strings.
 
 #### Out Argument Semantics
 
-```
+```sql
 DECLARE FUNCTION foo() OBJECT;
 
 CREATE PROC foo_user (OUT baz OBJECT)
 BEGIN
   SET baz := foo();
 END;
+```
 
+```c
 void foo_user(cql_object_ref _Nullable *_Nonnull baz) {
   *(void **)baz = NULL; // set out arg to non-garbage
   cql_set_object_ref(baz, foo());
@@ -2056,7 +2066,7 @@ void foo_user(cql_object_ref _Nullable *_Nonnull baz) {
 
 #### Function with Create Semantics
 
-```
+```sql
 DECLARE FUNCTION foo() CREATE OBJECT;
 
 CREATE PROCEDURE foo_user (INOUT baz OBJECT)
@@ -2065,7 +2075,9 @@ BEGIN
   SET x := foo();
   SET baz := foo();
 END;
+```
 
+```c
 void foo_user(cql_object_ref _Nullable *_Nonnull baz) {
   cql_object_ref x = NULL;
 
@@ -2081,7 +2093,7 @@ cql_cleanup:
 
 #### Function with Get Semantics
 
-```
+```sql
 DECLARE FUNCTION foo() OBJECT;
 
 CREATE PROCEDURE foo_user (INOUT baz OBJECT)
@@ -2090,7 +2102,9 @@ BEGIN
   SET x := foo();
   SET baz := foo();
 END;
+```
 
+```c
 void foo_user(cql_object_ref _Nullable *_Nonnull baz) {
   cql_object_ref x = NULL;
 
@@ -3862,7 +3876,7 @@ So far we've avoided discussing the generated C code in any details but here
 it seems helpful to show exactly what these declarations correspond to in the
 generated C to demystify all this.  There is a very straightforward conversion.
 
-```C
+```c
 void test(cql_int32 i);
 
 void out_test(
@@ -3993,7 +4007,7 @@ generate helper functions to read the data and materialize a result set.
 
 Let's look at the public interface of that result set now considering the most essential pieces.
 
-```C
+```c
 /* this is almost everything in the generated header file */
 #define read_foo_data_types_count 3
 cql_result_set_type_decl(
@@ -4025,7 +4039,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1)) \
 ```
 
 Let's consider some of these individually now
-```C
+```c
 cql_result_set_type_decl(
   read_foo_result_set,
   read_foo_result_set_ref);
@@ -4034,7 +4048,7 @@ This declares the data type for `read_foo_result_set` and the associated object 
 As it turns out, the underlying data type for all result sets is the same, and only the shape of the data varies.
 
 
-```C
+```c
 extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
   read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_);
@@ -4045,7 +4059,7 @@ This method is the main public entry point for result sets.
 
 Once you have a result set, you can read values out of it.
 
-```C
+```c
 extern cql_int32 read_foo_result_count(read_foo_result_set_ref
   _Nonnull result_set);
 ```
@@ -4053,7 +4067,7 @@ That function tells you how many rows are in the result set.
 
 For each row you can use any of the row readers:
 
-```C
+```c
 extern cql_int32 read_foo_get_id(read_foo_result_set_ref
   _Nonnull result_set, cql_int32 row);
 extern cql_bool read_foo_get_b_is_null(read_foo_result_set_ref
@@ -4074,7 +4088,7 @@ Note:  The compiler has runtime arrays that control naming conventions as well a
 
 Finally, also part of the public interface, are these macros:
 
-```C
+```c
 #define read_foo_row_hash(result_set, row)
 #define read_foo_row_equal(rs1, row1, rs2, row2)
 ```
@@ -4183,7 +4197,7 @@ Virtually all the code pieces to do this already exist for normal result sets.  
 
 We need a buffer to hold the rows we are going to accumulate;  We use `cql_bytebuf` just like the normal fetcher above.
 
-```C
+```c
 // This bit creates a growable buffer to hold the rows
 // This is how we do all the other result sets, too
 cql_bytebuf _rows_;
@@ -4239,7 +4253,7 @@ end;
 
 And this main code to open the database and access the procedure:
 
-```C
+```c
 // main.c
 
 #include <stdlib.h>
@@ -4299,6 +4313,8 @@ CQL stored procs have a very simple contract so it is easy to declare procedures
 
 In another example of the two-headed nature of CQL, there are two ways to declare functions.  As we have already
 seen you can make function-like procedures and call them like functions simply by making a procedure with an `out` parameter. However, there are also cases where it is reasonable to make function calls to external functions of other kinds.  There are three major types of functions you might wish to call.
+
+### Function Types
 
 #### Ordinary Scalar Functions
 
@@ -4418,6 +4434,22 @@ end;
 
 This construct is very general indeed but the runtime set up for it is much more complicated than scalar functions
 and only more modern versions of SQLite even support it.
+
+### SQL Functions with Unchecked Parameter Types
+
+Certain SQL functions like [`json_extract`](https://www.sqlite.org/json1.html#jex) are variadic (they accept variable number of arguments). To use such functions within CQL, you can declare a SQL function to have untyped parameters by including the `NO CHECK` clause instead of parameter types.
+
+For example:
+```sql
+declare select function json_extract no check text;
+```
+
+This is also supported for SQL table-valued functions:
+```sql
+declare select function table_valued_function no check (t text, i int);
+```
+
+> Note: currently the `NO CHECK` clause is not supported for non SQL [Ordinary Scalar Functions](#Ordinary-Scalar-Functions).
 
 ### Notes on Builtin Functions
 
@@ -7475,7 +7507,7 @@ END;
 
 Which generates this C API:
 
-```C
+```c
 void generate_sample_proc_row_fetch_results(
     generate_sample_proc_row_rowset_ref _Nullable *_Nonnull result_set,
     string_ref _Nonnull foo_,
@@ -7703,7 +7735,7 @@ And of course if the annotation is not flexible enough, you can write your own d
 
 The CQL above results in the usual C signatures.  For instance:
 
-```C
+```c
 CQL_WARN_UNUSED cql_code test_the_subject_populate_tables(sqlite3 *_Nonnull _db_);
 ```
 
@@ -8669,7 +8701,7 @@ It's easiest to illustrate this with an example so let's begin there.
 
 Let's first start with this very simple schema:
 
-```
+```sql
 create table my_table(
  id integer primary key,
  name text not null,
@@ -8693,7 +8725,7 @@ of additional columns of any type.  So we can keep the examples simple.
 
 The base fragment might look something like this:
 
-```
+```sql
 @attribute(cql:base_fragment=base_frag)
 create proc base_frag_template(id_ integer not null)
 begin
@@ -8995,7 +9027,7 @@ split_text(tok) AS (
 )
 ```
 
-This text might appear in dozens of places where a comma seperated list needs to be split into pieces and there is no good way
+This text might appear in dozens of places where a comma separated list needs to be split into pieces and there is no good way
 to share the code between these locations.  CQL is frequently used in conjunction with the C-pre-processor so you could
 come up with something using the #define construct but this is problematic for several reasons:
 
@@ -9117,7 +9149,7 @@ of v1 and v2.  SQL will of course see the full expansion but your program only n
 how many times you use the fragment anywhere in the code.
 
 So far we have illustrated the "parameter" part of the flexibility.  Now let's look at the "generics" part;
-even though it's overkill for this example, it should still be illustratative.  You could imagine that
+even though it's overkill for this example, it should still be illustrative.  You could imagine that
 the procedure we wrote above `ids_from_string` might do something more complicated, maybe filtering out
 negative ids, ids that are too big, or that don't match some pattern, whatever the case might be.  You
 might want these features in a variety of contexts, maybe not just starting from a string to split.
@@ -9134,7 +9166,7 @@ BEGIN
 END;
 ```
 
-Note the new construct for a CTE definition: inside a fragment we can use "LIKE" to define a pluggable CTE.
+Note the new construct for a CTE definition: inside a fragment we can use "LIKE" to define a plug-able CTE.
 In this case we used a `select` statement to describe the shape the fragment requires.  We could also
 have used a name `source(*) LIKE shape_name` just like we use shape names when describing cursors.  The
 name can be any existing view, table, a procedure with a result, etc.  Any name that describes a shape.
@@ -9194,8 +9226,8 @@ similar to what you could do with a `VIEW` plus a `WHERE` clause but:
 * such a system can give you well controlled combinations known to work well
 * there is no schema required, so your database load time can still be fast
 * parameterization is not limited to filtering VIEWs after the fact
-* "generic" patterns are available, allowing arbitary data sources to be filtered, validated, augmented
-* each fragment can be tested seperately with its own suite rather than only in the context of some larger thing
+* "generic" patterns are available, allowing arbitrary data sources to be filtered, validated, augmented
+* each fragment can be tested separately with its own suite rather than only in the context of some larger thing
 * code generation can be more economical because the compiler is aware of what is being shared
 
 In short, shared fragments can help with the composition of any complicated kinds of queries.
@@ -9213,7 +9245,7 @@ When creating a fragment the following rules are enforced:
 * the fragment is free to use other fragments, but it may not call itself
   * calling itself would result in infinite inlining
 
-Usage of a fragment is always intruced by a "call" to the fragment name in a CTE body.
+Usage of a fragment is always introduced by a "call" to the fragment name in a CTE body.
 When using a fragment the following rules are enforced.
 
 * the provided parameters must create a valid procedure call just like normal procedure calls
@@ -9246,7 +9278,7 @@ There are many instances where it is desirable to not just replace parameters bu
 Without shared fragments, the only way to accomplish this is to fork the desired query at the topmost level (because SQLite has no internal
 possibility of "IF" conditions.)  This is expensive in terms of code size and also cognitive load because the entire alternative sequences
 have to be kept carefully in sync.  Macros can help with this but then you get the usual macro maintenance problems, including poor diagnostics.
-And of course there is no possibilty to share the common parts of the text of the code if it is forked.
+And of course there is no possibility to share the common parts of the text of the code if it is forked.
 
 However, conditional shared fragments allow forms like this:
 
@@ -9272,7 +9304,7 @@ Now we can do something like:
 ```
 
 In this case, if the string `val` is empty then SQLite will not see the complex comma splitting code, and instead will see
-the trivial case `select 0 id where 0`.  The code in a conditinal fragment might be entirely different between the branches
+the trivial case `select 0 id where 0`.  The code in a conditional fragment might be entirely different between the branches
 removing unnecessary code, or swapping in a new experimental cache in your test environment, or anything like that.
 
 The generalization is simply this:
@@ -9284,7 +9316,7 @@ The generalization is simply this:
 * any table parameters with the same name in different branches must have the same type
   * otherwise it would be impossible to provide a single actual table for those table parameters
 
-With this additional flexibility a wide variety of SQL statements can be constructed economically and maintainably.  Importantly,
+With this additional flexibility a wide variety of SQL statements can be constructed economically and maintainability.  Importantly,
 consumers of the fragments need not deal with all these various alternate possibilities but they can readily create their own
 useful combinations out of building blocks.
 
@@ -9521,7 +9553,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu May 12 14:16:07 PDT 2022
+Snapshot as of Tue May 31 09:23:31 PDT 2022
 
 ### Operators and Literals
 
@@ -9637,6 +9669,7 @@ any_stmt:
   | declare_enum_stmt
   | declare_const_stmt
   | declare_group_stmt
+  | declare_select_func_no_check_stmt
   | declare_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
@@ -10065,6 +10098,7 @@ data_type_any:
   | "BLOB"  opt_kind
   | "OBJECT" opt_kind
   | "OBJECT" '<' name "CURSOR" '>'
+  | "OBJECT" '<' name "SET" '>'
   | "ID"
   ;
 
@@ -10743,6 +10777,11 @@ const_values:
 const_value:  name '=' expr
   ;
 
+declare_select_func_no_check_stmt:
+  "DECLARE" "SELECT" function name "NO" "CHECK" data_type_with_options
+  | "DECLARE" "SELECT" function name "NO" "CHECK" '(' typed_names ')'
+  ;
+
 declare_func_stmt:
   "DECLARE" function name '(' func_params ')' data_type_with_options
   | "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
@@ -10830,7 +10869,7 @@ declare_stmt:
   | "DECLARE" name "CURSOR" "FOR" explain_stmt
   | "DECLARE" name "CURSOR" "FOR" call_stmt
   | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
-  | "DECLARE" name "CURSOR" "FOR" name
+  | "DECLARE" name "CURSOR" "FOR" expr
   | "DECLARE" name "TYPE" data_type_with_options
   ;
 
@@ -14114,7 +14153,7 @@ The indicated function accepts only a single argument of type blob.
 
 -----
 
-### CQL0346: variable must be of type `object<T cursor>` where T is a valid shape name 'variable'
+### CQL0346: expression must be of type `object<T cursor>` where T is a valid shape name 'variable'
 
 It's possible to take the statement associated with a statement cursor and store it in an object variable. Using the form:
 
@@ -15599,7 +15638,35 @@ The correct approach is to undo an @unsub with a @resub and vice versa.  Any exi
 directives should remain forever for logically consistent upgrade scripts.
 
 
-CQL046 -- no longer an error
+### CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'proc_name'
+
+In order to use a shared fragment the compiler must see the full body of the fragment, this is
+because the fragment will be inlined into the SQL in which it appears.  As a consequence it
+makes no sense to try to apply the attribute to a procedure declaration.  Instead put the
+shared fragment you want to use somewhere where it can be #included in full.
+
+example error:
+
+```sql
+@attribute(cql:shared_fragment)
+declare proc x() (x integer);
+
+create proc y()
+begin
+  with (call x())
+  select * from x;
+end;
+```
+
+Instead, include the entire body like so (this example is ultra simple).
+
+```sql
+@attribute(cql:shared_fragment)
+create proc x()
+begin
+  select 1 x; -- the procedure body must be present
+end;
+```
 
 
 ### CQL0469: table/view is already deleted 'name'
@@ -15716,6 +15783,22 @@ Procedure should return at least all columns defined by the interface and column
 
 Procedure should return at least all columns defined by the interface and column type should be the same.
 
+### CQL0486: function cannot be both a normal function and an unchecked function, 'function_name'
+
+The same function cannot be declared as a function with unchecked parameters with the `NO CHECK` clause and then redeclared with typed parameters, or vice versa.
+
+```sql
+--- Declaration of an external function foo with unchecked parameters.
+DECLARE SELECT FUNCTION foo NO CHECK t text;
+
+...
+
+--- A redeclaration of foo with typed paramters. This would be invalid if the previous declaration exists.
+DECLARE SELECT FUNCTION foo() t text;
+```
+
+Make sure the redeclaration of the function is consistent with the original declaration, or remove the redeclaration.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -15728,7 +15811,7 @@ Procedure should return at least all columns defined by the interface and column
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu May 12 14:16:08 PDT 2022
+Snapshot as of Tue May 31 09:23:31 PDT 2022
 
 ### Rules
 
@@ -18338,7 +18421,7 @@ Most developers don't even think about the amalgam build flavor; to a first appr
 
 To use the amalgam you'll want to do something like this:
 
-```C
+```c
 #define CQL_IS_NOT_MAIN 1
 
 // Suppresses a bunch of warnings because the code
@@ -18395,7 +18478,7 @@ If this symbol is defined then `cql_main` will not be redefined to be `main`.
 
 As the comments in the source say:
 
-```C
+```c
 #ifndef CQL_IS_NOT_MAIN
 
 // Normally CQL is the main entry point.  If you are using CQL
@@ -18429,7 +18512,7 @@ code which is attached here.  If you want the error messages to go somewhere els
 as the name of your error handling function.  It should accept a `const char *` and record that string
 however you deem appropriate.
 
-```C
+```c
 #ifndef cql_emit_error
 
 // CQL "stderr" outputs are emitted with this API.
@@ -18471,7 +18554,7 @@ code which is attached here.  If you want the standard output to go somewhere el
 as the name of your output handling function.  It should accept a `const char *` and record that string
 however you deem appropriate.
 
-```C
+```c
 #ifndef cql_emit_output
 
 // CQL "stdout" outputs are emitted (in arbitrarily small pieces)
@@ -18508,7 +18591,7 @@ If you still want normal file i/o for your output but you simply want to control
 
 If all you need to do is control the origin of the `FILE *` that is written to, you can replace just this function.
 
-```C
+```c
 #ifndef cql_open_file_for_write
 
 // Not a normal integration point, the normal thing to do is
@@ -18541,7 +18624,7 @@ code which is attached here.  If you want the compilation output to go somewhere
 as the name of your output handling function.  It should accept a `const char *` for the file name and another
 for the data to be written.  You can then store those compilation results however you deem appropriate.
 
-```C
+```c
 #ifndef cql_write_file
 
 // CQL code generation outputs are emitted in one "gulp" with this
@@ -18671,7 +18754,7 @@ end;
 
 #### `main.c`
 
-```C
+```c
 #include <stdlib.h>
 #include <sqlite3.h>
 
@@ -18813,7 +18896,7 @@ for your application.
 The following three macros can be defined in your `cqlrt.h` and they can be directed at a version that
 keeps a cache of your choice.
 
-```C
+```c
 #ifndef cql_sqlite3_exec
 #define cql_sqlite3_exec(db, sql) sqlite3_exec((db), (sql), NULL, NULL, NULL)
 #endif
@@ -18875,7 +18958,7 @@ tripwire is never hit.
 When a `fetch_results` method is called, a failure results in a call to `cql_log_database_error`.
 Presently the log format is very simple.  The invocation looks like this:
 
-```C
+```c
  cql_log_database_error(info->db, "cql", "database error");
 ```
 The logging facility is expected to send the message to wherever is appropriate for your environment.
@@ -18903,7 +18986,7 @@ The file `rt_common.c` defines the common result types, but the skeleton file `r
 includes affordances to add your own types without having to worry about conflicts with the
 common types.  These macros define
 
-```C
+```c
 #define RT_EXTRAS
 #define RT_EXTRA_CLEANUP
 ```
@@ -18936,3 +19019,6 @@ unique to your runtime.
 
 There are tracing macros to help with debugability.  Providing some
 useful versions of those can be of great help in production environments.
+
+
+
