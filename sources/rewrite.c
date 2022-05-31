@@ -1966,10 +1966,7 @@ static ast_node *rewrite_child_partition_creation(ast_node *child_results, int32
     new_ast_stmt_list(
       new_ast_declare_cursor(
         new_ast_str(cursor_name),
-        new_ast_call_stmt(
-          new_ast_str(proc_name),
-          NULL
-        )
+        call_stmt
       ),
     // loop fetch __child_cursor__
     new_ast_stmt_list(
@@ -2159,18 +2156,17 @@ static ast_node *rewrite_insert_children_partitions(
 
 static ast_node *rewrite_declare_parent_cursor(
   CSTR parent_cursor_name,
-  CSTR parent_proc_name,
+  ast_node *parent_call_stmt,
   ast_node *tail)
 {
+  Contract(is_ast_call_stmt(parent_call_stmt));
+
   // DECLARE CP CURSOR FOR CALL parent();
 
   return new_ast_stmt_list(
     new_ast_declare_cursor(
       new_ast_str(parent_cursor_name),
-      new_ast_call_stmt(
-        new_ast_str(parent_proc_name),
-        NULL
-      )
+      parent_call_stmt
     ),
     tail
   );
@@ -2253,6 +2249,39 @@ static ast_node *rewrite_loop_fetch_parent_cursor(
   );
 }
 
+// The general rewrite looks like this:
+//
+// create proc test_parent_child()
+// begin
+//   out union call parent(2) join call child(1) using (x);
+// end;
+//
+// becomes:
+//
+// CREATE PROC test_parent_child ()
+// BEGIN
+//   DECLARE __result__0 BOOL NOT NULL;
+//   DECLARE __key__0 CURSOR LIKE test_child(x);
+//   LET __partition__0 := cql_partition_create();
+//   DECLARE __child_cursor__0 CURSOR FOR CALL test_child(1);
+//   LOOP FETCH __child_cursor__0
+//   BEGIN
+//     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
+//     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
+//   END;
+//   
+//   The above repeats once for each child result set
+//  
+//   DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, child1 OBJECT<test_child SET> NOT NULL);
+//   DECLARE __parent__0 CURSOR FOR CALL test_parent(2);
+//   LOOP FETCH __parent__0
+//   BEGIN
+//     FETCH __key__0(x) FROM VALUES(__parent__0.x);
+//     FETCH __out_cursor__0(x, child1) FROM VALUES(__parent__0.x, cql_extract_partition(__partition__0, __key__0));
+//     OUT UNION __out_cursor__0;
+//   END;
+// END;
+//
 cql_noexport void rewrite_out_union_parent_child_stmt(ast_node *ast) {
   Contract(is_ast_out_union_parent_child_stmt(ast));
 
@@ -2282,7 +2311,7 @@ cql_noexport void rewrite_out_union_parent_child_stmt(ast_node *ast) {
 
   ast_node *result = rewrite_child_partition_creation(child_results, cursor_base,
     rewrite_out_cursor_declare(parent_proc_name, out_cursor_name, child_results,
-      rewrite_declare_parent_cursor(parent_cursor_name, parent_proc_name,
+      rewrite_declare_parent_cursor(parent_cursor_name, call_stmt,
         rewrite_loop_fetch_parent_cursor(parent_cursor_name, out_cursor_name, child_results)
       )
     )

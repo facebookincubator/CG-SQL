@@ -22352,3 +22352,49 @@ create proc nested_interface_wrapper()
 begin
   declare interface foo(LIKE interface1);
 end;
+
+-- cursor partitioning runtime functions (these will be builtin at some point)
+declare function cql_partition_create() create object not null;
+declare function cql_partition_cursor(partition_ object not null, key cursor, value cursor) bool not null;
+declare function cql_extract_partition(partition_ object not null, key cursor) create object not null;
+
+create proc test_parent(x_ integer)
+begin
+  select x_ x;
+end;
+
+create proc test_child(x_ integer)
+begin
+  select x_ x;
+end;
+
+-- Verify that the rewrite is successful including arg pass through
+-- + CREATE PROC test_parent_child ()
+-- + BEGIN
+-- +   DECLARE __result__0 BOOL NOT NULL;
+-- +   DECLARE __key__0 CURSOR LIKE test_child(x);
+-- +   LET __partition__0 := cql_partition_create();
+-- +   DECLARE __child_cursor__0 CURSOR FOR CALL test_child(1);
+-- +   LOOP FETCH __child_cursor__0
+-- +   BEGIN
+-- +     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
+-- +     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
+-- +   END;
+-- +   DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, child1 OBJECT<test_child SET> NOT NULL);
+-- +   DECLARE __parent__0 CURSOR FOR CALL test_parent(2);
+-- +   LOOP FETCH __parent__0
+-- +   BEGIN
+-- +     FETCH __key__0(x) FROM VALUES(__parent__0.x);
+-- +     FETCH __out_cursor__0(x, child1) FROM VALUES(__parent__0.x, cql_extract_partition(__partition__0, __key__0));
+-- +     OUT UNION __out_cursor__0;
+-- +   END;
+-- + END;
+-- + {create_proc_stmt}: __out_cursor__0: test_parent_child: { x: integer, child1: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
+-- - error:
+create proc test_parent_child()
+begin
+  out union
+   call test_parent(2) join call test_child(1) using (x);
+end;
+
+
