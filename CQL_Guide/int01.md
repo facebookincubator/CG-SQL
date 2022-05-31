@@ -12,7 +12,7 @@ sidebar_label: "Part 1: Lexing, Parsing, and the AST"
 ### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
-an adjunct to the Guide proper, which describes the language, and to a lesser extent
+an adjunct to the [Guide proper](/cql-guide/ch01), which describes the language, and to a lesser extent
 the code that the compiler generates.
 
 The actual code is heavily commented, so it's better to read the code to see the details
@@ -30,7 +30,7 @@ The grammar is a large subset of the SQLite dialect of SQL augmented with contro
 directives.  As a consequence, it's a useful asset in-and-of-itself. If you're looking for an
 economical SQL grammar, you could do a lot worse than start with the one CQL uses.  The grammar is
 of course in the usual `.y` format that bison consumes but it's also extracted into more readable
-versions for use in the railroad diagram and the Guide documentation.  Any of those sources would be
+versions for use in the [railroad diagram](/program-diagram) and the Guide documentation.  Any of those sources would be
 a good starting place for a modest SQL project in need of a grammar.
 
 ### Lexical Analysis
@@ -360,14 +360,25 @@ and simplest examples of how to crack the AST for any particular type of node yo
 There are several reasons why we might want to echo the SQL, but the inescapable one is this: any hunk of
 SQL that appears as part of a CQL program (i.e. DDL/DML rather than control flow like `IF`/`WHILE`) has to go
 to SQLite and SQLite expects that code to be plain text.  So the AST must be reformatted as plain text that is
-exactly equivalent to the original input.  The process of parsing removes extra white space and parentheses, so
-to get something that looks reasonable some standard formatting (including indenting) is applied to the output text.
+exactly equivalent to the original input. The process of parsing removes extra white space and parentheses, so
+to get something that looks reasonable, some standard formatting (including indenting) is applied to the output text.
 This has the effect of normalizing the input and potentially beautifying it as well (especially if it was
 poorly formatted initially).
 
-To see these features, you need only run cql with no arguments. By default, it reads `stdin`, makes the AST, and
-then emits the normalized, formatted text. If there are no syntax errors, the input and the output should be
-equivalent.
+To see these features, run `cql` with the `--echo` flag. For example:
+
+```bash
+out/cql --echo < your_file.sql
+```
+
+or
+
+```bash
+out/cql --echo --in your_file.sql
+```
+
+By default, it reads `stdin`, makes the AST, and then emits the normalized, formatted text. If there are no syntax
+errors, the input and the output should be equivalent.
 
 Standard formatting is essential, but CQL also has a number of extra demands.
 
