@@ -8800,6 +8800,69 @@ bool_t is_no_clause_simple_select(ast_node *select_stmt) {
   return false;
 }
 
+// validate shared fragment call:
+//  * target has no errors
+//  * target is a shared fragment
+//    * target therefore a single select statement
+//    * target therefore has no out-arguments
+//  * target has no select clauses like FROM etc.
+//  * target has one column, it's just a SQL expression
+static void sem_validate_expression_fragment(ast_node *ast, ast_node *proc) {
+  Contract(is_ast_call(ast));
+  Contract(is_proc(proc));
+
+  EXTRACT_STRING(proc_name, get_proc_name(proc));
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_NOTNULL(proc_params_stmts, proc->right);
+  EXTRACT(params, proc_params_stmts->left);
+  EXTRACT(stmt_list, proc_params_stmts->right);
+
+  // check if we are calling a shared fragment
+  uint32_t frag_type = find_proc_frag_type(proc);
+  if (frag_type != FRAG_TYPE_SHARED) {
+    report_error(ast,
+      "CQL0224: a function call to a procedure inside SQL may call "
+      "only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
+    record_error(ast);
+    return;
+  }
+
+  Invariant(proc->sem->sptr);
+  sem_struct *sptr = proc->sem->sptr;
+  if (sptr->count > 1) {
+      report_error(ast, "CQL0232: nested select expression must return exactly one column", proc_name);
+      record_error(ast);
+      return;
+  }
+
+  EXTRACT_ANY_NOTNULL(select_stmt, stmt_list->left);
+
+  if (!is_no_clause_simple_select(select_stmt)) {
+    report_error(ast, "CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause", proc_name);
+    record_error(ast);
+    return;
+  }
+
+  sem_validate_args_vs_formals(ast, proc_name, arg_list, params, NORMAL_CALL);
+  if (is_error(ast)) {
+    return;
+  }
+
+  Invariant(ast->sem->sem_type == SEM_TYPE_OK);
+
+  Invariant(sptr->count == 1);
+  ast->sem = new_sem(sptr->semtypes[0]);
+  ast->sem->kind = sptr->kinds[0];
+
+  // we don't want the inline-ness to run up the tree so
+  // we just put that flag bit on the proc name
+
+  ast->left->sem = new_sem(ast->sem->sem_type);
+  *ast->left->sem = *ast->sem;
+  ast->left->sem->sem_type |= SEM_TYPE_INLINE_CALL;
+}
+
 // Calling a stored procedure as a function
 // There are a few things to check:
 //  * it has to be a loose expression or else a shared fragment
@@ -8840,57 +8903,9 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
   EXTRACT(stmt_list, proc_params_stmts->right);
 
   if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
-    // validate shared fragment call:
-    //  * target has no errors
-    //  * target is a shared fragment
-    //    * target therefore a single select statement
-    //    * target therefore has no out-arguments
-    //  * target has no select clauses like FROM etc.
-    //  * target has one column, it's just a SQL expression
-
-    // check if we are calling a shared fragment
-    uint32_t frag_type = find_proc_frag_type(proc);
-    if (frag_type != FRAG_TYPE_SHARED) {
-      report_error(ast,
-        "CQL0224: a function call to a procedure inside SQL may call "
-        "only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
-      record_error(ast);
-      return;
-    }
-
-    Invariant(proc->sem->sptr);
-    sem_struct *sptr = proc->sem->sptr;
-    if (sptr->count > 1) {
-       report_error(ast, "CQL0232: nested select expression must return exactly one column", proc_name);
-       record_error(ast);
-       return;
-    }
-
-    EXTRACT_ANY_NOTNULL(select_stmt, stmt_list->left);
-
-    if (!is_no_clause_simple_select(select_stmt)) {
-      report_error(ast, "CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause", proc_name);
-      record_error(ast);
-      return;
-    }
-
-    sem_validate_args_vs_formals(ast, proc_name, arg_list, params, NORMAL_CALL);
-    if (is_error(ast)) {
-      return;
-    }
-
-    Invariant(ast->sem->sem_type == SEM_TYPE_OK);
-
-    Invariant(sptr->count == 1);
-    ast->sem = new_sem(sptr->semtypes[0]);
-    ast->sem->kind = sptr->kinds[0];
-
-    // we don't want the inline-ness to run up the tree so
-    // we just put that flag bit on the proc name
-
-    ast->left->sem = new_sem(ast->sem->sem_type);
-    *ast->left->sem = *ast->sem;
-    ast->left->sem->sem_type |= SEM_TYPE_INLINE_CALL;
+    // evaluation proceeds as an expression fragment, it fails or not
+    // either way we're done with it.
+    sem_validate_expression_fragment(ast, proc);
     return;
   }
 
