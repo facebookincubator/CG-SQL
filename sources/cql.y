@@ -206,7 +206,7 @@ static void cql_reset_globals(void);
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 %token AS CASE WHEN FROM FROM_BLOB THEN ELSE END LEFT SWITCH
-%token OUTER JOIN WHERE GROUP BY ORDER ASC
+%token OUTER JOIN WHERE GROUP BY ORDER ASC NULLS FIRST LAST
 %token DESC INNER AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT AT_EPONYMOUS
 %token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
@@ -253,7 +253,7 @@ static void cql_reset_globals(void);
 %type <aval> window_func_inv opt_filter_clause window_name_or_defn window_defn opt_select_window
 %type <aval> opt_partition_by opt_frame_spec frame_boundary_opts frame_boundary_start frame_boundary_end frame_boundary
 %type <aval> opt_where opt_groupby opt_having opt_orderby opt_limit opt_offset opt_as_alias as_alias window_clause
-%type <aval> groupby_item groupby_list orderby_item orderby_list opt_asc_desc window_name_defn window_name_defn_list
+%type <aval> groupby_item groupby_list orderby_item orderby_list opt_asc_desc opt_nullsfirst_nullslast window_name_defn window_name_defn_list
 %type <aval> table_or_subquery table_or_subquery_list query_parts table_function opt_from_query_parts
 %type <aval> opt_join_cond join_cond join_clause join_target join_target_list
 %type <aval> basic_update_stmt with_update_stmt update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
@@ -809,6 +809,8 @@ name:
   | TYPE { $name = new_ast_str("type"); }
   | HIDDEN { $name = new_ast_str("hidden"); }
   | PRIVATE { $name = new_ast_str("private"); }
+  | FIRST { $name = new_ast_str("first"); }
+  | LAST { $name = new_ast_str("last"); }
   ;
 
 opt_name:
@@ -1371,8 +1373,14 @@ groupby_item:
 
 opt_asc_desc:
   /* nil */  { $opt_asc_desc = NULL; }
-  | ASC  { $opt_asc_desc = new_ast_asc(); }
-  | DESC  { $opt_asc_desc = new_ast_desc(); }
+  | ASC  opt_nullsfirst_nullslast { $opt_asc_desc = new_ast_asc($opt_nullsfirst_nullslast); }
+  | DESC  opt_nullsfirst_nullslast { $opt_asc_desc = new_ast_desc($opt_nullsfirst_nullslast); }
+  ;
+
+opt_nullsfirst_nullslast:
+  /* nil */  { $opt_nullsfirst_nullslast = NULL; }
+  | NULLS FIRST  { $opt_nullsfirst_nullslast = new_ast_nullsfirst(); }
+  | NULLS LAST  { $opt_nullsfirst_nullslast = new_ast_nullslast(); }
   ;
 
 opt_having:

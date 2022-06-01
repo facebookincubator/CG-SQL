@@ -631,6 +631,9 @@ select a, b from x order by a, b;
 -- order_by
 select a, b from x order by a asc, b desc;
 
+-- order_by
+select a, b from x order by a asc nulls last, b desc nulls first;
+
 -- simple cast expression
 select cast(1 as text);
 

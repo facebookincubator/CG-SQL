@@ -1681,9 +1681,15 @@ static void gen_query_parts(ast_node *ast) {
 static void gen_asc_desc(ast_node *ast) {
   if (is_ast_asc(ast)) {
     gen_printf(" ASC");
+    if (ast->left && is_ast_nullslast(ast->left)) {
+      gen_printf(" NULLS LAST");
+    }
   }
   else if (is_ast_desc(ast)) {
     gen_printf(" DESC");
+    if (ast->left && is_ast_nullsfirst(ast->left)) {
+      gen_printf(" NULLS FIRST");
+    }
   }
   else {
     Contract(!ast);

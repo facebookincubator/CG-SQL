@@ -83,6 +83,7 @@ INTERSECT                    { return INTERSECT; }
 EXCEPT                       { return EXCEPT; }
 NOT                          { return NOT; }
 NULL                         { return NULL_; }
+NULLS                        { return NULLS; }
 TRUE                         { return TRUE_; }
 FALSE                        { return FALSE_; }
 DEFAULT                      { return DEFAULT; }
@@ -133,6 +134,8 @@ GROUP                        { return GROUP; }
 HAVING                       { return HAVING; }
 ASC                          { return ASC; }
 DESC                         { return DESC; }
+FIRST                        { return FIRST; }
+LAST                         { return LAST; }
 LEFT                         { return LEFT; }
 JOIN                         { return JOIN; }
 SET                          { return SET; }
