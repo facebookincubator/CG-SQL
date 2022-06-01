@@ -26898,13 +26898,11 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0235: too many arguments provided 
 
 The statement ending at line XXXX
 
-SET an_int := out_cursor_proc();
+LET out_result_set := out_cursor_proc();
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
-
-  {assign}: err
-  | {name an_int}: an_int: integer variable was_set
-  | {call}: err
+  {let_stmt}: out_result_set: object<out_cursor_proc SET> variable
+  | {name out_result_set}: out_result_set: object<out_cursor_proc SET> variable
+  | {call}: object<out_cursor_proc SET>
     | {name out_cursor_proc}
     | {call_arg_list}
       | {call_filter_clause}

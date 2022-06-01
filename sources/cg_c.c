@@ -118,6 +118,9 @@ static CSTR error_target = CQL_CLEANUP_DEFAULT_LABEL;
 // holding the right value.  Each catch scope has its own corresponding to the error
 // that it caught.
 
+#define CQL_PROTO_NORMAL false
+#define CQL_FORCE_FETCH_RESULTS true
+
 static CSTR rcthrown_current = CQL_RCTHROWN_DEFAULT;
 static int32_t rcthrown_index = 0;
 static bool_t rcthrown_used = false;
@@ -3511,7 +3514,7 @@ static void cg_emit_fetch_results_prototype(
 // is a naked prototype, so additional arguments could be added -- it will be
 // missing the trailing ")" and it will not have EXPORT or anything like that
 // on it.
-static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
+static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t force_fetch_results) {
   Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -3533,7 +3536,7 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
-  bool_t out_union_proc = has_out_union_stmt_result(ast);
+  bool_t out_union_proc = has_out_union_stmt_result(ast) || force_fetch_results;
 
   // if you're doing out_union then the row fetcher is all there is
   CSTR suffix = out_union_proc ? "_fetch_results" : "";
@@ -3545,13 +3548,13 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
     bprintf(proc_decl, "static ");
   }
 
-  bool_t need_comma = 0;
+  bool_t need_comma = false;
   if (dml_proc) {
     bprintf(proc_decl, "CQL_WARN_UNUSED %s %s(sqlite3 *_Nonnull _db_", rt->cql_code, proc_sym.ptr);
-    if (result_set_proc) {
+    if (result_set_proc && !force_fetch_results) {
       bprintf(proc_decl, ", sqlite3_stmt *_Nullable *_Nonnull _result_stmt");
     }
-    need_comma = 1;
+    need_comma = true;
   }
   else {
     bprintf(proc_decl, "void %s(", proc_sym.ptr);
@@ -3567,7 +3570,7 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
     // result set type
     bprintf(proc_decl, "%s _Nullable *_Nonnull _result_set_", result_set_ref.ptr);
 
-    need_comma = 1;
+    need_comma = true;
     CHARBUF_CLOSE(result_set_ref);
   }
 
@@ -3579,7 +3582,7 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
     cg_params(params, proc_decl, CG_PROC_PARAMS_IN_ALIAS);
   }
 
-  if (out_stmt_proc) {
+  if (out_stmt_proc && !force_fetch_results) {
     if (dml_proc || params) {
       bprintf(proc_decl, ", ");
     }
@@ -3742,7 +3745,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   cg_cleanup_output = &proc_cleanup;
 
   CHARBUF_OPEN(proc_decl);
-  cg_emit_proc_prototype(ast, &proc_decl);
+  cg_emit_proc_prototype(ast, &proc_decl, CQL_PROTO_NORMAL);
 
   if (out_union_proc) {
     CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
@@ -3958,6 +3961,16 @@ static void cg_declare_select_func_stmt(ast_node *ast) {
   // NO-OP
 }
 
+// emit the proc with the appropriate invocation prefix
+static void cg_emit_proc_decl_from_invocation(bool_t private_proc, CSTR invocation) {
+  if (private_proc) {
+    bprintf(cg_declarations_output, "%s);\n\n", invocation);
+  }
+  else {
+    bprintf(cg_fwd_ref_output, "%s%s);\n\n", rt->symbol_visibility, invocation);
+  }
+}
+
 // Emit the prototype for the declared method, but no body.
 static void cg_declare_proc_stmt(ast_node *ast) {
   Contract(is_ast_declare_proc_stmt(ast));
@@ -3975,12 +3988,14 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
+  bool_t has_result_proc = has_result_set(ast) ;
 
   CHARBUF_OPEN(proc_decl);
 
-  cg_emit_proc_prototype(ast, &proc_decl);
+  cg_emit_proc_prototype(ast, &proc_decl, CQL_PROTO_NORMAL);
 
-  if (out_union_proc) {
+  if (out_stmt_proc || out_union_proc || has_result_proc) {
+
     CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
     CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
 
@@ -3988,18 +4003,21 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 
     CHARBUF_CLOSE(result_set);
     CHARBUF_CLOSE(result_set_ref);
+
+    if (out_stmt_proc || has_result_proc) {
+      // force fetch results prototype
+      CHARBUF_OPEN(fetch_results_decl);
+        cg_emit_proc_prototype(ast, &fetch_results_decl, CQL_FORCE_FETCH_RESULTS);
+        cg_emit_proc_decl_from_invocation(private_proc, fetch_results_decl.ptr);
+      CHARBUF_CLOSE(fetch_results_decl);
+    }
   }
 
-   if (out_stmt_proc) {
+  if (out_stmt_proc) {
     cg_c_struct_for_sptr(cg_fwd_ref_output, ast->sem->sptr, NULL);
   }
 
-  if (private_proc) {
-    bprintf(cg_declarations_output, "%s);\n\n", proc_decl.ptr);
-  }
-  else {
-    bprintf(cg_fwd_ref_output, "%s%s);\n\n", rt->symbol_visibility, proc_decl.ptr);
-  }
+  cg_emit_proc_decl_from_invocation(private_proc, proc_decl.ptr);
 
   current_proc = NULL;
 
@@ -6399,8 +6417,11 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   ast_node *func_stmt = find_func(name);
   CSTR func_name = NULL;
 
-  bool_t proc_as_func = 0;
-  bool_t dml_proc = 0;
+  bool_t dml_proc = false;
+  bool_t proc_as_func = false;
+  bool_t out_arg_result = false;
+  bool_t result_set_return = false;
+  bool_t need_comma = false;
 
   if (func_stmt) {
     EXTRACT_STRING(fname, func_stmt->left);
@@ -6415,8 +6436,11 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     ast_node *proc_name_ast = get_proc_name(proc_stmt);
     EXTRACT_STRING(pname, proc_name_ast);
     func_name = pname;
-    proc_as_func = 1;
+    proc_as_func = true;
     dml_proc = is_dml_proc(proc_stmt->sem->sem_type);
+
+    result_set_return = has_out_stmt_result(proc_stmt) || has_result_set(proc_stmt) || has_out_union_stmt_result(proc_stmt);
+    out_arg_result = !result_set_return;
   }
 
   sem_t sem_type_result = ast->sem->sem_type;
@@ -6424,14 +6448,25 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   // The answer will be stored in this scratch variable, any type is possible
   CG_SETUP_RESULT_VAR(ast, sem_type_result);
   CHARBUF_OPEN(invocation);
-  CG_CHARBUF_OPEN_SYM(func_sym, func_name);
+  CG_CHARBUF_OPEN_SYM(func_sym, func_name, result_set_return ? "_fetch_results" : "");
+  CG_CHARBUF_OPEN_SYM(result_ref, func_name, "_result_set_ref");
 
   if (dml_proc) {
-    // at least one arg for the out arg so add _db_ with comma
-    bprintf(&invocation, "_rc_ = %s(_db_, ", func_sym.ptr);
+    bprintf(&invocation, "_rc_ = %s(_db_", func_sym.ptr);
+    need_comma = true;
   }
   else {
     bprintf(&invocation, "%s(", func_sym.ptr);
+    need_comma = false;
+  }
+
+  if (result_set_return) {
+    // capture the result var
+    if (need_comma) {
+      bprintf(&invocation, ", ");
+    }
+    bprintf(&invocation, "(%s *)&%s", result_ref.ptr, result_var.ptr);
+    need_comma = true;
   }
 
   ast_node *item;
@@ -6442,18 +6477,17 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     EXTRACT_NOTNULL(param, params->left);
     sem_t sem_type_param = param->sem->sem_type;
 
-    cg_emit_one_arg(arg, sem_type_param, sem_type_arg, &invocation);
-
-    // if any more items in the list or the out arg still pending, we need comma
-    if (item->right || proc_as_func) {
+    if (need_comma) {
       bprintf(&invocation, ", ");
     }
+    cg_emit_one_arg(arg, sem_type_param, sem_type_arg, &invocation);
+    need_comma = true;
   }
 
   if (!item && params) {
     // The only way this happens is when calling a stored proc like a function
     // using the last arg as the return type.
-    Invariant(proc_as_func);
+    Invariant(out_arg_result);
     Invariant(!params->right);
     EXTRACT_NOTNULL(param, params->left);
     sem_t param_type = param->sem->sem_type;
@@ -6465,6 +6499,9 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     sem_t arg_type = param_type & sem_not(SEM_TYPE_OUT_PARAMETER|SEM_TYPE_IN_PARAMETER);
 
     cg_release_out_arg_before_call(arg_type, param_type, result_var.ptr);
+    if (need_comma) {
+      bprintf(&invocation, ", ");
+    }
     bprintf(&invocation, "&%s", result_var.ptr);
   }
 
@@ -6490,6 +6527,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     cg_copy(cg_main_output, result_var.ptr, func_stmt->sem->sem_type, invocation.ptr);
   }
 
+  CHARBUF_CLOSE(result_ref);
   CHARBUF_CLOSE(func_sym);
   CHARBUF_CLOSE(invocation);
   CG_CLEANUP_RESULT_VAR();  // this will restore the scratch stack for us
@@ -8298,6 +8336,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-op-parentheses\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wliteral-conversion\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunused-but-set-variable\"\n");
+  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunused-function\"\n");
 
   bprintf(&body_file, "%s", cg_fwd_ref_output->ptr);
   bprintf(&body_file, "%s", cg_constants_output->ptr);

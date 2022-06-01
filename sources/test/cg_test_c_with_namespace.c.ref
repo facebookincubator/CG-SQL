@@ -9,9 +9,16 @@
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#pragma clang diagnostic ignored "-Wunused-function"
 extern CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_);
+#ifndef result_set_type_decl_xyzzy_result_set
+#define result_set_type_decl_xyzzy_result_set 1
+cql_result_set_type_decl(xyzzy_result_set, xyzzy_result_set_ref);
+#endif
+extern CQL_WARN_UNUSED cql_code xyzzy_fetch_results(sqlite3 *_Nonnull _db_, xyzzy_result_set_ref _Nullable *_Nonnull _result_set_, cql_nullable_int32 id);
+
 extern CQL_WARN_UNUSED cql_code xyzzy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 id);
 
 extern void plugh(cql_nullable_int32 id);
@@ -56,6 +63,12 @@ typedef struct out_cursor_proc_row {
 } out_cursor_proc_row;
 #endif
 extern CQL_WARN_UNUSED cql_code out_cursor_proc(sqlite3 *_Nonnull _db_, out_cursor_proc_row *_Nonnull _result_);
+#ifndef result_set_type_decl_fetcher_proc_result_set
+#define result_set_type_decl_fetcher_proc_result_set 1
+cql_result_set_type_decl(fetcher_proc_result_set, fetcher_proc_result_set_ref);
+#endif
+extern void fetcher_proc_fetch_results(fetcher_proc_result_set_ref _Nullable *_Nonnull _result_set_);
+
 
 #ifndef row_type_decl_fetcher_proc_row
 #define row_type_decl_fetcher_proc_row 1
@@ -249,6 +262,12 @@ extern void simple_cursor_proc(simple_cursor_proc_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code redundant_cast(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code top_level_select_alias_unused(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+#ifndef result_set_type_decl_p1_result_set
+#define result_set_type_decl_p1_result_set 1
+cql_result_set_type_decl(p1_result_set, p1_result_set_ref);
+#endif
+extern void p1_fetch_results(p1_result_set_ref _Nullable *_Nonnull _result_set_);
+
 
 #ifndef row_type_decl_p1_row
 #define row_type_decl_p1_row 1
@@ -261,6 +280,12 @@ typedef struct p1_row {
 } p1_row;
 #endif
 extern void p1(p1_row *_Nonnull _result_);
+
+#ifndef result_set_type_decl_p2_result_set
+#define result_set_type_decl_p2_result_set 1
+cql_result_set_type_decl(p2_result_set, p2_result_set_ref);
+#endif
+extern CQL_WARN_UNUSED cql_code p2_fetch_results(sqlite3 *_Nonnull _db_, p2_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
 #ifndef row_type_decl_p2_row
@@ -484,6 +509,12 @@ extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Non
 #define gr_cursor_refs_offset cql_offsetof(gr_cursor_row, y) // count = 1
 
 #define gr_blob_cursor_refs_offset cql_offsetof(gr_blob_cursor_row, name) // count = 1
+#ifndef result_set_type_decl_some_redeclared_out_proc_result_set
+#define result_set_type_decl_some_redeclared_out_proc_result_set 1
+cql_result_set_type_decl(some_redeclared_out_proc_result_set, some_redeclared_out_proc_result_set_ref);
+#endif
+extern CQL_WARN_UNUSED cql_code some_redeclared_out_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_proc_result_set_ref _Nullable *_Nonnull _result_set_);
+
 
 #ifndef row_type_decl_some_redeclared_out_proc_row
 #define row_type_decl_some_redeclared_out_proc_row 1
@@ -495,6 +526,12 @@ typedef struct some_redeclared_out_proc_row {
 } some_redeclared_out_proc_row;
 #endif
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_proc(sqlite3 *_Nonnull _db_, some_redeclared_out_proc_row *_Nonnull _result_);
+
+#ifndef result_set_type_decl_some_redeclared_out_proc_result_set
+#define result_set_type_decl_some_redeclared_out_proc_result_set 1
+cql_result_set_type_decl(some_redeclared_out_proc_result_set, some_redeclared_out_proc_result_set_ref);
+#endif
+extern CQL_WARN_UNUSED cql_code some_redeclared_out_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
 #ifndef row_type_decl_some_redeclared_out_proc_row

@@ -8866,7 +8866,10 @@ static void sem_validate_expression_fragment(ast_node *ast, ast_node *proc) {
 // Calling a stored procedure as a function
 // There are a few things to check:
 //  * it has to be a loose expression or else a shared fragment
-//  * args have to be checked and compatible with formals, except, for non-SQL calls
+//    * in this case regular arg matching happens on all arguments
+//  * it returns a result set (via out union, out, or select)
+//    * all args must match in this case also
+//  * scalar proc as func case
 //    * the last formal must be an OUT arg and it must be a scalar type
 //    * that out arg will be treated as the return value of the "function"
 //    * in code-gen we will create a temporary for it, semantic analysis doesn't care
@@ -8900,7 +8903,6 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
 
   EXTRACT_NOTNULL(proc_params_stmts, proc->right);
   EXTRACT(params, proc_params_stmts->left);
-  EXTRACT(stmt_list, proc_params_stmts->right);
 
   if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
     // evaluation proceeds as an expression fragment, it fails or not
@@ -8909,14 +8911,18 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
     return;
   }
 
-  if (has_out_stmt_result(proc) || has_result_set(proc)) {
-    report_error(ast, "CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions", proc_name);
-    record_error(ast);
-    return;
-  }
+  bool_t result_set_return = has_out_stmt_result(proc) || has_result_set(proc) || has_out_union_stmt_result(proc);
 
-  sem_validate_args_vs_formals(ast, proc_name, arg_list, params, PROC_AS_FUNC);
+  bool_t validation_type = result_set_return ?  NORMAL_CALL : PROC_AS_FUNC;
+
+  sem_validate_args_vs_formals(ast, proc_name, arg_list, params, validation_type);
   Invariant(ast->sem);  // either an error or a result
+
+  if (result_set_return && !is_error(ast)) {
+    // this call will return the result set object
+    ast->sem = new_sem(SEM_TYPE_OBJECT);
+    ast->sem->kind = dup_printf("%s SET", proc_name);
+  }
 
   // The call may have mutated any or all of the currently improved globals, so
   // we simply invalidate all of them.

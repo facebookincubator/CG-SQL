@@ -7135,11 +7135,12 @@ SET an_int := proc_func(distinct 1);
 -- +1 error:
 set an_int := proc_with_single_output(1, an_int, an_int2);
 
--- TEST: try to use a proc that deals with struct results
--- + {call}: err
--- + error: % Stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
--- +1 error:
-set an_int := out_cursor_proc();
+-- TEST: capture a result set from a proc that returns a structured result
+-- + {let_stmt}: out_result_set: object<out_cursor_proc SET> variable
+-- + {name out_result_set}: out_result_set: object<out_cursor_proc SET> variable
+-- + {call}: object<out_cursor_proc SET>
+-- - error:
+let out_result_set := out_cursor_proc();
 
 -- TEST: this proc has no out arg that can be used as a result
 -- + {call}: err

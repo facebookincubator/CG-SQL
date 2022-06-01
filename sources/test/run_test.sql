@@ -3000,22 +3000,12 @@ BEGIN_TEST(read_all_types_rowset)
   EXPECT(not C);
 END_TEST(read_all_types_rowset)
 
--- make something to fake out CQL so we can call the real fetcher
-DECLARE PROC load_all_types_table_shim() out union
-   (b0 BOOL, i0 INTEGER, l0 LONG_INT, d0 REAL, s0 TEXT, bl0 BLOB,
-    b1 BOOL NOT NULL, i1 INTEGER NOT NULL, l1 LONG_INT NOT NULL, d1 REAL NOT NULL, s1 TEXT NOT NULL, bl1 BLOB NOT NULL)
-    using transaction;
-
--- we're going to redirect this declared out union function to be the
--- automaticlaly generated fetcher above.  That's a normal result set
--- generated in the normal way.  And boom just like that we're reading a
--- result set rather than the statement
-
-@echo c,"#define load_all_types_table_shim_fetch_results load_all_types_table_fetch_results\n";
-@echo c,"#define load_all_types_table_shim_result_set_ref load_all_types_table_result_set_ref\n";
-
 BEGIN_TEST(read_all_types_auto_fetcher)
-  declare C cursor for call load_all_types_table_shim();
+  -- we want to force the auto fetcher to be called, so we capture the result set
+  -- rather than cursoring over it.  Then we cursor over the captured result set
+
+  let result_set := load_all_types_table();
+  declare C cursor for result_set;
   fetch C;
   EXPECT(C);
 

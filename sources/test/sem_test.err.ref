@@ -619,7 +619,6 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a proce
 test/sem_test.sql:XXXX:1: error: in declare_value_cursor : CQL0197: duplicate variable name in the same scope 'C'
 test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses 'proc_func'
 test/sem_test.sql:XXXX:1: error: in call : CQL0235: too many arguments provided to procedure 'proc_with_single_output'
-test/sem_test.sql:XXXX:1: error: in call : CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions 'out_cursor_proc'
 test/sem_test.sql:XXXX:1: error: in param : CQL0211: procedure without trailing OUT parameter used as function 'proc2'
 test/sem_test.sql:XXXX:1: error: in call : CQL0224: a function call to a procedure inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment) 'proc_with_single_output'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'out_cursor_proc'
