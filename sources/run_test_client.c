@@ -36,6 +36,9 @@ cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db);
 cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
 cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db);
 
+cql_string_ref _Nullable string_create(void);
+cql_blob_ref _Nonnull blob_from_string(cql_string_ref str);
+
 extern cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i);
 extern cql_int32 get_blob_size(cql_blob_ref b);
 

@@ -10,13 +10,11 @@
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #pragma clang diagnostic ignored "-Wunused-function"
+extern cql_nullable_int32 side_effect1(void);
+extern cql_nullable_int32 side_effect2(void);
 extern CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_);
-#ifndef result_set_type_decl_xyzzy_result_set
-#define result_set_type_decl_xyzzy_result_set 1
-cql_result_set_type_decl(xyzzy_result_set, xyzzy_result_set_ref);
-#endif
 extern CQL_WARN_UNUSED cql_code xyzzy_fetch_results(sqlite3 *_Nonnull _db_, xyzzy_result_set_ref _Nullable *_Nonnull _result_set_, cql_nullable_int32 id);
 
 extern CQL_WARN_UNUSED cql_code xyzzy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 id);
@@ -33,6 +31,9 @@ extern CQL_WARN_UNUSED cql_code with_stmt(sqlite3 *_Nonnull _db_, sqlite3_stmt *
 extern CQL_WARN_UNUSED cql_code with_recursive_stmt(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code parent_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code parent_proc_child(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern cql_nullable_int32 simple_func(cql_nullable_int32 int1);
+extern cql_string_ref _Nonnull text_func(cql_nullable_int32 int1, cql_int32 int2);
+extern cql_object_ref _Nonnull obj_notnull_func(void);
 
 #ifndef row_type_decl_cursor_with_object_row
 #define row_type_decl_cursor_with_object_row 1
@@ -44,7 +45,14 @@ typedef struct cursor_with_object_row {
 } cursor_with_object_row;
 #endif
 extern void cursor_with_object(cql_object_ref _Nullable object_, cursor_with_object_row *_Nonnull _result_);
+extern cql_object_ref _Nullable obj_func(void);
+extern cql_object_ref _Nullable obj_func_create(void);
+extern cql_string_ref _Nullable text_func_create(void);
 extern CQL_WARN_UNUSED cql_code uses_proc_for_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern cql_nullable_int32 voidfunc(void);
+extern cql_blob_ref _Nonnull blob_notnull_func(void);
+extern cql_blob_ref _Nullable blob_func(void);
+extern cql_blob_ref _Nullable blob_func_create(void);
 extern CQL_WARN_UNUSED cql_code blob_returner(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 #ifndef row_type_decl_out_cursor_proc_row
@@ -63,10 +71,6 @@ typedef struct out_cursor_proc_row {
 } out_cursor_proc_row;
 #endif
 extern CQL_WARN_UNUSED cql_code out_cursor_proc(sqlite3 *_Nonnull _db_, out_cursor_proc_row *_Nonnull _result_);
-#ifndef result_set_type_decl_fetcher_proc_result_set
-#define result_set_type_decl_fetcher_proc_result_set 1
-cql_result_set_type_decl(fetcher_proc_result_set, fetcher_proc_result_set_ref);
-#endif
 extern void fetcher_proc_fetch_results(fetcher_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
@@ -198,10 +202,6 @@ typedef struct forward_out_union_row {
   cql_int32 x;
 } forward_out_union_row;
 #endif
-#ifndef result_set_type_decl_extern_out_union_helper_result_set
-#define result_set_type_decl_extern_out_union_helper_result_set 1
-cql_result_set_type_decl(extern_out_union_helper_result_set, extern_out_union_helper_result_set_ref);
-#endif
 extern void extern_out_union_helper_fetch_results(extern_out_union_helper_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
@@ -262,10 +262,6 @@ extern void simple_cursor_proc(simple_cursor_proc_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code redundant_cast(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code top_level_select_alias_unused(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-#ifndef result_set_type_decl_p1_result_set
-#define result_set_type_decl_p1_result_set 1
-cql_result_set_type_decl(p1_result_set, p1_result_set_ref);
-#endif
 extern void p1_fetch_results(p1_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
@@ -281,10 +277,6 @@ typedef struct p1_row {
 #endif
 extern void p1(p1_row *_Nonnull _result_);
 
-#ifndef result_set_type_decl_p2_result_set
-#define result_set_type_decl_p2_result_set 1
-cql_result_set_type_decl(p2_result_set, p2_result_set_ref);
-#endif
 extern CQL_WARN_UNUSED cql_code p2_fetch_results(sqlite3 *_Nonnull _db_, p2_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
@@ -345,16 +337,8 @@ typedef struct out_union_dml_row {
 } out_union_dml_row;
 #endif
 extern CQL_WARN_UNUSED cql_code window_function_invocation(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-#ifndef result_set_type_decl_out_union_with_dml_result_set
-#define result_set_type_decl_out_union_with_dml_result_set 1
-cql_result_set_type_decl(out_union_with_dml_result_set, out_union_with_dml_result_set_ref);
-#endif
 extern CQL_WARN_UNUSED cql_code out_union_with_dml_fetch_results(sqlite3 *_Nonnull _db_, out_union_with_dml_result_set_ref _Nullable *_Nonnull _result_set_, cql_nullable_int32 id);
 
-#ifndef result_set_type_decl_out_union_no_dml_result_set
-#define result_set_type_decl_out_union_no_dml_result_set 1
-cql_result_set_type_decl(out_union_no_dml_result_set, out_union_no_dml_result_set_ref);
-#endif
 extern void out_union_no_dml_fetch_results(out_union_no_dml_result_set_ref _Nullable *_Nonnull _result_set_, cql_nullable_int32 id);
 
 extern CQL_WARN_UNUSED cql_code use_return(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
@@ -495,12 +479,17 @@ typedef struct out_proc_with_contract_in_fetch_results_row {
 #endif
 extern void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc_with_contract_in_fetch_results_row *_Nonnull _result_);
 extern CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern cql_int32 ltor_func_int_not_null(cql_int32 a, cql_int32 b);
+extern cql_nullable_int32 ltor_func_int(cql_nullable_int32 a, cql_nullable_int32 b);
+extern cql_string_ref _Nonnull ltor_func_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull b);
+extern cql_string_ref _Nullable ltor_func_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b);
 extern CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 x);
 extern CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 // static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern cql_blob_ref _Nullable make_blob(void);
 
 // The statement ending at line XXXX
 
@@ -509,10 +498,6 @@ extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Non
 #define gr_cursor_refs_offset cql_offsetof(gr_cursor_row, y) // count = 1
 
 #define gr_blob_cursor_refs_offset cql_offsetof(gr_blob_cursor_row, name) // count = 1
-#ifndef result_set_type_decl_some_redeclared_out_proc_result_set
-#define result_set_type_decl_some_redeclared_out_proc_result_set 1
-cql_result_set_type_decl(some_redeclared_out_proc_result_set, some_redeclared_out_proc_result_set_ref);
-#endif
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
@@ -527,10 +512,6 @@ typedef struct some_redeclared_out_proc_row {
 #endif
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_proc(sqlite3 *_Nonnull _db_, some_redeclared_out_proc_row *_Nonnull _result_);
 
-#ifndef result_set_type_decl_some_redeclared_out_proc_result_set
-#define result_set_type_decl_some_redeclared_out_proc_result_set 1
-cql_result_set_type_decl(some_redeclared_out_proc_result_set, some_redeclared_out_proc_result_set_ref);
-#endif
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
@@ -556,16 +537,8 @@ typedef struct some_redeclared_out_proc_row {
 } some_redeclared_out_proc_row;
 #endif
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_proc(sqlite3 *_Nonnull _db_, some_redeclared_out_proc_row *_Nonnull _result_);
-#ifndef result_set_type_decl_some_redeclared_out_union_proc_result_set
-#define result_set_type_decl_some_redeclared_out_union_proc_result_set 1
-cql_result_set_type_decl(some_redeclared_out_union_proc_result_set, some_redeclared_out_union_proc_result_set_ref);
-#endif
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_union_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_union_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
-#ifndef result_set_type_decl_some_redeclared_out_union_proc_result_set
-#define result_set_type_decl_some_redeclared_out_union_proc_result_set 1
-cql_result_set_type_decl(some_redeclared_out_union_proc_result_set, some_redeclared_out_union_proc_result_set_ref);
-#endif
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_union_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_union_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 
@@ -578,6 +551,7 @@ typedef struct some_redeclared_out_union_proc_row {
   cql_nullable_int32 x;
 } some_redeclared_out_union_proc_row;
 #endif
+extern cql_nullable_int32 external_cursor_func(cql_dynamic_cursor *_Nonnull x);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");

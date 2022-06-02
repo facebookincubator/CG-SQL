@@ -3946,7 +3946,7 @@ static void cg_declare_func_stmt(ast_node *ast) {
     bprintf(&func_decl, "void");
   }
 
-  bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, func_decl.ptr);
+  bprintf(cg_fwd_ref_output, "%s%s);\n", rt->symbol_visibility, func_decl.ptr);
 
   CHARBUF_CLOSE(func_sym);
   CHARBUF_CLOSE(func_decl);
@@ -3999,7 +3999,7 @@ static void cg_declare_proc_stmt(ast_node *ast) {
     CG_CHARBUF_OPEN_SYM(result_set_ref, name, "_result_set_ref");
     CG_CHARBUF_OPEN_SYM(result_set, name, "_result_set");
 
-    cg_result_set_type_decl(cg_fwd_ref_output, result_set.ptr, result_set_ref.ptr);
+    cg_result_set_type_decl(cg_header_output, result_set.ptr, result_set_ref.ptr);
 
     CHARBUF_CLOSE(result_set);
     CHARBUF_CLOSE(result_set_ref);

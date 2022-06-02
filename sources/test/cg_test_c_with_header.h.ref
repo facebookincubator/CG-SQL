@@ -98,10 +98,8 @@ extern cql_string_ref _Nonnull t2;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern cql_nullable_int32 side_effect1(void);
 
 // The statement ending at line XXXX
-extern cql_nullable_int32 side_effect2(void);
 
 // The statement ending at line XXXX
 
@@ -353,6 +351,10 @@ extern cql_string_ref _Nonnull s;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_xyzzy_result_set
+#define result_set_type_decl_xyzzy_result_set 1
+cql_result_set_type_decl(xyzzy_result_set, xyzzy_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_);
@@ -603,7 +605,6 @@ extern CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_null
 extern CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull output, cql_bool *_Nonnull result);
 
 // The statement ending at line XXXX
-extern cql_nullable_int32 simple_func(cql_nullable_int32 int1);
 
 // The statement ending at line XXXX
 extern cql_nullable_int32 result;
@@ -611,7 +612,6 @@ extern cql_nullable_int32 result;
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern cql_string_ref _Nonnull text_func(cql_nullable_int32 int1, cql_int32 int2);
 
 // The statement ending at line XXXX
 extern cql_string_ref _Nullable text_result;
@@ -627,7 +627,6 @@ extern cql_object_ref _Nullable obj_var;
 extern cql_object_ref _Nonnull obj_var2;
 
 // The statement ending at line XXXX
-extern cql_object_ref _Nonnull obj_notnull_func(void);
 
 // The statement ending at line XXXX
 
@@ -675,17 +674,14 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern cql_object_ref _Nullable obj_func(void);
 
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern cql_object_ref _Nullable obj_func_create(void);
 
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern cql_string_ref _Nullable text_func_create(void);
 
 // The statement ending at line XXXX
 
@@ -754,7 +750,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
-extern cql_nullable_int32 voidfunc(void);
 
 // The statement ending at line XXXX
 
@@ -788,7 +783,6 @@ extern cql_blob_ref _Nullable blob_var;
 extern cql_blob_ref _Nonnull blob_var2;
 
 // The statement ending at line XXXX
-extern cql_blob_ref _Nonnull blob_notnull_func(void);
 
 // The statement ending at line XXXX
 
@@ -826,12 +820,10 @@ extern void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern cql_blob_ref _Nullable blob_func(void);
 
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern cql_blob_ref _Nullable blob_func_create(void);
 
 // The statement ending at line XXXX
 
@@ -913,6 +905,10 @@ extern CQL_WARN_UNUSED cql_code read_cursor_proc(sqlite3 *_Nonnull _db_);
 extern CQL_WARN_UNUSED cql_code declare_cursor_then_fetch_from_proc(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_fetcher_proc_result_set
+#define result_set_type_decl_fetcher_proc_result_set 1
+cql_result_set_type_decl(fetcher_proc_result_set, fetcher_proc_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
 
@@ -1228,6 +1224,10 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern void forward_out_union_fetch_results(forward_out_union_result_set_ref _Nullable *_Nonnull _result_set_);
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_extern_out_union_helper_result_set
+#define result_set_type_decl_extern_out_union_helper_result_set 1
+cql_result_set_type_decl(extern_out_union_helper_result_set, extern_out_union_helper_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
 #define CRC_forward_out_union_extern -5479089429828632085L
@@ -1622,8 +1622,16 @@ extern CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_in
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_p1_result_set
+#define result_set_type_decl_p1_result_set 1
+cql_result_set_type_decl(p1_result_set, p1_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_p2_result_set
+#define result_set_type_decl_p2_result_set 1
+cql_result_set_type_decl(p2_result_set, p2_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code use_many_out_cursors(sqlite3 *_Nonnull _db_);
@@ -1770,8 +1778,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern CQL_WARN_UNUSED cql_code update_cursor(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_out_union_with_dml_result_set
+#define result_set_type_decl_out_union_with_dml_result_set 1
+cql_result_set_type_decl(out_union_with_dml_result_set, out_union_with_dml_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_out_union_no_dml_result_set
+#define result_set_type_decl_out_union_no_dml_result_set 1
+cql_result_set_type_decl(out_union_no_dml_result_set, out_union_no_dml_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
 #define CRC_use_return 6020670114685873144L
@@ -3307,16 +3323,12 @@ extern void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _N
 extern void ltor_proc_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b, cql_string_ref _Nullable *_Nonnull c);
 
 // The statement ending at line XXXX
-extern cql_int32 ltor_func_int_not_null(cql_int32 a, cql_int32 b);
 
 // The statement ending at line XXXX
-extern cql_nullable_int32 ltor_func_int(cql_nullable_int32 a, cql_nullable_int32 b);
 
 // The statement ending at line XXXX
-extern cql_string_ref _Nonnull ltor_func_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull b);
 
 // The statement ending at line XXXX
-extern cql_string_ref _Nullable ltor_func_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b);
 
 // The statement ending at line XXXX
 extern void arguments_are_evaluated_left_to_right(void);
@@ -3494,7 +3506,6 @@ extern void slash_star_and_star_slash(void);
 extern CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
-extern cql_blob_ref _Nullable make_blob(void);
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_);
@@ -3538,8 +3549,16 @@ extern void mutated_in_param_ref(cql_string_ref _Nullable _in__x);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_some_redeclared_out_proc_result_set
+#define result_set_type_decl_some_redeclared_out_proc_result_set 1
+cql_result_set_type_decl(some_redeclared_out_proc_result_set, some_redeclared_out_proc_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_some_redeclared_out_proc_result_set
+#define result_set_type_decl_some_redeclared_out_proc_result_set 1
+cql_result_set_type_decl(some_redeclared_out_proc_result_set, some_redeclared_out_proc_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
 #define CRC_some_redeclared_out_proc -1123009572921827289L
@@ -3565,8 +3584,16 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   0)
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_some_redeclared_out_union_proc_result_set
+#define result_set_type_decl_some_redeclared_out_union_proc_result_set 1
+cql_result_set_type_decl(some_redeclared_out_union_proc_result_set, some_redeclared_out_union_proc_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_some_redeclared_out_union_proc_result_set
+#define result_set_type_decl_some_redeclared_out_union_proc_result_set 1
+cql_result_set_type_decl(some_redeclared_out_union_proc_result_set, some_redeclared_out_union_proc_result_set_ref);
+#endif
 
 // The statement ending at line XXXX
 #define CRC_some_redeclared_out_union_proc -1185916713537278198L
@@ -3592,7 +3619,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern CQL_WARN_UNUSED cql_code some_redeclared_out_union_proc_fetch_results(sqlite3 *_Nonnull _db_, some_redeclared_out_union_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 // The statement ending at line XXXX
-extern cql_nullable_int32 external_cursor_func(cql_dynamic_cursor *_Nonnull x);
 
 // The statement ending at line XXXX
 extern void external_cursor_caller(void);
