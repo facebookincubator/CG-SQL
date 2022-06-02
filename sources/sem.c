@@ -2964,8 +2964,44 @@ static void sem_data_type_column(ast_node *ast) {
   }
 
   if (ast->left) {
-    EXTRACT_STRING(name, ast->left);
-    ast->sem->kind = name;
+    EXTRACT_STRING(kind, ast->left);
+    ast->sem->kind = kind;
+
+    bool_t is_set = !!sem_ends_in_set(kind);
+    bool_t is_cursor = !!sem_ends_in_cursor(kind);
+
+    if (is_set || is_cursor) {
+      // <T SET> and <T CURSOR> get additional checks
+
+      // now we extract just the type name
+      CHARBUF_OPEN(tmp);
+      for (int32_t i = 0; kind[i] && kind[i] != ' '; i++) {
+        bputc(&tmp, kind[i]);
+      }
+
+      // We make a like node for the object type (which is itself not in AST here)
+      // so that we can use the standard likeable helpers for error checking
+      AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+      ast_node *type_node = new_ast_str(tmp.ptr);
+      ast_node *like_node = new_ast_like(type_node, NULL);
+      AST_REWRITE_INFO_RESET();
+
+      CHARBUF_CLOSE(tmp);
+
+      // the indicated type must be a valid shape name (one we could use in LIKE T)
+      ast_node *like_target = sem_find_shape_def_base(like_node, LIKEABLE_FOR_VALUES);
+      if (!like_target) {
+        record_error(ast);
+        return;
+      }
+
+      // it's a result set so it must also be a proc type
+      if (is_set && !is_ast_create_proc_stmt(like_target) && !is_ast_declare_proc_stmt(like_target)) {
+        report_error(ast, "CQL0090: object<T SET> has a T that is not a procedure with a result set", kind);
+        record_error(ast);
+        return;
+      }
+    }
   }
 }
 
@@ -19389,7 +19425,7 @@ cql_noexport size_t sem_ends_in_cursor(CSTR str) {
   CSTR tail = " CURSOR";
   size_t len_tail = strlen(tail);
   if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
-    return false;
+    return 0;
   }
   return len_tail;
 }
@@ -19399,7 +19435,7 @@ cql_noexport size_t sem_ends_in_set(CSTR str) {
   CSTR tail = " SET";
   size_t len_tail = strlen(tail);
   if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
-    return false;
+    return 0;
   }
   return len_tail;
 }
@@ -19449,10 +19485,10 @@ cql_noexport ast_node *sem_find_likeable_from_expr_type(ast_node *expr) {
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
   ast_node *like_target = sem_find_shape_def_base(like_node, LIKEABLE_FOR_VALUES);
-  if (!like_target) {
-    record_error(expr);
-    return NULL;
-  }
+
+  // we have already checked the name when the object was declared, or else we made the name ourselves
+  // in all these cases it MUST be valid already or else something is seriously wrong.
+  Invariant(like_target);
 
   return like_target;
 }
@@ -19496,10 +19532,10 @@ static void sem_set_from_cursor(ast_node *ast) {
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
   ast_node *like_target = sem_find_likeable_from_expr_type(var);
-  if (!like_target) {
-    record_error(ast);
-    return;
-  }
+
+  // we have already checked the name when the object was declared, or else we made the name ourselves
+  // in all these cases it MUST be valid already or else something is seriously wrong.
+  Invariant(like_target);
 
   // the cursor has to be a statement cursor
   if (cursor->sem->sem_type & SEM_TYPE_VALUE_CURSOR) {

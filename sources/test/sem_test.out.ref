@@ -60522,16 +60522,16 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   {create_proc_stmt}: err
   | {name cursor_unbox_not_a_type}: err
   | {proc_params_stmts}
-    | {params}: ok
-    | | {param}: box: object<not_a_type CURSOR> variable in
-    |   | {param_detail}: box: object<not_a_type CURSOR> variable in
-    |     | {name box}: box: object<not_a_type CURSOR> variable in
-    |     | {type_object}: object<not_a_type CURSOR>
+    | {params}: err
+    | | {param}: err
+    |   | {param_detail}
+    |     | {name box}
+    |     | {type_object}: err
     |       | {name not_a_type CURSOR}
-    | {stmt_list}: err
-      | {declare_cursor}: err
+    | {stmt_list}
+      | {declare_cursor}
         | {name C}
-        | {name box}: err
+        | {name box}
 
 The statement ending at line XXXX
 
@@ -60621,35 +60621,35 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
   {create_proc_stmt}: err
   | {name cursor_box_not_a_shape}: err
   | {proc_params_stmts}
-    | {params}: ok
+    | {params}: err
     | | {param}: err
     |   | {out}
-    |   | {param_detail}: box: object<barf CURSOR> variable out
-    |     | {name box}: box: object<barf CURSOR> variable out
-    |     | {type_object}: object<barf CURSOR>
+    |   | {param_detail}
+    |     | {name box}
+    |     | {type_object}: err
     |       | {name barf CURSOR}
-    | {stmt_list}: err
-      | {declare_cursor}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
-      | | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
-      | | {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
-      |   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
-      |   | | {select_core}: select: { id: integer notnull, name: text, rate: longint }
-      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text, rate: longint }
-      |   |     | {select_expr_list}: select: { id: integer notnull, name: text, rate: longint }
-      |   |     | | {star}: select: { id: integer notnull, name: text, rate: longint }
-      |   |     | {select_from_etc}: TABLE { bar: bar }
-      |   |       | {table_or_subquery_list}: TABLE { bar: bar }
-      |   |       | | {table_or_subquery}: TABLE { bar: bar }
-      |   |       |   | {name bar}: TABLE { bar: bar }
+    | {stmt_list}
+      | {declare_cursor}
+      | | {name C}
+      | | {select_stmt}
+      |   | {select_core_list}
+      |   | | {select_core}
+      |   |   | {select_expr_list_con}
+      |   |     | {select_expr_list}
+      |   |     | | {star}
+      |   |     | {select_from_etc}
+      |   |       | {table_or_subquery_list}
+      |   |       | | {table_or_subquery}
+      |   |       |   | {name bar}
       |   |       | {select_where}
       |   |         | {select_groupby}
       |   |           | {select_having}
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {set_from_cursor}: err
-        | {name box}: box: object<barf CURSOR> variable out
-        | {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
+      | {set_from_cursor}
+        | {name box}
+        | {name C}
 
 The statement ending at line XXXX
 
@@ -88654,4 +88654,49 @@ END;
           |                 | {name __key__0}: __key__0: select: { x: integer } variable shape_storage value_cursor serialize
           | {out_union_stmt}: __out_cursor__0: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
             | {name __out_cursor__0}: __out_cursor__0: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC test_object_types ()
+BEGIN
+  DECLARE C CURSOR LIKE (id INTEGER);
+  DECLARE u OBJECT<goo CURSOR>;
+  DECLARE w OBJECT<C CURSOR>;
+  DECLARE x OBJECT<C SET>;
+  DECLARE y OBJECT<test_parent_child SET>;
+END;
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'goo'
+test/sem_test.sql:XXXX:1: error: in type_object : CQL0090: object<T SET> has a T that is not a procedure with a result set 'C SET'
+
+  {create_proc_stmt}: err
+  | {name test_object_types}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor_like_typed_names}: C: select: { id: integer } variable shape_storage value_cursor
+      | | {name C}: C: select: { id: integer } variable shape_storage value_cursor
+      | | {typed_names}: select: { id: integer }
+      |   | {typed_name}: id: integer
+      |     | {name id}
+      |     | {type_int}: id: integer
+      | {declare_vars_type}: err
+      | | {name_list}
+      | | | {name u}
+      | | {type_object}: err
+      |   | {name goo CURSOR}
+      | {declare_vars_type}: object<C CURSOR>
+      | | {name_list}: w: object<C CURSOR> variable
+      | | | {name w}: w: object<C CURSOR> variable
+      | | {type_object}: object<C CURSOR>
+      |   | {name C CURSOR}
+      | {declare_vars_type}: err
+      | | {name_list}
+      | | | {name x}
+      | | {type_object}: err
+      |   | {name C SET}
+      | {declare_vars_type}: object<test_parent_child SET>
+        | {name_list}: y: object<test_parent_child SET> variable
+        | | {name y}: y: object<test_parent_child SET> variable
+        | {type_object}: object<test_parent_child SET>
+          | {name test_parent_child SET}
 

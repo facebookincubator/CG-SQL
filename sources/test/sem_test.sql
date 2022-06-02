@@ -22369,7 +22369,7 @@ begin
   select x_ x;
 end;
 
--- Verify that the rewrite is successful including arg pass through
+-- TEST: Verify that the rewrite is successful including arg pass through
 -- + CREATE PROC test_parent_child ()
 -- + BEGIN
 -- +   DECLARE __result__0 BOOL NOT NULL;
@@ -22398,4 +22398,17 @@ begin
    call test_parent(2) join call test_child(1) using (x);
 end;
 
+-- TEST: verify that type kinds that require particular shapes are getting them
+-- + {declare_vars_type}: object<C CURSOR>
+-- + error: % must be a cursor, proc, table, or view 'goo'
+-- + error: % object<T SET> has a T that is not a procedure with a result set 'C SET'
+-- + {declare_vars_type}: object<test_parent_child SET>
+create proc test_object_types()
+begin
+  declare C cursor like (id integer);
+  declare u object<goo cursor>;
+  declare w object<C cursor>;
+  declare x object<C set>;
+  declare y object<test_parent_child set>;
+end;
 

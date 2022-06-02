@@ -1488,4 +1488,6 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
 test/sem_test.sql:XXXX:1: error: in declare_proc_no_check_stmt : CQL0481: proc name conflicts with interface name 'interface1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with func name 'maybe_create_func_text'
 test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be top level 'foo'
+test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'goo'
+test/sem_test.sql:XXXX:1: error: in type_object : CQL0090: object<T SET> has a T that is not a procedure with a result set 'C SET'
 semantic errors present; no code gen.
