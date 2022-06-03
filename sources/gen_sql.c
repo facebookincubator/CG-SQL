@@ -3934,11 +3934,23 @@ static void gen_stmt_list(ast_node *root) {
 
   BEGIN_INDENT(statement, indent_level);
 
+  bool first_stmt = true;
+
   for (ast_node *semi = root; semi; semi = semi->right) {
-    if (gen_stmt_level == 1 && semi != root) {
+    EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, semi);
+    if (misc_attrs) {
+      // do not echo declarations that came from the builtin stream
+      if (exists_attribute_str(misc_attrs, "builtin")) {
+        continue;
+      }
+    }
+
+    if (gen_stmt_level == 1 && !first_stmt) {
       gen_printf("\n");
     }
-    EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, semi);
+
+    first_stmt = false;
+
     if (misc_attrs) {
       gen_misc_attrs(misc_attrs);
     }

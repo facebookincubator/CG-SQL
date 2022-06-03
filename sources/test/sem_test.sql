@@ -22354,11 +22354,6 @@ begin
   declare interface foo(LIKE interface1);
 end;
 
--- cursor partitioning runtime functions (these will be builtin at some point)
-declare function cql_partition_create() create object not null;
-declare function cql_partition_cursor(partition_ object not null, key cursor, value cursor) bool not null;
-declare function cql_extract_partition(partition_ object not null, key cursor) create object not null;
-
 create proc test_parent(x_ integer)
 begin
   select x_ x;
