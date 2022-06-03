@@ -5025,11 +5025,6 @@ BEGIN_TEST(cursor_equal)
 
 END_TEST(cursor_equal)
 
--- cursor partitioning runtime functions (these will be builtin at some point)
-declare function cql_partition_create() create object not null;
-declare function cql_partition_cursor(partition_ object not null, key cursor, value cursor) bool not null;
-declare function cql_extract_partition(partition_ object not null, key cursor) create object not null;
-
 DECLARE PROC get_rows(result object not null) OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL, z BOOL);
 
 BEGIN_TEST(child_results)
