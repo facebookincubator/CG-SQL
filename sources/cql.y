@@ -2411,6 +2411,16 @@ static void parse_cmd(int argc, char **argv) {
 static jmp_buf for_exit;
 static int32_t exit_code;
 
+cql_noexport CSTR cql_builtin_text() {
+  return
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, value CURSOR) BOOL NOT NULL;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL;";
+}
+
 int cql_main(int argc, char **argv) {
   exit_code = 0;
   yylineno = 1;
@@ -2418,6 +2428,9 @@ int cql_main(int argc, char **argv) {
   if (!setjmp(for_exit)) {
     parse_cmd(argc, argv);
     ast_init();
+
+    // add the builtin declares before we process the real input
+    cql_setup_for_builtins();
 
     if (options.run_unit_tests) {
       run_unit_tests();
