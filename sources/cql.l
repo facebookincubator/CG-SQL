@@ -35,46 +35,6 @@ cql_noexport CSTR get_last_doc_comment() {
   return result;
 }
 
-static bool cql_builtins_processing = false;
-static bool cql_delete_main_buffer = false;
-static YY_BUFFER_STATE cql_main_buffer;
-
-cql_noexport void cql_setup_for_builtins() {
-  // stash a buffer for the main input, note that we might already have a buffer
-  // in the amalgam case, if we do then use that.
-  if (YY_CURRENT_BUFFER) {
-    cql_main_buffer = YY_CURRENT_BUFFER;
-    cql_delete_main_buffer = false;
-  }
-  else {
-    // if we don't already have a buffer make one using yyin or stdin
-    cql_main_buffer = yy_create_buffer(yyin ? yyin : stdin, YY_BUF_SIZE);
-    cql_delete_main_buffer = true;
-  }
-
-  // add the builtin declares before we process the real input
-  yy_scan_string(cql_builtin_text());
-  cql_builtins_processing = true;
-}
-
-static bool_t cql_finish_stream() {
-  // when we read the end of the temporary buffer we switch to the main buffer
-  if (cql_builtins_processing) {
-    cql_builtins_processing = false;
-    yy_delete_buffer(YY_CURRENT_BUFFER);
-    yy_switch_to_buffer(cql_main_buffer);
-    return false;
-  }
-
-  if (cql_delete_main_buffer) {
-    yy_delete_buffer(YY_CURRENT_BUFFER);
-    cql_delete_main_buffer = false;
-  }
-
-  // nothing further to process, terminate
-  return true;
-}
-
 %}
 
 stop [^A-Z_0-9]
@@ -317,8 +277,6 @@ CONTEXT{sp}COLUMN/{stop}     { return CONTEXT_COLUMN; }
 CONTEXT{sp}TYPE/{stop}       { return CONTEXT_TYPE; }
 SIGN{sp}FUNCTION/{stop}      { return SIGN_FUNCTION; }
 CURSOR{sp}HAS{sp}ROW/{stop}  { return CURSOR_HAS_ROW; }
-
-<<EOF>>                      { if (cql_finish_stream()) yyterminate(); }
 
 0x{hex}+                     { char *s = Strdup(yytext); yylval.sval = s; return strtoll(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
 0x{hex}+L                    { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }

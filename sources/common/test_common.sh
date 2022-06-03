@@ -138,8 +138,7 @@ create_unwritable_file() {
 basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
   echo running "${TEST_DIR}/test.sql"
-  # exercising the non --in path (i.e. read from stdin)
-  if ! ${CQL} --echo --dev < "${TEST_DIR}/test.sql" >"${OUT_DIR}/test.out"
+  if ! ${CQL} --echo --dev --in "${TEST_DIR}/test.sql" >"${OUT_DIR}/test.out"
   then
    echo basic parsing test failed
    failed
