@@ -1342,12 +1342,7 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // bool
           E(cql_result_set_get_bool_col(rs, row, col) == row,
             "expected bool did not match seed data, row %d, col %d\n", row, col);
-          cql_nullable_bool new_value;
-          cql_set_notnull(new_value, !row);
-          cql_result_set_set_bool_col(rs, row, col, new_value);
-          E(cql_result_set_get_bool_col(rs, row, col) == !row,
-            "expected bool did not match seed data, row %d, col %d\n", !row, col);
-          cql_result_set_set_bool_col_not_null(rs, row, col, row);
+          cql_result_set_set_bool_col(rs, row, col, row);
           E(cql_result_set_get_bool_col(rs, row, col) == row,
             "expected bool did not match seed data, row %d, col %d\n", row, col);
           break;
@@ -1356,12 +1351,7 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // int32
           E(cql_result_set_get_int32_col(rs, row, col) == row,
             "expected int32 did not match seed data, row %d, col %d\n", row, col);
-          cql_nullable_int32 new_value;
-          cql_set_notnull(new_value, row + 19);
-          cql_result_set_set_int32_col(rs, row, col, new_value);
-          E(cql_result_set_get_int32_col(rs, row, col) == row + 19,
-            "expected int32 did not match seed data, row %d, col %d\n", row + 19, col);
-          cql_result_set_set_int32_col_not_null(rs, row, col, row + 20);
+          cql_result_set_set_int32_col(rs, row, col, row + 20);
           E(cql_result_set_get_int32_col(rs, row, col) == row + 20,
             "expected int32 did not match seed data, row %d, col %d\n", row + 20, col);
           break;
@@ -1370,12 +1360,7 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // int64
           E(cql_result_set_get_int64_col(rs, row, col) == row,
             "expected int64 did not match seed data, row %d, col %d\n", row, col);
-          cql_nullable_int64 new_value;
-          cql_set_notnull(new_value, row + 29);
-          cql_result_set_set_int64_col(rs, row, col, new_value);
-          E(cql_result_set_get_int64_col(rs, row, col) == row + 29,
-            "expected int64 did not match seed data, row %d, col %d\n", row + 29, col);
-          cql_result_set_set_int64_col_not_null(rs, row, col, row + 30);
+          cql_result_set_set_int64_col(rs, row, col, row + 30);
           E(cql_result_set_get_int64_col(rs, row, col) == row + 30,
             "expected int64 did not match seed data, row %d, col %d\n", row + 30, col);
           break;
@@ -1384,12 +1369,7 @@ cql_code test_all_column_fetchers(sqlite3 *db) {
           // double
           E(cql_result_set_get_double_col(rs, row, col) == row,
             "expected double did not match seed data, row %d, col %d\n", row, col);
-          cql_nullable_double new_value;
-          cql_set_notnull(new_value, row + 39);
-          cql_result_set_set_double_col(rs, row, col, new_value);
-          E(cql_result_set_get_double_col(rs, row, col) == row + 39,
-            "expected double did not match seed data, row %d, col %d\n", row + 39, col);
-          cql_result_set_set_double_col_not_null(rs, row, col, row + 40);
+          cql_result_set_set_double_col(rs, row, col, row + 40);
           E(cql_result_set_get_double_col(rs, row, col) == row + 40,
             "expected double did not match seed data, row %d, col %d\n", row + 40, col);
           break;

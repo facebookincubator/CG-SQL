@@ -274,14 +274,11 @@ CQL_EXPORT cql_object_ref _Nullable cql_result_set_get_object_col(cql_result_set
 CQL_EXPORT cql_blob_ref _Nullable cql_result_set_get_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 
 // setters
-CQL_EXPORT void cql_result_set_set_int32_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_nullable_int32 new_value);
-CQL_EXPORT void cql_result_set_set_int32_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int32 new_value);
-CQL_EXPORT void cql_result_set_set_int64_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_nullable_int64 new_value);
-CQL_EXPORT void cql_result_set_set_int64_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int64 new_value);
-CQL_EXPORT void cql_result_set_set_bool_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_nullable_bool new_value);
-CQL_EXPORT void cql_result_set_set_bool_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_bool new_value);
-CQL_EXPORT void cql_result_set_set_double_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_nullable_double new_value);
-CQL_EXPORT void cql_result_set_set_double_col_not_null(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_double new_value);
+CQL_EXPORT void cql_result_set_set_to_null_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
+CQL_EXPORT void cql_result_set_set_int32_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int32 new_value);
+CQL_EXPORT void cql_result_set_set_int64_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_int64 new_value);
+CQL_EXPORT void cql_result_set_set_bool_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_bool new_value);
+CQL_EXPORT void cql_result_set_set_double_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_double new_value);
 CQL_EXPORT void cql_result_set_set_string_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_string_ref _Nullable new_value);
 CQL_EXPORT void cql_result_set_set_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_object_ref _Nullable new_value);
 CQL_EXPORT void cql_result_set_set_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_blob_ref _Nullable new_value);

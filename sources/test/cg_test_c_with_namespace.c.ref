@@ -555,6 +555,19 @@ typedef struct some_redeclared_out_union_proc_row {
 } some_redeclared_out_union_proc_row;
 #endif
 extern cql_nullable_int32 external_cursor_func(cql_dynamic_cursor *_Nonnull x);
+extern CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+
+#ifndef row_type_decl_simple_container_proc_row
+#define row_type_decl_simple_container_proc_row 1
+typedef struct simple_container_proc_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_nullable_int32 a;
+  cql_int32 b;
+  cql_object_ref _Nullable c;
+} simple_container_proc_row;
+#endif
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -7825,9 +7838,7 @@ cql_int32 emit_object_with_setters_get_i(emit_object_with_setters_result_set_ref
 }
 
 extern void emit_object_with_setters_set_i(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int32 new_value) {
-  cql_nullable_int32 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value);
 }
 
 cql_int64 emit_object_with_setters_get_l(emit_object_with_setters_result_set_ref _Nonnull result_set) {
@@ -7836,9 +7847,7 @@ cql_int64 emit_object_with_setters_get_l(emit_object_with_setters_result_set_ref
 }
 
 extern void emit_object_with_setters_set_l(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int64 new_value) {
-  cql_nullable_int64 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value_);
+  cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value);
 }
 
 cql_bool emit_object_with_setters_get_b(emit_object_with_setters_result_set_ref _Nonnull result_set) {
@@ -7847,9 +7856,7 @@ cql_bool emit_object_with_setters_get_b(emit_object_with_setters_result_set_ref 
 }
 
 extern void emit_object_with_setters_set_b(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_bool new_value) {
-  cql_nullable_bool new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value_);
+  cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value);
 }
 
 cql_double emit_object_with_setters_get_d(emit_object_with_setters_result_set_ref _Nonnull result_set) {
@@ -7858,9 +7865,7 @@ cql_double emit_object_with_setters_get_d(emit_object_with_setters_result_set_re
 }
 
 extern void emit_object_with_setters_set_d(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_double new_value) {
-  cql_nullable_double new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value_);
+  cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value);
 }
 
 cql_string_ref _Nonnull emit_object_with_setters_get_t(emit_object_with_setters_result_set_ref _Nonnull result_set) {
@@ -8027,15 +8032,11 @@ cql_int32 emit_setters_with_nullables_get_i_value(emit_setters_with_nullables_re
 }
 
 extern void emit_setters_with_nullables_set_i_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int32 new_value) {
-  cql_nullable_int32 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value);
 }
 
 extern void emit_setters_with_nullables_set_i_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
-  cql_nullable_int32 new_value_;
-  cql_set_null(new_value_);
-  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 2);
 }
 
 cql_bool emit_setters_with_nullables_get_l_is_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
@@ -8049,15 +8050,11 @@ cql_int64 emit_setters_with_nullables_get_l_value(emit_setters_with_nullables_re
 }
 
 extern void emit_setters_with_nullables_set_l_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int64 new_value) {
-  cql_nullable_int64 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value_);
+  cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value);
 }
 
 extern void emit_setters_with_nullables_set_l_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
-  cql_nullable_int64 new_value_;
-  cql_set_null(new_value_);
-  cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value_);
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 3);
 }
 
 cql_bool emit_setters_with_nullables_get_b_is_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
@@ -8071,15 +8068,11 @@ cql_bool emit_setters_with_nullables_get_b_value(emit_setters_with_nullables_res
 }
 
 extern void emit_setters_with_nullables_set_b_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_bool new_value) {
-  cql_nullable_bool new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value_);
+  cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value);
 }
 
 extern void emit_setters_with_nullables_set_b_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
-  cql_nullable_bool new_value_;
-  cql_set_null(new_value_);
-  cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value_);
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 4);
 }
 
 cql_bool emit_setters_with_nullables_get_d_is_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
@@ -8093,15 +8086,11 @@ cql_double emit_setters_with_nullables_get_d_value(emit_setters_with_nullables_r
 }
 
 extern void emit_setters_with_nullables_set_d_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_double new_value) {
-  cql_nullable_double new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value_);
+  cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value);
 }
 
 extern void emit_setters_with_nullables_set_d_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
-  cql_nullable_double new_value_;
-  cql_set_null(new_value_);
-  cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value_);
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 5);
 }
 
 cql_string_ref _Nullable emit_setters_with_nullables_get_t(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
@@ -8243,9 +8232,7 @@ cql_int32 no_out_with_setters_get_id(no_out_with_setters_result_set_ref _Nonnull
 }
 
 extern void no_out_with_setters_set_id(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
-  cql_nullable_int32 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value_);
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
 }
 
 cql_string_ref _Nullable no_out_with_setters_get_name(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -8268,15 +8255,11 @@ cql_int64 no_out_with_setters_get_rate_value(no_out_with_setters_result_set_ref 
 }
 
 extern void no_out_with_setters_set_rate_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int64 new_value) {
-  cql_nullable_int64 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int64_col((cql_result_set_ref)result_set, row, 2, new_value_);
+  cql_result_set_set_int64_col((cql_result_set_ref)result_set, row, 2, new_value);
 }
 
 extern void no_out_with_setters_set_rate_to_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row) {
-  cql_nullable_int64 new_value_;
-  cql_set_null(new_value_);
-  cql_result_set_set_int64_col((cql_result_set_ref)result_set, row, 2, new_value_);
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 2);
 }
 
 cql_bool no_out_with_setters_get_type_is_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -8290,15 +8273,11 @@ cql_int32 no_out_with_setters_get_type_value(no_out_with_setters_result_set_ref 
 }
 
 extern void no_out_with_setters_set_type_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
-  cql_nullable_int32 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 3, new_value_);
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 3, new_value);
 }
 
 extern void no_out_with_setters_set_type_to_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row) {
-  cql_nullable_int32 new_value_;
-  cql_set_null(new_value_);
-  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 3, new_value_);
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 3);
 }
 
 cql_bool no_out_with_setters_get_size_is_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -8312,15 +8291,11 @@ cql_double no_out_with_setters_get_size_value(no_out_with_setters_result_set_ref
 }
 
 extern void no_out_with_setters_set_size_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_double new_value) {
-  cql_nullable_double new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_double_col((cql_result_set_ref)result_set, row, 4, new_value_);
+  cql_result_set_set_double_col((cql_result_set_ref)result_set, row, 4, new_value);
 }
 
 extern void no_out_with_setters_set_size_to_null(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row) {
-  cql_nullable_double new_value_;
-  cql_set_null(new_value_);
-  cql_result_set_set_double_col((cql_result_set_ref)result_set, row, 4, new_value_);
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 4);
 }
 
 uint8_t no_out_with_setters_data_types[no_out_with_setters_data_types_count] = {
@@ -16890,6 +16865,206 @@ void mutated_not_null(cql_string_ref _Nonnull _in__x) {
   cql_set_string_ref(&x, _literal_26_xyzzy_clobber1);
 
   cql_string_release(x);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC simple_child_proc ()
+BEGIN
+  SELECT 1 AS x, 2 AS y;
+END;
+*/
+
+#define _PROC_ "simple_child_proc"
+static int32_t simple_child_proc_perf_index;
+
+cql_string_proc_name(simple_child_proc_stored_procedure_name, "simple_child_proc");
+
+typedef struct simple_child_proc_row {
+  cql_int32 x;
+  cql_int32 y;
+} simple_child_proc_row;
+
+cql_int32 simple_child_proc_get_x(simple_child_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  simple_child_proc_row *data = (simple_child_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].x;
+}
+
+cql_int32 simple_child_proc_get_y(simple_child_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  simple_child_proc_row *data = (simple_child_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].y;
+}
+
+uint8_t simple_child_proc_data_types[simple_child_proc_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // x
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // y
+};
+
+static cql_uint16 simple_child_proc_col_offsets[] = { 2,
+  cql_offsetof(simple_child_proc_row, x),
+  cql_offsetof(simple_child_proc_row, y)
+};
+
+cql_int32 simple_child_proc_result_count(simple_child_proc_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_child_proc_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_simple_child_proc, &simple_child_proc_perf_index);
+  cql_code rc = simple_child_proc(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = simple_child_proc_data_types,
+    .col_offsets = simple_child_proc_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(simple_child_proc_row),
+    .crc = CRC_simple_child_proc,
+    .perf_index = &simple_child_proc_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+// export: DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare(_db_, _result_stmt,
+    "SELECT 1, 2");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:emit_setters)
+CREATE PROC simple_container_proc ()
+BEGIN
+  DECLARE C CURSOR LIKE (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>);
+  FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "simple_container_proc_fetch_results"
+
+#define simple_container_proc_refs_offset cql_offsetof(simple_container_proc_row, c) // count = 1
+static int32_t simple_container_proc_perf_index;
+
+cql_string_proc_name(simple_container_proc_stored_procedure_name, "simple_container_proc");
+
+cql_bool simple_container_proc_get_a_is_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  simple_container_proc_row *data = (simple_container_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].a.is_null;
+}
+
+cql_int32 simple_container_proc_get_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  simple_container_proc_row *data = (simple_container_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].a.value;
+}
+
+extern void simple_container_proc_set_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
+}
+
+extern void simple_container_proc_set_a_to_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 0);
+}
+
+cql_int32 simple_container_proc_get_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  simple_container_proc_row *data = (simple_container_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].b;
+}
+
+extern void simple_container_proc_set_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 1, new_value);
+}
+
+simple_child_proc_result_set_ref _Nullable simple_container_proc_get_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  simple_container_proc_row *data = (simple_container_proc_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return (simple_child_proc_result_set_ref _Nullable )data[row].c;
+}
+
+extern void simple_container_proc_set_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, simple_child_proc_result_set_ref _Nullable new_value) {
+  cql_result_set_set_object_col((cql_result_set_ref)result_set, row, 2, (cql_object_ref)new_value);
+}
+
+uint8_t simple_container_proc_data_types[simple_container_proc_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // a
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // b
+  CQL_DATA_TYPE_OBJECT, // c
+};
+
+#define simple_container_proc_refs_offset cql_offsetof(simple_container_proc_row, c) // count = 1
+
+static cql_uint16 simple_container_proc_col_offsets[] = { 3,
+  cql_offsetof(simple_container_proc_row, a),
+  cql_offsetof(simple_container_proc_row, b),
+  cql_offsetof(simple_container_proc_row, c)
+};
+
+cql_int32 simple_container_proc_result_count(simple_container_proc_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info simple_container_proc_info = {
+  .rc = SQLITE_OK,
+  .data_types = simple_container_proc_data_types,
+  .col_offsets = simple_container_proc_col_offsets,
+  .refs_count = 1,
+  .refs_offset = simple_container_proc_refs_offset,
+  .encode_context_index = -1,
+  .rowsize = sizeof(simple_container_proc_row),
+  .crc = CRC_simple_container_proc,
+  .perf_index = &simple_container_proc_perf_index,
+};
+// export: DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
+
+typedef struct simple_container_proc_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_nullable_int32 a;
+  cql_int32 b;
+  cql_object_ref _Nullable c;
+} simple_container_proc_C_row;
+
+#define simple_container_proc_C_refs_offset cql_offsetof(simple_container_proc_C_row, c) // count = 1
+CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_container_proc_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  simple_container_proc_C_row C = { ._refs_count_ = 1, ._refs_offset_ = simple_container_proc_C_refs_offset };
+  cql_object_ref _tmp_n_object_0 = NULL;
+
+  cql_profile_start(CRC_simple_container_proc, &simple_container_proc_perf_index);
+  C._has_row_ = 1;
+  cql_set_notnull(C.a, 1);
+  C.b = 2;
+  _rc_ = simple_child_proc_fetch_results(_db_, (simple_child_proc_result_set_ref *)&_tmp_n_object_0);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  cql_set_object_ref(&C.c, _tmp_n_object_0);
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  simple_container_proc_info.db = _db_;
+  cql_results_from_data(_rc_, &_rows_, &simple_container_proc_info, (cql_result_set_ref *)_result_set_);
+  simple_container_proc_info.db = NULL;
+  cql_teardown_row(C);
+  cql_object_release(_tmp_n_object_0);
+  return _rc_;
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

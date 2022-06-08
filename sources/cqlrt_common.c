@@ -1750,31 +1750,17 @@ void cql_result_set_set_int32_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
   cql_int32 col,
-  cql_nullable_int32 new_value)
+  cql_int32 new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_INT32;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
-    *(cql_int32 *)data = new_value.value;
+    *(cql_int32 *)data = new_value;
   } else {
-    ((cql_nullable_int32 *)data)->value = new_value.value;
-    ((cql_nullable_int32 *)data)->is_null = new_value.is_null;
+    ((cql_nullable_int32 *)data)->value = new_value;
+    ((cql_nullable_int32 *)data)->is_null = false;
   }
-}
-
-// This is the helper method that writes a cql_int32 into a rowset at a particular row and column.
-// This helper wraps the new int32 in to a cql_nullable_int32 then we can forward
-// the set to cql_result_set_set_int32_col
-void cql_result_set_set_int32_col_not_null(
-  cql_result_set_ref _Nonnull result_set,
-  cql_int32 row,
-  cql_int32 col,
-  cql_int32 new_value)
-{
-  cql_nullable_int32 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int32_col(result_set, row, col, new_value_);
 }
 
 // This is the helper method that reads an int64 out of a rowset at a particular row and column.
@@ -1801,31 +1787,17 @@ void cql_result_set_set_int64_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
   cql_int32 col,
-  cql_nullable_int64 new_value)
+  cql_int64 new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_INT64;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
-    *(cql_int64 *)data = new_value.value;
+    *(cql_int64 *)data = new_value;
   } else {
-    ((cql_nullable_int64 *)data)->value = new_value.value;
-    ((cql_nullable_int64 *)data)->is_null = new_value.is_null;
+    ((cql_nullable_int64 *)data)->value = new_value;
+    ((cql_nullable_int64 *)data)->is_null = false;
   }
-}
-
-// This is the helper method that writes a cql_int64 into a rowset at a particular row and column.
-// This helper wraps the new int64 in to a cql_nullable_int64 then we can forward
-// the set to cql_result_set_set_int64_col
-void cql_result_set_set_int64_col_not_null(
-  cql_result_set_ref _Nonnull result_set,
-  cql_int32 row,
-  cql_int32 col,
-  cql_int64 new_value)
-{
-  cql_nullable_int64 new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_int64_col(result_set, row, col, new_value_);
 }
 
 // This is the helper method that reads a double out of a rowset at a particular row and column.
@@ -1852,31 +1824,17 @@ void cql_result_set_set_double_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
   cql_int32 col,
-  cql_nullable_double new_value)
+  cql_double new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_DOUBLE;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
-    *(cql_double *)data = new_value.value;
+    *(cql_double *)data = new_value;
   } else {
-    ((cql_nullable_double *)data)->value = new_value.value;
-    ((cql_nullable_double *)data)->is_null = new_value.is_null;
+    ((cql_nullable_double *)data)->value = new_value;
+    ((cql_nullable_double *)data)->is_null = false;
   }
-}
-
-// This is the helper method that writes a double into a rowset at a particular row and column.
-// This helper wraps the new double in to a cql_nullable_double then we can forward
-// the set to cql_result_set_set_double_col
-void cql_result_set_set_double_col_not_null(
-  cql_result_set_ref _Nonnull result_set,
-  cql_int32 row,
-  cql_int32 col,
-  cql_double new_value)
-{
-  cql_nullable_double new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_double_col(result_set, row, col, new_value_);
 }
 
 // This is the helper method that reads an bool out of a rowset at a particular row and column.
@@ -1902,31 +1860,17 @@ void cql_result_set_set_bool_col(
   cql_result_set_ref _Nonnull result_set,
   cql_int32 row,
   cql_int32 col,
-  cql_nullable_bool new_value)
+  cql_bool new_value)
 {
   cql_int32 data_type = CQL_DATA_TYPE_BOOL;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
-    *(cql_bool *)data = new_value.value;
+    *(cql_bool *)data = new_value;
   } else {
-    ((cql_nullable_bool *)data)->value = new_value.value;
-    ((cql_nullable_bool *)data)->is_null = new_value.is_null;
+    ((cql_nullable_bool *)data)->value = new_value;
+    ((cql_nullable_bool *)data)->is_null = false;
   }
-}
-
-// This is the helper method that writes a bool into a rowset at a particular row and column.
-// This helper wraps the new cql_bool in to a cql_nullable_bool then we can forward
-// the set to cql_result_set_set_bool_col
-void cql_result_set_set_bool_col_not_null(
-  cql_result_set_ref _Nonnull result_set,
-  cql_int32 row,
-  cql_int32 col,
-  cql_bool new_value)
-{
-  cql_nullable_bool new_value_;
-  cql_set_notnull(new_value_, new_value);
-  cql_result_set_set_bool_col(result_set, row, col, new_value_);
 }
 
 // This is the helper method that reads a string out of a rowset at a particular row and column.
@@ -2075,6 +2019,65 @@ cql_bool cql_result_set_get_is_null_col(
   return is_null;
 }
 
+// This is the helper method that sets a nullable column to null
+void cql_result_set_set_to_null_col(
+  cql_result_set_ref _Nonnull result_set,
+  cql_int32 row, cql_int32 col)
+{
+  // Check to make sure the requested row is a valid row
+  // See cql_address_of_col for reasons why this might fail.
+  cql_int32 count = cql_result_set_get_count(result_set);
+  cql_contract(row < count);
+
+  // Check to make sure the meta data has column data
+  // See cql_address_of_col for reasons why this might fail.
+  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
+  cql_contract(meta->columnOffsets != NULL);
+
+  // Check to make sure the requested column is a valid column
+  // See cql_address_of_col for reasons why this might fail.
+  int32_t columnCount = meta->columnCount;
+  cql_contract(col < columnCount);
+
+  uint8_t data_type = meta->dataTypes[col];
+
+  cql_uint16 offset = meta->columnOffsets[col + 1];
+  size_t row_size = meta->rowsize;
+  char *data =((char *)cql_result_set_get_data(result_set)) + row * row_size + offset;
+
+  int32_t core_data_type = CQL_CORE_DATA_TYPE_OF(data_type);
+
+  // if this fails you are attempting to set a not null column to null
+  cql_contract(!(data_type & CQL_DATA_TYPE_NOT_NULL));
+
+  // if this fails it means you're using the null set helper on an reference type
+  // you can just use the normal setter on those types because they are references
+  // and so NULL is valid.  You only use this method for setting primitive types to null.
+  cql_contract(core_data_type != CQL_DATA_TYPE_BLOB);
+  cql_contract(core_data_type != CQL_DATA_TYPE_STRING);
+  cql_contract(core_data_type != CQL_DATA_TYPE_OBJECT);
+
+  switch (core_data_type) {
+    case CQL_DATA_TYPE_BOOL:
+      cql_set_null(*(cql_nullable_bool *)data);
+      break;
+
+    case CQL_DATA_TYPE_INT32:
+      cql_set_null(*(cql_nullable_int32 *)data);
+      break;
+
+    case CQL_DATA_TYPE_INT64:
+      cql_set_null(*(cql_nullable_int64 *)data);
+      break;
+
+    default:
+     // nothing else left but double
+     cql_contract(core_data_type == CQL_DATA_TYPE_DOUBLE);
+     cql_set_null(*(cql_nullable_double *)data);
+     break;
+  }
+}
+
 // This is the helper method that determines if a column is encoded
 // return TRUE if the data type value has the flag CQL_DATA_TYPE_ENCODED
 cql_bool cql_result_set_get_is_encoded_col(
@@ -2175,13 +2178,14 @@ void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_No
       meta->getIsNull = cql_result_set_get_is_null_col;
       meta->getIsEncoded = cql_result_set_get_is_encoded_col;
 
-      meta->setBoolean = cql_result_set_set_bool_col_not_null;
-      meta->setDouble = cql_result_set_set_double_col_not_null;
-      meta->setInt32 = cql_result_set_set_int32_col_not_null;
-      meta->setInt64 = cql_result_set_set_int64_col_not_null;
+      meta->setBoolean = cql_result_set_set_bool_col;
+      meta->setDouble = cql_result_set_set_double_col;
+      meta->setInt32 = cql_result_set_set_int32_col;
+      meta->setInt64 = cql_result_set_set_int64_col;
       meta->setString = cql_result_set_set_string_col;
       meta->setObject = cql_result_set_set_object_col;
       meta->setBlob = cql_result_set_set_blob_col;
+      meta->setToNull = cql_result_set_set_to_null_col;
   #endif
 }
 

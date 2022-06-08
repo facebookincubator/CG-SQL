@@ -237,4 +237,6 @@ DECLARE PROC mutated_in_arg1 (x TEXT);
 DECLARE PROC mutated_in_arg2 (x TEXT);
 DECLARE PROC mutated_in_arg3 (x TEXT) USING TRANSACTION;
 DECLARE PROC mutated_not_null (x TEXT NOT NULL);
+DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
 DECLARE PROC end_proc ();

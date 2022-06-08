@@ -557,8 +557,7 @@ static void cg_emit_local_nullable_init(charbuf *output, CSTR name, sem_t sem_ty
 
 // Emit the nullability annotation for a BLOB, OBJECT, or TEXT variable.
 static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
-  sem_t core_type = core_type_of(sem_type);
-  Contract(core_type == SEM_TYPE_BLOB || core_type == SEM_TYPE_OBJECT || core_type == SEM_TYPE_TEXT);
+  Contract(is_ref_type(sem_type));
 
   if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
     // In the case of an OUT NOT NULL variable (but *not* an INOUT NOT NULL
@@ -683,6 +682,47 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
   }
   CHARBUF_CLOSE(name);
 }
+
+static void cg_result_set_type_from_kind(charbuf *output, sem_t sem_type, CSTR kind) {
+  CHARBUF_OPEN(temp);
+
+  // pull out everything up to the leading space
+  CSTR p = kind;
+  for (p = kind; *p != ' '; p++) {
+    bputc(&temp, *p);
+  }
+
+  CG_CHARBUF_OPEN_SYM(result_set_ref, temp.ptr, "_result_set_ref");
+    bprintf(output, "%s ", result_set_ref.ptr);
+  CHARBUF_CLOSE(result_set_ref);
+
+  CHARBUF_CLOSE(temp);
+
+  cg_var_nullability_annotation(output, sem_type);
+}
+
+static bool_t is_result_set_type(sem_t sem_type, CSTR kind) {
+  return core_type_of(sem_type) == SEM_TYPE_OBJECT && kind && sem_ends_in_set(kind);
+}
+
+// This helper generates results for function return types as the name indicates.
+// The only thing that's going on here is that we would like the return type of
+// the result reader functions to be the correct result set type if the return is
+// of type object<procname SET>.   Normally the type kind does not affect codegen
+// at all, integer<foo> and integer<bar> both generate integer types but in this
+// case we're talking about a result set reader and the result set has in it sub
+// result sets.  This is public C interface to to save everyone from doing the casting
+// it happens automatically.
+static void cg_col_reader_type(charbuf *output, sem_t sem_type, CSTR kind, CSTR base_name) {
+  if (is_result_set_type(sem_type, kind)) {
+    cg_result_set_type_from_kind(output, sem_type, kind);
+    bprintf(output, "%s", base_name);
+  }
+  else {
+    cg_var_decl(output, sem_type, base_name, CG_VAR_DECL_PROTO);
+  }
+}
+
 
 // Sometimes when we need a scratch variable to store an intermediate result
 // we can avoid the scratch variable entirely and use the target of the assignment
@@ -7225,6 +7265,7 @@ typedef struct function_info {
   charbuf *headers;
   bool_t uses_out;
   sem_t ret_type;
+  CSTR ret_kind;
   sem_t name_type;
   CSTR result_set_ref_type;
   CSTR row_struct_type;
@@ -7248,7 +7289,6 @@ typedef struct function_info {
 static void cg_proc_result_set_getter(function_info *info) {
   charbuf *h = info->headers;
   charbuf *d = info->defs;
-  sem_t sem_type = info->ret_type;
 
   Invariant(info->frag_type != FRAG_TYPE_EXTENSION);
 
@@ -7261,7 +7301,7 @@ static void cg_proc_result_set_getter(function_info *info) {
     info->sym_suffix);
 
   CHARBUF_OPEN(func_decl);
-  cg_var_decl(&func_decl, sem_type, col_getter_sym.ptr, CG_VAR_DECL_PROTO);
+  cg_col_reader_type(&func_decl, info->ret_type, info->ret_kind, col_getter_sym.ptr);
   bprintf(&func_decl, "(%s _Nonnull result_set", info->result_set_ref_type);
 
   // a procedure that uses OUT gives exactly one row, so no index in the API
@@ -7290,14 +7330,27 @@ static void cg_proc_result_set_getter(function_info *info) {
     info->row_struct_type,
     rt->cql_result_set_get_data);
 
+  CHARBUF_OPEN(cast_buffer);
+
+  // cast the data type in the buffer to the correct result type
+  if (is_result_set_type(info->ret_type, info->ret_kind)) {
+    bprintf(&cast_buffer, "(");
+    cg_result_set_type_from_kind(&cast_buffer, info->ret_type, info->ret_kind);
+    bprintf(&cast_buffer, ")");
+  }
+
   // Single row result set is always data[0]
   // And data->field looks nicer than data[0].field
   if (info->uses_out) {
-    bprintf(d, "  return data->%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
+    bprintf(d, "  return %sdata->%s%s;\n",
+      cast_buffer.ptr, info->col, info->value_suffix ? info->value_suffix : "");
   }
   else {
-    bprintf(d, "  return data[row].%s%s;\n", info->col, info->value_suffix ? info->value_suffix : "");
+    bprintf(d, "  return %sdata[row].%s%s;\n",
+    cast_buffer.ptr, info->col, info->value_suffix ? info->value_suffix : "");
   }
+
+  CHARBUF_CLOSE(cast_buffer);
 
   bprintf(d, "}\n");
 
@@ -7337,7 +7390,7 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
     info->sym_suffix);
 
   CHARBUF_OPEN(func_decl);
-  cg_var_decl(&func_decl, info->ret_type, col_getter_sym.ptr, CG_VAR_DECL_PROTO);
+  cg_col_reader_type(&func_decl, info->ret_type, info->ret_kind, col_getter_sym.ptr);
   bprintf(&func_decl, "(%s _Nonnull result_set", info->result_set_ref_type);
 
   // a procedure that uses OUT gives exactly one row, so no index in the API
@@ -7382,6 +7435,17 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
   Invariant(out);
 
   bprintf(out, "  return ");
+
+  // cast the data type in the buffer to the correct result type
+  CSTR trailing_string = "";
+
+  if (is_result_set_type(info->ret_type, info->ret_kind)) {
+    bprintf(out, "(");
+    cg_result_set_type_from_kind(out, info->ret_type, info->ret_kind);
+    bprintf(out, ")(");
+    trailing_string = ")";
+  }
+
   if (is_ref_type(info->name_type) && is_nullable(info->ret_type)) {
     bprintf(out,
       "%s((cql_result_set_ref)result_set, %s, %d) ? NULL : ",
@@ -7416,7 +7480,7 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
       bprintf(out, "%s", rt->cql_result_set_get_object);
       break;
   }
-  bprintf(out, "((cql_result_set_ref)result_set, %s, %d);\n", row, info->col_index);
+  bprintf(out, "((cql_result_set_ref)result_set, %s, %d)%s;\n", row, info->col_index, trailing_string);
   bprintf(out, "}\n");
 
 cleanup:
@@ -7474,7 +7538,7 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_i
   CHARBUF_OPEN(var_decl);
 
   if (!is_set_null) {
-    cg_var_decl(&var_decl, info->ret_type, "new_value", CG_VAR_DECL_PROTO);
+    cg_col_reader_type(&var_decl, info->ret_type, info->ret_kind, "new_value");
   }
 
   CHARBUF_OPEN(func_decl);
@@ -7508,54 +7572,53 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_i
   }
 
   CSTR row = info->uses_out ? "0" : "row";
-  bool_t is_ref = info->name_type == SEM_TYPE_TEXT || info->name_type == SEM_TYPE_OBJECT || info->name_type == SEM_TYPE_BLOB;
+  bool_t is_ref = is_ref_type(info->name_type);
   if (is_ref && is_not_nullable(info->ret_type)) {
     bprintf(out, "  cql_contract_argument_notnull((void *)new_value, 2);\n");
   }
 
-  bool_t generate_nullable_wrapper = !options.generate_type_getters;
+  if (is_set_null) {
+    bprintf(out, "  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, %s, %d);\n", row, info->col_index);
+  }
+  else {
+    switch (info->name_type) {
+      case SEM_TYPE_BOOL:
+        bprintf(out, "  %s", rt->cql_result_set_set_bool);
+        break;
+      case SEM_TYPE_REAL:
+        bprintf(out, "  %s", rt->cql_result_set_set_double);
+        break;
+      case SEM_TYPE_INTEGER:
+        bprintf(out, "  %s", rt->cql_result_set_set_int32);
+        break;
+      case SEM_TYPE_LONG_INTEGER:
+        bprintf(out, "  %s", rt->cql_result_set_set_int64);
+        break;
+      case SEM_TYPE_TEXT:
+        bprintf(out, "  %s", rt->cql_result_set_set_string);
+        break;
+      case SEM_TYPE_BLOB:
+        bprintf(out, "  %s", rt->cql_result_set_set_blob);
+        break;
+      case SEM_TYPE_OBJECT:
+        bprintf(out, "  %s", rt->cql_result_set_set_object);
+        break;
+    }
 
-  switch (info->name_type) {
-    case SEM_TYPE_BOOL:
-      if (generate_nullable_wrapper) {
-        bprintf(out, "  cql_nullable_bool new_value_;\n");
-        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
-      }
-      bprintf(out, "  %s", rt->cql_result_set_set_bool);
-      break;
-    case SEM_TYPE_REAL:
-      if (generate_nullable_wrapper) {
-        bprintf(out, "  cql_nullable_double new_value_;\n");
-        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
-      }
-      bprintf(out, "  %s", rt->cql_result_set_set_double);
-      break;
-    case SEM_TYPE_INTEGER:
-      if (generate_nullable_wrapper) {
-        bprintf(out, "  cql_nullable_int32 new_value_;\n");
-        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
-      }
-      bprintf(out, "  %s", rt->cql_result_set_set_int32);
-      break;
-    case SEM_TYPE_LONG_INTEGER:
-      if (generate_nullable_wrapper) {
-        bprintf(out, "  cql_nullable_int64 new_value_;\n");
-        bprintf(out, "  %s;\n", is_set_null ? "cql_set_null(new_value_)" : "cql_set_notnull(new_value_, new_value)");
-      }
-      bprintf(out, "  %s", rt->cql_result_set_set_int64);
-      break;
-    case SEM_TYPE_TEXT:
-      bprintf(out, "  %s", rt->cql_result_set_set_string);
-      break;
-    case SEM_TYPE_BLOB:
-      bprintf(out, "  %s", rt->cql_result_set_set_blob);
-      break;
-    case SEM_TYPE_OBJECT:
-      bprintf(out, "  %s", rt->cql_result_set_set_object);
-      break;
+    CHARBUF_OPEN(new_value_expr);
+
+    if (is_result_set_type(info->ret_type, info->ret_kind)) {
+      // the object setter takes a generic object type, so add the cast, this way all the callers don't have to
+      bprintf(&new_value_expr, "(cql_object_ref)");
+    }
+
+    bprintf(&new_value_expr, "new_value");
+
+    bprintf(out, "((cql_result_set_ref)result_set, %s, %d, %s);\n", row, info->col_index, new_value_expr.ptr);
+
+    CHARBUF_CLOSE(new_value_expr);
   }
 
-  bprintf(out, "((cql_result_set_ref)result_set, %s, %d, new_value%s);\n", row, info->col_index, !is_ref && generate_nullable_wrapper ? "_" : "");
   bprintf(out, "}\n");
 
   CHARBUF_CLOSE(func_decl);
@@ -7809,6 +7872,7 @@ static void cg_proc_result_set(ast_node *ast) {
   for (int32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
+    CSTR kind = sptr->kinds[i];
 
     // Neither base fragments nor extension fragments declare the result data shape
     // the assembly fragement does that, all columns will be known at that time.
@@ -7840,6 +7904,7 @@ static void cg_proc_result_set(ast_node *ast) {
       .result_set_ref_type = result_set_ref.ptr,
       .row_struct_type = row_sym.ptr,
       .frag_type = frag_type,
+      .ret_kind = kind,
     };
 
     // if the current row is equal or greater than the base query count
@@ -7866,6 +7931,15 @@ static void cg_proc_result_set(ast_node *ast) {
         info.name_type = core_type;
         info.sym_suffix = "_value";
         cg_proc_result_set_type_based_getter(&info);
+
+        if (emit_setters) {
+          info.name_type = core_type;
+          cg_proc_result_set_setter(&info, DO_USE_INLINE, DONT_EMIT_SET_NULL);
+
+          // set null setter
+          info.sym_suffix = "_to_null";
+          cg_proc_result_set_setter(&info, DO_USE_INLINE, DO_EMIT_SET_NULL);
+        }
       }
       else {
         info.ret_type = sem_type;

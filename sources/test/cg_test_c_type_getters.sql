@@ -141,3 +141,39 @@ begin
   fetch C from arguments;
   out C;
 end;
+
+create proc simple_child_proc()
+begin
+  select 1 x, 2 y;
+end;
+
+-- TEST: emit getters and setters for a simple result set set type
+-- + static inline cql_bool simple_container_proc_get_a_is_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 0);
+-- + static inline cql_int32 simple_container_proc_get_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
+-- + static inline void simple_container_proc_set_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
+-- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
+-- + static inline void simple_container_proc_set_a_to_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
+-- + static inline cql_int32 simple_container_proc_get_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
+-- + static inline void simple_container_proc_set_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
+-- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 1, new_value);
+-- + static inline simple_child_proc_result_set_ref _Nullable simple_container_proc_get_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- +   return (simple_child_proc_result_set_ref _Nullable )(cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_object_col((cql_result_set_ref)result_set, row, 2));
+-- + static inline void simple_container_proc_set_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, simple_child_proc_result_set_ref _Nullable new_value) {
+-- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, row, 2, (cql_object_ref)new_value);
+@attribute(cql:emit_setters)
+create proc simple_container_proc()
+begin
+  declare C cursor like (a integer, b integer not null, c object<simple_child_proc set>);
+  fetch C using
+     1 a,
+     2 b,
+     simple_child_proc() c;
+
+  out union C;
+end;
+
+

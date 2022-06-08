@@ -279,3 +279,91 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   0, \
   (cql_result_set_ref)(rs2), \
   0)
+
+// The statement ending at line XXXX
+#define CRC_simple_child_proc 8385003267409391710L
+
+extern cql_string_ref _Nonnull simple_child_proc_stored_procedure_name;
+
+#define simple_child_proc_data_types_count 2
+
+extern uint8_t simple_child_proc_data_types[simple_child_proc_data_types_count];
+
+#ifndef result_set_type_decl_simple_child_proc_result_set
+#define result_set_type_decl_simple_child_proc_result_set 1
+cql_result_set_type_decl(simple_child_proc_result_set, simple_child_proc_result_set_ref);
+#endif
+
+static inline cql_int32 simple_child_proc_get_x(simple_child_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
+}
+
+static inline cql_int32 simple_child_proc_get_y(simple_child_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
+}
+
+extern cql_int32 simple_child_proc_result_count(simple_child_proc_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_child_proc_result_set_ref _Nullable *_Nonnull result_set);
+#define simple_child_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define simple_child_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
+#define CRC_simple_container_proc -1717517036398391463L
+
+extern cql_string_ref _Nonnull simple_container_proc_stored_procedure_name;
+
+#define simple_container_proc_data_types_count 3
+
+extern uint8_t simple_container_proc_data_types[simple_container_proc_data_types_count];
+
+#ifndef result_set_type_decl_simple_container_proc_result_set
+#define result_set_type_decl_simple_container_proc_result_set 1
+cql_result_set_type_decl(simple_container_proc_result_set, simple_container_proc_result_set_ref);
+#endif
+
+static inline cql_bool simple_container_proc_get_a_is_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 0);
+}
+
+static inline cql_int32 simple_container_proc_get_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
+}
+
+static inline void simple_container_proc_set_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
+}
+
+static inline void simple_container_proc_set_a_to_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 0);
+}
+
+static inline cql_int32 simple_container_proc_get_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
+}
+
+static inline void simple_container_proc_set_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
+  cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 1, new_value);
+}
+
+static inline simple_child_proc_result_set_ref _Nullable simple_container_proc_get_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
+  return (simple_child_proc_result_set_ref _Nullable )(cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_object_col((cql_result_set_ref)result_set, row, 2));
+}
+
+static inline void simple_container_proc_set_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, simple_child_proc_result_set_ref _Nullable new_value) {
+  cql_result_set_set_object_col((cql_result_set_ref)result_set, row, 2, (cql_object_ref)new_value);
+}
+
+extern cql_int32 simple_container_proc_result_count(simple_container_proc_result_set_ref _Nonnull result_set);
+#define simple_container_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define simple_container_proc_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_container_proc_result_set_ref _Nullable *_Nonnull _result_set_);

@@ -4282,4 +4282,98 @@ static inline BOOL CGBSomeRedeclaredOutUnionProcRowEqual(CGBSomeRedeclaredOutUni
   return CGCSomeRedeclaredOutUnionProcRowEqual(CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet1), row1, CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet2), row2);
 }
 
+@class CGBSimpleChildProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSimpleChildProc
+@end
+#endif
+
+static inline CGBSimpleChildProc *CGBSimpleChildProcFromCGCSimpleChildProc(CGCSimpleChildProcResultSetRef resultSet)
+{
+  return (__bridge CGBSimpleChildProc *)resultSet;
+}
+
+static inline CGCSimpleChildProcResultSetRef CGCSimpleChildProcFromCGBSimpleChildProc(CGBSimpleChildProc *resultSet)
+{
+  return (__bridge CGCSimpleChildProcResultSetRef)resultSet;
+}
+
+static inline int32_t CGBSimpleChildProcGetX(CGBSimpleChildProc *resultSet, int32_t row)
+{
+  CGCSimpleChildProcResultSetRef cResultSet = CGCSimpleChildProcFromCGBSimpleChildProc(resultSet);
+  return CGCSimpleChildProcGetX(cResultSet, row);
+}
+
+static inline int32_t CGBSimpleChildProcGetY(CGBSimpleChildProc *resultSet, int32_t row)
+{
+  CGCSimpleChildProcResultSetRef cResultSet = CGCSimpleChildProcFromCGBSimpleChildProc(resultSet);
+  return CGCSimpleChildProcGetY(cResultSet, row);
+}
+
+static inline int32_t CGBSimpleChildProcResultCount(CGBSimpleChildProc *resultSet)
+{
+  return CGCSimpleChildProcResultCount(CGCSimpleChildProcFromCGBSimpleChildProc(resultSet));
+}
+
+static inline NSUInteger CGBSimpleChildProcRowHash(CGBSimpleChildProc *resultSet, int32_t row)
+{
+  return CGCSimpleChildProcRowHash(CGCSimpleChildProcFromCGBSimpleChildProc(resultSet), row);
+}
+
+static inline BOOL CGBSimpleChildProcRowEqual(CGBSimpleChildProc *resultSet1, int32_t row1, CGBSimpleChildProc *resultSet2, int32_t row2)
+{
+  return CGCSimpleChildProcRowEqual(CGCSimpleChildProcFromCGBSimpleChildProc(resultSet1), row1, CGCSimpleChildProcFromCGBSimpleChildProc(resultSet2), row2);
+}
+
+@class CGBSimpleContainerProc;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSimpleContainerProc
+@end
+#endif
+
+static inline CGBSimpleContainerProc *CGBSimpleContainerProcFromCGCSimpleContainerProc(CGCSimpleContainerProcResultSetRef resultSet)
+{
+  return (__bridge CGBSimpleContainerProc *)resultSet;
+}
+
+static inline CGCSimpleContainerProcResultSetRef CGCSimpleContainerProcFromCGBSimpleContainerProc(CGBSimpleContainerProc *resultSet)
+{
+  return (__bridge CGCSimpleContainerProcResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBSimpleContainerProcGetA(CGBSimpleContainerProc *resultSet, int32_t row)
+{
+  CGCSimpleContainerProcResultSetRef cResultSet = CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet);
+  return CGCSimpleContainerProcGetAIsNull(cResultSet, row) ? nil : @(CGCSimpleContainerProcGetAValue(cResultSet, row));
+}
+
+static inline int32_t CGBSimpleContainerProcGetB(CGBSimpleContainerProc *resultSet, int32_t row)
+{
+  CGCSimpleContainerProcResultSetRef cResultSet = CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet);
+  return CGCSimpleContainerProcGetB(cResultSet, row);
+}
+
+static inline NSObject *_Nullable CGBSimpleContainerProcGetC(CGBSimpleContainerProc *resultSet, int32_t row)
+{
+  CGCSimpleContainerProcResultSetRef cResultSet = CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet);
+  return (__bridge NSObject *)CGCSimpleContainerProcGetC(cResultSet, row);
+}
+
+static inline int32_t CGBSimpleContainerProcResultCount(CGBSimpleContainerProc *resultSet)
+{
+  return CGCSimpleContainerProcResultCount(CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet));
+}
+
+static inline NSUInteger CGBSimpleContainerProcRowHash(CGBSimpleContainerProc *resultSet, int32_t row)
+{
+  return CGCSimpleContainerProcRowHash(CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet), row);
+}
+
+static inline BOOL CGBSimpleContainerProcRowEqual(CGBSimpleContainerProc *resultSet1, int32_t row1, CGBSimpleContainerProc *resultSet2, int32_t row2)
+{
+  return CGCSimpleContainerProcRowEqual(CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet1), row1, CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END
