@@ -72,6 +72,14 @@ JNIEXPORT jbyteArray JNICALL Java_com_facebook_cgsql_CQLResultSet_getBlob
 
 /*
  * Class:     com_facebook_cgsql_CQLResultSet
+ * Method:    copyChildResultSet
+ * Signature: (JII)J
+ */
+JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copyChildResultSet
+  (JNIEnv *, jobject, jlong, jint, jint);
+
+/*
+ * Class:     com_facebook_cgsql_CQLResultSet
  * Method:    isNull
  * Signature: (JII)Z
  */

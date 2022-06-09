@@ -103,6 +103,22 @@ JNIEXPORT jbyteArray JNICALL Java_com_facebook_cgsql_CQLResultSet_getBlob
 
 /*
  * Class:     com_facebook_cgsql_CQLResultSet
+ * Method:    copyChildResultSet
+ * Signature: (JII)Lcom/facebook/cgsql/CQLResultSet;
+ */
+JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copyChildResultSet
+  (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
+
+  cql_result_set_ref ref = (cql_result_set_ref)(rs);
+
+  cql_object_ref refNew = cql_result_set_get_object_col(ref, row, col);
+  cql_retain((cql_type_ref)refNew);
+
+  return (jlong)refNew;
+}
+
+/*
+ * Class:     com_facebook_cgsql_CQLResultSet
  * Method:    isNull
  * Signature: (JII)Z
  */

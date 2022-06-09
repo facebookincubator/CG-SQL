@@ -92,6 +92,10 @@ public final class CQLResultSet {
     return getBlob(result_set_ref, row, column);
   }
 
+  public CQLResultSet getChildResultSet(int row, int column) {
+    return new CQLResultSet(copyChildResultSet(result_set_ref, row, column));
+  }
+
   public boolean isNull(int row, int column) {
     return isNull(result_set_ref, row, column);
   }
@@ -134,6 +138,8 @@ public final class CQLResultSet {
   public native double getDouble(long result_set_ref, int row, int column);
 
   public native byte[] getBlob(long result_set_ref, int row, int column);
+
+  public native long copyChildResultSet(long result_set_ref, int row, int column);
 
   public native boolean isNull(long result_set_ref, int row, int column);
 

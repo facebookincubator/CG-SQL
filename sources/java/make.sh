@@ -53,10 +53,15 @@ echo "making directories"
 
 mkdir -p com/facebook/cgsql
 mkdir -p sample
+mkdir -p child
 
 echo generating stored procs
-../out/cql --in Sample.sql --cg Sample.h Sample.c
-../out/cql --in Sample.sql --rt java --cg sample/Sample.java --java_package_name sample
+cc -E -x c Child.sql >Child.pre
+../out/cql --in Child.pre --cg Child.h Child.c Child_exports.sql --generate_exports
+cc -E -x c Sample.sql >Sample.pre
+../out/cql --in Child.pre --rt java --cg child/Child.java --java_package_name child
+../out/cql --in Sample.pre --cg Sample.h Sample.c
+../out/cql --in Sample.pre --rt java --cg sample/Sample.java --java_package_name sample
 
 # normalize the output
 # 1. the internal version has different java path names, normalize on the OSS path names
@@ -66,6 +71,9 @@ echo generating stored procs
 #
 sed -e "s/msys.mci/cgsql/" -e "s/@Nullable//" -e "/import javax.annotation.Nullable/d" <sample/Sample.java >__tmp1
 mv __tmp1 sample/Sample.java
+
+sed -e "s/msys.mci/cgsql/" -e "s/@Nullable//" -e "/import javax.annotation.Nullable/d" <child/Child.java >__tmp1
+mv __tmp1 child/Child.java
 
 echo "regenerating JNI .h file"
 javac -h . com/facebook/cgsql/CQLResultSet.java
@@ -95,13 +103,14 @@ echo "compiling native code"
 ${CC} -c com_facebook_cgsql_CQLResultSet.c
 ${CC} -c TestResult.c
 ${CC} -c Sample.c
+${CC} -c Child.c
 
-${CC} -o libTestResult.${SUFFIX} -shared TestResult.o Sample.o ../cqlrt.c ${SQLITE_LINK}
+${CC} -o libTestResult.${SUFFIX} -shared TestResult.o Sample.o Child.o ../cqlrt.c ${SQLITE_LINK}
 ${CC} -o libCQLResultSet.${SUFFIX} -shared com_facebook_cgsql_CQLResultSet.o ../cqlrt.c ${SQLITE_LINK}
 
 echo making .class files
 
-javac CGSQLMain.java TestResult.java com/facebook/cgsql/CQLResultSet.java com/facebook/cgsql/CQLViewModel.java com/facebook/cgsql/EncodedString.java sample/Sample.java
+javac CGSQLMain.java TestResult.java com/facebook/cgsql/CQLResultSet.java com/facebook/cgsql/CQLViewModel.java com/facebook/cgsql/EncodedString.java sample/Sample.java child/Child.java
 
 echo "executing"
 LIBPATH=.

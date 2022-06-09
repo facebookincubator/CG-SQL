@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import child.*;
 import com.facebook.cgsql.CQLResultSet;
 import java.nio.charset.StandardCharsets;
 import sample.*;
@@ -46,6 +47,12 @@ public class CGSQLMain {
               data.getKey1(i),
               data.getKey2(i),
               Boolean.toString(data.getKey2IsEncoded())));
+
+      Child child = new Child(data.getMyChildResult(i));
+      for (int j = 0; j < child.getCount(); j++) {
+        System.out.println(
+            String.format("--> Child Row %d: x:%d y:%s", j, child.getX(j), child.getY(j)));
+      }
     }
   }
 }

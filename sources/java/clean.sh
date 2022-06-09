@@ -15,8 +15,16 @@ rm -f com_facebook_cgsql_CQLResultSet.o
 rm -f Sample.c
 rm -f Sample.h
 rm -f Sample.o
+rm -f Child.c
+rm -f Child.h
+rm -f Child.o
+rm -f Child.pre
+rm -f Child_exports.sql
+rm -f Sample.pre
 rm -f sample/Sample.class
 rm -f sample/Sample.java
+rm -f child/Child.class
+rm -f child/Child.java
 rm -f sqlite3-all.o
 rm -rf libCQLResultSet*
 rm -rf libTestResult*

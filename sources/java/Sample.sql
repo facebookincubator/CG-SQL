@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include "Child_exports.sql"
+
 /* this is a demo procedure, it's rather silly... */
 @attribute(cql:vault_sensitive)
 @attribute(cql:custom_type_for_encoded_column)
@@ -39,6 +41,14 @@ begin
     set i := i + 1;
   end;
 
+  set i := 0;
   /* the result will have a variety of data types to exercise the JNI helpers */
-  select * from my_data;
+  declare C cursor for select * from my_data;
+  loop fetch C
+  begin
+    declare result cursor like (like C, my_child_result object<Child set>);
+    fetch result from values(from C, Child(i));
+    out union result;
+    set i := i + 1;
+  end;
 end;
