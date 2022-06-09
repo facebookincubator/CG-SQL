@@ -67603,39 +67603,6 @@ LET val_total := ( SELECT total(1)
 
 The statement ending at line XXXX
 
-LET val_average := ( SELECT average(1)
-  FROM foo
-  WHERE 0 );
-
-  {let_stmt}: val_average: real variable
-  | {name val_average}: val_average: real variable
-  | {select_stmt}: _anon: real
-    | {select_core_list}: select: { _anon: real }
-    | | {select_core}: select: { _anon: real }
-    |   | {select_expr_list_con}: select: { _anon: real }
-    |     | {select_expr_list}: select: { _anon: real }
-    |     | | {select_expr}: real
-    |     |   | {call}: real
-    |     |     | {name average}: real
-    |     |     | {call_arg_list}
-    |     |       | {call_filter_clause}
-    |     |       | {arg_list}: ok
-    |     |         | {int 1}: integer notnull
-    |     | {select_from_etc}: TABLE { foo: foo }
-    |       | {table_or_subquery_list}: TABLE { foo: foo }
-    |       | | {table_or_subquery}: TABLE { foo: foo }
-    |       |   | {name foo}: TABLE { foo: foo }
-    |       | {select_where}
-    |         | {opt_where}: integer notnull
-    |         | | {int 0}: integer notnull
-    |         | {select_groupby}
-    |           | {select_having}
-    | {select_orderby}
-      | {select_limit}
-        | {select_offset}
-
-The statement ending at line XXXX
-
 LET val_avg := ( SELECT avg(1)
   FROM foo
   WHERE 0 );

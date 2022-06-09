@@ -7244,8 +7244,8 @@ static void sem_aggr_func_min(ast_node *ast, uint32_t arg_count) {
   sem_aggr_func_min_or_max(ast, arg_count);
 }
 
-// Average validation -> any numeric is ok, but you get a real back.
-static void sem_aggr_func_average(ast_node *ast, uint32_t arg_count) {
+// Avg validation -> any numeric is ok, but you get a real back.
+static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -7256,7 +7256,7 @@ static void sem_aggr_func_average(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // Note: average does not have a multi-arg form like min/max, only
+  // Note: avg does not have a multi-arg form like min/max, only
   // the single arg form is legal in Sqlite
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
@@ -7270,18 +7270,13 @@ static void sem_aggr_func_average(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // average will be real, sensitivity preserved, nullability NOT preserved
+  // avg will be real, sensitivity preserved, nullability NOT preserved
   // because all aggregates can return NULL if there are zero rows
   // e.g. select avg(1) from sqlite_master where 0;   -> NULL
   sem_t combined_flags = sensitive_flag(arg->sem->sem_type);
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_REAL | combined_flags);
 
   // ast->sem->name is not set here because e.g. avg(x) is not named "x"
-}
-
-// just an alias
-static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
-  sem_aggr_func_average(ast, arg_count);
 }
 
 static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
@@ -22220,7 +22215,6 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
   // built-in aggregate functions without GROUP BY clause return at least one row
   EXTRACT_STRING(name, expr->left);
   if (!is_ast_opt_groupby(opt_groupby) && (
-    !Strcasecmp("average", name) ||
     !Strcasecmp("avg", name) ||
     !Strcasecmp("count", name) ||
     !Strcasecmp("group_concat", name) ||
@@ -23835,7 +23829,6 @@ cql_noexport void sem_main(ast_node *ast) {
   AGGR_FUNC_INIT(sum);
   AGGR_FUNC_INIT(total);
   AGGR_FUNC_INIT(avg);
-  AGGR_FUNC_INIT(average);
   AGGR_FUNC_INIT(group_concat);
 
   FUNC_INIT(ifnull);

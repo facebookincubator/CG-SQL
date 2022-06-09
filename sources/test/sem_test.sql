@@ -16877,10 +16877,6 @@ let val_count := (select count(1) from foo where 0);
 -- - error:
 let val_total := (select total(1) from foo where 0);
 
---- TEST: IF NOTHING requirement not enforced for built-in aggregate function - average
--- - error:
-let val_average := (select average(1) from foo where 0);
-
 --- TEST: IF NOTHING requirement not enforced for built-in aggregate function - avg
 -- - error:
 let val_avg := (select avg(1) from foo where 0);
