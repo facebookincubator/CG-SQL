@@ -67271,16 +67271,16 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set
   | {select_stmt}: err
-    | {select_core_list}
-    | | {select_core}
-    |   | {select_expr_list_con}
-    |     | {select_expr_list}
-    |     | | {select_expr}
-    |     |   | {name id}
-    |     | {select_from_etc}
-    |       | {table_or_subquery_list}
-    |       | | {table_or_subquery}
-    |       |   | {name foo}
+    | {select_core_list}: select: { id: integer notnull }
+    | | {select_core}: select: { id: integer notnull }
+    |   | {select_expr_list_con}: select: { id: integer notnull }
+    |     | {select_expr_list}: select: { id: integer notnull }
+    |     | | {select_expr}: id: integer notnull
+    |     |   | {name id}: id: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
     |       | {select_where}
     |         | {select_groupby}
     |           | {select_having}
@@ -67456,16 +67456,16 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
     |   | {select_limit}
     |     | {select_offset}
     | {select_stmt}: err
-      | {select_core_list}
-      | | {select_core}
-      |   | {select_expr_list_con}
-      |     | {select_expr_list}
-      |     | | {select_expr}
-      |     |   | {name id}
-      |     | {select_from_etc}
-      |       | {table_or_subquery_list}
-      |       | | {table_or_subquery}
-      |       |   | {name foo}
+      | {select_core_list}: select: { id: integer notnull }
+      | | {select_core}: select: { id: integer notnull }
+      |   | {select_expr_list_con}: select: { id: integer notnull }
+      |     | {select_expr_list}: select: { id: integer notnull }
+      |     | | {select_expr}: id: integer notnull
+      |     |   | {name id}: id: integer notnull
+      |     | {select_from_etc}: TABLE { foo: foo }
+      |       | {table_or_subquery_list}: TABLE { foo: foo }
+      |       | | {table_or_subquery}: TABLE { foo: foo }
+      |       |   | {name foo}: TABLE { foo: foo }
       |       | {select_where}
       |         | {select_groupby}
       |           | {select_having}
@@ -67607,8 +67607,8 @@ LET val_avg := ( SELECT avg(1)
   FROM foo
   WHERE 0 );
 
-  {let_stmt}: val_avg: real variable
-  | {name val_avg}: val_avg: real variable
+  {let_stmt}: val_avg: real variable was_set
+  | {name val_avg}: val_avg: real variable was_set
   | {select_stmt}: _anon: real
     | {select_core_list}: select: { _anon: real }
     | | {select_core}: select: { _anon: real }
@@ -67777,28 +67777,28 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
   {assign}: err
   | {name val_max}: val_max: integer variable
   | {select_stmt}: err
-    | {select_core_list}
-    | | {select_core}
-    |   | {select_expr_list_con}
-    |     | {select_expr_list}
-    |     | | {select_expr}
-    |     |   | {call}
-    |     |     | {name max}
+    | {select_core_list}: select: { _anon: integer notnull }
+    | | {select_core}: select: { _anon: integer notnull }
+    |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    |     | {select_expr_list}: select: { _anon: integer notnull }
+    |     | | {select_expr}: integer notnull
+    |     |   | {call}: integer notnull
+    |     |     | {name max}: integer notnull
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
-    |     |       | {arg_list}
-    |     |         | {int 1}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
     |     |         | {arg_list}
-    |     |           | {int 2}
+    |     |           | {int 2}: integer notnull
     |     |           | {arg_list}
-    |     |             | {int 3}
-    |     | {select_from_etc}
-    |       | {table_or_subquery_list}
-    |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |     |             | {int 3}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
     |       | {select_where}
-    |         | {opt_where}
-    |         | | {int 0}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
     |         | {select_groupby}
     |           | {select_having}
     | {select_orderby}
@@ -67816,28 +67816,28 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
   {assign}: err
   | {name val_min}: val_min: integer variable
   | {select_stmt}: err
-    | {select_core_list}
-    | | {select_core}
-    |   | {select_expr_list_con}
-    |     | {select_expr_list}
-    |     | | {select_expr}
-    |     |   | {call}
-    |     |     | {name min}
+    | {select_core_list}: select: { _anon: integer notnull }
+    | | {select_core}: select: { _anon: integer notnull }
+    |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    |     | {select_expr_list}: select: { _anon: integer notnull }
+    |     | | {select_expr}: integer notnull
+    |     |   | {call}: integer notnull
+    |     |     | {name min}: integer notnull
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
-    |     |       | {arg_list}
-    |     |         | {int 1}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
     |     |         | {arg_list}
-    |     |           | {int 2}
+    |     |           | {int 2}: integer notnull
     |     |           | {arg_list}
-    |     |             | {int 3}
-    |     | {select_from_etc}
-    |       | {table_or_subquery_list}
-    |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |     |             | {int 3}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
     |       | {select_where}
-    |         | {opt_where}
-    |         | | {int 0}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
     |         | {select_groupby}
     |           | {select_having}
     | {select_orderby}
@@ -67856,29 +67856,29 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
   {assign}: err
   | {name val_min}: val_min: integer variable
   | {select_stmt}: err
-    | {select_core_list}
-    | | {select_core}
-    |   | {select_expr_list_con}
-    |     | {select_expr_list}
-    |     | | {select_expr}
-    |     |   | {call}
-    |     |     | {name min}
+    | {select_core_list}: select: { _anon: integer }
+    | | {select_core}: select: { _anon: integer }
+    |   | {select_expr_list_con}: select: { _anon: integer }
+    |     | {select_expr_list}: select: { _anon: integer }
+    |     | | {select_expr}: integer
+    |     |   | {call}: integer
+    |     |     | {name min}: integer
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
-    |     |       | {arg_list}
-    |     |         | {int 1}
-    |     | {select_from_etc}
-    |       | {table_or_subquery_list}
-    |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
     |       | {select_where}
-    |         | {opt_where}
-    |         | | {int 0}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
     |         | {select_groupby}
-    |           | {opt_groupby}
-    |           | | {groupby_list}
+    |           | {opt_groupby}: ok
+    |           | | {groupby_list}: ok
     |           |   | {groupby_item}
-    |           |     | {name id}
+    |           |     | {name id}: id: integer notnull
     |           | {select_having}
     | {select_orderby}
       | {select_limit}
@@ -67896,33 +67896,204 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
   {assign}: err
   | {name val_sum}: val_sum: integer variable
   | {select_stmt}: err
-    | {select_core_list}
-    | | {select_core}
-    |   | {select_expr_list_con}
-    |     | {select_expr_list}
-    |     | | {select_expr}
-    |     |   | {call}
-    |     |     | {name sum}
+    | {select_core_list}: select: { _anon: integer }
+    | | {select_core}: select: { _anon: integer }
+    |   | {select_expr_list_con}: select: { _anon: integer }
+    |     | {select_expr_list}: select: { _anon: integer }
+    |     | | {select_expr}: integer
+    |     |   | {call}: integer
+    |     |     | {name sum}: integer
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
-    |     |       | {arg_list}
-    |     |         | {int 1}
-    |     | {select_from_etc}
-    |       | {table_or_subquery_list}
-    |       | | {table_or_subquery}
-    |       |   | {name foo}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
     |       | {select_where}
-    |         | {opt_where}
-    |         | | {int 0}
+    |         | {opt_where}: integer notnull
+    |         | | {int 0}: integer notnull
     |         | {select_groupby}
-    |           | {opt_groupby}
-    |           | | {groupby_list}
+    |           | {opt_groupby}: ok
+    |           | | {groupby_list}: ok
     |           |   | {groupby_item}
-    |           |     | {name id}
+    |           |     | {name id}: id: integer notnull
     |           | {select_having}
     | {select_orderby}
       | {select_limit}
         | {select_offset}
+
+The statement ending at line XXXX
+
+SET val_avg := ( SELECT avg(id) AS col
+  FROM foo
+LIMIT 1 - 1 );
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name val_avg}: val_avg: real variable was_set
+  | {select_stmt}: err
+    | {select_core_list}: select: { col: real }
+    | | {select_core}: select: { col: real }
+    |   | {select_expr_list_con}: select: { col: real }
+    |     | {select_expr_list}: select: { col: real }
+    |     | | {select_expr}: col: real
+    |     |   | {call}: real
+    |     |   | | {name avg}: real
+    |     |   | | {call_arg_list}
+    |     |   |   | {call_filter_clause}
+    |     |   |   | {arg_list}: ok
+    |     |   |     | {name id}: id: integer notnull
+    |     |   | {opt_as_alias}
+    |     |     | {name col}
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {opt_limit}: integer notnull
+        | | {sub}: integer notnull
+        |   | {int 1}: integer notnull
+        |   | {int 1}: integer notnull
+        | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC val_avg_proc (lim INTEGER)
+BEGIN
+  LET val_avg := ( SELECT avg(id) AS col
+    FROM foo
+  LIMIT lim );
+END;
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {create_proc_stmt}: err
+  | {name val_avg_proc}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: lim: integer variable in
+    |   | {param_detail}: lim: integer variable in
+    |     | {name lim}: lim: integer variable in
+    |     | {type_int}: integer
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name val_avg}
+        | {select_stmt}: err
+          | {select_core_list}: select: { col: real }
+          | | {select_core}: select: { col: real }
+          |   | {select_expr_list_con}: select: { col: real }
+          |     | {select_expr_list}: select: { col: real }
+          |     | | {select_expr}: col: real
+          |     |   | {call}: real
+          |     |   | | {name avg}: real
+          |     |   | | {call_arg_list}
+          |     |   |   | {call_filter_clause}
+          |     |   |   | {arg_list}: ok
+          |     |   |     | {name id}: id: integer notnull
+          |     |   | {opt_as_alias}
+          |     |     | {name col}
+          |     | {select_from_etc}: TABLE { foo: foo }
+          |       | {table_or_subquery_list}: TABLE { foo: foo }
+          |       | | {table_or_subquery}: TABLE { foo: foo }
+          |       |   | {name foo}: TABLE { foo: foo }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {opt_limit}: lim: integer variable in
+              | | {name lim}: lim: integer variable in
+              | {select_offset}
+
+The statement ending at line XXXX
+
+SET val_avg := ( SELECT avg(id) AS col
+  FROM foo
+LIMIT 2 + 4 * 10 );
+
+  {assign}: val_avg: real variable was_set
+  | {name val_avg}: val_avg: real variable was_set
+  | {select_stmt}: col: real
+    | {select_core_list}: select: { col: real }
+    | | {select_core}: select: { col: real }
+    |   | {select_expr_list_con}: select: { col: real }
+    |     | {select_expr_list}: select: { col: real }
+    |     | | {select_expr}: col: real
+    |     |   | {call}: real
+    |     |   | | {name avg}: real
+    |     |   | | {call_arg_list}
+    |     |   |   | {call_filter_clause}
+    |     |   |   | {arg_list}: ok
+    |     |   |     | {name id}: id: integer notnull
+    |     |   | {opt_as_alias}
+    |     |     | {name col}
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {opt_limit}: integer notnull
+        | | {add}: integer notnull
+        |   | {int 2}: integer notnull
+        |   | {mul}: integer notnull
+        |     | {int 4}: integer notnull
+        |     | {int 10}: integer notnull
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET val_avg := ( SELECT avg(id) AS col
+  FROM foo
+LIMIT 2 + 4 * 10
+OFFSET 1 );
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+
+  {assign}: err
+  | {name val_avg}: val_avg: real variable was_set
+  | {select_stmt}: err
+    | {select_core_list}: select: { col: real }
+    | | {select_core}: select: { col: real }
+    |   | {select_expr_list_con}: select: { col: real }
+    |     | {select_expr_list}: select: { col: real }
+    |     | | {select_expr}: col: real
+    |     |   | {call}: real
+    |     |   | | {name avg}: real
+    |     |   | | {call_arg_list}
+    |     |   |   | {call_filter_clause}
+    |     |   |   | {arg_list}: ok
+    |     |   |     | {name id}: id: integer notnull
+    |     |   | {opt_as_alias}
+    |     |     | {name col}
+    |     | {select_from_etc}: TABLE { foo: foo }
+    |       | {table_or_subquery_list}: TABLE { foo: foo }
+    |       | | {table_or_subquery}: TABLE { foo: foo }
+    |       |   | {name foo}: TABLE { foo: foo }
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {opt_limit}: integer notnull
+        | | {add}: integer notnull
+        |   | {int 2}: integer notnull
+        |   | {mul}: integer notnull
+        |     | {int 4}: integer notnull
+        |     | {int 10}: integer notnull
+        | {select_offset}
+          | {opt_offset}: integer notnull
+            | {int 1}: integer notnull
 
 The statement ending at line XXXX
 

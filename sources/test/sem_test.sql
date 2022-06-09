@@ -16913,6 +16913,25 @@ set val_min := (select min(1) from foo where 0 group by id);
 -- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 set val_sum := (select sum(1) from foo where 0 group by id);
 
+--- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a LIMIT less than one is used (and expression within LIMIT is evaluated)
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+set val_avg := (select avg(id) col from foo limit 1 - 1);
+
+--- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a  LIMIT using a variable (and expression within LIMIT is evaluated)
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+create proc val_avg_proc(lim integer)
+begin
+  let val_avg := (select avg(id) col from foo limit lim);
+end;
+
+--- TEST: No IF NOTHING requirement is imposed for built-in aggregate functions when a  LIMIT is 1 or bigger (and expression within LIMIT is evaluated)
+-- - error:
+set val_avg := (select avg(id) col from foo limit (2 + 4 * 10));
+
+--- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when OFFSET is used
+-- + error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+set val_avg := (select avg(id) col from foo limit (2 + 4 * 10) offset 1);
+
 -- TEST: normal if nothing
 -- + {enforce_normal_stmt}: ok
 -- - error:;

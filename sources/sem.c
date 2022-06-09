@@ -22144,6 +22144,45 @@ static bool_t sem_select_stmt_is_mixed_results(ast_node *ast) {
   return is_ast_join_clause(query_parts);
 }
 
+// helper function to check if a select expression with a built-in aggregate function will always return a row
+static bool_t sem_check_aggregate_select_expr_must_return_a_row(ast_node *ast, ast_node *select_where) {
+  Contract(is_ast_select_stmt(ast));
+  Contract(is_ast_select_where(select_where));
+
+  EXTRACT_NOTNULL(select_groupby, select_where->right);
+  EXTRACT(opt_groupby, select_groupby->left);
+
+  EXTRACT_NOTNULL(select_orderby, ast->right);
+  EXTRACT_NOTNULL(select_limit, select_orderby->right);
+  EXTRACT(opt_limit, select_limit->left);
+  EXTRACT_NOTNULL(select_offset, select_limit->right);
+  EXTRACT(opt_offset, select_offset->left);
+
+  // Assume any OFFSET or GROUP BY clause may lead to aggregation not return a row. OFFSETs with constant of 0 or less
+  // are no-ops, but won't be considered
+  if (is_ast_opt_offset(opt_offset) || is_ast_opt_groupby(opt_groupby)) {
+    return false;
+  }
+
+  // When LIMIT is used, if it cannot evaluate to a positive constant, then it might not return a row
+  if (!opt_limit) {
+    // Short circuit and allow error handling to kick in elsewhere
+    return true;
+  } else {
+    eval_node result = EVAL_NIL;
+    eval(opt_limit->left, &result);
+
+    if (result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL) {
+      eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+      return result.int64_value >= 1;
+    } else {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Only for use in (select expr ...) so there is known to be exactly one item in the
 // select list.  This tells us if there is some way we can know that there will be
 // a row for sure in such an expression.  There are assorted special cases that are
@@ -22209,27 +22248,24 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
     return false;
   }
 
-  EXTRACT_NOTNULL(select_groupby, select_where->right);
-  EXTRACT(opt_groupby, select_groupby->left);
-
-  // built-in aggregate functions without GROUP BY clause return at least one row
+  // built-in aggregate functions clause might always return at least one row
   EXTRACT_STRING(name, expr->left);
-  if (!is_ast_opt_groupby(opt_groupby) && (
+  if (
     !Strcasecmp("avg", name) ||
     !Strcasecmp("count", name) ||
     !Strcasecmp("group_concat", name) ||
     !Strcasecmp("sum", name) ||
     !Strcasecmp("total", name)
-  )) {
-    return true;
+  ) {
+    return sem_check_aggregate_select_expr_must_return_a_row(ast, select_where);;
   }
 
-  // min and max are aggregate functions if and only if they have exactly one argument, they are scalar functions if
-  // they have two or more arguments
-  if (!is_ast_opt_groupby(opt_groupby) && (
+  // min and max are aggregate functions if they have exactly one argument, they are scalar functions if they have two
+  // or more arguments
+  if (
     !Strcasecmp("max", name) ||
     !Strcasecmp("min", name)
-  )) {
+  ) {
       EXTRACT_ANY_NOTNULL(call_arg_list, expr->right);
       EXTRACT_ANY_NOTNULL(arg_list, call_arg_list->right);
 
@@ -22237,7 +22273,7 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
       for (ast_node *item = arg_list; item; item = item->right) arg_count++;
 
       if (arg_count == 1) {
-        return true;
+        return sem_check_aggregate_select_expr_must_return_a_row(ast, select_where);
       }
   }
 
@@ -22267,6 +22303,12 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
     return;
   }
 
+  // (select ...)
+  sem_select(ast);
+  if (is_error(ast)) {
+    return;
+  }
+
   // For purposes of testing "strict if nothing", a select on the left side of the if nothing
   // operator is in an if nothing context  but the right side is not in an if nothing context.
   //  e.g.
@@ -22284,12 +22326,6 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   if (invalid_select) {
     report_error(ast, "CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'", NULL);
     record_error(ast);
-    return;
-  }
-
-  // (select ...)
-  sem_select(ast);
-  if (is_error(ast)) {
     return;
   }
 
