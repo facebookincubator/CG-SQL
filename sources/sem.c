@@ -1368,6 +1368,11 @@ static void sem_column_name_match_encode_context_column_type(CSTR name, ast_node
 // Eligible columns are encoded if they are sensitive as soon as they're
 // fetched from db (see cql_multifetch(...)).
 bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab *encode_columns_arg) {
+  // objects can't be encoded
+  if (core_type_of(sem_type) == SEM_TYPE_OBJECT) {
+    return false;
+  }
+
   bool_t is_col_eligible = false;
   if (encode_columns_arg && encode_columns_arg->count > 0 ) {
     is_col_eligible = symtab_find(encode_columns_arg, col) != NULL;
@@ -8951,7 +8956,7 @@ static void sem_proc_as_func(ast_node *ast, ast_node *proc) {
 
   if (result_set_return && !is_error(ast)) {
     // this call will return the result set object
-    ast->sem = new_sem(SEM_TYPE_OBJECT);
+    ast->sem = new_sem(SEM_TYPE_OBJECT | SEM_TYPE_NOTNULL);
     ast->sem->kind = dup_printf("%s SET", proc_name);
   }
 

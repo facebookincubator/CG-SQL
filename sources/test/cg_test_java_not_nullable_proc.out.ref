@@ -46,6 +46,10 @@ public final class cg_test_java_not_nullable_proc extends CQLViewModel {
     return mResultSet.getIsEncoded(5);
   }
 
+  public CQLResultSet getObjcol(int row) {
+    return mResultSet.getChildResultSet(row, 6);
+  }
+
   public int getCount() {
     return mResultSet.getCount();
   }

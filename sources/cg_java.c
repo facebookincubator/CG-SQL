@@ -103,8 +103,8 @@ static void cg_java_proc_result_set_getter(
   bool_t notnull = is_not_nullable(sem_type);
   sem_t core_type = core_type_of(sem_type);
 
-  CSTR return_type;
-  CSTR field_type;
+  CSTR return_type = "not_supported";
+  CSTR field_type = "not_supported";
   CSTR prefix = "get_";
   CSTR nullable_prefix = notnull ? "" : "_nullable_";
   CSTR nullable_attr = notnull ? "" : "@Nullable\n";
@@ -162,6 +162,12 @@ static void cg_java_proc_result_set_getter(
       nullable_prefix = "";
       return_type = rt->cql_blob_ref;
       field_type = "Blob";
+      break;
+
+    case SEM_TYPE_OBJECT:
+      nullable_prefix = "";
+      return_type = "CQLResultSet";
+      field_type = "ChildResultSet";
       break;
   }
 
@@ -527,8 +533,11 @@ static void cg_java_create_proc_stmt(ast_node *ast, cg_java_context *java_contex
 
       // resultsets with objects in java are not supported
       if (core_type_of(sem_type) == SEM_TYPE_OBJECT) {
-        cql_error("out cursors with object columns are not yet supported for java\n");
-        cql_cleanup_and_exit(1);
+        CSTR kind = sptr->kinds[i];
+        if (!kind || !sem_ends_in_set(kind)) {
+          cql_error("out cursors with object columns are not yet supported for java\n");
+          cql_cleanup_and_exit(1);
+        }
       }
     }
 

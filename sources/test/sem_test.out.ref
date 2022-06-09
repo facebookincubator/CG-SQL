@@ -26983,9 +26983,9 @@ The statement ending at line XXXX
 
 LET out_result_set := out_cursor_proc();
 
-  {let_stmt}: out_result_set: object<out_cursor_proc SET> variable
-  | {name out_result_set}: out_result_set: object<out_cursor_proc SET> variable
-  | {call}: object<out_cursor_proc SET>
+  {let_stmt}: out_result_set: object<out_cursor_proc SET> notnull variable
+  | {name out_result_set}: out_result_set: object<out_cursor_proc SET> notnull variable
+  | {call}: object<out_cursor_proc SET> notnull
     | {name out_cursor_proc}
     | {call_arg_list}
       | {call_filter_clause}

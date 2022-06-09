@@ -7136,8 +7136,8 @@ SET an_int := proc_func(distinct 1);
 set an_int := proc_with_single_output(1, an_int, an_int2);
 
 -- TEST: capture a result set from a proc that returns a structured result
--- + {let_stmt}: out_result_set: object<out_cursor_proc SET> variable
--- + {name out_result_set}: out_result_set: object<out_cursor_proc SET> variable
+-- + {let_stmt}: out_result_set: object<out_cursor_proc SET> notnull variable
+-- + {name out_result_set}: out_result_set: object<out_cursor_proc SET> notnull variable
 -- + {call}: object<out_cursor_proc SET>
 -- - error:
 let out_result_set := out_cursor_proc();
