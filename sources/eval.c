@@ -63,7 +63,7 @@ static void eval_num(ast_node *expr, eval_node *result) {
     break;
 
   case NUM_LONG:
-    result->int64_value = strtol(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
+    result->int64_value = (int64_t)strtoll(lit, NULL, has_hex_prefix(lit) ? 16 : 10);
     result->sem_type = SEM_TYPE_LONG_INTEGER;
     break;
 
