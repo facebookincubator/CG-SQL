@@ -7014,7 +7014,7 @@ static bool_t sem_validate_exists_context(ast_node *ast) {
 // the nested select must be ok.  The result will be a not null boolean.
 static void sem_expr_exists(ast_node *ast, CSTR cstr) {
   Contract(is_ast_exists_expr(ast));
-  EXTRACT_NOTNULL(select_stmt, ast->left);
+  EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
 
   if (!sem_validate_exists_context(ast)) {
     return;

@@ -814,7 +814,7 @@ static void gen_arg_expr(ast_node *ast) {
 
 static void gen_expr_exists(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_exists_expr(ast));
-  EXTRACT_NOTNULL(select_stmt, ast->left);
+  EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
 
   gen_printf("EXISTS (");
   gen_select_stmt(select_stmt);
