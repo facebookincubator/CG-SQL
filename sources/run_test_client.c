@@ -87,6 +87,12 @@ cql_code run_client(sqlite3 *db) {
   E(floats__one == 1.0, "float_enum case 1");
   E(floats__two == 2.0, "float_enum case 2");
 
+  // ensure special case long const round trips to C
+  int64_t min_long_ref = _64(-9223372036854775807);
+  E(long_const_1 == min_long_ref, "round trip safe negative const");
+  E(long_const_2 == min_long_ref - 1, "round trip min_long explicit long");
+  E(long_const_3 == min_long_ref - 1, "round trip min_long implicit long");
+
   E(fails_because_bogus_table(db) != SQLITE_OK, "procedure should have returned an error\n");
   E(trace_received == 1, "failure proc did not trigger a trace\n");
   E(!cql_outstanding_refs, "outstanding refs in fails_because_bogus_table: %d\n", cql_outstanding_refs);

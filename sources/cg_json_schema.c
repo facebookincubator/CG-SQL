@@ -440,7 +440,7 @@ static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
 
      bprintf(output, "  \"name\" : \"%s\",\n", enum_name);
      bprintf(output, "  \"value\" : ");
-     eval_format_number(enum_name_ast->sem->value, output);
+     eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_NORMAL, output);
      bprintf(output, "\n}");
 
      enum_values = enum_values->right;
@@ -516,7 +516,7 @@ static void cg_json_const_values(ast_node *const_values, charbuf *output) {
        cg_json_emit_string(output, const_expr);
      }
      else {
-       eval_format_number(const_expr->sem->value, output);
+       eval_format_number(const_expr->sem->value, EVAL_FORMAT_NORMAL, output);
      }
 
      bprintf(output, "\n}");

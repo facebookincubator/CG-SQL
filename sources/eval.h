@@ -22,6 +22,9 @@
 
 #define EVAL_NIL {0, 0, 0, 0, false}
 
+#define EVAL_FORMAT_NORMAL 1
+#define EVAL_FORMAT_FOR_C 2
+
 typedef struct eval_node {
   sem_t sem_type;
   int64_t int64_value;
@@ -36,6 +39,6 @@ cql_noexport void eval(ast_node *_Nonnull expr, eval_node *_Nonnull result);
 cql_noexport ast_node *_Nonnull eval_set(ast_node *_Nonnull expr, eval_node *_Nonnull result);
 cql_noexport void eval_cast_to(eval_node *_Nonnull result, sem_t sem_type);
 cql_noexport void eval_add_one(eval_node *_Nonnull result);
-cql_noexport void eval_format_number(eval_node *_Nonnull result, charbuf *_Nonnull output);
+cql_noexport void eval_format_number(eval_node *_Nonnull result, int32_t format_mode, charbuf *_Nonnull output);
 
 #endif

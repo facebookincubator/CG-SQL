@@ -4134,8 +4134,8 @@ end;
 
 -- TEST: basic code gen for the switch (no default, int64)
 -- + switch (l2) {
--- + case _64(1):
--- + case _64(3):
+-- + case 1:
+-- + case 3:
 -- + i2 = 30;
 -- +2 break;
 -- + case _64(4):
@@ -4146,7 +4146,7 @@ end;
 switch l2
   when 1, 3 then
     set i2 := 30;
-  when 4 then
+  when 4L then
     set i2 := 40;
   when 5 then nothing
 end;
@@ -5170,8 +5170,8 @@ end;
 --
 -- +  big1 = _64(0x7fffffffffffffff);
 -- +  big2 = _64(0x8000000000000000);
--- +  big3 = (_64(9223372036854775807)-1);
--- +  big4 = (_64(9223372036854775807)-1);
+-- +  big3 = (_64(-9223372036854775807) - 1);
+-- +  big4 = (_64(-9223372036854775807) - 1);
 -- +  big5 = _64(9223372036854775807);
 -- +  big6 = _64(9223372036854775807);
 create proc bigstuff()
@@ -5183,6 +5183,14 @@ begin
   let big5 := 9223372036854775807L;
   let big6 := 9223372036854775807;
 end;
+
+declare const group big_constants(
+  big_long_constants_max = 9223372036854775807,
+  big_long_constants_min = -9223372036854775808,
+  big_long_constants_almost_min = -9223372036854775807
+);
+
+@emit_constants big_constants;
 
 -- TEST: variable group creates declarations only
 -- group produces nothing in the main stream!
@@ -5384,5 +5392,3 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
-
-

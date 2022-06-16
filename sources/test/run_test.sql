@@ -4560,6 +4560,43 @@ begin
   EXPECT(C.x == D.x);
 end;
 
+declare const group long_constants (
+  long_const_1 = -9223372036854775807L,
+  long_const_2 = -9223372036854775808L,
+  long_const_3 = -9223372036854775808
+);
+
+@emit_constants long_constants;
+
+BEGIN_TEST(verify_long_constant_forms)
+   let reference := long_const_1  - 1;
+
+   EXPECT_SQL_TOO(reference = -9223372036854775808L);
+   EXPECT_SQL_TOO(reference = -9223372036854775808);
+   EXPECT_SQL_TOO(reference = const(-9223372036854775808L));
+   EXPECT_SQL_TOO(reference = const(-9223372036854775808));
+   EXPECT_SQL_TOO(reference = long_const_2);
+   EXPECT_SQL_TOO(reference = long_const_3);
+
+   LET x := -9223372036854775808L;
+   EXPECT_SQL_TOO(reference == x);
+
+   SET x := -9223372036854775808;
+   EXPECT_SQL_TOO(reference == x);
+
+   SET x := const(-9223372036854775808L);
+   EXPECT_SQL_TOO(reference == x);
+
+   SET x := const(-9223372036854775808);
+   EXPECT_SQL_TOO(reference == x);
+
+   SET x := long_const_2;
+   EXPECT_SQL_TOO(reference == x);
+
+   SET x := long_const_3;
+   EXPECT_SQL_TOO(reference == x);
+END_TEST(verify_long_constant_forms)
+
 BEGIN_TEST(serialization_tricky_values)
   call round_trip_int(0);
   call round_trip_int(1);

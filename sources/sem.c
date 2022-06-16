@@ -2234,7 +2234,7 @@ cql_noexport void print_sem_type(sem_node *sem) {
 
   if (sem->value) {
     CHARBUF_OPEN(temp);
-    eval_format_number(sem->value, &temp);
+    eval_format_number(sem->value, EVAL_FORMAT_NORMAL, &temp);
     cql_output(" = %s", temp.ptr);
     CHARBUF_CLOSE(temp);
   }

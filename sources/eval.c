@@ -45,10 +45,8 @@ static void eval_null(ast_node *expr, eval_node *result) {
 }
 
 // A number; it could be any of the numeric types with or without a hex prefix
-static void eval_num(ast_node *expr, eval_node *result) {
-  EXTRACT_NUM_TYPE(num_type, expr);
-  EXTRACT_NUM_VALUE(lit, expr);
-
+// It's already in string for for us.
+static void eval_num_str(CSTR lit, int32_t num_type, eval_node *result) {
   result->sem_type = SEM_TYPE_ERROR;
 
   switch (num_type) {
@@ -75,6 +73,14 @@ static void eval_num(ast_node *expr, eval_node *result) {
   }
 
   Invariant(result->sem_type != SEM_TYPE_ERROR);
+}
+
+// A number; it could be any of the numeric types with or without a hex prefix
+static void eval_num(ast_node *expr, eval_node *result) {
+  EXTRACT_NUM_TYPE(num_type, expr);
+  EXTRACT_NUM_VALUE(lit, expr);
+
+  eval_num_str(lit, num_type, result);
 }
 
 // Used for explicit casts but also for numeric conversions when
@@ -188,7 +194,16 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
     break;
 
   case SEM_TYPE_LONG_INTEGER:
-    new_num = new_ast_num(NUM_LONG, dup_printf("%lld", (llint_t)result->int64_value));
+    // we have to special case for MIN_LONG
+    if  (result->int64_value == -9223372036854775807LL - 1) {
+      // later stages of the compiler are looking for this case and will rewrite it as "_64(-9223372036854775807) - 1"
+      // we encode it this way because that's how its appears for users
+      new_num = new_ast_uminus(new_ast_num(NUM_LONG, dup_printf("9223372036854775808")));
+    }
+    else {
+      // other cases, don't need special treatment so we use the most economical encoding
+      new_num = new_ast_num(NUM_LONG, dup_printf("%lld", (llint_t)result->int64_value));
+    }
     break;
 
   case SEM_TYPE_BOOL:
@@ -718,6 +733,19 @@ static void eval_tilde(ast_node *expr, eval_node *result) {
 // * all others are negated
 // * bool promotes to an integer and is negated so the valid results are 0 and -1
 static void eval_uminus(ast_node *expr, eval_node *result) {
+
+  if (is_ast_num(expr->left)) {
+    EXTRACT_NUM_TYPE(num_type, expr->left);
+    EXTRACT_NUM_VALUE(lit, expr->left);
+
+
+    if (num_type == NUM_LONG && !strcmp("9223372036854775808", lit)) {
+      result->sem_type = SEM_TYPE_LONG_INTEGER;
+      result->int64_value = (int64_t)(-9223372036854775807LL - 1);
+      return;
+    }
+  }
+
   eval(expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
     return;
@@ -1011,7 +1039,7 @@ cql_noexport void eval_add_one(eval_node *result) {
   }
 }
 
-cql_noexport void eval_format_number(eval_node *result, charbuf *output) {
+cql_noexport void eval_format_number(eval_node *result, int32_t format_mode, charbuf *output) {
   Contract(result->sem_type != SEM_TYPE_ERROR);
   Contract(result->sem_type != SEM_TYPE_NULL);
 
@@ -1023,7 +1051,20 @@ cql_noexport void eval_format_number(eval_node *result, charbuf *output) {
       break;
 
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(output, "%lld", (llint_t)result->int64_value);
+      if (format_mode == EVAL_FORMAT_FOR_C) {
+         if  (result->int64_value == -9223372036854775807LL - 1) {
+           // if outputing to C you cannot emit the constant -9223372036854775808
+           // you have to do it with an expression like so:
+           bprintf(output, "(_64(-9223372036854775807) - 1)");
+         }
+         else {
+           bprintf(output, "_64(%lld)", (llint_t)result->int64_value);
+         }
+      }
+      else {
+         bprintf(output, "%lld", (llint_t)result->int64_value);
+      }
+
       break;
 
     case SEM_TYPE_REAL:

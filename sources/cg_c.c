@@ -1744,8 +1744,8 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
     EXTRACT_NUM_VALUE(lit, expr);
 
     if (num_type == NUM_LONG && !strcmp("9223372036854775808", lit)) {
-      // add long suffix if needed
-      bprintf(value, "(_64(9223372036854775807)-1)");
+      // emit MIN_LONG in a way that the C compiler can accept
+      bprintf(value, "(_64(-9223372036854775807) - 1)");
       bprintf(is_null, "0");
       return;
     }
@@ -5295,18 +5295,9 @@ static void cg_emit_one_enum(ast_node *ast) {
        EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
        EXTRACT_STRING(enum_name, enum_name_ast);
 
-       bool_t is_long = core_type_of(type->sem->sem_type) == SEM_TYPE_LONG_INTEGER;
-
        bprintf(cg_header_output, "\n  %s__%s = ", name, enum_name);
 
-       if (is_long) {
-         bprintf(cg_header_output, "_64(");
-       }
-       eval_format_number(enum_name_ast->sem->value, cg_header_output);
-
-       if (is_long) {
-         bprintf(cg_header_output, ")");
-       }
+       eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_FOR_C, cg_header_output);
 
        if (enum_values->right) {
          bprintf(cg_header_output, ",");
@@ -5324,7 +5315,7 @@ static void cg_emit_one_enum(ast_node *ast) {
        EXTRACT_STRING(enum_name, enum_name_ast);
 
        bprintf(cg_header_output, "#define %s__%s ", name, enum_name);
-       eval_format_number(enum_name_ast->sem->value, cg_header_output);
+       eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_FOR_C, cg_header_output);
        bprintf(cg_header_output, "\n");
 
        enum_values = enum_values->right;
@@ -5380,19 +5371,7 @@ static void cg_emit_one_const_group(ast_node *ast) {
      bprintf(cg_header_output, "#define %s ", const_name);
 
      if (is_numeric(const_value->sem->sem_type)) {
-
-       bool_t is_long = core_type_of(const_value->sem->sem_type) == SEM_TYPE_LONG_INTEGER;
-
-       if (is_long) {
-         bprintf(cg_header_output, "_64(");
-       }
-
-       eval_format_number(const_value->sem->value, cg_header_output);
-
-       if (is_long) {
-         bprintf(cg_header_output, ")");
-       }
-
+       eval_format_number(const_value->sem->value, EVAL_FORMAT_FOR_C, cg_header_output);
      }
      else {
        // we don't make a string object for string literals that are being emitted, just the C literal
@@ -5911,19 +5890,9 @@ static void cg_switch_expr_list(ast_node *ast, sem_t sem_type_switch_expr) {
     eval(expr, &result);
     Invariant(result.sem_type != SEM_TYPE_ERROR); // already checked
 
-    bool_t is_long = core_type_of(sem_type_switch_expr) == SEM_TYPE_LONG_INTEGER;
-
     bprintf(cg_main_output, "case ");
 
-    if (is_long) {
-      bprintf(cg_main_output, "_64(");
-    }
-
-    eval_format_number(&result, cg_main_output);
-
-    if (is_long) {
-      bprintf(cg_main_output, ")");
-    }
+    eval_format_number(&result, EVAL_FORMAT_FOR_C, cg_main_output);
 
     bprintf(cg_main_output, ":\n");
 
