@@ -2933,7 +2933,8 @@ enum some_ints {
 #define enum_some_reals_defined
 
 
-// enum some_reals (floating point values)
+// (some_reals has non integer values -- create a type alias and constants; best we can do.
+typedef cql_double enum_some_reals;
 #define some_reals__foo 1.200000e+01
 #define some_reals__bar 3.000000e+00
 
@@ -2941,10 +2942,11 @@ enum some_ints {
 #ifndef enum_some_longs_defined
 #define enum_some_longs_defined
 
-enum some_longs {
-  some_longs__foo = _64(9223372036854775807),
-  some_longs__bar = _64(3)
-};
+
+// (some_longs has non integer values -- create a type alias and constants; best we can do.
+typedef cql_int64 enum_some_longs;
+#define some_longs__foo _64(9223372036854775807)
+#define some_longs__bar _64(3)
 
 #endif
 
@@ -2952,10 +2954,11 @@ enum some_longs {
 #ifndef enum_some_longs_defined
 #define enum_some_longs_defined
 
-enum some_longs {
-  some_longs__foo = _64(9223372036854775807),
-  some_longs__bar = _64(3)
-};
+
+// (some_longs has non integer values -- create a type alias and constants; best we can do.
+typedef cql_int64 enum_some_longs;
+#define some_longs__foo _64(9223372036854775807)
+#define some_longs__bar _64(3)
 
 #endif
 

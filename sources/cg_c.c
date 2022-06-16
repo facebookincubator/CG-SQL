@@ -5287,7 +5287,7 @@ static void cg_emit_one_enum(ast_node *ast) {
   bprintf(cg_header_output, "#ifndef enum_%s_defined\n", name);
   bprintf(cg_header_output, "#define enum_%s_defined\n\n", name);
 
-  if (core_type_of(type->sem->sem_type) != SEM_TYPE_REAL) {
+  if (core_type_of(type->sem->sem_type) == SEM_TYPE_INTEGER) {
     bprintf(cg_header_output, "enum %s {", name);
 
     while (enum_values) {
@@ -5308,7 +5308,16 @@ static void cg_emit_one_enum(ast_node *ast) {
     bprintf(cg_header_output, "\n};\n");
   }
   else {
-    bprintf(cg_header_output, "\n// enum %s (floating point values)\n", name);
+    // * enums can't be float, so we have to do those as #define
+    // * enums generally only hold ints so they might not be able to hold an int64
+    //   so we have to do int64 as macros as well
+
+    bprintf(cg_header_output, "\n// (%s has non integer values -- create a type alias and constants; best we can do.\n", name);
+    CHARBUF_OPEN(tmp);
+      cg_var_decl(&tmp, type->sem->sem_type, "enum", CG_VAR_DECL_PROTO);
+      bprintf(cg_header_output, "typedef %s_%s;\n", tmp.ptr, name);
+    CHARBUF_CLOSE(tmp);
+
     while (enum_values) {
        EXTRACT_NOTNULL(enum_value, enum_values->left);
        EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
@@ -5316,6 +5325,7 @@ static void cg_emit_one_enum(ast_node *ast) {
 
        bprintf(cg_header_output, "#define %s__%s ", name, enum_name);
        eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_FOR_C, cg_header_output);
+
        bprintf(cg_header_output, "\n");
 
        enum_values = enum_values->right;
