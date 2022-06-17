@@ -4179,10 +4179,29 @@ select 3 as A, 4 as B;
 
 -- TEST: union all with not matching columns
 -- + error: % if multiple selects, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 select 1 as A, 2 as C
 union all
 select 3 as A, 4 as B;
+
+-- TEST: force the various diagnostic forms
+-- + {select_stmt}: err
+-- + error: % additional difference diagnostic info:
+-- + sem_test.sql:% error: likely end location of the 1st item
+-- +   this item has 3 columns
+-- + sem_test.sql:% error: likely end location of the 2nd item
+-- +   this item has 4 columns
+-- + duplicate column in 1st: x integer notnull
+-- + duplicate column in 2nd: x integer notnull
+-- + only in 1st: y integer notnull
+-- + only in 2nd: u integer notnull
+-- + only in 2nd: z integer notnull
+-- diagnostics also present
+-- +4 error:
+select 1 as x, 2 as x, 3 as y
+union all
+select 0 as u, 1 as x, 2 as x, 3 as z;
 
 -- TEST: union all with not matching types (but compat)
 -- + {select_core_list}: union_all: { A: integer notnull, B: real notnull }
@@ -5154,7 +5173,8 @@ end;
 -- TEST: create a conditional fragment with not matching like clauses
 -- + {create_proc_stmt}: err
 -- + error: % bogus_cte, all must have the same column count
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 @attribute(cql:shared_fragment)
 create proc bogus_conditional_duplicate_cte_names()
 begin
@@ -6908,7 +6928,8 @@ end;
 -- + {create_proc_stmt}: err
 -- + {out_stmt}: err
 -- + error: % in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 2: 'B' vs. 'C'
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 create proc out_cursor_proc_incompat_results()
 begin
   declare a, b integer not null;
@@ -7240,7 +7261,8 @@ end;
 -- expected type is not marked as an error
 -- - {name C}: err
 -- + error: % receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 create proc fetch_from_call_to_proc_with_different_column_names()
 begin
   declare C cursor like select 1 A, 2 C;
@@ -8621,7 +8643,8 @@ end @delete(1, MigrateProcFoo);
 -- + {select_core_compound}
 -- +2 {int 2}
 -- + error: % if multiple selects, all must have the same column count
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 select 1 as A, 2 as B, 3 as C
 union all
 select 3 as A, 4 as B;
@@ -10423,7 +10446,8 @@ end;
 -- + error: % if multiple selects, all column names must be identical so they have unambiguous names; error in column 4: 'name2' vs. 'name'
 -- + {create_proc_stmt}: err
 -- + {with_select_stmt}: err
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 @attribute(cql:extension_fragment=core)
 create proc test_bad_extension_fragment_union_one(id_ integer)
 begin
@@ -10441,7 +10465,8 @@ end;
 -- + {create_proc_stmt}: err
 -- + {with_select_stmt}: err
 -- + {cte_tables}: err
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 @attribute(cql:extension_fragment=core)
 create proc test_bad_extension_fragment_union_two(id_ integer)
 begin
@@ -14380,7 +14405,8 @@ end;
 -- + {assign}: err
 -- + {call}: err
 -- + error: % in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 create proc cql_cursor_diff_col_compatible_cursor_with_diff_col_name()
 begin
   declare c1 cursor for select 1 x, 'y' y;
@@ -14745,7 +14771,8 @@ end;
 
 -- TEST: try to box but the type doesn't match
 -- + error: % in the cursor and the variable type, all must have the same column count
--- +1 error:
+-- diagnostics also present
+-- +4 error:
 create proc cursor_box_wrong_shape(out box object<foo cursor>)
 begin
   declare C cursor for select * from bar;

@@ -10933,6 +10933,15 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0057: in multiple select/out statements, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: B real notnull
+
 
   {create_proc_stmt}: err
   | {name with_wrong_count}: err
@@ -11124,6 +11133,16 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 1: 'A' vs. 'B'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 1 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: A integer notnull
+only in 2nd: B integer notnull
+
 
   {create_proc_stmt}: err
   | {name with_bad_names}: err
@@ -15235,6 +15254,16 @@ UNION ALL
 SELECT 3 AS A, 4 AS B;
 
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: C integer notnull
+only in 2nd: B integer notnull
+
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -15269,6 +15298,83 @@ test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, 
   |         |     | {int 4}: integer notnull
   |         |     | {opt_as_alias}
   |         |       | {name B}
+  |         | {select_from_etc}: ok
+  |           | {select_where}
+  |             | {select_groupby}
+  |               | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 AS x, 2 AS x, 3 AS y
+UNION ALL
+SELECT 0 AS u, 1 AS x, 2 AS x, 3 AS z;
+
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 3 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 4 columns
+
+duplicate column in 1st: x integer notnull
+duplicate column in 2nd: x integer notnull
+only in 1st: y integer notnull
+only in 2nd: u integer notnull
+only in 2nd: z integer notnull
+
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  | | | {select_expr_list_con}: select: { x: integer notnull, x: integer notnull, y: integer notnull }
+  | |   | {select_expr_list}: select: { x: integer notnull, x: integer notnull, y: integer notnull }
+  | |   | | {select_expr}: x: integer notnull
+  | |   | | | {int 1}: integer notnull
+  | |   | | | {opt_as_alias}
+  | |   | |   | {name x}
+  | |   | | {select_expr_list}
+  | |   |   | {select_expr}: x: integer notnull
+  | |   |   | | {int 2}: integer notnull
+  | |   |   | | {opt_as_alias}
+  | |   |   |   | {name x}
+  | |   |   | {select_expr_list}
+  | |   |     | {select_expr}: y: integer notnull
+  | |   |       | {int 3}: integer notnull
+  | |   |       | {opt_as_alias}
+  | |   |         | {name y}
+  | |   | {select_from_etc}: ok
+  | |     | {select_where}
+  | |       | {select_groupby}
+  | |         | {select_having}
+  | | {select_core_compound}
+  |   | {int 2}
+  |   | {select_core_list}: err
+  |     | {select_core}: select: { u: integer notnull, x: integer notnull, x: integer notnull, z: integer notnull }
+  |       | {select_expr_list_con}: select: { u: integer notnull, x: integer notnull, x: integer notnull, z: integer notnull }
+  |         | {select_expr_list}: select: { u: integer notnull, x: integer notnull, x: integer notnull, z: integer notnull }
+  |         | | {select_expr}: u: integer notnull
+  |         | | | {int 0}: integer notnull
+  |         | | | {opt_as_alias}
+  |         | |   | {name u}
+  |         | | {select_expr_list}
+  |         |   | {select_expr}: x: integer notnull
+  |         |   | | {int 1}: integer notnull
+  |         |   | | {opt_as_alias}
+  |         |   |   | {name x}
+  |         |   | {select_expr_list}
+  |         |     | {select_expr}: x: integer notnull
+  |         |     | | {int 2}: integer notnull
+  |         |     | | {opt_as_alias}
+  |         |     |   | {name x}
+  |         |     | {select_expr_list}
+  |         |       | {select_expr}: z: integer notnull
+  |         |         | {int 3}: integer notnull
+  |         |         | {opt_as_alias}
+  |         |           | {name z}
   |         | {select_from_etc}: ok
   |           | {select_where}
   |             | {select_groupby}
@@ -19479,6 +19585,18 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0057: bogus_cte, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in cte_decl : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 3 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: x integer notnull
+only in 1st: y integer notnull
+only in 1st: z real notnull
+only in 2nd: id integer notnull
+
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -26220,6 +26338,16 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 2: 'B' vs. 'C'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: B integer notnull
+only in 2nd: C integer notnull
+
 
   {create_proc_stmt}: err
   | {name out_cursor_proc_incompat_results}: err
@@ -27251,6 +27379,16 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
+test/sem_test.sql:XXXX:1: error: in str : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: C integer notnull
+only in 2nd: B integer notnull
+
 
   {create_proc_stmt}: err
   | {name fetch_from_call_to_proc_with_different_column_names}: err
@@ -32472,6 +32610,15 @@ UNION ALL
 SELECT 3 AS A, 4 AS B;
 
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 3 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: C integer notnull
+
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42422,6 +42569,16 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 4: 'name2' vs. 'name'
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 4 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 4 columns
+
+only in 1st: name2 text
+only in 2nd: name text
+
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -42585,6 +42742,15 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 4 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 3 columns
+
+only in 1st: name text
+
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -59005,6 +59171,18 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
+test/sem_test.sql:XXXX:1: error: in str : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: x integer notnull
+only in 1st: y text notnull
+only in 2nd: z integer notnull
+only in 2nd: v text notnull
+
 
   {create_proc_stmt}: err
   | {name cql_cursor_diff_col_compatible_cursor_with_diff_col_name}: err
@@ -60744,6 +60922,16 @@ BEGIN
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0057: in the cursor and the variable type, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 1 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 3 columns
+
+only in 2nd: name text
+only in 2nd: rate longint
+
 
   {create_proc_stmt}: err
   | {name cursor_box_wrong_shape}: err

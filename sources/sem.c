@@ -5197,6 +5197,77 @@ cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast) {
   // if there is an error it will be on the ast on exit as is normal
 }
 
+static void sem_emit_one_sptr_type(charbuf *output, sem_struct *sptr, int32_t i) {
+  bprintf(output, "%s ", sptr->names[i]);
+  sem_t sem_type = sptr->semtypes[i];
+  get_sem_core(sem_type, output);
+
+  // the bits that matter
+  sem_type &= SEM_TYPE_NOTNULL;
+  get_sem_flags(sem_type, output);
+}
+
+// given that we found sptr differences in one of the places that the types must match
+// we use this helper to tell the user what's different in detail
+static void sem_emit_column_diff_diagnostics(ast_node *left, ast_node *right) {
+  Invariant(is_struct(left->sem->sem_type));
+  sem_struct *sptr_left = left->sem->sptr;
+  Invariant(is_struct(right->sem->sem_type));
+  sem_struct *sptr_right = right->sem->sptr;
+
+  CHARBUF_OPEN(report);
+  CHARBUF_OPEN(tmp);
+
+  bprintf(&report, "additional difference diagnostic info:\n\n");
+  bprintf(&report, "%s:%d:1: error: likely end location of the 1st item\n", left->filename, left->lineno);
+  bprintf(&report, "  this item has %d columns\n", sptr_left->count);
+  bprintf(&report, "%s:%d:1: error: likely end location of the 2nd item\n", right->filename, right->lineno);
+  bprintf(&report, "  this item has %d columns\n", sptr_right->count);
+  bprintf(&report, "\n");
+
+  symtab *left_symbols = symtab_new();
+  symtab *right_symbols = symtab_new();
+
+  int32_t i;
+  for (i = 0; i < sptr_left->count; i++) {
+    bclear(&tmp);
+    sem_emit_one_sptr_type(&tmp, sptr_left, i);
+    if (!symtab_add(left_symbols, Strdup(tmp.ptr), NULL)) {
+      bprintf(&report, "duplicate column in 1st: %s\n", tmp.ptr);
+    }
+  }
+
+  for (i = 0; i < sptr_right->count; i++) {
+    bclear(&tmp);
+    sem_emit_one_sptr_type(&tmp, sptr_right, i);
+    if (!symtab_add(right_symbols, Strdup(tmp.ptr), NULL)) {
+      bprintf(&report, "duplicate column in 2nd: %s\n", tmp.ptr);
+    }
+  }
+
+  for (i = 0; i < sptr_left->count; i++) {
+    bclear(&tmp);
+    sem_emit_one_sptr_type(&tmp, sptr_left, i);
+    if (!symtab_find(right_symbols, tmp.ptr)) {
+      bprintf(&report, "only in 1st: %s\n", tmp.ptr);
+    }
+  }
+
+  for (i = 0; i < sptr_right->count; i++) {
+    bclear(&tmp);
+    sem_emit_one_sptr_type(&tmp, sptr_right, i);
+    if (!symtab_find(left_symbols, tmp.ptr)) {
+      bprintf(&report, "only in 2nd: %s\n", tmp.ptr);
+    }
+  }
+
+  symtab_delete(left_symbols);
+  symtab_delete(right_symbols);
+  report_error(left, report.ptr, NULL);
+  CHARBUF_CLOSE(tmp);
+  CHARBUF_CLOSE(report);
+}
+
 static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right) {
   Invariant(is_struct(left->sem->sem_type));
   sem_struct *sptr_left = left->sem->sptr;
@@ -5207,6 +5278,7 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
 
   if (sptr_left->count != sptr_right->count) {
     report_error(left, "CQL0057: if multiple selects, all must have the same column count", NULL);
+    sem_emit_column_diff_diagnostics(left, right);
     record_error(left);
     record_error(right);
     return NULL;
@@ -5223,6 +5295,7 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
            " all column names must be identical so they have unambiguous names; error"
            " in column %d: '%s' vs. '%s'", i+1, col1, col2);
       report_error(left, err_msg, NULL);
+      sem_emit_column_diff_diagnostics(left, right);
       record_error(left);
       record_error(right);
       return NULL;
@@ -5274,6 +5347,7 @@ cql_noexport void sem_verify_identical_columns(ast_node *expected, ast_node *act
   if (sptr_expected->count != sptr_actual->count) {
     CSTR errmsg = dup_printf("CQL0057: %s, all must have the same column count", target);
     report_error(actual, errmsg, NULL);
+    sem_emit_column_diff_diagnostics(expected, actual);
     record_error(actual);
     return;
   }
@@ -5290,6 +5364,7 @@ cql_noexport void sem_verify_identical_columns(ast_node *expected, ast_node *act
         " all column names must be identical so they have unambiguous names; error"
         " in column %d: '%s' vs. '%s'", target, i+1, col1, col2);
       report_error(actual, errmsg, NULL);
+      sem_emit_column_diff_diagnostics(expected, actual);
       record_error(actual);
       return;
     }

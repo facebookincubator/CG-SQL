@@ -261,8 +261,27 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0061: in multiple select/out statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0057: in multiple select/out statements, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: B real notnull
+
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0062: in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 1: 'A' vs. 'B'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 1 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: A integer notnull
+only in 2nd: B integer notnull
+
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the select must have a name
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'with_result_set'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0214: procedures with results can only be called using a cursor in global context 'with_result_set'
@@ -346,6 +365,30 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0232: nested select express
 test/sem_test.sql:XXXX:1: error: in in_pred : CQL0012: incompatible types in expression 'IN'
 test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expression 'NOT IN'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: C integer notnull
+only in 2nd: B integer notnull
+
+test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 3 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 4 columns
+
+duplicate column in 1st: x integer notnull
+duplicate column in 2nd: x integer notnull
+only in 1st: y integer notnull
+only in 2nd: u integer notnull
+only in 2nd: z integer notnull
+
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
@@ -423,6 +466,18 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0440: fragments may no
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provided to procedure 'a_shared_frag'
 test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0442: shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
 test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0057: bogus_cte, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in cte_decl : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 3 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 1 columns
+
+only in 1st: x integer notnull
+only in 1st: y integer notnull
+only in 1st: z real notnull
+only in 2nd: id integer notnull
+
 test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
 test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0443: shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
 test/sem_test.sql:XXXX:1: error: in cond_action : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
@@ -606,6 +661,16 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'QQ'
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: cursor was not fetched with the auto-fetch syntax 'fetch [cursor]' 'C'
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 2: 'B' vs. 'C'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: B integer notnull
+only in 2nd: C integer notnull
+
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select'
 test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_select_first'
 test/sem_test.sql:XXXX:1: error: in out_union_stmt : CQL0063: can't mix and match out, out union, or select/call for return values 'out_cursor_proc_mixed_cursor_select_then_union'
@@ -625,6 +690,16 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0058: receiving cursor from call, all column names must be identical so they have unambiguous names; error in column 2: 'C' vs. 'B'
+test/sem_test.sql:XXXX:1: error: in str : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: C integer notnull
+only in 2nd: B integer notnull
+
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for value cursors, not for sqlite cursors 'my_cursor'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -720,6 +795,15 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0093: RAISE 2nd argument must be a 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0321: migration proc not allowed on object 'trigger8'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 3 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: C integer notnull
+
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in expression 'A'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result 'n'
 test/sem_test.sql:XXXX:1: error: in str : CQL0056: NULL expression has no type to imply the type of the select result 'n'
@@ -814,7 +898,26 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0287: extension/assembly fragment must add stub for base CTE with same types from base fragment (expected longint; found integer) 'rate'
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0288: extension/assembly fragment stub for base CTE column must be exact type match (including nullability) (expected longint; found longint notnull) 'rate'
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0058: if multiple selects, all column names must be identical so they have unambiguous names; error in column 4: 'name2' vs. 'name'
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 4 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 4 columns
+
+only in 1st: name2 text
+only in 2nd: name text
+
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0057: if multiple selects, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in select_core : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 4 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 3 columns
+
+only in 1st: name text
+
 test/sem_test.sql:XXXX:1: error: in select_core : CQL0330: fragment must start with exactly 'SELECT * FROM core'
 test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
 test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
@@ -1055,6 +1158,18 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
 test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all columns must be an exact type match (expected integer notnull; found text notnull) 'x'
 test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have identical column count 'cql_cursor_diff_col'
 test/sem_test.sql:XXXX:1: error: in str : CQL0058: in cql_cursor_diff_col, all column names must be identical so they have unambiguous names; error in column 1: 'x' vs. 'z'
+test/sem_test.sql:XXXX:1: error: in str : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 2 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 2 columns
+
+only in 1st: x integer notnull
+only in 1st: y text notnull
+only in 2nd: z integer notnull
+only in 2nd: v text notnull
+
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'trim'
@@ -1078,6 +1193,16 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'box'
 test/sem_test.sql:XXXX:1: error: in str : CQL0261: cursor did not originate from a SQLite statement, it only has values 'C'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'barf'
 test/sem_test.sql:XXXX:1: error: in str : CQL0057: in the cursor and the variable type, all must have the same column count
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : additional difference diagnostic info:
+
+test/sem_test.sql:XXXX:1: error: likely end location of the 1st item
+  this item has 1 columns
+test/sem_test.sql:XXXX:1: error: likely end location of the 2nd item
+  this item has 3 columns
+
+only in 2nd: name text
+only in 2nd: rate longint
+
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'XYZZY'
 test/sem_test.sql:XXXX:1: error: in set_from_cursor : CQL0173: variable not found 'box'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_get_blob_size'
