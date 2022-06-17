@@ -116,6 +116,16 @@ module.exports = {
       // Please do not remove the credits, help to publicize Docusaurus :)
       copyright: `Copyright © ${new Date().getFullYear()} Meta Platforms, Inc. Built with Docusaurus.`,
     },
+    algolia: {
+      // The application ID provided by Algolia
+      appId: '1HF376U378',
+
+      // Public API key: it is safe to commit it
+      apiKey: '0e77fa21bce01bba99cad9686e21decb',
+
+      indexName: 'cgsql',
+      searchPagePath: 'search',
+    },
   },
   plugins: [
     [
@@ -151,6 +161,9 @@ module.exports = {
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        sitemap: {
+          ignorePatterns: ['/cql-guide/generated/*'],
         },
       },
     ],
