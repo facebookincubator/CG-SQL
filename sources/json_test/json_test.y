@@ -58,7 +58,7 @@ void yyset_lineno(int);
 %token TRIGGERS DELETE_TABLES FOR_EACH_ROW FROM_TABLES INSERT_TABLES
 %token IS_INSTEAD_OF_TRIGGER IS_BEFORE_TRIGGER IS_DELETE_TRIGGER IS_AFTER_TRIGGER IS_INSERT_TRIGGER IS_UPDATE_TRIGGER
 %token STATEMENT STATEMENT_ARGS TARGET UPDATE_TABLES USES_PROCEDURES USES_VIEWS USES_TABLES WHEN_EXPR WHEN_EXPR_ARGS
-%token QUERIES ARGS DEFINED_IN_FILE VALUE_ARGS STATEMENT_TYPE INSERTS UPDATES DELETES GENERAL_INSERTS
+%token QUERIES ARGS DEFINED_IN_FILE DEFINED_ON_LINE VALUE_ARGS STATEMENT_TYPE INSERTS UPDATES DELETES GENERAL_INSERTS
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL INTERFACES
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
 %token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS CHECK_EXPRESSIONS
@@ -502,6 +502,7 @@ queries: query | query ',' queries ;
 query: '{'
        NAME STRING_LITERAL ','
        DEFINED_IN_FILE STRING_LITERAL ','
+       DEFINED_ON_LINE INT_LITERAL ','
        ARGS '[' opt_args ']' ','
        dependencies ','
        opt_region_info
@@ -546,6 +547,7 @@ inserts_general: insert_general | insert_general ',' inserts_general
 insert_details:
          NAME STRING_LITERAL ','
          DEFINED_IN_FILE STRING_LITERAL ','
+         DEFINED_ON_LINE INT_LITERAL ','
          ARGS '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -580,6 +582,7 @@ updates: update | update ',' updates
 update : '{'
          NAME STRING_LITERAL ','
          DEFINED_IN_FILE STRING_LITERAL ','
+         DEFINED_ON_LINE INT_LITERAL ','
          ARGS '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -599,6 +602,7 @@ deletes: delete | delete ',' deletes
 delete : '{'
          NAME STRING_LITERAL ','
          DEFINED_IN_FILE STRING_LITERAL ','
+         DEFINED_ON_LINE INT_LITERAL ','
          ARGS '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -618,6 +622,7 @@ generals: general | general ',' generals
 general: '{'
           NAME STRING_LITERAL ','
           DEFINED_IN_FILE STRING_LITERAL ','
+          DEFINED_ON_LINE INT_LITERAL ','
           ARGS '[' opt_complex_args ']' ','
           dependencies ','
           opt_regions
@@ -683,6 +688,7 @@ interfaces: interface | interface ',' interfaces
 interface: '{'
           NAME STRING_LITERAL ','
           DEFINED_IN_FILE STRING_LITERAL ','
+          DEFINED_ON_LINE INT_LITERAL ','
           PROJECTION '[' projected_columns ']'
          '}'
   ;

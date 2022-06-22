@@ -81,6 +81,7 @@ s/[[:<:]]DELETES[[:>:]]/'"deletes"' ':'/g
 s/[[:<:]]UPDATES[[:>:]]/'"updates"' ':'/g
 s/[[:<:]]ARGS[[:>:]]/'"args"' ':'/g
 s/[[:<:]]DEFINED_IN_FILE[[:>:]]/'"definedInFile"' ':'/g
+s/[[:<:]]DEFINED_ON_LINE[[:>:]]/'"definedOnLine"' ':'/g
 s/[[:<:]]STATEMENT_TYPE[[:>:]]/'"statementType"' ':'/g
 s/[[:<:]]VALUES[[:>:]]/'"values"' ':'/g
 s/[[:<:]]VALUE_ARGS[[:>:]]/'"valueArgs"' ':'/g

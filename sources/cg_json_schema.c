@@ -28,7 +28,6 @@ cql_noexport void cg_json_schema_main(ast_node *head) {}
 #include "symtab.h"
 #include "encoders.h"
 #include "eval.h"
-#include "cg_common.h"
 
 static void cg_fragment_with_params(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
 static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
@@ -2153,6 +2152,11 @@ static void cg_defined_in_file(charbuf *output, ast_node *ast) {
   CHARBUF_CLOSE(tmp);
 }
 
+static void cg_defined_on_line(charbuf *output, ast_node *ast) {
+  int32_t lineno = cg_find_first_line(ast);
+  bprintf(output, ",\n\"definedOnLine\" : %d", lineno);
+}
+
 static void cg_json_declare_interface(ast_node *ast) {
   Contract(is_ast_declare_interface_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -2165,6 +2169,7 @@ static void cg_json_declare_interface(ast_node *ast) {
   BEGIN_INDENT(interface, 2);
   bprintf(output, "\"name\" : \"%s\"", name);
   cg_defined_in_file(output, ast);
+  cg_defined_on_line(output, ast);
   cg_json_projection(output, ast);
   END_INDENT(interface);
 
@@ -2197,6 +2202,7 @@ static void cg_json_create_proc(ast_node *ast, ast_node *misc_attrs) {
 
   bprintf(output, "\"name\" : \"%s\"", name);
   cg_defined_in_file(output, name_ast);
+  cg_defined_on_line(output, ast);
 
   bool_t simple = cg_parameters(output, ast);
 

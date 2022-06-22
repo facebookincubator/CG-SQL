@@ -184,44 +184,6 @@ static int32_t cur_fragment_predicate = 0;
 static int32_t prev_variable_count;
 static int32_t cur_variable_count;
 
-// See cg_find_best_line for more details on why this is what it is.
-// All that's going on here is we recursively visit the tree and find the smallest
-// line number that matches the given file in that branch.
-static int32_t cg_find_first_line_recursive(ast_node *ast, CSTR filename) {
-  int32_t line = INT32_MAX;
-  int32_t lleft = INT32_MAX;
-  int32_t lright = INT32_MAX;
-
-  // file name is usually the same actual string but not always
-  if (ast->filename == filename || !strcmp(filename, ast->filename)) {
-   line = ast->lineno;
-  }
-
-  if (ast_has_left(ast)) {
-   lleft = cg_find_first_line_recursive(ast->left, filename);
-   if (lleft < line) line = lleft;
-  }
-
-  if (ast_has_right(ast)) {
-   lright = cg_find_first_line_recursive(ast->right, filename);
-   if (lright < line) line = lright;
-  }
-
-  return line;
-}
-
-// What's going on here is that the AST is generated on REDUCE operations.
-// that means the line number at the time any AST node was generated is
-// the largest line number anywhere in that AST.  But if we're looking for
-// the line number for a statement we want the line number where it started.
-// The way to get that is to recurse through the tree and choose the smallest
-// line number anywhere in the tree.  But, we must only use line numbers
-// from the same file as the one we ended on.  If (e.g.) a procedure spans files
-// this will cause jumping around but that's not really avoidable.
-static int32_t cg_find_first_line(ast_node *ast) {
-  return cg_find_first_line_recursive(ast, ast->filename);
-}
-
 // emit the line directive, escape the file name using the C convention
 static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
   if (options.test || options.nolines) {

@@ -112,6 +112,7 @@ int fileno(FILE *);
 \"constantGroups\"[ \t]*:        { return CONSTANT_GROUPS; }
 \"args\"[ \t]*:                  { return ARGS; }
 \"definedInFile\"[ \t]*:         { return DEFINED_IN_FILE; }
+\"definedOnLine\"[ \t]*:         { return DEFINED_ON_LINE; }
 \"statementType\"[ \t]*:         { return STATEMENT_TYPE; }
 \"values\"[ \t]*:                { return VALUES; }
 \"valueArgs\"[ \t]*:             { return VALUE_ARGS; }

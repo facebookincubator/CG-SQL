@@ -270,3 +270,5 @@ cql_noexport void cg_no_op(ast_node *_Nonnull ast);
 cql_noexport bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
 
 cql_noexport crc_t crc_charbuf(charbuf *_Nonnull input);
+
+cql_noexport int32_t cg_find_first_line(ast_node *_Nonnull ast);
