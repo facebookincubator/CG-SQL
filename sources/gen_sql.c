@@ -2395,6 +2395,19 @@ static void gen_alter_table_add_column_stmt(ast_node *ast) {
   gen_col_def(col_def);
 }
 
+bool_t eval_if_stmt_callback(ast_node *ast) {
+  Contract(is_ast_if_stmt(ast));
+
+  bool_t suppress = 0;
+  if (gen_callbacks && gen_callbacks->if_stmt_callback) {
+    CHARBUF_OPEN(buf);
+    suppress = gen_callbacks->if_stmt_callback(ast, gen_callbacks->if_stmt_context, &buf);
+    gen_printf("%s", buf.ptr);
+    CHARBUF_CLOSE(buf);
+  }
+  return suppress;
+}
+
 static void gen_cond_action(ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
@@ -2422,6 +2435,10 @@ static void gen_if_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(if_alt, ast->right);
   EXTRACT(elseif, if_alt->left);
   EXTRACT_NAMED(elsenode, else, if_alt->right);
+
+  if (eval_if_stmt_callback(ast)) {
+    return;
+  }
 
   gen_printf("IF ");
   gen_cond_action(cond_action);

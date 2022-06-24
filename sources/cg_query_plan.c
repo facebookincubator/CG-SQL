@@ -24,6 +24,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {}
 #include "gen_sql.h"
 #include "cg_common.h"
 #include "sem.h"
+#include "eval.h"
 
 static void cg_qp_one_stmt(ast_node *stmt);
 
@@ -72,6 +73,50 @@ static bool_t variables_callback(
   if (is_nullable(sem_type)) {
     bprintf(output, ")");
   }
+
+  return true;
+}
+
+// For shared fragments with conditionals, choose one block and discard the conditional.
+// A zero-indexed integer provided by "context" chooses the block - default is 0.
+static bool_t if_stmt_callback(
+  struct ast_node *_Nonnull ast,
+  void *_Nullable context,
+  charbuf *_Nonnull output)
+{
+  Contract(is_ast_if_stmt(ast));
+  EXTRACT_NOTNULL(if_alt, ast->right);
+  EXTRACT(elseif, if_alt->left);
+  EXTRACT_NAMED_NOTNULL(elsenode, else, if_alt->right);
+
+  int64_t branch_to_keep_index = context ? *(int64_t*) context : 0;
+  ast_node *stmt_list;
+
+  if (branch_to_keep_index <= 0) {
+    EXTRACT_NOTNULL(cond_action, ast->left);
+    stmt_list = cond_action->right;
+  } else {
+    int64_t curr_index = 1;
+    while (elseif && curr_index < branch_to_keep_index) {
+      Contract(is_ast_elseif(elseif));
+      elseif = elseif->right;
+      curr_index++;
+    }
+
+    if (elseif) {
+      EXTRACT(cond_action, elseif->left);
+      stmt_list = cond_action->right;
+    } else {
+      stmt_list = elsenode->left;
+    }
+  }
+
+  // This callback is only invoked within shared fragments.
+  // So we can enforce there's only a single select statement
+  Contract(is_ast_stmt_list(stmt_list));
+  Contract(!stmt_list->right);
+  EXTRACT_NOTNULL(select_stmt, stmt_list->left);
+  gen_one_stmt(select_stmt);
 
   return true;
 }
@@ -155,6 +200,21 @@ static void cg_qp_ok_table_scan_callback(
   bprintf(ok_table_scan_buf, "#%s#", table_name);
 }
 
+static void cg_qp_query_plan_branch_callback(
+  CSTR _Nonnull name,
+  ast_node* _Nonnull misc_attr_value,
+  void* _Nullable context)
+{
+  Contract(context && is_ast_num(misc_attr_value));
+
+  eval_node result = EVAL_NIL;
+  eval(misc_attr_value, &result);
+
+  Contract(result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL);
+  eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+  *(int64_t*)context = result.int64_value;
+}
+
 // There are now extract work to be done in create_proc_stmt substree.
 // We need to associate the proc name and ok_table_scan's tables to all
 // sql statement found in the proc.
@@ -175,10 +235,27 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
 
   uint32_t frag_type = find_proc_frag_type(ast);
   if (frag_type == FRAG_TYPE_SHARED) {
+    EXTRACT_MISC_ATTRS(ast, misc_attrs);
+    int64_t if_stmt_branch_context = 0;
+    find_query_plan_branch(misc_attrs, cg_qp_query_plan_branch_callback, (void *) &if_stmt_branch_context);
+
+    cg_qp_callbacks->if_stmt_callback = &if_stmt_callback;
+    cg_qp_callbacks->if_stmt_context = &if_stmt_branch_context;
+
     bprintf(query_plans, "@attribute(cql:shared_fragment)\n");
+
+    if (if_stmt_branch_context > 0) {
+      bprintf(query_plans, "@attribute(cql:query_plan_branch=%lld)\n", if_stmt_branch_context);
+    }
+
     gen_set_output_buffer(query_plans);
     gen_statement_with_callbacks(ast, cg_qp_callbacks);
     bprintf(query_plans, ";\n\n");
+
+    // Don't apply callback outside of shared fragments
+    cg_qp_callbacks->if_stmt_callback = NULL;
+    cg_qp_callbacks->if_stmt_context = NULL;
+
     return;
   }
 

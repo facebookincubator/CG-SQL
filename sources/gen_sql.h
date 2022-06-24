@@ -98,6 +98,10 @@ typedef struct gen_sql_callbacks {
   gen_sql_callback _Nullable cte_suppress_callback;
   void *_Nullable cte_suppress_context;
 
+  // This callback is used to override entire if/else statements
+  gen_sql_callback _Nullable if_stmt_callback;
+  void *_Nullable if_stmt_context;
+
   // If true, hex literals are converted to decimal.  This is for JSON which does not support hex literals.
   bool_t convert_hex;
 

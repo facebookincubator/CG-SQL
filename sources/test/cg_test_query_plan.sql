@@ -222,3 +222,41 @@ begin
   where C.id in (select * from I)
   and C.id not in (select * from E);
 end;
+
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=011)
+CREATE PROC frag1(x int)
+BEGIN
+  IF x == 2 THEN
+    SELECT 1 a;
+  ELSE
+    SELECT 2 a;
+  END IF;
+END;
+
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=3)
+CREATE PROC frag2(y int)
+BEGIN
+  IF y == 2 THEN
+    SELECT 10 b;
+  ELSE IF y == -1 THEN
+    SELECT 20 b;
+  ELSE IF y == 0 THEN
+    SELECT 30 b;
+  ELSE IF y == 3 THEN
+    SELECT 40 b;
+  ELSE
+    SELECT 50 b;
+  END IF;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC frag3(z int)
+BEGIN
+  IF z == 2 THEN
+    SELECT 100 c;
+  ELSE
+    SELECT 200 c;
+  END IF;
+END;

@@ -409,6 +409,26 @@ BEGIN
   END;
 END;
 
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=11)
+CREATE PROC frag1 (x INTEGER)
+BEGIN
+SELECT 2 AS a;
+END;
+
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=3)
+CREATE PROC frag2 (y INTEGER)
+BEGIN
+SELECT 40 AS b;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC frag3 (z INTEGER)
+BEGIN
+SELECT 100 AS c;
+END;
+
 
 CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN

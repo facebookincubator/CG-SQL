@@ -413,6 +413,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
 
 // For searching proc dependencies/attributes
 typedef void (*find_ast_str_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
+typedef void (*find_ast_num_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull num_ast, void *_Nullable context);
 
 typedef struct table_callbacks {
   bool_t notify_table_or_view_drops;
@@ -487,6 +488,12 @@ cql_noexport uint32_t find_assembly_query_attr(
   ast_node *_Nullable misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
   void *_Nullable context);
+
+cql_noexport uint32_t find_query_plan_branch(
+  ast_node *_Nonnull list,
+  find_ast_num_node_callback _Nonnull callback,
+  void *_Nullable context
+);
 
 #define FRAG_TYPE_NONE 0
 #define FRAG_TYPE_BASE 1

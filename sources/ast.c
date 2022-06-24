@@ -21,11 +21,12 @@ cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
 cql_data_defn( char *_Nullable current_file );
 
-// Helper object to just hold info in find_attribute_str(...)
+// Helper object to just hold info in find_attribute_str(...) and find_attribute_num(...)
 typedef struct misc_attrs_type {
   CSTR attribute_name;
   void * context;
   find_ast_str_node_callback str_node_callback;
+  find_ast_num_node_callback num_node_callback;
   bool_t presence_only;
   uint32_t count;
 } misc_attrs_type;
@@ -455,6 +456,11 @@ static void ast_find_ast_misc_attr_callback(
           misc->count++;
         }
       }
+    } else if (is_ast_num(ast_misc_attr_values)) {
+      if (misc->num_node_callback) {
+        EXTRACT_NUM_VALUE(value, ast_misc_attr_values);
+        misc->num_node_callback(value, ast_misc_attr_values, misc->context);
+      }
     }
   }
 }
@@ -471,6 +477,27 @@ cql_noexport uint32_t find_attribute_str(
 
   misc_attrs_type misc = {
     .str_node_callback = callback,
+    .context = context,
+    .attribute_name = attribute_name,
+    .count = 0,
+  };
+
+  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
+  return misc.count;
+}
+
+// Helper function to extract the specified number type attribute (if any) from the misc attributes
+// provided, and invoke the callback function
+cql_noexport uint32_t find_attribute_num(
+  ast_node *_Nullable misc_attr_list,
+  find_ast_num_node_callback _Nullable callback,
+  void *_Nullable context,
+  const char *attribute_name)
+{
+  Contract(is_ast_misc_attrs(misc_attr_list));
+
+  misc_attrs_type misc = {
+    .num_node_callback = callback,
     .context = context,
     .attribute_name = attribute_name,
     .count = 0,
@@ -528,6 +555,14 @@ cql_noexport uint32_t find_ok_table_scan(
   void *_Nullable context)
 {
   return find_attribute_str(list, callback, context, "ok_table_scan");
+}
+
+cql_noexport uint32_t find_query_plan_branch(
+  ast_node *_Nonnull list,
+  find_ast_num_node_callback _Nonnull callback,
+  void *_Nullable context
+) {
+  return find_attribute_num(list, callback, context, "query_plan_branch");
 }
 
 // Helper function to extract the auto-drop nodes (if any) from the misc attributes
