@@ -257,16 +257,6 @@ static rtdata rt_schema = {
   .symbol_case = cg_symbol_case_camel,
 };
 
-static rtdata rt_schema_facet_checker = {
-  .name = "schema_facet_checker",
-  .code_generator = &cg_schema_facet_checker_main,
-  .required_file_names_count = 1,
-  .source_prefix =
-    RT_IP_NOTICE("--")
-    RT_SIGNSRC("--") "\n",
-  .symbol_case = cg_symbol_case_camel,
-};
-
 static rtdata rt_json_schema = {
   .name = "json_schema",
   .code_generator = &cg_json_schema_main,
@@ -322,7 +312,6 @@ static rtdata *(rt_all[]) = {
   &rt_schema_upgrade,
   &rt_schema_sqlite,
   &rt_schema,
-  &rt_schema_facet_checker,
   &rt_json_schema,
   &rt_test_helpers,
   &rt_query_plan,

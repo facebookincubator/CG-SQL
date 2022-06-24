@@ -9496,11 +9496,6 @@ These are the various outputs the compiler can produce.
 * suitable for use to create the next or first "previous" schema for schema validation
 * requires one output file
 
-#### --rt schema_facet_checker
-* produces a CQL script that checks whether the schema is up to date which can then be compiled with CQL itself
-* see the chapter on schema upgrade/migration: [Chapter 10](https://cgsql.dev/cql-guide/ch10/)
-* requires one output file (foo.sql)
-
 #### --rt schema_upgrade
 * produces a CQL schema upgrade script which can then be compiled with CQL itself
 * see the chapter on schema upgrade/migration: [Chapter 10](https://cgsql.dev/cql-guide/ch10/)

@@ -11,7 +11,6 @@
 cql_noexport void cg_schema_main(ast_node *head) {}
 cql_noexport void cg_schema_upgrade_main(ast_node *head) {}
 cql_noexport void cg_schema_sqlite_main(ast_node *head) {}
-cql_noexport void cg_schema_facet_checker_main(ast_node *head) {}
 
 #else
 
@@ -219,8 +218,8 @@ static bool_t cg_schema_force_if_not_exists(ast_node *ast, void *context, charbu
   return true;
 }
 
-// Emit table definitions and procedures required solely to check whether an upgrade is needed
-static void cg_schema_facet_checker_helpers(charbuf *decls, bool_t is_facet_checker) {
+// Emit the helper procedures for the upgrade
+static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "-- facets table declaration --\n");
   bprintf(decls, "CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
   bprintf(decls, "  facet TEXT NOT NULL PRIMARY KEY,\n");
@@ -233,12 +232,6 @@ static void cg_schema_facet_checker_helpers(charbuf *decls, bool_t is_facet_chec
 
   bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
 
-  // The facet checker's copy of this procedure is unused in tests and can conflict
-  // with the main schema deployer's copy unless this one is made private.
-  if (is_facet_checker) {
-    bprintf(decls, "@attribute(cql:private)\n");
-  }
-
   bprintf(decls, "CREATE PROCEDURE %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  BEGIN TRY\n");
@@ -248,11 +241,6 @@ static void cg_schema_facet_checker_helpers(charbuf *decls, bool_t is_facet_chec
   bprintf(decls, "    SET _version := -1;\n"); // this is here to handle the case where the table doesn't exist
   bprintf(decls, "  END CATCH;\n");
   bprintf(decls, "END;\n\n");
-}
-
-// Emit the helper procedures for the upgrade
-static void cg_schema_helpers(charbuf *decls) {
-  cg_schema_facet_checker_helpers(decls, false /* is_facet_checker */);
 
   bprintf(decls, "-- saved facets table declaration --\n");
   bprintf(decls, "CREATE TEMP TABLE %s_cql_schema_facets_saved(\n", global_proc_name);
@@ -1353,44 +1341,6 @@ static llint_t cg_schema_compute_crc(
     CHARBUF_CLOSE(all_schema_no_virtual_tables);
   }
   return schema_crc;
-}
-
-// Main entry point for schema facet checker code generation.
-cql_noexport void cg_schema_facet_checker_main(ast_node *head) {
-  Contract(options.file_names_count == 1);
-
-  cql_exit_on_semantic_errors(head);
-  exit_on_no_global_proc();
-
-  schema_annotation* notes;
-  size_t schema_items_count;
-  recreate_annotation* recreates;
-  size_t recreate_items_count;
-  int32_t max_schema_version;
-  llint_t schema_crc = cg_schema_compute_crc(
-     &notes,
-     &schema_items_count,
-     &recreates,
-     &recreate_items_count,
-     &max_schema_version,
-     NULL);
-
-  CHARBUF_OPEN(main);
-
-  cg_schema_facet_checker_helpers(&main, true /* is_facet_checker */);
-
-  bprintf(&main, "CREATE PROCEDURE %s_facet_check()\n", global_proc_name);
-  bprintf(&main, "BEGIN\n");
-  bprintf(&main, "  -- Fetch the last known schema CRC. Fail if it's out of date. --\n");
-  bprintf(&main, "  DECLARE OUT CALL %s_cql_get_facet_version('cql_schema_crc', schema_crc);\n\n", global_proc_name);
-  bprintf(&main, "  IF schema_crc <> %lld THEN\n", (llint_t)schema_crc);
-  bprintf(&main, "    THROW;\n");
-  bprintf(&main, "  END IF;\n");
-  bprintf(&main, "END;\n\n");
-
-  cql_write_file(options.file_names[0], main.ptr);
-
-  CHARBUF_CLOSE(main);
 }
 
 // Main entry point for schema upgrade code-gen.

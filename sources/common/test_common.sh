@@ -1055,18 +1055,6 @@ schema_migration_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_schema_min_version_upgrade.out
   on_diff_exit cg_test_schema_min_version_upgrade.err
-
-  echo "  running schema facet checker"
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_facet_checker.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_facet_checker 2>"${OUT_DIR}/cg_test_schema_facet_checker.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_facet_checker.err"
-    failed
-  fi
-
-  echo "  computing diffs (empty if none)"
-  on_diff_exit cg_test_schema_facet_checker.out
-  on_diff_exit cg_test_schema_facet_checker.err
 }
 
 misc_cases() {
@@ -1275,18 +1263,6 @@ misc_cases() {
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_schema_min_version_upgrade.out
   on_diff_exit cg_test_schema_min_version_upgrade.err
-
-  echo "  running schema facet checker"
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_facet_checker.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_facet_checker 2>"${OUT_DIR}/cg_test_schema_facet_checker.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_facet_checker.err"
-    failed
-  fi
-
-  echo "  computing diffs (empty if none)"
-  on_diff_exit cg_test_schema_facet_checker.out
-  on_diff_exit cg_test_schema_facet_checker.err
 }
 
 misc_cases() {
