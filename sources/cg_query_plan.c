@@ -77,8 +77,9 @@ static bool_t variables_callback(
   return true;
 }
 
-// For shared fragments with conditionals, choose one block and discard the conditional.
-// A zero-indexed integer provided by "context" chooses the block - default is 0.
+// For shared fragments with conditionals, choose one branch and discard the conditional.
+// A one-indexed integer provided by "context" chooses the branch - default is 1 (first branch).
+// Starting from 1 rather than 0 seems more intuitive for the use of @attribute(cql:query_plan_branch)
 static bool_t if_stmt_callback(
   struct ast_node *_Nonnull ast,
   void *_Nullable context,
@@ -89,14 +90,14 @@ static bool_t if_stmt_callback(
   EXTRACT(elseif, if_alt->left);
   EXTRACT_NAMED_NOTNULL(elsenode, else, if_alt->right);
 
-  int64_t branch_to_keep_index = context ? *(int64_t*) context : 0;
+  int64_t branch_to_keep_index = context ? *(int64_t*) context : 1;
   ast_node *stmt_list;
 
-  if (branch_to_keep_index <= 0) {
+  if (branch_to_keep_index <= 1) {
     EXTRACT_NOTNULL(cond_action, ast->left);
     stmt_list = cond_action->right;
   } else {
-    int64_t curr_index = 1;
+    int64_t curr_index = 2;
     while (elseif && curr_index < branch_to_keep_index) {
       Contract(is_ast_elseif(elseif));
       elseif = elseif->right;
@@ -236,7 +237,7 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
   uint32_t frag_type = find_proc_frag_type(ast);
   if (frag_type == FRAG_TYPE_SHARED) {
     EXTRACT_MISC_ATTRS(ast, misc_attrs);
-    int64_t if_stmt_branch_context = 0;
+    int64_t if_stmt_branch_context = 1;
     find_query_plan_branch(misc_attrs, cg_qp_query_plan_branch_callback, (void *) &if_stmt_branch_context);
 
     cg_qp_callbacks->if_stmt_callback = &if_stmt_callback;
@@ -244,7 +245,7 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
 
     bprintf(query_plans, "@attribute(cql:shared_fragment)\n");
 
-    if (if_stmt_branch_context > 0) {
+    if (if_stmt_branch_context > 1) {
       bprintf(query_plans, "@attribute(cql:query_plan_branch=%lld)\n", if_stmt_branch_context);
     }
 

@@ -417,7 +417,7 @@ SELECT 2 AS a;
 END;
 
 @attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=3)
+@attribute(cql:query_plan_branch=4)
 CREATE PROC frag2 (y INTEGER)
 BEGIN
 SELECT 40 AS b;

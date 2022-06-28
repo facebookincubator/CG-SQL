@@ -235,7 +235,7 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=3)
+@attribute(cql:query_plan_branch=4)
 CREATE PROC frag2(y int)
 BEGIN
   IF y == 2 THEN
@@ -252,6 +252,7 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=1)
 CREATE PROC frag3(z int)
 BEGIN
   IF z == 2 THEN
