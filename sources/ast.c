@@ -310,7 +310,21 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 
   if (is_ast_int(node)) {
     cql_output("%s", padbuffer);
-    cql_output("{int %lld}", (llint_t)((struct int_ast_node *)node)->value);
+    int_ast_node *inode = (int_ast_node *)node;
+    cql_output("{int %lld}", (llint_t)inode->value);
+    if (node->parent->type == k_ast_join_target) {
+      CSTR out = NULL;
+      switch (inode->value) {
+        case JOIN_INNER:       out = "{join_inner}";       break;
+        case JOIN_CROSS:       out = "{join_cross}";       break;
+        case JOIN_LEFT_OUTER:  out = "{join_left_outer}";  break;
+        case JOIN_RIGHT_OUTER: out = "{join_right_outer}"; break;
+        case JOIN_LEFT:        out = "{join_left}";        break;
+        case JOIN_RIGHT:       out = "{join_right}";       break;
+      }
+      Contract(out); // if this fails there is a bogus join type in the AST
+      cql_output(" %s", out);
+    }
     ret = true;
   }
 

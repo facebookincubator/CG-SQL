@@ -365,7 +365,7 @@ SELECT T1.id, name
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: bar }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: bar }
   |       |       | | {name bar}: TABLE { T2: bar }
@@ -411,7 +411,7 @@ SELECT *
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: foo }
-  |       |     | {int 5}
+  |       |     | {int 5} {join_left}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: foo }
   |       |         | {name foo}: TABLE { T2: foo }
@@ -444,7 +444,7 @@ SELECT *
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: foo }
-  |       |     | {int 2}
+  |       |     | {int 2} {join_cross}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: foo }
   |       |       | | {name foo}: TABLE { T2: foo }
@@ -3363,7 +3363,7 @@ SELECT *
   |       | |   | {name Item}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { Item: select, ItemBrand: select }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { ItemBrand: select }
   |       |       | | {select_stmt}: select: { id2: integer notnull, brand: text notnull }
@@ -3642,7 +3642,7 @@ LIMIT 5;
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: bar }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: bar }
   |       |       | | {name bar}: TABLE { T2: bar }
@@ -3713,7 +3713,7 @@ test/sem_test.sql:XXXX:1: error: in on : CQL0015: expected numeric expression 'O
   |       | | | {name foo}: TABLE { foo: foo }
   |       | | {join_target_list}
   |       |   | {join_target}: err
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: bar }
   |       |       | | {name bar}: TABLE { T2: bar }
@@ -11296,7 +11296,7 @@ OFFSET 7;
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: bar }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: bar }
   |       |       | | {name bar}: TABLE { T2: bar }
@@ -11379,7 +11379,7 @@ test/sem_test.sql:XXXX:1: error: in opt_offset : CQL0015: expected numeric expre
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: bar }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: bar }
   |       |       | | {name bar}: TABLE { T2: bar }
@@ -11976,7 +11976,7 @@ SELECT *
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: foo }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: foo }
   |       |       | | {name foo}: TABLE { T2: foo }
@@ -12015,7 +12015,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: err
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: foo }
   |       |       | | {name foo}: TABLE { T2: foo }
@@ -12056,7 +12056,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0096: join using column not f
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: err
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: foo }
   |       |       | | {name foo}: TABLE { T2: foo }
@@ -12097,7 +12097,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0097: join using column not f
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: err
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: foo }
   |       |       | | {name foo}: TABLE { T2: foo }
@@ -12188,7 +12188,7 @@ SELECT *
   |       | | | {name payload1}: TABLE { payload1: payload1 }
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { payload1: payload1, payload2: payload2 }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { payload2: payload2 }
   |       |       | | {name payload2}: TABLE { payload2: payload2 }
@@ -12221,7 +12221,7 @@ SELECT *
   |       | | | {name payload1}: TABLE { payload1: payload1 }
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { payload1: payload1, payload2: payload2 }
-  |       |     | {int 3}
+  |       |     | {int 3} {join_left_outer}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { payload2: payload2 }
   |       |       | | {name payload2}: TABLE { payload2: payload2 }
@@ -12254,7 +12254,7 @@ SELECT *
   |       | | | {name payload1}: TABLE { payload1: payload1 }
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { payload1: payload1, payload2: payload2 }
-  |       |     | {int 4}
+  |       |     | {int 4} {join_right_outer}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { payload2: payload2 }
   |       |       | | {name payload2}: TABLE { payload2: payload2 }
@@ -12287,7 +12287,7 @@ SELECT *
   |       | | | {name payload1}: TABLE { payload1: payload1 }
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { payload1: payload1, payload2: payload2 }
-  |       |     | {int 2}
+  |       |     | {int 2} {join_cross}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { payload2: payload2 }
   |       |       | | {name payload2}: TABLE { payload2: payload2 }
@@ -12331,7 +12331,7 @@ foo AS D);
   |       | |         | {name B}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { A: foo, B: foo, C: foo, D: foo }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: JOIN { C: foo, D: foo }
   |       |         | {table_or_subquery_list}: JOIN { C: foo, D: foo }
@@ -12375,7 +12375,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   |       | |   | | {name foo}: TABLE { foo: foo }
   |       | |   | {join_target_list}
   |       | |     | {join_target}: err
-  |       | |       | {int 1}
+  |       | |       | {int 1} {join_inner}
   |       | |       | {table_join}
   |       | |         | {table_or_subquery}: TABLE { bar: bar }
   |       | |         | | {name bar}: TABLE { bar: bar }
@@ -12385,7 +12385,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   |       | |             | {strlit 'x'}: text notnull
   |       | | {join_target_list}
   |       |   | {join_target}
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { foo: foo }
   |       |       | | {name foo}: TABLE { foo: foo }
@@ -12756,7 +12756,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0098: left/right column types
   |       | | | {name join_clause_1}: TABLE { join_clause_1: join_clause_1 }
   |       | | {join_target_list}
   |       |   | {join_target}: err
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { join_clause_2: join_clause_2 }
   |       |       | | {name join_clause_2}: TABLE { join_clause_2: join_clause_2 }
@@ -13265,7 +13265,7 @@ SELECT *
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: A1, T2: B1 }
-  |       |   | | {int 3}
+  |       |   | | {int 3} {join_left_outer}
   |       |   | | {table_join}
   |       |   |   | {table_or_subquery}: TABLE { T2: B1 }
   |       |   |   | | {name B1}: TABLE { T2: B1 }
@@ -13282,7 +13282,7 @@ SELECT *
   |       |   |         | {name foo}
   |       |   | {join_target_list}
   |       |     | {join_target}: JOIN { T1: A1, T2: B1, T3: C1 }
-  |       |       | {int 3}
+  |       |       | {int 3} {join_left_outer}
   |       |       | {table_join}
   |       |         | {table_or_subquery}: TABLE { T3: C1 }
   |       |         | | {name C1}: TABLE { T3: C1 }
@@ -14710,7 +14710,7 @@ BB2 AS B)
   |       | |         | {name B}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { A: AA1, B: BB2, C: CC3 }
-  |       |     | {int 3}
+  |       |     | {int 3} {join_left_outer}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { C: CC3 }
   |       |       | | {name CC3}: TABLE { C: CC3 }
@@ -18643,7 +18643,7 @@ SELECT *
     |       | |   | {name X}
     |       | | {join_target_list}
     |       |   | {join_target}: JOIN { X: x, Y: select }
-    |       |   | | {int 1}
+    |       |   | | {int 1} {join_inner}
     |       |   | | {table_join}
     |       |   |   | {table_or_subquery}: TABLE { Y: select }
     |       |   |   | | {with_select_stmt}: select: { a: integer notnull, b: integer notnull }
@@ -18702,7 +18702,7 @@ SELECT *
     |       |   |         | {name a}
     |       |   | {join_target_list}
     |       |     | {join_target}: JOIN { X: x, Y: select, Z: select }
-    |       |       | {int 1}
+    |       |       | {int 1} {join_inner}
     |       |       | {table_join}
     |       |         | {table_or_subquery}: TABLE { Z: select }
     |       |         | | {with_select_stmt}: select: { a: integer notnull, b: integer notnull }
@@ -18966,7 +18966,7 @@ SELECT *
     |       | | | {name another_cte}: TABLE { another_cte: another_cte }
     |       | | {join_target_list}
     |       |   | {join_target}: JOIN { another_cte: another_cte, some_cte: some_cte }
-    |       |     | {int 1}
+    |       |     | {int 1} {join_inner}
     |       |     | {table_join}
     |       |       | {table_or_subquery}: TABLE { some_cte: some_cte }
     |       |         | {name some_cte}: TABLE { some_cte: some_cte }
@@ -21674,7 +21674,7 @@ END;
           |         |       | | | {name bar}: TABLE { bar: bar }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { bar: bar, t1: t1 }
-          |         |       |     | {int 1}
+          |         |       |     | {int 1} {join_inner}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { t1: t1 }
           |         |       |       | | {name t1}: TABLE { t1: t1 }
@@ -24975,7 +24975,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0180: duplicate column name in resu
       |   |       | |   | {name T1}
       |   |       | | {join_target_list}
       |   |       |   | {join_target}: JOIN { T1: foo, T2: foo }
-      |   |       |     | {int 1}
+      |   |       |     | {int 1} {join_inner}
       |   |       |     | {table_join}
       |   |       |       | {table_or_subquery}: TABLE { T2: foo }
       |   |       |       | | {name foo}: TABLE { T2: foo }
@@ -25028,7 +25028,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0180: duplicate column
         |       | |   | {name T1}
         |       | | {join_target_list}
         |       |   | {join_target}: JOIN { T1: foo, T2: foo }
-        |       |     | {int 1}
+        |       |     | {int 1} {join_inner}
         |       |     | {table_join}
         |       |       | {table_or_subquery}: TABLE { T2: foo }
         |       |       | | {name foo}: TABLE { T2: foo }
@@ -34313,7 +34313,7 @@ ORDER BY sort_key, key_;
   |           | | | {name a}: TABLE { a: a }
   |           | | {join_target_list}
   |           |   | {join_target}: JOIN { a: a, b: b }
-  |           |     | {int 1}
+  |           |     | {int 1} {join_inner}
   |           |     | {table_join}
   |           |       | {table_or_subquery}: TABLE { b: b }
   |           |       | | {name b}: TABLE { b: b }
@@ -34396,7 +34396,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'a_key_'
   |           | | | {name a}: TABLE { a: a }
   |           | | {join_target_list}
   |           |   | {join_target}: JOIN { a: a, b: b }
-  |           |     | {int 1}
+  |           |     | {int 1} {join_inner}
   |           |     | {table_join}
   |           |       | {table_or_subquery}: TABLE { b: b }
   |           |       | | {name b}: TABLE { b: b }
@@ -34478,7 +34478,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'b.a_key_'
   |           | | | {name a}: TABLE { a: a }
   |           | | {join_target_list}
   |           |   | {join_target}: JOIN { a: a, b: b }
-  |           |     | {int 1}
+  |           |     | {int 1} {join_inner}
   |           |     | {table_join}
   |           |       | {table_or_subquery}: TABLE { b: b }
   |           |       | | {name b}: TABLE { b: b }
@@ -34527,7 +34527,7 @@ SELECT T1.id
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: bar, T2: with_sensitive }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: with_sensitive }
   |       |       | | {name with_sensitive}: TABLE { T2: with_sensitive }
@@ -34578,7 +34578,7 @@ SELECT T1.id
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: bar, T2: with_sensitive }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: with_sensitive }
   |       |       | | {name with_sensitive}: TABLE { T2: with_sensitive }
@@ -34623,7 +34623,7 @@ SELECT T1.id
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: with_sensitive, T2: with_sensitive }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: with_sensitive }
   |       |       | | {name with_sensitive}: TABLE { T2: with_sensitive }
@@ -34663,7 +34663,7 @@ SELECT T1.id
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: with_sensitive, T2: with_sensitive }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: with_sensitive }
   |       |       | | {name with_sensitive}: TABLE { T2: with_sensitive }
@@ -38315,7 +38315,7 @@ END;
           |       |       | |   | {name T1}
           |       |       | | {join_target_list}
           |       |       |   | {join_target}: JOIN { T1: foo, T2: bar }
-          |       |       |     | {int 1}
+          |       |       |     | {int 1} {join_inner}
           |       |       |     | {table_join}
           |       |       |       | {table_or_subquery}: TABLE { T2: bar }
           |       |       |       | | {name bar}: TABLE { T2: bar }
@@ -39181,7 +39181,7 @@ END;
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -39470,7 +39470,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0322: fragment parameters must be e
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -39617,7 +39617,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0255: fragment name is not a previo
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -39764,7 +39764,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0268: extension/assembly fragment m
           |         |       | | | {name core_not_exist}: TABLE { core_not_exist: core_not_exist }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core_not_exist: core_not_exist, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -39914,7 +39914,7 @@ test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0258: extension fragment mus
           |     |   |       | | | {name core}: TABLE { core: core }
           |     |   |       | | {join_target_list}
           |     |   |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |     |   |       |     | {int 3}
+          |     |   |       |     | {int 3} {join_left_outer}
           |     |   |       |     | {table_join}
           |     |   |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |     |   |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -39969,7 +39969,7 @@ test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0258: extension fragment mus
           |           |       | | | {name core}: TABLE { core: core }
           |           |       | | {join_target_list}
           |           |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |           |       |     | {int 3}
+          |           |       |     | {int 3} {join_left_outer}
           |           |       |     | {table_join}
           |           |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |           |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -40259,7 +40259,7 @@ test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0260: extension fragment CTE
           |         |       | |   | {name core}
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: select, junk: select }
-          |         |       |     | {int 1}
+          |         |       |     | {int 1} {join_inner}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { junk: select }
           |         |       |         | {select_stmt}: select: { a: integer notnull }
@@ -40457,7 +40457,7 @@ test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0260: extension fragment CTE
           |         |       | |   | {name core}
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core2, junk: select }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { junk: select }
           |         |       |         | {select_stmt}: select: { a: integer notnull }
@@ -40613,7 +40613,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0268: extension/assembly fragm
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -40761,7 +40761,7 @@ test/sem_test.sql:XXXX:1: error: in select_from_etc : CQL0320: extension fragmen
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, junk: select }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { junk: select }
           |         |       |         | {select_stmt}: select: { a: integer notnull }
@@ -41054,7 +41054,7 @@ test/sem_test.sql:XXXX:1: error: in select_from_etc : CQL0320: extension fragmen
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, junk: select }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { junk: select }
           |         |       |         | {select_stmt}: select: { a: integer notnull }
@@ -41342,7 +41342,7 @@ test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0260: extension fragment CTE
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 1}
+          |         |       |     | {int 1} {join_inner}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -41489,7 +41489,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end wit
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -41639,7 +41639,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end wit
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -41786,7 +41786,7 @@ test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0259: extension fragment CTE
           |         |       | | | {name bar}: TABLE { bar: bar }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { bar: bar, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -41923,7 +41923,7 @@ test/sem_test.sql:XXXX:1: error: in cte_tables : CQL0259: extension fragment CTE
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -42060,7 +42060,7 @@ END;
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -42199,7 +42199,7 @@ test/sem_test.sql:XXXX:1: error: in cte_table : CQL0266: extension fragment name
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -42383,7 +42383,7 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0287: extension/assemb
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -42517,7 +42517,7 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0288: extension/assemb
           |         |       | | | {name core}: TABLE { core: core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -42690,7 +42690,7 @@ only in 2nd: name text
           |         |           | | | {name core}: TABLE { core: core }
           |         |           | | {join_target_list}
           |         |           |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |           |     | {int 1}
+          |         |           |     | {int 1} {join_inner}
           |         |           |     | {table_join}
           |         |           |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |           |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -42857,7 +42857,7 @@ only in 1st: name text
           |         |           | | | {name core}: TABLE { core: core }
           |         |           | | {join_target_list}
           |         |           |   | {join_target}: JOIN { core: core, plugin_table: plugin_table }
-          |         |           |     | {int 1}
+          |         |           |     | {int 1} {join_inner}
           |         |           |     | {table_join}
           |         |           |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |           |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -43383,7 +43383,7 @@ END;
           |         |       | | | {name assembly_core}: TABLE { assembly_core: assembly_core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { assembly_core: assembly_core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -43530,7 +43530,7 @@ END;
           |         |       | | | {name assembly_core}: TABLE { assembly_core: assembly_core }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { assembly_core: assembly_core, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -43751,7 +43751,7 @@ END;
           |       |   |       | | | {name assembly_one}: TABLE { assembly_one: assembly_one }
           |       |   |       | | {join_target_list}
           |       |   |       |   | {join_target}: JOIN { assembly_one: assembly_one, plugin_table: plugin_table }
-          |       |   |       |     | {int 3}
+          |       |   |       |     | {int 3} {join_left_outer}
           |       |   |       |     | {table_join}
           |       |   |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |       |   |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -43814,7 +43814,7 @@ END;
           |             |       | | | {name assembly_two}: TABLE { assembly_two: assembly_two }
           |             |       | | {join_target_list}
           |             |       |   | {join_target}: JOIN { assembly_two: assembly_two, plugin_table: plugin_table }
-          |             |       |     | {int 3}
+          |             |       |     | {int 3} {join_left_outer}
           |             |       |     | {table_join}
           |             |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |             |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -44774,7 +44774,7 @@ END;
           |         |       | | | {name assembly_core_bad_one}: TABLE { assembly_core_bad_one: assembly_core_bad_one }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { assembly_core_bad_one: assembly_core_bad_one, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -44919,7 +44919,7 @@ END;
           |         |       | | | {name assembly_core_bad_one}: TABLE { assembly_core_bad_one: assembly_core_bad_one }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { assembly_core_bad_one: assembly_core_bad_one, plugin_table: plugin_table }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { plugin_table: plugin_table }
           |         |       |       | | {name plugin_table}: TABLE { plugin_table: plugin_table }
@@ -45068,7 +45068,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0267: extension fragments of 
           |     |   |       | | | {name assembly_core_bad_one}
           |     |   |       | | {join_target_list}
           |     |   |       |   | {join_target}
-          |     |   |       |     | {int 3}
+          |     |   |       |     | {int 3} {join_left_outer}
           |     |   |       |     | {table_join}
           |     |   |       |       | {table_or_subquery}
           |     |   |       |       | | {name plugin_table}
@@ -45123,7 +45123,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0267: extension fragments of 
           |           |       | | | {name assembly_bad_one}
           |           |       | | {join_target_list}
           |           |       |   | {join_target}
-          |           |       |     | {int 3}
+          |           |       |     | {int 3} {join_left_outer}
           |           |       |     | {table_join}
           |           |       |       | {table_or_subquery}
           |           |       |       | | {name plugin_table}
@@ -46006,7 +46006,7 @@ SELECT T1.id AS id1, T2.id AS id2
         |       | |   | {name T1}
         |       | | {join_target_list}
         |       |   | {join_target}: JOIN { T1: a_table_in_root_region, T2: a_table_in_dep_region }
-        |       |     | {int 1}
+        |       |     | {int 1} {join_inner}
         |       |     | {table_join}
         |       |       | {table_or_subquery}: TABLE { T2: a_table_in_dep_region }
         |       |       | | {name a_table_in_dep_region}: TABLE { T2: a_table_in_dep_region }
@@ -46252,7 +46252,7 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
         |       | |   | {name T1}
         |       | | {join_target_list}
         |       |   | {join_target}: err
-        |       |     | {int 1}
+        |       |     | {int 1} {join_inner}
         |       |     | {table_join}
         |       |       | {table_or_subquery}: err
         |       |       | | {name a_table_in_dep_region}
@@ -50533,7 +50533,7 @@ SELECT *
     |       | | | {name foo}: TABLE { foo: foo }
     |       | | {join_target_list}
     |       |   | {join_target}: JOIN { foo: foo, bar: bar }
-    |       |     | {int 1}
+    |       |     | {int 1} {join_inner}
     |       |     | {table_join}
     |       |       | {table_or_subquery}: TABLE { bar: bar }
     |       |         | {name bar}: TABLE { bar: bar }
@@ -50649,7 +50649,7 @@ SELECT *
       |       | | | {name foo}: TABLE { foo: foo }
       |       | | {join_target_list}
       |       |   | {join_target}: JOIN { foo: foo, bar: bar }
-      |       |     | {int 1}
+      |       |     | {int 1} {join_inner}
       |       |     | {table_join}
       |       |       | {table_or_subquery}: TABLE { bar: bar }
       |       |         | {name bar}: TABLE { bar: bar }
@@ -54424,7 +54424,7 @@ END;
           |         |       | | | {name blob_stuff}: TABLE { blob_stuff: blob_stuff }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { blob_stuff: blob_stuff, T2: select }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { T2: select }
           |         |       |         | {select_stmt}: select: { bl2: blob notnull }
@@ -54556,7 +54556,7 @@ END;
           |         |       | | | {name blob_stuff}: TABLE { blob_stuff: blob_stuff }
           |         |       | | {join_target_list}
           |         |       |   | {join_target}: JOIN { blob_stuff: blob_stuff, T2: select }
-          |         |       |     | {int 3}
+          |         |       |     | {int 3} {join_left_outer}
           |         |       |     | {table_join}
           |         |       |       | {table_or_subquery}: TABLE { T2: select }
           |         |       |         | {select_stmt}: select: { bl2: blob notnull }
@@ -55909,7 +55909,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0251: fragment must end wit
             |       | | | {name foo}: TABLE { foo: foo }
             |       | | {join_target_list}
             |       |   | {join_target}: JOIN { foo: foo, T: select }
-            |       |     | {int 1}
+            |       |     | {int 1} {join_inner}
             |       |     | {table_join}
             |       |       | {table_or_subquery}: TABLE { T: select }
             |       |         | {select_stmt}: select: { x: integer notnull }
@@ -68992,7 +68992,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0370: due to a memory leak 
         |       | |   | {name T1}
         |       | | {join_target_list}
         |       |   | {join_target}: JOIN { T1: select, T2: select }
-        |       |     | {int 1}
+        |       |     | {int 1} {join_inner}
         |       |     | {table_join}
         |       |       | {table_or_subquery}: TABLE { T2: select }
         |       |         | {select_stmt}: select: { _anon: integer notnull }
@@ -69133,7 +69133,7 @@ SELECT *
   |       | | | {name foo}: TABLE { foo: foo }
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { foo: foo, tvf: select }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       |         | {table_function}: TABLE { tvf: select } table_valued_function
@@ -69167,7 +69167,7 @@ test/sem_test.sql:XXXX:1: error: in join_target : CQL0371: table valued function
   |       | | | {name foo}: TABLE { foo: foo }
   |       | | {join_target_list}
   |       |   | {join_target}: err
-  |       |     | {int 5}
+  |       |     | {int 5} {join_left}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       |         | {table_function}: TABLE { tvf: select } table_valued_function
@@ -69204,7 +69204,7 @@ test/sem_test.sql:XXXX:1: error: in join_target : CQL0371: table valued function
   |       | |     | {int 1}: integer notnull
   |       | | {join_target_list}
   |       |   | {join_target}: err
-  |       |     | {int 6}
+  |       |     | {int 6} {join_right}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { foo: foo }
   |       |         | {name foo}: TABLE { foo: foo }
@@ -69235,7 +69235,7 @@ SELECT *
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: foo, T2: foo }
-  |       |     | {int 2}
+  |       |     | {int 2} {join_cross}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: foo }
   |       |         | {name foo}: TABLE { T2: foo }
@@ -73032,7 +73032,7 @@ END;
         |       | | | {name tnull}: TABLE { tnull: tnull }
         |       | | {join_target_list}
         |       |   | {join_target}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
-        |       |     | {int 1}
+        |       |     | {int 1} {join_inner}
         |       |     | {table_join}
         |       |       | {table_or_subquery}: TABLE { another_table_with_nullables: another_table_with_nullables }
         |       |       | | {name another_table_with_nullables}: TABLE { another_table_with_nullables: another_table_with_nullables }
@@ -73385,7 +73385,7 @@ END;
         |       | | | {name tnull}: TABLE { tnull: tnull }
         |       | | {join_target_list}
         |       |   | {join_target}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
-        |       |     | {int 1}
+        |       |     | {int 1} {join_inner}
         |       |     | {table_join}
         |       |       | {table_or_subquery}: TABLE { another_table_with_nullables: another_table_with_nullables }
         |       |       | | {name another_table_with_nullables}: TABLE { another_table_with_nullables: another_table_with_nullables }
@@ -73441,7 +73441,7 @@ END;
         |       | | | {name tnull}: TABLE { tnull: tnull }
         |       | | {join_target_list}
         |       |   | {join_target}: JOIN { tnull: tnull, another_table_with_nullables: another_table_with_nullables }
-        |       |     | {int 1}
+        |       |     | {int 1} {join_inner}
         |       |     | {table_join}
         |       |       | {table_or_subquery}: TABLE { another_table_with_nullables: another_table_with_nullables }
         |       |       | | {name another_table_with_nullables}: TABLE { another_table_with_nullables: another_table_with_nullables }
@@ -82495,7 +82495,7 @@ END;
             |       | | | {name source}: TABLE { source: source }
             |       | | {join_target_list}
             |       |   | {join_target}: JOIN { source: source, fragtest_2_0: fragtest_2_0 }
-            |       |     | {int 1}
+            |       |     | {int 1} {join_inner}
             |       |     | {table_join}
             |       |       | {table_or_subquery}: TABLE { fragtest_2_0: fragtest_2_0 }
             |       |         | {name fragtest_2_0}: TABLE { fragtest_2_0: fragtest_2_0 }
@@ -82920,7 +82920,7 @@ SELECT T1.id, T1.t
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: simple_shape2, T2: simple_shape2 }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: simple_shape2 }
   |       |         | {name simple_shape2}: TABLE { T2: simple_shape2 }
@@ -82966,7 +82966,7 @@ SELECT T1.id, T1.t, T1.u
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: simple_shape2, T2: simple_shape2 }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: simple_shape2 }
   |       |         | {name simple_shape2}: TABLE { T2: simple_shape2 }
@@ -83012,7 +83012,7 @@ SELECT T1.id, T1.t, T1.u
   |       | |   | {name T1}
   |       | | {join_target_list}
   |       |   | {join_target}: JOIN { T1: simple_shape2, T2: simple_shape2 }
-  |       |     | {int 1}
+  |       |     | {int 1} {join_inner}
   |       |     | {table_join}
   |       |       | {table_or_subquery}: TABLE { T2: simple_shape2 }
   |       |         | {name simple_shape2}: TABLE { T2: simple_shape2 }

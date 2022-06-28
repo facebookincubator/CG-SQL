@@ -131,7 +131,7 @@ test/sem_test_dev.sql:XXXX:1: error: in explain_stmt : CQL0292: explain statemen
     |       | | | {name foo}
     |       | | {join_target_list}
     |       |   | {join_target}
-    |       |     | {int 1}
+    |       |     | {int 1} {join_inner}
     |       |     | {table_join}
     |       |       | {table_or_subquery}
     |       |         | {name bar}

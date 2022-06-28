@@ -206,9 +206,6 @@ typedef struct rtdata {
   // Logging database error;
   const char *cql_log_database_error;
 
-  // The type for a hash code.
-  const char *cql_hash_code;
-
   // The type for a boolean value.
   const char *cql_bool;
 

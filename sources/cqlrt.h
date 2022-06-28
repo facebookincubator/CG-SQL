@@ -39,7 +39,7 @@ typedef unsigned char cql_bool;
 #define CQL_C_TYPE_BOXED_STMT 3
 #define CQL_C_TYPE_OBJECT 4
 
-typedef unsigned long cql_hash_code;
+typedef uint64_t cql_hash_code;
 typedef int32_t cql_int32;
 typedef uint32_t cql_uint32;
 typedef uint16_t cql_uint16;
