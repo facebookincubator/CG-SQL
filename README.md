@@ -17,8 +17,9 @@ Find out more at our [website](https://cgsql.dev/).
 
 Please refer to our documentation to start using CG/SQL:
 - [CG/SQL Language Summary](https://cgsql.dev/docs/introduction)
-- [Building CG/SQL](https://cgsql.dev/docs/building)
-- [Getting Started with Hello World](https://cgsql.dev/cql-guide/ch01#getting-started)
+- [Getting Started with CG/SQL](https://cgsql.dev/docs/getting-started)
+- [Writing a Hello World Program](https://cgsql.dev/cql-guide/ch01#getting-started)
+- [Playground](https://cgsql.dev/docs/playground)
 
 For Contributors:
 - [Typical Dev Cycle](https://cgsql.dev/docs/dev-notes)

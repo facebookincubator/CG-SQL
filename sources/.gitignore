@@ -18,3 +18,13 @@
 *.gcda
 *.gcno
 .pbcopy.swp
+
+/repl/go_query_plan
+/repl/go
+
+/repl/go-qp.sql
+/repl/go.sql.pre
+/repl/*.c
+/repl/*.h
+/repl/*.h.gch
+/repl/*.o

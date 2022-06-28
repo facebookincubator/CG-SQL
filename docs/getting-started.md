@@ -1,9 +1,10 @@
 ---
-id: building
-title: Building CG/SQL
-sidebar_label: Building CG/SQL
+id: getting-started
+title: Getting Started with CG/SQL
+sidebar_label: Getting Started
 ---
 
+## Building
 :::caution
 Please make sure you meet the [requirements](#requirements).
 :::
@@ -22,8 +23,12 @@ $ out/cql
 
 You might want to alias the location of `out/cql`. For example, by using the `alias` command in Linux or MacOS.
 
-Go to the [first chapter of the CQL Guide](/cql-guide/ch01#getting-started) to write your first CQL program!
+## Next Steps
+
+- Go to the [first chapter of the CQL Guide](/cql-guide/ch01#getting-started) to write your first CQL program!
 The [second chapter](/cql-guide/ch02#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
+- [CGL Language Cheatsheet](/cql-guide/x6)
+- [CQL Playground](/docs/playground)
 
 ## Requirements
 

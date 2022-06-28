@@ -7,6 +7,10 @@ CG/SQL is a code generation system for the popular SQLite library that allows de
 
 The full system also includes features for managing and upgrading schema, creating test code for stored procedures, getting query plans for procedures, as well as interfacing with stored procedures from other languages, such as Java and Objective-C. The JSON output allows for the creation of even more analysis or interfacing code. The package includes extensive documentation on the language and system.
 
+:::tip
+When we write "CQL" in these documents we're referring to the compiler proper, its flags, outputs and so forth.  In order to avoid confusion with the many similarly named systems (there are many!) we refer to the overall project as CG/SQL.  This comprises the docs, runtime, samples, everything.
+:::
+
 # What it does:
 
 The CQL compiler does most of the heavy lifting. This compiler reads the schema and procedures, providing a strongly typed language with hundreds of compile-time errors designed to prevent runtime SQL issues. The compiler carefully tracks the data types of variables as well as schema types, and reports inconsistencies (such as trying to assign nullable columns to non-nullable output variables), and otherwise ensures that the SQLite APIs are used consistently and properly.
