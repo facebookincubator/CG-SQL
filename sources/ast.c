@@ -526,8 +526,8 @@ static void ast_exists_ast_misc_attr_callback(
   }
 }
 
-// Helper function to extract the specified string type attribute (if any) from the misc attributes
-// provided, and invoke the callback function
+// Helper function to return count of given string type attribute
+// in the misc attributes provided
 cql_noexport uint32_t exists_attribute_str(ast_node *_Nullable misc_attr_list, const char *attribute_name)
 {
   if (!misc_attr_list) {
