@@ -24,6 +24,7 @@ cql_code test_error_case_rowset(sqlite3 *db);
 cql_code test_autodrop_rowset(sqlite3 *db);
 cql_code test_one_row_result(sqlite3 *db);
 cql_code test_cql_bytebuf_open(sqlite3 *db);
+cql_code test_cql_bytebuf_format(sqlite3 *db);
 cql_code test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(sqlite3 *db);
 cql_code test_cql_bytebuf_alloc_over_bytebuf_exp_growth_cap(sqlite3 *db);
 cql_code test_all_column_encoded_fetchers(sqlite3 *db);
@@ -162,6 +163,9 @@ cql_code run_client(sqlite3 *db) {
 
   SQL_E(test_cql_bytebuf_open(db));
   E(!cql_outstanding_refs, "outstanding refs in test_cql_bytebuf_open: %d\n", cql_outstanding_refs);
+
+  SQL_E(test_cql_bytebuf_format(db));
+  E(!cql_outstanding_refs, "outstanding refs in test_cql_bytebuf_format: %d\n", cql_outstanding_refs);
 
   SQL_E(test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(db));
   E(!cql_outstanding_refs,
@@ -1539,6 +1543,34 @@ cql_code test_cql_bytebuf_open(sqlite3 *db) {
   tests_passed++;
   return SQLITE_OK;
 }
+
+cql_code test_cql_bytebuf_format(sqlite3 *db) {
+  tests++;
+  printf("Running C client test for bytebuf formatting\n");
+
+  cql_bytebuf b;
+  cql_bytebuf_open(&b);
+  cql_bprintf(&b, "Hello, world %s:%d", "foo%1", 12);
+  cql_bytebuf_append_null(&b);
+
+  const char *expected = "Hello, world foo%1:12";
+
+  cql_bool matches = !strcmp(b.ptr, expected);
+
+  if (!matches) {
+    printf("expected: %s\nactual: %s\n", expected, b.ptr);
+  }
+
+  E(matches, "string format check -- failed");
+
+  E(b.used == strlen(expected) + 1, "extra characters in buffer");
+
+  cql_bytebuf_close(&b);
+
+  tests_passed++;
+  return SQLITE_OK;
+}
+
 
 cql_code test_cql_bytebuf_alloc_within_bytebuf_exp_growth_cap(sqlite3 *db) {
   printf("Running cql_bytebuf_alloc_within_bytebuf_exp_growth_cap test\n");

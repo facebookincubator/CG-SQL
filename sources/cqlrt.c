@@ -9,7 +9,7 @@
 #include <memory.h>
 #include <stdbool.h>
 
-int cql_outstanding_refs = 0;
+int32_t cql_outstanding_refs = 0;
 
 void cql_retain(cql_type_ref _Nullable ref) {
   if (ref) {

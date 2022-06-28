@@ -551,7 +551,7 @@ void cql_bytebuf_close(cql_bytebuf *_Nonnull b) {
 // Note: the data is assumed to be location independent and reference count invariant.
 // (i.e. you can memcpy it safely if you then also destroy the old copy)
 void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed) {
-  int avail = b->max - b->used;
+  int32_t avail = b->max - b->used;
 
   if (needed > avail) {
     if (b->max > BYTEBUF_EXP_GROWTH_CAP) {
@@ -575,6 +575,48 @@ void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed) {
 void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data, int32_t bytes) {
   void *pv = cql_bytebuf_alloc(buffer, bytes);
   memcpy(pv, data, bytes);
+}
+
+// This is a simple wrapper on vsnprintf, we do two passes first to compute the bytes needed
+// which we allocate using cql_bytebuf_alloc and then we write the formatted string.  Note that
+// it's normal to call this many times or in mixed ways so the null terminator is not desired.
+// The buffer gets the text of the string only.  Use cql_bytebuf_append_null to null terminate.
+static void cql_vbprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, va_list *_Nonnull args) {
+  va_list pass1, pass2;
+  va_copy(pass1, *args);
+  va_copy(pass2, *args);
+
+  // +1 to include the trailing null we will need (but don't want)
+  uint32_t needed = (uint32_t)vsnprintf(NULL, 0, format, pass1) + 1;
+
+  char *newptr = cql_bytebuf_alloc(buffer, needed);
+
+  // We can't stop this from writing a null terminator
+  vsnprintf(newptr, needed, format, pass2);
+
+  // We don't want the null terminator, se we remove it.
+  buffer->used--;
+
+  va_end(pass1);
+  va_end(pass2);
+}
+
+// This allows you to write into a bytebuf using a format string and varargs
+// All the work is delegated really, vsnprinf ultimately does everything but
+// first we need to call the function that does the size computation.
+void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...) {
+ va_list args;
+ va_start(args, format);
+ cql_vbprintf(buffer, format, &args);
+ va_end(args);
+}
+
+// After using cql_bprintf it's pretty normal to need to add a null terminator
+// to create a C style string.  Though not always depending on where the buffer is going.
+// This helps with that need.
+void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer) {
+  char var = 0;
+  cql_bytebuf_append(buffer, &var, sizeof(var));
 }
 
 // This helper is used to give us a db handle we can use when faking the LIKE operator

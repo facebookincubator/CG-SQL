@@ -101,7 +101,7 @@ typedef struct cql_dynamic_cursor {
   uint16_t cursor_refs_offset;
 } cql_dynamic_cursor;
 
-CQL_EXPORT int cql_outstanding_refs;
+CQL_EXPORT int32_t cql_outstanding_refs;
 
 CQL_EXPORT void cql_copyoutrow(sqlite3 *_Nullable db, cql_result_set_ref _Nonnull rs, cql_int32 row, cql_int32 count, ...);
 CQL_EXPORT void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, ...);
@@ -224,16 +224,18 @@ extern jmp_buf *_Nullable cql_contract_argument_notnull_tripwire_jmp_buf;
 typedef struct cql_bytebuf
 {
   char *_Nullable ptr;   // pointer to stored data, if any
-  int used;    // bytes used in current buffer
-  int max;     // max bytes in current buffer
+  int32_t used;          // bytes used in current buffer
+  int32_t max;           // max bytes in current buffer
 } cql_bytebuf;
 
-CQL_EXPORT int bytebuf_open_count;
+CQL_EXPORT int32_t bytebuf_open_count;
 
 CQL_EXPORT void cql_bytebuf_open(cql_bytebuf *_Nonnull b);
 CQL_EXPORT void cql_bytebuf_close(cql_bytebuf *_Nonnull b);
 CQL_EXPORT void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed);
 CQL_EXPORT void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data, int32_t bytes);
+CQL_EXPORT void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...);
+CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
 
 // sqlite3 compat functions for implementations that do not exist in lib versions that are supported.  If the runtime
 // version of sqlite3 supports these functions, it will use those, otherwise it will use the compat version.
