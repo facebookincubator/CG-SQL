@@ -67,6 +67,7 @@ s/[[:<:]]FALSE_[[:>:]]/"FALSE"/g
 s/[[:<:]]FCOUNT[[:>:]]/"FCOUNT"/g
 s/[[:<:]]FETCH[[:>:]]/"FETCH"/g
 s/[[:<:]]FILTER[[:>:]]/"FILTER"/g
+s/[[:<:]]FIRST[[:>:]]/"FIRST"/g
 s/[[:<:]]FOLLOWING[[:>:]]/"FOLLOWING"/g
 s/[[:<:]]FOR[[:>:]]/"FOR"/g
 s/[[:<:]]FOREIGN[[:>:]]/"FOREIGN"/g
@@ -100,6 +101,7 @@ s/[[:<:]]IS[[:>:]]/"IS"/g
 s/[[:<:]]ISNULL[[:>:]]/"ISNULL"/g
 s/[[:<:]]JOIN[[:>:]]/"JOIN"/g
 s/[[:<:]]KEY[[:>:]]/"KEY"/g
+s/[[:<:]]LAST[[:>:]]/"LAST"/g
 s/[[:<:]]LE[[:>:]]/"<="/g
 s/[[:<:]]LEAVE[[:>:]]/"LEAVE"/g
 s/[[:<:]]LEFT[[:>:]]/"LEFT"/g
@@ -120,6 +122,7 @@ s/[[:<:]]NOT[[:>:]]/"NOT"/g
 s/[[:<:]]NOTHING[[:>:]]/"NOTHING"/g
 s/[[:<:]]NOTNULL[[:>:]]/"NOTNULL"/g
 s/[[:<:]]NULL_[[:>:]]/"NULL"/g
+s/[[:<:]]NULLS[[:>:]]/"NULLS"/g
 s/[[:<:]]OBJECT[[:>:]]/"OBJECT"/g
 s/[[:<:]]OF[[:>:]]/"OF"/g
 s/[[:<:]]OFFSET[[:>:]]/"OFFSET"/g

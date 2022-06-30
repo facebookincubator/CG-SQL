@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue May 31 09:23:31 PDT 2022
+Snapshot as of Wed Jun 29 14:39:51 PDT 2022
 
 ### Rules
 
@@ -453,6 +453,7 @@ queries: query | query ',' queries ;
 query: '{'
        '"name"' ':' STRING_LITERAL ','
        '"definedInFile"' ':' STRING_LITERAL ','
+       '"definedOnLine"' ':' INT_LITERAL ','
        '"args"' ':' '[' opt_args ']' ','
        dependencies ','
        opt_region_info
@@ -497,6 +498,7 @@ inserts_general: insert_general | insert_general ',' inserts_general
 insert_details:
          '"name"' ':' STRING_LITERAL ','
          '"definedInFile"' ':' STRING_LITERAL ','
+         '"definedOnLine"' ':' INT_LITERAL ','
          '"args"' ':' '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -531,6 +533,7 @@ updates: update | update ',' updates
 update : '{'
          '"name"' ':' STRING_LITERAL ','
          '"definedInFile"' ':' STRING_LITERAL ','
+         '"definedOnLine"' ':' INT_LITERAL ','
          '"args"' ':' '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -550,6 +553,7 @@ deletes: delete | delete ',' deletes
 delete : '{'
          '"name"' ':' STRING_LITERAL ','
          '"definedInFile"' ':' STRING_LITERAL ','
+         '"definedOnLine"' ':' INT_LITERAL ','
          '"args"' ':' '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -569,6 +573,7 @@ generals: general | general ',' generals
 general: '{'
           '"name"' ':' STRING_LITERAL ','
           '"definedInFile"' ':' STRING_LITERAL ','
+          '"definedOnLine"' ':' INT_LITERAL ','
           '"args"' ':' '[' opt_complex_args ']' ','
           dependencies ','
           opt_regions
@@ -634,6 +639,7 @@ interfaces: interface | interface ',' interfaces
 interface: '{'
           '"name"' ':' STRING_LITERAL ','
           '"definedInFile"' ':' STRING_LITERAL ','
+          '"definedOnLine"' ':' INT_LITERAL ','
           '"projection"' ':' '[' projected_columns ']'
          '}'
   ;

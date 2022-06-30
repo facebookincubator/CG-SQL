@@ -24,13 +24,15 @@ checks, error checks, and the other miscellany needed to use SQLite correctly.
 CQL is also strongly typed, whereas SQLite is very forgiving with regard to what operations
 are allowed on which data.  Strict type checking is much more reasonable given CQL's compiled programming model.
 
-> NOTE: CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this
-> content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the
-> fewest runtime dependencies allowed for illustration.
+:::note
+CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this
+content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the
+fewest runtime dependencies allowed for illustration.
+:::
 
 ### Getting Started
 
-Before starting this tutorial, make sure you have built the `cql` executable first in [Building CG/SQL](https://cgsql.dev/docs/building).
+Before starting this tutorial, make sure you have built the `cql` executable first in [Building CG/SQL](/docs/getting-started#building).
 
 The "Hello World" program rendered in CQL looks like this:
 
@@ -46,7 +48,7 @@ end;
 
 This very nearly works exactly as written but we'll need a little bit of glue to wire it all up.
 
-First, assuming you have [built](https://cgsql.dev/docs/building) `cql`, you should have the power to do this:
+First, assuming you have [built](/docs/getting-started#building) `cql`, you should have the power to do this:
 
 ```bash
 $ cql --in hello.sql --cg hello.h hello.c
@@ -4359,7 +4361,7 @@ begin
   set dict := dict_create();
   call dict_add(dict, "k1", "v1");
   call dict_add(dict, "k2", "v2");
-  if (dict_get_value(dict, "k1") == dict__get_value(dict, "k2)) then
+  if (dict_get_value(dict, "k1") == dict__get_value(dict, "k2")) then
     call printf("insanity has ensued\n");
   end if;
 end;
@@ -4465,7 +4467,6 @@ CQL's hard-coded builtin list includes:
  * sum
  * total
  * avg
- * average
  * group_concat
 
 *Scalar Functions*
@@ -7771,9 +7772,9 @@ is often desirable and the maintenance is not too bad.  You just use the `use_my
 -->
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)
 
-To use CQL in this fashion, the sequence will be something like the below.  See Appendix 1 for command line details.
+To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](/cql-guide/x1) for command line details.
 
-```
+```bash
 cql --in input.sql --rt json_schema --cg out.json
 ```
 
@@ -7783,34 +7784,33 @@ the possible outputs available at https://cgsql.dev/json-diagram.
 In the balance of this chapter we'll deal with the contents of the sections and their meaning rather than the specifics of the format,
 which are better described with the grammar above.
 
-#### Tables
+## Tables
 
 The "tables" section has zero or more tables, each table is comprised of these fields:
 
-* name : the table name
-* crc : the schema CRC for the entire table definition, including columns and constraints
-* isTemp : true if this is a temporary table
-* ifNotExists : true if the table was created with "if not exists"
-* withoutRowid : true if the table was created using "without rowid"
-* isAdded : true if the table has an @create directive
-  * addedVersion : optional, the schema version number in the @create directive
-* isDeleted : true if the table was marked with @delete or is currently _unsubscribed_
-  * deletedVersion : optional, the schema version number in the @delete directive
-* isRecreated : true if the table is marked with @recreate
-  * recreateGroupName : optional, if the @recreate attribute specifies a group name, it is present here
-* unsubscribedVersion : optional, if the table was last unsubscribed, the version number when this happened
-* resubscribedVersion : optional, if the table was last resubscribed, the version number when this happened
-* _region information_ : optional, see the section on Region Info
-* indices : optional, a list of the names of the indices on this table, see the indices section
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* _columns_ : an array of column definitions, see the section on columns
-* primaryKey : a list of column names, possibly empty if no primary key
-* primaryKeySortOrders : a list of corresponding sort orders, possibly empty, for each column of the primary key if specified
-* primaryKeyName : optional, the name of the primary key, if it has one
-* _foreignKeys_ : a list of foreign keys for this table, possibly empty, see the foreign keys section
-* _uniqueKeys_ : a list of unique keys for this table, possibly empty, see the unique keys section
-* _checkExpressions_ : a list of check expressions for this table, possibly empty, see the check expression section
-
+* **name** : the table name
+* **crc** : the schema CRC for the entire table definition, including columns and constraints
+* **isTemp** : true if this is a temporary table
+* **ifNotExists** : true if the table was created with "if not exists"
+* **withoutRowid** : true if the table was created using "without rowid"
+* **isAdded** : true if the table has an @create directive
+  * **addedVersion** : optional, the schema version number in the @create directive
+* **isDeleted** : true if the table was marked with @delete or is currently _unsubscribed_
+  * **deletedVersion** : optional, the schema version number in the @delete directive
+* **isRecreated** : true if the table is marked with @recreate
+  * **recreateGroupName** : optional, if the @recreate attribute specifies a group name, it is present here
+* **unsubscribedVersion** : optional, if the table was last unsubscribed, the version number when this happened
+* **resubscribedVersion** : optional, if the table was last resubscribed, the version number when this happened
+* **_region information_** : optional, see the section on Region Info
+* **indices** : optional, a list of the names of the indices on this table, see the [indices section](#indices)
+* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **_columns_** : an array of column definitions, see the section on columns
+* **primaryKey** : a list of column names, possibly empty if no primary key
+* **primaryKeySortOrders** : a list of corresponding sort orders, possibly empty, for each column of the primary key if specified
+* **primaryKeyName** : optional, the name of the primary key, if it has one
+* **_foreignKeys_** : a list of foreign keys for this table, possibly empty, see the [foreign keys section](#foreign-keys)
+* **_uniqueKeys_** : a list of unique keys for this table, possibly empty, see the [unique keys section](#unique-keys)
+* **_checkExpressions_** : a list of check expressions for this table, possibly empty, see the [check expression section](#check-expressions)
 
 Example:
 
@@ -7874,26 +7874,26 @@ generates:
     }
 ```
 
-#### Region Information
+## Region Information
 
 Region Information can appear on many entities, it consists of two optional elements:
 
-* region : optional, the name of the region in which the entity was defined
-* deployedInRegion : optional, the deployment region in which that region is located
+* **region** : optional, the name of the region in which the entity was defined
+* **deployedInRegion** : optional, the deployment region in which that region is located
 
-#### Attributes
+## Attributes
 
-Miscelleaneous attributes can be present on virtual every kind of entity.  They are optional.  The root node
+Miscellaneous attributes can be present on virtual every kind of entity.  They are optional.  The root node
 introduces the attributes:
 
-* attributes : a list at least one attribute
+* **attributes** : a list at least one attribute
 
 Each attribute is a name and value pair:
 
-* name : any string
+* **name** : any string
   * attribute names are often compound like "cql:shared_fragment"
   * they are otherwise simple identifiers
-* value : any _attribute value_
+* **value** : any _attribute value_
 
 Each _attribute value_ can be:
 
@@ -7902,34 +7902,34 @@ Each _attribute value_ can be:
 
 Since the _attribute values_ can nest its possible to represent arbitrarily complex data types in an attribute.  You can even represent a LISP program.
 
-#### Foreign Keys
+## Foreign Keys
 
 Foreign keys appear only in tables, the list of keys contains zero or more entries of this form:
 
-* name : optional, the name of the foreign key if specified
-* columns : the names of the constrained columns in the current table (the "child" table)
-* referenceTable : the name of the table that came after REFERENCES in the foreign key
-* referenceColumns : the constraining columns in the referenced table
-* onUpdate : the ON UPDATE action (e.g. "CASCADE", "NO ACTION", etc.)
-* onDelete : the ON DELETE action (e.g. "CASCADE", "NO ACTION", etc.)
-* isDeferred : boolean, indicating the deferred or not deferred setting for this foreign key
+* **name** : optional, the name of the foreign key if specified
+* **columns** : the names of the constrained columns in the current table (the "child" table)
+* **referenceTable** : the name of the table that came after REFERENCES in the foreign key
+* **referenceColumns** : the constraining columns in the referenced table
+* **onUpdate** : the ON UPDATE action (e.g. "CASCADE", "NO ACTION", etc.)
+* **onDelete** : the ON DELETE action (e.g. "CASCADE", "NO ACTION", etc.)
+* **isDeferred** : boolean, indicating the deferred or not deferred setting for this foreign key
 
-#### Unique Keys
+## Unique Keys
 
 Unique keys appear only in tables, the list of keys contains zero or more entries of this form:
 
-* name : optional, the name of the unique key if specified
-* columns: a list of 1 or more contrained column names
-* sortOrders: a list of corresponding sort orders for the columns
+* **name**: optional, the name of the unique key if specified
+* **columns**: a list of 1 or more constrained column names
+* **sortOrders**: a list of corresponding sort orders for the columns
 
 
-#### Check Expressions
+## Check Expressions
 
 Check Expressions appear only in tables, the list of keys contains zero or more entries of this form:
 
-* name : optional, the name of the unique key if specified
-* checkExpr : the check expression in plain text
-* checkExprArgs: an array of zero or more local variables that should be bound to the `?` items in the check expression
+* **name** : optional, the name of the unique key if specified
+* **checkExpr** : the check expression in plain text
+* **checkExprArgs**: an array of zero or more local variables that should be bound to the `?` items in the check expression
 
 The checkExprArgs will almost certainly be the empty list `[]`.  In the exceedingly rare situation that the table
 in question was defined in a procedure and some of parts of the check expression were arguments to that procedure
@@ -7937,58 +7937,58 @@ then the check expression is not fully known until that procedure runs and some 
 at run time.  This is an extraordinary choice but technically possible.
 
 
-#### Columns
+## Columns
 
 Columns are themselves rather complex, there are 1 or more of them in each table.  The table will have
 a list of records of this form:
 
-* name : the name of the columns
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* type : the column type (e.g. bool, real, text, etc.)
-* kind : optional, if the type is qualified by a discriminator such as int<task_id> it appears here
-* isSensitive : optional, indicates a column that holds sensitive information such as PII
-* isNotNull : true if the column is not null
-* isAdded : true if the column has an @create directive
-  * addedVersion : optional, the schema version number in the @create directive
-* isDeleted : true if the column was marked with @delete
-  * deletedVersion : optional, the schema version number in the @delete directive
-* defaultValue : optional, can be any literal, the default value of the column
-* collate : optional, the collation string (e.g. nocase)
-* checkExpr : optional, the _check expression_ for this column (see the related section)
-* isPrimaryKey : true if the column was marked with PRIMARY KEY
-* isUniqueKey : true if the column was marked with UNIQUE
-* isAutoIncrement : true if the column was marked with AUTOINCREMENT
+* **name** : the name of the columns
+* **_attributes_** : optional, see the [section on attributes](#attributes), they appear in many places
+* **type** : the column type (e.g. bool, real, text, etc.)
+* **kind** : optional, if the type is qualified by a discriminator such as int<task_id> it appears here
+* **isSensitive** : optional, indicates a column that holds sensitive information such as PII
+* **isNotNull** : true if the column is not null
+* **isAdded** : true if the column has an @create directive
+  * **addedVersion** : optional, the schema version number in the @create directive
+* **isDeleted** : true if the column was marked with @delete
+  * **deletedVersion** : optional, the schema version number in the @delete directive
+* **defaultValue** : optional, can be any literal, the default value of the column
+* **collate** : optional, the collation string (e.g. nocase)
+* **checkExpr** : optional, the _check expression_ for this column (see the related section)
+* **isPrimaryKey** : true if the column was marked with PRIMARY KEY
+* **isUniqueKey** : true if the column was marked with UNIQUE
+* **isAutoIncrement** : true if the column was marked with AUTOINCREMENT
 
 
-#### Virtual Tables
+## Virtual Tables
 
 The "virtualTables" section is very similar to the "tables" section with zero or more virtual table entries.
 Virtual table entries are the same as table entries with the following additions:
 
-* module : the name of the module that manages this virtual table
-* isEponymous : true if the virtual table was declared eponymous
-* isVirtual : always true for virtual tables
+* **module** : the name of the module that manages this virtual table
+* **isEponymous** : true if the virtual table was declared eponymous
+* **isVirtual** : always true for virtual tables
 
 The JSON schema for these items was designed to be as similar as possible so that typically the same code can handle both
 with possibly a few extra tests of the isVirtual field.
 
 
-#### Views
+## Views
 
 The views section contains the list of all views in the schema, it is zero or more view entires of this form.
 
-* name : the view name
-* crc : the schema CRC for the entire view definition
-* isTemp : true if this is a temporary view
-* isDeleted : true if the view was marked with @delete
-  * deletedVersion : optional, the schema version number in the @delete directive
-* _region information_ : optional, see the section on Region Info
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* _columns_ : an array of column definitions, see the section on columns
-* _projection_ : an array of projected columns from the view, the view result if you will, see the section on projections
-* select : the text of the select statement that defined the view
-* selectArgs : the names of arguments any unbound expressions ("?") in the view
-* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
+* **name** : the view name
+* **crc** : the schema CRC for the entire view definition
+* **isTemp** : true if this is a temporary view
+* **isDeleted** : true if the view was marked with @delete
+  * **deletedVersion** : optional, the schema version number in the @delete directive
+* **_region information_** : optional, see the section on Region Info
+* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **_columns_** : an array of column definitions, see the section on columns
+* **_projection_** : an array of projected columns from the view, the view result if you will, see the section on projections
+* **select** : the text of the select statement that defined the view
+* **selectArgs** : the names of arguments any unbound expressions ("?") in the view
+* **_dependencies_** : several lists of tables and how they are used in the view, see the [section on dependencies](#dependencies)
 
 Note that the use of unbound expressions in a view truly extraordinary so selectArgs is essentially always going to be an empty list.
 
@@ -8027,47 +8027,47 @@ Generates:
     }
 ```
 
-#### Projections
+## Projections
 
 A projection defines the output shape of something that can return a table-like value such as a view or a procedure.
 
 The projection consists of a list of one or more _projected columns_, each of which is:
 
-* name : the name of the result column  (e.g. in select 2 as foo) the name is "foo"
-* type : the type of the column (e.g. text, real, etc.)
-* kind : optional, the discriminator of the type if it has one (e.g. if the result is an `int<job_id>` the kind is "job_id")
-* isSensitive : optional, true if the result is sensitive (e.g. PII or something like that)
-* isNotNull : true if the result is known to be not null
+* **name** : the name of the result column  (e.g. in select 2 as foo) the name is "foo"
+* **type** : the type of the column (e.g. text, real, etc.)
+* **kind** : optional, the discriminator of the type if it has one (e.g. if the result is an `int<job_id>` the kind is "job_id")
+* **isSensitive** : optional, true if the result is sensitive (e.g. PII or something like that)
+* **isNotNull** : true if the result is known to be not null
 
-#### Dependencies
+## Dependencies
 
 The dependencies section appears in many entities, it indicates things that were used by the object and how they were used.
 Most of the fields are optional, some fields are impossible in some contexts (e.g. inserts can happen inside of views).
 
-* insertTables : optional, a list of tables into which values were inserted
-* updateTables : optional, a list of tables whose values were updated
-* deleteTables : optional, a list of tables which had rows deleted
-* fromTables : optional, a list of tables that appeared in a FROM clause (maybe indirectly inside a VIEW or CTE)
-* usesProcedures : optional, a list of procedures that were accessed via CALL (not shared fragments, those are inlined)
-* usesViews : optional, a list of views which were accessed (these are recursively visited to get to tables)
-* usesTables : the list of tables that were used in any way at all by the current entity (i.e. the union of the previous table sections)
+* **insertTables** : optional, a list of tables into which values were inserted
+* **updateTables** : optional, a list of tables whose values were updated
+* **deleteTables** : optional, a list of tables which had rows deleted
+* **fromTables** : optional, a list of tables that appeared in a FROM clause (maybe indirectly inside a VIEW or CTE)
+* **usesProcedures** : optional, a list of procedures that were accessed via CALL (not shared fragments, those are inlined)
+* **usesViews** : optional, a list of views which were accessed (these are recursively visited to get to tables)
+* **usesTables** : the list of tables that were used in any way at all by the current entity (i.e. the union of the previous table sections)
 
-#### Indices
+## Indices
 
 The indices section contains the list of all indices in the schema, it is zero or more view entires of this form:
 
-* name : the index name
-* crc : the schema CRC for the entire index definition
-* table : the name of the table with this index
-* isUnique : true if this is a unique index
-* ifNotExists : true if this index was created with IF NOT EXISTS
-* isDeleted : true if the view was marked with @delete
-  * deletedVersion : optional, the schema version number in the @delete directive
-* _region information_ : optional, see the section on Region Info
-* where : optional, if this is partial index then this has the partial index where expression
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* columns : the list of column names in the index
-* sortOrders : the list of corresponding sort orders
+* **name** : the index name
+* **crc** : the schema CRC for the entire index definition
+* **table** : the name of the table with this index
+* **isUnique** : true if this is a unique index
+* **ifNotExists** : true if this index was created with IF NOT EXISTS
+* **isDeleted** : true if the view was marked with @delete
+  * **deletedVersion** : optional, the schema version number in the @delete directive
+* **_region information_** : optional, see the section on Region Info
+* **where** : optional, if this is partial index then this has the partial index where expression
+* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **columns** : the list of column names in the index
+* **sortOrders** : the list of corresponding sort orders
 
 Example:
 
@@ -8091,7 +8091,7 @@ Generates:
 
 ```
 
-#### Procedures
+## Procedures
 
 The next several sections:
 
@@ -8103,27 +8103,28 @@ The next several sections:
 * General
 
 All provide information about various types of procedures.  Some "simple" procedures that consist only of the type of statement
-corresond to their section (and some other rules) present additional information about their contents.  This can sometimes
+correspond to their section (and some other rules) present additional information about their contents.  This can sometimes
 be useful.  All the sections define certain common things about procedures so that basic information is available about
 all procedures.  This is is basically the contents of the "general" section which deals with procedures that have a complex
 body of which little can be said.
 
 
-#### Queries
+### Queries
 
 The queries section corresponds to the stored procedures that are a single SELECT statement with no fragments.
 
 The fields of a query record are:
 
-* name : the name of the procedure
-* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* args : _procedure arguments_ see the relevant section
-* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
-* _region information_ : optional, see the section on Region Info
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* _projection_ : an array of projected columns from the procedure, the view if you will, see the section on projections
-* statement : the text of the select statement that is the body of the procedure
-* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
+* **name** : the name of the procedure
+* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is declared
+* **args** : _procedure arguments_ see the relevant section
+* **_dependencies_** : several lists of tables and how they are used in the view, see the section on dependencies
+* **_region information_** : optional, see the section on Region Info
+* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **_projection_** : an array of projected columns from the procedure, the view if you will, see [the section on projections](#projections)
+* **statement** : the text of the select statement that is the body of the procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
 
 Example:
 
@@ -8140,6 +8141,7 @@ Generates:
     {
       "name" : "p",
       "definedInFile" : "x",
+      "definedOnLine" : 3,
       "args" : [
         {
           "name" : "name_",
@@ -8167,19 +8169,19 @@ Generates:
     }
 ```
 
-#### Procedure Arguments
+### Procedure Arguments
 
 Procedure arguments have several generalities that don't come up very often but are important to describe.  The argument list
 of a procedure is 0 or more arguments of the form:
 
-* name : the argument name, any valid identifier
-* argOrigin : either the name repeated if it's just a name or a 3 part string if it came from a bundle, see below
-* type : the type of the argument (e.g. text, real, etc.)
-* kind : optional, the descriminated type if any e.g. in `int<job_id>` it's "job_id"
-* isSensitive : optional, true if the argument is marked with @sensitive (e.g. it has PII etc.)
-* isNotNull : true if the argument is declared not null
+* **name** : the argument name, any valid identifier
+* **argOrigin** : either the name repeated if it's just a name or a 3 part string if it came from a bundle, see below
+* **type** : the type of the argument (e.g. text, real, etc.)
+* **kind** : optional, the discriminated type if any e.g. in `int<job_id>` it's "job_id"
+* **isSensitive** : optional, true if the argument is marked with @sensitive (e.g. it has PII etc.)
+* **isNotNull** : true if the argument is declared not null
 
-An example of a simple argumenmt was shown above, if we change the example a little bit to use the argument bundle syntax
+An example of a simple argument was shown above, if we change the example a little bit to use the argument bundle syntax
 (even though it's overkill) we can see the general form of argOrigin.
 
 Example:
@@ -8197,6 +8199,7 @@ Generates:
     {
       "name" : "p",
       "definedInFile" : "x",
+      "definedOnLine" : 3,
       "args" : [
         {
           "name" : "a_foo_id",
@@ -8237,21 +8240,22 @@ The JSON is often used to generate glue code to call procedures from different l
 you want to codegen something other normal arguments in your code.
 
 
-#### General Inserts
+### General Inserts
 
 The general insert section corresponds to the stored procedures that are a single INSERT statement with no fragments.
 The fields of a general insert record are:
 
-* name : the name of the procedure
-* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* args : _procedure arguments_ see the relevant section
-* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
-* _region information_ : optional, see the section on Region Info
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* table : the name of the table the procedure inserts into
-* statement : the text of the select statement that is the body of the procedure
-* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
-* statementType : there are several insert forms such as "INSERT", "INSERT OR REPLACE", "REPLACE", etc.  the type is encoded here
+* **name** : the name of the procedure
+* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is declared
+* **args** : _procedure arguments_ see [the relevant section](#procedure-arguments)
+* **_dependencies_** : several lists of tables and how they are used in the view, see the [section on dependencies](#dependencies)
+* **_region information_** : optional, see the [section on Region Info](#region-information)
+* **_attributes_** : optional, see the [section on attributes](#attributes), they appear in many places
+* **table** : the name of the table the procedure inserts into
+* **statement** : the text of the select statement that is the body of the procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
+* **statementType** : there are several insert forms such as "INSERT", "INSERT OR REPLACE", "REPLACE", etc. the type is encoded here
 
 General inserts does not include the inserted values because they are not directly extractable in general.  This form is used if one of
 these is true:
@@ -8290,7 +8294,7 @@ Generates:
     }
 ```
 
-#### Simple Inserts
+### Simple Inserts
 
 The vanilla inserts section can be used for procedures that just insert a single row.  This is a
 very common case and if the JSON is being used to drive custom code generation it is useful
@@ -8299,8 +8303,8 @@ section except that includes the inserted values.  The "values" property has thi
 
 Each value in the values list corresponds 1:1 with a column and has this form:
 
-* value : the expression for this value
-* valueArgs: the array of procedure arguments that should replace the "?" entries in the value
+* **value** : the expression for this value
+* **valueArgs**: the array of procedure arguments that should replace the "?" entries in the value
 
 Example:
 
@@ -8317,17 +8321,18 @@ Generates:
     {
       "name" : "p",
       "definedInFile" : "x",
+      "definedOnLine" : 3,
       "args" : [
-        {
-          "name" : "id_",
-          "argOrigin" : "foo id",
-          "type" : "integer",
-          "isNotNull" : 0
-        },
         {
           "name" : "name_",
           "argOrigin" : "foo name",
           "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "id_",
+          "argOrigin" : "foo id",
+          "type" : "integer",
           "isNotNull" : 0
         }
       ],
@@ -8351,20 +8356,21 @@ Generates:
     }
 ```
 
-#### Updates
+### Updates
 
 The updates section corresponds to the stored procedures that are a single UPDATE statement with no fragments. The
 fields of an update record are:
 
-* name : the name of the procedure
-* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* args : _procedure arguments_ see the relevant section
-* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
-* _region information_ : optional, see the section on Region Info
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* table : the name of the table the procedure inserts into
-* statement : the text of the update statement that is the body of the procedure
-* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
+* **name** : the name of the procedure
+* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is declared
+* **args** : _procedure arguments_ see [the relevant section](#procedure-arguments)
+* **_dependencies_** : several lists of tables and how they are used in the view, see the section on dependencies
+* **_region information_** : optional, see [the section on Region Info](#region-information)
+* **_attributes_** : optional, see [the section on attributes](#attributes), they appear in many places
+* **table** : the name of the table the procedure inserts into
+* **statement** : the text of the update statement that is the body of the procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
 
 
 Example:
@@ -8382,17 +8388,18 @@ Generates:
     {
       "name" : "p",
       "definedInFile" : "x",
+      "definedOnLine" : 3,
       "args" : [
-        {
-          "name" : "id_",
-          "argOrigin" : "foo id",
-          "type" : "integer",
-          "isNotNull" : 0
-        },
         {
           "name" : "name_",
           "argOrigin" : "foo name",
           "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "id_",
+          "argOrigin" : "foo id",
+          "type" : "integer",
           "isNotNull" : 0
         }
       ],
@@ -8405,7 +8412,7 @@ Generates:
 ```
 
 
-#### Deletes
+### Deletes
 
 The deletes section corresponds to the stored procedures that are a single DELETE statement with no fragments. The
 fields of a delete record are exactly the same as those of update.  Those are the basic fields needed to bind any
@@ -8426,6 +8433,7 @@ Generates:
     {
       "name" : "delete_proc",
       "definedInFile" : "x",
+      "definedOnLine" : 3,
       "args" : [
         {
           "name" : "name_",
@@ -8442,7 +8450,7 @@ Generates:
     }
 ```
 
-#### General
+### General
 
 And finally the section for procedures that were encountered that are not one of the simple prepared statement forms.  The principle reasons for being in this category are:
 * the procedure has out arguments
@@ -8453,30 +8461,31 @@ And finally the section for procedures that were encountered that are not one of
 The fields of a general procedure are something like a union of update and delete and query but with no statement info.  The are
 as follows:
 
-* name : the name of the procedure
-* definedInFile : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
-* args : _complex procedure arguments_ see the relevant section
-* _dependencies_ : several lists of tables and how they are used in the view, see the section on dependencies
-* _region information_ : optional, see the section on Region Info
-* _attributes_ : optional, see the section on attributes, they appear in many places
-* _projection_ : optional, an array of projected columns from the procedure, the view if you will, see the section on projections
-* _result_contract_ : optional,
-* table : the name of the table the procedure inserts into
-* statement : the text of the update statement that is the body of the procedure
-* statementArgs : a list of procedure arguments (possibly empty) that should be used to replace the corresonding "?" parameters in the statement
-* usesDatabase : true if the procedure requires you to pass in a sqlite connection to call it
+* **name** : the name of the procedure
+* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is declared
+* **args** : _complex procedure arguments_ see the relevant section
+* **_dependencies_** : several lists of tables and how they are used in the view, see the section on dependencies
+* **_region information_** : optional, see the section on Region Info
+* **_attributes_** : optional, see the section on attributes, they appear in many places
+* **_projection_** : optional, an array of projected columns from the procedure, the view if you will, see the section on projections
+* **_result_contract_** : optional,
+* **table** : the name of the table the procedure inserts into
+* **statement** : the text of the update statement that is the body of the procedure
+* **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
+* **usesDatabase** : true if the procedure requires you to pass in a sqlite connection to call it
 
 The result contract is at most one of these:
 
-* hasSelectResult : true if the procedure generates its projection using SELECT
-* hasOutResult: true if the procedure generates its projection using OUT
-* hasOutUnionResult: true if the procedure generates its projection using OUT UNION
+* **hasSelectResult** : true if the procedure generates its projection using SELECT
+* **hasOutResult**: true if the procedure generates its projection using OUT
+* **hasOutUnionResult**: true if the procedure generates its projection using OUT UNION
 
 A procedure that does not produce a result set in any way will set none of these and have no projection entry.
 
 Example:
 
-```
+```sql
 create proc with_complex_args (inout arg real)
 begin
   set arg := (select arg+1 as a);
@@ -8487,8 +8496,10 @@ end;
 Generates:
 
 ```json
+    {
       "name" : "with_complex_args",
       "definedInFile" : "x",
+      "definedOnLine" : 1,
       "args" : [
         {
           "binding" : "inout",
@@ -8515,53 +8526,82 @@ Generates:
 
 The complex form of the arguments allows for an optional "binding"
 
-* binding : optional, if present it can take the value "out" or "inout"
-* if absent then binding is the usual "in"
+* **binding** : optional, if present it can take the value "out" or "inout"
+  * if absent then binding is the usual "in"
 
 Note that atypical binding forces procedures into the "general" section.
 
-#### Regions
+## Interfaces
+
+* **name** : the name of the procedure
+* **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
+* **definedOnLine** : the line number of the file where the procedure is declared
+* **projection**: An array of projections. See [the section on projections](#projections)
+
+Example
+
+```sql
+declare interface interface1 (id integer);
+```
+
+Generates:
+```json
+    {
+      "name" : "interface1",
+      "definedInFile" : "x.sql",
+      "definedOnLine" : 1,
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ]
+    }
+```
+
+## Regions
 
 The regions section contains a list of all the region definitions.  Each region is of the form:
 
-* name : the name of the region
-* isDeployableRoot : is this region itself a deployment region (declared with @declare_deployable_region)
-* deployedInRegion : name, the deployment region that contains this region or "(orphan)" if none
+* **name** : the name of the region
+* **isDeployableRoot** : is this region itself a deployment region (declared with @declare_deployable_region)
+* **deployedInRegion** : name, the deployment region that contains this region or "(orphan)" if none
    * note that deploymentRegions form a forest
-* using : a list of zero or more parent regions
-* usingPrivately: a list of zero more more booleans, one corresponding to each region
+* **using** : a list of zero or more parent regions
+* **usingPrivately**: a list of zero more more booleans, one corresponding to each region
   * the boolean is true if the inheritance is private, meaning that sub-regions cannot see the contents of the inherited region
 
 There are more details on regions and the meaning of these terms in Chapter 10.
 
-#### Ad Hoc Migrations
+## Ad Hoc Migrations
 
 This section lists all of the declared ad hoc migrations.  Each entry is of the form:
 
-* name : the name of the procedure to be called for the migration step
-* crc : the CRC of this migration step, a hash of the call
-* _attributes_ : optional, see the section on attributes, they appear in many places
+* **name** : the name of the procedure to be called for the migration step
+* **crc** : the CRC of this migration step, a hash of the call
+* **_attributes_** : optional, see the section on attributes, they appear in many places
 
 Exactly one of:
 
-* version: optional, any positive integer, the version at which the migration runs, OR
-* onRecreateOf: optional, if present indicates that the migration runs when the indicated group is recreated
+* **version**: optional, any positive integer, the version at which the migration runs, OR
+* **onRecreateOf**: optional, if present indicates that the migration runs when the indicated group is recreated
 
 There are more details on ad hoc migrations in Chapter 10.
 
-#### Enums
+## Enums
 
 This section list all the enumeration types and values.  Each entry is of the form:
 
-* name : the name of the enumeration
-* type : the base type of the enumeration (e.g. INT, LONG)
-* isNotNull: always true, all enum values are not null (here for symmetry with other uses of "type")
-* values: a list of legal enumeration values
+* **name** : the name of the enumeration
+* **type** : the base type of the enumeration (e.g. INT, LONG)
+* **isNotNull**: always true, all enum values are not null (here for symmetry with other uses of "type")
+* **values**: a list of legal enumeration values
 
 Each enumeration value is of the form:
 
-* name : the name of the value
-* value : a numeric literal
+* **name** : the name of the value
+* **value** : a numeric literal
 
 Example:
 
@@ -8589,20 +8629,20 @@ Generates:
     }
 ````
 
-#### Constant Groups
+## Constant Groups
 
 This section list all the constant groups and values.  Each entry is of the form:
 
-* name : the name of the constant group
-* values: a list of declared constant values, this can be of mixed type
+* **name** : the name of the constant group
+* **values**: a list of declared constant values, this can be of mixed type
 
 Each constant value is of the form:
 
-* name : the name of the constant
-* type : the base type of the constant (e.g. LONG, REAL, etc.)
-* kind : optional, the type kind of the constant (this can be set with a CAST on a literal, e.g. CAST(1 as int<job_id>))
-* isNotNull : true if the constant type is not null (which is anything but the NULL literal)
-* value : the numeric or string literal value of the constant
+* **name** : the name of the constant
+* **type** : the base type of the constant (e.g. LONG, REAL, etc.)
+* **kind** : optional, the type kind of the constant (this can be set with a CAST on a literal, e.g. CAST(1 as int<job_id>))
+* **isNotNull** : true if the constant type is not null (which is anything but the NULL literal)
+* **value** : the numeric or string literal value of the constant
 
 
 Example:
@@ -8644,13 +8684,13 @@ Generates:
     }
 ```
 
-#### Subscriptions
+## Subscriptions
 
 This section list all the schema subscriptions in non-decreasing order by version.  Each entry is of the form:
 
-* type : either "unsub" or "resub"
-* table : the target of the subscription directive
-* version : the version at which this operation is to happen
+* **type** : either "unsub" or "resub"
+* **table** : the target of the subscription directive
+* **version** : the version at which this operation is to happen
 
 Example:
 
@@ -8674,7 +8714,7 @@ Generates:
     }
 ```
 
-#### Summary
+## Summary
 
 These sections general provide all the information about everything that was declared in a translation unit.  Typically
 not the full body of what was declared but its interface.  The schema information provide the core type and context
@@ -9324,6 +9364,119 @@ Ultimately, from SQLite's perspective, all of these shared fragment forms result
 
 See Appendix 8 for an extensive section on best practices around fragments and common table expressions in general.
 
+:::tip
+If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `@attribute(cql:query_plan_branch=[integer])` to modify the behaviour. Read [Query Plan Generation](/cql-guide/ch15) for details.
+:::
+
+
+## Chapter 15: Query Plan Generation
+CQL offers a way to run SQLite's [`EXPLAIN QUERY PLAN` command](https://www.sqlite.org/eqp.html) for all the SQL statements used in a CQL file using a set of special compilation steps.
+
+Generating query plans is inherently complicated. Any given stored procedure might include many SQL statements, each of which has a plan. To get the plans, those statements must be executed in the appropriate mode. In order for them to execute, whatever tables, views, and user-defined functions they use must exist. The statements can have any number of parameters, those have to be swapped out because they might come from anywhere. When run in `--rt query_plan` mode, the compiler accomplishes all of this by analyzing the original code and creating entirely new code. Running this new code creates the schema and, with the appropriate transforms, runs all the SQL statements in the original to give us the query plans. The process requires many steps as we'll see below.
+
+## Query Plan Generation Compilation Steps
+:::tip
+The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](/docs/playground#query-plan-playground). The rest of the section explains how query plan generation works and some of its quirks.
+:::
+
+To execute query plans for a given CQL file, the following commands need to be run:
+
+```bash
+CQL_FILE= # The CQL file to compile
+CQL_ROOT_DIR= # Path to cql directory
+CQL=$CQL_ROOT_DIR/out/cql
+
+# Generate Query Plan Script
+$CQL --in $CQL_FILE --rt query_plan --cg go-qp.sql
+
+# Generate UDF stubs
+$CQL --in $CQL_FILE --rt udf --cg go-qp-udf.h go-qp-udf.c
+
+# Compile and link CQL artifacts, with a main C file query_plan_test.c
+$CQL --in go-qp.sql --cg go-qp.h go-qp.c --dev
+cc -I$CQL_ROOT_DIR -I. -c $CQL_ROOT_DIR/query_plan_test.c go-qp.c go-qp-udf.c
+cc -I$CQL_ROOT_DIR -I. -O -o go_query_plan go-qp.o go-qp-udf.o query_plan_test.o $CQL_ROOT_DIR/cqlrt.c -lsqlite3
+
+# Run and generate query plans
+./go_query_plan
+```
+
+Contrary to what one might expect, rather than providing query plans directly, CQL uses `--rt query_plan` to generate a second CQL script that returns query plans for each SQL statement used.
+
+A separate command, `--rt udf` is required to generate any stubbed [user defined functions](/cql-guide/ch08) that are used in the original script. Afterwards, the generated query plan script, udf stubs needs to compiled like any CQL file and run by a "main" function that needs to be created separately.
+
+The CQL repository provides the file [`query_plan_test.c`](https://github.com/facebookincubator/CG-SQL/blob/main/sources/query_plan_test.c) that can be used as the "main" function, otherwise you can make your own.
+
+::note
+When compiling the CQL file generated by `--rt query_plan`, the `--dev` flag is required.
+:::
+
+### Special Handling of CQL features in Query Plan Generation
+CQL's query planner generator modifies the usage of the following features to allow SQLite run `EXPLAIN QUERY PLAN` successfully:
+
+- Variables
+- User Defined Functions
+- Conditionals in Shared Fragments
+
+:::caution
+Generating query plans of CQL files that use table valued functions, or [virtual tables](https://sqlite.org/vtab.html#:~:text=2.-,Table%2Dvalued%20functions,columns%20of%20the%20virtual%20table.) is not supported.
+:::
+
+#### Variables
+Variables used in SQL statements are stubbed into constants. The exact value varies depending on the type of the variable, but it is always equivalent to some form of `"1"`.
+
+```sql title="original.sql"
+...
+SELECT *
+FROM my_table
+WHERE id = x;
+...
+```
+
+```sql title="query_plan.sql"
+...
+EXPLAIN QUERY PLAN
+SELECT *
+FROM my_table
+WHERE my_table.id = nullable(1);
+...
+```
+
+#### User Defined Functions
+_Read [Functions](/cql-guide/ch08) on details about Function Types._
+
+Since the implementation of UDFs in a CQL file do not affect SQLite query plans, CQL's query plan script expects stubs generated by `cql --rt udf` to be used instead.
+
+#### Conditionals in Shared Fragments
+_Read [CQL Query Fragments](/cql-guide/ch14) on details about shared fragments_
+
+Only one branch of a conditional is chosen for query plan analysis. By default this will be the first branch, which is the initial `SELECT` statement following the `IF` conditional.
+The branch to analyze can be configured with the `cql:query_plan_branch` [@attribute](/cql-guide/x3).
+
+Here's an example of `cql:query_plan_branch` being used:
+
+```sql title="original.sql"
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=1)
+CREATE PROC frag2(y int)
+BEGIN
+  IF y == 2 THEN
+    SELECT 10 b;
+  ELSE IF y == -1 THEN
+    SELECT 20 b;
+  ELSE
+    SELECT 30 b;
+  END IF;
+END;
+```
+
+```sql title="query_plan.sql"
+EXPLAIN QUERY PLAN
+SELECT 20 b;
+```
+
+Setting `cql:query_plan_branch=1` selects the second branch. Providing `cql:query_plan_branch=2` instead would yield the `ELSE` clause `SELECT 30 b`. `cql:query_plan_branch=0` would yield `SELECT 10 b`, which is the same as the default behaviour.
+
 
 ## Appendix 1: Command Line Options
 <!---
@@ -9332,7 +9485,7 @@ See Appendix 8 for an extensive section on best practices around fragments and c
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-CQL has a variety of command line options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
+CQL has a variety of command line (CLI) options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
 
 * note CQL is often used after the c pre-processor is run so this kind of invocation is typical:
 
@@ -9433,7 +9586,7 @@ NOTE: different result types require a different number of output files with dif
 
 ### --dev
 * some codegen features only make sense during development, this enables dev mode to turn those one
-** example: explain query plan
+** example: [explain query plan](/cql-guide/ch15)
 
 ### --java_package_name name
 * used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
@@ -9524,7 +9677,7 @@ These are the various outputs the compiler can produce.
 #### --rt query_plan
 * produces CQL output which can be re-compiled by CQL as normal input
 * the output consists of a set of procedures that will emit all query plans for the DML that was in the input
-* see `--rt udf` for additional info
+* see also `--rt udf` and [Chapter 15](/cql-guide/ch15)
 
 #### --rt stats
 * produces  a simple .csv file with node count information for AST nodes per procedure in the input
@@ -9534,6 +9687,7 @@ These are the various outputs the compiler can produce.
 * produces stub UDF implementations for all UDFS that were seen in the input
 * this output is suitable for use with `--rt query_plan` so that SQL with UDFs will run in a simple context
 * requires two output files (e.g. udfs.h and udfs.c)
+* See also [Chapter 15](/cql-guide/ch15)
 
 
 
@@ -9548,7 +9702,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue May 31 09:23:31 PDT 2022
+Snapshot as of Wed Jun 29 14:39:51 PDT 2022
 
 ### Operators and Literals
 
@@ -9603,23 +9757,23 @@ REALLIT /* floating point literal */
 "DROP" "ELSE IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE
 CURRENT ROW" "EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE
 TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
-"FILTER" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM
-BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING"
-"HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX" "INITIALLY"
-"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER"
-"INTERFACE" "INTO" "JOIN" "KEY" "LEAVE" "LEFT" "LET"
-"LIMIT" "LONG" "LONG_INT" "LONG_INTEGER" "LOOP" "NO" "NOT
-DEFERRABLE" "NOTHING" "NULL" "OBJECT" "OF" "OFFSET" "ON
-CONFLICT" "ON" "OPEN" "ORDER" "OUT" "OUTER" "OVER"
-"PARTITION" "PRECEDING" "PRIMARY" "PRIVATE" "PROC"
-"PROCEDURE" "QUERY PLAN" "RAISE" "RANGE" "REAL" "RECURSIVE"
-"REFERENCES" "RELEASE" "RENAME" "REPLACE" "RESTRICT"
-"RETURN" "RIGHT" "ROLLBACK" "ROWID" "ROWS" "SAVEPOINT"
-"SELECT" "SET" "SIGN FUNCTION" "STATEMENT" "SWITCH" "TABLE"
-"TEMP" "TEXT" "THEN" "THROW" "TO" "TRANSACTION" "TRIGGER"
-"TRY" "TYPE" "UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING"
-"VALUES" "VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW"
-"WITH" "WITHOUT"
+"FILTER" "FIRST" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN"
+"FROM BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS"
+"HAVING" "HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX"
+"INITIALLY" "INNER" "INOUT" "INSERT" "INSTEAD" "INT"
+"INTEGER" "INTERFACE" "INTO" "JOIN" "KEY" "LAST" "LEAVE"
+"LEFT" "LET" "LIMIT" "LONG" "LONG_INT" "LONG_INTEGER"
+"LOOP" "NO" "NOT DEFERRABLE" "NOTHING" "NULL" "NULLS"
+"OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON" "OPEN" "ORDER"
+"OUT" "OUTER" "OVER" "PARTITION" "PRECEDING" "PRIMARY"
+"PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE" "RANGE"
+"REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
+"REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
+"ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
+"STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
+"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "UNBOUNDED"
+"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VIEW"
+"VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -10019,6 +10173,8 @@ name:
   | "TYPE"
   | "HIDDEN"
   | "PRIVATE"
+  | "FIRST"
+  | "LAST"
   ;
 
 opt_name:
@@ -10503,8 +10659,14 @@ groupby_item:
 
 opt_asc_desc:
   /* nil */
-  | "ASC"
-  | "DESC"
+  | "ASC"  opt_nullsfirst_nullslast
+  | "DESC"  opt_nullsfirst_nullslast
+  ;
+
+opt_nullsfirst_nullslast:
+  /* nil */
+  | "NULLS" "FIRST"
+  | "NULLS" "LAST"
   ;
 
 opt_having:
@@ -11267,11 +11429,13 @@ The complete list (as of this writing) is:
     * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
     * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
   * `cql:generate_copy` the code generation for the annotated procedure will produce a `[procedure_name]_copy` function that can make complete or partial copies of its result set.
-  * `cql:base_fragment=frag_name` used for base fragments (See Chapter 14)
-  * `cql:extension_fragment=frag_name` used for extension fragments (See Chapter 14)
-  * `cql:assembly_fragment=frag_name` used for assembly fragments (See Chapter 14)
+  * `cql:base_fragment=frag_name` used for base fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#base-query-fragments))
+  * `cql:extension_fragment=frag_name` used for extension fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#extension-query-fragments))
+  * `cql:assembly_fragment=frag_name` used for assembly fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#extension-query-fragments))
+  * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#shared-fragments))
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
+  * `@attribute(cql:query_plan_branch=[integer])` is by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](/cql-guide/ch15))
 
 
 
@@ -11933,9 +12097,9 @@ Doesn't make any sense.
 
 -----
 
-### CQL0082: argument must be numeric 'AVERAGE'
+### CQL0082: argument must be numeric
 
-The argument of AVERAGE must be numeric.
+The argument of function must be numeric.
 
 -----
 
@@ -11981,13 +12145,16 @@ SQLite user defined functions (or builtins) declared with  `declare select funct
 
 -----
 
-CQL0090: -- more specific errors are now generated
+### CQL0090: `object<T SET>` has a T that is not a procedure with a result set, 'name'
+
+The data type `object<T SET>` refers to the shape of a result set of a particular procedure.  In this case the indicated name is not such a procedure.
+
+The most likely source of this problem is that there is a typo in the indicated name.  Alternatively the name might be a valid shape like a cursor name or some other shape name but it's a shape that isn't coming from a procedure.
 
 -----
 
-### CQL0091: stored procs that deal with result sets or cursors cannot be invoked as functions 'name'
+CQL0091: -- generalized so that this is not an error anymore
 
-The function syntax for procs cannot be used on procedures that return a result set.  Such procedures already have a result and it isn't even a scalar result.
 
 -----
 
@@ -14342,6 +14509,12 @@ In the indicated type declaration, the indicated attribute was specified twice. 
 because commonly the case where a row does not exist is not handled correctly when `(select ...)` is used
 without the `if nothing` options.
 
+If your select expression uses a [built-in aggregate function](https://www.sqlite.org/lang_aggfunc.html), this check may not be enforced because they can always return a row. But there are exceptions. The check is still enforced when one of the following is in the expression:
+- a `GROUP BY` clause
+- a `LIMIT` that evaluates to less than 1, or is a variable
+- an `OFFSET` clause
+- You have a `min` or `max` function with more than 1 argument. Those are [scalar functions](https://sqlite.org/lang_corefunc.html#max_scalar).
+
 ----
 
 ### CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
@@ -15806,7 +15979,7 @@ Make sure the redeclaration of the function is consistent with the original decl
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue May 31 09:23:31 PDT 2022
+Snapshot as of Wed Jun 29 14:39:51 PDT 2022
 
 ### Rules
 
@@ -16247,6 +16420,7 @@ queries: query | query ',' queries ;
 query: '{'
        '"name"' ':' STRING_LITERAL ','
        '"definedInFile"' ':' STRING_LITERAL ','
+       '"definedOnLine"' ':' INT_LITERAL ','
        '"args"' ':' '[' opt_args ']' ','
        dependencies ','
        opt_region_info
@@ -16291,6 +16465,7 @@ inserts_general: insert_general | insert_general ',' inserts_general
 insert_details:
          '"name"' ':' STRING_LITERAL ','
          '"definedInFile"' ':' STRING_LITERAL ','
+         '"definedOnLine"' ':' INT_LITERAL ','
          '"args"' ':' '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -16325,6 +16500,7 @@ updates: update | update ',' updates
 update : '{'
          '"name"' ':' STRING_LITERAL ','
          '"definedInFile"' ':' STRING_LITERAL ','
+         '"definedOnLine"' ':' INT_LITERAL ','
          '"args"' ':' '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -16344,6 +16520,7 @@ deletes: delete | delete ',' deletes
 delete : '{'
          '"name"' ':' STRING_LITERAL ','
          '"definedInFile"' ':' STRING_LITERAL ','
+         '"definedOnLine"' ':' INT_LITERAL ','
          '"args"' ':' '[' opt_args ']' ','
          dependencies ','
          opt_region_info
@@ -16363,6 +16540,7 @@ generals: general | general ',' generals
 general: '{'
           '"name"' ':' STRING_LITERAL ','
           '"definedInFile"' ':' STRING_LITERAL ','
+          '"definedOnLine"' ':' INT_LITERAL ','
           '"args"' ':' '[' opt_complex_args ']' ','
           dependencies ','
           opt_regions
@@ -16428,6 +16606,7 @@ interfaces: interface | interface ',' interfaces
 interface: '{'
           '"name"' ':' STRING_LITERAL ','
           '"definedInFile"' ':' STRING_LITERAL ','
+          '"definedOnLine"' ':' INT_LITERAL ','
           '"projection"' ':' '[' projected_columns ']'
          '}'
   ;

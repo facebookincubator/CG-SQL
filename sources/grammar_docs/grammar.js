@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue May 31 09:23:31 2022
+// Snapshot as of Wed Jun 29 14:39:51 2022
 
 
 const PREC = {
@@ -83,7 +83,7 @@ module.exports = grammar({
     indexed_column: $ => seq($.expr, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
     create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_where), optional($.opt_delete_version_attr)),
-    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE),
+    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE, $.FIRST, $.LAST),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
@@ -176,7 +176,8 @@ module.exports = grammar({
     opt_groupby: $ => seq($.GROUP, $.BY, $.groupby_list),
     groupby_list: $ => choice($.groupby_item, seq($.groupby_item, ',', $.groupby_list)),
     groupby_item: $ => $.expr,
-    opt_asc_desc: $ => choice($.ASC, $.DESC),
+    opt_asc_desc: $ => choice(seq($.ASC, optional($.opt_nullsfirst_nullslast)), seq($.DESC, optional($.opt_nullsfirst_nullslast))),
+    opt_nullsfirst_nullslast: $ => choice(seq($.NULLS, $.FIRST), seq($.NULLS, $.LAST)),
     opt_having: $ => seq($.HAVING, $.expr),
     opt_orderby: $ => seq($.ORDER, $.BY, $.orderby_list),
     orderby_list: $ => choice($.orderby_item, seq($.orderby_item, ',', $.orderby_list)),
@@ -396,6 +397,8 @@ module.exports = grammar({
     TYPE: $ => CI('type'),
     HIDDEN: $ => CI('hidden'),
     PRIVATE: $ => CI('private'),
+    FIRST: $ => CI('first'),
+    LAST: $ => CI('last'),
     AUTOINCREMENT: $ => CI('autoincrement'),
     COLLATE: $ => CI('collate'),
     AT_SENSITIVE: $ => CI('@sensitive'),
@@ -467,6 +470,7 @@ module.exports = grammar({
     GROUP: $ => CI('group'),
     ASC: $ => CI('asc'),
     DESC: $ => CI('desc'),
+    NULLS: $ => CI('nulls'),
     HAVING: $ => CI('having'),
     ORDER: $ => CI('order'),
     LIMIT: $ => CI('limit'),
