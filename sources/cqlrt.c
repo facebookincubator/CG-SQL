@@ -154,7 +154,15 @@ cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable 
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
   cql_invariant(s1 != NULL);
   cql_invariant(s2 != NULL);
-  return cql_compat_sqlite3_strlike(s2->ptr, s1->ptr, '\0');
+
+  // The sqlite3_strlike(P,X,E) interface returns zero if and only if string X matches
+  // the LIKE pattern P with escape character E.
+  // The definition of LIKE pattern matching used in sqlite3_strlike(P,X,E) is the same
+  // as for the "X LIKE P ESCAPE E" operator in the SQL dialect understood by SQLite.
+  // For "X LIKE P" without the ESCAPE clause, set the E parameter of
+  // sqlite3_strlike(P,X,E) to 0
+
+  return sqlite3_strlike(s2->ptr, s1->ptr, '\0');
 }
 
 static void cql_result_set_finalize(cql_type_ref _Nonnull ref) {

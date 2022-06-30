@@ -15,7 +15,7 @@ cql_int32 cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2
 
   cql_alloc_cstr(c1, s1);
   cql_alloc_cstr(c2, s2);
-  cql_int32 code = (cql_int32)cql_compat_sqlite3_strlike(c1, c2, '\0');
+  cql_int32 code = (cql_int32)sqlite3_strlike(c1, c2, '\0');
   cql_free_cstr(c2, s2);
   cql_free_cstr(c1, s1);
 

@@ -126,9 +126,7 @@ cql_result_set *_Nonnull cql_get_result_set_from_ref(cql_result_set_ref _Nonnull
 
 cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data, void (*_Nonnull finalizer)(void *_Nonnull))
 {
-  cql_partition *self = (cql_partition *)calloc(1, sizeof(cql_partition));
-
-  CQLHolder *holder = [[CQLHolder alloc] initWithBytes:(void *)self andType:CF_HELD_TYPE_GENERIC];
+  CQLHolder *holder = [[CQLHolder alloc] initWithBytes:(void *)data andType:CF_HELD_TYPE_GENERIC];
   holder.generic_finalizer = finalizer;
   return (__bridge_retained cql_object_ref)holder;
 }

@@ -48,13 +48,12 @@
 CQL_EXTERN_C_BEGIN
 
 // Define CQL_COMPAT_VERSION_NUMBER in order to override and test compatibility APIs with any real version of sqlite.
-static inline int cql_sqlite3_libversion_number(void) {
+
 #ifdef CQL_COMPAT_VERSION_NUMBER
-  return CQL_COMPAT_VERSION_NUMBER;
-#else // CQL_COMPAT_VERSION_NUMBER
-  return sqlite3_libversion_number();
-#endif // CQL_COMPAT_VERSION_NUMBER
-}
+#define cql_sqlite3_libversion_number() CQL_COMPAT_VERSION_NUMBER
+#else
+#define cql_sqlite3_libversion_number() sqlite3_libversion_number()
+#endif
 
 typedef struct cql_nullable_int32 {
  cql_bool is_null;

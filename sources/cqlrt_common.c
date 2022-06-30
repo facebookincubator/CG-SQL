@@ -619,62 +619,6 @@ void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer) {
   cql_bytebuf_append(buffer, &var, sizeof(var));
 }
 
-// This helper is used to give us a db handle we can use when faking the LIKE operator
-// in the event that sqlite3_strlike is not available in the version we are using.
-static cql_code _cql_get_compat_db(sqlite3 *_Nonnull *_Nonnull db) {
-  static sqlite3 *shared_db = NULL;
-  cql_code rc = SQLITE_OK;
-  if (!shared_db) {
-    rc = sqlite3_open(":memory:", &shared_db);
-  }
-  *db = shared_db;
-  return rc;
-}
-
-// The return value for this compat function is 0 or 1, where 0 is a match.  The sqlite3_strlike function specifies
-// that it returns 0 or non-0, but does not specify significance for any non-0 values, so we have the ability to just
-// return 1 and still be good.  A return of -1 indicates an error in executing the query (which is also a failure).
-static int _cql_compat_sqlite3_strlike(
-  const char *_Nonnull zGlob,
-  const char *_Nonnull zStr,
-  unsigned int cEsc)
-{
-  // The escape char is bound as a string, but matching the sqlite3_strlike signature makes this an unsigned int.
-  const char *zEsc = (const char *)&cEsc;
-  int result = -1; // failure
-  sqlite3 *db;
-  sqlite3_stmt *stmt = NULL;
-  int rc = _cql_get_compat_db(&db);
-  const char *expr = cEsc ? "SELECT like(?, ?, ?);" : "SELECT like(?,?);";
-  if (rc == SQLITE_OK) rc = cql_sqlite3_prepare_v2(db, expr, -1, &stmt, NULL);
-  if (rc == SQLITE_OK) rc = sqlite3_bind_text(stmt, 1, zGlob, -1, SQLITE_TRANSIENT);
-  if (rc == SQLITE_OK) rc = sqlite3_bind_text(stmt, 2, zStr, -1, SQLITE_TRANSIENT);
-  if (rc == SQLITE_OK && cEsc) rc = sqlite3_bind_text(stmt, 3, zEsc, 1, SQLITE_TRANSIENT);
-  if (rc == SQLITE_OK) rc = sqlite3_step(stmt);
-  if (rc == SQLITE_ROW) result = !sqlite3_column_int(stmt, 0);
-  cql_finalize_stmt(&stmt);
-  return result;
-}
-
-// If the Sqlite sqlite3_strlike method is not available we can round trip to
-// sqlite with a LIKE expression instead.
-int cql_compat_sqlite3_strlike(
-  const char *_Nonnull zGlob,
-  const char *_Nonnull zStr,
-  unsigned int cEsc)
-{
-  // sqlite3_strlike is available in 3.10.0 and greater
-  int (*strlike_impl)(const char *, const char *, unsigned int) =
-#if SQLITE_VERSION_NUMBER >= 3010000
-  (cql_sqlite3_libversion_number() >= 3010000 ?
-   sqlite3_strlike :
-   _cql_compat_sqlite3_strlike);
-#else
-  _cql_compat_sqlite3_strlike;
-#endif
-  return strlike_impl(zGlob, zStr, cEsc);
-}
-
 // If there is no row available we can use this helper to ensure that
 // the output data is put into a known state.
 static void cql_multinull(cql_int32 count, va_list *_Nonnull args) {

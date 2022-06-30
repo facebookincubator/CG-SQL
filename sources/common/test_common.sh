@@ -1556,37 +1556,41 @@ run_test() {
   then
     echo preprocessing failed.
     failed
-  elif ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
+  fi
+
+  if ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
   then
     echo codegen failed.
     failed
-  elif ! (echo "  compiling code"; do_make run_test )
+  fi
+
+  if ! (echo "  compiling code"; do_make run_test )
   then
     echo build failed
     failed
-  elif ! (echo "  executing tests"; "./${OUT_DIR}/run_test")
+  fi
+
+  if ! (echo "  executing tests"; "./${OUT_DIR}/run_test")
   then
     echo tests failed
     failed
-  elif ! ${CQL} --compress --cg "${OUT_DIR}/run_test_compressed.h" "${OUT_DIR}/run_test_compressed.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
+  fi
+
+  if ! ${CQL} --compress --cg "${OUT_DIR}/run_test_compressed.h" "${OUT_DIR}/run_test_compressed.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
   then
     echo compressed codegen failed.
     failed
-  elif ! (echo "  compiling code (compressed version)"; do_make run_test_compressed )
+  fi
+
+  if ! (echo "  compiling code (compressed version)"; do_make run_test_compressed )
   then
     echo build failed
     failed
-  elif ! (echo "  executing tests (compressed version)"; "./${OUT_DIR}/run_test_compressed")
+  fi
+
+  if ! (echo "  executing tests (compressed version)"; "./${OUT_DIR}/run_test_compressed")
   then
     echo tests failed
-    failed
-  elif ! (echo "  compiling compat code"; do_make run_test_compat )
-  then
-    echo compile compat failed
-    failed
-  elif ! (echo "  executing compat tests"; "./${OUT_DIR}/run_test_compat")
-  then
-    echo compat tests failed
     failed
   fi
 }
