@@ -79,3 +79,7 @@ int main(int argc, char* argv[]) {
   cql_result_set_release(result_set);
   return SQLITE_OK;
 }
+
+cql_code mockable_sqlite3_step(sqlite3_stmt *stmt) {
+  return sqlite3_step(stmt);
+}

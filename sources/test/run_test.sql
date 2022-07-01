@@ -5257,6 +5257,66 @@ BEGIN_TEST(parent_child_results)
 
 END_TEST(parent_child_results)
 
+BEGIN_TEST(string_dictionary)
+
+  let i := 1;
+  while i <= 512
+  begin
+     let dict := cql_string_dictionary_create();
+
+     let j := 0;
+     while j < i
+     begin
+       let added := cql_string_dictionary_add(dict, printf("%d", j), printf("%d", j*100));
+       EXPECT(added);
+
+       set added := cql_string_dictionary_add(dict, printf("%d", j), "0");
+       EXPECT(NOT added);
+       set j := j + 2;
+     end;
+
+     set j := 0;
+     while j < i
+     begin
+       let result := cql_string_dictionary_find(dict, printf("%d", j));
+       EXPECT(case when j % 2 then result IS NULL else result == printf("%d", j*100) end);
+       set j := j + 1;
+     end;
+
+     set i := i * 2;
+  end;
+
+  -- test null lookup, always fails
+  EXPECT(cql_string_dictionary_find(dict, NULL) IS NULL);
+
+END_TEST(string_dictionary)
+
+DECLARE FUNCTION _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL NOT NULL;
+
+-- _cql_contains_column_def is used by the upgrader to find string matches the indicate a column is present
+-- it's the same as this expression: haystack GLOB printf('*[) ]%s*', needle)
+-- any null arguments yield a false result
+BEGIN_TEST(cql_contains_column_def)
+
+  -- trivial cases all fail, the "needle" has to be reasonable to even have a chance to match
+  EXPECT(NOT _cql_contains_column_def(null, 'x'));
+  EXPECT(NOT _cql_contains_column_def('x', NULL));
+  EXPECT(NOT _cql_contains_column_def('', 'bar'));
+  EXPECT(NOT _cql_contains_column_def('foo', ''));
+
+  EXPECT(_cql_contains_column_def("create table foo(x integer)", "x integer"));
+  EXPECT(NOT _cql_contains_column_def("create table foo(xx integer)", "x integer"));
+  EXPECT(_cql_contains_column_def("create table foo(id integer, x integer)", "x integer"));
+  EXPECT(NOT _cql_contains_column_def("create table foo(id integer, xx integer)", "x integer"));
+
+  -- it's expecting normalized text so non-canonical matches don't count
+  EXPECT(NOT _cql_contains_column_def("create table foo(id integer, x Integer)", "x integer"));
+
+  -- column name at the start isn't a match, there has to be a space or paren
+  EXPECT(NOT _cql_contains_column_def("x integer", "x integer"));
+
+END_TEST(cql_contains_column_def)
+
 
 END_SUITE()
 

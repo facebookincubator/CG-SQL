@@ -84,7 +84,7 @@ $O/crc64xz.o: crc64xz.c crc64xz.h
 
 $O/ast.o: ast.c ast.h cql.h encoders.h charbuf.h
 
-$O/cqlrt.o: cqlrt.c cqlrt.h
+$O/cqlrt.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 
 $O/rt.o: rt.c rt.h rt_common.c
 
@@ -182,7 +182,7 @@ $O/test_helpers.o: $O/test_helpers.c
 
 $O/test_helpers_test.o: test_helpers_test.c
 
-$O/cqlrt_mocked.o: cqlrt.c cqlrt.h
+$O/cqlrt_mocked.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 	$(CC) $(CFLAGS) -DCQL_RUN_TEST -c -o $O/cqlrt_mocked.o cqlrt.c
 
 RUN_TEST_DEPS=$O/run_test.o $O/cqltest.o $O/run_test_client.o $O/cqlrt_mocked.o $O/result_set_extension.o
@@ -223,7 +223,7 @@ upgrade_test: $(UPGRADE_OBJS) $O/upgrade_test.o $O/upgrade_validate.o $O/downgra
 	$(CC) $(CFLAGS) -o $O/upgrade2 $O/cqlrt_mocked.o $O/upgrade_validate.o $O/generated_upgrade2.o $O/upgrade_test.o $(SQLITE_LINK)
 	$(CC) $(CFLAGS) -o $O/upgrade3 $O/cqlrt_mocked.o $O/upgrade_validate.o $O/generated_upgrade3.o $O/upgrade_test.o $(SQLITE_LINK)
 	$(CC) $(CFLAGS) -o $O/upgrade4 $O/cqlrt_mocked.o $O/upgrade_validate.o $O/generated_upgrade4.o $O/upgrade_test.o $(SQLITE_LINK)
-	$(CC) $(CFLAGS) -o $O/downgrade_test $O/cqlrt.o $O/generated_upgrade1.o $O/downgrade_test.o $(SQLITE_LINK)
+	$(CC) $(CFLAGS) -o $O/downgrade_test $O/cqlrt_mocked.o $O/generated_upgrade1.o $O/downgrade_test.o $(SQLITE_LINK)
 
 query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o
 	$(CC) $(CFLAGS) -o $O/query_plan_test $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o $(SQLITE_LINK)
@@ -237,7 +237,7 @@ $O/dbhelp.o: tester/dbhelp.c tester/dbhelp.h
 $O/main.o: tester/main.c
 	$(CC) -o $@ -c $(CFLAGS) tester/main.c
 
-cql-verify: cqlrt.c cqlrt.h $O/main.o $O/cqlrt.o $O/dbhelp.o $(SQLITE_OBJ)
+cql-verify: $O/main.o $O/cqlrt.o $O/dbhelp.o $(SQLITE_OBJ)
 	$(CC) $(CFLAGS) -I. -o $O/cql-verify $O/main.o $O/cqlrt.o $O/dbhelp.o $(SQLITE_LINK)
 
 $O/linetest.o: linetester/linetest.c linetester/linetest.h

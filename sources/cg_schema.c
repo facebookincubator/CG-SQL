@@ -248,11 +248,19 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  version LONG INTEGER NOT NULL\n");
   bprintf(decls, ");\n\n");
 
-  bprintf(decls, "-- helper proc for testing for the presence of a column/type\n");
+  bprintf(decls, "-- holds all the table definitions out of sqlite_master\n");
+  bprintf(decls, "DECLARE %s_tables_dict_ OBJECT<string_dictionary>;\n\n", global_proc_name);
+
+  bprintf(decls, "-- helper proc for creating the dictionary of table defs from sqlite_master\n");
   bprintf(decls, "@attribute(cql:private)\n");
-  bprintf(decls, "CREATE PROCEDURE %s_check_column_exists(table_name TEXT NOT NULL, decl TEXT NOT NULL, OUT present BOOL NOT NULL)\n", global_proc_name);
+  bprintf(decls, "CREATE PROCEDURE %s_get_table_defs()\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  SET present := (SELECT EXISTS(SELECT * FROM sqlite_master WHERE tbl_name = table_name AND sql GLOB decl));\n");
+  bprintf(decls, "  DECLARE C CURSOR FOR SELECT name, sql from sqlite_master where type = 'table';\n");
+  bprintf(decls, "  SET %s_tables_dict_ := cql_string_dictionary_create();\n", global_proc_name);
+  bprintf(decls, "  LOOP FETCH C\n");
+  bprintf(decls, "  BEGIN\n");
+  bprintf(decls, "    LET added := cql_string_dictionary_add(%s_tables_dict_, C.name, C.sql);\n", global_proc_name);
+  bprintf(decls, "  END;\n");
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- helper proc for creating the schema version table\n");
@@ -300,7 +308,6 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "-- helper proc to reset any triggers that are on the old plan --\n");
   bprintf(decls, "DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;\n\n");
-
 }
 
 static void cg_schema_emit_one_time_drop(charbuf *decls) {
@@ -1426,6 +1433,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "  END CATCH;\n");
   bprintf(&preamble, "END;\n\n");
 
+  bprintf(&preamble, "DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;\n");
+
+  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "CREATE PROC %s_column_exists(table_ TEXT NOT NULL, col_info TEXT NOT NULL, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&preamble, "BEGIN\n");
+  bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
+  bprintf(&preamble, "  LET table_str := cql_string_dictionary_find(%s_tables_dict_, table_);\n", global_proc_name);
+  bprintf(&preamble, "  SET exists_ := _cql_contains_column_def(table_str, col_info);\n");
+  bprintf(&preamble, "END;\n\n");
+
   // the main upgrade worker
 
   bprintf(&main, "\n@attribute(cql:private)\n");
@@ -1458,6 +1475,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     bprintf(&main, "      CALL %s_cql_set_version_crc(0, %lld);\n", global_proc_name, baseline_crc);
     bprintf(&main, "    END IF;\n\n");
   }
+
+  bprintf(&main, "    CALL %s_get_table_defs();\n\n", global_proc_name);
 
   uint32_t prev_version = 0;
 
@@ -1535,7 +1554,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           target_name,
           col_name,
           col_type);
-        bprintf(&upgrade, "      IF NOT %s_check_column_exists('%s', '*[( ]%s %s*') THEN \n",
+        bprintf(&upgrade, "      IF NOT %s_column_exists('%s', '%s %s') THEN \n",
           global_proc_name,
           target_name,
           col_name,
@@ -1803,10 +1822,12 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "    BEGIN CATCH\n");
   bprintf(&main, "      CALL cql_facets_delete(%s_facets);\n", global_proc_name);
   bprintf(&main, "      SET %s_facets := 0;\n", global_proc_name);
+  bprintf(&main, "      SET %s_tables_dict_ := NULL;\n", global_proc_name);
   bprintf(&main, "      THROW;\n");
   bprintf(&main, "    END CATCH;\n");
   bprintf(&main, "    CALL cql_facets_delete(%s_facets);\n", global_proc_name);
   bprintf(&main, "    SET %s_facets := 0;\n", global_proc_name);
+  bprintf(&main, "    SET %s_tables_dict_ := NULL;\n", global_proc_name);
   bprintf(&main, "  ELSE\n");
   bprintf(&main, "    -- some canonical result for no differences --\n");
   bprintf(&main, "    SELECT 'no differences' facet;\n");

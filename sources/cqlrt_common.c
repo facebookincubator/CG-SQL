@@ -3464,7 +3464,7 @@ static void cql_partition_val_release(void *_Nullable context, cql_int64 val) {
 // helpers above will free the keys/values including iterating the buffer contents if
 // there are any unused buffers left.
 static void cql_partition_finalize(void *_Nonnull data) {
-  // recover our type
+  // recover self
   cql_partition *_Nonnull self = data;
 
   // we're doing final cleanup now so attach the release code
@@ -3703,4 +3703,121 @@ cql_object_ref _Nonnull cql_extract_partition(
   cql_invariant(self->empty_result);
   cql_object_retain(self->empty_result);
   return self->empty_result;
+}
+
+// Check the table definition "haystack" searching for the column definition string "needle"
+// The needle must start after a space or an open paren (start of lexical unit)
+// to match a possible column defintion.
+cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_, cql_string_ref _Nullable needle_) {
+  if (!haystack_ || !needle_) {
+    return false;
+  }
+
+  cql_alloc_cstr(haystack, haystack_);
+  cql_alloc_cstr(needle, needle_);
+
+  cql_bool found = false;
+
+  if (!needle[0] || !haystack[0]) {
+    goto cleanup;
+  }
+
+  const char *p = haystack + 1;
+
+  for (;;) {
+    p = strstr(p, needle);
+    if (!p) {
+      goto cleanup;
+    }
+
+    // if column info found at start of word, it's a match
+    if (p[-1] == ' ' || p[-1] == '(') {
+      found = true;
+      goto cleanup;
+    }
+
+    p++;
+  }
+
+cleanup:
+
+  cql_free_cstr(needle, needle_);
+  cql_free_cstr(haystack, haystack_);
+
+  return found;
+}
+
+// The outside world does not need to know the details of the string dictionary
+// so it's defined locally.  We have to have one of these because we can't
+// otherwise assume one exists and we already have the hash table anyway
+// so this is really a pretty trivial extension to create generic runtime support.
+typedef struct cql_string_dictionary {
+  cql_hashtab *_Nonnull ht;
+} cql_string_dictionary;
+
+// Defer finalization to the hash table which has all it needs to do the job
+static void cql_string_dictionary_finalize(void *_Nonnull data) {
+  // recover self
+  cql_string_dictionary *_Nonnull self = data;
+
+  cql_hashtab_delete(self->ht);
+
+  free(self);
+}
+
+// This makes a simple string dictionary with retained strings
+cql_object_ref _Nonnull cql_string_dictionary_create() {
+
+  cql_string_dictionary *_Nonnull self = calloc(1, sizeof(cql_string_dictionary));
+
+  cql_object_ref obj = _cql_generic_object_create(self, cql_string_dictionary_finalize);
+
+  // we can re-use the hash, equality, retain, and release from the cql_string_dictionary
+  // keys and values are the same in this hash table so we can use the same function
+  // to retain/release either
+  self->ht = cql_hashtab_new(
+      cql_key_str_hash,
+      cql_key_str_eq,
+      cql_key_retain_str,
+      cql_key_retain_str,
+      cql_key_release_str,
+      cql_key_release_str,
+      self
+    );
+
+  return obj;
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_string_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_string_ref _Nonnull val)
+{
+  cql_contract(dict);
+  cql_contract(key);
+  cql_contract(val);
+
+  cql_string_dictionary *_Nonnull self = _cql_generic_object_get_data(dict);
+
+  // retain/release defined above, the key/value will be retained
+  return cql_hashtab_add(self->ht, (cql_int64)key, (cql_int64)val);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the string
+cql_string_ref _Nullable cql_string_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  cql_contract(dict);
+
+  if (!key) {
+     return NULL;
+  }
+
+  cql_string_dictionary *_Nonnull self = _cql_generic_object_get_data(dict);
+
+  cql_hashtab_entry *entry = cql_hashtab_find(self->ht, (cql_int64)key);
+
+  return entry ? (cql_string_ref)entry->val : NULL;
 }

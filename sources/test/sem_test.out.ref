@@ -85,6 +85,89 @@ DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR)
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary> NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<string_dictionary> notnull create_func
+    | {name cql_string_dictionary_create}: object<string_dictionary> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<string_dictionary> notnull create_func
+        | {notnull}: object<string_dictionary> notnull
+          | {type_object}: object<string_dictionary>
+            | {name string_dictionary}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary> NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL) BOOL NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: bool notnull
+    | {name cql_string_dictionary_add}: bool notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<string_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<string_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<string_dictionary> notnull variable in
+      | |   | {notnull}: object<string_dictionary> notnull
+      | |     | {type_object}: object<string_dictionary>
+      | |       | {name string_dictionary}
+      | | {params}
+      |   | {param}: key: text notnull variable in
+      |   | | {param_detail}: key: text notnull variable in
+      |   |   | {name key}: key: text notnull variable in
+      |   |   | {notnull}: text notnull
+      |   |     | {type_text}: text
+      |   | {params}
+      |     | {param}: value: text notnull variable in
+      |       | {param_detail}: value: text notnull variable in
+      |         | {name value}: value: text notnull variable in
+      |         | {notnull}: text notnull
+      |           | {type_text}: text
+      | {notnull}: bool notnull
+        | {type_bool}: bool
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL, key TEXT) TEXT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text
+    | {name cql_string_dictionary_find}: text
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<string_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<string_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<string_dictionary> notnull variable in
+      | |   | {notnull}: object<string_dictionary> notnull
+      | |     | {type_object}: object<string_dictionary>
+      | |       | {name string_dictionary}
+      | | {params}
+      |   | {param}: key: text variable in
+      |     | {param_detail}: key: text variable in
+      |       | {name key}: key: text variable in
+      |       | {type_text}: text
+      | {type_text}: text
+
+The statement ending at line XXXX
+
 DECLARE PROC printf NO CHECK;
 
   {declare_proc_no_check_stmt}: ok

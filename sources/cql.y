@@ -2418,7 +2418,13 @@ cql_noexport CSTR cql_builtin_text() {
     "@attribute(cql:builtin)"
     "DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, value CURSOR) BOOL NOT NULL;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL;";
+    "DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_string_dictionary_create() CREATE OBJECT<string_dictionary> NOT NULL;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_string_dictionary_add(dict OBJECT<string_dictionary> NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL) BOOL NOT NULL;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_string_dictionary_find(dict OBJECT<string_dictionary> NOT NULL, key TEXT) TEXT;";
 }
 
 int cql_main(int argc, char **argv) {

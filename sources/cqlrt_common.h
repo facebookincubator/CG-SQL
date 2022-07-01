@@ -337,18 +337,35 @@ CQL_EXPORT cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name
 CQL_EXPORT cql_bool cql_facet_upsert(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
 CQL_EXPORT cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull key);
 
-cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)());
-void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull obj);
+// For internal use by the runtime only
+CQL_EXPORT cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)());
+CQL_EXPORT void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull obj);
 
-cql_object_ref _Nonnull cql_partition_create(void);
+CQL_EXPORT cql_object_ref _Nonnull cql_partition_create(void);
 
-cql_bool cql_partition_cursor(
+CQL_EXPORT cql_bool cql_partition_cursor(
   cql_object_ref _Nonnull obj,
   cql_dynamic_cursor *_Nonnull key,
   cql_dynamic_cursor *_Nonnull val);
 
-cql_object_ref _Nonnull cql_extract_partition(
+CQL_EXPORT cql_object_ref _Nonnull cql_extract_partition(
   cql_object_ref _Nonnull obj,
   cql_dynamic_cursor *_Nonnull key);
 
+CQL_EXPORT cql_object_ref _Nonnull cql_string_dictionary_create(void);
+
+CQL_EXPORT cql_bool cql_string_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_string_ref _Nonnull val);
+
+CQL_EXPORT cql_string_ref _Nullable cql_string_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key);
+
+// For internal use by the schema upgrader only, subject to change and generally uninteresting because
+// of its unusual matching rules.
+CQL_EXPORT cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_, cql_string_ref _Nullable needle_);
+
 CQL_EXTERN_C_END
+
