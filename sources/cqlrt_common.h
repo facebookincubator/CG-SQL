@@ -47,14 +47,6 @@
 
 CQL_EXTERN_C_BEGIN
 
-// Define CQL_COMPAT_VERSION_NUMBER in order to override and test compatibility APIs with any real version of sqlite.
-
-#ifdef CQL_COMPAT_VERSION_NUMBER
-#define cql_sqlite3_libversion_number() CQL_COMPAT_VERSION_NUMBER
-#else
-#define cql_sqlite3_libversion_number() sqlite3_libversion_number()
-#endif
-
 typedef struct cql_nullable_int32 {
  cql_bool is_null;
  cql_int32 value;
@@ -235,10 +227,6 @@ CQL_EXPORT void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed)
 CQL_EXPORT void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data, int32_t bytes);
 CQL_EXPORT void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...);
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
-
-// sqlite3 compat functions for implementations that do not exist in lib versions that are supported.  If the runtime
-// version of sqlite3 supports these functions, it will use those, otherwise it will use the compat version.
-CQL_EXPORT int cql_compat_sqlite3_strlike(const char *_Nonnull zGlob, const char *_Nonnull zStr, unsigned int cEsc);
 
 // teardown all the internal data for the given result_set
 CQL_EXPORT void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set);
