@@ -153,3 +153,13 @@ begin
     throw;
   end;
 end;
+
+create proc begin_transaction()
+begin
+  BEGIN TRANSACTION;
+end;
+
+create proc commit_transaction()
+begin
+  COMMIT TRANSACTION;
+end;

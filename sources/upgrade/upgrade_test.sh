@@ -10,6 +10,7 @@ CQL_FILE="${OUT_DIR}/generated_upgrade_test.cql"
 SCHEMA_FILE="${OUT_DIR}/generated_upgrade_test_schema.sql"
 TEST_PREFIX="test"
 CQL="./${OUT_DIR}/cql"
+ERROR_TRACE=0
 
 # shellcheck disable=SC1091
 source common/test_helpers.sh || exit 1
@@ -61,6 +62,13 @@ do
     exit 1
   fi
 
+  # set ERROR_TRACE to get verbose tracing in the upgrader
+  if [ "${ERROR_TRACE}" != "0" ]
+  then
+    cat upgrade/errortrace.inc "${OUT_DIR}/generated_upgrader$i.sql" >"${OUT_DIR}/x"
+    mv "${OUT_DIR}/x" "${OUT_DIR}/generated_upgrader$i.sql" 
+  fi
+
   if ! ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --compress --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"; then
     echo ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --compress --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"
     echo "failed C from the upgrader $i"
@@ -104,12 +112,19 @@ do
   set_exclusive $i
 
   # Generate upgrade CQL.
-  if ! ${CQL} ${exclusive} --in "$SCHEMA_FILE" --cg "$CQL_FILE" --rt schema_upgrade --global_proc "$TEST_PREFIX"; then
+  if ! ${CQL} ${exclusive} --in "${SCHEMA_FILE}" --cg "${CQL_FILE}" --rt schema_upgrade --global_proc "${TEST_PREFIX}"; then
     echo "Failed to generate upgrade CQL."
-    echo "cc -I./ -Iupgrade -w -E -x c $SCHEMA_FILE > $TEMP_FILE && ${CQL} -- \
-        --in $TEMP_FILE --cg $CQL_FILE --rt schema_upgrade \
-        --global_proc $TEST_PREFIX"
+    echo "cc -I./ -Iupgrade -w -E -x c ${SCHEMA_FILE} > ${TEMP_FILE} && ${CQL} -- \
+        --in ${TEMP_FILE} --cg ${CQL_FILE} --rt schema_upgrade \
+        --global_proc ${TEST_PREFIX}"
     exit 1
+  fi
+
+  # set ERROR_TRACE to get verbose tracing in the upgrader
+  if [ "${ERROR_TRACE}" != "0" ]
+  then
+    cat upgrade/errortrace.inc "${CQL_FILE}" >"${OUT_DIR}/x"
+    mv "${OUT_DIR}/x" "${CQL_FILE}" 
   fi
 
   if ! diff "${OUT_DIR}/generated_upgrader$i.sql" "${CQL_FILE}" ; then
@@ -127,7 +142,7 @@ do
 
       echo "Upgrade from nothing to v$j, then to v$i -- must match direct update to v$i"
 
-      rm -f "$OUT_DIR/test.db"
+      rm -f "${OUT_DIR}/test.db"
       if ! ${OUT_DIR}/upgrade$j "${OUT_DIR}/test.db" > ${OUT_DIR}/partial.out; then
         echo ${OUT_DIR}/upgrade$j "${OUT_DIR}/test.db > ${OUT_DIR}/partial.out"
         echo "initial step to version $j" failed
