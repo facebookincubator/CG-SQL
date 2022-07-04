@@ -291,6 +291,11 @@ def emit_schema():
             "  c_notnull bool not null,\n"
             "  primary key (t_name, c_name));\n"
             "\n"
+            "create table table_attributes(\n"
+            "  t_name text not null,\n"
+            "  a_name text not null,\n"
+            "  value text not null);\n"
+            "\n"
             "create table regions(\n"
             "  r_name text primary key);\n"
             "\n"
@@ -370,7 +375,6 @@ def emit_projection(p_name, projection):
         )
         col = col + 1
 
-
 # Here we emit all the information for the procedures that are known
 # this is basic info about the name and arguments as well as dependencies.
 # For any chunk of JSON that has the "dependencies" sub-block
@@ -389,6 +393,34 @@ def emit_procinfo(section, s_name):
         for vdep in src.get("usesViews", []):
             print(f"insert into proc_view_deps values('{p_name}', '{vdep}');")
 
+def emit_attr_value(attr):
+    if isinstance(attr, list):
+        first = 1
+        print("(", end = "")
+        for a in attr:
+            if first:
+                first = 0
+            else:
+                print(", ", end ="")
+
+            emit_attr_value(a)
+        print(")", end  = "")
+    elif isinstance(attr, str):
+        astr = f"{attr}".replace("'", "''")
+        print(f"\"{astr}\"", end = "")
+    else:
+        print(f"{attr}", end = "")
+
+def emit_attribute(t_name, attr):
+    a_name = attr["name"]
+    value = attr["value"]
+    print(f"insert into table_attributes values ('{t_name}', '{a_name}', '", end="")
+    emit_attr_value(value)
+    print("');")
+
+def emit_attributes(t_name, attrs):
+   for attr in attrs:
+      emit_attribute(t_name, attr)
 
 # This walks the various JSON chunks and emits them into the equivalent table:
 # * first we walk the tables, this populates:
@@ -417,6 +449,9 @@ def emit_sql(data):
         print(
             f"insert into tables values('{t_name}', '{region}', {deleted}, {createVersion}, {deleteVersion}, {recreated}, '{groupName}');"
         )
+        if "attributes" in t:
+            emit_attributes(t_name, t["attributes"])
+
         for ctup in enumerate(t["columns"]):
             c = ctup[1]
             c_name = c["name"]
