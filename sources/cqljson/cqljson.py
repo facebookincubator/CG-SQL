@@ -291,6 +291,11 @@ def emit_schema():
             "  c_notnull bool not null,\n"
             "  primary key (t_name, c_name));\n"
             "\n"
+            "create table table_attributes(\n"
+            "  t_name text not null,\n"
+            "  a_name text not null,\n"
+            "  value text not null);\n"
+            "\n"
             "create table regions(\n"
             "  r_name text primary key);\n"
             "\n"
@@ -390,9 +395,47 @@ def emit_procinfo(section, s_name):
             print(f"insert into proc_view_deps values('{p_name}', '{vdep}');")
 
 
+# Emits a single attribute value, it can be a list, a string (which might require escapes)
+# or value primitive that isn't a string (which doesn't).  Lists are emitted as comma
+# seperated values recursively
+def emit_attr_value(attr):
+    if isinstance(attr, list):
+        first = 1
+        print("(", end="")
+        for a in attr:
+            if first:
+                first = 0
+            else:
+                print(", ", end="")
+
+            emit_attr_value(a)
+        print(")", end="")
+    elif isinstance(attr, str):
+        astr = f"{attr}".replace("'", "''")
+        print(f'"{astr}"', end="")
+    else:
+        print(f"{attr}", end="")
+
+
+# emits a single attribute name and value, the value might need recursive handling
+def emit_attribute(t_name, attr):
+    a_name = attr["name"]
+    value = attr["value"]
+    print(f"insert into table_attributes values ('{t_name}', '{a_name}', '", end="")
+    emit_attr_value(value)
+    print("');")
+
+
+# emits all the attributes for a table (this is always a list even if it's a list of one)
+def emit_attributes(t_name, attrs):
+    for attr in attrs:
+        emit_attribute(t_name, attr)
+
+
 # This walks the various JSON chunks and emits them into the equivalent table:
 # * first we walk the tables, this populates:
 #   * one row in the tables table (t_name, region)
+#   * one row per attribute in the attributes table (t_name, a_name, value)
 #   * one row per column in the columns table (t_name, c_name, c_type, c_notnull)
 #   * one row per primary key column in the pks table (t_name, pkcol)
 #   * we enumerate the FKs, giving each a name like fk1, fk2, etc. (fk{ifk})
@@ -417,6 +460,9 @@ def emit_sql(data):
         print(
             f"insert into tables values('{t_name}', '{region}', {deleted}, {createVersion}, {deleteVersion}, {recreated}, '{groupName}');"
         )
+        if "attributes" in t:
+            emit_attributes(t_name, t["attributes"])
+
         for ctup in enumerate(t["columns"]):
             c = ctup[1]
             c_name = c["name"]
