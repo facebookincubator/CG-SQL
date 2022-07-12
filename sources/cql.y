@@ -77,9 +77,11 @@ static void cql_exit_on_parse_errors();
 static void parse_cleanup();
 static void cql_usage();
 static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
+static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
+static CSTR table_comment_saved;
 
 int yylex();
 void yyerror(const char *s, ...);
@@ -238,6 +240,7 @@ static void cql_reset_globals(void);
 %type <aval> create_index_stmt create_table_stmt create_view_stmt create_virtual_table_stmt
 %type <aval> indexed_column indexed_columns
 %type <aval> drop_index_stmt drop_table_stmt drop_view_stmt drop_trigger_stmt
+%type <ival> create_table_prefix_opt_temp
 
 %type <aval> trigger_update_stmt trigger_delete_stmt trigger_insert_stmt trigger_select_stmt
 %type <aval> trigger_stmt trigger_stmts opt_when_expr trigger_action opt_of
@@ -579,9 +582,15 @@ opt_module_args: /* nil */ { $opt_module_args = NULL; }
   | '(' ARGUMENTS FOLLOWING ')' { $opt_module_args = new_ast_following(); }
   ;
 
+create_table_prefix_opt_temp:
+  CREATE opt_temp TABLE {
+    /* This node only exists so that we can get an early reduce in the table flow to grab the doc comment */
+   $create_table_prefix_opt_temp = $opt_temp; table_comment_saved = get_last_doc_comment();
+  };
+
 create_table_stmt:
-  CREATE opt_temp TABLE opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  {
-    int flags = $opt_temp | $opt_if_not_exists | $opt_no_rowid;
+  create_table_prefix_opt_temp opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  {
+    int flags = $create_table_prefix_opt_temp | $opt_if_not_exists | $opt_no_rowid;
     struct ast_node *flags_node = new_ast_opt(flags);
     struct ast_node *name = $name;
     struct ast_node *col_key_list = $col_key_list;
@@ -679,7 +688,7 @@ col_def:
   misc_attrs col_name data_type_any col_attrs  {
   struct ast_node *name_type = new_ast_col_def_name_type($col_name, $data_type_any);
   struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, $col_attrs);
-  $col_def = new_ast_col_def(col_def_type_attrs, $misc_attrs);
+  $col_def = make_coldef_node(col_def_type_attrs, $misc_attrs);
   }
   ;
 
@@ -2774,7 +2783,7 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt)
   if (is_ast_create_proc_stmt(any_stmt) ||
       is_ast_create_view_stmt(any_stmt) ||
       is_ast_create_table_stmt(any_stmt)) {
-    CSTR comment = get_last_doc_comment();
+    CSTR comment = table_comment_saved ? table_comment_saved : get_last_doc_comment();
     if (comment) {
        ast_node *misc_attr_key = new_ast_dot(new_ast_str("cql"), new_ast_str("doc_comment"));
        ast_node *misc_attr = new_ast_misc_attr(misc_attr_key, new_ast_cstr(comment));
@@ -2782,10 +2791,29 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt)
     }
   }
 
+  // in any case, we get one chance to use this
+  table_comment_saved = NULL;
+
   if (misc_attrs) {
      return new_ast_stmt_and_attr(misc_attrs, any_stmt);
   }
   else {
      return any_stmt;
   }
+}
+
+static ast_node *make_coldef_node(ast_node *col_def_type_attrs, ast_node *misc_attrs)
+{
+  // This is the equivalent of:
+  //
+  // $col_def = new_ast_col_def(col_def_type_attrs, $misc_attrs);
+
+  CSTR comment = get_last_doc_comment();
+  if (comment) {
+     ast_node *misc_attr_key = new_ast_dot(new_ast_str("cql"), new_ast_str("doc_comment"));
+     ast_node *misc_attr = new_ast_misc_attr(misc_attr_key, new_ast_cstr(comment));
+     misc_attrs = new_ast_misc_attrs(misc_attr, misc_attrs);
+  }
+
+  return new_ast_col_def(col_def_type_attrs, misc_attrs);
 }

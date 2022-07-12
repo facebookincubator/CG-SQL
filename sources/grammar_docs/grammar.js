@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Jun 29 14:39:51 2022
+// Snapshot as of Tue Jul 12 08:59:04 2022
 
 
 const PREC = {
@@ -48,7 +48,8 @@ module.exports = grammar({
     drop_trigger_stmt: $ => choice(seq($.DROP, $.TRIGGER, $.IF, $.EXISTS, $.name), seq($.DROP, $.TRIGGER, $.name)),
     create_virtual_table_stmt: $ => seq($.CREATE, $.VIRTUAL, $.TABLE, optional($.opt_vtab_flags), $.name, $.USING, $.name, optional($.opt_module_args), $.AS, '(', $.col_key_list, ')', optional($.opt_delete_version_attr)),
     opt_module_args: $ => choice(seq('(', $.misc_attr_value_list, ')'), seq('(', $.ARGUMENTS, $.FOLLOWING, ')')),
-    create_table_stmt: $ => seq($.CREATE, optional($.opt_temp), $.TABLE, optional($.opt_if_not_exists), $.name, '(', $.col_key_list, ')', optional($.opt_no_rowid), optional($.version_attrs_opt_recreate)),
+    create_table_prefix_opt_temp: $ => seq($.CREATE, optional($.opt_temp), $.TABLE),
+    create_table_stmt: $ => seq($.create_table_prefix_opt_temp, optional($.opt_if_not_exists), $.name, '(', $.col_key_list, ')', optional($.opt_no_rowid), optional($.version_attrs_opt_recreate)),
     opt_temp: $ => $.TEMP,
     opt_if_not_exists: $ => seq($.IF, $.NOT, $.EXISTS),
     opt_no_rowid: $ => seq($.WITHOUT, $.ROWID),

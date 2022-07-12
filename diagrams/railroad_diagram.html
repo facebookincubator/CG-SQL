@@ -1720,7 +1720,7 @@
          <ul>
             <li><a href="#create_virtual_table_stmt" title="create_virtual_table_stmt">create_virtual_table_stmt</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="create_table_stmt">create_table_stmt:</a></p><svg width="867" height="103">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="create_table_prefix_opt_temp">create_table_prefix_opt_temp:</a></p><svg width="315" height="37">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -1759,31 +1759,77 @@
             <rect x="121" y="1" width="82" height="32" class="nonterminal"></rect>
             <text class="nonterminal" x="131" y="21">opt_temp</text></a><rect x="225" y="3" width="62" height="32" rx="10"></rect>
          <rect x="223" y="1" width="62" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="233" y="21">TABLE</text><a href="#opt_if_not_exists" title="opt_if_not_exists">
-            <rect x="307" y="3" width="130" height="32"></rect>
-            <rect x="305" y="1" width="130" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="315" y="21">opt_if_not_exists</text></a><a href="#name" title="name">
-            <rect x="457" y="3" width="56" height="32"></rect>
-            <rect x="455" y="1" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="465" y="21">name</text></a><rect x="533" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="531" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="541" y="21">(</text><a href="#col_key_list" title="col_key_list">
-            <rect x="579" y="3" width="94" height="32"></rect>
-            <rect x="577" y="1" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="587" y="21">col_key_list</text></a><rect x="693" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="691" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="701" y="21">)</text><a href="#opt_no_rowid" title="opt_no_rowid">
-            <rect x="739" y="3" width="106" height="32"></rect>
-            <rect x="737" y="1" width="106" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="747" y="21">opt_no_rowid</text></a><a href="#version_attrs_opt_recreate" title="version_attrs_opt_recreate">
-            <rect x="645" y="69" width="194" height="32"></rect>
-            <rect x="643" y="67" width="194" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="653" y="87">version_attrs_opt_recreate</text></a><path class="line" d="m17 17 h2 m0 0 h10 m72 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m62 0 h10 m0 0 h10 m130 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m94 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m106 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-244 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m194 0 h10 m3 0 h-3"></path>
-         <polygon points="857 83 865 79 865 87"></polygon>
-         <polygon points="857 83 849 79 849 87"></polygon></svg><p>
+         <text class="terminal" x="233" y="21">TABLE</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m72 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m62 0 h10 m3 0 h-3"></path>
+         <polygon points="305 17 313 13 313 21"></polygon>
+         <polygon points="305 17 297 13 297 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#create_table_prefix_opt_temp" title="create_table_prefix_opt_temp">create_table_prefix_opt_temp</a></div>
+               <div>         ::= 'CREATE' <a href="#opt_temp" title="opt_temp">opt_temp</a> 'TABLE'</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#create_table_stmt" title="create_table_stmt">create_table_stmt</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="create_table_stmt">create_table_stmt:</a></p><svg width="825" height="103">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 17 1 13 1 21"></polygon>
+         <polygon points="17 17 9 13 9 21"></polygon><a href="#create_table_prefix_opt_temp" title="create_table_prefix_opt_temp">
+            <rect x="31" y="3" width="214" height="32"></rect>
+            <rect x="29" y="1" width="214" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="39" y="21">create_table_prefix_opt_temp</text></a><a href="#opt_if_not_exists" title="opt_if_not_exists">
+            <rect x="265" y="3" width="130" height="32"></rect>
+            <rect x="263" y="1" width="130" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="273" y="21">opt_if_not_exists</text></a><a href="#name" title="name">
+            <rect x="415" y="3" width="56" height="32"></rect>
+            <rect x="413" y="1" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="423" y="21">name</text></a><rect x="491" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="489" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="499" y="21">(</text><a href="#col_key_list" title="col_key_list">
+            <rect x="537" y="3" width="94" height="32"></rect>
+            <rect x="535" y="1" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="545" y="21">col_key_list</text></a><rect x="651" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="649" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="659" y="21">)</text><a href="#opt_no_rowid" title="opt_no_rowid">
+            <rect x="697" y="3" width="106" height="32"></rect>
+            <rect x="695" y="1" width="106" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="705" y="21">opt_no_rowid</text></a><a href="#version_attrs_opt_recreate" title="version_attrs_opt_recreate">
+            <rect x="603" y="69" width="194" height="32"></rect>
+            <rect x="601" y="67" width="194" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="611" y="87">version_attrs_opt_recreate</text></a><path class="line" d="m17 17 h2 m0 0 h10 m214 0 h10 m0 0 h10 m130 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m94 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m106 0 h10 m2 0 l2 0 m2 0 l2 0 m2 0 l2 0 m-244 66 l2 0 m2 0 l2 0 m2 0 l2 0 m2 0 h10 m194 0 h10 m3 0 h-3"></path>
+         <polygon points="815 83 823 79 823 87"></polygon>
+         <polygon points="815 83 807 79 807 87"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#create_table_stmt" title="create_table_stmt">create_table_stmt</a></div>
-               <div>         ::= 'CREATE' <a href="#opt_temp" title="opt_temp">opt_temp</a> 'TABLE' <a href="#opt_if_not_exists" title="opt_if_not_exists">opt_if_not_exists</a> <a href="#name" title="name">name</a> '(' <a href="#col_key_list" title="col_key_list">col_key_list</a> ')' <a href="#opt_no_rowid" title="opt_no_rowid">opt_no_rowid</a> <a href="#version_attrs_opt_recreate" title="version_attrs_opt_recreate">version_attrs_opt_recreate</a></div></code></div>
+               <div>         ::= <a href="#create_table_prefix_opt_temp" title="create_table_prefix_opt_temp">create_table_prefix_opt_temp</a> <a href="#opt_if_not_exists" title="opt_if_not_exists">opt_if_not_exists</a> <a href="#name" title="name">name</a> '(' <a href="#col_key_list" title="col_key_list">col_key_list</a> ')' <a href="#opt_no_rowid" title="opt_no_rowid">opt_no_rowid</a> <a href="#version_attrs_opt_recreate" title="version_attrs_opt_recreate">version_attrs_opt_recreate</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -1832,7 +1878,7 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#create_table_stmt" title="create_table_stmt">create_table_stmt</a></li>
+            <li><a href="#create_table_prefix_opt_temp" title="create_table_prefix_opt_temp">create_table_prefix_opt_temp</a></li>
             <li><a href="#create_trigger_stmt" title="create_trigger_stmt">create_trigger_stmt</a></li>
             <li><a href="#create_view_stmt" title="create_view_stmt">create_view_stmt</a></li>
          </ul>

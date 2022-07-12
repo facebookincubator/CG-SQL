@@ -1368,6 +1368,80 @@
 
     The statement ending at line XXXX
 
+    @ATTRIBUTE(cql:doc_comment="/** comment for the table */")
+    CREATE TABLE potato_table(
+      @ATTRIBUTE(cql:doc_comment="/** for the id column */")
+      potato_id INTEGER,
+      @ATTRIBUTE(cql:doc_comment="/** for the name column */")
+      @ATTRIBUTE(normal_attribute)
+      potato_name TEXT
+    )
+
+    {
+      "name" : "potato_table",
+      "CRC" : "-2522002868851592223",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "attributes" : [
+        {
+          "name" : "cql:doc_comment",
+          "value" : "/** comment for the table */"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "potato_id",
+          "attributes" : [
+            {
+              "name" : "cql:doc_comment",
+              "value" : "/** for the id column */"
+            }
+          ],
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "potato_name",
+          "attributes" : [
+            {
+              "name" : "cql:doc_comment",
+              "value" : "/** for the name column */"
+            },
+            {
+              "name" : "normal_attribute",
+              "value" : 1
+            }
+          ],
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
     CREATE TABLE t_for_unsub(
       id INTEGER
     )
@@ -2920,7 +2994,7 @@
     {
       "name" : "uses_deleted_view_alias",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1439,
+      "definedOnLine" : 1457,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -2951,7 +3025,7 @@
     {
       "name" : "test_interface1_implementation_correct",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1505,
+      "definedOnLine" : 1523,
       "args" : [
         {
           "name" : "id_",
@@ -3910,7 +3984,7 @@
     {
       "name" : "interface1",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1502,
+      "definedOnLine" : 1520,
       "projection" : [
         {
           "name" : "id",

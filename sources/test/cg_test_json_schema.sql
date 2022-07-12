@@ -1425,6 +1425,24 @@ begin
   select 1 x;
 end;
 
+-- TEST: verify table attribute in the presence of column attributes
+-- and also verify column attributes
+-- +3 "name" : "cql:doc_comment",
+-- + "value" : "/** comment for the table */"
+-- + "value" : "/** for the id column */"
+-- + "value" : "/** for the name column */"
+-- ensure the doc comment mixes with normal attributes
+-- + "name" : "normal_attribute",
+-- + "value" : 1
+/** comment for the table */
+create table potato_table (
+  /** for the id column */
+  potato_id integer,
+  /** for the name column */
+  @attribute(normal_attribute)
+  potato_name text
+);
+
 -- TEST: create a deleted view (for the next test)
 -- + "name" : "deleted_view",
 -- + "isTemp" : 0,

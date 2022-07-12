@@ -9702,7 +9702,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jun 29 14:39:51 PDT 2022
+Snapshot as of Tue Jul 12 08:59:03 PDT 2022
 
 ### Operators and Literals
 
@@ -9983,8 +9983,11 @@ opt_module_args: /* nil */
   | '(' "ARGUMENTS" "FOLLOWING" ')'
   ;
 
+create_table_prefix_opt_temp:
+  "CREATE" opt_temp "TABLE" ;
+
 create_table_stmt:
-  "CREATE" opt_temp "TABLE" opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate
+  create_table_prefix_opt_temp opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate
   ;
 
 opt_temp:
@@ -15979,7 +15982,7 @@ Make sure the redeclaration of the function is consistent with the original decl
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jun 29 14:39:51 PDT 2022
+Snapshot as of Tue Jul 12 08:59:04 PDT 2022
 
 ### Rules
 
