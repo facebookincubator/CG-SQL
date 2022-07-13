@@ -2676,9 +2676,16 @@ static bool cql_key_str_eq(void *_Nullable context, cql_int64 key1, cql_int64 ke
   return cql_string_equal((cql_string_ref)key1, (cql_string_ref)key2);
 }
 
+// Defer finalization to the hash table which has all it needs to do the job
+static void cql_facets_finalize(void *_Nonnull data) {
+  cql_hashtab *_Nonnull self = data;
+  cql_hashtab_delete(self);
+}
+
 // create the facets storage using the hashtable
-cql_int64 cql_facets_new(void) {
-  return (cql_int64)cql_hashtab_new(
+cql_object_ref _Nonnull cql_facets_create(void) {
+
+  cql_hashtab * self = cql_hashtab_new(
     cql_key_str_hash,
     cql_key_str_eq,
     cql_key_retain_str,
@@ -2687,40 +2694,51 @@ cql_int64 cql_facets_new(void) {
     cql_no_op_retain_release,
     NULL
   );
-}
 
-// cleanup the facet storage if facets is valid
-void cql_facets_delete(cql_int64 facets){
-  if (facets) {
-    cql_hashtab_delete((cql_hashtab*)facets);
-  }
+  return _cql_generic_object_create(self, cql_facets_finalize);
 }
 
 // add a facet value to the hash table
-cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc) {
-  return cql_hashtab_add((cql_hashtab *)facets, (cql_int64)name, crc);
+cql_bool cql_facet_add(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name, cql_int64 crc) {
+  cql_bool result = false;
+  if (facets) { 
+    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
+    result = cql_hashtab_add(self, (cql_int64)name, crc);
+  }
+  return result;
 }
 
 // Search for the facet value in the hash table, if not found return -1
-cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull name) {
-  cql_hashtab_entry *payload = cql_hashtab_find((cql_hashtab *)facets, (cql_int64)name);
-  if (!payload) {
-     return -1;
+cql_int64 cql_facet_find(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name) {
+  cql_int64 result = -1;
+  if (facets) {
+    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
+    cql_hashtab_entry *payload = cql_hashtab_find(self, (cql_int64)name);
+    if (payload) {
+      result = payload->val;
+    }
   }
-  return payload->val;
+  return result;
 }
 
 // Search for the facet value in the hash table, replace it if it exists
 // add it if it doesn't
-cql_bool cql_facet_upsert(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc) {
-  cql_hashtab_entry *payload = cql_hashtab_find((cql_hashtab *)facets, (cql_int64)name);
-  if (!payload) {
-      // this will return true because we just checked and it's not there
-      return cql_hashtab_add((cql_hashtab *)facets, (cql_int64)name, crc);
+cql_bool cql_facet_upsert(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name, cql_int64 crc) {
+  cql_bool result = false;
+  if (facets) {
+    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
+    cql_hashtab_entry *payload = cql_hashtab_find(self, (cql_int64)name);
+    if (!payload) {
+        // this will return true because we just checked and it's not there
+        result = cql_hashtab_add(self, (cql_int64)name, crc);
+        goto done;
+    }
+    // did not add path
+    payload->val = crc;
   }
-  // did not add path
-  payload->val = crc;
-  return false;
+
+done:
+  return result;
 }
 
 #define cql_append_value(b, var) cql_bytebuf_append(&b, &var, sizeof(var))

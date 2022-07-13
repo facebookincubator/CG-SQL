@@ -6,10 +6,9 @@
 -- schema crc 4537885047772706106
 
 -- declare facet helpers-- 
-DECLARE facet_data TYPE LONG<facet_data> not null;
+DECLARE facet_data TYPE OBJECT<facet_data>;
 DECLARE test_facets facet_data;
-DECLARE FUNCTION cql_facets_new() facet_data;
-DECLARE PROCEDURE cql_facets_delete(facets facet_data);
+DECLARE FUNCTION cql_facets_create() create facet_data not null;
 DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
 DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
 DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
@@ -332,7 +331,7 @@ END;
 CREATE PROCEDURE test_setup_facets()
 BEGIN
   BEGIN TRY
-    SET test_facets := cql_facets_new();
+    SET test_facets := cql_facets_create();
     DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
     LOOP FETCH C
     BEGIN
@@ -488,13 +487,11 @@ BEGIN
       CALL test_perform_needed_upgrades(include_virtual_tables);
     END TRY;
     BEGIN CATCH
-      CALL cql_facets_delete(test_facets);
-      SET test_facets := 0;
+      SET test_facets := NULL;
       SET test_tables_dict_ := NULL;
       THROW;
     END CATCH;
-    CALL cql_facets_delete(test_facets);
-    SET test_facets := 0;
+    SET test_facets := NULL;
     SET test_tables_dict_ := NULL;
   ELSE
     -- some canonical result for no differences --

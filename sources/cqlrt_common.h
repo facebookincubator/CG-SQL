@@ -319,11 +319,10 @@ typedef struct cql_hashtab {
 } cql_hashtab;
 
 // CQL friendly versions of the hash table things, easy to call from CQL
-CQL_EXPORT cql_int64 cql_facets_new(void);
-CQL_EXPORT void cql_facets_delete(cql_int64 facets);
-CQL_EXPORT cql_bool cql_facet_add(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
-CQL_EXPORT cql_bool cql_facet_upsert(cql_int64 facets, cql_string_ref _Nonnull name, cql_int64 crc);
-CQL_EXPORT cql_int64 cql_facet_find(cql_int64 facets, cql_string_ref _Nonnull key);
+CQL_EXPORT cql_object_ref _Nonnull cql_facets_create(void);
+CQL_EXPORT cql_bool cql_facet_add(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name, cql_int64 crc);
+CQL_EXPORT cql_bool cql_facet_upsert(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name, cql_int64 crc);
+CQL_EXPORT cql_int64 cql_facet_find(cql_object_ref _Nullable  facets, cql_string_ref _Nonnull key);
 
 // For internal use by the runtime only
 CQL_EXPORT cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)());

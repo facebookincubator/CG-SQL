@@ -335,10 +335,9 @@ static void cg_schema_emit_sqlite_master(charbuf *decls) {
 
 static void cg_schema_emit_facet_functions(charbuf *decls) {
   bprintf(decls, "-- declare facet helpers-- \n");
-  bprintf(decls, "DECLARE facet_data TYPE LONG<facet_data> not null;\n");
+  bprintf(decls, "DECLARE facet_data TYPE OBJECT<facet_data>;\n");
   bprintf(decls, "DECLARE %s_facets facet_data;\n", global_proc_name);
-  bprintf(decls, "DECLARE FUNCTION cql_facets_new() facet_data;\n");
-  bprintf(decls, "DECLARE PROCEDURE cql_facets_delete(facets facet_data);\n");
+  bprintf(decls, "DECLARE FUNCTION cql_facets_create() create facet_data not null;\n");
   bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
   bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
   bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;\n\n");
@@ -1421,7 +1420,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
   bprintf(&preamble, "  BEGIN TRY\n");
-  bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
+  bprintf(&preamble, "    SET %s_facets := cql_facets_create();\n", global_proc_name);
   bprintf(&preamble, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
   bprintf(&preamble, "    LOOP FETCH C\n");
   bprintf(&preamble, "    BEGIN\n");
@@ -1820,13 +1819,11 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "      CALL %s_perform_needed_upgrades(include_virtual_tables);\n", global_proc_name);
   bprintf(&main, "    END TRY;\n");
   bprintf(&main, "    BEGIN CATCH\n");
-  bprintf(&main, "      CALL cql_facets_delete(%s_facets);\n", global_proc_name);
-  bprintf(&main, "      SET %s_facets := 0;\n", global_proc_name);
+  bprintf(&main, "      SET %s_facets := NULL;\n", global_proc_name);
   bprintf(&main, "      SET %s_tables_dict_ := NULL;\n", global_proc_name);
   bprintf(&main, "      THROW;\n");
   bprintf(&main, "    END CATCH;\n");
-  bprintf(&main, "    CALL cql_facets_delete(%s_facets);\n", global_proc_name);
-  bprintf(&main, "    SET %s_facets := 0;\n", global_proc_name);
+  bprintf(&main, "    SET %s_facets := NULL;\n", global_proc_name);
   bprintf(&main, "    SET %s_tables_dict_ := NULL;\n", global_proc_name);
   bprintf(&main, "  ELSE\n");
   bprintf(&main, "    -- some canonical result for no differences --\n");

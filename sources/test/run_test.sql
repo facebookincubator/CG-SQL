@@ -3735,15 +3735,13 @@ BEGIN_TEST(nested_rc_values)
 END_TEST(nested_rc_values)
 
 -- facet helper functions, used by the schema upgrader
-DECLARE facet_data TYPE LONG<facet_data> not null;
-DECLARE FUNCTION cql_facets_new() facet_data;
-DECLARE PROCEDURE cql_facets_delete(facets facet_data);
+DECLARE facet_data TYPE OBJECT<facet_data>;
+DECLARE FUNCTION cql_facets_create() create facet_data not null;
 DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
 DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
 
 BEGIN_TEST(facet_helpers)
-  let facets := cql_facets_new();
-  EXPECT(facets);
+  let facets := cql_facets_create();
 
   -- add some facets
   let i := 0;
@@ -3779,8 +3777,6 @@ BEGIN_TEST(facet_helpers)
 
   -- NOTE the test infra is counting refs so that if we fail
   -- to clean up the test fails; no expectation is required
-  call cql_facets_delete(facets);
-
 END_TEST(facet_helpers)
 
 -- not null result
