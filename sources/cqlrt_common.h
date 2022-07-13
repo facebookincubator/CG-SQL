@@ -350,9 +350,13 @@ CQL_EXPORT cql_string_ref _Nullable cql_string_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
+CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
+CQL_EXPORT void cql_string_list_add_string(cql_object_ref _Nullable list, cql_string_ref _Nonnull string);
+CQL_EXPORT int32_t cql_string_list_get_count(cql_object_ref _Nullable list);
+CQL_EXPORT cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable list, int32_t index);
+
 // For internal use by the schema upgrader only, subject to change and generally uninteresting because
 // of its unusual matching rules.
 CQL_EXPORT cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_, cql_string_ref _Nullable needle_);
 
 CQL_EXTERN_C_END
-

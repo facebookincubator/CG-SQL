@@ -5313,6 +5313,25 @@ BEGIN_TEST(cql_contains_column_def)
 
 END_TEST(cql_contains_column_def)
 
+-- cql utilities for making a basic string list
+-- this is not a very functional list but schema helpers might need 
+-- generic lists of strings so we offer these based on bytebuf
+
+DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
+DECLARE FUNCTION cql_string_list_create() CREATE cql_string_list;
+DECLARE FUNCTION cql_string_list_get_string(list cql_string_list, index_ INTEGER NOT NULL) TEXT;
+DECLARE FUNCTION cql_string_list_get_count(list cql_string_list) INTEGER NOT NULL;
+DECLARE PROCEDURE cql_string_list_add_string(list cql_string_list, string TEXT NOT NULL);
+
+BEGIN_TEST(cql_string_list)
+  let list := cql_string_list_create();
+  EXPECT(0 == cql_string_list_get_count(list));
+  CALL cql_string_list_add_string(list, "hello");
+  CALL cql_string_list_add_string(list, "goodbyte");
+  EXPECT(2 == cql_string_list_get_count(list));
+  EXPECT("hello" == cql_string_list_get_string(list, 0));
+  EXPECT("goodbyte" == cql_string_list_get_string(list, 1));
+END_TEST(cql_string_list)
 
 END_SUITE()
 

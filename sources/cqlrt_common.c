@@ -2701,7 +2701,7 @@ cql_object_ref _Nonnull cql_facets_create(void) {
 // add a facet value to the hash table
 cql_bool cql_facet_add(cql_object_ref _Nullable facets, cql_string_ref _Nonnull name, cql_int64 crc) {
   cql_bool result = false;
-  if (facets) { 
+  if (facets) {
     cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
     result = cql_hashtab_add(self, (cql_int64)name, crc);
   }
@@ -3838,4 +3838,63 @@ cql_string_ref _Nullable cql_string_dictionary_find(
   cql_hashtab_entry *entry = cql_hashtab_find(self->ht, (cql_int64)key);
 
   return entry ? (cql_string_ref)entry->val : NULL;
+}
+
+// We have to release all the strings in the buffer then release the buffer memory
+static void cql_string_list_finalize(void *_Nonnull data) {
+  cql_bytebuf *_Nonnull self = data;
+  int32_t count = self->used / sizeof(cql_string_ref);
+  for (int32_t i = 0; i < count; i++) {
+    size_t offset = i * sizeof(cql_string_ref);
+    cql_string_ref string = *(cql_string_ref *)(self->ptr + offset);
+    cql_string_release(string);
+  }
+  cql_bytebuf_close(self);
+  free(self);
+}
+
+// create the list storage using a byte buffer
+cql_object_ref _Nonnull cql_string_list_create(void) {
+
+  cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
+  cql_bytebuf_open(self);
+  return _cql_generic_object_create(self, cql_string_list_finalize);
+}
+
+// add a string to the buffer and retain it
+void cql_string_list_add_string(cql_object_ref _Nullable list, cql_string_ref _Nonnull string) {
+  cql_contract(list);
+  cql_contract(string);
+
+  cql_string_retain(string);
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_bytebuf_append(self, &string, sizeof(string));
+}
+
+// return number of elements
+int32_t cql_string_list_get_count(cql_object_ref _Nullable list) {
+  int32_t result = 0;
+
+  if (list) {
+    cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+    result = self->used / sizeof(cql_string_ref);
+  }
+
+  return result;
+}
+
+// return the nth string, with no extra retain (get semantics)
+cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable list, int32_t index) {
+  cql_string_ref result = NULL;
+
+  if (list) {
+    cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+    int32_t count = self->used / sizeof(cql_string_ref);
+    cql_contract(index >= 0 && index < count);
+    cql_invariant(self->ptr);
+    size_t offset = index * sizeof(cql_string_ref);
+    result = *(cql_string_ref *)(self->ptr + offset);
+  }
+
+  return result;
 }
