@@ -3008,7 +3008,7 @@ static void gen_typed_name(ast_node *ast) {
   }
 }
 
-static void gen_typed_names(ast_node *ast) {
+void gen_typed_names(ast_node *ast) {
   Contract(is_ast_typed_names(ast));
 
   while (ast) {
