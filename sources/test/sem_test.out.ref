@@ -88042,6 +88042,61 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+CREATE TABLE self_ref_table(
+  id INTEGER PRIMARY KEY,
+  id2 INTEGER REFERENCES self_ref_table (id)
+) @CREATE(10);
+
+  {create_table_stmt}: self_ref_table: { id: integer notnull primary_key, id2: integer foreign_key } @create(10)
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {create_attr}
+  | |   | {version_annotation}
+  | |     | {int 10}
+  | | {name self_ref_table}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: id2: integer foreign_key
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name id2}
+          | | {type_int}: integer
+          | {col_attrs_fk}: ok
+            | {fk_target_options}
+              | {fk_target}
+              | | {name self_ref_table}
+              | | {name_list}
+              |   | {name id}: id: integer notnull
+              | {int 0}
+
+The statement ending at line XXXX
+
+@UNSUB(23, self_ref_table);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 23}
+    | {name self_ref_table}
+
+The statement ending at line XXXX
+
+@RESUB(24, self_ref_table);
+
+  {schema_resub_stmt}: ok
+  | {version_annotation}
+    | {int 24}
+    | {name self_ref_table}
+
+The statement ending at line XXXX
+
 DECLARE PROC broken_thing (LIKE does_not_exist ARGUMENTS);
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'does_not_exist'

@@ -22166,6 +22166,22 @@ create table child_subs_table (
 -- - error:
 @resub(22, child_subs_table);
 
+
+create table self_ref_table(
+  id integer primary key,
+  id2 integer references self_ref_table(id)
+) @create(10);
+
+-- TEST: ok to unsub to a table that refers to itself
+-- + {schema_unsub_stmt}: ok
+-- - error:
+@unsub (23, self_ref_table);
+
+-- TEST: ok to resub to a table that refers to itself
+-- + {schema_resub_stmt}: ok
+-- - error:
+@resub (24, self_ref_table);
+
 -- TEST: this generates an error and creates an unresolved arg list
 -- + {declare_proc_stmt}: err
 -- + {like}: err

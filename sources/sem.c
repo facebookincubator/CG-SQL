@@ -23447,8 +23447,12 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
     if (!is_deleted(src_ast)) {
       // we're not going to return; we keep generating as many errors as needed
       CSTR src_name = sem_get_name(src_ast);
-      report_error(ast, "CQL0473: @unsub is invalid because the table/view is still used by", src_name);
-      record_error(ast);
+
+      // carve out an exception for tables that refer to themselves, that FK won't break anything
+      if (Strcasecmp(name, src_name)) {
+        report_error(ast, "CQL0473: @unsub is invalid because the table/view is still used by", src_name);
+        record_error(ast);
+      }
     }
   }
 
@@ -23530,9 +23534,12 @@ static void sem_schema_resub_stmt(ast_node *ast) {
       if (is_deleted(ref_ast)) {
         CSTR ref_name = sem_get_name(ref_ast);
 
-        // we're not going to return; we keep generating as many errors as needed
-        report_error(ast, "CQL0474: @resub is invalid because the table/view references", ref_name);
-        record_error(ast);
+        // carve out an exception for tables that refer to themselves, that FK won't break anything
+        if (Strcasecmp(name, ref_name)) {
+          // we're not going to return; we keep generating as many errors as needed
+          report_error(ast, "CQL0474: @resub is invalid because the table/view references", ref_name);
+          record_error(ast);
+        }
       }
     }
   }

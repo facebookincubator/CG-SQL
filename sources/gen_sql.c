@@ -3011,15 +3011,13 @@ static void gen_typed_name(ast_node *ast) {
 void gen_typed_names(ast_node *ast) {
   Contract(is_ast_typed_names(ast));
 
-  while (ast) {
-    Contract(is_ast_typed_names(ast));
-    gen_typed_name(ast->left);
+  for (ast_node *item = ast; item; item = item->right) {
+    Contract(is_ast_typed_names(item));
+    gen_typed_name(item->left);
 
-    if (ast->right) {
+    if (item->right) {
       gen_printf(", ");
     }
-
-    ast = ast->right;
   }
 }
 
