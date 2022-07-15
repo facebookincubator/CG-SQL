@@ -2729,15 +2729,15 @@ cql_bool cql_facet_upsert(cql_object_ref _Nullable facets, cql_string_ref _Nonnu
     cql_hashtab *_Nonnull self = _cql_generic_object_get_data(facets);
     cql_hashtab_entry *payload = cql_hashtab_find(self, (cql_int64)name);
     if (!payload) {
-        // this will return true because we just checked and it's not there
-        result = cql_hashtab_add(self, (cql_int64)name, crc);
-        goto done;
+      // this will return true because we just checked and it's not there
+      result = cql_hashtab_add(self, (cql_int64)name, crc);
     }
-    // did not add path
-    payload->val = crc;
+    else {
+      // did not add path
+      payload->val = crc;
+    }
   }
 
-done:
   return result;
 }
 
