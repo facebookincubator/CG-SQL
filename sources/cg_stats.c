@@ -79,7 +79,7 @@ static void cg_stats_create_proc_stmt(ast_node *ast) {
 
 static void cg_stats_stmt_list(ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
-    EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
+    EXTRACT_STMT(stmt, ast);
     
     if (is_ast_create_proc_stmt(stmt)) {
       cg_stats_create_proc_stmt(stmt);

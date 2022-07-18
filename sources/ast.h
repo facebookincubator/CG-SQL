@@ -346,6 +346,13 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
     Contract(is_ast_misc_attrs(misc_attrs)); \
   }
 
+#define EXTRACT_STMT(stmt, stmt_list) \
+  Contract(is_ast_stmt_list(stmt_list)); \
+  ast_node *stmt = stmt_list->left; \
+  if (is_ast_stmt_and_attr(stmt)) { \
+    stmt = stmt->right; \
+  }
+
 // Use this macro from within a single node processor to reach out and get the attributes that apply to that
 // node, which would be hanging off the parent ast node, if present.
 #define EXTRACT_MISC_ATTRS(ast, misc_attrs) \
