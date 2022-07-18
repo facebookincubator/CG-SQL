@@ -4667,7 +4667,6 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
-  EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   bool_t saved_in_inline_function_fragment = in_inline_function_fragment;
   symtab *saved_proc_arg_aliases = proc_arg_aliases;
