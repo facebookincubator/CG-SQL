@@ -15825,10 +15825,72 @@ begin
   declare my_var my_type;
 end;
 
--- TEST declare a sensitive and not null type
+-- TEST: declare a sensitive and not null type
 -- + DECLARE my_type_sens_not TYPE TEXT NOT NULL @SENSITIVE;
 -- - error:
 declare my_type_sens_not type text not null @sensitive;
+
+-- used in the following test
+-- + {declare_proc_stmt}: ok
+-- + {name x}: x: text variable in sensitive
+-- - error:
+declare proc some_proc_with_an_arg_of_a_named_type(x my_type);
+
+-- TEST: redeclaring a proc that uses a named type works as expected
+-- + {declare_proc_stmt}: ok
+-- + {name x}: x: text variable in sensitive
+-- - error:
+declare proc some_proc_with_an_arg_of_a_named_type(x my_type);
+
+-- used in the following tests
+-- + {name some_group_var1}: some_group_var1: text variable sensitive
+-- + {name some_group_var2}: some_group_var2: text variable sensitive
+-- - error:
+declare group some_group_with_a_var_of_a_named_type
+begin
+  declare some_group_var1 my_type;
+  declare some_group_var2 text @sensitive;
+end;
+
+-- TEST: redeclaring a group that uses a named type worked as expected; note
+-- that the statement list is *not* analyzed in this case
+-- + {declare_group_stmt}: ok
+-- + {name my_type}
+-- + {type_text}
+-- - {name some_group_var1}: some_group_var1: text variable sensitive
+-- - {name some_group_var2}: some_group_var2: text variable sensitive
+-- - error:
+declare group some_group_with_a_var_of_a_named_type
+begin
+  declare some_group_var1 my_type;
+  declare some_group_var2 text @sensitive;
+end;
+
+-- TEST: redeclaring a group with named types replaced by that which they alias
+-- (and vice versa) also works
+-- + {declare_group_stmt}: ok
+-- + {type_text}
+-- + {name my_type}
+-- - {name some_group_var1}: some_group_var1: text variable sensitive
+-- - {name some_group_var2}: some_group_var2: text variable sensitive
+-- - error:
+declare group some_group_with_a_var_of_a_named_type
+begin
+  declare some_group_var1 text @sensitive;
+  declare some_group_var2 my_type;
+end;
+
+-- TEST: redeclaring a group with a bogus named type does not work
+-- + Incompatible declarations found
+-- +2 error: % DECLARE GROUP some_group_with_a_var_of_a_named_type
+-- + The above must be identical.
+-- + error: % variable definitions do not match in group 'some_group_with_a_var_of_a_named_type'
+-- +3 error:
+declare group some_group_with_a_var_of_a_named_type
+begin
+  declare some_group_var1 some_bogus_named_type;
+  declare some_group_var2 text @sensitive;
+end;
 
 -- TEST: declared type in column definition
 -- + id TEXT @SENSITIVE NOT NULL
@@ -22464,4 +22526,3 @@ begin
   declare x object<C set>;
   declare y object<test_parent_child set>;
 end;
-

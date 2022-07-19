@@ -1273,6 +1273,19 @@ test/sem_test.sql:XXXX:1: error: in notnull : CQL0367: an attribute was specifie
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: duplicate type declaration 'my_type'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 ;
+  DECLARE some_group_var2 TEXT @SENSITIVE;
+END
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 TEXT @SENSITIVE;
+  DECLARE some_group_var2 TEXT @SENSITIVE;
+END
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : CQL0463: variable definitions do not match in group 'some_group_with_a_var_of_a_named_type'
 test/sem_test.sql:XXXX:1: error: in col_def_type_attrs : CQL0360: unknown type 'bogus_type'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'

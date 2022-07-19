@@ -36,6 +36,7 @@ cql_noexport void gen_insert_type(ast_node *_Nonnull ast);
 cql_noexport void gen_declare_proc_from_create_proc(ast_node *_Nonnull ast);
 cql_noexport void gen_col_key_list(ast_node *_Nonnull list);
 cql_noexport void gen_typed_names(ast_node *_Nullable ast);
+cql_noexport void gen_data_type(ast_node *_Nonnull ast);
 
 // automatically sets the output buffer and printf's the results of the above
 cql_noexport void gen_to_stdout(ast_node *_Nullable ast, gen_func fn);
@@ -102,6 +103,11 @@ typedef struct gen_sql_callbacks {
   // This callback is used to override entire if/else statements
   gen_sql_callback _Nullable if_stmt_callback;
   void *_Nullable if_stmt_context;
+
+  // This callback allows named types to be resolved when comparing ASTs during
+  // semantic analysis.
+  gen_sql_callback _Nullable named_type_callback;
+  void *_Nullable named_type_context;
 
   // If true, hex literals are converted to decimal.  This is for JSON which does not support hex literals.
   bool_t convert_hex;

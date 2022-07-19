@@ -64670,6 +64670,137 @@ DECLARE my_type_sens_not TYPE TEXT NOT NULL @SENSITIVE;
 
 The statement ending at line XXXX
 
+DECLARE PROC some_proc_with_an_arg_of_a_named_type (x TEXT @SENSITIVE);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name some_proc_with_an_arg_of_a_named_type}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: text variable in sensitive
+        | {param_detail}: x: text variable in sensitive
+          | {name x}: x: text variable in sensitive
+          | {sensitive_attr}: text sensitive
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE PROC some_proc_with_an_arg_of_a_named_type (x TEXT @SENSITIVE);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name some_proc_with_an_arg_of_a_named_type}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: text variable in sensitive
+        | {param_detail}: x: text variable in sensitive
+          | {name x}: x: text variable in sensitive
+          | {sensitive_attr}: text sensitive
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 TEXT @SENSITIVE;
+  DECLARE some_group_var2 TEXT @SENSITIVE;
+END;
+
+  {declare_group_stmt}: ok
+  | {name some_group_with_a_var_of_a_named_type}
+  | {stmt_list}
+    | {declare_vars_type}: text sensitive
+    | | {name_list}: some_group_var1: text variable sensitive
+    | | | {name some_group_var1}: some_group_var1: text variable sensitive
+    | | {sensitive_attr}: text sensitive
+    |   | {type_text}: text
+    | {declare_vars_type}: text sensitive
+      | {name_list}: some_group_var2: text variable sensitive
+      | | {name some_group_var2}: some_group_var2: text variable sensitive
+      | {sensitive_attr}: text sensitive
+        | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 my_type;
+  DECLARE some_group_var2 TEXT @SENSITIVE;
+END;
+
+  {declare_group_stmt}: ok
+  | {name some_group_with_a_var_of_a_named_type}
+  | {stmt_list}
+    | {declare_vars_type}
+    | | {name_list}
+    | | | {name some_group_var1}
+    | | {name my_type}
+    | {declare_vars_type}
+      | {name_list}
+      | | {name some_group_var2}
+      | {sensitive_attr}
+        | {type_text}
+
+The statement ending at line XXXX
+
+DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 TEXT @SENSITIVE;
+  DECLARE some_group_var2 my_type;
+END;
+
+  {declare_group_stmt}: ok
+  | {name some_group_with_a_var_of_a_named_type}
+  | {stmt_list}
+    | {declare_vars_type}
+    | | {name_list}
+    | | | {name some_group_var1}
+    | | {sensitive_attr}
+    |   | {type_text}
+    | {declare_vars_type}
+      | {name_list}
+      | | {name some_group_var2}
+      | {name my_type}
+
+The statement ending at line XXXX
+
+DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 some_bogus_named_type;
+  DECLARE some_group_var2 TEXT @SENSITIVE;
+END;
+
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 ;
+  DECLARE some_group_var2 TEXT @SENSITIVE;
+END
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
+BEGIN
+  DECLARE some_group_var1 TEXT @SENSITIVE;
+  DECLARE some_group_var2 TEXT @SENSITIVE;
+END
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_group_stmt : CQL0463: variable definitions do not match in group 'some_group_with_a_var_of_a_named_type'
+
+  {declare_group_stmt}: err
+  | {name some_group_with_a_var_of_a_named_type}
+  | {stmt_list}
+    | {declare_vars_type}
+    | | {name_list}
+    | | | {name some_group_var1}
+    | | {name some_bogus_named_type}
+    | {declare_vars_type}
+      | {name_list}
+      | | {name some_group_var2}
+      | {sensitive_attr}
+        | {type_text}
+
+The statement ending at line XXXX
+
 CREATE TABLE t(
   id TEXT @SENSITIVE NOT NULL
 );

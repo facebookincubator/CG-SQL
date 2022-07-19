@@ -12514,6 +12514,26 @@ static bool_t sem_validate_identical_ddl(ast_node *cur, ast_node *prev) {
   return sem_validate_identical_text(cur, prev, gen_one_stmt, &callbacks);
 }
 
+// When comparing two declarations, it will sometimes be the case that one of
+// the declarations will have not yet been analyzed. This callback allows for
+// named types to be resolved in such unanalyzed declarations so that the
+// comparison can be made properly.
+static bool_t sem_named_type_gen_sql_callback(ast_node *ast, void *context, charbuf *buf) {
+  Contract(is_ast_str(ast));
+  EXTRACT_STRING(name, ast);
+
+  ast_node *named_type = find_named_type(name);
+
+  if (named_type) {
+    AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+    gen_data_type(rewrite_gen_data_type(named_type->sem->sem_type, named_type->sem->kind));
+    AST_REWRITE_INFO_RESET();
+    return true;
+  }
+
+  return false;
+}
+
 // Several places require identical definitions if names are duplicated
 // This method does the job for a variety of objects, it generates the canoncial text
 // for the AST and verifies that it is identical.  This works for all kinds of objects.
@@ -12521,11 +12541,26 @@ static bool_t sem_validate_identical_text(ast_node *prev, ast_node *cur, gen_fun
   CHARBUF_OPEN(prev_sql);
   CHARBUF_OPEN(cur_sql);
 
+  // We set `named_type_callback` so named types are always resolved before
+  // being compared -- even when `prev` or `cur` have not been analyzed.
+  gen_sql_callbacks callbacks_with_named_type_callback;
+  if (callbacks) {
+     // The input `callbacks` is copied to avoid mutating anything in the
+     // caller.
+     callbacks_with_named_type_callback = *callbacks;
+  } else {
+    init_gen_sql_callbacks(&callbacks_with_named_type_callback);
+    // We set `gen_mode_echo` as it's equivalent to passing NULL to
+    // `gen_with_callbacks`.
+    callbacks_with_named_type_callback.mode = gen_mode_echo;
+  }
+  callbacks_with_named_type_callback.named_type_callback = sem_named_type_gen_sql_callback;
+
   gen_set_output_buffer(&prev_sql);
-  gen_with_callbacks(prev, fn, callbacks);
+  gen_with_callbacks(prev, fn, &callbacks_with_named_type_callback);
 
   gen_set_output_buffer(&cur_sql);
-  gen_with_callbacks(cur, fn, callbacks);
+  gen_with_callbacks(cur, fn, &callbacks_with_named_type_callback);
 
   bool_t identical = !strcmp(prev_sql.ptr, cur_sql.ptr);
 
@@ -18905,6 +18940,12 @@ static void sem_declare_group_stmt(ast_node *ast) {
     record_error(ast);
     return;
   }
+
+  // We check for an existing variable group with the same name before analyzing
+  // `stmt_list` so that we can bail out early if `ast` is an identical
+  // redeclaration. If we didn't return early for the identical case, we'd run
+  // into duplicate variable name errors when calling `sem_one_stmt` further
+  // down.
 
   ast_node *existing_variable_group = find_variable_group(name);
 

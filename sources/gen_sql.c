@@ -201,7 +201,7 @@ cql_noexport void gen_misc_attrs(ast_node *list) {
   }
 }
 
-static void gen_data_type(ast_node *ast) {
+void gen_data_type(ast_node *ast) {
   if (is_ast_create_data_type(ast)) {
     gen_printf("CREATE ");
     gen_data_type(ast->left);
@@ -238,7 +238,20 @@ static void gen_data_type(ast_node *ast) {
   } else {
     Contract(is_ast_str(ast));
     EXTRACT_STRING(name, ast);
-    gen_printf("%s", name);
+    bool_t suppress = false;
+    if (gen_callbacks) {
+      gen_sql_callback callback = gen_callbacks->named_type_callback;
+      if (callback) {
+        CHARBUF_OPEN(buf);
+        suppress = callback(ast, gen_callbacks->named_type_context, &buf);
+        gen_printf("%s", buf.ptr);
+        CHARBUF_CLOSE(buf);
+        return;
+      }
+    }
+    if (!suppress) {
+      gen_printf("%s", name);
+    }
     return;
   }
 
