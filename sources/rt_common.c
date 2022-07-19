@@ -10,6 +10,7 @@
 #include "cg_c.h"
 #include "cg_java.h"
 #include "cg_json_schema.h"
+#include "cg_lua.h"
 #include "cg_objc.h"
 #include "cg_query_plan.h"
 #include "cg_schema.h"
@@ -102,6 +103,27 @@ static rtdata rt_c = {
   .cql_result_set_set_string = "cql_result_set_set_string_col",
   .cql_result_set_set_object = "cql_result_set_set_object_col",
   .cql_result_set_set_blob = "cql_result_set_set_blob_col",
+};
+
+static rtdata rt_lua = {
+  .name = "lua",
+  .code_generator = &cg_lua_main,
+  .required_file_names_count = 1,
+  .header_prefix = "",
+  .cqlrt_template = "require(\"%s\")\n\n",
+  .cqlrt = "cqlrt",
+  .header_wrapper_begin = "",
+  .header_wrapper_end = "",
+  .source_prefix =
+    RT_IP_NOTICE("--")
+    RT_AUTOGEN("--") "\n",
+  .source_wrapper_begin = "",
+  .source_wrapper_end = "",
+  .exports_prefix = "",
+  .symbol_case = cg_symbol_case_snake,
+  .generate_type_getters = 0,
+  .generate_equality_macros = 1,
+  .symbol_prefix = ""
 };
 
 static rtdata rt_objc = {
@@ -305,6 +327,7 @@ static rtdata *(rt_all[]) = {
   &rt_objc,
   &rt_objc_mit,
   &rt_java,
+  &rt_lua,
   &rt_schema_upgrade,
   &rt_schema_sqlite,
   &rt_schema,

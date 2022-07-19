@@ -47,9 +47,12 @@ OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebu
           $O/cg_common.o $O/cg_c.o $O/cg_java.o $O/cg_objc.o $O/symtab.o $O/compat.o \
           $O/cg_schema.o $O/crc64xz.o $O/cg_json_schema.o $O/cg_test_helpers.o $O/encoders.o \
           $O/unit_tests.o $O/cg_query_plan.o ${O}/minipool.o $O/cg_udf.o $O/rt.o $O/eval.o \
-          $O/rewrite.o $O/printf.o $O/flow.o $O/cg_stats.o
+          $O/rewrite.o $O/printf.o $O/flow.o $O/cg_stats.o $O/cg_lua.o
 
 OBJECTS+=$(ADDITIONAL_OBJECTS)
+
+$O/rt.o: rt.c rt_common.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $O/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

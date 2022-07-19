@@ -1785,6 +1785,45 @@ unit_tests() {
   fi
 }
 
+code_gen_lua_test() {
+  echo '--------------------------------- STAGE 19 -- LUA CODE GEN TEST'
+  echo running codegen test
+  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_lua.lua" --in "${TEST_DIR}/cg_test_lua.sql" --global_proc cql_startup --rt lua 2>"${OUT_DIR}/cg_test_lua.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_lua.err"
+    failed
+  fi
+
+  echo validating codegen
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_lua.sql" "${OUT_DIR}/cg_test_lua.lua"
+  then
+    echo "ERROR: failed verification"
+    failed
+  fi
+
+  echo testing for successful compilation of generated lua
+  if ! lua out/cg_test_lua.lua
+  then
+    echo "ERROR: failed to compile the C code from the code gen test"
+    failed
+  fi
+
+  echo testing for successful compilation of lua run test
+  echo " cannot run this by default because of runtime requirements"
+
+  if ! ${CQL} --cg "${OUT_DIR}/lua_run_test.lua" --in "lua_demo/run_test_prep.sql" --global_proc cql_startup --rt lua 2>"${OUT_DIR}/cg_lua_run_test.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_lua_run_test.err"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_lua.lua
+  on_diff_exit cg_test_lua.err
+}
+
 
 GENERATED_TAG=generated
 AT_GENERATED_TAG="@$GENERATED_TAG"
@@ -1827,6 +1866,7 @@ line_number_test
 stats_test
 amalgam_test
 signatures_test
+code_gen_lua_test
 extra_tests
 
 make_clean_msg

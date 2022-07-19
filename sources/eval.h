@@ -24,6 +24,7 @@
 
 #define EVAL_FORMAT_NORMAL 1
 #define EVAL_FORMAT_FOR_C 2
+#define EVAL_FORMAT_FOR_LUA 3
 
 typedef struct eval_node {
   sem_t sem_type;

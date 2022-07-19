@@ -1,0 +1,6 @@
+demo.sh can be run from this directory
+
+run_test.sh should be run from the main sources directory
+
+the main test script does not execute lua code because that would require assumptions about
+lua install that we are not yet willing to make

@@ -1061,6 +1061,16 @@ cql_noexport void eval_format_number(eval_node *result, int32_t format_mode, cha
            bprintf(output, "_64(%lld)", (llint_t)result->int64_value);
          }
       }
+      else if (format_mode == EVAL_FORMAT_FOR_LUA) {
+         if  (result->int64_value == -9223372036854775807LL - 1) {
+           // if outputing to LUA you cannot emit the constant -9223372036854775808
+           // you have to do it with an expression like so:
+           bprintf(output, "(-9223372036854775807 - 1)");
+         }
+         else {
+           bprintf(output, "%lld", (llint_t)result->int64_value);
+         }
+      }
       else {
          bprintf(output, "%lld", (llint_t)result->int64_value);
       }
