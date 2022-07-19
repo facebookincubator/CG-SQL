@@ -17119,6 +17119,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_blob_ref _tmp_n_blob_1 = NULL;
   cql_blob_ref _tmp_blob_1 = NULL;
   cql_blob_ref _tmp_blob_0 = NULL;
+  cql_blob_ref _tmp_n_blob_0 = NULL;
   cql_string_ref _tmp_n_text_1 = NULL;
   cql_int64 _tmp_int64_2 = 0;
   cql_double _tmp_double_2 = 0;
@@ -18939,9 +18940,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_nullable_blob_ref(_temp_stmt, 0, &_tmp_n_blob_1);
+    cql_column_nullable_blob_ref(_temp_stmt, 0, &_tmp_n_blob_0);
   cql_finalize_stmt(&_temp_stmt);
-  cql_set_nullable(l0_nullable, !_tmp_n_blob_1, cql_get_blob_size(_tmp_n_blob_1));
+  cql_set_notnull(l0_nullable, cql_get_blob_size(_tmp_n_blob_0));
 
   // The statement ending at line XXXX
 
@@ -19596,6 +19597,7 @@ cql_cleanup:
   cql_blob_release(_tmp_blob_0);
   cql_blob_release(blob_var_notnull);
   cql_finalize_stmt(&global_cursor_stmt);
+  cql_blob_release(_tmp_n_blob_0);
   cql_string_release(_tmp_n_text_1);
   cql_teardown_row(global_cursor2);
   cql_teardown_row(gr_cursor);

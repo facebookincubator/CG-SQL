@@ -3317,7 +3317,7 @@ end;
 @enforce_strict cast;
 
 -- TEST: test cql_get_blob_size codegen
--- + cql_set_nullable(l0_nullable, !_tmp_n_blob_1, cql_get_blob_size(_tmp_n_blob_1));
+-- + cql_set_notnull(l0_nullable, cql_get_blob_size(_tmp_n_blob_0));
 set l0_nullable := cql_get_blob_size((select blob_var));
 
 -- TEST: test cql_get_blob_size codegen with not null blob
