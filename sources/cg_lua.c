@@ -334,7 +334,8 @@ static void cg_lua_zero_masks(cg_lua_scratch_masks *_Nonnull masks) {
 static void cg_lua_emit_local_init(charbuf *output, sem_t sem_type)
 {
   if (is_nullable(sem_type)) {
-    bprintf(output, " = nil");
+    // no init needed
+    bprintf(output, "\n");
     return;
   }
 
@@ -342,21 +343,22 @@ static void cg_lua_emit_local_init(charbuf *output, sem_t sem_type)
   switch (core_type) {
     case SEM_TYPE_INTEGER:
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(output, " = 0");
+      bprintf(output, " = 0\n");
       break;
 
     case SEM_TYPE_TEXT:
     case SEM_TYPE_BLOB:
     case SEM_TYPE_OBJECT:
-      bprintf(output, " = nil");
+      // no init needed
+      bprintf(output, "\n");
       break;
 
     case SEM_TYPE_REAL:
-      bprintf(output, " = 0.0");
+      bprintf(output, " = 0.0\n");
       break;
 
     case SEM_TYPE_BOOL:
-      bprintf(output, " = false");
+      bprintf(output, " = false\n");
       break;
    }
 }
@@ -375,10 +377,8 @@ static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
   Contract(!is_null_type(sem_type));
   Contract(cg_main_output);
 
-  bprintf(output, "local %s\n", name);
-  bprintf(output, "%s", name);
+  bprintf(output, "local %s", name);
   cg_lua_emit_local_init(output, sem_type);
-  bprintf(output, "\n");
 }
 
 // Sometimes when we need a scratch variable to store an intermediate result

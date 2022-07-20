@@ -4693,6 +4693,11 @@ static void sem_binary_math(ast_node *ast, CSTR op) {
 
   sem_t core_type = sem_combine_types(core_type_left, core_type_right);
 
+  // all math operations combine to at least integers (e.g. bool + bool = integer)
+  if (core_type == SEM_TYPE_BOOL) {
+    core_type = SEM_TYPE_INTEGER;
+  }
+
   CSTR kind = sem_combine_kinds(ast->right, ast->left->sem->kind);
   if (is_error(ast->right)) {
     record_error(ast);

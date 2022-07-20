@@ -362,10 +362,8 @@ set i0_nullable := i1_nullable not between r2 and i0_nullable;
 
 -- TEST: out parameter test
 -- + function out_test()
--- +   local i
--- +   i = 0
+-- +   local i = 0
 -- +   local ii
--- +   ii = nil
 -- +   i = i2
 -- +   ii = i0_nullable
 -- +   return i, ii
@@ -378,7 +376,6 @@ end;
 
 -- TEST: long storage (it's all the same in LUA)
 -- + local longint_var
--- + longint_var = nil
 declare longint_var long integer;
 
 -- TEST long mul
@@ -964,7 +961,6 @@ set obj_var := null;
 
 -- TEST: declare not null object
 -- + local obj_var2
--- + obj_var2 = nil
 declare obj_var2 object not null;
 
 declare function obj_notnull_func() object not null;
@@ -1254,12 +1250,10 @@ end;
 
 -- TEST: create blob variable
 -- + local blob_var
--- + blob_var = nil
 declare blob_var blob;
 
 -- TEST: create blob variable2
 -- + local blob_var2
--- + blob_var2 = nil
 declare blob_var2 blob not null;
 
 declare function blob_notnull_func() blob not null;
@@ -3845,14 +3839,16 @@ end;
 declare proc private_fwd_ref(x integer not null);
 
 -- TEST: ensure out args set to null for ref types
--- + x = nil
+-- nothing to do in LUA
+-- + local x
 -- + return x
 create proc set_out_arg_ref_test(out x text)
 begin
 end;
 
 -- TEST: ensure out args set to null for nullable types
--- + x = nil
+-- nothing to do in LUA
+-- + local x
 -- + return x
 create proc set_out_arg_null_test(out x integer)
 begin
@@ -4062,37 +4058,37 @@ end;
 
 -- TEST: most binary operations involving a null-typed argument result in null
 -- one for the initializer and one for the assignment
--- +2 add0 = nil
--- +2 add1 = nil
--- +2 bin_and0 = nil
--- +2 bin_and1 = nil
--- +2 bin_or0 = nil
--- +2 bin_or1 = nil
--- +2 div0 = nil
--- +2 div1 = nil
--- +2 ge0 = nil
--- +2 ge1 = nil
--- +2 gt0 = nil
--- +2 gt1 = nil
--- +2 le0 = nil
--- +2 le1 = nil
+-- +1 add0 = nil
+-- +1 add1 = nil
+-- +1 bin_and0 = nil
+-- +1 bin_and1 = nil
+-- +1 bin_or0 = nil
+-- +1 bin_or1 = nil
+-- +1 div0 = nil
+-- +1 div1 = nil
+-- +1 ge0 = nil
+-- +1 ge1 = nil
+-- +1 gt0 = nil
+-- +1 gt1 = nil
+-- +1 le0 = nil
+-- +1 le1 = nil
 -- these also match not_like
--- +4 like0 = nil
--- +4 like1 = nil
--- +2 lshift0 = nil
--- +2 lshift1 = nil
--- +2 lt0 = nil
--- +2 lt1 = nil
--- +2 mod0 = nil
--- +2 mod1 = nil
--- +2 mul0 = nil
--- +2 mul1 = nil
--- +2 not_like0 = nil
--- +2 not_like1 = nil
--- +2 rshift0 = nil
--- +2 rshift1 = nil
--- +2 sub0 = nil
--- +2 sub1 = nil
+-- +2 like0 = nil
+-- +2 like1 = nil
+-- +1 lshift0 = nil
+-- +1 lshift1 = nil
+-- +1 lt0 = nil
+-- +1 lt1 = nil
+-- +1 mod0 = nil
+-- +1 mod1 = nil
+-- +1 mul0 = nil
+-- +1 mul1 = nil
+-- +1 not_like0 = nil
+-- +1 not_like1 = nil
+-- +1 rshift0 = nil
+-- +1 rshift1 = nil
+-- +1 sub0 = nil
+-- +1 sub1 = nil
 -- - Error
 create proc binary_ops_with_null()
 begin
@@ -5072,6 +5068,5 @@ create proc end_proc() begin end;
 
 -- TEST: end marker -- this is the last test
 -- + local end_marker
--- + end_marker = nil
 declare end_marker integer;
 --------------------------------------------------------------------
