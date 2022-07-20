@@ -440,6 +440,7 @@ typedef struct table_callbacks {
   find_ast_str_node_callback _Nullable callback_deletes;
   find_ast_str_node_callback _Nullable callback_from;
   find_ast_str_node_callback _Nullable callback_proc;
+  void (*_Nullable callback_final_processing)(void *_Nullable callback_context);
   void *_Nullable callback_context;
 } table_callbacks;
 

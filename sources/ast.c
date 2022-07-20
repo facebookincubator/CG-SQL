@@ -1059,6 +1059,10 @@ cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
 
   continue_find_table_node(callbacks, node);
 
+  if (callbacks->callback_final_processing) {
+    callbacks->callback_final_processing(callbacks->callback_context);
+  }
+
   SYMTAB_CLEANUP(callbacks->visited_any_table);
   SYMTAB_CLEANUP(callbacks->visited_insert);
   SYMTAB_CLEANUP(callbacks->visited_update);

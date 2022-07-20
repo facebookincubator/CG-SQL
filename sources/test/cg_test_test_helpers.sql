@@ -930,3 +930,55 @@ begin
   with (call simple_frag() using child_blob_primary_key as source)
   select * from simple_frag;
 end;
+
+CREATE TABLE trig_test_t1(
+  pk LONG_INT PRIMARY KEY
+);
+
+CREATE TABLE trig_test_t2(
+  pk LONG_INT PRIMARY KEY,
+  ak LONG_INT REFERENCES trig_test_t1 (pk)
+);
+
+CREATE TABLE trig_test_t3(
+  pk LONG_INT PRIMARY KEY,
+  ak LONG_INT REFERENCES trig_test_t2 (pk)
+);
+
+CREATE TABLE trig_test_t4(
+  pk LONG_INT PRIMARY KEY,
+  ak LONG_INT REFERENCES trig_test_t2 (pk)
+);
+
+CREATE TABLE IF NOT EXISTS trig_test_tx(
+  ak LONG_INT PRIMARY KEY
+);
+
+CREATE TRIGGER IF NOT EXISTS trig
+  AFTER INSERT ON trig_test_t1
+BEGIN
+  INSERT OR IGNORE INTO trig_test_tx(ak) SELECT pk
+    FROM trig_test_t3;
+END;
+
+-- TEST: we verify that the trigger is not going to mess things up order-wise
+-- it should be walked after all else so even though it gives a shorter path
+-- to trig_test_t3 it is still ok, we will generate trig_test_t3 after _t2
+-- note that validation here only checks for well formed output.  The real
+-- validation comes from the fact that we compile the generated code so
+-- any invalid order will cause the compilation to fail in the test.  That is
+-- providing real order validation here.
+-- + CREATE TABLE IF NOT EXISTS trig_test_t1
+-- + CREATE TABLE IF NOT EXISTS trig_test_t2
+-- + CREATE TABLE IF NOT EXISTS trig_test_t3
+-- + CREATE TABLE IF NOT EXISTS trig_test_t4
+-- + CREATE TABLE IF NOT EXISTS trig_test_tx
+-- + CREATE TRIGGER IF NOT EXISTS trig
+-- + CREATE PROC test_MyProc_create_triggers()
+-- + CREATE PROC test_MyProc_create_tables()
+@ATTRIBUTE(cql:autotest=(dummy_test))
+CREATE PROC MyProc ()
+BEGIN
+  SELECT 1 AS dummy
+    FROM trig_test_t4;
+END;
