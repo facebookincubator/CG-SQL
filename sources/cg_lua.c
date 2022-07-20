@@ -673,6 +673,7 @@ static void cg_lua_is_or_is_not(ast_node *ast, CSTR op, charbuf *value, int32_t 
 // operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
+// this must never return nil
 static void cg_lua_expr_is_false(ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -700,6 +701,7 @@ static void cg_lua_expr_is_false(ast_node *ast, CSTR op, charbuf *value, int32_t
 // operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
+// this must never return nil
 static void cg_lua_expr_is_not_false(ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -728,6 +730,7 @@ static void cg_lua_expr_is_not_false(ast_node *ast, CSTR op, charbuf *value, int
 // operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
+// this must never return nil
 static void cg_lua_expr_is_true(ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -754,6 +757,7 @@ static void cg_lua_expr_is_true(ast_node *ast, CSTR op, charbuf *value, int32_t 
 // operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
+// this must never return nil
 static void cg_lua_expr_is_not_true(ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -1135,7 +1139,7 @@ static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_t
 //
 //   ::case_else::
 //     statements to evaluate R3;
-//     result = R3;
+//     result = R3
 //   until true
 //
 // If the X is omitted then U and V are normal boolean expressions and
@@ -1223,6 +1227,9 @@ static void cg_lua_expr_case(ast_node *case_expr, CSTR str, charbuf *value, int3
   bprintf(cg_main_output, "until true\n");
 }
 
+// we have built-in support for numeric casts only, the SQL string cast operations are highly
+// complex with interesting parsing rules and so forth.  We don't try to do those at all
+// but there's no reason we can't do the simple numeric conversions in the non-SQL path
 static void cg_lua_expr_cast(ast_node *cast_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_cast_expr(cast_expr));
 
@@ -1236,7 +1243,8 @@ static void cg_lua_expr_cast(ast_node *cast_expr, CSTR str, charbuf *value, int3
   CG_LUA_PUSH_EVAL(expr, pri_new);
 
   if (core_type_expr == core_type_result) {
-    // no-op cast, just pass through
+    // no-op cast, just pass through -- we have to add parens because they were
+    // implicit in the call syntax of cast -- so this is the safe/easy thing to do
     bprintf(value, "(%s)", expr_value.ptr);
   }
   else switch (core_type_result) {
@@ -1314,10 +1322,14 @@ static void cg_lua_expr_between_rewrite(
 
 // This is the first of the key primitives in codegen -- it generates the
 // output buffers for an identifier.  There are a few interesting cases.
-//   * if it's an out variable we refer to it as *foo
-//   * nullable strings use "id" for .value and "!id" for .is_null
-//   * nullable other use the variables .is_null and .value
-//   * non-nullables use the variable for the value and "0" for is_null
+//
+//   * LUA identifiers are very simple, we don't need structs or temps so
+//     we can simply emit the name with no changes
+//   * we have special case code for the @RC identifier for the most recent result code
+//   * we have to undo the cursor transform _C_has_row_ into C._has_row_ because
+//     cursors are uniform in LUA, this is goofy but works for now
+//   * when processing shared fragments we might need to alias local variables
+//     to their computed value
 //
 // Note: It's important to use the semantic name sem->name rather than the text
 // of the ast because the user might refer case insensitively to the variable FoO
@@ -1333,7 +1345,7 @@ static void cg_lua_id(ast_node *expr, charbuf *value) {
   // map the logical @rc variable to the correct saved version
   if (!strcmp(name, "@rc")) {
     bprintf(value, "%s", lua_rcthrown_current);
-    lua_rcthrown_used = 1;
+    lua_rcthrown_used = true;
     return;
   }
 
@@ -1371,15 +1383,15 @@ static void cg_lua_id(ast_node *expr, charbuf *value) {
 // the codgen for coalesce(X,Y) we use a pattern like this:
 //   declare result of the appropriate type;
 //   repeat
-//     evaluate X;
-//     if (x is not null) {
-//       result = X;  // we can use the form where  X is known to be not null
-//       break;       // we're done...
-//     }
+//     evaluate X
+//     if x is not null then
+//       result = X  -- we can use the form where  X is known to be not null
+//       break       -- we're done...
+//     end
 //     ... other cases just like the above...
 //     ... the final case has no test, use it even if null
-//     evaluate Y;
-//     result = Y;
+//     evaluate Y
+//     result = Y
 //   until true
 static void cg_lua_func_coalesce(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
@@ -1429,6 +1441,7 @@ static void cg_lua_func_ifnull(ast_node *call_ast, charbuf *value) {
   cg_lua_func_coalesce(call_ast, value);
 }
 
+// no-op function, we just force parents to not screw up the order of ops
 static void cg_lua_func_sensitive(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -1446,6 +1459,7 @@ static void cg_lua_func_sensitive(ast_node *call_ast, charbuf *value) {
   cg_lua_expr(expr, value, LUA_EXPR_PRI_HIGHEST);
 }
 
+// no-op function, we just force parents to not screw up the order of ops
 static void cg_lua_func_nullable(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -1503,7 +1517,7 @@ static void cg_lua_func_attest_notnull(ast_node *call_ast, charbuf *value, lua_a
       bprintf(cg_main_output, "  _rc_ = CQL_ERROR\n");
       bprintf(cg_main_output, "  goto %s\n", lua_error_target);
       bprintf(cg_main_output, "end\n");
-      lua_error_target_used = 1;
+      lua_error_target_used = true;
       break;
   }
 
@@ -1557,6 +1571,8 @@ static void cg_lua_func_printf(ast_node *call_ast, charbuf *value) {
   CG_LUA_CLEANUP_RESULT_VAR();
 }
 
+// wrapper function for the builtin cql_get_blob_size
+// this is super simple in LUA because the nullable case is the same as the not nullable case
 static void cg_lua_func_cql_get_blob_size(ast_node *ast, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -1565,27 +1581,12 @@ static void cg_lua_func_cql_get_blob_size(ast_node *ast, charbuf *value) {
   EXTRACT(arg_list, call_arg_list->right);
   EXTRACT_ANY_NOTNULL(expr, arg_list->left);
 
-  sem_t sem_type_var = name_ast->sem->sem_type;
-
-  CG_LUA_RESERVE_RESULT_VAR(ast, sem_type_var);
-  // Evaluate the expression and stow it in a temporary.
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
-  CHARBUF_OPEN(temp);
 
   // store cql_get_blob_size call in temp. e.g: cql_get_blob_size(expr_value)
-  bprintf(&temp, "cql_get_blob_size(%s)", expr_value.ptr);
+  bprintf(value, "cql_get_blob_size(%s)", expr_value.ptr);
 
-  if (is_not_nullable(sem_type_var)) {
-    // The result is known to be not nullable therefore we can store directly the value to the result buff
-    bprintf(value, "%s", temp.ptr);
-  } else {
-    CG_LUA_USE_RESULT_VAR();
-    cg_lua_store(cg_main_output, result_var.ptr, sem_type_var, sem_type_var, temp.ptr);
-  }
-
-  CHARBUF_CLOSE(temp);
   CG_LUA_POP_EVAL(expr);
-  CG_LUA_CLEANUP_RESULT_VAR();
 }
 
 // This is some kind of function call in an expression context.  Look up the method
@@ -1638,12 +1639,14 @@ static void cg_lua_expr_str(ast_node *expr, CSTR op, charbuf *value, int32_t pri
   }
 }
 
+// the "dot" operator (e.g. C.x) is handled on the ID path 
 static void cg_lua_expr_dot(ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   // X.Y has a net local name computed by semantic analysis.  Use it like any other id.
   Contract(is_ast_dot(expr));
   cg_lua_id(expr, value);
 }
 
+// the null constant
 static void cg_lua_expr_null(ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_null(expr));
   // null literal
@@ -1652,7 +1655,7 @@ static void cg_lua_expr_null(ast_node *expr, CSTR op, charbuf *value, int32_t pr
 
 // This is the main entry point for codegen of an expression.  It dispatches
 // to one of the above workers for all the complex types and handles a few primitives
-// in place. See the introductory notes to understand is_null and value.
+// in place.
 static void cg_lua_expr(ast_node *expr, charbuf *value, int32_t pri) {
   Contract(value);
   Contract(value->used == 1);  // just the null (i.e. empty buffer)
@@ -1757,7 +1760,7 @@ static void cg_lua_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *value
   // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real
   cg_lua_expr_select_frag(select_stmt, &select_value);
 
-  // we're inside of the "if (__rc__ == CQL_ROW) {" case
+  // we're inside of the "if __rc__ == CQL_ROW then" case
   // we need to store the result of the select in our output variable
   // note that these are known to be compatible (already verified) but they might not
   // be the exact same type, hence the copy.  In this case we're definitely using the value.
@@ -1834,8 +1837,17 @@ static void cg_lua_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbu
 
 // This is the elementary piece of the if-then construct, it's one condition
 // and one statement list.  It can happen in the context of the top level
-// if or any else-if.  The conditional generated requires either simple true
-// for not nulls or nullable true (i.e. null is false, false is false).
+// if or any else-if.  In lua 0 is not falsey so we have to be sure to
+// convert numerics to bools but otherwise things are very easy/normal.
+// Nil is falsey so no issues there.
+//
+// > if nil then print("truthy") end;
+// > if 0 then print("truthy") end;
+// truthy
+// > if 1 then print("truthy") end;
+// truthy
+// if false then print("truthy") end;
+// 
 static void cg_lua_cond_action(ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
@@ -1890,12 +1902,12 @@ static void cg_lua_elseif_list(ast_node *ast, ast_node *elsenode) {
 // That means the overall pattern has to look like this, with nesting.
 //
 //   prep statements;
-//   result = final expression;
+//   result = final expression
 //   if result then
 //     statements
 //   else
 //     prep statements;
-//     result = final expression;
+//     result = final expression
 //     if result then
 //       statements
 //     else
@@ -2014,27 +2026,17 @@ static void cg_lua_params_init(ast_node *ast, charbuf *body) {
   }
 }
 
-
 // Emit the return code variables for the procedure
 // if the procedure uses throw then it needs the saved RC as well so we can re-throw it
 static void cg_lua_emit_rc_vars(charbuf *output) {
   bprintf(output, "  local _rc_ = CQL_OK\n");
 }
 
-// For each parameter, emit a contract that enforces nullability as follows:
+// For LUA the contract rules are simple:
+// * in not null args need a contract
+// * out args are not really args, they are return values so nothing to check
+// * inout args are in as an arg and out as as a return value, so check if not null
 //
-// * In the case of an IN NOT NULL parameter, enforce that the caller has not
-//   passed NULL.
-// * Similarly, in the case of an OUT or INOUT parameter, again enforce that the
-//   caller has not passed NULL.
-// * In addition to the previous case, in the case of an INOUT NOT NULL
-//   parameter, enforce that the pointer provided by the caller does not point
-//   to NULL.
-//
-// The contracts emitted always match the _Notnull parameter attributes in the
-// declaration of the procedure.
-//
-// NOTE: These are temporarily being emitted as tripwires instead of contracts.
 static void cg_lua_emit_contracts(ast_node *ast, charbuf *b) {
   Contract(is_ast_params(ast));
   Contract(b);
@@ -2068,11 +2070,7 @@ static void cg_lua_emit_contracts(ast_node *ast, charbuf *b) {
   }
 }
 
-#define EMIT_DML_PROC 1
-
-// emit a prototype for the fetch results function into the indicated buffer
-// we need some context such as "is it a dml proc" to do this correctly but
-// otherwise this is just using some of our standard helpers
+// emit the fetch results function defintion (not the body) into the indicated buffer
 static void cg_lua_emit_fetch_results_prototype(
   bool_t dml_proc,
   ast_node *params,
@@ -2115,12 +2113,14 @@ static void cg_lua_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
 
   // in lua declare generates nothing so it's always this case
   Invariant(is_ast_create_proc_stmt(ast));
+
   if (is_ast_create_proc_stmt(ast)) {
     EXTRACT_STRING(n, ast->left);
     name = n;
   }
-  /* snipping in case we need something in the future
+  /* snipping in case we need something in the future for the declare case
   else {
+    // LUA has no exterrn prototype form and we're not doing headers so nothing to do
     EXTRACT_NOTNULL(proc_name_type, ast->left);
     EXTRACT_STRING(n, proc_name_type->left);
     name = n;
@@ -2164,15 +2164,13 @@ static void cg_lua_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
 //  * save the current output globals
 //  * set the globals to point to those buffers
 //  * save the old scratch masks and create new ones
-//  * emit the prototype of the C function for this proc into two streams:
-//      * the .h file (in prototype form)
-//      * the current main_output (in function definition form)
-//      * use the helper method above to emit the parameters
+//  * emit the prototype of the LUA function for this proc
 //  * recursively spit out the statements
 //  * when this is all done assemble the pieces into the original output streams
 //  * procedures that use SQL will get a hidden _db_ argument
-//  * procedures that return a result set will get a statement output
+//  * procedures that return a result set will get a statement result value
 //    * and the additional procedures for creating the result set and accessing it are emitted
+//  * cursor OUT forms get rows output or a single row output
 static void cg_lua_create_proc_stmt(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -2233,10 +2231,10 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   cg_lua_scratch_masks masks;
   cg_lua_current_masks = &masks;
   cg_lua_zero_masks(cg_lua_current_masks);
-  lua_temp_statement_emitted = 0;
-  lua_in_proc = 1;
+  lua_temp_statement_emitted = false;
+  lua_in_proc = true;
   current_proc = ast;
-  lua_seed_declared = 0;
+  lua_seed_declared = false;
 
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
@@ -2389,8 +2387,8 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
     cg_lua_proc_result_set(ast);
   }
 
-  lua_in_proc = 0;
-  use_encode = 0;
+  lua_in_proc = false;
+  use_encode = false;
   current_proc = NULL;
   base_fragment_name = NULL;
 
@@ -2500,11 +2498,8 @@ static bool_t cg_lua_table_rename(ast_node *ast, void *context, charbuf *buffer)
   return handled;
 }
 
-// This helper method fetchs a single column from a select statement.  The result
-// is to be stored in the local variable "var" which will be in the correct state
-// including nullability.  There are helpers for most cases, otherwise
-// we can use normal sqlite accessors.  Strings of course create a cql_string_ref
-// and blobs create a cql_blog_ref.
+// This helper method fetches a single column from a select statement.  The result
+// is to be stored in the local variable "var"
 static void cg_lua_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
   if (core_type_of(sem_type) == SEM_TYPE_BOOL) {
     bprintf(output, "  %s = cql_to_bool(cql_get_value(%s, %d))\n", var, cursor, index);
@@ -2520,7 +2515,7 @@ static void lua_ensure_temp_statement() {
     bprintf(cg_declarations_output, "local _temp_stmt = nil\n");
     bprintf(cg_cleanup_output, "  cql_finalize_stmt(_temp_stmt)\n");
     bprintf(cg_cleanup_output, "  _temp_stmt = nil\n");
-    lua_temp_statement_emitted = 1;
+    lua_temp_statement_emitted = true;
   }
 }
 
@@ -2582,7 +2577,7 @@ static void cg_lua_fragment_copy_pred() {
   }
   else {
     // TODO: I think we can prove that it's always true in the code block we are in
-    // so this could be = 1 and hence is the same as the above.
+    // so this could be = true and hence is the same as the above.
     bprintf(cg_main_output, "_preds_%d[%d] = _preds_%d[%d]\n",
       lua_cur_bound_statement,
       lua_max_fragment_predicate++,
@@ -2689,6 +2684,23 @@ static void cg_lua_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charb
   }
 }
 
+// This handles the expression fragment case, this is rewritten so that
+// the arguments of the expression fragment become columns of one row of table
+// e.g. 
+// @attribute(cql:shared_fragment)
+// create proc ex_frag(x integer)
+// begin
+//    select x + 2 * x as result;
+// end
+//
+// this becomes
+//
+// "SELECT x + 2 * x from (select ? as x)"
+//
+// The expression fragment is not allowed to have its own from clause which means
+// we can use the from clause for our own purposes (local binding).  The is very
+// helpful if the fragment happens often or if the argument would otherwise have
+// to be evaluated many times.  But it comes at the cost of a one-row query.
 static bool_t cg_lua_inline_func(ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
@@ -2761,6 +2773,27 @@ static bool_t cg_lua_inline_func(ast_node *call_ast, void *context, charbuf *buf
   return true;
 }
 
+// Here we've found a call expression where a CTE should be so like
+// with
+//  X(*) as (call foo(1,2,3))
+// select * from X;
+//
+// or
+//
+// with
+//  X(*) as (call foo(1,2,3) USING foo as source1, bar = source2)
+// select * from X;
+//
+// What we're going to do is replace the call with the body of the procedure that is being called.
+// We have to do a few things to make this work:
+//  * the args to the procedure have to be evaluated and put into locals
+//  * any use of those arguments has to be redirected to said locals (so rename the locals)
+//  * naturally any of those arguments can't be database things (wrong context) so we can evaluate them
+//    all in advance
+//  * if the call has the "USING" form then we have to alias all instances of the mentioned
+//    tables in the target procedure to be the values that were provided
+//  * any such args/aliases have been pre-validated during semantic analysis
+//  * code gen is designed to keep as many string literals identical as possible so that they can be folded
 static bool_t cg_lua_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
@@ -3048,7 +3081,7 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
   callbacks.variables_callback = cg_lua_capture_variables;
   callbacks.variables_context = &vars;
   callbacks.star_callback = cg_expand_star;
-  callbacks.minify_casts = 1;
+  callbacks.minify_casts = true;
   callbacks.minify_aliases = minify_aliases;
   callbacks.long_to_int_conv = true;
   callbacks.cte_proc_callback = cg_lua_call_in_cte;
@@ -3159,146 +3192,15 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
 }
 
 // This emits the declaration for an "auto cursor" -- that is a cursor
-// that includes storage for all the fields it can fetch.  It uses the
-// struct helper to make a suitable struct and the creates the local and
-// initializes its teardown function.  Code also has to go into the cleanup
-// section for suitable teardown.
+// that includes storage for all the fields it can fetch.  In LUA all
+// cursors have storage.  When you do FETCH INTO first the cursor is loaded
+// and then the variables are assigned, so there is only the one path.
 static void cg_lua_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   Contract(cursor_name);
   Contract(sptr);
 
   bprintf(cg_declarations_output, "local %s = {}\n", cursor_name);
   bprintf(cg_declarations_output, "%s._has_row_ = false\n", cursor_name);
-}
-
-// This causes enum declarations to go into the header file.
-// Those enum values  are not even used in our codegen because the ast is
-// rewritten to have the actual value rather than the name.  However this will
-// make it possible to use the enums in callers from C.  The enum values are
-// "public" in this sense.  This is a lot like the gen_sql code except it will be
-// in C format.  Note C has no floating point enums so we have to do those with macros.
-
-static void cg_lua_emit_one_enum(ast_node *ast) {
-  Contract(is_ast_declare_enum_stmt(ast));
-  EXTRACT_NOTNULL(typed_name, ast->left);
-  EXTRACT_NOTNULL(enum_values, ast->right);
-  EXTRACT_ANY(name_ast, typed_name->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_ANY_NOTNULL(type, typed_name->right);
-
-  if (core_type_of(type->sem->sem_type) != SEM_TYPE_REAL) {
-    bprintf(cg_header_output, "enum %s {", name);
-
-    while (enum_values) {
-       EXTRACT_NOTNULL(enum_value, enum_values->left);
-       EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
-       EXTRACT_STRING(enum_name, enum_name_ast);
-
-       bprintf(cg_header_output, "\n  %s__%s = ", name, enum_name);
-
-       eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_FOR_LUA, cg_header_output);
-
-       if (enum_values->right) {
-         bprintf(cg_header_output, ",");
-       }
-
-       enum_values = enum_values->right;
-    }
-    bprintf(cg_header_output, "\n}\n");
-  }
-  else {
-    bprintf(cg_header_output, "\n// enum %s (floating point values)\n", name);
-    while (enum_values) {
-       EXTRACT_NOTNULL(enum_value, enum_values->left);
-       EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
-       EXTRACT_STRING(enum_name, enum_name_ast);
-
-       bprintf(cg_header_output, "#define %s__%s ", name, enum_name);
-       eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_FOR_LUA, cg_header_output);
-       bprintf(cg_header_output, "\n");
-
-       enum_values = enum_values->right;
-    }
-  }
-}
-
-static void cg_lua_emit_enums_stmt(ast_node *ast) {
-  Contract(is_ast_emit_enums_stmt(ast));
-  EXTRACT(name_list, ast->left);
-
-  if (name_list) {
-    // names specified: emit those
-    while (name_list) {
-      // names previously checked, we assert they are good here
-      EXTRACT_STRING(name, name_list->left);
-      EXTRACT_NOTNULL(declare_enum_stmt, find_enum(name));
-      cg_lua_emit_one_enum(declare_enum_stmt);
-      name_list = name_list->right;
-    }
-  }
-  else {
-    // none specified: emit all
-    for (list_item *item = all_enums_list; item; item = item->next) {
-      EXTRACT_NOTNULL(declare_enum_stmt, item->ast);
-      cg_lua_emit_one_enum(declare_enum_stmt);
-    }
-  }
-}
-
-// This causes global constant declarations to go into the header file.
-// Those constants are not even used in our codegen because the ast is
-// rewritten to have the actual value rather than the name.  However this will
-// make it possible to use the constant in callers from C.  The constant values are
-// "public" in this sense.  This is a lot like the gen_sql code except it will be
-// in C format.
-
-static void cg_lua_emit_one_const_group(ast_node *ast) {
-  Contract(is_ast_declare_const_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT_NOTNULL(const_values, ast->right);
-  EXTRACT_STRING(name, name_ast);
-
-  while (const_values) {
-     EXTRACT_NOTNULL(const_value, const_values->left);
-     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
-     EXTRACT_STRING(const_name, const_name_ast);
-
-     bprintf(cg_header_output, "#define %s ", const_name);
-
-     if (is_numeric(const_value->sem->sem_type)) {
-       eval_format_number(const_value->sem->value, EVAL_FORMAT_FOR_LUA, cg_header_output);
-     }
-     else {
-       // we don't make a string object for string literals that are being emitted, just the C literal
-       CHARBUF_OPEN(quoted);
-
-       EXTRACT_STRING(literal, const_value->right);
-       cg_lua_requote_literal(literal, &quoted);
-       bprintf(cg_header_output, "%s", quoted.ptr);
-
-       CHARBUF_CLOSE(quoted);
-     }
-
-     bprintf(cg_header_output, "\n");
-
-     const_values = const_values->right;
-  }
-}
-
-static void cg_lua_emit_constants_stmt(ast_node *ast) {
-  Contract(is_ast_emit_constants_stmt(ast));
-  EXTRACT_NOTNULL(name_list, ast->left);
-
-  if (name_list) {
-    // names specified: emit those
-    while (name_list) {
-      // names previously checked, we assert they are good here
-      EXTRACT_STRING(name, name_list->left);
-      EXTRACT_NOTNULL(declare_const_stmt, find_constant_group(name));
-      cg_lua_emit_one_const_group(declare_const_stmt);
-      name_list = name_list->right;
-    }
-  }
 }
 
 // Declaring a cursor causes us to do the following:
@@ -3457,23 +3359,9 @@ static void cg_lua_declare_cursor(ast_node *ast) {
   // things a lot more symmetric.
   cg_lua_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
 
-#ifdef RAINY_DAY
-  if (name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE) {
-    cg_lua_declare_auto_cursor(cursor_name, name_ast->sem->sptr);
-  }
-  else {
-    // if it's a global cursor (`!lua_in_proc`) we have to assume we will need the
-    // variable eventually so we emit it now; if it's a local then we only emit
-    // it if we know it'll be used later on (as indicated by `SEM_TYPE_FETCH_INTO`)
-    if (!lua_in_proc || name_ast->sem->sem_type & SEM_TYPE_FETCH_INTO) {
-      // make the cursor_has_row hidden variable
-      CHARBUF_OPEN(temp);
-      bprintf(&temp, "_%s_has_row_", cursor_name);
-      cg_lua_var_decl(cg_declarations_output, SEM_TYPE_BOOL | SEM_TYPE_NOTNULL, temp.ptr);
-      CHARBUF_CLOSE(temp);
-    }
-  }
-#endif
+  // in C you have to put something in the .h file if you want to have a global cursor
+  // we have none of that in LUA so... nothing here... for global cursor stuff.  see cg_c.c
+  // if you want to see the sadness that is C.
 }
 
 // This is the cursor boxing primitive, we'll make an object variable for this cursor here
@@ -3530,8 +3418,7 @@ static void cg_lua_declare_cursor_like_typed_names(ast_node *ast) {
 }
 
 // The value cursor form for sure will be fetched.   We emit the necessary locals
-// for the cursor here.  Those are one for "_has_row_" field and another for each
-// element of the structure the cursor holds.
+// for the cursor here.
 static void cg_lua_declare_value_cursor(ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -3544,8 +3431,7 @@ static void cg_lua_declare_value_cursor(ast_node *ast) {
 }
 
 // Fetch values has been checked for the presence of all columns and seed values
-// have already been added if needed.  All we have to generate evaluation of each value
-// and then a store.  There is no "fetch values into name_list" form.
+// have already been added if needed.
 static void cg_lua_fetch_values_stmt(ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
@@ -3584,6 +3470,7 @@ static void cg_lua_fetch_values_stmt(ast_node *ast) {
   }
 }
 
+// native blob storage support, these are just cursor calls
 static void cg_lua_fetch_cursor_from_blob_stmt(ast_node *ast) {
   Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
   CSTR cursor_name = ast->left->sem->name;
@@ -3600,6 +3487,7 @@ static void cg_lua_fetch_cursor_from_blob_stmt(ast_node *ast) {
   CG_LUA_POP_EVAL(blob);
 }
 
+// native blob storage support, these are just cursor calls
 static void cg_lua_set_blob_from_cursor_stmt(ast_node *ast) {
   Contract(is_ast_set_blob_from_cursor_stmt(ast));
 
@@ -3675,6 +3563,7 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
      }
   }
 
+  // the fetch INTO case reads out the fields from cursor which was fetched as usual
   if (name_list) {
     int32_t i = 0; // column get is zero based
 
@@ -3741,12 +3630,11 @@ static void cg_lua_update_cursor_stmt(ast_node *ast) {
   bprintf(cg_main_output, "end\n");
 }
 
-// Here we just emit the various case labels for the expression list of
-// a WHEN clause.  There isn't much to this.
+// Here we just emit the various values for an IF expression that is part of
+// a SWITCH/WHEN clause
 //  * the correct indent level is already set up
-//  * if the constants are 64 make sure we emit them as such
 //  * we know evaluation will work because the semantic pass already checked it
-//  * formatting numbers never fails
+//  * formatting numbers never fails, we use LUA number format
 static void cg_lua_switch_expr_list(ast_node *ast, sem_t sem_type_switch_expr, CSTR val) {
   Contract(is_ast_expr_list(ast));
 
@@ -3777,7 +3665,10 @@ static void cg_lua_switch_expr_list(ast_node *ast, sem_t sem_type_switch_expr, C
 // placed on the various expressions.  We know that the case lables are all
 // integers and we know that the expression type of the switch expression is
 // a not null integer type so we can easily generate the switch form.  Anything
-// that could go wrong has already been checked.
+// that could go wrong has already been checked.  In LUA there is no switch
+// statement so we just generate a series of IF statements and an ELSE case.
+// We put all that into a repeat .. until true loop so that we can use "break"
+// to get out of the loop.
 static void cg_lua_switch_stmt(ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
   EXTRACT_NOTNULL(switch_body, ast->right);
@@ -3852,16 +3743,18 @@ static void cg_lua_switch_stmt(ast_node *ast) {
 // generating while (expression) would not generalize.
 // The overall pattern for while has to look like this:
 //
-//  for (;;) {
+//  while true
+//  do
 //    prep statements;
 //    condition = final expression;
-//    if (!condition) break;
+//    if  not(condition) then break end
 //
 //    statements;
-//  }
+//    ::continue_label%d::
+//  end
 //
 // Note that while can have leave and continue substatements which have to map
-// to break and continue.   That means other top level statements that aren't loops
+// to break and goto ::continue::.   That means other top level statements that aren't loops
 // must not create a C loop construct or break/continue would have the wrong target.
 static void cg_lua_while_stmt(ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
@@ -3906,11 +3799,12 @@ static void cg_lua_while_stmt(ast_node *ast) {
 }
 
 // The general pattern for this is very simple:
-//   for (;;) {
-//     do the fetch;
-//     if (no rows) break;
-//     do your loop;
-//  }
+//   while true
+//   do
+//     do the fetch
+//     if no rows then break end
+//     do your loop
+//   end
 // It has to be this because the fetch might require many statements.
 // There are helpers for all of this so it's super simple.
 static void cg_lua_loop_stmt(ast_node *ast) {
@@ -3924,7 +3818,7 @@ static void cg_lua_loop_stmt(ast_node *ast) {
 
   // LOOP [fetch_stmt] BEGIN [stmt_list] END
 
-  bprintf(cg_main_output, "while 1\ndo\n");
+  bprintf(cg_main_output, "while true\ndo\n");
   CG_PUSH_MAIN_INDENT(loop, 2);
 
   cg_lua_fetch_stmt(fetch_stmt);
@@ -3972,7 +3866,7 @@ static void cg_lua_leave_stmt(ast_node *ast) {
   bprintf(cg_main_output, "break\n");
 }
 
-// Only SQL loops are allowed to use C loops, so "break" is perfect
+// We go to the main cleanup label and exit the current procedure
 static void cg_lua_return_stmt(ast_node *ast) {
   Contract(is_ast_return_stmt(ast) || is_ast_rollback_return_stmt(ast) || is_ast_commit_return_stmt(ast));
 
@@ -4127,35 +4021,16 @@ static void cg_lua_call_named_external(CSTR name, ast_node *arg_list) {
 
 // This is the hard work of doing the call actually happens.  We have to:
 //   * evaluate each argument in the arg list
-//     * for string literals, don't make a string_ref, just emit the literal as a quoted string
-//       it's going to a C style call anyway...
-//     * for strings
-//       * add a prep statement to convert the string to a const char * in a temporary
-//       * include the temporary in the arg list
-//       * add a cleanup statement to release the temporary
-//     * for others, use the expression value
-//   * burn the top of the stack, in case the result is stored in a temporary,
-//     each arg gets a fresh top of stack so they don't clobber each others results.
+//   * emit a standard call for the lot
+//   * there are no out args, so any reference to an out arg means the local copy
+//   * there is no return value (that's what native functions are for)
 static void cg_lua_emit_external_arglist(ast_node *arg_list, charbuf *prep, charbuf *invocation, charbuf *cleanup) {
   for (ast_node *item = arg_list; item; item = item->right) {
     EXTRACT_ANY(arg, item->left);
 
-    if (is_strlit(arg)) {
-      // special case, don't make a string object for string literals that are going to
-      // external methods like printf
-      CHARBUF_OPEN(quoted);
-
-      EXTRACT_STRING(literal, arg);
-      cg_lua_requote_literal(literal, &quoted);
-      bprintf(invocation, "%s", quoted.ptr);
-
-      CHARBUF_CLOSE(quoted);
-    }
-    else {
-      CG_LUA_PUSH_EVAL(arg, LUA_EXPR_PRI_ROOT);
-      bprintf(invocation, "%s", arg_value.ptr);
-      CG_LUA_POP_EVAL(arg);
-    }
+    CG_LUA_PUSH_EVAL(arg, LUA_EXPR_PRI_ROOT);
+    bprintf(invocation, "%s", arg_value.ptr);
+    CG_LUA_POP_EVAL(arg);
 
     if (item->right) {
       bprintf(invocation, ", ");
@@ -4202,13 +4077,10 @@ static void cg_lua_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_t
 }
 
 // This generates the invocation for a user defined external function.
-// Basically we do a simple C invoke with the matching argument types which are known exactly
+// Basically we do a simple invoke with the matching argument types which are known exactly
 // we do the usual argument conversions using cg_lua_emit_one_arg just like when calling procedures
 // however we capture the return type in a temporary variable created exactly for this purpose.
-// Note we do this without using the usual macros because those would invoke the function twice:
-// one time for is_null and one time for _value which is a no-no.  So here we emit a direct
-// assignment much like we would in cg_lua_store.  Except we don't have to do all the cg_lua_store things
-// because we know the target is a perfectly matching local variable we just created.
+// This code is also used in the proc as func path hence the dml stuff
 static void cg_lua_user_func(ast_node *ast, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -4220,8 +4092,8 @@ static void cg_lua_user_func(ast_node *ast, charbuf *value) {
   ast_node *func_stmt = find_func(name);
   CSTR func_name = NULL;
 
-  bool_t proc_as_func = 0;
-  bool_t dml_proc = 0;
+  bool_t proc_as_func = false;
+  bool_t dml_proc = false;
   bool_t result_set_return = false;
 
   if (func_stmt) {
@@ -4237,7 +4109,7 @@ static void cg_lua_user_func(ast_node *ast, charbuf *value) {
     ast_node *proc_name_ast = get_proc_name(proc_stmt);
     EXTRACT_STRING(pname, proc_name_ast);
     func_name = pname;
-    proc_as_func = 1;
+    proc_as_func = true;
     dml_proc = is_dml_proc(proc_stmt->sem->sem_type);
 
     result_set_return = has_out_stmt_result(proc_stmt) || has_result_set(proc_stmt) || has_out_union_stmt_result(proc_stmt);
@@ -4539,7 +4411,7 @@ static void cg_lua_insert_dummy_spec(ast_node *ast) {
 
   if (!lua_seed_declared) {
     cg_lua_var_decl(cg_declarations_output, sem_type_var, name);
-    lua_seed_declared = 1;
+    lua_seed_declared = true;
   }
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ASSIGN);
@@ -4609,7 +4481,7 @@ static void cg_lua_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast
   CSTR saved_lua_error_target = lua_error_target;
   bool_t saved_lua_error_target_used = lua_error_target_used;
   lua_error_target = catch_start.ptr;
-  lua_error_target_used = 0;
+  lua_error_target_used = false;
 
   // Emit the try code.
   bprintf(cg_main_output, "-- try\n\n");
@@ -4709,8 +4581,8 @@ static void cg_lua_throw_stmt(ast_node *ast) {
 
   bprintf(cg_main_output, "_rc_ = cql_best_error(%s)\n", lua_rcthrown_current);
   bprintf(cg_main_output, "goto %s\n", lua_error_target);
-  lua_error_target_used = 1;
-  lua_rcthrown_used = 1;
+  lua_error_target_used = true;
+  lua_rcthrown_used = true;
 }
 
 // Dispatch to one of the statement helpers using the symbol table.
@@ -5178,6 +5050,8 @@ cql_noexport void cg_lua_init(void) {
   LUA_NO_OP_STMT_INIT(schema_resub_stmt);
   LUA_NO_OP_STMT_INIT(declare_group_stmt);
   LUA_NO_OP_STMT_INIT(emit_group_stmt);
+  LUA_NO_OP_STMT_INIT(emit_enums_stmt);
+  LUA_NO_OP_STMT_INIT(emit_constants_stmt);
   LUA_NO_OP_STMT_INIT(declare_select_func_no_check_stmt);
   LUA_NO_OP_STMT_INIT(declare_select_func_stmt);
   LUA_NO_OP_STMT_INIT(declare_func_stmt);
@@ -5218,8 +5092,6 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(let_stmt);
   LUA_STMT_INIT(set_from_cursor);
   LUA_STMT_INIT(create_proc_stmt);
-  LUA_STMT_INIT(emit_enums_stmt);
-  LUA_STMT_INIT(emit_constants_stmt);
   LUA_STMT_INIT(trycatch_stmt);
   LUA_STMT_INIT(proc_savepoint_stmt);
   LUA_STMT_INIT(throw_stmt);
@@ -5318,7 +5190,7 @@ cql_noexport void cg_lua_cleanup() {
   lua_error_target = NULL;
   cg_lua_current_masks = NULL;
 
-  lua_in_loop = 0;
+  lua_in_loop = false;
   lua_case_statement_count = 0;
   lua_catch_block_count = 0;
   lua_error_target = CQL_CLEANUP_DEFAULT_LABEL;

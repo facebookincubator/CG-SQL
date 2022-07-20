@@ -7363,6 +7363,12 @@ static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
   sem_coalesce(ast, 1);  // set "ifnull"
 }
 
+// The usual blob verification stuff.  Note that cql_get_blob_size
+// returns not null (blob size of nil is zero).
+// We can't declare this function with the normal syntax because it
+// has to prop sensitivity.  We should probably have a syntax for
+// nullable args get nullable results and sensitive args get sensitive
+// results but we don't have one at this time.
 static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -7387,11 +7393,10 @@ static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
   }
 
   // integer type
-  sem_t sem_type = SEM_TYPE_LONG_INTEGER;
+  sem_t sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+
   // add sensitivity if argument is sensitive
   sem_type |= sensitive_flag(arg->sem->sem_type);
-  // add nullability if argument is nullable
-  sem_type |=  not_nullable_flag(arg->sem->sem_type);
 
   name_ast->sem = ast->sem = new_sem(sem_type);
 }

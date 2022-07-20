@@ -5049,6 +5049,19 @@ begin
    call num_arg(true);
 end;
 
+-- TEST: switch label with max long constant
+-- the constant must be composed of simple valid literals
+-- + WHEN -9223372036854775808L THEN
+-- + WHEN 9223372036854775807L THEN
+-- + if _tmp_int64_0 == (-9223372036854775807 - 1) then
+-- + if _tmp_int64_0 == 9223372036854775807 then
+create proc big_switch_label(x long integer not null)
+begin
+  switch x
+  when -9223372036854775808L then let y := 0;
+  when 9223372036854775807 then let z := 1;
+  end;
+end;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

@@ -94,7 +94,7 @@ static int32_t temp_cstr_count = 0;
 // This tells us if we needed a temporary statement to do an exec or prepare
 // with no visible statement result.  If we emitted the temporary we have to
 // clean it up.  Examples of this set x := (select 1);   or  DELETE from foo;
-static bool_t temp_statement_emitted = 0;
+static bool_t temp_statement_emitted = false;
 
 // This tells us if we have already emitted the declaration for the dummy data
 // seed variable holder _seed_ in the current context.
@@ -951,7 +951,7 @@ static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_ty
     }
   }
 
-  bool_t handled = 0;
+  bool_t handled = false;
 
   // Check to see if we are trying to store a variable back on itself.
   // This happens when is_assignment_target_reusable let us use the target
@@ -2178,6 +2178,9 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
   bprintf(cg_main_output, "} while (0);\n");
 }
 
+// we have built-in support for numeric casts only, the SQL string cast operations are highly
+// complex with interesting parsing rules and so forth.  We don't try to do those at all
+// but there's no reason we can't do the simple numeric conversions in the non-SQL path
 static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_cast_expr(cast_expr));
 
@@ -2259,20 +2262,20 @@ static bool_t cg_make_nice_literal_name(CSTR str, charbuf *output) {
   }
 
   bprintf(output, "_literal_%d", ++string_literals_count);
-  bool_t underscore = 0;
+  bool_t underscore = false;
 
   for (int32_t i = 0; str[i] && i < CQL_NICE_LITERAL_NAME_LIMIT; i++) {
     char ch = str[i];
     if (Isalpha(ch)) {
       bputc(output, ch);
-      underscore = 0;
+      underscore = false;
     }
     else if (ch == '\\') {
      if (str[i+1]) i++;  // don't fall off the end
     }
     else if (!underscore) {
       bputc(output, '_');
-      underscore = 1;
+      underscore = true;
     }
   }
 
@@ -2359,6 +2362,11 @@ static void cg_expr_between_rewrite(
 //   * nullable strings use "id" for .value and "!id" for .is_null
 //   * nullable other use the variables .is_null and .value
 //   * non-nullables use the variable for the value and "0" for is_null
+//   * we have special case code for the @RC identifier for the most recent result code
+//   * we have to undo the cursor transform _C_has_row_ into C._has_row_ because
+//     cursors are uniform in LUA, this is goofy but works for now
+//   * when processing shared fragments we might need to alias local variables
+//     to their computed value
 //
 // Note: It's important to use the semantic name sem->name rather than the text
 // of the ast because the user might refer case insensitively to the variable FoO
@@ -2375,7 +2383,7 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
   if (!strcmp(name, "@rc")) {
     bprintf(value, "%s", rcthrown_current);
     bprintf(is_null, "0");
-    rcthrown_used = 1;
+    rcthrown_used = true;
     return;
   }
 
@@ -2561,7 +2569,7 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
         bprintf(cg_main_output, "  _rc_ = SQLITE_ERROR;\n");
         bprintf(cg_main_output, "  goto %s;\n", error_target);
         bprintf(cg_main_output, "}\n");
-        error_target_used = 1;
+        error_target_used = true;
         break;
     }
 
@@ -2620,6 +2628,8 @@ static void cg_func_printf(ast_node *call_ast, charbuf *is_null, charbuf *value)
   CG_CLEANUP_RESULT_VAR();
 }
 
+// wrapper function for the builtin cql_get_blob_size
+// all we have to do is figure out if we need a temporary or not to hold the answer
 static void cg_func_cql_get_blob_size(ast_node *ast, charbuf*is_null, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -2628,28 +2638,13 @@ static void cg_func_cql_get_blob_size(ast_node *ast, charbuf*is_null, charbuf *v
   EXTRACT(arg_list, call_arg_list->right);
   EXTRACT_ANY_NOTNULL(expr, arg_list->left);
 
-  sem_t sem_type_var = name_ast->sem->sem_type;
-
-  CG_RESERVE_RESULT_VAR(ast, sem_type_var);
-  // Evaluate the expression and stow it in a temporary.
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
-  CHARBUF_OPEN(temp);
 
-  // store cql_get_blob_size call in temp. e.g: cql_get_blob_size(expr_value)
-  bprintf(&temp, "%s(%s)", rt->cql_get_blob_size, expr_value.ptr);
+  // The result is known to be not nullable therefore we can store directly the value to the result buff
+  bprintf(is_null, "0");
+  bprintf(value, "%s(%s)", rt->cql_get_blob_size, expr_value.ptr);
 
-  if (is_not_nullable(sem_type_var)) {
-    // The result is known to be not nullable therefore we can store directly the value to the result buff
-    bprintf(is_null, "0");
-    bprintf(value, "%s", temp.ptr);
-  } else {
-    CG_USE_RESULT_VAR();
-    cg_store(cg_main_output, result_var.ptr, sem_type_var, sem_type_var, expr_is_null.ptr, temp.ptr);
-  }
-
-  CHARBUF_CLOSE(temp);
   CG_POP_EVAL(expr);
-  CG_CLEANUP_RESULT_VAR();
 }
 
 // This is some kind of function call in an expression context.  Look up the method
@@ -2703,12 +2698,14 @@ static void cg_expr_str(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   }
 }
 
+// the "dot" operator (e.g. C.x) is handled on the ID path 
 static void cg_expr_dot(ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // X.Y has a net local name computed by semantic analysis.  Use it like any other id.
   Contract(is_ast_dot(expr));
   cg_id(expr, is_null, value);
 }
 
+// the null constant
 static void cg_expr_null(ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_null(expr));
   // null literal
@@ -3416,15 +3413,13 @@ static void cg_emit_rc_vars(charbuf *output) {
 //
 // The contracts emitted always match the _Notnull parameter attributes in the
 // declaration of the procedure.
-//
-// NOTE: These are temporarily being emitted as tripwires instead of contracts.
 static void cg_emit_contracts(ast_node *ast, charbuf *b) {
   Contract(is_ast_params(ast));
   Contract(b);
 
   CHARBUF_OPEN(alias);
 
-  bool_t did_emit_contract = 0;
+  bool_t did_emit_contract = false;
 
   int32_t position = 1;
   for (ast_node *params = ast; params; params = params->right, position++) {
@@ -3450,14 +3445,14 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
       // it points to must not be null; the former because we'll write to it,
       // and the latter because we'll read it and expect it to not be NULL.
       bprintf(b, "  cql_contract_argument_notnull_when_dereferenced((void *)%s, %d);\n", name, position);
-      did_emit_contract = 1;
+      did_emit_contract = true;
     } else if (is_out_parameter(sem_type) || is_nonnull_ref_type) {
       // Here, only the argument itself must not be null. This is either because
       // we have an OUT argument and thus only need to be able to write to the
       // address given, or because we have an `IN arg R NOT NULL` (where `R` is
       // some reference type) that we'll read and expect to not be NULL.
       bprintf(b, "  cql_contract_argument_notnull((void *)%s, %d);\n", name, position);
-      did_emit_contract = 1;
+      did_emit_contract = true;
     }
   }
 
@@ -3682,7 +3677,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   rcthrown_index = 0;
 
   bool_t saved_rcthrown_used = rcthrown_used;
-  rcthrown_used = 0;
+  rcthrown_used = false;
 
   bool_t saved_temp_emitted = temp_statement_emitted;
   bool_t saved_seed_declared = seed_declared;
@@ -4266,7 +4261,7 @@ static void ensure_temp_statement() {
   if (!temp_statement_emitted) {
     bprintf(cg_declarations_output, "sqlite3_stmt *_temp_stmt = NULL;\n");
     bprintf(cg_cleanup_output, "  cql_finalize_stmt(&_temp_stmt);\n");
-    temp_statement_emitted = 1;
+    temp_statement_emitted = true;
   }
 }
 
@@ -4582,6 +4577,23 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
   }
 }
 
+// This handles the expression fragment case, this is rewritten so that
+// the arguments of the expression fragment become columns of one row of table
+// e.g. 
+// @attribute(cql:shared_fragment)
+// create proc ex_frag(x integer)
+// begin
+//    select x + 2 * x as result;
+// end
+//
+// this becomes
+//
+// "SELECT x + 2 * x from (select ? as x)"
+//
+// The expression fragment is not allowed to have its own from clause which means
+// we can use the from clause for our own purposes (local binding).  The is very
+// helpful if the fragment happens often or if the argument would otherwise have
+// to be evaluated many times.  But it comes at the cost of a one-row query.
 static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
@@ -4654,6 +4666,27 @@ static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer)
   return true;
 }
 
+// Here we've found a call expression where a CTE should be so like
+// with
+//  X(*) as (call foo(1,2,3))
+// select * from X;
+//
+// or
+//
+// with
+//  X(*) as (call foo(1,2,3) USING foo as source1, bar = source2)
+// select * from X;
+//
+// What we're going to do is replace the call with the body of the procedure that is being called.
+// We have to do a few things to make this work:
+//  * the args to the procedure have to be evaluated and put into locals
+//  * any use of those arguments has to be redirected to said locals (so rename the locals)
+//  * naturally any of those arguments can't be database things (wrong context) so we can evaluate them
+//    all in advance
+//  * if the call has the "USING" form then we have to alias all instances of the mentioned
+//    tables in the target procedure to be the values that were provided
+//  * any such args/aliases have been pre-validated during semantic analysis
+//  * code gen is designed to keep as many string literals identical as possible so that they can be folded
 static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
@@ -4950,7 +4983,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   callbacks.variables_callback = cg_capture_variables;
   callbacks.variables_context = &vars;
   callbacks.star_callback = cg_expand_star;
-  callbacks.minify_casts = 1;
+  callbacks.minify_casts = true;
   callbacks.minify_aliases = minify_aliases;
   callbacks.long_to_int_conv = true;
   callbacks.cte_proc_callback = cg_call_in_cte;
@@ -5670,6 +5703,7 @@ static void cg_fetch_values_stmt(ast_node *ast) {
   }
 }
 
+// native blob storage support, these are just dyn cursor calls
 static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
   Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
   CSTR cursor_name = ast->left->sem->name;
@@ -5688,6 +5722,7 @@ static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
   CG_POP_EVAL(blob);
 }
 
+// native blob storage support, these are just dyn cursor calls
 static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
   Contract(is_ast_set_blob_from_cursor_stmt(ast));
 
@@ -5845,7 +5880,7 @@ static void cg_update_cursor_stmt(ast_node *ast) {
 }
 
 // Here we just emit the various case labels for the expression list of
-// a WHEN clause.  There isn't much to this.
+// a SWITCH/WHEN clause.  There isn't much to this.
 //  * the correct indent level is already set up
 //  * if the constants are 64 make sure we emit them as such
 //  * we know evaluation will work because the semantic pass already checked it
@@ -6042,7 +6077,7 @@ static void cg_leave_stmt(ast_node *ast) {
   bprintf(cg_main_output, "break;\n");
 }
 
-// Only SQL loops are allowed to use C loops, so "break" is perfect
+// We go to the main cleanup label and exit the current procedure
 static void cg_return_stmt(ast_node *ast) {
   Contract(is_ast_return_stmt(ast) || is_ast_rollback_return_stmt(ast) || is_ast_commit_return_stmt(ast));
 
@@ -6334,7 +6369,7 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
       break;
     }
 
-    bool_t must_box_arg = 0;
+    bool_t must_box_arg = false;
     if (is_nullable(sem_type_param)) {
        must_box_arg |= is_ast_null(arg);
        must_box_arg |= is_not_nullable(sem_type_arg);
@@ -6386,6 +6421,7 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
 // one time for is_null and one time for _value which is a no-no.  So here we emit a direct
 // assignment much like we would in cg_store.  Except we don't have to do all the cg_store things
 // because we know the target is a perfectly matching local variable we just created.
+// This code is also used in the proc as func path hence the dml stuff.
 static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -6783,7 +6819,7 @@ static void cg_insert_dummy_spec(ast_node *ast) {
 
   if (!seed_declared) {
     cg_var_decl(cg_declarations_output, sem_type_var, name, CG_VAR_DECL_LOCAL);
-    seed_declared = 1;
+    seed_declared = true;
   }
 
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ASSIGN);
@@ -6853,7 +6889,7 @@ static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_nod
   CSTR saved_error_target = error_target;
   bool_t saved_error_target_used = error_target_used;
   error_target = catch_start.ptr;
-  error_target_used = 0;
+  error_target_used = false;
 
   // Emit the try code.
   bprintf(cg_main_output, "// try\n{\n");
@@ -6951,8 +6987,8 @@ static void cg_throw_stmt(ast_node *ast) {
 
   bprintf(cg_main_output, "_rc_ = cql_best_error(%s);\n", rcthrown_current);
   bprintf(cg_main_output, "goto %s;\n", error_target);
-  error_target_used = 1;
-  rcthrown_used = 1;
+  error_target_used = true;
+  rcthrown_used = true;
 }
 
 // Dispatch to one of the statement helpers using the symbol table.
@@ -8039,7 +8075,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
       fetch_result_info info = {
           .dml_proc = dml_proc,
-          .use_stmt = 0,
+          .use_stmt = false,
           .data_types_sym = data_types_sym.ptr,
           .col_offsets_sym = col_offsets_sym.ptr,
           .refs_count = refs_count,
@@ -8092,8 +8128,8 @@ static void cg_proc_result_set(ast_node *ast) {
 
       // Now read in in all the rows using this fetch information
       fetch_result_info info = {
-          .dml_proc = 1,
-          .use_stmt = 1,
+          .dml_proc = true,
+          .use_stmt = true,
           .data_types_sym = data_types_sym.ptr,
           .col_offsets_sym = col_offsets_sym.ptr,
           .refs_count = refs_count,
@@ -8117,8 +8153,8 @@ static void cg_proc_result_set(ast_node *ast) {
       Invariant(uses_out_union);
 
       fetch_result_info info = {
-          .dml_proc = 0,
-          .use_stmt = 0,
+          .dml_proc = false,
+          .use_stmt = false,
           .data_types_sym = data_types_sym.ptr,
           .col_offsets_sym = col_offsets_sym.ptr,
           .refs_count = refs_count,
@@ -8607,7 +8643,7 @@ cql_noexport void cg_c_cleanup() {
   error_target = NULL;
   cg_current_masks = NULL;
 
-  cg_in_loop = 0;
+  cg_in_loop = false;
   case_statement_count = 0;
   catch_block_count = 0;
   error_target = CQL_CLEANUP_DEFAULT_LABEL;

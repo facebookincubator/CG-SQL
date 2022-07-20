@@ -61116,8 +61116,8 @@ SET an_long := cql_get_blob_size(blob_var);
 
   {assign}: an_long: longint variable was_set
   | {name an_long}: an_long: longint variable was_set
-  | {call}: longint
-    | {name cql_get_blob_size}: longint
+  | {call}: longint notnull
+    | {name cql_get_blob_size}: longint notnull
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
