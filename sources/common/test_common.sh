@@ -1802,12 +1802,12 @@ code_gen_lua_test() {
     failed
   fi
 
-  echo testing for successful compilation of generated lua
-  if ! lua out/cg_test_lua.lua
-  then
-    echo "ERROR: failed to compile the C code from the code gen test"
-    failed
-  fi
+#  echo testing for successful compilation of generated lua
+#  if ! lua out/cg_test_lua.lua
+#  then
+#    echo "ERROR: failed to compile the C code from the code gen test"
+#    failed
+#  fi
 
   echo testing for successful compilation of lua run test
   echo " cannot run this by default because of runtime requirements"
