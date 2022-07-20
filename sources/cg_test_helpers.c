@@ -66,6 +66,8 @@ typedef struct dummy_test_info {
   list_item *found_views;
   CSTR table_current;
   struct table_callbacks *callbacks;
+  symtab *found_triggers;
+  list_item *pending_triggers;
 } dummy_test_info;
 
 static void find_all_table_nodes(dummy_test_info *info, ast_node *node);
@@ -146,17 +148,10 @@ static void cg_test_helpers_dummy_result_set(CSTR name) {
   bprintf(cg_th_procs, "END;\n");
 }
 
-// Find all triggers on the table "table_or_view_name" then find all the tables those
-// triggers actions depend on. The tables in those triggers should be parf of dummy_test
-// codegen otherwise trigger creation stmt will fail in dummy_test.
-static void find_all_triggers_node(dummy_test_info *info, CSTR table_or_view_name) {
+// triggers have to go after all else because their dependencies are in any order
+// and we do not want to alter the table create order by processing a trigger
+static void enqueue_all_triggers_node(dummy_test_info *info, CSTR table_or_view_name) {
   symtab_entry *triggers_entry = symtab_find(all_tables_with_triggers, table_or_view_name);
-
-  gen_sql_callbacks callbacks;
-  init_gen_sql_callbacks(&callbacks);
-  callbacks.if_not_exists_callback = cg_test_helpers_force_if_not_exists;
-
-  // We can safely visit all the triggers because we know we visit any given table only once
 
   if (triggers_entry) {
     // We collect this table as having triggers. Later we'll use this datastructure to emit
@@ -164,8 +159,37 @@ static void find_all_triggers_node(dummy_test_info *info, CSTR table_or_view_nam
     bytebuf *buf = (bytebuf *)triggers_entry->val;
     ast_node **items = (ast_node **)buf->ptr;
     int32_t count = buf->used / sizeof(*items);
+
     for (int32_t i = 0; i < count; i++) {
       EXTRACT_ANY_NOTNULL(create_trigger_stmt, items[i]);
+      EXTRACT_NOTNULL(trigger_body_vers, create_trigger_stmt->right);
+      EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
+      EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+      EXTRACT_STRING(trigger_name, trigger_name_ast);
+
+      if (symtab_add(info->found_triggers, trigger_name, NULL)) {
+        add_item_to_list(&info->pending_triggers, create_trigger_stmt);
+      }
+    }
+  }
+}
+
+// process all the pending triggers
+static void process_pending_triggers(void *_Nullable context) {
+  dummy_test_info *info = (dummy_test_info *)context;
+
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.if_not_exists_callback = cg_test_helpers_force_if_not_exists;
+
+  // note that we might get more triggers as a result of processing these triggers
+  while (info->pending_triggers) {
+    // We can safely visit all the triggers because we know we visit any given table only once
+    list_item *trigger_list = info->pending_triggers;
+    info->pending_triggers = NULL;
+
+    while (trigger_list) {
+      EXTRACT_ANY_NOTNULL(create_trigger_stmt, trigger_list->ast);
 
       // emit create trigger stmt
       gen_set_output_buffer(gen_create_triggers);
@@ -184,6 +208,8 @@ static void find_all_triggers_node(dummy_test_info *info, CSTR table_or_view_nam
       // should also to be part of tables emit by dummy_test. Otherwise the triggers statement
       // will be referencing non existent table in dummy_test.
       continue_find_table_node(info->callbacks, create_trigger_stmt);
+
+      trigger_list = trigger_list->next;
     }
   }
 }
@@ -200,7 +226,6 @@ static void found_table_or_view(CSTR _Nonnull table_or_view_name, ast_node *_Non
 
   // tables/views that are deleted have no business appearing in the dummy test output
   if (!deleted) {
-
     // Now let's walk through the new found table (table_or_view_name) to find all the tables it
     // depends on.  This is to find the FKs inside it.  Note that we don't have to check for
     // cycles because the walker driving all of this already does that, we just go.
@@ -222,6 +247,11 @@ static void found_table_or_view(CSTR _Nonnull table_or_view_name, ast_node *_Non
     // This callback is invoked exactly once per table/view by the walker so we already know we
     // have to add the item to the list, we don't need to keep our own state.
 
+    // Find all triggers on the table "table_or_view_name" then find all of the tables and triggers
+    // referenced by them.  These must come after the table itself has been analyzed.  We
+    // process these much later.
+    enqueue_all_triggers_node(info, table_or_view_name);
+
     // note by now we've already visited and added things inside us so our dependencies are already in the list
     if (is_ast_create_view_stmt(table_or_view)) {
       add_item_to_list(&info->found_views, table_or_view);
@@ -229,10 +259,6 @@ static void found_table_or_view(CSTR _Nonnull table_or_view_name, ast_node *_Non
     else {
       add_item_to_list(&info->found_tables, table_or_view);
     }
-
-    // Find all triggers on the table "table_or_view_name" then find all of the tables and triggers
-    // referenced by them.  These must come after the table itself has been analyzed
-    find_all_triggers_node(info, table_or_view_name);
   }
 }
 
@@ -244,6 +270,7 @@ static void find_all_table_nodes(dummy_test_info *info, ast_node *node) {
     .notify_table_or_view_drops = true,
     .notify_fk = true,
     .notify_triggers = true,
+    .callback_final_processing = process_pending_triggers
   };
 
   info->callbacks  = &callbacks;
@@ -648,7 +675,9 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   dummy_test_info info = {
     .table_current = NULL,
     .found_tables = NULL,
-    .found_views = NULL
+    .found_views = NULL,
+    .found_triggers = symtab_new(),
+    .pending_triggers = NULL,
   };
 
   // First thing we have to do is gather all the tables that are used transitively by the procedure

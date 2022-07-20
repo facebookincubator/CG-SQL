@@ -930,3 +930,40 @@ begin
   with (call simple_frag() using child_blob_primary_key as source)
   select * from simple_frag;
 end;
+
+CREATE TABLE trig_test_t1(
+  pk LONG_INT PRIMARY KEY
+);
+
+CREATE TABLE trig_test_t2(
+  pk LONG_INT PRIMARY KEY,
+  ak LONG_INT REFERENCES trig_test_t1 (pk)
+);
+
+CREATE TABLE trig_test_t3(
+  pk LONG_INT PRIMARY KEY,
+  ak LONG_INT REFERENCES trig_test_t2 (pk)
+);
+
+CREATE TABLE trig_test_t4(
+  pk LONG_INT PRIMARY KEY,
+  ak LONG_INT REFERENCES trig_test_t2 (pk)
+);
+
+CREATE TABLE IF NOT EXISTS trig_test_tx(
+  ak LONG_INT PRIMARY KEY
+);
+
+CREATE TRIGGER IF NOT EXISTS trig
+  AFTER INSERT ON trig_test_t1
+BEGIN
+  INSERT OR IGNORE INTO trig_test_tx(ak) SELECT pk
+    FROM trig_test_t3;
+END;
+
+@ATTRIBUTE(cql:autotest=(dummy_test))
+CREATE PROC MyProc ()
+BEGIN
+  SELECT 1 AS dummy
+    FROM trig_test_t4;
+END;

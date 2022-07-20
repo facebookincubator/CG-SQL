@@ -197,14 +197,14 @@ END;
 
 CREATE PROC test_sample_proc7_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -233,8 +233,8 @@ END;
 
 CREATE PROC test_sample_proc7_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc7_read_Baa()
@@ -329,14 +329,14 @@ END;
 
 CREATE PROC test_sample_proc13_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -365,8 +365,8 @@ END;
 
 CREATE PROC test_sample_proc13_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc13_read_Baa()
@@ -464,14 +464,14 @@ END;
 
 CREATE PROC test_sample_proc14_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -500,8 +500,8 @@ END;
 
 CREATE PROC test_sample_proc14_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc14_read_Baa()
@@ -579,14 +579,14 @@ END;
 
 CREATE PROC test_sample_proc15_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -618,8 +618,8 @@ END;
 
 CREATE PROC test_sample_proc15_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc15_read_primary_as_column()
@@ -693,14 +693,14 @@ END;
 
 CREATE PROC test_sample_proc16_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -728,8 +728,8 @@ END;
 
 CREATE PROC test_sample_proc16_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc16_read_Baa()
@@ -802,14 +802,14 @@ END;
 
 CREATE PROC test_sample_proc17_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -841,8 +841,8 @@ END;
 
 CREATE PROC test_sample_proc17_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc17_read_Baa()
@@ -916,14 +916,14 @@ END;
 
 CREATE PROC test_sample_proc18_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -951,8 +951,8 @@ END;
 
 CREATE PROC test_sample_proc18_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc18_read_Baa()
@@ -1059,14 +1059,14 @@ END;
 
 CREATE PROC test_sample_proc20_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1094,8 +1094,8 @@ END;
 
 CREATE PROC test_sample_proc20_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc20_read_Baa()
@@ -1170,14 +1170,14 @@ END;
 
 CREATE PROC test_sample_proc21_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1210,8 +1210,8 @@ END;
 
 CREATE PROC test_sample_proc21_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc21_read_Baa()
@@ -1307,14 +1307,14 @@ END;
 
 CREATE PROC test_sample_proc22_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1346,8 +1346,8 @@ END;
 
 CREATE PROC test_sample_proc22_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc22_read_Baa()
@@ -1443,14 +1443,14 @@ END;
 
 CREATE PROC test_sample_proc23_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1482,8 +1482,8 @@ END;
 
 CREATE PROC test_sample_proc23_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc23_read_Baa()
@@ -1557,14 +1557,14 @@ END;
 
 CREATE PROC test_sample_proc24_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1592,8 +1592,8 @@ END;
 
 CREATE PROC test_sample_proc24_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc24_read_Baa()
@@ -1666,14 +1666,14 @@ END;
 
 CREATE PROC test_sample_proc25_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1701,8 +1701,8 @@ END;
 
 CREATE PROC test_sample_proc25_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc25_read_Baa()
@@ -1838,14 +1838,14 @@ END;
 
 CREATE PROC test_sample_proc28_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1867,8 +1867,8 @@ END;
 
 CREATE PROC test_sample_proc28_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc28_read_Aaa()
@@ -1938,14 +1938,14 @@ END;
 
 CREATE PROC test_sample_proc30_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -1967,8 +1967,8 @@ END;
 
 CREATE PROC test_sample_proc30_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc30_read_Aaa()
@@ -2096,14 +2096,14 @@ END;
 
 CREATE PROC test_sample_proc311_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
+  CREATE TRIGGER IF NOT EXISTS onAaa
     BEFORE DELETE ON Aaa
-    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
-  CREATE TRIGGER IF NOT EXISTS onAaa
+  CREATE TRIGGER IF NOT EXISTS triggerAaa
     BEFORE DELETE ON Aaa
+    WHEN is_declare_func_enabled()
   BEGIN
   DELETE FROM dbl_table WHERE num = OLD.dl;
   END;
@@ -2131,8 +2131,8 @@ END;
 
 CREATE PROC test_sample_proc311_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS triggerAaa;
   DROP TRIGGER IF EXISTS onAaa;
+  DROP TRIGGER IF EXISTS triggerAaa;
 END;
 
 CREATE PROC test_sample_proc311_read_Baa()
@@ -2701,4 +2701,92 @@ END;
 CREATE PROC test_test_frags_read_child_blob_primary_key()
 BEGIN
   SELECT * FROM child_blob_primary_key;
+END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_MyProc_create_tables()
+BEGIN
+  CREATE TABLE IF NOT EXISTS trig_test_t1(
+    pk LONG_INT PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS trig_test_t2(
+    pk LONG_INT PRIMARY KEY,
+    ak LONG_INT REFERENCES trig_test_t1 (pk)
+  );
+  CREATE TABLE IF NOT EXISTS trig_test_t4(
+    pk LONG_INT PRIMARY KEY,
+    ak LONG_INT REFERENCES trig_test_t2 (pk)
+  );
+  CREATE TABLE IF NOT EXISTS trig_test_tx(
+    ak LONG_INT PRIMARY KEY
+  );
+  CREATE TABLE IF NOT EXISTS trig_test_t3(
+    pk LONG_INT PRIMARY KEY,
+    ak LONG_INT REFERENCES trig_test_t2 (pk)
+  );
+END;
+
+CREATE PROC test_MyProc_create_triggers()
+BEGIN
+  CREATE TRIGGER IF NOT EXISTS trig
+    AFTER INSERT ON trig_test_t1
+  BEGIN
+  INSERT OR IGNORE INTO trig_test_tx(ak) SELECT pk
+    FROM trig_test_t3;
+  END;
+END;
+
+CREATE PROC test_MyProc_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO trig_test_t1(pk) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO trig_test_t1(pk) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO trig_test_t2(pk, ak) VALUES(1, 1) @dummy_seed(125);
+  INSERT OR IGNORE INTO trig_test_t2(pk, ak) VALUES(2, 2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO trig_test_t4(pk, ak) VALUES(1, 1) @dummy_seed(127);
+  INSERT OR IGNORE INTO trig_test_t4(pk, ak) VALUES(2, 2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO trig_test_tx(ak) VALUES(1) @dummy_seed(129);
+  INSERT OR IGNORE INTO trig_test_tx(ak) VALUES(2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO trig_test_t3(pk, ak) VALUES(1, 1) @dummy_seed(131);
+  INSERT OR IGNORE INTO trig_test_t3(pk, ak) VALUES(2, 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_MyProc_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS trig_test_t3;
+  DROP TABLE IF EXISTS trig_test_tx;
+  DROP TABLE IF EXISTS trig_test_t4;
+  DROP TABLE IF EXISTS trig_test_t2;
+  DROP TABLE IF EXISTS trig_test_t1;
+END;
+
+CREATE PROC test_MyProc_drop_triggers()
+BEGIN
+  DROP TRIGGER IF EXISTS trig;
+END;
+
+CREATE PROC test_MyProc_read_trig_test_t1()
+BEGIN
+  SELECT * FROM trig_test_t1;
+END;
+
+CREATE PROC test_MyProc_read_trig_test_t2()
+BEGIN
+  SELECT * FROM trig_test_t2;
+END;
+
+CREATE PROC test_MyProc_read_trig_test_t4()
+BEGIN
+  SELECT * FROM trig_test_t4;
+END;
+
+CREATE PROC test_MyProc_read_trig_test_tx()
+BEGIN
+  SELECT * FROM trig_test_tx;
+END;
+
+CREATE PROC test_MyProc_read_trig_test_t3()
+BEGIN
+  SELECT * FROM trig_test_t3;
 END;
