@@ -5089,6 +5089,10 @@ begin
   end;
 end;
 
+-- we just have to successfully ignore these
+-- there is no codegen, this is a semantic analysis thing
+declare interface should_not_frag(id integer);
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

@@ -5145,6 +5145,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_NO_OP_STMT_INIT(schema_unsub_stmt);
   LUA_NO_OP_STMT_INIT(schema_resub_stmt);
   LUA_NO_OP_STMT_INIT(declare_group_stmt);
+  LUA_NO_OP_STMT_INIT(declare_interface_stmt);
   LUA_NO_OP_STMT_INIT(emit_group_stmt);
   LUA_NO_OP_STMT_INIT(emit_enums_stmt);
   LUA_NO_OP_STMT_INIT(emit_constants_stmt);
