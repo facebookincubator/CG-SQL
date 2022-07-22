@@ -6,8 +6,5 @@
 
 set -euo pipefail
 
-make
-rm -f out/x.l
-out/cql --in lua_demo/run_test_prep.sql --cg out/x.l --rt lua --global_proc go
-echo "go(sqlite3.open_memory())" >>out/x.l
-lua out/x.l
+lua_demo/prepare_run_test.sh
+lua out/run_test.lua

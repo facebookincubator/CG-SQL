@@ -162,8 +162,9 @@ DECLARE longint_var LONG_INT;
 --]]
 local longint_var
 local foo_cursor_stmt = nil
-local foo_cursor = {}
-foo_cursor._has_row_ = false
+local foo_cursor = { _has_row_ = false }
+local foo_cursor_fields_ = { "id", "i2" }
+local foo_cursor_types_ = "II"
 
 -- The statement ending at line XXXX
 
@@ -179,8 +180,9 @@ DECLARE col2 REAL NOT NULL;
 --]]
 local col2 = 0.0
 local basic_cursor_stmt = nil
-local basic_cursor = {}
-basic_cursor._has_row_ = false
+local basic_cursor = { _has_row_ = false }
+local basic_cursor_fields_ = { "_anon0", "_anon1" }
+local basic_cursor_types_ = "ID"
 
 -- The statement ending at line XXXX
 
@@ -196,8 +198,9 @@ DECLARE arg2 INTEGER NOT NULL;
 --]]
 local arg2 = 0
 local exchange_cursor_stmt = nil
-local exchange_cursor = {}
-exchange_cursor._has_row_ = false
+local exchange_cursor = { _has_row_ = false }
+local exchange_cursor_fields_ = { "arg2", "arg1" }
+local exchange_cursor_types_ = "II"
 local _temp_stmt = nil
 
 -- The statement ending at line XXXX
@@ -219,7 +222,7 @@ function outparm_test(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "DELETE FROM bar WHERE id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {foo})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {foo})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -308,7 +311,7 @@ function with_result_set_fetch_results(_db_)
   local _rc_
   _rc_, stmt = with_result_set(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -345,7 +348,7 @@ function select_from_view_fetch_results(_db_)
   local _rc_
   _rc_, stmt = select_from_view(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "id", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -415,7 +418,7 @@ function get_data(_db_, name_, id_)
   _rc_, _result_stmt = cql_prepare(_db_, 
     "SELECT id, name, rate, type, size FROM bar WHERE id = ? AND name = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _result_stmt, {id_, name_})
+  _rc_ = cql_multibind(_db_, _result_stmt, "IS", {id_, name_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -429,7 +432,7 @@ function get_data_fetch_results(_db_, name_, id_)
   local _rc_
   _rc_, stmt = get_data(_db_, name_, id_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -457,23 +460,25 @@ END;
 function easy_fetch(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size" }
+  local C_types_ = "Islid"
   local C2_stmt = nil
-  local C2 = {}
-  C2._has_row_ = false
+  local C2 = { _has_row_ = false }
+  local C2_fields_ = { "id", "name", "rate", "type", "size" }
+  local C2_types_ = "Islid"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT id, name, rate, type, size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "id", "name", "rate", "type", "size" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   printf("%d %s\n", C.id, C.name)
   _rc_, C2_stmt = cql_prepare(_db_, 
     "SELECT id, name, rate, type, size FROM bar WHERE ? AND id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, C2_stmt, {C._has_row_, C.id})
+  _rc_ = cql_multibind(_db_, C2_stmt, "FI", {C._has_row_, C.id})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -567,8 +572,9 @@ END;
 function xyzzy_test(_db_)
   local _rc_ = CQL_OK
   local xyzzy_cursor_stmt = nil
-  local xyzzy_cursor = {}
-  xyzzy_cursor._has_row_ = false
+  local xyzzy_cursor = { _has_row_ = false }
+  local xyzzy_cursor_fields_ = { "A" }
+  local xyzzy_cursor_types_ = "I"
 
   _rc_, xyzzy_cursor_stmt = xyzzy(_db_, 1)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -613,7 +619,7 @@ function complex_return_fetch_results(_db_)
   local _rc_
   _rc_, stmt = complex_return(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -649,7 +655,7 @@ function hierarchical_query(_db_, rate_, limit_, offset_)
   _rc_, _result_stmt = cql_prepare(_db_, 
     "SELECT id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _result_stmt, {rate_, limit_, offset_})
+  _rc_ = cql_multibind(_db_, _result_stmt, "LII", {rate_, limit_, offset_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -663,7 +669,7 @@ function hierarchical_query_fetch_results(_db_, rate_, limit_, offset_)
   local _rc_
   _rc_, stmt = hierarchical_query(_db_, rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -699,7 +705,7 @@ function hierarchical_unmatched_query(_db_, rate_, limit_, offset_)
   _rc_, _result_stmt = cql_prepare(_db_, 
     "SELECT id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _result_stmt, {rate_, limit_, offset_})
+  _rc_ = cql_multibind(_db_, _result_stmt, "LII", {rate_, limit_, offset_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -713,7 +719,7 @@ function hierarchical_unmatched_query_fetch_results(_db_, rate_, limit_, offset_
   local _rc_
   _rc_, stmt = hierarchical_unmatched_query(_db_, rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -751,7 +757,7 @@ function union_select_fetch_results(_db_)
   local _rc_
   _rc_, stmt = union_select(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"A"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -789,7 +795,7 @@ function union_all_select_fetch_results(_db_)
   local _rc_
   _rc_, stmt = union_all_select(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"A"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -828,7 +834,7 @@ function union_all_with_nullable_fetch_results(_db_)
   local _rc_
   _rc_, stmt = union_all_with_nullable(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"name"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "name" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -853,14 +859,15 @@ END;
 function with_stmt_using_cursor(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a", "b", "c" }
+  local C_types_ = "III"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "WITH X (a, b, c) AS (SELECT 1, 2, 3) SELECT a, b, c FROM X")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "a", "b", "c" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -900,7 +907,7 @@ function with_stmt_fetch_results(_db_)
   local _rc_
   _rc_, stmt = with_stmt(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"a", "b", "c"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -941,7 +948,7 @@ function with_recursive_stmt_fetch_results(_db_)
   local _rc_
   _rc_, stmt = with_recursive_stmt(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"a", "b", "c"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -977,7 +984,7 @@ function parent_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = parent_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"one", "two", "three"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "one", "two", "three" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -1013,7 +1020,7 @@ function parent_proc_child_fetch_results(_db_)
   local _rc_
   _rc_, stmt = parent_proc_child(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"four", "five", "six"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "four", "five", "six" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -1038,14 +1045,15 @@ function outint_nullable(_db_)
   local output
   local result = false
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "_anon0" }
+  local C_types_ = "I"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "_anon0" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   output = C._anon0
   result = C._has_row_
@@ -1073,14 +1081,15 @@ function outint_notnull(_db_)
   local output = 0
   local result = false
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "_anon0" }
+  local C_types_ = "I"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "_anon0" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   output = C._anon0
   result = C._has_row_
@@ -1144,8 +1153,9 @@ END;
 
 function cursor_with_object(object_)
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "object_" }
+  local C_types_ = "o"
 
   C._has_row_ = true
   C.object_ = object_
@@ -1240,7 +1250,7 @@ function insert_values(_db_, id_, type_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO bar(id, type) VALUES(?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {id_, type_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "Ii", {id_, type_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1322,7 +1332,7 @@ function uses_proc_for_result_fetch_results(_db_)
   local _rc_
   _rc_, stmt = uses_proc_for_result(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -1331,11 +1341,13 @@ function uses_proc_for_result_fetch_results(_db_)
 end
 
 local expanded_select_stmt = nil
-local expanded_select = {}
-expanded_select._has_row_ = false
+local expanded_select = { _has_row_ = false }
+local expanded_select_fields_ = { "id", "name", "rate", "type", "size" }
+local expanded_select_types_ = "Islid"
 local table_expanded_select_stmt = nil
-local table_expanded_select = {}
-table_expanded_select._has_row_ = false
+local table_expanded_select = { _has_row_ = false }
+local table_expanded_select_fields_ = { "id", "name", "rate", "type", "size" }
+local table_expanded_select_types_ = "Islid"
 
 -- The statement ending at line XXXX
 
@@ -1409,7 +1421,7 @@ function dummy_user(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {_seed_, _seed_, _seed_, _seed_, _seed_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1529,7 +1541,7 @@ function blob_returner_fetch_results(_db_)
   local _rc_
   _rc_, stmt = blob_returner(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"blob_id", "b_notnull", "b_nullable"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "IBb", { "blob_id", "b_notnull", "b_nullable" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -1569,14 +1581,15 @@ function out_cursor_proc(_db_)
   local _rc_ = CQL_OK
   local _result_ = nil
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size", "extra1", "extra2" }
+  local C_types_ = "IslidSS"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size, 'xyzzy', 'plugh' FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "id", "name", "rate", "type", "size", "extra1", "extra2" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _result_ = cql_clone_row(C)
   _rc_ = CQL_OK
@@ -1610,8 +1623,9 @@ END;
 
 function read_cursor_proc(_db_)
   local _rc_ = CQL_OK
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size", "extra1", "extra2" }
+  local C_types_ = "IslidSS"
 
   _rc_, C = out_cursor_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1633,8 +1647,9 @@ END;
 
 function declare_cursor_then_fetch_from_proc(_db_)
   local _rc_ = CQL_OK
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size", "extra1", "extra2" }
+  local C_types_ = "IslidSS"
 
   _rc_, C = out_cursor_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1720,7 +1735,7 @@ function thread_theme_info_list_fetch_results(_db_, thread_key_)
   local _rc_
   _rc_, stmt = thread_theme_info_list(_db_, thread_key_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"thread_key"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "L", { "thread_key" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -1741,8 +1756,9 @@ END;
 --]]
 
 function fetch_values_dummy()
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size" }
+  local C_types_ = "Islid"
   local _tmp_text_0
   local _seed_ = 0
 
@@ -1753,7 +1769,7 @@ function fetch_values_dummy()
   C.name = _tmp_text_0
   C.rate = _seed_
   C.type = _seed_
-  C.size = _seed_
+  C.size = cql_to_float(_seed_)
 
 end
 
@@ -1768,8 +1784,9 @@ END;
 --]]
 
 function fetch_values_extended()
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size", "xx", "yy" }
+  local C_types_ = "Islidds"
   local _tmp_text_0
   local _tmp_text_1
   local _seed_ = 0
@@ -1781,8 +1798,8 @@ function fetch_values_extended()
   C.name = _tmp_text_0
   C.rate = _seed_
   C.type = _seed_
-  C.size = _seed_
-  C.xx = _seed_
+  C.size = cql_to_float(_seed_)
+  C.xx = cql_to_float(_seed_)
   _tmp_text_1 = cql_printf("yy_%d", _seed_)
   C.yy = _tmp_text_1
 
@@ -1823,8 +1840,9 @@ END;
 function no_cleanup_label_needed_proc(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "N" }
+  local C_types_ = "I"
   local x
 
   -- try
@@ -1833,7 +1851,7 @@ function no_cleanup_label_needed_proc(_db_)
       "SELECT 1")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto catch_start_2; end
     -- step and fetch
-    _rc_ = cql_multifetch(C_stmt, C, { "N" })
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto catch_start_2; end
     goto catch_end_2
 
@@ -1897,12 +1915,13 @@ END;
 
 function out_no_db()
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "A", "B" }
+  local C_types_ = "ID"
 
   C._has_row_ = true
   C.A = 3
-  C.B = 12
+  C.B = cql_to_float(12)
   _result_ = cql_clone_row(C)
 
   return _result_
@@ -1932,14 +1951,16 @@ END;
 
 function declare_cursor_like_cursor()
   local _result_ = nil
-  local C0 = {}
-  C0._has_row_ = false
-  local C1 = {}
-  C1._has_row_ = false
+  local C0 = { _has_row_ = false }
+  local C0_fields_ = { "A", "B" }
+  local C0_types_ = "ID"
+  local C1 = { _has_row_ = false }
+  local C1_fields_ = { "A", "B" }
+  local C1_types_ = "ID"
 
   C1._has_row_ = true
   C1.A = 3
-  C1.B = 12
+  C1.B = cql_to_float(12)
   _result_ = cql_clone_row(C1)
 
   return _result_
@@ -1967,8 +1988,9 @@ END;
 
 function declare_cursor_like_proc()
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a", "b" }
+  local C_types_ = "is"
 
   _result_ = cql_clone_row(C)
 
@@ -1997,8 +2019,9 @@ END;
 
 function declare_cursor_like_table()
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size" }
+  local C_types_ = "Islid"
 
   _result_ = cql_clone_row(C)
 
@@ -2027,8 +2050,9 @@ END;
 
 function declare_cursor_like_view()
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "f1", "f2", "f3" }
+  local C_types_ = "III"
 
   _result_ = cql_clone_row(C)
 
@@ -2215,7 +2239,7 @@ function multi_rewrite(_db_, blob_id_, b_notnull_, b_nullable_, id_, name_, rate
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {blob_id_, b_notnull_, b_nullable_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -2245,10 +2269,12 @@ END;
 
 function fetch_to_cursor_from_cursor()
   local _result_ = nil
-  local C0 = {}
-  C0._has_row_ = false
-  local C1 = {}
-  C1._has_row_ = false
+  local C0 = { _has_row_ = false }
+  local C0_fields_ = { "A", "B" }
+  local C0_types_ = "IS"
+  local C1 = { _has_row_ = false }
+  local C1_fields_ = { "A", "B" }
+  local C1_types_ = "IS"
 
   C0._has_row_ = true
   C0.A = 2
@@ -2287,8 +2313,9 @@ END;
 function loop_statement_cursor(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "A" }
+  local C_types_ = "I"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1")
@@ -2296,7 +2323,7 @@ function loop_statement_cursor(_db_)
   while true
   do
     -- step and fetch
-    _rc_ = cql_multifetch(C_stmt, C, { "A" })
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     if not C._has_row_ then break end
     printf("%d\n", C.A)
@@ -2326,8 +2353,9 @@ END;
 function loop_statement_not_auto_cursor(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "A" }
+  local C_types_ = "I"
   local A_ = 0
 
   _rc_, C_stmt = cql_prepare(_db_, 
@@ -2336,7 +2364,7 @@ function loop_statement_not_auto_cursor(_db_)
   while true
   do
     -- step and fetch
-    _rc_ = cql_multifetch(C_stmt, C, { "A" })
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     A_ = C.A
     if not C._has_row_ then break end
@@ -2393,8 +2421,9 @@ function call_in_loop(_db_)
   local _rc_ = CQL_OK
   local i
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "I"
 
   i = 0
   while true
@@ -2405,7 +2434,7 @@ function call_in_loop(_db_)
     _rc_, C_stmt = simple_select(_db_)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     -- step and fetch
-    _rc_ = cql_multifetch(C_stmt, C, { "x" })
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   end
   _rc_ = CQL_OK
@@ -2436,8 +2465,9 @@ function call_in_loop_with_nullable_condition(_db_)
   local _rc_ = CQL_OK
   local i
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "I"
 
   i = 0
   while true
@@ -2448,7 +2478,7 @@ function call_in_loop_with_nullable_condition(_db_)
     _rc_, C_stmt = simple_select(_db_)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     -- step and fetch
-    _rc_ = cql_multifetch(C_stmt, C, { "x" })
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   end
   _rc_ = CQL_OK
@@ -2483,13 +2513,15 @@ function call_in_loop_boxed(_db_)
   local i
   local C_stmt = nil
   local C_object_
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "I"
   local box
   local D_stmt = nil
   local D_object_
-  local D = {}
-  D._has_row_ = false
+  local D = { _has_row_ = false }
+  local D_fields_ = { "x" }
+  local D_types_ = "I"
 
   i = 0
   while true
@@ -2504,7 +2536,7 @@ function call_in_loop_boxed(_db_)
     D_object_ = box
     D_stmt = cql_unbox_stmt(D_object_)
     -- step and fetch
-    _rc_ = cql_multifetch(D_stmt, D, { "x" })
+    _rc_ = cql_multifetch(D_stmt, D, D_types_, D_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   end
   _rc_ = CQL_OK
@@ -2526,8 +2558,9 @@ END;
 
 function out_union_helper_fetch_results()
   local _rows_ = {}
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "I"
 
   C._has_row_ = true
   C.x = 1
@@ -2553,14 +2586,15 @@ function out_union_dml_helper_fetch_results(_db_)
   local _rc_ = CQL_OK
   local _rows_ = {}
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "I"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "x" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if C._has_row_ then
     table.insert(_rows_, cql_clone_row(C))
@@ -2595,8 +2629,9 @@ function call_out_union_in_loop(_db_)
   local C_result_set_ = nil
   local C_row_num_ = 0
   local C_row_count_ = 0
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "I"
 
   i = 0
   while true
@@ -2610,7 +2645,7 @@ function call_out_union_in_loop(_db_)
     if C_row_num_ <= C_row_count_ then
       C = C_result_set_[C_row_num_]
     else
-      C = {}; C._has_row_ = false
+      C = { _has_row_ = false }
     end
   end
   _rc_ = CQL_OK
@@ -2676,8 +2711,9 @@ function forward_out_union_dml_fetch_results(_db_)
   return _rc_, _result_set_
 end
 local global_cursor_stmt = nil
-local global_cursor = {}
-global_cursor._has_row_ = false
+local global_cursor = { _has_row_ = false }
+local global_cursor_fields_ = { "a", "b" }
+local global_cursor_types_ = "II"
 
 -- The statement ending at line XXXX
 
@@ -2876,7 +2912,7 @@ function simple_identity_fetch_results(_db_)
   local _rc_
   _rc_, stmt = simple_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "data"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "data" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -2913,7 +2949,7 @@ function complex_identity_fetch_results(_db_)
   local _rc_
   _rc_, stmt = complex_identity(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"col1", "col2", "data"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "col1", "col2", "data" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -2938,14 +2974,15 @@ function out_cursor_identity(_db_)
   local _rc_ = CQL_OK
   local _result_ = nil
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "data" }
+  local C_types_ = "II"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1, 2")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "id", "data" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _result_ = cql_clone_row(C)
   _rc_ = CQL_OK
@@ -2997,7 +3034,7 @@ function radioactive_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = radioactive_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "data"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -3082,7 +3119,7 @@ function autodropper_fetch_results(_db_)
   local _rc_
   _rc_, stmt = autodropper(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"a", "b"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "a", "b" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -3104,8 +3141,9 @@ END;
 
 function simple_cursor_proc()
   local _result_ = nil
-  local A_CURSOR = {}
-  A_CURSOR._has_row_ = false
+  local A_CURSOR = { _has_row_ = false }
+  local A_CURSOR_fields_ = { "id" }
+  local A_CURSOR_types_ = "I"
 
   A_CURSOR._has_row_ = true
   A_CURSOR.id = 1
@@ -3152,7 +3190,7 @@ function redundant_cast_fetch_results(_db_)
   local _rc_
   _rc_, stmt = redundant_cast(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"plugh", "five"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "plugh", "five" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -3200,8 +3238,9 @@ END;
 function settings_info(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "unread_pending_thread_count", "switch_account_badge_count" }
+  local C_types_ = "ii"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT SUM(A.unread_pending_thread_count), SUM(A.switch_account_badge_count) FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count FROM unread_pending_threads AS P UNION ALL SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count FROM switch_account_badges AS S) AS A")
@@ -3244,7 +3283,7 @@ function top_level_select_alias_unused_fetch_results(_db_)
   local _rc_
   _rc_, stmt = top_level_select_alias_unused(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "x"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "x" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -3284,7 +3323,7 @@ function top_level_select_alias_used_in_orderby_fetch_results(_db_)
   local _rc_
   _rc_, stmt = top_level_select_alias_used_in_orderby(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "x"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "x" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -3342,13 +3381,14 @@ END;
 function rowset_object_reader(_db_, rowset)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id" }
+  local C_types_ = "i"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT id FROM ReadFromRowset(?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, C_stmt, {rowset})
+  _rc_ = cql_multibind(_db_, C_stmt, "o", {rowset})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3429,7 +3469,7 @@ function upsert_do_nothing(_db_, id_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO foo(id) VALUES(?) ON CONFLICT DO NOTHING")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {id_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {id_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3468,10 +3508,12 @@ END;
 
 function use_many_out_cursors(_db_)
   local _rc_ = CQL_OK
-  local c1 = {}
-  c1._has_row_ = false
-  local c2 = {}
-  c2._has_row_ = false
+  local c1 = { _has_row_ = false }
+  local c1_fields_ = { "id", "t" }
+  local c1_types_ = "Is"
+  local c2 = { _has_row_ = false }
+  local c2_fields_ = { "id", "t" }
+  local c2_types_ = "Is"
 
   c1 = p1()
   _rc_, c2 = p2(_db_)
@@ -3503,8 +3545,9 @@ function fetch_many_times(_db_, arg)
   cql_contract_argument_notnull(arg, 1)
 
   local _rc_ = CQL_OK
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "t" }
+  local C_types_ = "Is"
 
   if cql_to_num(arg) == 1 then
     C = p1()
@@ -3538,8 +3581,9 @@ END;
 
 function out_union_two_fetch_results()
   local _rows_ = {}
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x", "y" }
+  local C_types_ = "IS"
 
   C._has_row_ = true
   C.x = 1
@@ -3572,8 +3616,9 @@ function out_union_reader(_db_)
   local c_result_set_ = nil
   local c_row_num_ = 0
   local c_row_count_ = 0
-  local c = {}
-  c._has_row_ = false
+  local c = { _has_row_ = false }
+  local c_fields_ = { "x", "y" }
+  local c_types_ = "IS"
 
   c_result_set_ = out_union_two_fetch_results()
   c_row_num_ = 0
@@ -3584,7 +3629,7 @@ function out_union_reader(_db_)
     if c_row_num_ <= c_row_count_ then
       c = c_result_set_[c_row_num_]
     else
-      c = {}; c._has_row_ = false
+      c = { _has_row_ = false }
     end
     if not c._has_row_ then break end
     printf("%d %s\n", c.x, c.y)
@@ -3610,14 +3655,15 @@ function out_union_from_select_fetch_results(_db_)
   local _rc_ = CQL_OK
   local _rows_ = {}
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x", "y" }
+  local C_types_ = "IS"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1, '2'")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "x", "y" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if C._has_row_ then
     table.insert(_rows_, cql_clone_row(C))
@@ -3651,8 +3697,9 @@ function out_union_dml_reader(_db_)
   local c_result_set_ = nil
   local c_row_num_ = 0
   local c_row_count_ = 0
-  local c = {}
-  c._has_row_ = false
+  local c = { _has_row_ = false }
+  local c_fields_ = { "x", "y" }
+  local c_types_ = "IS"
 
   _rc_, c_result_set_ = out_union_from_select_fetch_results(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3664,7 +3711,7 @@ function out_union_dml_reader(_db_)
     if c_row_num_ <= c_row_count_ then
       c = c_result_set_[c_row_num_]
     else
-      c = {}; c._has_row_ = false
+      c = { _has_row_ = false }
     end
     if not c._has_row_ then break end
     printf("%d %s\n", c.x, c.y)
@@ -3691,8 +3738,9 @@ function out_union_values_fetch_results(a, b)
   cql_contract_argument_notnull(b, 2)
 
   local _rows_ = {}
-  local x = {}
-  x._has_row_ = false
+  local x = { _has_row_ = false }
+  local x_fields_ = { "x", "y" }
+  local x_types_ = "II"
 
   x._has_row_ = true
   x.x = a
@@ -3722,8 +3770,9 @@ function read_out_union_values(_db_, a, b)
   local C_result_set_ = nil
   local C_row_num_ = 0
   local C_row_count_ = 0
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x", "y" }
+  local C_types_ = "II"
 
   C_result_set_ = out_union_values_fetch_results(a, b)
   C_row_num_ = 0
@@ -3732,7 +3781,7 @@ function read_out_union_values(_db_, a, b)
   if C_row_num_ <= C_row_count_ then
     C = C_result_set_[C_row_num_]
   else
-    C = {}; C._has_row_ = false
+    C = { _has_row_ = false }
   end
   _rc_ = CQL_OK
 
@@ -3756,14 +3805,15 @@ function out_union_dml_fetch_results(_db_)
   local _rc_ = CQL_OK
   local _rows_ = {}
   local x_stmt = nil
-  local x = {}
-  x._has_row_ = false
+  local x = { _has_row_ = false }
+  local x_fields_ = { "id", "data" }
+  local x_types_ = "Is"
 
   _rc_, x_stmt = cql_prepare(_db_, 
     "SELECT id, data FROM radioactive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(x_stmt, x, { "id", "data" })
+  _rc_ = cql_multifetch(x_stmt, x, x_types_, x_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if x._has_row_ then
     table.insert(_rows_, cql_clone_row(x))
@@ -3792,8 +3842,9 @@ function out_union_dml_for_call(_db_)
   local C_result_set_ = nil
   local C_row_num_ = 0
   local C_row_count_ = 0
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "data" }
+  local C_types_ = "Is"
 
   _rc_, C_result_set_ = out_union_dml_fetch_results(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3803,7 +3854,7 @@ function out_union_dml_for_call(_db_)
   if C_row_num_ <= C_row_count_ then
     C = C_result_set_[C_row_num_]
   else
-    C = {}; C._has_row_ = false
+    C = { _has_row_ = false }
   end
   _rc_ = CQL_OK
 
@@ -3877,7 +3928,7 @@ function window_function_invocation_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window_function_invocation(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "row_num"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "row_num" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -3898,8 +3949,9 @@ END;
 
 function update_cursor(_db_)
   local _rc_ = CQL_OK
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x", "y" }
+  local C_types_ = "II"
 
   if C._has_row_ then
     C.x = 2
@@ -3964,7 +4016,7 @@ function use_return_fetch_results(_db_)
   local _rc_
   _rc_, stmt = use_return(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"x"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4035,8 +4087,9 @@ END;
 function empty_blocks(_db_)
   local _rc_ = CQL_OK
   local c_stmt = nil
-  local c = {}
-  c._has_row_ = false
+  local c = { _has_row_ = false }
+  local c_fields_ = { "x" }
+  local c_types_ = "I"
 
   if true then
   end
@@ -4059,7 +4112,7 @@ function empty_blocks(_db_)
   while true
   do
     -- step and fetch
-    _rc_ = cql_multifetch(c_stmt, c, { "x" })
+    _rc_ = cql_multifetch(c_stmt, c, c_types_, c_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     if not c._has_row_ then break end
   end
@@ -4190,7 +4243,7 @@ function lotsa_columns_no_getters_fetch_results(_db_)
   local _rc_
   _rc_, stmt = lotsa_columns_no_getters(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4228,7 +4281,7 @@ function sproc_with_copy_fetch_results(_db_)
   local _rc_
   _rc_, stmt = sproc_with_copy(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4260,8 +4313,9 @@ function emit_object_with_setters(o, x, i, l, b, d, t, bl)
   cql_contract_argument_notnull(bl, 8)
 
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "o", "x", "i", "l", "b", "d", "t", "bl" }
+  local C_types_ = "OOILFDSB"
 
   C._has_row_ = true
   C.o = o
@@ -4301,8 +4355,9 @@ END;
 
 function emit_setters_with_nullables(o, x, i, l, b, d, t, bl)
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "o", "x", "i", "l", "b", "d", "t", "bl" }
+  local C_types_ = "ooilfdsb"
 
   C._has_row_ = true
   C.o = o
@@ -4357,7 +4412,7 @@ function no_out_with_setters_fetch_results(_db_)
   local _rc_
   _rc_, stmt = no_out_with_setters(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4407,14 +4462,15 @@ function early_out_rc_cleared(_db_)
   local _rc_ = CQL_OK
   local x
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "I"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "x" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if C._has_row_ then
     _rc_ = CQL_OK -- clean up any CQL_ROW value or other non-error
@@ -4458,7 +4514,7 @@ function vault_sensitive_with_values_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = vault_sensitive_with_values_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4497,7 +4553,7 @@ function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = vault_not_nullable_sensitive_with_values_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "ISSL", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4535,7 +4591,7 @@ function vault_sensitive_mixed_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = vault_sensitive_mixed_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4576,7 +4632,7 @@ function vault_union_all_table_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = vault_union_all_table_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4614,7 +4670,7 @@ function vault_alias_column_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = vault_alias_column_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"alias_name"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4652,7 +4708,7 @@ function vault_alias_column_name_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = vault_alias_column_name_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"alias_name"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4676,14 +4732,15 @@ END;
 function vault_cursor_proc(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "name" }
+  local C_types_ = "s"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT name FROM vault_mixed_sensitive")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "name" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -4722,7 +4779,7 @@ function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_
   local _rc_
   _rc_, stmt = vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4760,7 +4817,7 @@ function vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_result
   local _rc_
   _rc_, stmt = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4798,7 +4855,7 @@ function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_result
   local _rc_
   _rc_, stmt = vault_sensitive_with_context_and_no_sensitive_columns_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -4823,8 +4880,9 @@ function try_boxing(_db_)
   local result
   local C_stmt = nil
   local C_object_
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size" }
+  local C_types_ = "Islid"
 
   C_stmt = nil
   _rc_, C_stmt = cql_prepare(_db_, 
@@ -4852,13 +4910,14 @@ function try_unboxing(_db_, boxed_cursor)
   local _rc_ = CQL_OK
   local C_stmt = nil
   local C_object_
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size" }
+  local C_types_ = "Islid"
 
   C_object_ = boxed_cursor
   C_stmt = cql_unbox_stmt(C_object_)
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "id", "name", "rate", "type", "size" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -5293,7 +5352,7 @@ function window1_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window1(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5331,7 +5390,7 @@ function window2_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window2(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "RunningTotal"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "RunningTotal" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5369,7 +5428,7 @@ function window3_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window3(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5407,7 +5466,7 @@ function window4_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window4(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5445,7 +5504,7 @@ function window5_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window5(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5483,7 +5542,7 @@ function window6_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window6(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5521,7 +5580,7 @@ function window7_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window7(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5559,7 +5618,7 @@ function window8_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window8(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5597,7 +5656,7 @@ function window9_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window9(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5635,7 +5694,7 @@ function window10_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window10(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5673,7 +5732,7 @@ function window11_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window11(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5711,7 +5770,7 @@ function window12_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window12(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5749,7 +5808,7 @@ function window13_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window13(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5787,7 +5846,7 @@ function window14_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window14(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5825,7 +5884,7 @@ function window15_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window15(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -5863,7 +5922,7 @@ function window16_fetch_results(_db_)
   local _rc_
   _rc_, stmt = window16(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"month", "amount", "SalesMovingAverage"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "idd", { "month", "amount", "SalesMovingAverage" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -6148,8 +6207,9 @@ function out_arg_cursor(x)
   cql_contract_argument_notnull(x, 1)
 
   local y = 0
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x", "y" }
+  local C_types_ = "II"
 
   C._has_row_ = true
   C.x = 1
@@ -6221,7 +6281,7 @@ function virtual1_fetch_results(_db_)
   local _rc_
   _rc_, stmt = virtual1(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"vx", "vy"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "vx", "vy" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -6259,7 +6319,7 @@ function virtual2_fetch_results(_db_)
   local _rc_
   _rc_, stmt = virtual2(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"vx", "vy"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "vx", "vy" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -6300,8 +6360,9 @@ END;
 
 function private_out_union_fetch_results()
   local _rows_ = {}
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a_field" }
+  local C_types_ = "I"
 
   C._has_row_ = true
   C.a_field = 1
@@ -6330,8 +6391,9 @@ function use_private_out_union(_db_)
   local C_result_set_ = nil
   local C_row_num_ = 0
   local C_row_count_ = 0
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a_field" }
+  local C_types_ = "I"
 
   C_result_set_ = private_out_union_fetch_results()
   C_row_num_ = 0
@@ -6342,7 +6404,7 @@ function use_private_out_union(_db_)
     if C_row_num_ <= C_row_count_ then
       C = C_result_set_[C_row_num_]
     else
-      C = {}; C._has_row_ = false
+      C = { _has_row_ = false }
     end
     if not C._has_row_ then break end
     printf("%d\n", C.a_field)
@@ -6366,8 +6428,9 @@ END;
 
 function no_getters_out_union_fetch_results()
   local _rows_ = {}
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a_field" }
+  local C_types_ = "I"
 
   C._has_row_ = true
   C.a_field = 1
@@ -6396,8 +6459,9 @@ function use_no_getters_out_union(_db_)
   local C_result_set_ = nil
   local C_row_num_ = 0
   local C_row_count_ = 0
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a_field" }
+  local C_types_ = "I"
 
   C_result_set_ = no_getters_out_union_fetch_results()
   C_row_num_ = 0
@@ -6408,7 +6472,7 @@ function use_no_getters_out_union(_db_)
     if C_row_num_ <= C_row_count_ then
       C = C_result_set_[C_row_num_]
     else
-      C = {}; C._has_row_ = false
+      C = { _has_row_ = false }
     end
     if not C._has_row_ then break end
     printf("%d\n", C.a_field)
@@ -6432,8 +6496,9 @@ END;
 
 function suppress_results_out_union_fetch_results()
   local _rows_ = {}
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a_field" }
+  local C_types_ = "I"
 
   C._has_row_ = true
   C.a_field = 1
@@ -6462,8 +6527,9 @@ function use_suppress_results_out_union(_db_)
   local C_result_set_ = nil
   local C_row_num_ = 0
   local C_row_count_ = 0
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a_field" }
+  local C_types_ = "I"
 
   C_result_set_ = suppress_results_out_union_fetch_results()
   C_row_num_ = 0
@@ -6474,7 +6540,7 @@ function use_suppress_results_out_union(_db_)
     if C_row_num_ <= C_row_count_ then
       C = C_result_set_[C_row_num_]
     else
-      C = {}; C._has_row_ = false
+      C = { _has_row_ = false }
     end
     if not C._has_row_ then break end
     printf("%d\n", C.a_field)
@@ -6560,8 +6626,9 @@ function set_out_arg_notnull_test()
 
   return x
 end
-local global_cursor2 = {}
-global_cursor2._has_row_ = false
+local global_cursor2 = { _has_row_ = false }
+local global_cursor2_fields_ = { "x" }
+local global_cursor2_types_ = "S"
 
 -- The statement ending at line XXXX
 
@@ -6577,10 +6644,8 @@ function early_close_cursor(_db_)
   local _rc_ = CQL_OK
   cql_finalize_stmt(global_cursor_stmt)
   global_cursor_stmt = nil
-  global_cursor = {}
-  global_cursor._has_row_ = false
-  global_cursor2 = {}
-  global_cursor2._has_row_ = false
+  global_cursor = { _has_row_ = false }
+  global_cursor2 = { _has_row_ = false }
   _rc_ = CQL_OK
 
   return _rc_
@@ -6653,8 +6718,9 @@ END;
 function try_catch_rc(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "extra2" }
+  local C_types_ = "S"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 'foo' FROM bar")
@@ -6662,7 +6728,7 @@ function try_catch_rc(_db_)
   -- try
 
     -- step and fetch
-    _rc_ = cql_multifetch(C_stmt, C, { "extra2" })
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto catch_start_18; end
     goto catch_end_18
 
@@ -6891,8 +6957,9 @@ function out_object(o)
   cql_contract_argument_notnull(o, 1)
 
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "o" }
+  local C_types_ = "O"
 
   C._has_row_ = true
   C.o = o
@@ -6995,7 +7062,7 @@ function result_set_proc_with_contract_in_fetch_results_fetch_results(_db_, t)
   local _rc_
   _rc_, stmt = result_set_proc_with_contract_in_fetch_results(_db_, t)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -7018,8 +7085,9 @@ function out_proc_with_contract_in_fetch_results(t)
   cql_contract_argument_notnull(t, 1)
 
   local _result_ = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name", "rate", "type", "size" }
+  local C_types_ = "Islid"
 
   _result_ = cql_clone_row(C)
 
@@ -7057,7 +7125,7 @@ function nullability_improvements_are_erased_for_sql(_db_)
     _rc_, _result_stmt = cql_prepare(_db_, 
       "SELECT ? + 1")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _rc_ = cql_multibind(_db_, _result_stmt, {a})
+    _rc_ = cql_multibind(_db_, _result_stmt, "i", {a})
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   end
   _rc_ = CQL_OK
@@ -7072,7 +7140,7 @@ function nullability_improvements_are_erased_for_sql_fetch_results(_db_)
   local _rc_
   _rc_, stmt = nullability_improvements_are_erased_for_sql(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"b"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "b" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -7272,8 +7340,9 @@ END;
 function BigFormat(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15", "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31", "f32", "f33", "f34", "f35", "f36", "f38", "f39", "f40", "f41", "f42", "f43", "f44", "f45", "f46", "f47", "f48", "f49", "f50", "f51", "f52", "f53", "f54", "f55", "f56", "f57", "f58", "f59", "f60", "f61", "f62", "f63", "f64", "f65", "f66", "f67", "f68", "f69", "f70", "f71", "f72", "f73", "f74", "f75" }
+  local C_types_ = "LIsSsslLLLLsFlfIIsisisiLsFFFsssilissLlfFsslFlIslsslIsLLssisilliLIIisdliili"
   local _tmp_text_1
   local _tmp_text_2
   local _tmp_text_3
@@ -7357,16 +7426,8 @@ function BigFormat(_db_)
   while true
   do
     -- step and fetch
-    _rc_ = cql_multifetch(C_stmt, C, { "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15", "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31", "f32", "f33", "f34", "f35", "f36", "f38", "f39", "f40", "f41", "f42", "f43", "f44", "f45", "f46", "f47", "f48", "f49", "f50", "f51", "f52", "f53", "f54", "f55", "f56", "f57", "f58", "f59", "f60", "f61", "f62", "f63", "f64", "f65", "f66", "f67", "f68", "f69", "f70", "f71", "f72", "f73", "f74", "f75" })
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    C.f13 = cql_to_bool(C.f13)
-    C.f15 = cql_to_bool(C.f15)
-    C.f26 = cql_to_bool(C.f26)
-    C.f27 = cql_to_bool(C.f27)
-    C.f28 = cql_to_bool(C.f28)
-    C.f40 = cql_to_bool(C.f40)
-    C.f41 = cql_to_bool(C.f41)
-    C.f45 = cql_to_bool(C.f45)
     if not C._has_row_ then break end
     repeat
       if C.f1 == nil then
@@ -8225,7 +8286,7 @@ function sensitive_function_is_a_no_op_fetch_results(_db_)
   local _rc_
   _rc_, stmt = sensitive_function_is_a_no_op(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"y"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "S", { "y" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -8306,7 +8367,7 @@ function foo_fetch_results(_db_)
   local _rc_
   _rc_, stmt = foo(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"shared_something"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "shared_something" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -8371,7 +8432,7 @@ function shared_conditional_user(_db_, x)
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, {x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x})
+  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -8385,7 +8446,7 @@ function shared_conditional_user_fetch_results(_db_, x)
   local _rc_
   _rc_, stmt = shared_conditional_user(_db_, x)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -8457,7 +8518,7 @@ function nested_shared_stuff(_db_)
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, {_p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__})
+  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {_p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -8471,7 +8532,7 @@ function nested_shared_stuff_fetch_results(_db_)
   local _rc_
   _rc_, stmt = nested_shared_stuff(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"x"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -8545,7 +8606,7 @@ function use_nested_select_shared_frag_form(_db_)
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, {_p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__})
+  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {_p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -8559,7 +8620,7 @@ function use_nested_select_shared_frag_form_fetch_results(_db_)
   local _rc_
   _rc_, stmt = use_nested_select_shared_frag_form(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"x"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "x" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -8633,17 +8694,19 @@ END;
 function blob_serialization_test(_db_)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name" }
+  local C_types_ = "IS"
   local B
-  local D = {}
-  D._has_row_ = false
+  local D = { _has_row_ = false }
+  local D_fields_ = { "id", "name" }
+  local D_types_ = "IS"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 1, 'foo'")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "id", "name" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_, B = cql_serialize_to_blob(C);
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -8669,8 +8732,9 @@ END;
 
 function deserialize_func(_db_)
   local _rc_ = CQL_OK
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id", "name" }
+  local C_types_ = "IS"
   local _tmp_n_blob_0
 
   _tmp_n_blob_0 = make_blob()
@@ -8775,14 +8839,15 @@ function some_redeclared_out_proc(_db_)
   local _rc_ = CQL_OK
   local _result_ = nil
   local c_stmt = nil
-  local c = {}
-  c._has_row_ = false
+  local c = { _has_row_ = false }
+  local c_fields_ = { "x" }
+  local c_types_ = "i"
 
   _rc_, c_stmt = cql_prepare(_db_, 
     "SELECT 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(c_stmt, c, { "x" })
+  _rc_ = cql_multifetch(c_stmt, c, c_types_, c_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _result_ = cql_clone_row(c)
   _rc_ = CQL_OK
@@ -8832,14 +8897,15 @@ function some_redeclared_out_union_proc_fetch_results(_db_)
   local _rc_ = CQL_OK
   local _rows_ = {}
   local c_stmt = nil
-  local c = {}
-  c._has_row_ = false
+  local c = { _has_row_ = false }
+  local c_fields_ = { "x" }
+  local c_types_ = "i"
 
   _rc_, c_stmt = cql_prepare(_db_, 
     "SELECT 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(c_stmt, c, { "x" })
+  _rc_ = cql_multifetch(c_stmt, c, c_types_, c_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if c._has_row_ then
     table.insert(_rows_, cql_clone_row(c))
@@ -8863,11 +8929,12 @@ END;
 --]]
 
 function external_cursor_caller()
-  local shape_storage = {}
-  shape_storage._has_row_ = false
+  local shape_storage = { _has_row_ = false }
+  local shape_storage_fields_ = { "x" }
+  local shape_storage_types_ = "I"
   local result
 
-  result = external_cursor_func(shape_storage)
+  result = external_cursor_func(shape_storage, shape_storage_types_, shape_storage_fields_)
 
 end
 
@@ -8944,14 +9011,15 @@ END;
 function mutated_in_arg3(_db_, x)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "x" }
+  local C_types_ = "S"
 
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT 'x'")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
-  _rc_ = cql_multifetch(C_stmt, C, { "x" })
+  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   x = C.x
   _rc_ = CQL_OK
@@ -9006,7 +9074,7 @@ function simple_child_proc_fetch_results(_db_)
   local _rc_
   _rc_, stmt = simple_child_proc(_db_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, result_set = cql_fetch_all_rows(stmt, {"x", "y"})
+  _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "x", "y" })
 
 ::cql_cleanup::
   cql_finalize_stmt(stmt)
@@ -9030,8 +9098,9 @@ END;
 function simple_container_proc_fetch_results(_db_)
   local _rc_ = CQL_OK
   local _rows_ = {}
-  local C = {}
-  C._has_row_ = false
+  local C = { _has_row_ = false }
+  local C_fields_ = { "a", "b", "c" }
+  local C_types_ = "iIo"
   local _tmp_object_0
 
   C._has_row_ = true
@@ -9588,7 +9657,7 @@ function cql_startup(_db_)
   _rc_, foo_cursor_stmt = cql_prepare(_db_, 
     "SELECT id, ? FROM foo WHERE id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, foo_cursor_stmt, {i2, i0_nullable})
+  _rc_ = cql_multibind(_db_, foo_cursor_stmt, "Ii", {i2, i0_nullable})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -9597,7 +9666,7 @@ function cql_startup(_db_)
   FETCH foo_cursor INTO i0_nullable, i2;
   --]]
   -- step and fetch
-  _rc_ = cql_multifetch(foo_cursor_stmt, foo_cursor, { "id", "i2" })
+  _rc_ = cql_multifetch(foo_cursor_stmt, foo_cursor, foo_cursor_types_, foo_cursor_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   i0_nullable = foo_cursor.id
   i2 = foo_cursor.i2
@@ -9617,7 +9686,7 @@ function cql_startup(_db_)
   FETCH basic_cursor INTO col1, col2;
   --]]
   -- step and fetch
-  _rc_ = cql_multifetch(basic_cursor_stmt, basic_cursor, { "_anon0", "_anon1" })
+  _rc_ = cql_multifetch(basic_cursor_stmt, basic_cursor, basic_cursor_types_, basic_cursor_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   col1 = basic_cursor._anon0
   col2 = basic_cursor._anon1
@@ -9629,8 +9698,7 @@ function cql_startup(_db_)
   --]]
   cql_finalize_stmt(basic_cursor_stmt)
   basic_cursor_stmt = nil
-  basic_cursor = {}
-  basic_cursor._has_row_ = false
+  basic_cursor = { _has_row_ = false }
 
   -- The statement ending at line XXXX
 
@@ -9654,7 +9722,7 @@ function cql_startup(_db_)
   _rc_, exchange_cursor_stmt = cql_prepare(_db_, 
     "SELECT ?, ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, exchange_cursor_stmt, {arg2, arg1})
+  _rc_ = cql_multibind(_db_, exchange_cursor_stmt, "II", {arg2, arg1})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -9663,7 +9731,7 @@ function cql_startup(_db_)
   FETCH exchange_cursor INTO arg1, arg2;
   --]]
   -- step and fetch
-  _rc_ = cql_multifetch(exchange_cursor_stmt, exchange_cursor, { "arg2", "arg1" })
+  _rc_ = cql_multifetch(exchange_cursor_stmt, exchange_cursor, exchange_cursor_types_, exchange_cursor_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   arg1 = exchange_cursor.arg2
   arg2 = exchange_cursor.arg1
@@ -9675,8 +9743,7 @@ function cql_startup(_db_)
   --]]
   cql_finalize_stmt(exchange_cursor_stmt)
   exchange_cursor_stmt = nil
-  exchange_cursor = {}
-  exchange_cursor._has_row_ = false
+  exchange_cursor = { _has_row_ = false }
 
   -- The statement ending at line XXXX
 
@@ -9686,7 +9753,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT ? + 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {i2})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {i2})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -9702,7 +9769,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT ? + 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {i0_nullable})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "i", {i0_nullable})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -10469,7 +10536,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {blob_var, blob_var_notnull})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "bB", {blob_var, blob_var_notnull})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -10556,7 +10623,7 @@ function cql_startup(_db_)
   FETCH global_cursor;
   --]]
   -- step and fetch
-  _rc_ = cql_multifetch(global_cursor_stmt, global_cursor, { "a", "b" })
+  _rc_ = cql_multifetch(global_cursor_stmt, global_cursor, global_cursor_types_, global_cursor_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -10694,7 +10761,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, {blob_var})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "b", {blob_var})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end

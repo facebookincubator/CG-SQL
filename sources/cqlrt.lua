@@ -20,6 +20,21 @@ CQL_ERROR = sqlite3.ERROR
 CQL_DONE = sqlite3.DONE
 CQL_ROW = sqlite3.ROW
 
+CQL_DATATYPE_BOOL_NOTNULL = string.byte("F", 1)
+CQL_DATATYPE_INT_NOTNULL = string.byte("I", 1)
+CQL_DATATYPE_LONG_NOTNULL = string.byte("L", 1)
+CQL_DATATYPE_DOUBLE_NOTNULL = string.byte("D", 1)
+CQL_DATATYPE_STRING_NOTNULL = string.byte("S", 1)
+CQL_DATATYPE_BLOB_NOTNULL = string.byte("B", 1)
+CQL_DATATYPE_OBJECT_NOTNULL = string.byte("O", 1)
+CQL_DATATYPE_BOOL = string.byte("f", 1)
+CQL_DATATYPE_INT = string.byte("i", 1)
+CQL_DATATYPE_LONG = string.byte("l", 1)
+CQL_DATATYPE_DOUBLE = string.byte("d", 1)
+CQL_DATATYPE_STRING = string.byte("s", 1)
+CQL_DATATYPE_BLOB = string.byte("b", 1)
+CQL_DATATYPE_OBJECT = string.byte("o", 1)
+
 function cql_is(x,y)
    if x == nil and y == nil then
      return true;
@@ -365,13 +380,24 @@ function cql_exec(db, sql)
   return db:exec(sql)
 end
 
-function cql_multibind(db, stmt, args)
+function cql_bind_one(stmt, bind_index, value, code)
+  if value ~= nil and code == CQL_DATATYPE_BLOB or code == CQL_DATATYPE_BLOB_NOTNULL then
+    rc = stmt:bind_blob(bind_index, value)
+  else
+    rc = stmt:bind(bind_index, value)
+  end
+  return rc;
+end
+
+function cql_multibind(db, stmt, types, columns)
   local rc = sqlite3.OK
-  for i = 1, #args
+  for i = 1, #columns
   do
-    local rc = stmt:bind(i, args[i])
+    local code = string.byte(types, i, i)
+    rc = cql_bind_one(stmt, i, columns[i], code)
     if rc ~= sqlite3.OK then break end
   end;
+
   return rc
 end
 
@@ -398,13 +424,14 @@ function cql_exec_var(db, frag_count, frag_preds, frags)
   return db:exec(sql)
 end
 
-function cql_multibind_var(db, stmt, bind_count, bind_preds, args)
+function cql_multibind_var(db, stmt, bind_count, bind_preds, types, columns)
   local bind_index = 1
   local rc = sqlite3.OK
-  for i = 1, #args
+  for i = 1, #columns
   do
     if bind_preds[i-1] then
-      rc = stmt:bind(bind_index, args[i])
+      local code = string.byte(types, i, i)
+      rc = cql_bind_one(stmt, bind_index, columns[i], code)
       if rc ~= sqlite3.OK then break end
       bind_index = bind_index + 1
     end
@@ -420,34 +447,62 @@ function cql_error_trace(rc, db)
   end
 end
 
-function cql_multifetch(stmt, result, args)
+function cql_empty_cursor(result, types, columns)
+  local byte
+  local data
+
+  for i = 1, #columns
+  do
+      byte = string.byte(types, i)
+      data = nil;
+      if byte == CQL_DATATYPE_BOOL_NOTNULL then
+        data = false
+      elseif byte == CQL_DATATYPE_INT_NOTNULL then
+        data = 0
+      elseif byte == CQL_DATATYPE_LONG_NOTNULL then
+        data = 0
+      elseif byte == CQL_DATATYPE_DOUBLE_NOTNULL then
+        data = 0.0
+      end
+      result[columns[i]] = data
+  end
+  result._has_row_ = false
+end
+
+function cql_multifetch(stmt, result, types, columns)
   result._has_row_ = false
   rc = stmt:step()
-  if rc ~= sqlite3.ROW then return rc end;
-  for i = 1, stmt:columns()
-  do
-    result[args[i]] = stmt:get_value(i-1)
+  if rc ~= sqlite3.ROW then
+    cql_empty_cursor(result, types, columns)
+  else
+    for i = 1, stmt:columns()
+    do
+      local data = stmt:get_value(i-1)
+      local code = string.byte(types, i, i)
+
+      if code == CQL_DATATYPE_DOUBLE or code == CQL_DATATYPE_DOUBLE_NOTNULL then
+        data = cql_to_float(data)
+      elseif code == CQL_DATATYPE_BOOL or code == CQL_DATATYPE_BOOL_NOTNULL then
+        data = cql_to_bool(data)
+      end
+
+      result[columns[i]] = data
+    end
+
+    result._has_row_ = true
   end
-  result._has_row_ = true
 
   return rc
 end
 
-
-function cql_fetch_all_rows(stmt, args)
+function cql_fetch_all_rows(stmt, types, columns)
   local rc
   local result_set = {}
 
   repeat
-    rc = stmt:step()
-    if rc ~= sqlite3.ROW then break end;
-
     local result = {}
-    for i = 1, stmt:columns()
-    do
-      result[args[i]] = stmt:get_value(i-1)
-    end
-    result._has_row_ = true
+    rc = cql_multifetch(stmt, result, types, columns)
+    if rc ~= sqlite3.ROW then break end;
     table.insert(result_set, result)
   until false
 
@@ -512,7 +567,7 @@ function cql_hash_string(str)
   return hash
 end
 
-function cql_cursor_hash(key)
+function cql_cursor_hash(key, key_types, key_fields)
   if key == nil or not key._has_row_ then
      return 0
   end
@@ -520,7 +575,8 @@ function cql_cursor_hash(key)
   return cql_hash_string(cql_make_str_key(key))
 end
 
-function cql_cursors_equal(k1, k2)
+function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
+  if k1_types ~= k2_types then return false end
   if k1 == nil and k2 == nil then return true end
   if k1 == nil or k2 == nil then return false end
   if (not k1._has_row_) and not k2._has_row_ then return true end
@@ -535,7 +591,7 @@ function cql_cursors_equal(k1, k2)
   return true
 end
 
-function cql_partition_cursor(partition, key, cursor)
+function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
   key = cql_make_str_key(key)
   cursor = cql_clone_row(cursor)
@@ -547,7 +603,7 @@ function cql_partition_cursor(partition, key, cursor)
   return true
 end;
 
-function cql_extract_partition(partition, key)
+function cql_extract_partition(partition, key, key_types, key_fields)
   key = cql_make_str_key(key)
   if partition[key] ~= nil then
      return partition[key]
@@ -732,6 +788,10 @@ end
 
 function exit(code)
   print("exit code", code)
+end
+
+function printf(...)
+  print(cql_printf(...))
 end
 
 -- ---

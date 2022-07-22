@@ -6,7 +6,7 @@
  */
 
 create table foo(x integer);
-declare proc print no check;
+declare proc printf no check;
 
 create proc foo()
 begin
@@ -107,9 +107,10 @@ begin
    let i := 1;
    while i <= 8
    begin
-      call print(printf("i:%2d  fib_i:%2d", i, fib(i)));
+      call printf("i:%2d  fib_i:%2d\n", i, fib(i));
       set i := i + 1;
    end;
 end;
 
+@echo lua, "function printf(...) io.write(cql_printf(...)) end\n";
 @echo lua, "go(sqlite3.open_memory())\n";

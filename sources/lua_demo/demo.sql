@@ -7,7 +7,7 @@
 
 -- demo stored procs
 
-DECLARE PROC print NO CHECK;
+DECLARE PROC printf NO CHECK;
 
 CREATE PROC make_mixed ()
 BEGIN
@@ -68,7 +68,7 @@ BEGIN
 
   LOOP FETCH C
   BEGIN
-    CALL print(C.line);
+    CALL printf("%s\n", C.line);
   END;
 END;
 
@@ -77,7 +77,7 @@ begin
   declare C cursor for call get_mixed(50);
   loop fetch C
   begin
-     call print(printf("%d %s %lld %lld %f", C.id, C.name, C.code, C.flag, C.rate));
+     call printf("%d %s %lld %lld %f\n", C.id, C.name, C.code, C.flag, C.rate);
   end;
 end;
 
@@ -86,11 +86,12 @@ begin
   call make_mixed();
   call load_mixed();
   call print_mixed();
-  call print("\nupdating mixed values 3 and 4\n");
+  call printf("\nupdating mixed values 3 and 4\n");
   call update_mixed(3, 999.99);
   call update_mixed(4, 199.99);
   call print_mixed();
   call mandelbrot();
 end;
 
+@echo lua, "function printf(...) io.write(cql_printf(...)) end\n";
 @echo lua, "go(sqlite3.open_memory())\n";

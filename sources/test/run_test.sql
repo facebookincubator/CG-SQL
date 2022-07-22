@@ -523,6 +523,41 @@ BEGIN_TEST(nested_select_expressions)
   EXPECT((select - -longs.neg) == -1);
 END_TEST(nested_select_expressions)
 
+create proc make_bools()
+begin
+    select true x
+    union all
+    select false x;
+end;
+
+BEGIN_TEST(bool_round_trip)
+  declare b bool;
+
+  set b := (select 0);
+  EXPECT(NOT b);
+
+  set b := (select 1);
+  EXPECT(b);
+
+  declare C cursor for call make_bools();
+  fetch C;
+  EXPECT(C.x);
+  fetch C;
+  EXPECT(not C.x);
+  fetch C;
+  EXPECT(not C);
+
+  -- capture the result set (i.e. use fetch_results)
+  let result := make_bools();
+  declare C2 cursor for result;
+  fetch C2;
+  EXPECT(C2.x);
+  fetch C2;
+  EXPECT(NOT C2.x);
+  fetch C2;
+  EXPECT(not C2);
+END_TEST(bool_round_trip)
+
 -- complex delete pattern
 
 create proc delete_one_from_mixed(out _id integer not null)
@@ -2910,6 +2945,8 @@ declare select function rscol(rs long, row integer not null, col integer not nul
 -- the virtual-table-like construct that we have created and in so doing
 -- test the runtime binding facilities needed by ptr(x)
 
+#ifndef LUA_RUN_TEST
+
 BEGIN_TEST(rowset_reading)
   declare start, stop, cur integer not null;
   set start := 10;
@@ -2936,6 +2973,8 @@ BEGIN_TEST(rowset_reading)
   end;
 
 END_TEST(rowset_reading)
+
+#endif
 
 BEGIN_TEST(rowset_reading_language_support)
   declare cur integer not null;
@@ -4214,6 +4253,8 @@ create table storage_one_long(
   x long not null
 );
 
+#ifndef LUA_RUN_TEST
+
 BEGIN_TEST(blob_serialization)
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
@@ -4556,6 +4597,8 @@ begin
   EXPECT(C.x == D.x);
 end;
 
+#endif // LUA_RUN_TEST
+
 declare const group long_constants (
   long_const_1 = -9223372036854775807L,
   long_const_2 = -9223372036854775808L,
@@ -4591,7 +4634,29 @@ BEGIN_TEST(verify_long_constant_forms)
 
    SET x := long_const_3;
    EXPECT_SQL_TOO(reference == x);
+
+   DECLARE z real not null;
+   set z :=  9223372036854775807;
+
+   -- this verifies that z was stored as a double
+   -- hence adding 0.0 will make no difference
+   EXPECT_SQL_TOO(z - 1 == z + 0.0 - 1);
+
+   declare C cursor for 
+     select 9223372036854775807 v
+     union all
+     select 9223372036854775807.0 v;
+
+  -- this verifies that if we mean to fetch a float we get a float
+  -- even if the value in the select is a long
+  FETCH C;
+  EXPECT(z == C.v);
+  FETCH C;
+  EXPECT(z == C.v);
+   
 END_TEST(verify_long_constant_forms)
+
+#ifndef LUA_RUN_TEST
 
 BEGIN_TEST(serialization_tricky_values)
   call round_trip_int(0);
@@ -4694,6 +4759,8 @@ BEGIN_TEST(clobber_blobs)
   call printf("blob corruption results: good: %d, bad: %d\n", good, bad);
   call printf("1000 bad results is normal\n");
 END_TEST(clobber_blobs)
+
+#endif // LUA_RUN_TEST
 
 create proc change_arg(x text)
 begin

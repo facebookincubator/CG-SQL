@@ -6,13 +6,13 @@
  */
 
 -- this is not going to be defined so calling it will crash lua to exit with a fail stack
-declare proc fatal_error();
+declare proc error no check;
 declare proc print no check;
 
 create proc expect(true_expr bool not null)
 begin
   if not true_expr then
-     call fatal_error();
+     call error("expecatation failed");
   end if;
 end;
 
@@ -48,6 +48,13 @@ begin
   call expect(9223372036854775807 + -9223372036854775808  == -1); 
   call expect(0x7fffffffffffffff + 0x8000000000000000  == -1); 
   call expect(0x8000000000000000 + 0x7fffffffffffffff   == -1); 
+
+
+  declare z real not null;
+  set z := 9223372036854775807;
+
+  -- this is verifying that the constant above has been stored as a double
+  call expect(z - 1 == z + 0.0 - 1);
 
   -- if you don't do the constants just write you get errors
   -- here we expect the error to illustrate the problem

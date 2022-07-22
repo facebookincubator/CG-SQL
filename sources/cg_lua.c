@@ -61,6 +61,7 @@ static void cg_lua_user_func(ast_node *ast, charbuf *value);
 static void cg_lua_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
 static void cg_lua_insert_dummy_spec(ast_node *ast);
 static void cg_lua_declare_simple_var(sem_t sem_type, CSTR name);
+static void cg_lua_put_typecode(charbuf *output, sem_t sem_type);
 cql_noexport void cg_lua_init(void);
 
 
@@ -254,6 +255,27 @@ static void cg_lua_to_num(sem_t sem_type, charbuf *value) {
      bprintf(&temp, "%s", value->ptr);
      bclear(value);
      cg_lua_emit_to_num(value, temp.ptr);
+     CHARBUF_CLOSE(temp);
+  }
+}
+
+// emits a cql_to_float call
+static void cg_lua_emit_to_float(charbuf *output, CSTR input) {
+  if (!strcmp("nil", input)) {
+    bprintf(output, "nil");
+    return;
+  }
+  bprintf(output, "cql_to_float(%s)", input);
+}
+
+// converts a boolean into a number if necessary
+// this is important because stuff like "true + 1 == 2" must be true
+static void cg_lua_to_float(sem_t sem_type, charbuf *value) {
+  if (!is_real(sem_type)) {
+     CHARBUF_OPEN(temp);
+     bprintf(&temp, "%s", value->ptr);
+     bclear(value);
+     cg_lua_emit_to_float(value, temp.ptr);
      CHARBUF_CLOSE(temp);
   }
 }
@@ -525,8 +547,11 @@ static void cg_lua_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t se
   CHARBUF_OPEN(result);
   bprintf(&result, "%s", value);
 
-  // Normalize non-booleans to true/false, you don't get this for free
-  if (is_bool(sem_type_var) && !is_bool(sem_type_expr)) {
+  // Normalize floats and bools for storage
+  if (is_real(sem_type_var) && !is_real(sem_type_expr)) {
+    cg_lua_to_float(sem_type_expr, &result);
+  }
+  else if (is_bool(sem_type_var) && !is_bool(sem_type_expr)) {
     cg_lua_to_bool(sem_type_expr, &result);
   }
   else if (!is_bool(sem_type_var) && is_bool(sem_type_expr)) {
@@ -1639,7 +1664,7 @@ static void cg_lua_expr_str(ast_node *expr, CSTR op, charbuf *value, int32_t pri
   }
 }
 
-// the "dot" operator (e.g. C.x) is handled on the ID path 
+// the "dot" operator (e.g. C.x) is handled on the ID path
 static void cg_lua_expr_dot(ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   // X.Y has a net local name computed by semantic analysis.  Use it like any other id.
   Contract(is_ast_dot(expr));
@@ -1847,7 +1872,7 @@ static void cg_lua_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbu
 // > if 1 then print("truthy") end;
 // truthy
 // if false then print("truthy") end;
-// 
+//
 static void cg_lua_cond_action(ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
@@ -2686,7 +2711,7 @@ static void cg_lua_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charb
 
 // This handles the expression fragment case, this is rewritten so that
 // the arguments of the expression fragment become columns of one row of table
-// e.g. 
+// e.g.
 // @attribute(cql:shared_fragment)
 // create proc ex_frag(x integer)
 // begin
@@ -3160,12 +3185,28 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
   reverse_list(&vars);
 
   if (count) {
+    CHARBUF_OPEN(typestring);
+    bputc(&typestring, '"');
+
+    // Now emit the binding args for each variable
+    for (list_item *item = vars; item; item = item->next)  {
+      sem_t sem_type = item->ast->sem->sem_type;
+      cg_lua_put_typecode(&typestring, sem_type);
+    }
+
+    bputc(&typestring, '"');
+
     if (lua_has_conditional_fragments) {
-      bprintf(cg_main_output, "_rc_ = cql_multibind_var(_db_, %s_stmt, %d, _vpreds_%d, {", stmt_name, count, lua_cur_bound_statement);
+      bprintf(cg_main_output, "_rc_ = cql_multibind_var(_db_, %s_stmt, %d, _vpreds_%d, %s, {",
+        stmt_name, count, lua_cur_bound_statement, typestring.ptr);
     }
     else {
-      bprintf(cg_main_output, "_rc_ = cql_multibind(_db_, %s_stmt, {", stmt_name);
+      bprintf(cg_main_output, "_rc_ = cql_multibind(_db_, %s_stmt, %s, {",
+        stmt_name, typestring.ptr);
     }
+
+    CHARBUF_CLOSE(typestring);
+
 
     // Now emit the binding args for each variable
     for (list_item *item = vars; item; item = item->next)  {
@@ -3191,6 +3232,73 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
   bytebuf_close(&lua_shared_fragment_strings);
 }
 
+static void cg_lua_emit_field_names(charbuf *output, sem_struct *sptr) {
+  Contract(sptr);
+
+  bprintf(output, "{ ");
+    for (int32_t i = 0; i < sptr->count; i++) {
+    if (i > 0) {
+      bprintf(output, ", ");
+    }
+    if (strcmp(sptr->names[i], "_anon")) {
+      bprintf(output, "\"%s\"", sptr->names[i]);
+    }
+    else {
+      bprintf(output, "\"_anon%d\"", i);
+    }
+  }
+  bprintf(output, " }");
+}
+
+// copied here for easy reference
+//
+// #define SEM_TYPE_BOOL 1         // the subtree is a bool
+// #define SEM_TYPE_INTEGER 2      // the subtree is an integer
+// #define SEM_TYPE_LONG_INTEGER 3 // the subtree is a long_integer
+// #define SEM_TYPE_REAL 4         // the subtree is a real
+// #define SEM_TYPE_TEXT 5         // the subtree is a text type
+// #define SEM_TYPE_BLOB 6         // the subtree is a blob type
+// #define SEM_TYPE_OBJECT 7       // the subtree is any object type
+//
+// code meanings
+//
+// f = flag = bool  (b is for blob)
+// i = integer
+// l = long_int
+// d = double (the real type)
+// s = string (the text type)
+// b = blob
+// o = object
+//
+// these are the same codes used by the blob encoder
+//
+// Note if the sem type codes were ever re-ordered a zillion tests
+// would break until these lines were fixed so there isn't really
+// a maintenance issue here.  There are actually more subtle
+// order dependencies for range checks so this doesn't really
+// add anything new.
+//
+static char code_nullable[] = "@fildsbo";
+static char code_not_nullable[] = "@FILDSBO";
+
+static void cg_lua_put_typecode(charbuf *output, sem_t sem_type) {
+  sem_t core_type = core_type_of(sem_type);
+  bool_t nullable = is_nullable(sem_type);
+  Invariant(core_type >= SEM_TYPE_NULL && core_type <= SEM_TYPE_OBJECT);
+  bputc(output, nullable ? code_nullable[core_type] : code_not_nullable[core_type]);
+}
+
+static void cg_lua_emit_field_types(charbuf *output, sem_struct *sptr) {
+  bputc(output, '"');
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    sem_t sem_type = sptr->semtypes[i];
+    cg_lua_put_typecode(output, sem_type);
+  }
+
+  bputc(output, '"');
+}
+
 // This emits the declaration for an "auto cursor" -- that is a cursor
 // that includes storage for all the fields it can fetch.  In LUA all
 // cursors have storage.  When you do FETCH INTO first the cursor is loaded
@@ -3199,8 +3307,14 @@ static void cg_lua_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   Contract(cursor_name);
   Contract(sptr);
 
-  bprintf(cg_declarations_output, "local %s = {}\n", cursor_name);
-  bprintf(cg_declarations_output, "%s._has_row_ = false\n", cursor_name);
+  // this should really zero the cursor
+  bprintf(cg_declarations_output, "local %s = { _has_row_ = false }\n", cursor_name);
+  bprintf(cg_declarations_output, "local %s_fields_ = ", cursor_name);
+  cg_lua_emit_field_names(cg_declarations_output, sptr);
+  bprintf(cg_declarations_output, "\n");
+  bprintf(cg_declarations_output, "local %s_types_ = ", cursor_name);
+  cg_lua_emit_field_types(cg_declarations_output, sptr);
+  bprintf(cg_declarations_output, "\n");
 }
 
 // Declaring a cursor causes us to do the following:
@@ -3525,7 +3639,8 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
     bprintf(cg_main_output, "if %s_row_num_ <= %s_row_count_ then\n", cursor_name, cursor_name);
     bprintf(cg_main_output, "  %s = %s_result_set_[%s_row_num_]\n", cursor_name, cursor_name, cursor_name);
     bprintf(cg_main_output, "else\n");
-    bprintf(cg_main_output, "  %s = {}; %s._has_row_ = false\n", cursor_name, cursor_name);
+    // this should really zero the cursor
+    bprintf(cg_main_output, "  %s = { _has_row_ = false }\n", cursor_name);
     bprintf(cg_main_output, "end\n");
   }
 
@@ -3538,29 +3653,10 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
   }
   else {
     bprintf(cg_main_output, "-- step and fetch\n");
-    bprintf(cg_main_output, "_rc_ = cql_multifetch(%s_stmt, %s, ", cursor_name, cursor_name);
-    bprintf(cg_main_output, "{ ");
-    for (int32_t i = 0; i < sptr->count; i++) {
-      if (i > 0) {
-        bprintf(cg_main_output, ", ");
-      }
-      if (strcmp(sptr->names[i], "_anon")) {
-        bprintf(cg_main_output, "\"%s\"", sptr->names[i]);
-      }
-      else {
-        bprintf(cg_main_output, "\"_anon%d\"", i);
-      }
-    }
-    bprintf(cg_main_output, " }");
+    bprintf(cg_main_output, "_rc_ = cql_multifetch(%s_stmt, %s, %s_types_, %s_fields_",
+      cursor_name, cursor_name, cursor_name, cursor_name);
     bprintf(cg_main_output, ")\n");
     cg_lua_error_on_expr("_rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE");
-  }
-
-  for (int32_t i = 0; i < sptr->count; i++) {
-     if (is_bool(sptr->semtypes[i])) {
-       bprintf(cg_main_output, "%s.%s = cql_to_bool(%s.%s)\n",
-         cursor_name, sptr->names[i], cursor_name, sptr->names[i]);
-     }
   }
 
   // the fetch INTO case reads out the fields from cursor which was fetched as usual
@@ -3927,8 +4023,8 @@ static void cg_lua_close_stmt(ast_node *ast) {
     bprintf(cg_main_output, "cql_finalize_stmt(%s_stmt)\n", name);
     bprintf(cg_main_output, "%s_stmt = nil\n", name);
   }
-  bprintf(cg_main_output, "%s = {}\n", name);
-  bprintf(cg_main_output, "%s._has_row_ = false\n", name);
+  // this should really zero the cursor
+  bprintf(cg_main_output, "%s = { _has_row_ = false }\n", name);
 }
 
 // The OUT statement copies the current value of a cursor into an implicit
@@ -4062,7 +4158,11 @@ static void cg_lua_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_t
       bprintf(invocation, ", ");
     }
 
-    if (is_bool(sem_type_param) && !is_bool(sem_type_arg)) {
+    if (is_cursor_formal(sem_type_param)) {
+      // cursor formal expands to three actual arguments
+      bprintf(invocation, "%s, %s_types_, %s_fields_", arg->sem->name, arg->sem->name, arg->sem->name);
+    }
+    else if (is_bool(sem_type_param) && !is_bool(sem_type_arg)) {
        cg_lua_emit_to_bool(invocation, arg_value.ptr);
     }
     else if (!is_bool(sem_type_param) && is_bool(sem_type_arg)) {
@@ -4905,15 +5005,11 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       bprintf(d, "  ");
       cg_lua_error_on_not_sqlite_ok();
 
-      bprintf(d, "  _rc_, result_set = cql_fetch_all_rows(stmt, {");
-      sem_struct *sptr = ast->sem->sptr;
-      for (int32_t i = 0; i < sptr->count; i++) {
-        if (i != 0) {
-           bprintf(d, ", ");
-        }
-        bprintf(d, "\"%s\"", sptr->names[i]);
-      }
-      bprintf(d, "})\n");
+      bprintf(d, "  _rc_, result_set = cql_fetch_all_rows(stmt, ");
+      cg_lua_emit_field_types(d, ast->sem->sptr);
+      bprintf(d, ", ");
+      cg_lua_emit_field_names(d, ast->sem->sptr);
+      bprintf(d, ")\n");
 
       bclear(&args);
       bclear(&returns);

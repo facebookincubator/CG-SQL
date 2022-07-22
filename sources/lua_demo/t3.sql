@@ -6,7 +6,7 @@
  */
 
 declare function make_str(x integer) text;
-declare proc print no check;
+declare procedure printf no check;
 
 create proc make_values()
 begin
@@ -26,8 +26,9 @@ begin
    declare C cursor for call make_values();
    loop fetch C
    begin
-     call print(C.x, C.y);
+     call printf("%d %d\n", C.x, C.y);
    end;
 end;
 
+@echo lua, "function printf(...) io.write(cql_printf(...)) end\n";
 @echo lua, "print_values()\n";

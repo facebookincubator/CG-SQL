@@ -386,11 +386,11 @@ set longint_var := (l0_nullable + l1_nullable) * 5;
 -- +  _rc_, foo_cursor_stmt = cql_prepare(_db_,
 -- +    "SELECT id, ? FROM foo WHERE id = ?")
 -- +2 if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
--- +  _rc_ = cql_multibind(_db_, foo_cursor_stmt, {i2, i0_nullable})
+-- +  _rc_ = cql_multibind(_db_, foo_cursor_stmt, "Ii", {i2, i0_nullable})
 declare foo_cursor cursor for select id, i2 from foo where id = i0_nullable;
 
 -- TEST: fetch a cursor
--- + _rc_ = cql_multifetch(foo_cursor_stmt, foo_cursor, { "id", "i2" })
+-- + _rc_ = cql_multifetch(foo_cursor_stmt, foo_cursor, foo_cursor_types_, foo_cursor_fields_)
 -- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- + i0_nullable = foo_cursor.id
 -- + i2 = foo_cursor.i2
@@ -405,7 +405,7 @@ declare col2 real not null;
 -- +  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 declare basic_cursor cursor for select 1, 2.5;
 
--- +  _rc_ = cql_multifetch(basic_cursor_stmt, basic_cursor, { "_anon0", "_anon1" })
+-- +  _rc_ = cql_multifetch(basic_cursor_stmt, basic_cursor, basic_cursor_types_, basic_cursor_fields_)
 -- +  if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- +  col1 = basic_cursor._anon0
 -- +  col2 = basic_cursor._anon1
@@ -424,10 +424,10 @@ set arg2 := 11;
 -- +   _rc_, exchange_cursor_stmt = cql_prepare(_db_,
 -- +     "SELECT ?, ?")
 -- +2  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
--- +   _rc_ = cql_multibind(_db_, exchange_cursor_stmt, {arg2, arg1})
+-- +  _rc_ = cql_multibind(_db_, exchange_cursor_stmt, "II", {arg2, arg1})
 declare exchange_cursor cursor for select arg2, arg1;
 
--- + _rc_ = cql_multifetch(exchange_cursor_stmt, exchange_cursor, { "arg2", "arg1" })
+-- +  _rc_ = cql_multifetch(exchange_cursor_stmt, exchange_cursor, exchange_cursor_types_, exchange_cursor_fields_)
 -- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- + arg1 = exchange_cursor.arg2
 -- + arg2 = exchange_cursor.arg1
@@ -440,7 +440,7 @@ close exchange_cursor;
 -- TEST: simple nested select
 -- +  _rc_, _temp_stmt = cql_prepare(_db_,
 -- +    "SELECT ? + 1")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, {i2})
+-- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {i2})
 -- +  cql_finalize_stmt(_temp_stmt)
 set i2 := (select i2+1);
 
@@ -448,7 +448,7 @@ set i2 := (select i2+1);
 -- in LUA these bind the same
 -- +  _rc_, _temp_stmt = cql_prepare(_db_,
 -- +    "SELECT ? + 1")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, {i0_nullable})
+-- +  _rc_ = cql_multibind(_db_, _temp_stmt, "i", {i0_nullable})
 -- +  cql_finalize_stmt(_temp_stmt)
 set i0_nullable := (select i0_nullable+1);
 
@@ -460,10 +460,10 @@ delete from bar where name like '\\ " \n';
 -- TEST: binding an out parameter
 -- + function outparm_test(_db_)
 -- +  local foo
--- + foo = 1
--- +   "DELETE FROM bar WHERE id = ?")
--- + _rc_ = cql_multibind(_db_, _temp_stmt, {foo})
--- + return _rc_, foo
+-- +  foo = 1
+-- +  "DELETE FROM bar WHERE id = ?")
+-- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {foo})
+-- +  return _rc_, foo
 create procedure outparm_test(out foo integer not null)
 begin
  set foo := 1;
@@ -490,7 +490,6 @@ end;
 -- + ::cql_cleanup::
 -- +   return _rc_
 -- + end
-
 create procedure throwing()
 begin
   begin try
@@ -624,7 +623,7 @@ set b0_nullable := 'b' not between null and 'c';
 -- + "SELECT id, name, rate, type, size FROM bar")
 -- + if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
 -- + function with_result_set_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 create procedure with_result_set()
 begin
   select * from bar;
@@ -636,7 +635,7 @@ end;
 -- + if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
 -- + return _rc_, _result_stmt
 -- + function select_from_view_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "type"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "id", "type" })
 -- + return _rc_, result_set
 create proc select_from_view()
 begin
@@ -661,7 +660,7 @@ end;
 -- + function get_data(_db_, name_, id_)
 -- + function get_data_fetch_results(_db_, name_, id_)
 -- + _rc_, stmt = get_data(_db_, name_, id_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 create procedure get_data(name_ text not null, id_ integer not null)
 begin
   select * from bar where id = id_ and name = name_;
@@ -673,14 +672,19 @@ end;
 -- validate auto variable management
 -- + function easy_fetch(_db_)
 -- +   local C_stmt = nil
--- +   local C = {}
+-- +   local C = { _has_row_ = false }
+-- +   local C_fields_ = { "id", "name", "rate", "type", "size" }
+-- +   local C_types_ = "Islid"
+-- +   local C2 = { _has_row_ = false }
+-- +   local C2_fields_ = { "id", "name", "rate", "type", "size" }
+-- +   local C2_types_ = "Islid"
 -- +   _rc_, C_stmt = cql_prepare(_db_,
 -- +   "SELECT id, name, rate, type, size FROM bar")
--- +   _rc_ = cql_multifetch(C_stmt, C, { "id", "name", "rate", "type", "size" })
+-- +   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- +   printf("%d %s\n", C.id, C.name)
 -- +   _rc_, C2_stmt = cql_prepare(_db_,
 -- +     "SELECT id, name, rate, type, size FROM bar WHERE ? AND id = ?")
--- +   _rc_ = cql_multibind(_db_, C2_stmt, {C._has_row_, C.id})
+-- +   _rc_ = cql_multibind(_db_, C2_stmt, "FI", {C._has_row_, C.id})
 -- +   cql_finalize_stmt(C_stmt)
 -- +   cql_finalize_stmt(C2_stmt)
 -- +   return _rc_
@@ -774,7 +778,7 @@ set S := 'x';
 declare proc xyzzy(id integer) ( A integer not null );
 
 -- TEST: call declared proc, capture statement in a cursor
--- + local xyzzy_cursor = {}
+-- + local xyzzy_cursor = { _has_row_ = false }
 -- + _rc_, xyzzy_cursor_stmt = xyzzy(_db_, 1)
 -- + cql_finalize_stmt(xyzzy_cursor_stmt)
 create proc xyzzy_test()
@@ -788,7 +792,7 @@ declare proc plugh(id integer);
 
 -- TEST: create a proc that returns a mix of possible types in a select
 -- + "SELECT 1, 2, CAST(3 AS LONG_INT), 3.0, 'xyz', NULL")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
 create proc complex_return()
 begin
   select TRUE as _bool,
@@ -802,7 +806,7 @@ end;
 -- TEST: create a proc with a nested select within an in statement for hierarchical queries
 create proc hierarchical_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
 -- + "SELECT id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"id"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
 begin
   select *
   from foo
@@ -819,7 +823,7 @@ end;
 
 -- TEST: create a proc with a nested select within a not in statement for hierarchical queries
 -- + "SELECT id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
 create proc hierarchical_unmatched_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
 begin
   select *
@@ -837,7 +841,7 @@ end;
 
 -- TEST: create a proc with a compound select union form
 -- +  "SELECT 1 UNION SELECT 2"
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"A"})
+-- +  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
 create proc union_select()
 begin
  select 1 as A union select 2 as A;
@@ -845,7 +849,7 @@ end;
 
 -- TEST: create a proc with a compound select union all form
 -- + "SELECT 1 UNION ALL SELECT 2")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"A"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
 create proc union_all_select()
 begin
  select 1 as A union all select 2 as A;
@@ -853,7 +857,7 @@ end;
 
 -- TEST: create a valid union using not null columns and nullable matching
 -- + "SELECT 'foo' UNION ALL SELECT name FROM bar")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"name"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "name" })
 create proc union_all_with_nullable()
 begin
   select nullable('foo') as name
@@ -862,8 +866,10 @@ begin
 end;
 
 -- TEST: create a simple with statement
+-- + local C_fields_ = { "a", "b", "c" }
+-- + local C_types_ = "III"
 -- + "WITH X (a, b, c) AS (SELECT 1, 2, 3) SELECT a, b, c FROM X")
--- + _rc_ = cql_multifetch(C_stmt, C, { "a", "b", "c" })
+-- +  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- - fetch_results
 create proc with_stmt_using_cursor()
 begin
@@ -875,7 +881,7 @@ end;
 
 -- TEST: with statement top level
 -- + "WITH X (a, b, c) AS (SELECT 1, 2, 3) SELECT a, b, c FROM X")
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"a", "b", "c"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 create proc with_stmt()
 begin
   with X(a,b,c) as (select 1,2,3) select * from X;
@@ -883,7 +889,7 @@ end;
 
 -- TEST: with recursive statement top level
 -- + "WITH RECURSIVE X (a, b, c) AS (SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6) SELECT a, b, c FROM X"
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"a", "b", "c"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 create proc with_recursive_stmt()
 begin
   with recursive X(a,b,c) as (select 1,2,3 union all select 4,5,6) select * from X;
@@ -891,7 +897,7 @@ end;
 
 -- TEST: parent procedure
 -- + "SELECT 1, 2, 3"
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"one", "two", "three"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "one", "two", "three" })
 create proc parent_proc()
 begin
   select 1 as one, 2 as two, 3 as three;
@@ -899,7 +905,7 @@ end;
 
 -- TEST: child procedure
 -- +  "SELECT 4, 5, 6"
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"four", "five", "six"})
+-- +  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "four", "five", "six" })
 create proc parent_proc_child()
 begin
   select 4 as four, 5 as five, 6 as six;
@@ -907,9 +913,11 @@ end;
 
 
 -- TEST: fetch nullable output parameter
--- + C._has_row_ = false
+-- + local C = { _has_row_ = false }
+-- + local C_fields_ = { "_anon0" }
+-- + local C_types_ = "I"
 -- + "SELECT 1")
--- + _rc_ = cql_multifetch(C_stmt, C, { "_anon0" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + output = C._anon0
 -- + result = C._has_row_
 -- + return _rc_, output, result
@@ -921,8 +929,10 @@ begin
 END;
 
 -- TEST: fetch not null output parameter
+-- + local C_fields_ = { "_anon0" }
+-- + local C_types_ = "I"
 -- + "SELECT 1")
--- + _rc_ = cql_multifetch(C_stmt, C, { "_anon0" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + output = C._anon0
 -- + return _rc_, output, result
 create proc outint_notnull(out output integer not null, out result bool not null)
@@ -1164,7 +1174,7 @@ end;
 -- + _rc_, _result_stmt = with_result_set(_db_)
 -- + return _rc_, _result_stmt
 -- + function uses_proc_for_result_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 -- + return _rc_, result_set
 create procedure uses_proc_for_result()
 begin
@@ -1221,7 +1231,7 @@ end;
 -- + @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123
 -- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
--- + _rc_ = cql_multibind(_db_, _temp_stmt, {_seed_, _seed_, _seed_, _seed_, _seed_})
+-- + _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
 create proc dummy_user()
 begin
   insert into bar () values () @dummy_seed(123) @dummy_nullables @dummy_defaults;
@@ -1381,12 +1391,12 @@ set blob_var_notnull := blob_notnull_func();
 -- TEST: bind a nullable blob and a not null blob
 -- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
 -- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)"
--- + _rc_ = cql_multibind(_db_, _temp_stmt, {blob_var, blob_var_notnull})
+-- + _rc_ = cql_multibind(_db_, _temp_stmt, "bB", {blob_var, blob_var_notnull})
 insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_var_notnull);
 
 -- TEST: a result set that includes blobs
 -- +  "SELECT blob_id, b_notnull, b_nullable FROM blob_table
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"blob_id", "b_notnull", "b_nullable"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "IBb", { "blob_id", "b_notnull", "b_nullable" })
 create proc blob_returner()
 begin
   select * from blob_table;
@@ -1413,8 +1423,10 @@ end;
 
 -- TEST: create an output struct proc
 -- main proc does the select and emits a row
+-- + local C_fields_ = { "id", "name", "rate", "type", "size", "extra1", "extra2" }
+-- + local C_types_ = "IslidSS"
 -- +  "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size, 'xyzzy', 'plugh' FROM bar")
--- + _rc_ = cql_multifetch(C_stmt, C, { "id", "name", "rate", "type", "size", "extra1", "extra2" })
+-- +   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 --
 -- OUT C :  remember C could be mutated, so we have to shallow copy it
 -- + _result_ = cql_clone_row(C)
@@ -1500,7 +1512,7 @@ create table threads (
 -- +  return _rc_, _result_stmt
 -- + function thread_theme_info_list_fetch_results(_db_, thread_key_)
 -- + _rc_, stmt = thread_theme_info_list(_db_, thread_key_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"thread_key"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "L", { "thread_key" })
 create procedure thread_theme_info_list(thread_key_ LONG INT NOT NULL)
 begin
   select * from (select thread_key from threads) T;
@@ -1515,7 +1527,7 @@ end;
 -- + C.name = _tmp_text_0
 -- + C.rate = _seed_
 -- + C.type = _seed_
--- + C.size = _seed_
+-- + C.size = cql_to_float(_seed_)
 -- - _rc_
 -- - cql_cleanup
 -- - return
@@ -1535,8 +1547,8 @@ end;
 -- + C.name = _tmp_text_0
 -- + C.rate = _seed_
 -- + C.type = _seed_
--- + C.size = _seed_
--- + C.xx = _seed_
+-- + C.size = cql_to_float(_seed_)
+-- + C.xx = cql_to_float(_seed_)
 -- + _tmp_text_1 = cql_printf("yy_%d", _seed_)
 -- + C.yy = _tmp_text_1
 -- - return
@@ -1591,10 +1603,10 @@ end;
 
 -- TEST: void cursor fetcher
 -- + function out_no_db_fetch_results()
--- + local C = {}
+-- + local C = { _has_row_ = false }
 -- + C._has_row_ = true
 -- + C.A = 3
--- + C.B = 12
+-- + C.B = cql_to_float(12)
 -- + _result_ = cql_clone_row(C)
 -- + return _result_
 create proc out_no_db()
@@ -1605,11 +1617,10 @@ begin
 end;
 
 -- TEST: declare cursor like cursor
--- + local C0 = {}
--- + local C1 = {}
--- + C1._has_row_ = true
+-- + local C0 = { _has_row_ = false }
+-- + local C1 = { _has_row_ = false }
 -- + C1.A = 3
--- + C1.B = 12
+-- + C1.B = cql_to_float(12)
 -- + _result_ = cql_clone_row(C1)
 -- + return _result_
 create proc declare_cursor_like_cursor()
@@ -1621,8 +1632,7 @@ begin
 end;
 
 -- TEST: declare cursor like proc
--- + local C = {}
--- + C._has_row_ = false
+-- + local C = { _has_row_ = false }
 -- + _result_ = cql_clone_row(C)
 -- + return _result_
 create proc declare_cursor_like_proc()
@@ -1632,8 +1642,7 @@ begin
 end;
 
 -- TEST: declare a cursor like a table
--- + local C = {}
--- + C._has_row_ = false
+-- + local C = { _has_row_ = false }
 -- + _result_ = cql_clone_row(C)
 -- + return _result_
 create proc declare_cursor_like_table()
@@ -1643,8 +1652,7 @@ begin
 end;
 
 -- TEST: declare a cursor like a view
--- + local C = {}
--- + C._has_row_ = false
+-- + local C = { _has_row_ = false }
 -- + _result_ = cql_clone_row(C)
 -- + return _result_
 create proc declare_cursor_like_view()
@@ -1751,7 +1759,7 @@ set r2 := (select SqlUserFunc(123));
 -- + cql_contract_argument_notnull(b_notnull_, 2)
 -- + cql_contract_argument_notnull(id_, 4)
 -- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
--- + _rc_ = cql_multibind(_db_, _temp_stmt, {blob_id_, b_notnull_, b_nullable_})
+-- + _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
 -- + out_arg = 1
 -- + return _rc_, out_arg
 create proc multi_rewrite(like blob_table, like bar, out out_arg integer not null)
@@ -1778,9 +1786,11 @@ begin
 end;
 
 -- TEST loop statement cursor with autofetch
+-- + local C_fields_ = { "A" }
+-- + local C_types_ = "I"
 -- + _rc_, C_stmt = cql_prepare(_db_,
 -- + "SELECT 1")
--- + _rc_ = cql_multifetch(C_stmt, C, { "A" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + if not C._has_row_ then break end
 -- + printf("%d\n", C.A)
 create proc loop_statement_cursor()
@@ -1793,9 +1803,11 @@ begin
 end;
 
 -- TEST loop statement cursor with autofetch
+-- + local C_fields_ = { "A" }
+-- + local C_types_ = "I"
 -- + _rc_, C_stmt = cql_prepare(_db_,
 -- + "SELECT 1"
--- + _rc_ = cql_multifetch(C_stmt, C, { "A" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- + A_ = C.A
 -- + if not C._has_row_ then break end
@@ -1819,9 +1831,11 @@ end;
 
 -- TEST: call for cursor in loop
 -- one release in cleanup; one in the loop
+-- + local C_fields_ = { "x" }
+-- + local C_types_ = "I"
 -- +2 cql_finalize_stmt(C_stmt)
 -- + _rc_, C_stmt = simple_select(_db_)
--- + _rc_ = cql_multifetch(C_stmt, C, { "x" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 create proc call_in_loop()
 begin
   declare i integer;
@@ -1837,8 +1851,10 @@ end;
 -- TEST: same, but with a nullable condition
 -- one release in cleanup; one in the loop
 -- +2 cql_finalize_stmt(C_stmt)
+-- + local C_fields_ = { "x" }
+-- + local C_types_ = "I"
 -- + _rc_, C_stmt = simple_select(_db_)
--- + _rc_ = cql_multifetch(C_stmt, C, { "x" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 create proc call_in_loop_with_nullable_condition()
 begin
   declare i int;
@@ -1853,6 +1869,11 @@ end;
 
 -- TEST: call in loop with boxing
 -- + local box
+-- + local D_stmt = nil
+-- + local D_object_
+-- + local D = { _has_row_ = false }
+-- + local D_fields_ = { "x" }
+-- + local D_types_ = "I"
 -- + _rc_, C_stmt = simple_select(_db_)
 -- + C_object_ = cql_box_stmt(C_stmt)
 -- + box = C_object_
@@ -1860,7 +1881,7 @@ end;
 -- - cql_finalize_stmt(D_stmt)
 -- + D_object_ = box
 -- + D_stmt = cql_unbox_stmt(D_object_)
--- + _rc_ = cql_multifetch(D_stmt, D, { "x" })
+-- + _rc_ = cql_multifetch(D_stmt, D, D_types_, D_fields_)
 create proc call_in_loop_boxed()
 begin
   declare i integer;
@@ -1893,8 +1914,10 @@ end;
 -- TEST: verify the decl, this is only for later tests
 -- + function out_union_dml_helper_fetch_results(_db_)
 -- - function out_union_dml_helper(_db_)
+-- + local C_fields_ = { "x" }
+-- + local C_types_ = "I"
 -- + "SELECT 1"
--- + _rc_ = cql_multifetch(C_stmt, C, { "x" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + table.insert(_rows_, cql_clone_row(C))
 -- + return _rc_, _rows_
 create proc out_union_dml_helper()
@@ -1912,7 +1935,7 @@ end;
 -- + if C_row_num_ <= C_row_count_ then
 -- +   C = C_result_set_[C_row_num_]
 -- + else
--- +   C = {}; C._has_row_ = false
+-- +   C = { _has_row_ = false }
 -- + end
 create proc call_out_union_in_loop()
 begin
@@ -1968,7 +1991,7 @@ end;
 declare global_cursor cursor for select 1 a, 2 b;
 
 -- TEST: fetch from global cursor
--- + _rc_ = cql_multifetch(global_cursor_stmt, global_cursor, { "a", "b" })
+-- _rc_ = cql_multifetch(global_cursor_stmt, global_cursor, global_cursor_types_, global_cursor_fields_)
 fetch global_cursor;
 
 -- TEST: use like in an expression
@@ -2123,7 +2146,7 @@ end;
 -- + _rc_, _result_stmt = cql_prepare(_db_,
 -- +    "SELECT 1, 2")
 -- + function simple_identity_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "data"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "data" })
 -- TODO, idendity was only interesting for partial compare on the rowset
 -- this really doesn't make much sense in the LUA world but some thinking
 -- could be needed here.
@@ -2138,7 +2161,7 @@ end;
 -- + "SELECT 1, 2, 3")
 -- + function complex_identity_fetch_results(_db_)
 -- +  _rc_, stmt = complex_identity(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"col1", "col2", "data"})
+-- +  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "col1", "col2", "data" })
 @attribute(cql:identity=(col1, col2))
 create proc complex_identity()
 begin
@@ -2147,8 +2170,10 @@ end;
 
 -- TEST: create proc with a out cursor and identity column
 -- + function out_cursor_identity(_db_)
+-- + local C_fields_ = { "id", "data" }
+-- + local C_types_ = "II"
 -- + "SELECT 1, 2")
--- + _rc_ = cql_multifetch(C_stmt, C, { "id", "data" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + function out_cursor_identity_fetch_results(_db_)
 -- + result_set = { _result_ }
 @attribute(cql:identity=(id))
@@ -2168,7 +2193,7 @@ create table radioactive(
 -- + function radioactive_proc(_db_)
 -- + "SELECT id, data FROM radioactive")
 -- + function radioactive_proc_fetch_results(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "data"})
+-- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
 -- TODO vault_sensitive is not yet supported, we'll have to figure out some kind of plan for what this means
 @attribute(cql:vault_sensitive)
 create proc radioactive_proc()
@@ -2218,8 +2243,7 @@ end;
 -- TEST: make sure that the name of the cursor is canonicalized
 -- There should be no references to the version with the wrong case
 -- + function simple_cursor_proc()
--- + local A_CURSOR = {}
--- + A_CURSOR._has_row_ = false
+-- + local A_CURSOR = { _has_row_ = false }
 -- + A_CURSOR.id = 1
 -- + _result_ = cql_clone_row(A_CURSOR)
 -- + return _result_
@@ -2335,7 +2359,7 @@ declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
 -- TEST: use a table valued function that consumes an object
 -- + function rowset_object_reader(_db_, rowset)
 -- + "SELECT id FROM ReadFromRowset(?)")
--- + _rc_ = cql_multibind(_db_, C_stmt, {rowset})
+-- + _rc_ = cql_multibind(_db_, C_stmt, "o", {rowset})
 create proc rowset_object_reader(rowset Object<rowset>)
 begin
   declare C cursor for select * from ReadFromRowset(rowset);
@@ -2391,8 +2415,8 @@ declare procedure p2() out (id integer not null, t text) using transaction;
 -- the idea is that it reveals any cases where a temporary pointer is
 -- stored into the symbol table as was the case with the temporary
 -- row data for each cursor.  The test is this:  is c2 properly emitted?
--- +1 local c1 = {}
--- +1 local c2 = {}
+-- +1 local c1 = { _has_row_ = false }
+-- +1 local c2 = { _has_row_ = false }
 -- +1 c1 = p1()
 -- +1 _rc_, c2 = p2(_db_)
 create procedure use_many_out_cursors()
@@ -2406,7 +2430,7 @@ end;
 -- must find that p1 and p2 row data are already declared and not duplicate
 -- the declarations.
 -- + function fetch_many_times(_db_, arg)
--- +1 local C = {}
+-- +1 local C = { _has_row_ = false }
 -- +2 C = p1()
 -- +2 _rc_, C = p2(_db_)
 create procedure fetch_many_times(arg bool not null)
@@ -2425,7 +2449,6 @@ end;
 -- TEST: create a result set from rows values
 -- + function out_union_two_fetch_results()
 -- + local _rows_ = {}
--- + C._has_row_ = false
 -- + C._has_row_ = true
 -- + C.x = 1
 -- + C.y = "y"
@@ -2445,7 +2468,7 @@ end;
 -- + c_row_num_ = 0
 -- + c_row_count_ = #(c_result_set_)
 -- + c = c_result_set_[c_row_num_]
--- + c = {}; c._has_row_ = false
+-- + c = { _has_row_ = false }
 create proc out_union_reader()
 begin
   declare c cursor for call out_union_two();
@@ -2458,8 +2481,10 @@ end;
 -- TEST: create a result set from selected rows
 -- + function out_union_from_select_fetch_results(_db_)
 -- + local _rows_ = {}
+-- + local C_fields_ = { "x", "y" }
+-- + local C_types_ = "IS"
 -- + "SELECT 1, '2'"
--- +1 _rc_ = cql_multifetch(C_stmt, C, { "x", "y" })
+-- +1 _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- +2 table.insert(_rows_, cql_clone_row(C))
 -- + return _rc_, _rows_
 create proc out_union_from_select()
@@ -2503,7 +2528,7 @@ end;
 -- + if C_row_num_ <= C_row_count_ then
 -- +  C = C_result_set_[C_row_num_]
 -- + else
--- +  C = {}; C._has_row_ = false
+-- +  C = { _has_row_ = false }
 create proc read_out_union_values(a integer not null, b integer not null)
 begin
   declare C cursor for call out_union_values(a,b);
@@ -2513,8 +2538,10 @@ end;
 -- This just sets up a call to a procedure that proceduce a dml out union result set
 -- + function out_union_dml_fetch_results(_db_)
 -- + local _rows_ = {}
+-- + local x_fields_ = { "id", "data" }
+-- + local x_types_ = "Is"
 -- + "SELECT id, data FROM radioactive")
--- + _rc_ = cql_multifetch(x_stmt, x, { "id", "data" })
+-- + _rc_ = cql_multifetch(x_stmt, x, x_types_, x_fields_)
 -- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- + table.insert(_rows_, cql_clone_row(x))
 -- + return _rc_, _rows_
@@ -2683,7 +2710,7 @@ end;
 
 -- TEST: no getters generated for this function
 -- lua has no getters but we can verify that there are no errors for using the form
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"}
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 @attribute(cql:suppress_getters)
 create proc lotsa_columns_no_getters()
 begin
@@ -2695,7 +2722,7 @@ end;
 -- + function sproc_with_copy(_db_)
 -- + "SELECT id, name, rate, type, size FROM bar"
 -- + function sproc_with_copy_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "rate", "type", "size"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 @attribute(cql:generate_copy)
 create proc sproc_with_copy()
 begin
@@ -2844,7 +2871,7 @@ create table vault_non_sensitive(
 -- +  return _rc_, _result_stmt
 -- + function vault_sensitive_with_values_proc_fetch_results(_db_)
 -- +  _rc_, stmt = vault_sensitive_with_values_proc(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+-- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 @attribute(cql:vault_sensitive=(id, name))
 @attribute(cql:custom_type_for_encoded_column)
@@ -2859,7 +2886,7 @@ end;
 -- +    "SELECT id, name, title, type FROM vault_mixed_not_nullable_sensitive")
 -- +  return _rc_, _result_stmt
 -- +function vault_not_nullable_sensitive_with_values_proc_fetch_results(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+-- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 @attribute(cql:vault_sensitive=(id, name))
 @attribute(cql:custom_type_for_encoded_column)
@@ -2873,8 +2900,8 @@ end;
 -- +function vault_sensitive_mixed_proc(_db_)
 -- +    "SELECT id, name, title, type FROM vault_mixed_sensitive")
 -- +  return _rc_, _result_stmt
--- +function vault_sensitive_mixed_proc_fetch_results(_db_)
--- +  _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+-- + function vault_sensitive_mixed_proc_fetch_results(_db_)
+-- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 @attribute(cql:vault_sensitive)
 create proc vault_sensitive_mixed_proc()
@@ -2888,7 +2915,7 @@ end;
 -- + "SELECT id, name, title, type FROM vault_mixed_sensitive UNION ALL SELECT id, name, title, type FROM vault_non_sensitive")
 -- + return _rc_, _result_stmt
 -- + function vault_union_all_table_proc_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- + return _rc_, result_set
 @attribute(cql:vault_sensitive)
 create proc vault_union_all_table_proc()
@@ -2905,7 +2932,7 @@ end;
 -- + return _rc_, _result_stmt
 -- + function vault_alias_column_proc_fetch_results(_db_)
 -- + _rc_, stmt = vault_alias_column_proc(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"alias_name"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 -- + return _rc_, result_set
 @attribute(cql:vault_sensitive=alias_name)
 create proc vault_alias_column_proc()
@@ -2919,7 +2946,7 @@ end;
 -- + "SELECT name FROM vault_mixed_sensitive")
 -- + function vault_alias_column_name_proc_fetch_results(_db_)
 -- + _rc_, stmt = vault_alias_column_name_proc(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"alias_name"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 -- + return _rc_, result_set
 @attribute(cql:vault_sensitive=alias_name)
 create proc vault_alias_column_name_proc()
@@ -2930,8 +2957,10 @@ end;
 -- TEST: vault a column in cursor result
 -- TODO figure out what vaulting means to lua if anything
 -- + function vault_cursor_proc(_db_)
+-- + local C_fields_ = { "name" }
+-- + local C_types_ = "s"
 -- + "SELECT name FROM vault_mixed_sensitive"
--- + _rc_ = cql_multifetch(C_stmt, C, { "name" })
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- - fetch_results
 @attribute(cql:vault_sensitive)
 create proc vault_cursor_proc()
@@ -2945,7 +2974,7 @@ end;
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc(_db_)
 -- + "SELECT id, name, title, type FROM vault_mixed_sensitive")
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 @attribute(cql:vault_sensitive=(title, (id, name)))
 create proc vault_sensitive_with_context_and_sensitive_columns_proc()
 begin
@@ -2967,7 +2996,7 @@ end;
 -- TEST: vault_sensitive attribute includes encode context column (title) and no sensitive column
 -- TODO figure out what vaulting means to lua if anything
 -- + function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(_db_)
--- + _rc_, result_set = cql_fetch_all_rows(stmt, {"id", "name", "title", "type"})
+-- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 @attribute(cql:vault_sensitive=(title, (id, name)))
 create proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
 begin
@@ -3036,7 +3065,9 @@ end;
 -- + local C_object_
 -- + C_object_ = boxed_cursor
 -- + C_stmt = cql_unbox_stmt(C_object_)
--- + _rc_ = cql_multifetch(C_stmt, C, { "id", "name", "rate", "type", "size" })
+-- + local C_fields_ = { "id", "name", "rate", "type", "size" }
+-- + local C_types_ = "Islid"
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- boxing controls lifetime
 -- - finalize
 create proc try_unboxing(boxed_cursor object<bar cursor>)
@@ -3173,7 +3204,7 @@ end;
 
 -- TEST: test cql_get_blob_size codegen
 -- + "SELECT ?"
--- + rc_ = cql_multibind(_db_, _temp_stmt, {blob_var})
+-- + rc_ = cql_multibind(_db_, _temp_stmt, "b", {blob_var})
 -- + l0_nullable = cql_get_blob_size(_tmp_n_blob_%)
 set l0_nullable := cql_get_blob_size((select blob_var));
 
@@ -3867,10 +3898,8 @@ declare global_cursor2 cursor like select "x" x;
 -- + function early_close_cursor(_db_)
 -- + cql_finalize_stmt(global_cursor_stmt)
 -- + global_cursor_stmt = nil
--- + global_cursor = {}
--- + global_cursor._has_row_ = false
--- + global_cursor2 = {}
--- + global_cursor2._has_row_ = false
+-- + global_cursor = { _has_row_ = false }
+-- + global_cursor2 = { _has_row_ = false }
 create proc early_close_cursor()
 begin
   close global_cursor;
@@ -4360,7 +4389,8 @@ CREATE TABLE big_data(
 -- this is really a stress test for the stack and temporary management
 -- the codegen is very simple. The compiler shouldn't crash on this stuff
 -- it has in the past.
--- + _rc_ = cql_multifetch(C_stmt, C, { "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15", "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31", "f32", "f33", "f34", "f35", "f36", "f38", "f39", "f40", "f41", "f42", "f43", "f44", "f45", "f46", "f47", "f48", "f49", "f50", "f51", "f52", "f53", "f54", "f55", "f56", "f57", "f58", "f59", "f60", "f61", "f62", "f63", "f64", "f65", "f66", "f67", "f68", "f69", "f70", "f71", "f72", "f73", "f74", "f75" })
+-- + "SELECT f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50, f51, f52, f53, f54, f55, f56, f57, f58, f59, f60, f61, f62, f63, f64, f65, f66, f67, f68, f69, f70, f71, f72, f73, f74, f75 FROM big_data"
+-- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 CREATE PROC BigFormat ()
 BEGIN
   DECLARE C CURSOR FOR SELECT * FROM big_data;
@@ -4626,7 +4656,7 @@ end;
 -- + ") SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar INNER JOIN some_cte ON ? = 5"
 --
 -- 8 variable sites, only some of which are used
--- + _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, {x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x})
+-- + _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x})
 create proc shared_conditional_user(x integer not null)
 begin
   with
@@ -4942,7 +4972,7 @@ end;
 declare function external_cursor_func(x cursor) integer;
 
 -- TEST call a function that takes a generic cursor
--- + result = external_cursor_func(shape_storage)
+-- + result = external_cursor_func(shape_storage, shape_storage_types_, shape_storage_fields_)
 create proc external_cursor_caller ()
 begin
   declare shape_storage cursor like select 1 as x;

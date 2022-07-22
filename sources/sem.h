@@ -203,6 +203,7 @@ cql_noexport bool_t is_virtual_ast(ast_node *ast);
 cql_noexport bool_t is_deleted(ast_node *ast);
 cql_noexport bool_t is_single_flag(sem_t sem_type);
 cql_noexport bool_t is_bool(sem_t sem_type);
+cql_noexport bool_t is_real(sem_t sem_type);
 cql_noexport bool_t is_string_compat(sem_t sem_type);
 cql_noexport bool_t is_blob_compat(sem_t sem_type);
 cql_noexport bool_t is_object_compat(sem_t sem_type);

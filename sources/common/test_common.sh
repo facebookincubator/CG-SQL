@@ -1812,10 +1812,8 @@ code_gen_lua_test() {
   echo testing for successful compilation of lua run test
   echo " cannot run this by default because of runtime requirements"
 
-  if ! ${CQL} --cg "${OUT_DIR}/lua_run_test.lua" --in "lua_demo/run_test_prep.sql" --global_proc cql_startup --rt lua 2>"${OUT_DIR}/cg_lua_run_test.err"
+  if ! lua_demo/prepare_run_test.sh
   then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_lua_run_test.err"
     failed
   fi
 

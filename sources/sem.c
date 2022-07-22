@@ -1132,6 +1132,10 @@ cql_noexport bool_t is_bool(sem_t sem_type) {
   return core_type_of(sem_type) == SEM_TYPE_BOOL;
 }
 
+cql_noexport bool_t is_real(sem_t sem_type) {
+  return core_type_of(sem_type) == SEM_TYPE_REAL;
+}
+
 cql_noexport bool_t is_variable(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_VARIABLE);
 }

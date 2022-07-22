@@ -42,7 +42,4 @@ echo ""
 echo "run test (NOTE: some exception spam is normal, the tests throwing exceptions on purpose)"
 echo ""
 
-rm -f $O/x.l
-$O/cql --in run_test_prep.sql --cg $O/x.l --rt lua --global_proc go 
-echo "go(sqlite3.open_memory())" >>$O/x.l
-(cd $O ; lua $O/x.l)
+(cd ..; lua_demo/run_test.sh)
