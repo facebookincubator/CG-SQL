@@ -72,7 +72,6 @@ then
     failed
 fi
 
-# echo run query plan in c
+# Run query plan in c. It will output the query plan.
+# Nothing else should be output in this script otherwise it'll break the formatted text
 "./out/query_plan_test"
-echo
-echo "done"
