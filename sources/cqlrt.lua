@@ -700,14 +700,6 @@ function cql_last_insert_rowid(db)
   return db:last_insert_rowid()
 end
 
-function cql_box_stmt(stmt)
-  return stmt
-end
-
-function cql_unbox_stmt(box)
-  return box
-end
-
 cql_user_data = {}
 
 function cql_set_user_data(k, v)

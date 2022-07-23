@@ -1870,17 +1870,14 @@ end;
 -- TEST: call in loop with boxing
 -- + local box
 -- + local D_stmt = nil
--- + local D_object_
 -- + local D = { _has_row_ = false }
 -- + local D_fields_ = { "x" }
 -- + local D_types_ = "I"
 -- + _rc_, C_stmt = simple_select(_db_)
--- + C_object_ = cql_box_stmt(C_stmt)
--- + box = C_object_
+-- + box = C_stmt
 -- due to the loops we do not finalize D as we go on each iteration
 -- - cql_finalize_stmt(D_stmt)
--- + D_object_ = box
--- + D_stmt = cql_unbox_stmt(D_object_)
+-- + D_stmt = box
 -- + _rc_ = cql_multifetch(D_stmt, D, D_types_, D_fields_)
 create proc call_in_loop_boxed()
 begin
@@ -3050,7 +3047,7 @@ end;
 -- + function try_boxing(_db_)
 -- + _rc_, C_stmt = cql_prepare(_db_,
 -- + "SELECT id, name, rate, type, size FROM bar"
--- + C_object_ = cql_box_stmt(C_stmt)
+-- + result = C_stmt
 -- + return _rc_, result
 -- boxed object controlsl lifetime now
 -- - finalize
@@ -3062,9 +3059,6 @@ end;
 
 -- TEST: simple unbox
 -- + function try_unboxing(_db_, boxed_cursor)
--- + local C_object_
--- + C_object_ = boxed_cursor
--- + C_stmt = cql_unbox_stmt(C_object_)
 -- + local C_fields_ = { "id", "name", "rate", "type", "size" }
 -- + local C_types_ = "Islid"
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)

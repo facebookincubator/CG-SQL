@@ -527,12 +527,6 @@ static void cg_lua_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR valu
   bprintf(output, "%s = %s\n", var, value);
 }
 
-// Functions are a little special in that they can return reference types that come
-// with a +1 reference.  However none of this is an issue in LUA.
-static void cg_lua_copy_for_create(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
-  bprintf(output, "%s = %s\n", var, value);
-}
-
 // This is most general store function.  Given the type of the destination and the type of the source
 // plus the value of the source it generates the correct operation to set it.
 // * if storing to a boolean from a non-boolean normalize the result to true/false
@@ -3414,15 +3408,10 @@ static void cg_lua_declare_cursor(ast_node *ast) {
 
     // DECLARE [name] CURSOR FOR [box_object_expr]
     EXTRACT_ANY_NOTNULL(expr, ast->right);
-
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
-    CHARBUF_OPEN(box_name);
 
-    bprintf(&box_name, "%s_object_", cursor_name);
-    cg_lua_copy(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, expr_value.ptr);
-    bprintf(cg_main_output, "%s_stmt = cql_unbox_stmt(%s)\n", cursor_name, box_name.ptr);
+    bprintf(cg_main_output, "%s_stmt = %s\n", cursor_name, expr_value.ptr);
 
-    CHARBUF_CLOSE(box_name);
     CG_LUA_POP_EVAL(expr);
   }
   else if (is_for_expr) {
@@ -3438,34 +3427,6 @@ static void cg_lua_declare_cursor(ast_node *ast) {
 
     EXTRACT_NOTNULL(call_stmt, ast->right);
     cg_lua_call_stmt_with_cursor(call_stmt, cursor_name);
-  }
-
-  if (is_boxed) {
-    // An object will control the lifetime of the cursor.  If the cursor is boxed
-    // this is the object reference that will be used.  This way the exit path is
-    // uniform regardless of whether or not the object was in fact boxed in the
-    // control flow.  This is saying that it might be boxed later so we use this
-    // general mechanism for lifetime. The cg_lua_var_decl helper handles cleanup too.
-
-    CHARBUF_OPEN(box_name);
-    bprintf(&box_name, "%s_object_", cursor_name);
-
-    cg_lua_var_decl(cg_declarations_output, SEM_TYPE_OBJECT, box_name.ptr);
-
-    // the unbox case gets the object from the unbox operation above, so skip if unboxing
-
-    if (!is_unboxing) {
-      // Note we have to clear the stashed box object and then accept the new box without
-      // increasing the retain count on the new box because it starts with a +1 as usual.
-      // This is a job for cg_lua_copy_for_create!
-
-      CHARBUF_OPEN(box_value);
-      bprintf(&box_value, "cql_box_stmt(%s_stmt)", cursor_name);
-      cg_lua_copy_for_create(cg_main_output, box_name.ptr, SEM_TYPE_OBJECT, box_value.ptr);
-      CHARBUF_CLOSE(box_value);
-    }
-
-    CHARBUF_CLOSE(box_name);
   }
 
   // in lua we always use "auto cursor" form we don't do cursor without storage
@@ -3489,15 +3450,8 @@ static void cg_lua_set_from_cursor(ast_node *ast) {
   EXTRACT_STRING(cursor_name, cursor);
   EXTRACT_STRING(var_name, variable);
 
-  CHARBUF_OPEN(value);
-  bprintf(&value, "%s_object_", cursor_name);
-
-  CHARBUF_OPEN(tmp_var_name);
-  bprintf(&tmp_var_name, "%s", var_name);
-  cg_lua_copy(cg_main_output, tmp_var_name.ptr, SEM_TYPE_OBJECT, value.ptr);
-  CHARBUF_CLOSE(tmp_var_name);
-
-  CHARBUF_CLOSE(value);
+  // in LUA the statement is already an object, we just store it
+  bprintf(cg_main_output, "%s = %s_stmt\n", var_name, cursor_name);
 }
 
 static void cg_lua_declare_cursor_like(ast_node *name_ast) {
