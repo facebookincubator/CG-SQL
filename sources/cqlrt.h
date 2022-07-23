@@ -36,8 +36,7 @@ typedef unsigned char cql_bool;
 #define CQL_C_TYPE_STRING 0
 #define CQL_C_TYPE_BLOB 1
 #define CQL_C_TYPE_RESULTS 2
-#define CQL_C_TYPE_BOXED_STMT 3
-#define CQL_C_TYPE_OBJECT 4
+#define CQL_C_TYPE_OBJECT 3
 
 typedef uint64_t cql_hash_code;
 typedef int32_t cql_int32;

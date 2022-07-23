@@ -359,4 +359,8 @@ CQL_EXPORT cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _N
 // of its unusual matching rules.
 CQL_EXPORT cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_, cql_string_ref _Nullable needle_);
 
+// Boxing interface (uses generic objects to hold a statement)
+CQL_EXPORT cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
+CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
+
 CQL_EXTERN_C_END

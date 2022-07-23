@@ -3885,3 +3885,17 @@ cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable lis
 
   return result;
 }
+
+static void cql_boxed_stmt_finalize(void *_Nonnull data) {
+  sqlite3_stmt *stmt = (sqlite3_stmt *)data;
+  cql_finalize_stmt(&stmt);
+}
+
+cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt) {
+  return _cql_generic_object_create(stmt, cql_boxed_stmt_finalize);
+}
+
+sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref) {
+  return (sqlite3_stmt *)_cql_generic_object_get_data(ref);
+}
+
