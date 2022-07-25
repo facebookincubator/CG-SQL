@@ -3765,43 +3765,30 @@ cleanup:
   return found;
 }
 
-// The outside world does not need to know the details of the string dictionary
-// so it's defined locally.  We have to have one of these because we can't
-// otherwise assume one exists and we already have the hash table anyway
-// so this is really a pretty trivial extension to create generic runtime support.
-typedef struct cql_string_dictionary {
-  cql_hashtab *_Nonnull ht;
-} cql_string_dictionary;
-
 // Defer finalization to the hash table which has all it needs to do the job
 static void cql_string_dictionary_finalize(void *_Nonnull data) {
   // recover self
-  cql_string_dictionary *_Nonnull self = data;
-
-  cql_hashtab_delete(self->ht);
-
-  free(self);
+  cql_hashtab *_Nonnull self = data;
+  cql_hashtab_delete(self);
 }
 
 // This makes a simple string dictionary with retained strings
 cql_object_ref _Nonnull cql_string_dictionary_create() {
 
-  cql_string_dictionary *_Nonnull self = calloc(1, sizeof(cql_string_dictionary));
-
-  cql_object_ref obj = _cql_generic_object_create(self, cql_string_dictionary_finalize);
-
   // we can re-use the hash, equality, retain, and release from the cql_string_dictionary
   // keys and values are the same in this hash table so we can use the same function
   // to retain/release either
-  self->ht = cql_hashtab_new(
+  cql_hashtab *self = cql_hashtab_new(
       cql_key_str_hash,
       cql_key_str_eq,
       cql_key_retain_str,
       cql_key_retain_str,
       cql_key_release_str,
       cql_key_release_str,
-      self
+      NULL
     );
+
+  cql_object_ref obj = _cql_generic_object_create(self, cql_string_dictionary_finalize);
 
   return obj;
 }
@@ -3816,10 +3803,10 @@ cql_bool cql_string_dictionary_add(
   cql_contract(key);
   cql_contract(val);
 
-  cql_string_dictionary *_Nonnull self = _cql_generic_object_get_data(dict);
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
 
   // retain/release defined above, the key/value will be retained
-  return cql_hashtab_add(self->ht, (cql_int64)key, (cql_int64)val);
+  return cql_hashtab_add(self, (cql_int64)key, (cql_int64)val);
 }
 
 // Lookup the given string in the hash table, note that we do not retain the string
@@ -3833,9 +3820,9 @@ cql_string_ref _Nullable cql_string_dictionary_find(
      return NULL;
   }
 
-  cql_string_dictionary *_Nonnull self = _cql_generic_object_get_data(dict);
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
 
-  cql_hashtab_entry *entry = cql_hashtab_find(self->ht, (cql_int64)key);
+  cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
   return entry ? (cql_string_ref)entry->val : NULL;
 }
@@ -3898,3 +3885,19 @@ cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable lis
 
   return result;
 }
+
+static void cql_boxed_stmt_finalize(void *_Nonnull data) {
+  // note that we use cql_finalize_stmt because it can be and often is
+  // intercepted to allow for cql statement pooling.
+  sqlite3_stmt *stmt = (sqlite3_stmt *)data;
+  cql_finalize_stmt(&stmt);
+}
+
+cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt) {
+  return _cql_generic_object_create(stmt, cql_boxed_stmt_finalize);
+}
+
+sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref) {
+  return (sqlite3_stmt *)_cql_generic_object_get_data(ref);
+}
+

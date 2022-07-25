@@ -125,12 +125,6 @@ cql_int32 cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2
 // This is the abstract holder for these items with only the C interface to get the contents
 typedef CFTypeRef CQLHolderRef;
 typedef CQLHolderRef cql_result_set_ref;
-typedef CQLHolderRef cql_boxed_stmt_ref;
-
-// builtin statement box
-typedef struct cql_boxed_stmt {
-  sqlite3_stmt *_Nullable stmt;
-} cql_boxed_stmt;
 
 typedef struct cql_result_set_meta {
   // release the internal memory for the rowset
@@ -306,9 +300,6 @@ cql_blob_ref _Nonnull cql_decode_blob_ref_new(
   cql_blob_ref _Nonnull value,
   cql_int32 context_type,
   void *_Nullable context);
-
-cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
-sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
 
 // NOTE: This must be included *after* all of the above symbols/macros.
 #include "cqlrt_common.h"

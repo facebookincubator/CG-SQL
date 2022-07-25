@@ -7188,17 +7188,6 @@ cql_string_ref _Nonnull cql_decode_string_ref_new(...);
 cql_blob_ref _Nonnull cql_decode_blob_ref_new(...);
 ```
 
-### Boxing Statements
-
-You must provide helpers to "box" and "unbox" a SQLite statement
-into a `cql_ref_type` of the appropriate type.  These are used
-to create boxed cursors.
-
-```c
-cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
-sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
-```
-
 ### The Common Headers
 
 The standard APIs all build on the above, so they should be included last.
@@ -9301,5 +9290,3 @@ Topics covered included:
 As with the other parts, no attempt was made to cover every function in detail.  That is
 best done by reading the source code. But there is overall structure here and an understanding
 of the basic principles is helpful before diving into the source code.
-
-

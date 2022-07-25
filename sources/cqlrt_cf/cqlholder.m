@@ -38,8 +38,7 @@
 // The kinds of things we know how to hold.
 
 #define CF_HELD_TYPE_RESULT_SET 1
-#define CF_HELD_TYPE_BOXED_STMT 2
-#define CF_HELD_TYPE_GENERIC 3
+#define CF_HELD_TYPE_GENERIC 2
 
 - (void)dynamicTeardown
 {
@@ -49,15 +48,6 @@
       cql_result_set_ref ref = (__bridge cql_result_set_ref)self;
       cql_result_set *result_set = (cql_result_set *)self.bytes;
       result_set->meta.teardown(ref);
-      break;
-    }
-
-  case CF_HELD_TYPE_BOXED_STMT:
-    {
-      cql_boxed_stmt *box = (cql_boxed_stmt *)self.bytes;
-
-      // note this is a no-op on null statements, and nulls stmt after finalization
-      cql_finalize_stmt(&box->stmt);
       break;
     }
 
@@ -97,24 +87,6 @@ cql_result_set_ref _Nonnull cql_result_set_create(
 
   CQLHolder *holder = [[CQLHolder alloc] initWithBytes:(void *)result_set andType:CF_HELD_TYPE_RESULT_SET];
   return (__bridge_retained cql_result_set_ref)holder;
-}
-
-cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt)
-{
-  cql_boxed_stmt *box = (cql_boxed_stmt *)malloc(sizeof(cql_boxed_stmt));
-  box->stmt = stmt;
-
-  CQLHolder *holder = [[CQLHolder alloc] initWithBytes:(void *)box andType:CF_HELD_TYPE_BOXED_STMT];
-  return (__bridge_retained cql_object_ref)holder;
-}
-
-// For holding boxed statements.
-
-sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref)
-{
-  CQLHolder *holder = (__bridge CQLHolder *)ref;
-  cql_boxed_stmt *box = (cql_boxed_stmt *)holder.bytes;
-  return box->stmt;
 }
 
 cql_result_set *_Nonnull cql_get_result_set_from_ref(cql_result_set_ref _Nonnull ref)

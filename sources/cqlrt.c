@@ -101,27 +101,6 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr) {
   return result;
 }
 
-static void cql_boxed_stmt_finalize(cql_type_ref _Nonnull ref) {
-  cql_boxed_stmt_ref boxed_stmt = (cql_boxed_stmt_ref)ref;
-  cql_finalize_stmt(&boxed_stmt->stmt);
-}
-
-cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt) {
-  cql_boxed_stmt_ref result = malloc(sizeof(cql_boxed_stmt));
-  result->base.type = CQL_C_TYPE_BOXED_STMT;
-  result->base.ref_count = 1;
-  result->base.finalize = &cql_boxed_stmt_finalize;
-  result->stmt = stmt;
-  cql_outstanding_refs++;
-  return (cql_object_ref)result;
-}
-
-sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref) {
-  cql_boxed_stmt_ref box = (cql_boxed_stmt_ref)ref;
-  cql_contract(box->base.type == CQL_C_TYPE_BOXED_STMT);
-  return box->stmt;
-}
-
 cql_int32 cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
   cql_invariant(s1 != NULL);
   cql_invariant(s2 != NULL);
