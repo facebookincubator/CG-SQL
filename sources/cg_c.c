@@ -3294,7 +3294,15 @@ static void cg_dynamic_cursor(charbuf *output, sem_struct *sptr, CSTR sym_name, 
   scope = scope ? scope : "";
 
   CG_CHARBUF_OPEN_SYM(refs_offset, scope, suffix, sym_name, "_refs_offset");
+  CG_CHARBUF_OPEN_SYM(fields, scope, suffix, sym_name, "_fields");
   int32_t refs_count = refs_count_sptr(sptr);
+
+  // note that cursor field strings are highly duplicative but the compiler will fold these anyway
+  bprintf(output, "const char *%s[] = {\n", fields.ptr);
+  for (uint32_t i = 0; i < sptr->count; i++) {
+    bprintf(output, "  \"%s\",\n", sptr->names[i]);
+  }
+  bprintf(output, "};\n");
 
   bprintf(output, "cql_dynamic_cursor %s_dyn = {\n", sym_name);
   bprintf(output, "  .cursor_data = (void *)&%s,\n", sym_name);
@@ -3302,12 +3310,14 @@ static void cg_dynamic_cursor(charbuf *output, sem_struct *sptr, CSTR sym_name, 
   bprintf(output, "  .cursor_data_types = %s,\n", types_name);
   bprintf(output, "  .cursor_col_offsets = %s,\n", cols_name);
   bprintf(output, "  .cursor_size = sizeof(%s),\n", sym_name);
+  bprintf(output, "  .cursor_fields = %s,\n", fields.ptr);
   if (refs_count) {
     bprintf(output, "  .cursor_refs_count = %d,\n", refs_count);
     bprintf(output, "  .cursor_refs_offset = %s,\n", refs_offset.ptr);
   }
   bprintf(output, "};\n");
 
+  CHARBUF_CLOSE(fields);
   CHARBUF_CLOSE(refs_offset);
 }
 

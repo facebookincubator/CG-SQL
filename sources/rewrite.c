@@ -34,7 +34,6 @@
 
 static ast_node* rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type);
 static ast_node* rewrite_gen_printf_call(CSTR format, ast_node *arg_list);
-static ast_node *rewrite_gen_cursor_printf(ast_node *variable);
 static ast_node *rewrite_gen_iif_case_expr(ast_node *expr, ast_node *val1, ast_node *val2);
 static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t report_column_name);
 static bool_t rewrite_one_def(ast_node *head);
@@ -745,36 +744,6 @@ cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(ast_node *arg_list) {
   return true;
 }
 
-// rewrite call node with cql_cursor_format(X) to a printf(format, arg ...)
-// statement. e.g: C cursor has column text x, y
-// cql_cursor_format(C); ===> printf("x:%s|y:%s", C.x, C.y);
-cql_noexport void rewrite_cql_cursor_format(ast_node *ast) {
-  Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
-  Contract(!Strcasecmp("cql_cursor_format", name));
-
-  ast_node *arg = first_arg(arg_list);
-
-  AST_REWRITE_INFO_SET(name_ast->lineno, name_ast->filename);
-  ast_node *printf_node = rewrite_gen_cursor_printf(arg);
-  AST_REWRITE_INFO_RESET();
-
-  // Reset the cql_cursor_format function call node to a case_expr
-  // node.
-  ast->type = printf_node->type;
-  ast_set_left(ast, printf_node->left);
-  ast_set_right(ast, printf_node->right);
-
-  // do semantic analysis of the rewritten AST to validate it
-  sem_expr(ast);
-
-  // the rewrite is not expected to have any semantic error
-  Invariant(!is_error(ast));
-}
-
 // rewrite call node with cql_cursor_diff_xxx(X,Y) to a case_expr statement
 // e.g: C1 and C2 are two cursor variable with the same shape
 // cql_cursor_diff_xxx(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
@@ -1085,75 +1054,6 @@ static ast_node *rewrite_gen_nullable(ast_node *ast) {
     new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL),
       new_ast_arg_list(ast, NULL)));
-}
-
-// Generate a 'call' node for printf function from a cursor variable.
-// This is used to rewrite cql_cursor_format(X) when called from a
-// sql context.
-// e.g:
-// select cql_cursor_format(C) as p; ===> select printf("x:%d|y:%s", C.x, C.y) as p;
-static ast_node *rewrite_gen_cursor_printf(ast_node *variable) {
-  Contract(is_variable(variable->sem->sem_type));
-
-  CHARBUF_OPEN(format);
-  sem_struct *sptr = variable->sem->sptr;
-  int32_t count = (int32_t) sptr->count;
-  Invariant(count > 0);
-  ast_node *arg_list = NULL;
-
-  for (int32_t i = count - 1; i >= 0; i--) {
-    Invariant(sptr->names[i]);
-    // left side of IS
-    ast_node* dot = new_ast_dot(new_ast_str(variable->sem->name), new_ast_str(sptr->names[i]));
-    // We wrap the dot in a call to nullable if it is of a nonnull type so that
-    // the IS NULL check will not result in a type error. Eliding the check is
-    // not possible in the nonnull case because even a dot of a nonnull type
-    // could, unfortunately, be null if a row was not fetched.
-    if (is_not_nullable(sptr->semtypes[i])) {
-     dot = rewrite_gen_nullable(dot);
-    }
-    // right side of IS
-    ast_node* null_node = new_ast_null();
-    // left side of WHEN
-    ast_node* is_node = new_ast_is(dot, null_node);
-    // the THEN part of WHEN THEN
-    ast_node* val = new_ast_str("'null'");
-    // left case_list node
-    ast_node* when = new_ast_when(is_node, val);
-    // left connector node
-    ast_node* case_list = new_ast_case_list(when, NULL);
-    // right connector node: printf(...)
-    CHARBUF_OPEN(format_output);
-    // arg_list node for the printf call
-    ast_node* printf_arg_list = rewrite_gen_arg_list(
-        &format_output, variable->sem->name, sptr->names[i], sptr->semtypes[i]);
-    ast_node* call_printf = rewrite_gen_printf_call(format_output.ptr, printf_arg_list);
-    CHARBUF_CLOSE(format_output);
-    // case list with no ELSE (we get ELSE NULL by default)
-    ast_node* connector = new_ast_connector(case_list, call_printf);
-    // CASE WHEN expr THEN result form; not CASE expr WHEN val THEN result
-    ast_node* case_expr = new_ast_case_expr(NULL, connector);
-    // new arg_list node
-    ast_node* new_arg_list = new_ast_arg_list(case_expr, arg_list);
-    arg_list = new_arg_list;
-  }
-
-  for (int32_t i = 0; i < count; i++) {
-    if (i > 0) {
-      bprintf(&format, "|");
-    }
-    bprintf(&format, "%s:%s", sptr->names[i], "%s");
-  }
-
-  CSTR format_lit = dup_printf("'%s'", format.ptr); // this turns into literal name
-  ast_node *first_arg_list = new_ast_arg_list(new_ast_str(format_lit), arg_list);
-  // call_arg_list node
-  ast_node *call_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), first_arg_list);
-  ast_node *call = new_ast_call(new_ast_str("printf"), call_arg_list);
-
-  CHARBUF_CLOSE(format);
-
-  return call;
 }
 
 // This helper generates a case_expr node that check if an expression to return value or

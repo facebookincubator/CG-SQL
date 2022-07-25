@@ -16,6 +16,7 @@ extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, 
 extern cql_object_ref _Nonnull cql_string_dictionary_create(void);
 extern cql_bool cql_string_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_string_ref _Nonnull value);
 extern cql_string_ref _Nullable cql_string_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
 
 // The statement ending at line XXXX
 

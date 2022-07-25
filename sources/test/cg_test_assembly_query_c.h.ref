@@ -17,6 +17,8 @@
 
 // The statement ending at line XXXX
 
+// The statement ending at line XXXX
+
 #ifndef result_set_type_decl_assembly_core_result_set
 #define result_set_type_decl_assembly_core_result_set 1
 cql_result_set_type_decl(assembly_core_result_set, assembly_core_result_set_ref);

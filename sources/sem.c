@@ -8627,57 +8627,6 @@ static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
 }
 
-// The cql_cursor_format function converts a cursor row value to a string.
-// cql_cursor_format() function is rewritten to printf() AST.
-static void sem_func_cql_cursor_format(ast_node *ast, uint32_t arg_count) {
-  Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
-
-  // Cursors don't make a lot of sense in the SQL context.  It could be
-  // done as just zillions of bound variables but the result wouldn't be very
-  // useful in SQL and if you want to format you can simply format the result
-  // from the cursor it arrives in anyway.  So in a SQL context this is probably
-  // just an error or an unrecommended pattern.
-
-  if (!sem_validate_context(ast, name, SEM_EXPR_CONTEXT_NONE)) {
-    return;
-  }
-
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
-    return;
-  }
-
-  ast_node *arg = first_arg(arg_list);
-  if (!sem_validate_cursor_from_variable(arg, name)) {
-    record_error(arg);
-    record_error(ast);
-    return;
-  }
-
-  if (!is_auto_cursor(arg->sem->sem_type)) {
-    EXTRACT_STRING(cursor_name, arg);
-    report_error(arg, "CQL0067: cursor was not used with 'fetch [cursor]'", cursor_name);
-    record_error(arg);
-    record_error(ast);
-    return;
-  }
-
-  // We do not do a context validation on purpose because after we
-  // rewrite cql_cursor_format() to printf(), the semantic analysis
-  // of printf() will do it for us.
-
-  // return type is the same as printf function.
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
-
-  // We have a cql_cursor_format function call, we rewrite the node to
-  // a call printf(...); node.
-  rewrite_cql_cursor_format(ast);
-  return;
-}
-
 // Given an already analyzed argument list, an AST to use for reporting errors
 // in the format string, the decoded format string itself, and the name of the
 // procedure being called, verify that the format string is valid and that the
@@ -20524,6 +20473,13 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
     if (is_error(arg)) {
       return false;
     }
+
+    if (!is_auto_cursor(arg->sem->sem_type)) {
+      report_error(arg, "CQL0067: cursor was not used with 'fetch [cursor]'", arg->sem->name);
+      record_error(arg);
+      return false;
+    }
+
     ast_node *var = find_local_or_global_variable(arg->sem->name);
     Invariant(var); // we know the cursor exists and is unique already
     var->sem->sem_type |= SEM_TYPE_SERIALIZE;
@@ -24015,7 +23971,6 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(lower);
   FUNC_INIT(cql_cursor_diff_col);
   FUNC_INIT(cql_cursor_diff_val);
-  FUNC_INIT(cql_cursor_format);
   FUNC_INIT(char);
   FUNC_INIT(sign);
   FUNC_INIT(abs);

@@ -16,6 +16,7 @@ extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, 
 extern cql_object_ref _Nonnull cql_string_dictionary_create(void);
 extern cql_bool cql_string_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_string_ref _Nonnull value);
 extern cql_string_ref _Nullable cql_string_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
 
 // The statement ending at line XXXX
 
@@ -61,12 +62,17 @@ uint8_t serialized_cursor_data_types[] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
   CQL_DATA_TYPE_STRING
 };
+const char *serialized_cursor_fields[] = {
+  "id",
+  "t",
+};
 cql_dynamic_cursor serialized_cursor_dyn = {
   .cursor_data = (void *)&serialized_cursor,
   .cursor_has_row = (void *)&serialized_cursor._has_row_,
   .cursor_data_types = serialized_cursor_data_types,
   .cursor_col_offsets = serialized_cursor_cols,
   .cursor_size = sizeof(serialized_cursor),
+  .cursor_fields = serialized_cursor_fields,
   .cursor_refs_count = 1,
   .cursor_refs_offset = serialized_cursor_refs_offset,
 };

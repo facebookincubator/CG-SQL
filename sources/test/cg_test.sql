@@ -4518,82 +4518,13 @@ CREATE TABLE big_data(
   f75 INTEGER
 );
 
--- TEST: lots of string temporaries create no errors
--- +  cql_string_release(_tmp_text_1);
--- +  cql_string_release(_tmp_text_2);
--- +  cql_string_release(_tmp_text_3);
--- +  cql_string_release(_tmp_text_4);
--- +  cql_string_release(_tmp_text_5);
--- +  cql_string_release(_tmp_text_6);
--- +  cql_string_release(_tmp_text_7);
--- +  cql_string_release(_tmp_text_8);
--- +  cql_string_release(_tmp_text_9);
--- +  cql_string_release(_tmp_text_10);
--- +  cql_string_release(_tmp_text_11);
--- +  cql_string_release(_tmp_text_12);
--- +  cql_string_release(_tmp_text_13);
--- +  cql_string_release(_tmp_text_14);
--- +  cql_string_release(_tmp_text_15);
--- +  cql_string_release(_tmp_text_16);
--- +  cql_string_release(_tmp_text_17);
--- +  cql_string_release(_tmp_text_18);
--- +  cql_string_release(_tmp_text_19);
--- +  cql_string_release(_tmp_text_20);
--- +  cql_string_release(_tmp_text_21);
--- +  cql_string_release(_tmp_text_22);
--- +  cql_string_release(_tmp_text_23);
--- +  cql_string_release(_tmp_text_24);
--- +  cql_string_release(_tmp_text_25);
--- +  cql_string_release(_tmp_text_26);
--- +  cql_string_release(_tmp_text_27);
--- +  cql_string_release(_tmp_text_28);
--- +  cql_string_release(_tmp_text_29);
--- +  cql_string_release(_tmp_text_30);
--- +  cql_string_release(_tmp_text_31);
--- +  cql_string_release(_tmp_text_32);
--- +  cql_string_release(_tmp_text_33);
--- +  cql_string_release(_tmp_text_34);
--- +  cql_string_release(_tmp_text_35);
--- +  cql_string_release(_tmp_text_36);
--- +  cql_string_release(_tmp_text_37);
--- +  cql_string_release(_tmp_text_38);
--- +  cql_string_release(_tmp_text_39);
--- +  cql_string_release(_tmp_text_40);
--- +  cql_string_release(_tmp_text_41);
--- +  cql_string_release(_tmp_text_42);
--- +  cql_string_release(_tmp_text_43);
--- +  cql_string_release(_tmp_text_44);
--- +  cql_string_release(_tmp_text_45);
--- +  cql_string_release(_tmp_text_46);
--- +  cql_string_release(_tmp_text_47);
--- +  cql_string_release(_tmp_text_48);
--- +  cql_string_release(_tmp_text_49);
--- +  cql_string_release(_tmp_text_50);
--- +  cql_string_release(_tmp_text_51);
--- +  cql_string_release(_tmp_text_52);
--- +  cql_string_release(_tmp_text_53);
--- +  cql_string_release(_tmp_text_54);
--- +  cql_string_release(_tmp_text_55);
--- +  cql_string_release(_tmp_text_56);
--- +  cql_string_release(_tmp_text_57);
--- +  cql_string_release(_tmp_text_58);
--- +  cql_string_release(_tmp_text_59);
--- +  cql_string_release(_tmp_text_60);
--- +  cql_string_release(_tmp_text_61);
--- +  cql_string_release(_tmp_text_62);
--- +  cql_string_release(_tmp_text_63);
--- +  cql_string_release(_tmp_text_64);
--- +  cql_string_release(_tmp_text_65);
--- +  cql_string_release(_tmp_text_66);
--- +  cql_string_release(_tmp_text_67);
--- +  cql_string_release(_tmp_text_68);
--- +  cql_string_release(_tmp_text_69);
--- +  cql_string_release(_tmp_text_70);
--- +  cql_string_release(_tmp_text_71);
--- +  cql_string_release(_tmp_text_72);
--- +  cql_string_release(_tmp_text_73);
--- +  cql_string_release(_tmp_text_74);
--- +  cql_string_release(_tmp_text_75);
+-- TEST: big test needs not string temporaries just one helper call
+-- we do not want to see the "get" pattern
+-- - cql_set_string_ref(&s, cql_cursor_format(&C_dyn));
+-- we want to see the "create" pattern (i.e. we start with a +1 ref)
+-- + cql_string_release(s);
+-- + s = cql_cursor_format(&C_dyn);
+-- - cql_string_release(_tmp_text
 CREATE PROC BigFormat ()
 BEGIN
   DECLARE C CURSOR FOR SELECT * FROM big_data;
@@ -5240,7 +5171,7 @@ end;
 -- + void mutated_in_param_ref(cql_string_ref _Nullable _in__x) {
 -- + cql_string_ref x = NULL;
 -- + cql_set_string_ref(&x, _in__x);
--- + cql_set_string_ref(&x, _literal_25_hi_mutated_in_param_ref);
+-- + cql_set_string_ref(&x, _literal_%_hi_mutated_in_param_ref);
 -- + cql_string_release(x);
 create proc mutated_in_param_ref(x text)
 begin

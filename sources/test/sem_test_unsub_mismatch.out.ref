@@ -168,6 +168,29 @@ DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text notnull create_func
+    | {name cql_cursor_format}: text notnull create_func
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: C: cursor variable in
+      |   | {param_detail}: C: cursor variable in
+      |     | {name C}: C: cursor variable in
+      |     | {type_cursor}: cursor
+      | {create_data_type}: text notnull create_func
+        | {notnull}: text notnull
+          | {type_text}: text
+
+The statement ending at line XXXX
+
 CREATE TABLE foo(
   id INTEGER
 );

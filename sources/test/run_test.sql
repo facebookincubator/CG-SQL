@@ -5400,6 +5400,27 @@ BEGIN_TEST(cql_string_list)
   EXPECT("goodbyte" == cql_string_list_get_string(list, 1));
 END_TEST(cql_string_list)
 
+BEGIN_TEST(cursor_formatting)
+  declare C cursor like (a_bool bool, an_int int, a_long long, a_real real, a_string text, a_blob blob);
+  -- load all nulls
+  fetch C() from values ();
+
+  LET s1 := cql_cursor_format(C);
+  EXPECT(s1 = "a_bool:null|an_int:null|a_long:null|a_real:null|a_string:null|a_blob:null");
+
+  -- nullable values not null
+  fetch C(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1) @dummy_nullables;
+  LET s2 := cql_cursor_format(C);
+  EXPECT(s2 = "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
+
+  declare D cursor like (a_bool bool not null, an_int int not null, a_long long not null, a_real real not null, a_string text not null, a_blob blob not null);
+   
+  -- not null values
+  fetch D(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1);
+  LET s3 := cql_cursor_format(D);
+  EXPECT(s3 = "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
+END_TEST(cursor_formatting)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

@@ -729,61 +729,24 @@ function cql_init_extensions(db)
   return sqlite3.OK
 end;
 
--- TESTING METHODS --
-function get_outstanding_refs()
-  return 0
-end
 
-function string_from_blob(str)
-  return str
-end
-
-function blob_from_string(blob)
-  return blob
-end
-
-function run_test_math(int1)
-   return int1 * 7, int1 * 5
-end
-
-function string_create()
-  return "Hello, world."
-end
-
-function set_create()
-  return {}
-end
-
-function set_contains(s, k)
-  return s[k] ~= nil
-end
-
-function set_add(s, k)
-  if s[k] ~= nil then
-    return false
+function cql_cursor_format(C, types, fields)
+  local result = ""
+  for i = 1, #fields
+  do
+    if i ~= 1 then result = result.."|" end
+    result = result..fields[i]..":"
+    local code = string.byte(types, i, i)
+    local value = C[fields[i]]
+    if value == nil then
+      result = result.."null"
+    else
+      if code == CQL_DATATYPE_BLOB_NOTNULL or code == CQL_DATATYPE_BLOB then
+        result = result.."length "..tostring(#value).." blob"
+      else
+        result = result..tostring(value)
+      end
+    end
   end
-
-  s[k] = 1
-  return true
+  return result
 end
-
-function cql_invariant(x)
- if x == false or x == 0 then
-    print("invariant failed")
-    force_error_exit()
- end
-end
-
-function some_integers_fetch(a,b,c)
-  return some_integers_fetch_results(a,b,c)
-end
-
-function exit(code)
-  print("exit code", code)
-end
-
-function printf(...)
-  print(cql_printf(...))
-end
-
--- ---

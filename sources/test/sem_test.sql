@@ -14579,19 +14579,8 @@ set sens_text := (select trim("xyz", name) result from with_sensitive);
 -- + {create_proc_stmt}: ok dml_proc
 -- + DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, nullable(1.1) AS e, CAST('y' AS BLOB) AS f;
 -- + FETCH c1;
--- + SET a_string := printf('a:%s|b:%s|c:%s|d:%s|e:%s|f:%s', CASE WHEN nullable(c1.a) IS NULL THEN 'null'
--- + ELSE printf('%d', CAST(c1.a AS INTEGER))
--- + END, CASE WHEN nullable(c1.b) IS NULL THEN 'null'
--- + ELSE printf('%d', c1.b)
--- + END, CASE WHEN nullable(c1.c) IS NULL THEN 'null'
--- + ELSE printf('%lld', c1.c)
--- + END, CASE WHEN nullable(c1.d) IS NULL THEN 'null'
--- + ELSE printf('%s', c1.d)
--- + END, CASE WHEN c1.e IS NULL THEN 'null'
--- + ELSE printf('%f', c1.e)
--- + END, CASE WHEN nullable(c1.f) IS NULL THEN 'null'
--- + ELSE printf('length %lld blob', cql_get_blob_size(c1.f))
--- + END);
+-- this is a normal function call now
+-- + SET a_string := cql_cursor_format(c1);
 -- - error:
 create proc print_call_cql_cursor_format()
 begin
@@ -14604,7 +14593,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- + error: % function may not appear in this context 'cql_cursor_format'
+-- + error: % user function may not appear in the context of a SQL statement 'cql_cursor_format'
 -- +1 error:
 create proc select_cql_cursor_format()
 begin
@@ -14626,20 +14615,6 @@ begin
   fetch C into x; -- tricky, fetching but not with storage
   set a_string := cql_cursor_format(c);
 end;
-
--- TEST: test cql_cursor_format with a non cursor params
--- + {assign}: err
--- + {call}: err
--- + error: % argument must be a variable in function 'cql_cursor_format'
--- +1 error:
-set a_string := cql_cursor_format(1);
-
--- TEST: test cql_cursor_format with a non variable cursor
--- + {assign}: err
--- + {call}: err
--- + error: % function got incorrect number of arguments 'cql_cursor_format'
--- +1 error:
-set a_string := cql_cursor_format(1, 2);
 
 -- TEST: assigning an int64 to an int is not ok
 -- + {assign}: err

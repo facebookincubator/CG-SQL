@@ -67,6 +67,8 @@ typedef struct cql_nullable_bool {
  cql_bool value;
 } cql_nullable_bool;
 
+typedef long long llint_t;
+
 // These macros are only used when generate_type_getters is enabled.
 #define CQL_DATA_TYPE_INT32     1       // note these are array offsets, do not reorder them!
 #define CQL_DATA_TYPE_INT64     2       // note these are array offsets, do not reorder them!
@@ -87,6 +89,7 @@ typedef struct cql_dynamic_cursor {
   cql_bool *_Nonnull cursor_has_row;
   cql_uint16 *_Nonnull cursor_col_offsets;
   uint8_t *_Nonnull cursor_data_types;
+  const char *_Nonnull *_Nonnull cursor_fields;
   size_t cursor_size;
   uint16_t cursor_refs_count;
   uint16_t cursor_refs_offset;
@@ -227,6 +230,7 @@ CQL_EXPORT void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed)
 CQL_EXPORT void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data, int32_t bytes);
 CQL_EXPORT void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...);
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
+CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_cursor);
 
 // teardown all the internal data for the given result_set
 CQL_EXPORT void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set);

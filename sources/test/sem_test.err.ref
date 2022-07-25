@@ -1175,10 +1175,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'trim'
 test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'trim'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'trim'
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_cursor_format'
+test/sem_test.sql:XXXX:1: error: in call : CQL0088: user function may not appear in the context of a SQL statement 'cql_cursor_format'
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'c'
-test/sem_test.sql:XXXX:1: error: in num : CQL0341: argument must be a variable in function 'cql_cursor_format'
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_cursor_format'
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG_INT' in 1L
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
