@@ -2512,13 +2512,11 @@ function call_in_loop_boxed(_db_)
   local _rc_ = CQL_OK
   local i
   local C_stmt = nil
-  local C_object_
   local C = { _has_row_ = false }
   local C_fields_ = { "x" }
   local C_types_ = "I"
   local box
   local D_stmt = nil
-  local D_object_
   local D = { _has_row_ = false }
   local D_fields_ = { "x" }
   local D_types_ = "I"
@@ -2531,10 +2529,8 @@ function call_in_loop_boxed(_db_)
     C_stmt = nil
     _rc_, C_stmt = simple_select(_db_)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    C_object_ = cql_box_stmt(C_stmt)
-    box = C_object_
-    D_object_ = box
-    D_stmt = cql_unbox_stmt(D_object_)
+    box = C_stmt
+    D_stmt = box
     -- step and fetch
     _rc_ = cql_multifetch(D_stmt, D, D_types_, D_fields_)
     if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -4879,7 +4875,6 @@ function try_boxing(_db_)
   local _rc_ = CQL_OK
   local result
   local C_stmt = nil
-  local C_object_
   local C = { _has_row_ = false }
   local C_fields_ = { "id", "name", "rate", "type", "size" }
   local C_types_ = "Islid"
@@ -4888,8 +4883,7 @@ function try_boxing(_db_)
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT id, name, rate, type, size FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  C_object_ = cql_box_stmt(C_stmt)
-  result = C_object_
+  result = C_stmt
   _rc_ = CQL_OK
 
 ::cql_cleanup::
@@ -4909,13 +4903,11 @@ END;
 function try_unboxing(_db_, boxed_cursor)
   local _rc_ = CQL_OK
   local C_stmt = nil
-  local C_object_
   local C = { _has_row_ = false }
   local C_fields_ = { "id", "name", "rate", "type", "size" }
   local C_types_ = "Islid"
 
-  C_object_ = boxed_cursor
-  C_stmt = cql_unbox_stmt(C_object_)
+  C_stmt = boxed_cursor
   -- step and fetch
   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
