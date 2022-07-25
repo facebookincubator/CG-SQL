@@ -2152,8 +2152,8 @@ Given that `arg2` is passed by reference, the statement `set arg2 := arg1;`
 actually updates a variable in the caller. For example:
 
 ```sql
-declare x int;
-echo_integer(42, x);
+declare x int not null;
+call echo_integer(42, x);
 -- `x` is now 42
 ```
 
@@ -2180,7 +2180,7 @@ is passed by reference as with `out` parameters.
 `inout` parameters allow for code such as the following:
 
 ```sql
-create procedure double(inout arg integer not null)
+create procedure times_two(inout arg integer not null)
 begin
   -- note that a variable in the caller is both
   -- read from and written to
@@ -2188,10 +2188,9 @@ begin
 end;
 
 let x := 2;
-double(x);
--- `x` is now four
+call times_two(x);
+-- `x` is now 4
 ```
-
 
 ### Procedure Calls
 
@@ -2199,7 +2198,7 @@ The usual `call` syntax is used to invoke a procedure.  It returns no value but 
 
 ```
   declare scratch integer not null;
-  call echo(12, scratch);
+  call echo_integer(12, scratch);
   scratch == 12; -- true
 ```
 
@@ -2255,7 +2254,7 @@ begin
      leave;
    else if x % 100 = 0 then
      continue;
-   else if x % 10 = 0
+   else if x % 10 = 0 then
      call printf('%d\n', x);
    end if;
   end;
@@ -2289,7 +2288,7 @@ part of the `while` statement but for illustration anyway, when x becomes negati
 This bit says that on every 100th iteration we go back to the start of the loop.  So the next bit will not run, which is the printing.
 
 ```sql
-   else if x % 10 = 0
+   else if x % 10 = 0 then
      call printf('%d\n', x);
    end if;
 ```
@@ -2331,7 +2330,7 @@ END;
 
 Some more complete examples:
 
-```
+```sql
 let x := get_something();
 switch x
   when 1,1+1 then -- constant expressions ok
@@ -9702,7 +9701,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Jul 12 08:59:03 PDT 2022
+Snapshot as of Sun Jul 24 11:43:35 PDT 2022
 
 ### Operators and Literals
 
@@ -15982,7 +15981,7 @@ Make sure the redeclaration of the function is consistent with the original decl
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Jul 12 08:59:04 PDT 2022
+Snapshot as of Sun Jul 24 11:43:35 PDT 2022
 
 ### Rules
 
