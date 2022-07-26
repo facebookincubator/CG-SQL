@@ -230,7 +230,7 @@ static bool_t lua_needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
 }
 
 // emits a cql_to_num call including a few special cases
-// e.g. cql_to_num(true) are cql_to_num(false) are very common
+// e.g. cql_to_num(true) and cql_to_num(false) are very common
 static void cg_lua_emit_to_num(charbuf *output, CSTR input) {
   if (!strcmp("true", input)) {
     bprintf(output, "1");
