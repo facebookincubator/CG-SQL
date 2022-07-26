@@ -15858,6 +15858,8 @@ CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_Nonnull _
   C._has_row_ = 1;
   cql_set_notnull(C.a, 1);
   C.b = 2;
+  cql_object_release(_tmp_object_0);
+  _tmp_object_0 = NULL;
   _rc_ = simple_child_proc_fetch_results(_db_, (simple_child_proc_result_set_ref *)&_tmp_object_0);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   cql_set_object_ref(&C.c, _tmp_object_0);

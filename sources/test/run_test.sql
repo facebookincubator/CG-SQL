@@ -5240,6 +5240,28 @@ begin
    end;
 end;
 
+create proc ch1_filter(k1 integer, k2 text)
+begin
+  declare C cursor for call ch1();
+  loop fetch C
+  begin
+     if C.k1 == k1 and C.k2 == k2 then 
+       out union C;
+     end if;
+  end;
+end;
+
+create proc ch2_filter(k3 integer, k4 text)
+begin
+  declare C cursor for call ch2();
+  loop fetch C
+  begin
+     if C.k3 == k3 and C.k4 == k4 then 
+       out union C;
+     end if;
+  end;
+end;
+
 
 create proc parent()
 begin
@@ -5270,9 +5292,22 @@ begin
      call ch2() USING (k3, k4);
 end;
 
-BEGIN_TEST(parent_child_results)
+create proc parent_child_simple_pattern()
+begin
+  declare C cursor for call parent();
+  loop fetch C
+  begin
+    declare result cursor like (like parent, child1 object<ch1_filter set>, child2 object<ch2_filter set>);
+    fetch result from values (from C, ch1_filter(C.k1, C.k2), ch2_filter(C.k3, C.k4));
+    out union result;
+  end;
+end;
+
+create proc verify_parent_child_results(results object<parent_child set>)
+begin
+  declare P cursor for results;
   let i := 0;
-  declare P cursor for call parent_child();
+
   loop fetch P
   begin
      -- call printf("%d) %d %s %d %s\n", i, P.k1, P.k2, P.k3, P.k4);
@@ -5317,6 +5352,19 @@ BEGIN_TEST(parent_child_results)
 
      set i := i + 1;
   end;
+end;
+
+BEGIN_TEST(parent_child_results)
+  let results := parent_child();
+  call verify_parent_child_results(results);
+
+  let alt_results := parent_child_simple_pattern();
+  declare r object;
+  set r := alt_results;
+
+  -- shape compatible, cast away ch1/ch2 vs. ch1_filter/ch2_filter
+  -- this verifies that the manually created parent/child result is the same
+  call verify_parent_child_results(r);
 
 END_TEST(parent_child_results)
 

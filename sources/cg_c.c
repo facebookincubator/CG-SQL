@@ -6491,6 +6491,10 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     if (need_comma) {
       bprintf(&invocation, ", ");
     }
+ 
+    // the out arg is clobbered by the called function, we have to release it first
+    bprintf(cg_main_output, "cql_object_release(%s);\n", result_var.ptr);
+    bprintf(cg_main_output, "%s = NULL;\n", result_var.ptr);
     bprintf(&invocation, "(%s *)&%s", result_ref.ptr, result_var.ptr);
     need_comma = true;
   }
