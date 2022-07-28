@@ -145,6 +145,10 @@ static symtab *string_literals;
 // used to create SQL with the --compress option "pieces"
 static symtab *text_pieces;
 
+// When emitting procedure declarations we do not want duplicates
+// Especially when recursing over referenced procedures via object<proc_name SET>
+static symtab *emitted_proc_decls;
+
 // The current shared fragment number in the current procdure
 static int32_t proc_cte_index;
 
@@ -665,7 +669,7 @@ static void cg_result_set_type_from_kind(charbuf *output, sem_t sem_type, CSTR k
 }
 
 static bool_t is_result_set_type(sem_t sem_type, CSTR kind) {
-  return core_type_of(sem_type) == SEM_TYPE_OBJECT && kind && sem_ends_in_set(kind);
+  return core_type_of(sem_type) == SEM_TYPE_OBJECT && kind && ends_in_set(kind);
 }
 
 // This helper generates results for function return types as the name indicates.
@@ -3769,16 +3773,17 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   if (options.test) {
     // echo the export where it can be sanity checked
+    bprintf(cg_declarations_output, "/*\n");
     if (private_proc) {
-      bprintf(cg_declarations_output, "// private: ");
+      bprintf(cg_declarations_output, "private:\n");
     }
     else {
-      bprintf(cg_declarations_output, "// export: ");
+      bprintf(cg_declarations_output, "export:\n");
     }
 
     gen_set_output_buffer(cg_declarations_output);
-    gen_declare_proc_from_create_proc(ast);
-    bprintf(cg_declarations_output, ";\n");
+    gen_declare_proc_closure(ast, NULL);
+    bprintf(cg_declarations_output, "*/\n");
   }
 
   cg_main_output = &proc_body;
@@ -3852,8 +3857,8 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   if (options.generate_exports && !private_proc) {
     gen_set_output_buffer(exports_output);
-    gen_declare_proc_from_create_proc(ast);
-    bprintf(exports_output, ";\n");
+    // the declare proc and any other procs it needs due to types with kind object<x SET>
+    gen_declare_proc_closure(ast, emitted_proc_decls);
   }
 
   if (out_union_proc) {
@@ -5490,7 +5495,7 @@ static void cg_declare_cursor(ast_node *ast) {
   }
   else {
     is_for_expr = true;
-    if (sem_ends_in_set(ast->right->sem->kind)) {
+    if (ends_in_set(ast->right->sem->kind)) {
       out_union_processing = true;
       out_union_result_name = ast->left->sem->sptr->struct_name;
       is_unboxing = false;
@@ -8519,6 +8524,9 @@ cql_noexport void cg_c_init(void) {
 
   Contract(!text_pieces);
   text_pieces = symtab_new_case_sens();
+ 
+  Contract(!emitted_proc_decls);
+  emitted_proc_decls = symtab_new();
 
   DDL_STMT_INIT(drop_table_stmt);
   DDL_STMT_INIT(drop_view_stmt);
@@ -8688,6 +8696,7 @@ cql_noexport void cg_c_cleanup() {
 
   SYMTAB_CLEANUP(string_literals);
   SYMTAB_CLEANUP(text_pieces);
+  SYMTAB_CLEANUP(emitted_proc_decls);
 
   base_fragment_name = NULL;
   exports_output = NULL;

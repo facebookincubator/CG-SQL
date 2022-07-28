@@ -534,7 +534,7 @@ static void cg_java_create_proc_stmt(ast_node *ast, cg_java_context *java_contex
       // resultsets with objects in java are not supported
       if (core_type_of(sem_type) == SEM_TYPE_OBJECT) {
         CSTR kind = sptr->kinds[i];
-        if (!kind || !sem_ends_in_set(kind)) {
+        if (!kind || !ends_in_set(kind)) {
           cql_error("out cursors with object columns are not yet supported for java\n");
           cql_cleanup_and_exit(1);
         }

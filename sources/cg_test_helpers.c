@@ -54,6 +54,9 @@ static symtab *all_tables_with_triggers;
 // all the indexes to emit
 static symtab *all_tables_with_indexes;
 
+// We use this table to track which proc declarations we've already emitted
+static symtab *test_helper_decls_emitted;
+
 // Record the autotest attribute processed. This is used to figure out if there
 // will be code gen to write to the output file
 static int32_t helper_flags = 0;
@@ -88,8 +91,7 @@ static bool is_declare_proc_needed() {
 static void cg_test_helpers_declare_proc(ast_node *ast) {
   bprintf(cg_th_decls, "\n");
   gen_set_output_buffer(cg_th_decls);
-  gen_declare_proc_from_create_proc(ast);
-  bprintf(cg_th_decls, ";\n");
+  gen_declare_proc_closure(ast, test_helper_decls_emitted);
 }
 
 static bool_t cg_test_helpers_force_if_not_exists(
@@ -1198,6 +1200,7 @@ static void cg_test_helpers_stmt_list(ast_node *head) {
   CHARBUF_OPEN(decls_buf);
   cg_th_procs = &procs_buf;
   cg_th_decls = &decls_buf;
+  test_helper_decls_emitted = symtab_new();
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
@@ -1218,6 +1221,8 @@ static void cg_test_helpers_stmt_list(ast_node *head) {
   all_tables_with_triggers = NULL;
   symtab_delete(all_tables_with_indexes);
   all_tables_with_indexes = NULL;
+  symtab_delete(test_helper_decls_emitted);
+  test_helper_decls_emitted = NULL;
 }
 
 // Force the globals to null state so that they do not look like roots to LeakSanitizer
@@ -1228,6 +1233,7 @@ static void cg_test_helpers_reset_globals() {
   gen_drop_triggers = NULL;
   all_tables_with_triggers = NULL;
   all_tables_with_indexes = NULL;
+  test_helper_decls_emitted = NULL;
   dummy_test_infos = NULL;
   cg_th_output = NULL;
   cg_th_decls = NULL;

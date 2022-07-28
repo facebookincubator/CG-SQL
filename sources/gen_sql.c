@@ -71,6 +71,7 @@ static void gen_opt_where(ast_node *ast);
 static void gen_conflict_clause(ast_node *ast);
 static void gen_call_stmt(ast_node *ast);
 static void gen_shared_cte(ast_node *ast);
+static bool_t gen_found_set_kind(ast_node *ast, void *context, charbuf *buffer);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -201,6 +202,32 @@ cql_noexport void gen_misc_attrs(ast_node *list) {
   }
 }
 
+static void gen_type_kind(CSTR name) {
+  // we don't always have an ast node for this, we make a fake one for the callback
+  str_ast_node sast = { 
+    .type = k_ast_str,
+    .value = name,
+    .filename = "none"
+  };
+
+  ast_node *ast = (ast_node *)&sast;
+
+  bool_t suppress = false;
+  if (gen_callbacks) {
+    gen_sql_callback callback = gen_callbacks->set_kind_callback;
+    if (callback && ends_in_set(name)) {
+      CHARBUF_OPEN(buf);
+      suppress = callback(ast, gen_callbacks->set_kind_context, &buf);
+      gen_printf("%s", buf.ptr);
+      CHARBUF_CLOSE(buf);
+    }
+  }
+
+  if (!suppress) {
+    gen_printf("<%s>", name);
+  }
+}
+
 void gen_data_type(ast_node *ast) {
   if (is_ast_create_data_type(ast)) {
     gen_printf("CREATE ");
@@ -257,9 +284,8 @@ void gen_data_type(ast_node *ast) {
 
   if (!for_sqlite()) {
     if (ast->left) {
-      gen_printf("<");
-      gen_name(ast->left);
-      gen_printf(">");
+      EXTRACT_STRING(name, ast->left);
+      gen_type_kind(name);
     }
   }
 }
@@ -2937,7 +2963,7 @@ static void gen_create_proc_stmt(ast_node *ast) {
   gen_printf("END");
 }
 
-cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
+static void gen_declare_proc_from_create_proc(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(!for_sqlite());
   EXTRACT_STRING(name, ast->left);
@@ -2974,7 +3000,7 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
 
         CSTR kind = sptr->kinds[i];
         if (kind) {
-          gen_printf("<%s>", kind);
+          gen_type_kind(kind);
         }
 
         if (is_not_nullable(sem_type)) {
@@ -3001,6 +3027,70 @@ cql_noexport void gen_declare_proc_from_create_proc(ast_node *ast) {
     }
   }
 #endif
+}
+
+static charbuf *closure_output;
+static symtab *closure_emitted;
+
+static bool_t gen_found_set_kind(ast_node *ast, void *context, charbuf *buffer) {
+  EXTRACT_STRING(name, ast);
+  ast_node *proc = NULL;
+
+  CHARBUF_OPEN(proc_name);
+    for (int32_t i = 0; name[i] && name[i] != ' '; i++) {
+      bputc(&proc_name, name[i]);
+    }
+    proc = find_proc(proc_name.ptr);
+  CHARBUF_CLOSE(proc_name);
+
+  if (proc) {
+    // get canonical name
+    EXTRACT_STRING(pname, get_proc_name(proc));
+
+    // we interrupt the current decl to emit a decl for this new name
+    if (!closure_emitted || symtab_add(closure_emitted, pname, NULL)) {
+      CHARBUF_OPEN(current);
+      charbuf *gen_output_saved = gen_output;
+
+      gen_output = &current;
+      gen_declare_proc_from_create_or_decl(proc);
+
+      gen_output = closure_output;
+      gen_printf("%s;\n", current.ptr);
+
+      gen_output = gen_output_saved;
+      CHARBUF_CLOSE(current);
+    }
+  }
+
+  return false;
+}
+
+cql_noexport void gen_declare_proc_closure(ast_node *ast, symtab *emitted) {
+  gen_sql_callbacks callbacks = {
+     .set_kind_callback = gen_found_set_kind,
+     .set_kind_context = emitted
+  };
+  gen_callbacks = &callbacks;
+
+  EXTRACT_STRING(name, ast->left);
+  if (emitted) {
+    // if specified then we use this to track what we have already emitted
+    symtab_add(emitted, name, NULL);
+  }
+
+  closure_output = gen_output;
+  closure_emitted = emitted;
+
+  CHARBUF_OPEN(current);
+    gen_output = &current;
+    gen_declare_proc_from_create_proc(ast);
+
+    gen_output = closure_output;
+    gen_printf("%s;\n", current.ptr);
+  CHARBUF_CLOSE(current);
+
+  gen_callbacks = NULL;
 }
 
 static void gen_typed_name(ast_node *ast) {

@@ -1070,3 +1070,13 @@ cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
   SYMTAB_CLEANUP(callbacks->visited_from);
   SYMTAB_CLEANUP(callbacks->visited_proc);
 }
+
+cql_noexport size_t ends_in_cursor(CSTR str) {
+  const char tail[] = " CURSOR";
+  return Strendswith(str, tail) ? sizeof(tail) - 1 : 0;
+}
+
+cql_noexport size_t ends_in_set(CSTR str) {
+  const char tail[] = " SET";
+  return Strendswith(str, tail) ? sizeof(tail) - 1 : 0;
+}

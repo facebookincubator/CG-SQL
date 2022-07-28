@@ -3675,6 +3675,38 @@ extern void mutated_not_null(cql_string_ref _Nonnull _in__x);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+#ifndef result_set_type_decl_a_proc_we_need_result_set
+#define result_set_type_decl_a_proc_we_need_result_set 1
+cql_result_set_type_decl(a_proc_we_need_result_set, a_proc_we_need_result_set_ref);
+#endif
+
+// The statement ending at line XXXX
+#define CRC_a_proc_that_needs_dependents -3070440102639124981L
+
+extern cql_string_ref _Nonnull a_proc_that_needs_dependents_stored_procedure_name;
+
+#define a_proc_that_needs_dependents_data_types_count 2
+
+#ifndef result_set_type_decl_a_proc_that_needs_dependents_result_set
+#define result_set_type_decl_a_proc_that_needs_dependents_result_set 1
+cql_result_set_type_decl(a_proc_that_needs_dependents_result_set, a_proc_that_needs_dependents_result_set_ref);
+#endif
+extern a_proc_we_need_result_set_ref _Nullable a_proc_that_needs_dependents_get_a_foo(a_proc_that_needs_dependents_result_set_ref _Nonnull result_set, cql_int32 row);
+extern a_proc_we_need_result_set_ref _Nullable a_proc_that_needs_dependents_get_another_foo(a_proc_that_needs_dependents_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 a_proc_that_needs_dependents_result_count(a_proc_that_needs_dependents_result_set_ref _Nonnull result_set);
+#define a_proc_that_needs_dependents_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define a_proc_that_needs_dependents_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+extern CQL_WARN_UNUSED cql_code a_proc_that_needs_dependents_fetch_results(sqlite3 *_Nonnull _db_, a_proc_that_needs_dependents_result_set_ref _Nullable *_Nonnull _result_set_);
+
+// The statement ending at line XXXX
+extern void another_proc_that_needs_dependents(cql_object_ref _Nullable a_foo);
+
+// The statement ending at line XXXX
 #define CRC_simple_child_proc 8385003267409391710L
 
 extern cql_string_ref _Nonnull simple_child_proc_stored_procedure_name;

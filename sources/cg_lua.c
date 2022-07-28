@@ -3358,7 +3358,7 @@ static void cg_lua_declare_cursor(ast_node *ast) {
   }
   else {
     is_for_expr = true;
-    if (sem_ends_in_set(ast->right->sem->kind)) {
+    if (ends_in_set(ast->right->sem->kind)) {
       out_union_processing = true;
       is_unboxing = false;
     }

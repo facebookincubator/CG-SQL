@@ -303,8 +303,6 @@ cql_noexport void sem_validate_cursor_blob_compat(ast_node *ast_error, ast_node 
 cql_noexport void sem_any_shape(ast_node *ast);
 cql_noexport sem_node *new_sem(sem_t sem_type);
 cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);
-cql_noexport size_t sem_ends_in_cursor(CSTR str);
-cql_noexport size_t sem_ends_in_set(CSTR str);
 
 #endif
 
