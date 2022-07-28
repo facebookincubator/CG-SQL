@@ -1520,7 +1520,7 @@ end;
 -- + _result_->size = C.size;
 -- + cql_set_string_ref(&_result_->extra1, C.extra1);
 -- + cql_set_string_ref(&_result_->extra2, C.extra2);
--- + // export: DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
 create proc out_cursor_proc()
 begin
   declare C cursor for select bar.*, 'xyzzy' extra1, 'plugh' extra2 from bar;
@@ -1695,7 +1695,7 @@ end;
 -- + _result_->_has_row_ = C._has_row_;
 -- + _result_->A = C.A;
 -- + _result_->B = C.B;
--- + // export: DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
+-- + DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
 create proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
@@ -2007,7 +2007,7 @@ begin
 end;
 
 -- TEST: verify the decl, this is only for later tests
--- + export: DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
+-- + DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
 create proc out_union_helper()
 begin
   declare C cursor like select 1 x;
@@ -2016,7 +2016,7 @@ begin
 end;
 
 -- TEST: verify the decl, this is only for later tests
--- + export: DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
 create proc out_union_dml_helper()
 begin
   declare C cursor for select 1 x;
@@ -2046,7 +2046,7 @@ begin
 end;
 
 -- TEST: here we create a proc that is going to forward the result of out union as its own result
--- + export: DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL)
+-- + DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL)
 -- - USING TRANSACTION
 -- + *_result_set_ = NULL;
 -- + out_union_helper_fetch_results((out_union_helper_result_set_ref *)_result_set_);
@@ -2069,7 +2069,7 @@ begin
 end;
 
 -- TEST: forward out union result, with dml proc
--- + export: DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
 -- + *_result_set_ = NULL;
 -- +  _rc_ = out_union_dml_helper_fetch_results(_db_, (out_union_dml_helper_result_set_ref *)_result_set_);
 -- +1 cql_object_release(*_result_set_);
@@ -2231,7 +2231,7 @@ end;
 
 -- TEST: null on lhs of NOT IN
 -- + cql_set_null(*b);
--- + // export: DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
+-- + DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
 create proc not_in_test(x integer, out b bool)
 begin
   set b := NULL NOT IN (1);
@@ -2248,7 +2248,7 @@ end;
 
 -- TEST: create proc with a single-column identity attribute
 -- + cql_uint16 simple_identity_identity_columns[] = { 1,
--- + // export: DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
+-- + DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
 @attribute(cql:identity=(id))
 create proc simple_identity()
 begin
@@ -2574,7 +2574,7 @@ begin
 end;
 
 -- TEST: create a result set from rows values
--- + // export: DECLARE PROC out_union_two () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL);
+-- + DECLARE PROC out_union_two () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL);
 -- + void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- + cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
 -- + cql_bytebuf _rows_;
@@ -2623,7 +2623,7 @@ begin
 end;
 
 -- TEST: create a result set from selected rows
--- + // export: DECLARE PROC out_union_from_select () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_union_from_select () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL) USING TRANSACTION;
 -- + cql_bytebuf _rows_;
 -- + cql_bytebuf_open(&_rows_);
 -- +2 cql_retain_row(C);
@@ -3628,7 +3628,7 @@ begin
 end;
 
 -- TEST: use result code in a procedure
--- + export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code)
 -- + cql_code _rc_ = SQLITE_OK;
 -- + *result_code = SQLITE_OK;
@@ -3890,7 +3890,7 @@ set t2 := (select name from bar if nothing or null "garbonzo");
 
 
 -- TEST: verify private exports and binding
--- + // private: DECLARE PROC private_proc (OUT x INTEGER);
+-- + DECLARE PROC private_proc (OUT x INTEGER);
 -- + static void private_proc(cql_nullable_int32 *_Nonnull x)
 @attribute(cql:private)
 create proc private_proc(out x integer)
@@ -3901,7 +3901,7 @@ end;
 -- TEST: verify that getters are not present on private out union but the fetcher is
 -- + .crc = CRC_private_out_union,
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
--- + // private: DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- + DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
 -- + static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
 -- - private_out_union_get_a_field
@@ -3930,7 +3930,7 @@ end;
 -- TEST: verify that getters are not present on no getters out union but the fetcher is
 -- + .crc = CRC_no_getters_out_union,
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
--- + // export: DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- + DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
 -- - static void
 -- + void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
@@ -3960,7 +3960,7 @@ end;
 -- TEST: verify that getters are not present on suppress results out union but the fetcher is
 -- + .crc = CRC_suppress_results_out_union,
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
--- + // export: DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- + DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
 -- - static void
 -- + void suppress_results_out_union_fetch_results(suppress_results_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
@@ -3988,7 +3988,7 @@ begin
 end;
 
 -- TEST: verify private exports and binding for result set case
--- + // private: DECLARE PROC private_result (OUT x INTEGER) (x INTEGER NOT NULL);
+-- + DECLARE PROC private_result (OUT x INTEGER) (x INTEGER NOT NULL);
 -- + static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x) {
 -- -- cql_code private_result_fetch_results
 @attribute(cql:private)
@@ -4284,7 +4284,7 @@ begin
 end;
 
 -- Verify that this is a DML proc even though it does nothing but use throw
--- + export: DECLARE PROC uses_throw () USING TRANSACTION;
+-- + DECLARE PROC uses_throw () USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
 -- + _rc_ = cql_best_error(SQLITE_OK);
 create proc uses_throw()
@@ -4293,7 +4293,7 @@ begin
 end;
 
 -- TEST: verify that this is a DML proc even though it does nothing but ifnull_throw
--- + export: DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
+-- + DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_int32 x) {
 -- + _rc_ = SQLITE_ERROR;
 create proc uses_ifnull_throw(x int)
@@ -5167,7 +5167,7 @@ end;
 -- TEST: if we mutate a reference arg then we have to track its lifetime
 -- we cannot just borrow the reference, the parameter is not released
 -- nor can it be...  So convert this to a normal local pattern.
--- + export: DECLARE PROC mutated_in_param_ref (x TEXT);
+-- + DECLARE PROC mutated_in_param_ref (x TEXT);
 -- + void mutated_in_param_ref(cql_string_ref _Nullable _in__x) {
 -- + cql_string_ref x = NULL;
 -- + cql_set_string_ref(&x, _in__x);
@@ -5276,6 +5276,28 @@ declare select function no_check_select_fun no check text;
 
 -- TEST: declaration of an unchecked table-valued select function
 declare select function no_check_select_table_valued_fun no check (t text);
+
+-- a proc that returns a value, we will use it's shape below
+declare proc a_proc_we_need() (id integer, t text);
+
+-- TEST make sure we export everything we need
+-- including the recursive dependency
+-- + DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
+-- + DECLARE PROC a_proc_that_needs_dependents () OUT UNION (a_foo OBJECT, another_foo OBJECT) USING TRANSACTION;
+create proc a_proc_that_needs_dependents()
+begin
+  declare C cursor like (a_foo object<a_proc_we_need set>, another_foo object<a_proc_we_need set>);
+  fetch C using a_proc_we_need() a_foo, a_proc_we_need() another_foo;
+  out union C;
+end;
+
+-- TEST: check for needed types in the args
+-- + DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
+-- + DECLARE PROC another_proc_that_needs_dependents (a_foo OBJECT);
+create proc another_proc_that_needs_dependents(a_foo object<a_proc_we_need set>)
+begin
+end;
+
 
 create proc simple_child_proc()
 begin

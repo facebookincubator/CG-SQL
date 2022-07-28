@@ -140,7 +140,10 @@ CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC selector () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NULL, f4 BOOL NOT NULL, f5 LONG_INT NOT NULL, f6 BLOB NOT NULL, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+/*
+export:
+DECLARE PROC selector () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NULL, f4 BOOL NOT NULL, f5 LONG_INT NOT NULL, f6 BLOB NOT NULL, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+*/
 CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -243,7 +246,10 @@ cql_fetch_info emit_object_result_set_info = {
   .crc = CRC_emit_object_result_set,
   .perf_index = &emit_object_result_set_perf_index,
 };
-// export: DECLARE PROC emit_object_result_set (o OBJECT NOT NULL) OUT UNION (o OBJECT NOT NULL);
+/*
+export:
+DECLARE PROC emit_object_result_set (o OBJECT NOT NULL) OUT UNION (o OBJECT NOT NULL);
+*/
 
 typedef struct emit_object_result_set_C_row {
   cql_bool _has_row_;
@@ -359,7 +365,10 @@ CQL_WARN_UNUSED cql_code sproc_copy_func_fetch_results(sqlite3 *_Nonnull _db_, s
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC sproc_copy_func () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NULL, f4 BOOL NOT NULL, f5 LONG_INT NOT NULL, f6 BLOB NOT NULL, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+/*
+export:
+DECLARE PROC sproc_copy_func () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NULL, f4 BOOL NOT NULL, f5 LONG_INT NOT NULL, f6 BLOB NOT NULL, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+*/
 CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -425,7 +434,10 @@ void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC emit_object_with_setters (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+/*
+export:
+DECLARE PROC emit_object_with_setters (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+*/
 
 typedef struct emit_object_with_setters_C_row {
   cql_bool _has_row_;
@@ -503,7 +515,10 @@ CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_,
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -565,7 +580,11 @@ cql_fetch_info simple_container_proc_info = {
   .crc = CRC_simple_container_proc,
   .perf_index = &simple_container_proc_perf_index,
 };
-// export: DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
+/*
+export:
+DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT) USING TRANSACTION;
+*/
 
 typedef struct simple_container_proc_C_row {
   cql_bool _has_row_;

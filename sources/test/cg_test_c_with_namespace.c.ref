@@ -559,6 +559,21 @@ typedef struct some_redeclared_out_union_proc_row {
 } some_redeclared_out_union_proc_row;
 #endif
 extern cql_nullable_int32 external_cursor_func(cql_dynamic_cursor *_Nonnull x);
+extern CQL_WARN_UNUSED cql_code a_proc_we_need_fetch_results(sqlite3 *_Nonnull _db_, a_proc_we_need_result_set_ref _Nullable *_Nonnull _result_set_);
+
+extern CQL_WARN_UNUSED cql_code a_proc_we_need(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+
+
+#ifndef row_type_decl_a_proc_that_needs_dependents_row
+#define row_type_decl_a_proc_that_needs_dependents_row 1
+typedef struct a_proc_that_needs_dependents_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nullable a_foo;
+  cql_object_ref _Nullable another_foo;
+} a_proc_that_needs_dependents_row;
+#endif
 extern CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 #ifndef row_type_decl_simple_container_proc_row
@@ -694,7 +709,10 @@ END;
 */
 
 #define _PROC_ "test"
-// export: DECLARE PROC test (i INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC test (i INTEGER NOT NULL);
+*/
 void test(cql_int32 i) {
   if (i) {
     puts("true");
@@ -716,7 +734,10 @@ END;
 */
 
 #define _PROC_ "proc_with_return_guard"
-// export: DECLARE PROC proc_with_return_guard (a INTEGER);
+/*
+export:
+DECLARE PROC proc_with_return_guard (a INTEGER);
+*/
 void proc_with_return_guard(cql_nullable_int32 a) {
   cql_nullable_int32 x;
   cql_set_null(x);
@@ -748,7 +769,10 @@ END;
 */
 
 #define _PROC_ "out_test"
-// export: DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
+/*
+export:
+DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
+*/
 void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
   cql_contract_argument_notnull((void *)i, 1);
   cql_contract_argument_notnull((void *)ii, 2);
@@ -814,7 +838,10 @@ END;
 */
 
 #define _PROC_ "outparm_test"
-// export: DECLARE PROC outparm_test (OUT foo INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC outparm_test (OUT foo INTEGER NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull foo) {
   cql_contract_argument_notnull((void *)foo, 1);
 
@@ -855,7 +882,10 @@ END;
 */
 
 #define _PROC_ "throwing"
-// export: DECLARE PROC throwing () USING TRANSACTION;
+/*
+export:
+DECLARE PROC throwing () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code throwing(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   // try
@@ -992,7 +1022,10 @@ CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, w
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC with_result_set () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC with_result_set () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1075,7 +1108,10 @@ CQL_WARN_UNUSED cql_code select_from_view_fetch_results(sqlite3 *_Nonnull _db_, 
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC select_from_view () (id INTEGER NOT NULL, type INTEGER);
+/*
+export:
+DECLARE PROC select_from_view () (id INTEGER NOT NULL, type INTEGER);
+*/
 CQL_WARN_UNUSED cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1102,7 +1138,10 @@ END;
 */
 
 #define _PROC_ "make_view"
-// export: DECLARE PROC make_view () USING TRANSACTION;
+/*
+export:
+DECLARE PROC make_view () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code make_view(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -1126,7 +1165,10 @@ END;
 */
 
 #define _PROC_ "make_index"
-// export: DECLARE PROC make_index () USING TRANSACTION;
+/*
+export:
+DECLARE PROC make_index () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code make_index(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -1245,7 +1287,10 @@ CQL_WARN_UNUSED cql_code get_data_fetch_results(sqlite3 *_Nonnull _db_, get_data
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC get_data (name_ TEXT NOT NULL, id_ INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC get_data (name_ TEXT NOT NULL, id_ INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_) {
   cql_contract_argument_notnull((void *)name_, 1);
 
@@ -1284,7 +1329,10 @@ END;
 */
 
 #define _PROC_ "easy_fetch"
-// export: DECLARE PROC easy_fetch () USING TRANSACTION;
+/*
+export:
+DECLARE PROC easy_fetch () USING TRANSACTION;
+*/
 
 typedef struct easy_fetch_C_row {
   cql_bool _has_row_;
@@ -1348,7 +1396,10 @@ END;
 */
 
 #define _PROC_ "copy_int"
-// export: DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
+/*
+export:
+DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
+*/
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 2);
 
@@ -1369,7 +1420,10 @@ END;
 */
 
 #define _PROC_ "insert_rowid_reader"
-// export: DECLARE PROC insert_rowid_reader () USING TRANSACTION;
+/*
+export:
+DECLARE PROC insert_rowid_reader () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int64 row;
@@ -1393,7 +1447,10 @@ END;
 */
 
 #define _PROC_ "changes_reader"
-// export: DECLARE PROC changes_reader () USING TRANSACTION;
+/*
+export:
+DECLARE PROC changes_reader () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code changes_reader(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 ct;
@@ -1429,7 +1486,10 @@ END;
 */
 
 #define _PROC_ "xyzzy_test"
-// export: DECLARE PROC xyzzy_test () USING TRANSACTION;
+/*
+export:
+DECLARE PROC xyzzy_test () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 _tmp_n_int_0;
@@ -1555,7 +1615,10 @@ CQL_WARN_UNUSED cql_code complex_return_fetch_results(sqlite3 *_Nonnull _db_, co
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC complex_return () (_bool BOOL NOT NULL, _integer INTEGER NOT NULL, _longint LONG_INT NOT NULL, _real REAL NOT NULL, _text TEXT NOT NULL, _nullable_bool BOOL);
+/*
+export:
+DECLARE PROC complex_return () (_bool BOOL NOT NULL, _integer INTEGER NOT NULL, _longint LONG_INT NOT NULL, _real REAL NOT NULL, _text TEXT NOT NULL, _nullable_bool BOOL);
+*/
 CQL_WARN_UNUSED cql_code complex_return(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1631,7 +1694,10 @@ CQL_WARN_UNUSED cql_code hierarchical_query_fetch_results(sqlite3 *_Nonnull _db_
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC hierarchical_query (rate_ LONG_INT NOT NULL, limit_ INTEGER NOT NULL, offset_ INTEGER NOT NULL) (id INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC hierarchical_query (rate_ LONG_INT NOT NULL, limit_ INTEGER NOT NULL, offset_ INTEGER NOT NULL) (id INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code hierarchical_query(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1719,7 +1785,10 @@ CQL_WARN_UNUSED cql_code hierarchical_unmatched_query_fetch_results(sqlite3 *_No
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC hierarchical_unmatched_query (rate_ LONG_INT NOT NULL, limit_ INTEGER NOT NULL, offset_ INTEGER NOT NULL) (id INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC hierarchical_unmatched_query (rate_ LONG_INT NOT NULL, limit_ INTEGER NOT NULL, offset_ INTEGER NOT NULL) (id INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code hierarchical_unmatched_query(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int64 rate_, cql_int32 limit_, cql_int32 offset_) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1801,7 +1870,10 @@ CQL_WARN_UNUSED cql_code union_select_fetch_results(sqlite3 *_Nonnull _db_, unio
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC union_select () (A INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC union_select () (A INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code union_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1873,7 +1945,10 @@ CQL_WARN_UNUSED cql_code union_all_select_fetch_results(sqlite3 *_Nonnull _db_, 
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC union_all_select () (A INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC union_all_select () (A INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code union_all_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1950,7 +2025,10 @@ CQL_WARN_UNUSED cql_code union_all_with_nullable_fetch_results(sqlite3 *_Nonnull
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC union_all_with_nullable () (name TEXT);
+/*
+export:
+DECLARE PROC union_all_with_nullable () (name TEXT);
+*/
 CQL_WARN_UNUSED cql_code union_all_with_nullable(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -1982,7 +2060,10 @@ END;
 */
 
 #define _PROC_ "with_stmt_using_cursor"
-// export: DECLARE PROC with_stmt_using_cursor () USING TRANSACTION;
+/*
+export:
+DECLARE PROC with_stmt_using_cursor () USING TRANSACTION;
+*/
 
 typedef struct with_stmt_using_cursor_C_row {
   cql_bool _has_row_;
@@ -2090,7 +2171,10 @@ CQL_WARN_UNUSED cql_code with_stmt_fetch_results(sqlite3 *_Nonnull _db_, with_st
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC with_stmt () (a INTEGER NOT NULL, b INTEGER NOT NULL, c INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC with_stmt () (a INTEGER NOT NULL, b INTEGER NOT NULL, c INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code with_stmt(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -2182,7 +2266,10 @@ CQL_WARN_UNUSED cql_code with_recursive_stmt_fetch_results(sqlite3 *_Nonnull _db
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC with_recursive_stmt () (a INTEGER NOT NULL, b INTEGER NOT NULL, c INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC with_recursive_stmt () (a INTEGER NOT NULL, b INTEGER NOT NULL, c INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code with_recursive_stmt(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -2271,7 +2358,10 @@ CQL_WARN_UNUSED cql_code parent_proc_fetch_results(sqlite3 *_Nonnull _db_, paren
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC parent_proc () (one INTEGER NOT NULL, two INTEGER NOT NULL, three INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC parent_proc () (one INTEGER NOT NULL, two INTEGER NOT NULL, three INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code parent_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -2355,7 +2445,10 @@ CQL_WARN_UNUSED cql_code parent_proc_child_fetch_results(sqlite3 *_Nonnull _db_,
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC parent_proc_child () (four INTEGER NOT NULL, five INTEGER NOT NULL, six INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC parent_proc_child () (four INTEGER NOT NULL, five INTEGER NOT NULL, six INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code parent_proc_child(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -2382,7 +2475,10 @@ END;
 */
 
 #define _PROC_ "outint_nullable"
-// export: DECLARE PROC outint_nullable (OUT output INTEGER, OUT result BOOL NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC outint_nullable (OUT output INTEGER, OUT result BOOL NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_int32 *_Nonnull output, cql_bool *_Nonnull result) {
   cql_contract_argument_notnull((void *)output, 1);
   cql_contract_argument_notnull((void *)result, 2);
@@ -2422,7 +2518,10 @@ END;
 */
 
 #define _PROC_ "outint_notnull"
-// export: DECLARE PROC outint_notnull (OUT output INTEGER NOT NULL, OUT result BOOL NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC outint_notnull (OUT output INTEGER NOT NULL, OUT result BOOL NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull output, cql_bool *_Nonnull result) {
   cql_contract_argument_notnull((void *)output, 1);
   cql_contract_argument_notnull((void *)result, 2);
@@ -2482,7 +2581,10 @@ END;
 */
 
 #define _PROC_ "obj_proc"
-// export: DECLARE PROC obj_proc (OUT an_object OBJECT);
+/*
+export:
+DECLARE PROC obj_proc (OUT an_object OBJECT);
+*/
 void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
   cql_contract_argument_notnull((void *)an_object, 1);
 
@@ -2546,7 +2648,10 @@ void cursor_with_object_fetch_results( cursor_with_object_result_set_ref _Nullab
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC cursor_with_object (object_ OBJECT) OUT (object_ OBJECT);
+/*
+export:
+DECLARE PROC cursor_with_object (object_ OBJECT) OUT (object_ OBJECT);
+*/
 
 typedef struct cursor_with_object_C_row {
   cql_bool _has_row_;
@@ -2581,7 +2686,10 @@ END;
 */
 
 #define _PROC_ "unused_temp"
-// export: DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
+*/
 void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
   cql_contract_argument_notnull((void *)o, 2);
 
@@ -2624,7 +2732,10 @@ END;
 */
 
 #define _PROC_ "echo_test"
-// export: DECLARE PROC echo_test ();
+/*
+export:
+DECLARE PROC echo_test ();
+*/
 void echo_test(void) {
   cql_string_ref s = NULL;
 
@@ -2646,7 +2757,10 @@ END;
 */
 
 #define _PROC_ "insert_values"
-// export: DECLARE PROC insert_values (id_ INTEGER NOT NULL, type_ INTEGER) USING TRANSACTION;
+/*
+export:
+DECLARE PROC insert_values (id_ INTEGER NOT NULL, type_ INTEGER) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
@@ -2678,7 +2792,10 @@ END;
 */
 
 #define _PROC_ "alter_table_test"
-// export: DECLARE PROC alter_table_test () USING TRANSACTION;
+/*
+export:
+DECLARE PROC alter_table_test () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code alter_table_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -2701,7 +2818,10 @@ END;
 */
 
 #define _PROC_ "drop_table_test"
-// export: DECLARE PROC drop_table_test () USING TRANSACTION;
+/*
+export:
+DECLARE PROC drop_table_test () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code drop_table_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -2818,7 +2938,10 @@ CQL_WARN_UNUSED cql_code uses_proc_for_result_fetch_results(sqlite3 *_Nonnull _d
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC uses_proc_for_result () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC uses_proc_for_result () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code uses_proc_for_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -2847,7 +2970,10 @@ END;
 */
 
 #define _PROC_ "index_dropper"
-// export: DECLARE PROC index_dropper () USING TRANSACTION;
+/*
+export:
+DECLARE PROC index_dropper () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code index_dropper(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -2875,7 +3001,10 @@ END;
 */
 
 #define _PROC_ "misc_dml_proc"
-// export: DECLARE PROC misc_dml_proc () USING TRANSACTION;
+/*
+export:
+DECLARE PROC misc_dml_proc () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -2909,7 +3038,10 @@ END;
 */
 
 #define _PROC_ "dummy_user"
-// export: DECLARE PROC dummy_user () USING TRANSACTION;
+/*
+export:
+DECLARE PROC dummy_user () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_int32 _seed_ = 0;
@@ -2946,7 +3078,10 @@ END;
 */
 
 #define _PROC_ "proc_with_out_arg"
-// export: DECLARE PROC proc_with_out_arg (OUT foo TEXT);
+/*
+export:
+DECLARE PROC proc_with_out_arg (OUT foo TEXT);
+*/
 void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
   cql_contract_argument_notnull((void *)foo, 1);
 
@@ -2969,7 +3104,10 @@ END;
 */
 
 #define _PROC_ "calls_out_proc"
-// export: DECLARE PROC calls_out_proc (OUT foo TEXT);
+/*
+export:
+DECLARE PROC calls_out_proc (OUT foo TEXT);
+*/
 void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
   cql_contract_argument_notnull((void *)foo, 1);
 
@@ -3010,7 +3148,10 @@ END;
 */
 
 #define _PROC_ "blob_proc"
-// export: DECLARE PROC blob_proc (OUT a_blob BLOB);
+/*
+export:
+DECLARE PROC blob_proc (OUT a_blob BLOB);
+*/
 void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob) {
   cql_contract_argument_notnull((void *)a_blob, 1);
 
@@ -3101,7 +3242,10 @@ CQL_WARN_UNUSED cql_code blob_returner_fetch_results(sqlite3 *_Nonnull _db_, blo
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC blob_returner () (blob_id INTEGER NOT NULL, b_notnull BLOB NOT NULL, b_nullable BLOB);
+/*
+export:
+DECLARE PROC blob_returner () (blob_id INTEGER NOT NULL, b_notnull BLOB NOT NULL, b_nullable BLOB);
+*/
 CQL_WARN_UNUSED cql_code blob_returner(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -3127,7 +3271,10 @@ END;
 */
 
 #define _PROC_ "voidproc"
-// export: DECLARE PROC voidproc ();
+/*
+export:
+DECLARE PROC voidproc ();
+*/
 void voidproc(void) {
   cql_nullable_int32 unused;
   cql_set_null(unused);
@@ -3249,7 +3396,10 @@ CQL_WARN_UNUSED cql_code out_cursor_proc_fetch_results(sqlite3 *_Nonnull _db_, o
   return cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
+*/
 
 typedef struct out_cursor_proc_C_row {
   cql_bool _has_row_;
@@ -3315,7 +3465,10 @@ END;
 */
 
 #define _PROC_ "read_cursor_proc"
-// export: DECLARE PROC read_cursor_proc () USING TRANSACTION;
+/*
+export:
+DECLARE PROC read_cursor_proc () USING TRANSACTION;
+*/
 
 typedef struct read_cursor_proc_C_row {
   cql_bool _has_row_;
@@ -3357,7 +3510,10 @@ END;
 */
 
 #define _PROC_ "declare_cursor_then_fetch_from_proc"
-// export: DECLARE PROC declare_cursor_then_fetch_from_proc () USING TRANSACTION;
+/*
+export:
+DECLARE PROC declare_cursor_then_fetch_from_proc () USING TRANSACTION;
+*/
 
 typedef struct declare_cursor_then_fetch_from_proc_C_row {
   cql_bool _has_row_;
@@ -3422,7 +3578,10 @@ END;
 */
 
 #define _PROC_ "dml_user"
-// export: DECLARE PROC dml_user (OUT a_ INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC dml_user (OUT a_ INTEGER NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_) {
   cql_contract_argument_notnull((void *)a_, 1);
 
@@ -3492,7 +3651,10 @@ CQL_WARN_UNUSED cql_code thread_theme_info_list_fetch_results(sqlite3 *_Nonnull 
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC thread_theme_info_list (thread_key_ LONG_INT NOT NULL) (thread_key LONG_INT NOT NULL);
+/*
+export:
+DECLARE PROC thread_theme_info_list (thread_key_ LONG_INT NOT NULL) (thread_key LONG_INT NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code thread_theme_info_list(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int64 thread_key_) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -3521,7 +3683,10 @@ END;
 */
 
 #define _PROC_ "fetch_values_dummy"
-// export: DECLARE PROC fetch_values_dummy ();
+/*
+export:
+DECLARE PROC fetch_values_dummy ();
+*/
 
 typedef struct fetch_values_dummy_C_row {
   cql_bool _has_row_;
@@ -3570,7 +3735,10 @@ END;
 */
 
 #define _PROC_ "fetch_values_extended"
-// export: DECLARE PROC fetch_values_extended ();
+/*
+export:
+DECLARE PROC fetch_values_extended ();
+*/
 
 typedef struct fetch_values_extended_C_row {
   cql_bool _has_row_;
@@ -3630,7 +3798,10 @@ END;
 */
 
 #define _PROC_ "c_literal"
-// export: DECLARE PROC c_literal (OUT x TEXT);
+/*
+export:
+DECLARE PROC c_literal (OUT x TEXT);
+*/
 void c_literal(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -3656,7 +3827,10 @@ END;
 */
 
 #define _PROC_ "no_cleanup_label_needed_proc"
-// export: DECLARE PROC no_cleanup_label_needed_proc () USING TRANSACTION;
+/*
+export:
+DECLARE PROC no_cleanup_label_needed_proc () USING TRANSACTION;
+*/
 
 typedef struct no_cleanup_label_needed_proc_C_row {
   cql_bool _has_row_;
@@ -3710,7 +3884,10 @@ END;
 */
 
 #define _PROC_ "no_code_after_catch"
-// export: DECLARE PROC no_code_after_catch () USING TRANSACTION;
+/*
+export:
+DECLARE PROC no_code_after_catch () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 x;
@@ -3788,7 +3965,10 @@ void out_no_db_fetch_results( out_no_db_result_set_ref _Nullable *_Nonnull resul
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
+/*
+export:
+DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
+*/
 
 typedef struct out_no_db_C_row {
   cql_bool _has_row_;
@@ -3869,7 +4049,10 @@ void declare_cursor_like_cursor_fetch_results( declare_cursor_like_cursor_result
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC declare_cursor_like_cursor () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
+/*
+export:
+DECLARE PROC declare_cursor_like_cursor () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
+*/
 
 typedef struct declare_cursor_like_cursor_C0_row {
   cql_bool _has_row_;
@@ -3966,7 +4149,10 @@ void declare_cursor_like_proc_fetch_results( declare_cursor_like_proc_result_set
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC declare_cursor_like_proc () OUT (a INTEGER, b TEXT);
+/*
+export:
+DECLARE PROC declare_cursor_like_proc () OUT (a INTEGER, b TEXT);
+*/
 
 typedef struct declare_cursor_like_proc_C_row {
   cql_bool _has_row_;
@@ -4087,7 +4273,10 @@ void declare_cursor_like_table_fetch_results( declare_cursor_like_table_result_s
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC declare_cursor_like_table () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC declare_cursor_like_table () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 
 typedef struct declare_cursor_like_table_C_row {
   cql_bool _has_row_;
@@ -4181,7 +4370,10 @@ void declare_cursor_like_view_fetch_results( declare_cursor_like_view_result_set
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC declare_cursor_like_view () OUT (f1 INTEGER NOT NULL, f2 INTEGER NOT NULL, f3 INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC declare_cursor_like_view () OUT (f1 INTEGER NOT NULL, f2 INTEGER NOT NULL, f3 INTEGER NOT NULL);
+*/
 
 typedef struct declare_cursor_like_view_C_row {
   cql_bool _has_row_;
@@ -4216,7 +4408,10 @@ END;
 */
 
 #define _PROC_ "weird_quoting"
-// export: DECLARE PROC weird_quoting () USING TRANSACTION;
+/*
+export:
+DECLARE PROC weird_quoting () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code weird_quoting(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -4251,7 +4446,10 @@ END;
 */
 
 #define _PROC_ "long_auto_table_maker"
-// export: DECLARE PROC long_auto_table_maker () USING TRANSACTION;
+/*
+export:
+DECLARE PROC long_auto_table_maker () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code long_auto_table_maker(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -4284,7 +4482,10 @@ END;
 */
 
 #define _PROC_ "blob_call1"
-// export: DECLARE PROC blob_call1 ();
+/*
+export:
+DECLARE PROC blob_call1 ();
+*/
 void blob_call1(void) {
   cql_blob_ref b = NULL;
 
@@ -4306,7 +4507,10 @@ END;
 */
 
 #define _PROC_ "blob_call2"
-// export: DECLARE PROC blob_call2 ();
+/*
+export:
+DECLARE PROC blob_call2 ();
+*/
 void blob_call2(void) {
   cql_blob_ref b = NULL;
 
@@ -4330,7 +4534,10 @@ END;
 */
 
 #define _PROC_ "blob_no_else"
-// export: DECLARE PROC blob_no_else ();
+/*
+export:
+DECLARE PROC blob_no_else ();
+*/
 void blob_no_else(void) {
   cql_blob_ref b = NULL;
   cql_blob_ref b1 = NULL;
@@ -4366,7 +4573,10 @@ END;
 */
 
 #define _PROC_ "with_inserter"
-// export: DECLARE PROC with_inserter () USING TRANSACTION;
+/*
+export:
+DECLARE PROC with_inserter () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code with_inserter(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -4393,7 +4603,10 @@ END;
 */
 
 #define _PROC_ "multi_rewrite"
-// export: DECLARE PROC multi_rewrite (blob_id_ INTEGER NOT NULL, b_notnull_ BLOB NOT NULL, b_nullable_ BLOB, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT, type_ INTEGER, size_ REAL, OUT out_arg INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC multi_rewrite (blob_id_ INTEGER NOT NULL, b_notnull_ BLOB NOT NULL, b_nullable_ BLOB, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT, type_ INTEGER, size_ REAL, OUT out_arg INTEGER NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_, cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_, cql_nullable_double size_, cql_int32 *_Nonnull out_arg) {
   cql_contract_argument_notnull((void *)b_notnull_, 2);
   cql_contract_argument_notnull((void *)out_arg, 9);
@@ -4484,7 +4697,10 @@ void fetch_to_cursor_from_cursor_fetch_results( fetch_to_cursor_from_cursor_resu
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC fetch_to_cursor_from_cursor () OUT (A INTEGER NOT NULL, B TEXT NOT NULL);
+/*
+export:
+DECLARE PROC fetch_to_cursor_from_cursor () OUT (A INTEGER NOT NULL, B TEXT NOT NULL);
+*/
 
 typedef struct fetch_to_cursor_from_cursor_C0_row {
   cql_bool _has_row_;
@@ -4541,7 +4757,10 @@ END;
 */
 
 #define _PROC_ "loop_statement_cursor"
-// export: DECLARE PROC loop_statement_cursor () USING TRANSACTION;
+/*
+export:
+DECLARE PROC loop_statement_cursor () USING TRANSACTION;
+*/
 
 typedef struct loop_statement_cursor_C_row {
   cql_bool _has_row_;
@@ -4589,7 +4808,10 @@ END;
 */
 
 #define _PROC_ "loop_statement_not_auto_cursor"
-// export: DECLARE PROC loop_statement_not_auto_cursor () USING TRANSACTION;
+/*
+export:
+DECLARE PROC loop_statement_not_auto_cursor () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code loop_statement_not_auto_cursor(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -4627,7 +4849,10 @@ END;
 */
 
 #define _PROC_ "simple_select"
-// export: DECLARE PROC simple_select () (x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC simple_select () (x INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code simple_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -4659,7 +4884,10 @@ END;
 */
 
 #define _PROC_ "call_in_loop"
-// export: DECLARE PROC call_in_loop () USING TRANSACTION;
+/*
+export:
+DECLARE PROC call_in_loop () USING TRANSACTION;
+*/
 
 typedef struct call_in_loop_C_row {
   cql_bool _has_row_;
@@ -4712,7 +4940,10 @@ END;
 */
 
 #define _PROC_ "call_in_loop_with_nullable_condition"
-// export: DECLARE PROC call_in_loop_with_nullable_condition () USING TRANSACTION;
+/*
+export:
+DECLARE PROC call_in_loop_with_nullable_condition () USING TRANSACTION;
+*/
 
 typedef struct call_in_loop_with_nullable_condition_C_row {
   cql_bool _has_row_;
@@ -4771,7 +5002,10 @@ END;
 */
 
 #define _PROC_ "call_in_loop_boxed"
-// export: DECLARE PROC call_in_loop_boxed () USING TRANSACTION;
+/*
+export:
+DECLARE PROC call_in_loop_boxed () USING TRANSACTION;
+*/
 
 typedef struct call_in_loop_boxed_D_row {
   cql_bool _has_row_;
@@ -4859,7 +5093,10 @@ cql_fetch_info out_union_helper_info = {
   .crc = CRC_out_union_helper,
   .perf_index = &out_union_helper_perf_index,
 };
-// export: DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
+*/
 
 typedef struct out_union_helper_C_row {
   cql_bool _has_row_;
@@ -4924,7 +5161,10 @@ cql_fetch_info out_union_dml_helper_info = {
   .crc = CRC_out_union_dml_helper,
   .perf_index = &out_union_dml_helper_perf_index,
 };
-// export: DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+*/
 
 typedef struct out_union_dml_helper_C_row {
   cql_bool _has_row_;
@@ -4979,7 +5219,10 @@ END;
 */
 
 #define _PROC_ "call_out_union_in_loop"
-// export: DECLARE PROC call_out_union_in_loop () USING TRANSACTION;
+/*
+export:
+DECLARE PROC call_out_union_in_loop () USING TRANSACTION;
+*/
 
 typedef struct call_out_union_in_loop_C_row {
   cql_bool _has_row_;
@@ -5055,7 +5298,10 @@ cql_fetch_info forward_out_union_info = {
   .crc = CRC_forward_out_union,
   .perf_index = &forward_out_union_perf_index,
 };
-// export: DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL);
+*/
 void forward_out_union_fetch_results(forward_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
   *_result_set_ = NULL;
 
@@ -5111,7 +5357,10 @@ cql_fetch_info forward_out_union_extern_info = {
   .crc = CRC_forward_out_union_extern,
   .perf_index = &forward_out_union_extern_perf_index,
 };
-// export: DECLARE PROC forward_out_union_extern () OUT UNION (x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC forward_out_union_extern () OUT UNION (x INTEGER NOT NULL);
+*/
 void forward_out_union_extern_fetch_results(forward_out_union_extern_result_set_ref _Nullable *_Nonnull _result_set_) {
   *_result_set_ = NULL;
 
@@ -5161,7 +5410,10 @@ cql_fetch_info forward_out_union_dml_info = {
   .crc = CRC_forward_out_union_dml,
   .perf_index = &forward_out_union_dml_perf_index,
 };
-// export: DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code forward_out_union_dml_fetch_results(sqlite3 *_Nonnull _db_, forward_out_union_dml_result_set_ref _Nullable *_Nonnull _result_set_) {
   cql_code _rc_ = SQLITE_OK;
   *_result_set_ = NULL;
@@ -5195,7 +5447,10 @@ END;
 */
 
 #define _PROC_ "make_trigger"
-// export: DECLARE PROC make_trigger () USING TRANSACTION;
+/*
+export:
+DECLARE PROC make_trigger () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -5231,7 +5486,10 @@ END;
 */
 
 #define _PROC_ "is_test"
-// export: DECLARE PROC is_test ();
+/*
+export:
+DECLARE PROC is_test ();
+*/
 void is_test(void) {
   cql_bool b = 0;
   cql_nullable_int32 i;
@@ -5264,7 +5522,10 @@ END;
 */
 
 #define _PROC_ "is_blob"
-// export: DECLARE PROC is_blob ();
+/*
+export:
+DECLARE PROC is_blob ();
+*/
 void is_blob(void) {
   cql_blob_ref bl1 = NULL;
   cql_blob_ref bl2 = NULL;
@@ -5295,7 +5556,10 @@ END;
 */
 
 #define _PROC_ "is_not_test"
-// export: DECLARE PROC is_not_test ();
+/*
+export:
+DECLARE PROC is_not_test ();
+*/
 void is_not_test(void) {
   cql_bool b = 0;
   cql_nullable_int32 i;
@@ -5324,7 +5588,10 @@ END;
 */
 
 #define _PROC_ "in_test"
-// export: DECLARE PROC in_test (x INTEGER, OUT b BOOL);
+/*
+export:
+DECLARE PROC in_test (x INTEGER, OUT b BOOL);
+*/
 void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 2);
 
@@ -5344,7 +5611,10 @@ END;
 */
 
 #define _PROC_ "not_in_test"
-// export: DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
+/*
+export:
+DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
+*/
 void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 2);
 
@@ -5365,7 +5635,10 @@ END;
 */
 
 #define _PROC_ "drop_trigger_test"
-// export: DECLARE PROC drop_trigger_test () USING TRANSACTION;
+/*
+export:
+DECLARE PROC drop_trigger_test () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code drop_trigger_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -5448,7 +5721,10 @@ CQL_WARN_UNUSED cql_code simple_identity_fetch_results(sqlite3 *_Nonnull _db_, s
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code simple_identity(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -5539,7 +5815,10 @@ CQL_WARN_UNUSED cql_code complex_identity_fetch_results(sqlite3 *_Nonnull _db_, 
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC complex_identity () (col1 INTEGER NOT NULL, col2 INTEGER NOT NULL, data INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC complex_identity () (col1 INTEGER NOT NULL, col2 INTEGER NOT NULL, data INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code complex_identity(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -5618,7 +5897,10 @@ CQL_WARN_UNUSED cql_code out_cursor_identity_fetch_results(sqlite3 *_Nonnull _db
   return cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC out_cursor_identity () OUT (id INTEGER NOT NULL, data INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_cursor_identity () OUT (id INTEGER NOT NULL, data INTEGER NOT NULL) USING TRANSACTION;
+*/
 
 typedef struct out_cursor_identity_C_row {
   cql_bool _has_row_;
@@ -5724,7 +6006,10 @@ void radioactive_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(radioactive_proc_data_types, radioactive_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC radioactive_proc () (id INTEGER NOT NULL, data TEXT @SENSITIVE);
+/*
+export:
+DECLARE PROC radioactive_proc () (id INTEGER NOT NULL, data TEXT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code radioactive_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -5753,7 +6038,10 @@ END;
 */
 
 #define _PROC_ "with_deleter"
-// export: DECLARE PROC with_deleter () USING TRANSACTION;
+/*
+export:
+DECLARE PROC with_deleter () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -5784,7 +6072,10 @@ END;
 */
 
 #define _PROC_ "with_updater"
-// export: DECLARE PROC with_updater () USING TRANSACTION;
+/*
+export:
+DECLARE PROC with_updater () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -5865,7 +6156,10 @@ CQL_WARN_UNUSED cql_code autodropper_fetch_results(sqlite3 *_Nonnull _db_, autod
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC autodropper () (a INTEGER NOT NULL, b INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC autodropper () (a INTEGER NOT NULL, b INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code autodropper(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -5945,7 +6239,10 @@ void simple_cursor_proc_fetch_results( simple_cursor_proc_result_set_ref _Nullab
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC simple_cursor_proc () OUT (id INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC simple_cursor_proc () OUT (id INTEGER NOT NULL);
+*/
 
 typedef struct simple_cursor_proc_A_CURSOR_row {
   cql_bool _has_row_;
@@ -6027,7 +6324,10 @@ CQL_WARN_UNUSED cql_code redundant_cast_fetch_results(sqlite3 *_Nonnull _db_, re
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC redundant_cast () (plugh INTEGER NOT NULL, five INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC redundant_cast () (plugh INTEGER NOT NULL, five INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code redundant_cast(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -6055,7 +6355,10 @@ END;
 */
 
 #define _PROC_ "view_creator"
-// export: DECLARE PROC view_creator () USING TRANSACTION;
+/*
+export:
+DECLARE PROC view_creator () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -6085,7 +6388,10 @@ END;
 */
 
 #define _PROC_ "settings_info"
-// export: DECLARE PROC settings_info () USING TRANSACTION;
+/*
+export:
+DECLARE PROC settings_info () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -6170,7 +6476,10 @@ CQL_WARN_UNUSED cql_code top_level_select_alias_unused_fetch_results(sqlite3 *_N
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC top_level_select_alias_unused () (id INTEGER NOT NULL, x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC top_level_select_alias_unused () (id INTEGER NOT NULL, x INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code top_level_select_alias_unused(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -6253,7 +6562,10 @@ CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby_fetch_results(sq
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC top_level_select_alias_used_in_orderby () (id INTEGER NOT NULL, x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC top_level_select_alias_used_in_orderby () (id INTEGER NOT NULL, x INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -6286,7 +6598,10 @@ END;
 */
 
 #define _PROC_ "use_with_select"
-// export: DECLARE PROC use_with_select () USING TRANSACTION;
+/*
+export:
+DECLARE PROC use_with_select () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 x;
@@ -6324,7 +6639,10 @@ END;
 */
 
 #define _PROC_ "rowset_object_reader"
-// export: DECLARE PROC rowset_object_reader (rowset OBJECT<rowset>) USING TRANSACTION;
+/*
+export:
+DECLARE PROC rowset_object_reader (rowset OBJECT<rowset>) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code rowset_object_reader(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable rowset) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
@@ -6358,7 +6676,10 @@ END;
 */
 
 #define _PROC_ "upsert_do_something"
-// export: DECLARE PROC upsert_do_something () USING TRANSACTION;
+/*
+export:
+DECLARE PROC upsert_do_something () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -6393,7 +6714,10 @@ END;
 */
 
 #define _PROC_ "with_upsert_form"
-// export: DECLARE PROC with_upsert_form () USING TRANSACTION;
+/*
+export:
+DECLARE PROC with_upsert_form () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -6424,7 +6748,10 @@ END;
 */
 
 #define _PROC_ "upsert_do_nothing"
-// export: DECLARE PROC upsert_do_nothing (id_ INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC upsert_do_nothing (id_ INTEGER NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *_temp_stmt = NULL;
@@ -6470,7 +6797,10 @@ END;
 */
 
 #define _PROC_ "use_many_out_cursors"
-// export: DECLARE PROC use_many_out_cursors () USING TRANSACTION;
+/*
+export:
+DECLARE PROC use_many_out_cursors () USING TRANSACTION;
+*/
 
 typedef struct use_many_out_cursors_c1_row {
   cql_bool _has_row_;
@@ -6528,7 +6858,10 @@ END;
 */
 
 #define _PROC_ "fetch_many_times"
-// export: DECLARE PROC fetch_many_times (arg BOOL NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC fetch_many_times (arg BOOL NOT NULL) USING TRANSACTION;
+*/
 
 typedef struct fetch_many_times_C_row {
   cql_bool _has_row_;
@@ -6624,7 +6957,10 @@ cql_fetch_info out_union_two_info = {
   .crc = CRC_out_union_two,
   .perf_index = &out_union_two_perf_index,
 };
-// export: DECLARE PROC out_union_two () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL);
+/*
+export:
+DECLARE PROC out_union_two () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL);
+*/
 
 typedef struct out_union_two_C_row {
   cql_bool _has_row_;
@@ -6669,7 +7005,10 @@ END;
 */
 
 #define _PROC_ "out_union_reader"
-// export: DECLARE PROC out_union_reader () USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_union_reader () USING TRANSACTION;
+*/
 
 typedef struct out_union_reader_c_row {
   cql_bool _has_row_;
@@ -6764,7 +7103,10 @@ cql_fetch_info out_union_from_select_info = {
   .crc = CRC_out_union_from_select,
   .perf_index = &out_union_from_select_perf_index,
 };
-// export: DECLARE PROC out_union_from_select () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_union_from_select () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL) USING TRANSACTION;
+*/
 
 typedef struct out_union_from_select_C_row {
   cql_bool _has_row_;
@@ -6823,7 +7165,10 @@ END;
 */
 
 #define _PROC_ "out_union_dml_reader"
-// export: DECLARE PROC out_union_dml_reader () USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_union_dml_reader () USING TRANSACTION;
+*/
 
 typedef struct out_union_dml_reader_c_row {
   cql_bool _has_row_;
@@ -6913,7 +7258,10 @@ cql_fetch_info out_union_values_info = {
   .crc = CRC_out_union_values,
   .perf_index = &out_union_values_perf_index,
 };
-// export: DECLARE PROC out_union_values (a INTEGER NOT NULL, b INTEGER NOT NULL) OUT UNION (x INTEGER NOT NULL, y INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC out_union_values (a INTEGER NOT NULL, b INTEGER NOT NULL) OUT UNION (x INTEGER NOT NULL, y INTEGER NOT NULL);
+*/
 
 typedef struct out_union_values_x_row {
   cql_bool _has_row_;
@@ -6950,7 +7298,10 @@ END;
 */
 
 #define _PROC_ "read_out_union_values"
-// export: DECLARE PROC read_out_union_values (a INTEGER NOT NULL, b INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC read_out_union_values (a INTEGER NOT NULL, b INTEGER NOT NULL) USING TRANSACTION;
+*/
 
 typedef struct read_out_union_values_C_row {
   cql_bool _has_row_;
@@ -7041,7 +7392,10 @@ void out_union_dml_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(out_union_dml_data_types, out_union_dml_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC out_union_dml () OUT UNION (id INTEGER NOT NULL, data TEXT @SENSITIVE) USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_union_dml () OUT UNION (id INTEGER NOT NULL, data TEXT @SENSITIVE) USING TRANSACTION;
+*/
 
 typedef struct out_union_dml_x_row {
   cql_bool _has_row_;
@@ -7097,7 +7451,10 @@ END;
 */
 
 #define _PROC_ "out_union_dml_for_call"
-// export: DECLARE PROC out_union_dml_for_call () USING TRANSACTION;
+/*
+export:
+DECLARE PROC out_union_dml_for_call () USING TRANSACTION;
+*/
 
 typedef struct out_union_dml_for_call_C_row {
   cql_bool _has_row_;
@@ -7148,7 +7505,10 @@ END;
 */
 
 #define _PROC_ "compound_select_expr"
-// export: DECLARE PROC compound_select_expr () USING TRANSACTION;
+/*
+export:
+DECLARE PROC compound_select_expr () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 x;
@@ -7239,7 +7599,10 @@ CQL_WARN_UNUSED cql_code window_function_invocation_fetch_results(sqlite3 *_Nonn
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window_function_invocation () (id INTEGER NOT NULL, row_num INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC window_function_invocation () (id INTEGER NOT NULL, row_num INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code window_function_invocation(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -7267,7 +7630,10 @@ END;
 */
 
 #define _PROC_ "update_cursor"
-// export: DECLARE PROC update_cursor () USING TRANSACTION;
+/*
+export:
+DECLARE PROC update_cursor () USING TRANSACTION;
+*/
 
 typedef struct update_cursor_C_row {
   cql_bool _has_row_;
@@ -7359,7 +7725,10 @@ CQL_WARN_UNUSED cql_code use_return_fetch_results(sqlite3 *_Nonnull _db_, use_re
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC use_return () (x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC use_return () (x INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code use_return(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -7395,7 +7764,10 @@ END;
 */
 
 #define _PROC_ "use_return_no_error_flow"
-// export: DECLARE PROC use_return_no_error_flow ();
+/*
+export:
+DECLARE PROC use_return_no_error_flow ();
+*/
 void use_return_no_error_flow(void) {
   if (1) {
     goto cql_cleanup; // return
@@ -7415,7 +7787,10 @@ END;
 */
 
 #define _PROC_ "empty_proc"
-// export: DECLARE PROC empty_proc ();
+/*
+export:
+DECLARE PROC empty_proc ();
+*/
 void empty_proc(void) {
 
 }
@@ -7450,7 +7825,10 @@ END;
 */
 
 #define _PROC_ "empty_blocks"
-// export: DECLARE PROC empty_blocks () USING TRANSACTION;
+/*
+export:
+DECLARE PROC empty_blocks () USING TRANSACTION;
+*/
 
 typedef struct empty_blocks_c_row {
   cql_bool _has_row_;
@@ -7523,7 +7901,10 @@ END;
 */
 
 #define _PROC_ "tail_catch"
-// export: DECLARE PROC tail_catch () USING TRANSACTION;
+/*
+export:
+DECLARE PROC tail_catch () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   // try
@@ -7556,7 +7937,10 @@ END;
 */
 
 #define _PROC_ "pretty_print_with_quote"
-// export: DECLARE PROC pretty_print_with_quote () USING TRANSACTION;
+/*
+export:
+DECLARE PROC pretty_print_with_quote () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -7579,7 +7963,10 @@ END;
 */
 
 #define _PROC_ "hex_quote"
-// export: DECLARE PROC hex_quote () USING TRANSACTION;
+/*
+export:
+DECLARE PROC hex_quote () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -7658,7 +8045,10 @@ CQL_WARN_UNUSED cql_code lotsa_columns_no_getters_fetch_results(sqlite3 *_Nonnul
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC lotsa_columns_no_getters () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC lotsa_columns_no_getters () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code lotsa_columns_no_getters(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -7780,7 +8170,10 @@ CQL_WARN_UNUSED cql_code sproc_with_copy_fetch_results(sqlite3 *_Nonnull _db_, s
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC sproc_with_copy () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC sproc_with_copy () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code sproc_with_copy(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -7936,7 +8329,10 @@ void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC emit_object_with_setters (o OBJECT NOT NULL, x OBJECT NOT NULL, i INTEGER NOT NULL, l LONG_INT NOT NULL, b BOOL NOT NULL, d REAL NOT NULL, t TEXT NOT NULL, bl BLOB NOT NULL) OUT (o OBJECT NOT NULL, x OBJECT NOT NULL, i INTEGER NOT NULL, l LONG_INT NOT NULL, b BOOL NOT NULL, d REAL NOT NULL, t TEXT NOT NULL, bl BLOB NOT NULL);
+/*
+export:
+DECLARE PROC emit_object_with_setters (o OBJECT NOT NULL, x OBJECT NOT NULL, i INTEGER NOT NULL, l LONG_INT NOT NULL, b BOOL NOT NULL, d REAL NOT NULL, t TEXT NOT NULL, bl BLOB NOT NULL) OUT (o OBJECT NOT NULL, x OBJECT NOT NULL, i INTEGER NOT NULL, l LONG_INT NOT NULL, b BOOL NOT NULL, d REAL NOT NULL, t TEXT NOT NULL, bl BLOB NOT NULL);
+*/
 
 typedef struct emit_object_with_setters_C_row {
   cql_bool _has_row_;
@@ -8159,7 +8555,10 @@ void emit_setters_with_nullables_fetch_results( emit_setters_with_nullables_resu
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INTEGER, l LONG_INT, b BOOL, d REAL, t TEXT, bl BLOB) OUT (o OBJECT, x OBJECT, i INTEGER, l LONG_INT, b BOOL, d REAL, t TEXT, bl BLOB);
+/*
+export:
+DECLARE PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INTEGER, l LONG_INT, b BOOL, d REAL, t TEXT, bl BLOB) OUT (o OBJECT, x OBJECT, i INTEGER, l LONG_INT, b BOOL, d REAL, t TEXT, bl BLOB);
+*/
 
 typedef struct emit_setters_with_nullables_C_row {
   cql_bool _has_row_;
@@ -8343,7 +8742,10 @@ CQL_WARN_UNUSED cql_code no_out_with_setters_fetch_results(sqlite3 *_Nonnull _db
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC no_out_with_setters () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC no_out_with_setters () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code no_out_with_setters(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -8371,7 +8773,10 @@ END;
 */
 
 #define _PROC_ "lotsa_columns_no_result_set"
-// export: DECLARE PROC lotsa_columns_no_result_set () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC lotsa_columns_no_result_set () (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code lotsa_columns_no_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -8401,7 +8806,10 @@ END;
 */
 
 #define _PROC_ "early_out_rc_cleared"
-// export: DECLARE PROC early_out_rc_cleared (OUT x INTEGER) USING TRANSACTION;
+/*
+export:
+DECLARE PROC early_out_rc_cleared (OUT x INTEGER) USING TRANSACTION;
+*/
 
 typedef struct early_out_rc_cleared_C_row {
   cql_bool _has_row_;
@@ -8530,7 +8938,10 @@ void vault_sensitive_with_values_proc_set_encoding(cql_int32 col, cql_bool encod
   return cql_set_encoding(vault_sensitive_with_values_proc_data_types, vault_sensitive_with_values_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -8634,7 +9045,10 @@ void vault_not_nullable_sensitive_with_values_proc_set_encoding(cql_int32 col, c
   return cql_set_encoding(vault_not_nullable_sensitive_with_values_proc_data_types, vault_not_nullable_sensitive_with_values_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_not_nullable_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT NOT NULL @SENSITIVE, title TEXT NOT NULL, type LONG_INT NOT NULL @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_not_nullable_sensitive_with_values_proc () (id INTEGER NOT NULL, name TEXT NOT NULL @SENSITIVE, title TEXT NOT NULL, type LONG_INT NOT NULL @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_not_nullable_sensitive_with_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -8742,7 +9156,10 @@ void vault_sensitive_with_no_values_proc_set_encoding(cql_int32 col, cql_bool en
   return cql_set_encoding(vault_sensitive_with_no_values_proc_data_types, vault_sensitive_with_no_values_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_sensitive_with_no_values_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_sensitive_with_no_values_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -8853,7 +9270,10 @@ void vault_union_all_table_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_union_all_table_proc_data_types, vault_union_all_table_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_union_all_table_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_union_all_table_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -8935,7 +9355,10 @@ void vault_alias_column_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_alias_column_proc_data_types, vault_alias_column_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_alias_column_proc () (alias_name TEXT @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_alias_column_proc () (alias_name TEXT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_alias_column_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -9014,7 +9437,10 @@ void vault_alias_column_name_proc_set_encoding(cql_int32 col, cql_bool encode) {
   return cql_set_encoding(vault_alias_column_name_proc_data_types, vault_alias_column_name_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_alias_column_name_proc () (alias_name TEXT @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_alias_column_name_proc () (alias_name TEXT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_alias_column_name_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -9043,7 +9469,10 @@ END;
 */
 
 #define _PROC_ "vault_cursor_proc"
-// export: DECLARE PROC vault_cursor_proc () USING TRANSACTION;
+/*
+export:
+DECLARE PROC vault_cursor_proc () USING TRANSACTION;
+*/
 
 typedef struct vault_cursor_proc_C_row {
   cql_bool _has_row_;
@@ -9168,7 +9597,10 @@ void vault_sensitive_with_context_and_sensitive_columns_proc_set_encoding(cql_in
   return cql_set_encoding(vault_sensitive_with_context_and_sensitive_columns_proc_data_types, vault_sensitive_with_context_and_sensitive_columns_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_sensitive_with_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_sensitive_with_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -9276,7 +9708,10 @@ void vault_sensitive_with_no_context_and_sensitive_columns_proc_set_encoding(cql
   return cql_set_encoding(vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types, vault_sensitive_with_no_context_and_sensitive_columns_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_sensitive_with_no_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+/*
+export:
+DECLARE PROC vault_sensitive_with_no_context_and_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT @SENSITIVE, title TEXT, type LONG_INT @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code vault_sensitive_with_no_context_and_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -9384,7 +9819,10 @@ void vault_sensitive_with_context_and_no_sensitive_columns_proc_set_encoding(cql
   return cql_set_encoding(vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types, vault_sensitive_with_context_and_no_sensitive_columns_proc_data_types_count, col, encode);
 }
 
-// export: DECLARE PROC vault_sensitive_with_context_and_no_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT, title TEXT, type LONG_INT);
+/*
+export:
+DECLARE PROC vault_sensitive_with_context_and_no_sensitive_columns_proc () (id INTEGER NOT NULL, name TEXT, title TEXT, type LONG_INT);
+*/
 CQL_WARN_UNUSED cql_code vault_sensitive_with_context_and_no_sensitive_columns_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -9458,7 +9896,10 @@ END;
 */
 
 #define _PROC_ "try_boxing"
-// export: DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
+/*
+export:
+DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result) {
   cql_contract_argument_notnull((void *)result, 1);
 
@@ -9494,7 +9935,10 @@ END;
 */
 
 #define _PROC_ "try_unboxing"
-// export: DECLARE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>) USING TRANSACTION;
+/*
+export:
+DECLARE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>) USING TRANSACTION;
+*/
 
 typedef struct try_unboxing_C_row {
   cql_bool _has_row_;
@@ -9545,7 +9989,10 @@ END;
 */
 
 #define _PROC_ "local_cast_int_notnull"
-// export: DECLARE PROC local_cast_int_notnull ();
+/*
+export:
+DECLARE PROC local_cast_int_notnull ();
+*/
 void local_cast_int_notnull(void) {
   cql_int32 x = 0;
 
@@ -9567,7 +10014,10 @@ END;
 */
 
 #define _PROC_ "local_cast_int"
-// export: DECLARE PROC local_cast_int ();
+/*
+export:
+DECLARE PROC local_cast_int ();
+*/
 void local_cast_int(void) {
   cql_nullable_int32 x;
   cql_set_null(x);
@@ -9591,7 +10041,10 @@ END;
 */
 
 #define _PROC_ "local_cast_long_notnull"
-// export: DECLARE PROC local_cast_long_notnull ();
+/*
+export:
+DECLARE PROC local_cast_long_notnull ();
+*/
 void local_cast_long_notnull(void) {
   cql_int64 x = 0;
 
@@ -9613,7 +10066,10 @@ END;
 */
 
 #define _PROC_ "local_cast_long"
-// export: DECLARE PROC local_cast_long ();
+/*
+export:
+DECLARE PROC local_cast_long ();
+*/
 void local_cast_long(void) {
   cql_nullable_int64 x;
   cql_set_null(x);
@@ -9637,7 +10093,10 @@ END;
 */
 
 #define _PROC_ "local_cast_real_notnull"
-// export: DECLARE PROC local_cast_real_notnull ();
+/*
+export:
+DECLARE PROC local_cast_real_notnull ();
+*/
 void local_cast_real_notnull(void) {
   cql_double x = 0;
 
@@ -9659,7 +10118,10 @@ END;
 */
 
 #define _PROC_ "local_cast_real"
-// export: DECLARE PROC local_cast_real ();
+/*
+export:
+DECLARE PROC local_cast_real ();
+*/
 void local_cast_real(void) {
   cql_nullable_double x;
   cql_set_null(x);
@@ -9683,7 +10145,10 @@ END;
 */
 
 #define _PROC_ "local_cast_bool_notnull"
-// export: DECLARE PROC local_cast_bool_notnull ();
+/*
+export:
+DECLARE PROC local_cast_bool_notnull ();
+*/
 void local_cast_bool_notnull(void) {
   cql_bool x = 0;
 
@@ -9705,7 +10170,10 @@ END;
 */
 
 #define _PROC_ "local_cast_bool"
-// export: DECLARE PROC local_cast_bool ();
+/*
+export:
+DECLARE PROC local_cast_bool ();
+*/
 void local_cast_bool(void) {
   cql_nullable_bool x;
   cql_set_null(x);
@@ -9731,7 +10199,10 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool_notnull"
-// export: DECLARE PROC local_cast_from_bool_notnull ();
+/*
+export:
+DECLARE PROC local_cast_from_bool_notnull ();
+*/
 void local_cast_from_bool_notnull(void) {
   cql_bool b = 0;
   cql_double x = 0;
@@ -9755,7 +10226,10 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool"
-// export: DECLARE PROC local_cast_from_bool ();
+/*
+export:
+DECLARE PROC local_cast_from_bool ();
+*/
 void local_cast_from_bool(void) {
   cql_nullable_bool b;
   cql_set_null(b);
@@ -9781,7 +10255,10 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool_no_op_notnull"
-// export: DECLARE PROC local_cast_from_bool_no_op_notnull ();
+/*
+export:
+DECLARE PROC local_cast_from_bool_no_op_notnull ();
+*/
 void local_cast_from_bool_no_op_notnull(void) {
   cql_bool x = 0;
   cql_bool b = 0;
@@ -9805,7 +10282,10 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool_no_op"
-// export: DECLARE PROC local_cast_from_bool_no_op ();
+/*
+export:
+DECLARE PROC local_cast_from_bool_no_op ();
+*/
 void local_cast_from_bool_no_op(void) {
   cql_nullable_bool b;
   cql_set_null(b);
@@ -9831,7 +10311,10 @@ END;
 */
 
 #define _PROC_ "base_proc_savepoint"
-// export: DECLARE PROC base_proc_savepoint () USING TRANSACTION;
+/*
+export:
+DECLARE PROC base_proc_savepoint () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 X;
@@ -9881,7 +10364,10 @@ END;
 */
 
 #define _PROC_ "base_proc_savepoint_commit_return"
-// export: DECLARE PROC base_proc_savepoint_commit_return () USING TRANSACTION;
+/*
+export:
+DECLARE PROC base_proc_savepoint_commit_return () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -9935,7 +10421,10 @@ END;
 */
 
 #define _PROC_ "base_proc_savepoint_rollback_return"
-// export: DECLARE PROC base_proc_savepoint_rollback_return () USING TRANSACTION;
+/*
+export:
+DECLARE PROC base_proc_savepoint_rollback_return () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -10070,7 +10559,10 @@ CQL_WARN_UNUSED cql_code window1_fetch_results(sqlite3 *_Nonnull _db_, window1_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window1 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window1 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10173,7 +10665,10 @@ CQL_WARN_UNUSED cql_code window2_fetch_results(sqlite3 *_Nonnull _db_, window2_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window2 () (month INTEGER, amount REAL, RunningTotal REAL);
+/*
+export:
+DECLARE PROC window2 () (month INTEGER, amount REAL, RunningTotal REAL);
+*/
 CQL_WARN_UNUSED cql_code window2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10276,7 +10771,10 @@ CQL_WARN_UNUSED cql_code window3_fetch_results(sqlite3 *_Nonnull _db_, window3_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window3 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window3 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window3(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10379,7 +10877,10 @@ CQL_WARN_UNUSED cql_code window4_fetch_results(sqlite3 *_Nonnull _db_, window4_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window4 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window4 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window4(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10482,7 +10983,10 @@ CQL_WARN_UNUSED cql_code window5_fetch_results(sqlite3 *_Nonnull _db_, window5_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window5 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window5 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window5(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10585,7 +11089,10 @@ CQL_WARN_UNUSED cql_code window6_fetch_results(sqlite3 *_Nonnull _db_, window6_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window6 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window6 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window6(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10688,7 +11195,10 @@ CQL_WARN_UNUSED cql_code window7_fetch_results(sqlite3 *_Nonnull _db_, window7_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window7 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window7 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window7(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10791,7 +11301,10 @@ CQL_WARN_UNUSED cql_code window8_fetch_results(sqlite3 *_Nonnull _db_, window8_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window8 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window8 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window8(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10894,7 +11407,10 @@ CQL_WARN_UNUSED cql_code window9_fetch_results(sqlite3 *_Nonnull _db_, window9_r
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window9 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window9 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window9(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -10997,7 +11513,10 @@ CQL_WARN_UNUSED cql_code window10_fetch_results(sqlite3 *_Nonnull _db_, window10
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window10 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window10 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window10(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -11100,7 +11619,10 @@ CQL_WARN_UNUSED cql_code window11_fetch_results(sqlite3 *_Nonnull _db_, window11
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window11 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window11 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window11(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -11203,7 +11725,10 @@ CQL_WARN_UNUSED cql_code window12_fetch_results(sqlite3 *_Nonnull _db_, window12
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window12 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window12 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window12(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -11306,7 +11831,10 @@ CQL_WARN_UNUSED cql_code window13_fetch_results(sqlite3 *_Nonnull _db_, window13
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window13 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window13 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window13(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -11409,7 +11937,10 @@ CQL_WARN_UNUSED cql_code window14_fetch_results(sqlite3 *_Nonnull _db_, window14
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window14 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window14 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window14(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -11512,7 +12043,10 @@ CQL_WARN_UNUSED cql_code window15_fetch_results(sqlite3 *_Nonnull _db_, window15
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window15 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window15 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window15(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -11615,7 +12149,10 @@ CQL_WARN_UNUSED cql_code window16_fetch_results(sqlite3 *_Nonnull _db_, window16
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC window16 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+/*
+export:
+DECLARE PROC window16 () (month INTEGER, amount REAL, SalesMovingAverage REAL);
+*/
 CQL_WARN_UNUSED cql_code window16(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -11642,7 +12179,10 @@ END;
 */
 
 #define _PROC_ "emit_rc"
-// export: DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
+/*
+export:
+DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code) {
   cql_contract_argument_notnull((void *)result_code, 1);
 
@@ -11694,7 +12234,10 @@ END;
 */
 
 #define _PROC_ "rc_test"
-// export: DECLARE PROC rc_test () USING TRANSACTION;
+/*
+export:
+DECLARE PROC rc_test () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code rc_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_int32 err = 0;
@@ -11783,7 +12326,10 @@ END;
 */
 
 #define _PROC_ "rc_test_lazy1"
-// export: DECLARE PROC rc_test_lazy1 () USING TRANSACTION;
+/*
+export:
+DECLARE PROC rc_test_lazy1 () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code rc_test_lazy1(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   // try
@@ -11844,7 +12390,10 @@ END;
 */
 
 #define _PROC_ "rc_test_lazy2"
-// export: DECLARE PROC rc_test_lazy2 () USING TRANSACTION;
+/*
+export:
+DECLARE PROC rc_test_lazy2 () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code rc_test_lazy2(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_int32 err = 0;
@@ -11894,7 +12443,10 @@ END;
 */
 
 #define _PROC_ "virtual_table_creator"
-// export: DECLARE PROC virtual_table_creator () USING TRANSACTION;
+/*
+export:
+DECLARE PROC virtual_table_creator () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code virtual_table_creator(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -11921,7 +12473,10 @@ END;
 */
 
 #define _PROC_ "out_arg_cursor"
-// export: DECLARE PROC out_arg_cursor (x INTEGER NOT NULL, OUT y INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC out_arg_cursor (x INTEGER NOT NULL, OUT y INTEGER NOT NULL);
+*/
 
 typedef struct out_arg_cursor_C_row {
   cql_bool _has_row_;
@@ -11962,7 +12517,10 @@ END;
 */
 
 #define _PROC_ "make_virt_table"
-// export: DECLARE PROC make_virt_table () USING TRANSACTION;
+/*
+export:
+DECLARE PROC make_virt_table () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_exec(_db_,
@@ -12049,7 +12607,10 @@ CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC virtual1 () (vx INTEGER NOT NULL, vy INTEGER);
+/*
+export:
+DECLARE PROC virtual1 () (vx INTEGER NOT NULL, vy INTEGER);
+*/
 CQL_WARN_UNUSED cql_code virtual1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -12133,7 +12694,10 @@ CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC virtual2 () (vx INTEGER NOT NULL, vy INTEGER);
+/*
+export:
+DECLARE PROC virtual2 () (vx INTEGER NOT NULL, vy INTEGER);
+*/
 CQL_WARN_UNUSED cql_code virtual2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -12161,7 +12725,10 @@ END;
 */
 
 #define _PROC_ "private_proc"
-// private: DECLARE PROC private_proc (OUT x INTEGER);
+/*
+private:
+DECLARE PROC private_proc (OUT x INTEGER);
+*/
 static void private_proc(cql_nullable_int32 *_Nonnull x) {
   cql_set_null(*x); // set out arg to non-garbage
   cql_set_notnull(*x, 1);
@@ -12206,7 +12773,10 @@ cql_fetch_info private_out_union_info = {
   .crc = CRC_private_out_union,
   .perf_index = &private_out_union_perf_index,
 };
-// private: DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
+/*
+private:
+DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
+*/
 
 typedef struct private_out_union_C_row {
   cql_bool _has_row_;
@@ -12244,7 +12814,10 @@ END;
 */
 
 #define _PROC_ "use_private_out_union"
-// export: DECLARE PROC use_private_out_union () USING TRANSACTION;
+/*
+export:
+DECLARE PROC use_private_out_union () USING TRANSACTION;
+*/
 
 typedef struct use_private_out_union_C_row {
   cql_bool _has_row_;
@@ -12314,7 +12887,10 @@ cql_fetch_info no_getters_out_union_info = {
   .crc = CRC_no_getters_out_union,
   .perf_index = &no_getters_out_union_perf_index,
 };
-// export: DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
+*/
 
 typedef struct no_getters_out_union_C_row {
   cql_bool _has_row_;
@@ -12352,7 +12928,10 @@ END;
 */
 
 #define _PROC_ "use_no_getters_out_union"
-// export: DECLARE PROC use_no_getters_out_union () USING TRANSACTION;
+/*
+export:
+DECLARE PROC use_no_getters_out_union () USING TRANSACTION;
+*/
 
 typedef struct use_no_getters_out_union_C_row {
   cql_bool _has_row_;
@@ -12422,7 +13001,10 @@ cql_fetch_info suppress_results_out_union_info = {
   .crc = CRC_suppress_results_out_union,
   .perf_index = &suppress_results_out_union_perf_index,
 };
-// export: DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
+*/
 
 typedef struct suppress_results_out_union_C_row {
   cql_bool _has_row_;
@@ -12460,7 +13042,10 @@ END;
 */
 
 #define _PROC_ "use_suppress_results_out_union"
-// export: DECLARE PROC use_suppress_results_out_union () USING TRANSACTION;
+/*
+export:
+DECLARE PROC use_suppress_results_out_union () USING TRANSACTION;
+*/
 
 typedef struct use_suppress_results_out_union_C_row {
   cql_bool _has_row_;
@@ -12504,7 +13089,10 @@ END;
 */
 
 #define _PROC_ "private_result"
-// private: DECLARE PROC private_result (OUT x INTEGER) (x INTEGER NOT NULL);
+/*
+private:
+DECLARE PROC private_result (OUT x INTEGER) (x INTEGER NOT NULL);
+*/
 static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -12538,7 +13126,10 @@ END;
 */
 
 #define _PROC_ "set_out_arg_ref_test"
-// export: DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
+/*
+export:
+DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
+*/
 void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -12556,7 +13147,10 @@ END;
 */
 
 #define _PROC_ "set_out_arg_null_test"
-// export: DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
+/*
+export:
+DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
+*/
 void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -12574,7 +13168,10 @@ END;
 */
 
 #define _PROC_ "set_out_arg_notnull_test"
-// export: DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
+*/
 void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -12595,7 +13192,10 @@ END;
 */
 
 #define _PROC_ "early_close_cursor"
-// export: DECLARE PROC early_close_cursor () USING TRANSACTION;
+/*
+export:
+DECLARE PROC early_close_cursor () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_finalize_stmt(&global_cursor_stmt);
@@ -12627,7 +13227,10 @@ END;
 */
 
 #define _PROC_ "various_lets"
-// export: DECLARE PROC various_lets ();
+/*
+export:
+DECLARE PROC various_lets ();
+*/
 void various_lets(void) {
   cql_double r = 0;
   cql_int32 i = 0;
@@ -12680,7 +13283,10 @@ END;
 */
 
 #define _PROC_ "try_catch_rc"
-// export: DECLARE PROC try_catch_rc () USING TRANSACTION;
+/*
+export:
+DECLARE PROC try_catch_rc () USING TRANSACTION;
+*/
 
 typedef struct try_catch_rc_C_row {
   cql_bool _has_row_;
@@ -12737,7 +13343,10 @@ END;
 */
 
 #define _PROC_ "out_decl_test"
-// export: DECLARE PROC out_decl_test (x INTEGER);
+/*
+export:
+DECLARE PROC out_decl_test (x INTEGER);
+*/
 void out_decl_test(cql_nullable_int32 x) {
   cql_int32 u = 0;
   cql_int32 v = 0;
@@ -12762,7 +13371,10 @@ END;
 */
 
 #define _PROC_ "out_decl_loop_test"
-// export: DECLARE PROC out_decl_loop_test (x INTEGER);
+/*
+export:
+DECLARE PROC out_decl_loop_test (x INTEGER);
+*/
 void out_decl_loop_test(cql_nullable_int32 x) {
   cql_int32 u = 0;
   cql_int32 v = 0;
@@ -12815,7 +13427,10 @@ END;
 */
 
 #define _PROC_ "binary_ops_with_null"
-// export: DECLARE PROC binary_ops_with_null ();
+/*
+export:
+DECLARE PROC binary_ops_with_null ();
+*/
 void binary_ops_with_null(void) {
   cql_nullable_int32 add0;
   cql_set_null(add0);
@@ -12922,7 +13537,10 @@ END;
 */
 
 #define _PROC_ "uses_throw"
-// export: DECLARE PROC uses_throw () USING TRANSACTION;
+/*
+export:
+DECLARE PROC uses_throw () USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   _rc_ = cql_best_error(SQLITE_OK);
@@ -12944,7 +13562,10 @@ END;
 */
 
 #define _PROC_ "uses_ifnull_throw"
-// export: DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
+/*
+export:
+DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_int32 x) {
   cql_code _rc_ = SQLITE_OK;
   cql_int32 y = 0;
@@ -13015,7 +13636,10 @@ void out_object_fetch_results( out_object_result_set_ref _Nullable *_Nonnull res
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC out_object (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+/*
+export:
+DECLARE PROC out_object (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+*/
 
 typedef struct out_object_C_row {
   cql_bool _has_row_;
@@ -13052,7 +13676,10 @@ END;
 */
 
 #define _PROC_ "exercise_contracts"
-// export: DECLARE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL);
+/*
+export:
+DECLARE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL);
+*/
 void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nullable c, cql_string_ref _Nonnull d, cql_blob_ref _Nullable e, cql_blob_ref _Nonnull f, cql_object_ref _Nullable g, cql_object_ref _Nonnull h, cql_nullable_int32 *_Nonnull i, cql_int32 *_Nonnull j, cql_string_ref _Nullable *_Nonnull k, cql_string_ref _Nullable *_Nonnull l, cql_nullable_int32 *_Nonnull m, cql_int32 *_Nonnull n, cql_string_ref _Nullable *_Nonnull o, cql_string_ref _Nonnull *_Nonnull p) {
   cql_contract_argument_notnull((void *)d, 4);
   cql_contract_argument_notnull((void *)f, 6);
@@ -13084,7 +13711,10 @@ END;
 */
 
 #define _PROC_ "public_proc_with_a_contract"
-// export: DECLARE PROC public_proc_with_a_contract (t TEXT NOT NULL);
+/*
+export:
+DECLARE PROC public_proc_with_a_contract (t TEXT NOT NULL);
+*/
 void public_proc_with_a_contract(cql_string_ref _Nonnull t) {
   cql_contract_argument_notnull((void *)t, 1);
 
@@ -13102,7 +13732,10 @@ END;
 */
 
 #define _PROC_ "private_proc_without_a_contract"
-// private: DECLARE PROC private_proc_without_a_contract (t TEXT NOT NULL);
+/*
+private:
+DECLARE PROC private_proc_without_a_contract (t TEXT NOT NULL);
+*/
 static void private_proc_without_a_contract(cql_string_ref _Nonnull t) {
 
 }
@@ -13213,7 +13846,10 @@ CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results_fetch_re
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC result_set_proc_with_contract_in_fetch_results (t TEXT NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC result_set_proc_with_contract_in_fetch_results (t TEXT NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code result_set_proc_with_contract_in_fetch_results(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull t) {
   cql_contract_argument_notnull((void *)t, 1);
 
@@ -13327,7 +13963,10 @@ void out_proc_with_contract_in_fetch_results_fetch_results( out_proc_with_contra
   cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC out_proc_with_contract_in_fetch_results (t TEXT NOT NULL) OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC out_proc_with_contract_in_fetch_results (t TEXT NOT NULL) OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 
 typedef struct out_proc_with_contract_in_fetch_results_C_row {
   cql_bool _has_row_;
@@ -13416,7 +14055,10 @@ CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql_fetch_resul
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC nullability_improvements_are_erased_for_sql () (b INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC nullability_improvements_are_erased_for_sql () (b INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -13452,7 +14094,10 @@ END;
 */
 
 #define _PROC_ "nullability_improvements_do_not_change_access"
-// export: DECLARE PROC nullability_improvements_do_not_change_access ();
+/*
+export:
+DECLARE PROC nullability_improvements_do_not_change_access ();
+*/
 void nullability_improvements_do_not_change_access(void) {
   cql_nullable_int32 a;
   cql_set_null(a);
@@ -13483,7 +14128,10 @@ END;
 */
 
 #define _PROC_ "BigFormat"
-// export: DECLARE PROC BigFormat () USING TRANSACTION;
+/*
+export:
+DECLARE PROC BigFormat () USING TRANSACTION;
+*/
 
 typedef struct BigFormat_C_row {
   cql_bool _has_row_;
@@ -13925,7 +14573,10 @@ END;
 */
 
 #define _PROC_ "ltor_proc_int_not_null"
-// export: DECLARE PROC ltor_proc_int_not_null (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT c INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC ltor_proc_int_not_null (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT c INTEGER NOT NULL);
+*/
 void ltor_proc_int_not_null(cql_int32 a, cql_int32 b, cql_int32 *_Nonnull c) {
   cql_contract_argument_notnull((void *)c, 3);
 
@@ -13943,7 +14594,10 @@ END;
 */
 
 #define _PROC_ "ltor_proc_int"
-// export: DECLARE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER);
+/*
+export:
+DECLARE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER);
+*/
 void ltor_proc_int(cql_nullable_int32 a, cql_nullable_int32 b, cql_nullable_int32 *_Nonnull c) {
   cql_contract_argument_notnull((void *)c, 3);
 
@@ -13962,7 +14616,10 @@ END;
 */
 
 #define _PROC_ "ltor_proc_text_not_null"
-// export: DECLARE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL);
+/*
+export:
+DECLARE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL);
+*/
 void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull b, cql_string_ref _Nullable *_Nonnull c) {
   cql_contract_argument_notnull((void *)a, 1);
   cql_contract_argument_notnull((void *)b, 2);
@@ -13983,7 +14640,10 @@ END;
 */
 
 #define _PROC_ "ltor_proc_text"
-// export: DECLARE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT);
+/*
+export:
+DECLARE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT);
+*/
 void ltor_proc_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b, cql_string_ref _Nullable *_Nonnull c) {
   cql_contract_argument_notnull((void *)c, 3);
 
@@ -14009,7 +14669,10 @@ END;
 */
 
 #define _PROC_ "arguments_are_evaluated_left_to_right"
-// export: DECLARE PROC arguments_are_evaluated_left_to_right ();
+/*
+export:
+DECLARE PROC arguments_are_evaluated_left_to_right ();
+*/
 void arguments_are_evaluated_left_to_right(void) {
   cql_int32 _tmp_int_1 = 0;
   cql_int32 _tmp_int_2 = 0;
@@ -14096,7 +14759,10 @@ END;
 */
 
 #define _PROC_ "f1"
-// export: DECLARE PROC f1 (OUT x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC f1 (OUT x INTEGER NOT NULL);
+*/
 void f1(cql_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -14116,7 +14782,10 @@ END;
 */
 
 #define _PROC_ "f2"
-// export: DECLARE PROC f2 (OUT x INTEGER);
+/*
+export:
+DECLARE PROC f2 (OUT x INTEGER);
+*/
 void f2(cql_nullable_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -14136,7 +14805,10 @@ END;
 */
 
 #define _PROC_ "f3"
-// export: DECLARE PROC f3 (y INTEGER, OUT x INTEGER);
+/*
+export:
+DECLARE PROC f3 (y INTEGER, OUT x INTEGER);
+*/
 void f3(cql_nullable_int32 y, cql_nullable_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 2);
 
@@ -14158,7 +14830,10 @@ END;
 */
 
 #define _PROC_ "multi_call_temp_reuse"
-// export: DECLARE PROC multi_call_temp_reuse ();
+/*
+export:
+DECLARE PROC multi_call_temp_reuse ();
+*/
 void multi_call_temp_reuse(void) {
   cql_int32 _tmp_int_2 = 0;
   cql_int32 _tmp_int_3 = 0;
@@ -14256,7 +14931,10 @@ CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op_fetch_results(sqlite3 *_N
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC sensitive_function_is_a_no_op () (y TEXT NOT NULL @SENSITIVE);
+/*
+export:
+DECLARE PROC sensitive_function_is_a_no_op () (y TEXT NOT NULL @SENSITIVE);
+*/
 CQL_WARN_UNUSED cql_code sensitive_function_is_a_no_op(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -14287,7 +14965,10 @@ END;
 */
 
 #define _PROC_ "and_preserves_temps"
-// export: DECLARE PROC and_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
+/*
+export:
+DECLARE PROC and_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
+*/
 void and_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable_int64 c) {
   cql_nullable_bool _tmp_n_bool_1;
   cql_set_null(_tmp_n_bool_1);
@@ -14341,7 +15022,10 @@ END;
 */
 
 #define _PROC_ "or_preserves_temps"
-// export: DECLARE PROC or_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
+/*
+export:
+DECLARE PROC or_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
+*/
 void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable_int64 c) {
   cql_nullable_bool _tmp_n_bool_1;
   cql_set_null(_tmp_n_bool_1);
@@ -14452,7 +15136,10 @@ CQL_WARN_UNUSED cql_code foo_fetch_results(sqlite3 *_Nonnull _db_, foo_result_se
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC foo () (shared_something INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC foo () (shared_something INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code foo(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -14599,7 +15286,10 @@ CQL_WARN_UNUSED cql_code shared_conditional_user_fetch_results(sqlite3 *_Nonnull
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC shared_conditional_user (x INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+/*
+export:
+DECLARE PROC shared_conditional_user (x INTEGER NOT NULL) (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL);
+*/
 CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 x) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -14736,7 +15426,10 @@ CQL_WARN_UNUSED cql_code nested_shared_stuff_fetch_results(sqlite3 *_Nonnull _db
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC nested_shared_stuff () (x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC nested_shared_stuff () (x INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -14867,7 +15560,10 @@ CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form_fetch_results(sqlite
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC use_nested_select_shared_frag_form () (x INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC use_nested_select_shared_frag_form () (x INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -14958,7 +15654,10 @@ END;
 */
 
 #define _PROC_ "simple_shared_frag"
-// private: DECLARE PROC simple_shared_frag () (shared_something INTEGER NOT NULL);
+/*
+private:
+DECLARE PROC simple_shared_frag () (shared_something INTEGER NOT NULL);
+*/
 static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -14990,7 +15689,10 @@ END;
 */
 
 #define _PROC_ "slash_star_and_star_slash"
-// export: DECLARE PROC slash_star_and_star_slash ();
+/*
+export:
+DECLARE PROC slash_star_and_star_slash ();
+*/
 void slash_star_and_star_slash(void) {
   cql_string_ref x = NULL;
 
@@ -15015,7 +15717,10 @@ END;
 */
 
 #define _PROC_ "blob_serialization_test"
-// export: DECLARE PROC blob_serialization_test () USING TRANSACTION;
+/*
+export:
+DECLARE PROC blob_serialization_test () USING TRANSACTION;
+*/
 
 typedef struct blob_serialization_test_C_row {
   cql_bool _has_row_;
@@ -15126,7 +15831,10 @@ END;
 */
 
 #define _PROC_ "deserialize_func"
-// export: DECLARE PROC deserialize_func () USING TRANSACTION;
+/*
+export:
+DECLARE PROC deserialize_func () USING TRANSACTION;
+*/
 
 typedef struct deserialize_func_C_row {
   cql_bool _has_row_;
@@ -15194,7 +15902,10 @@ END;
 */
 
 #define _PROC_ "bigstuff"
-// export: DECLARE PROC bigstuff ();
+/*
+export:
+DECLARE PROC bigstuff ();
+*/
 void bigstuff(void) {
   cql_int64 big1 = 0;
   cql_int64 big2 = 0;
@@ -15254,7 +15965,10 @@ END;
 */
 
 #define _PROC_ "use_gr_cursor_for_serialization"
-// export: DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) USING TRANSACTION;
+/*
+export:
+DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 1);
 
@@ -15279,7 +15993,10 @@ END;
 */
 
 #define _PROC_ "mutated_in_param_ref"
-// export: DECLARE PROC mutated_in_param_ref (x TEXT);
+/*
+export:
+DECLARE PROC mutated_in_param_ref (x TEXT);
+*/
 void mutated_in_param_ref(cql_string_ref _Nullable _in__x) {
   cql_string_ref x = NULL;
 
@@ -15358,7 +16075,10 @@ CQL_WARN_UNUSED cql_code some_redeclared_out_proc_fetch_results(sqlite3 *_Nonnul
   return cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC some_redeclared_out_proc () OUT (x INTEGER) USING TRANSACTION;
+/*
+export:
+DECLARE PROC some_redeclared_out_proc () OUT (x INTEGER) USING TRANSACTION;
+*/
 
 typedef struct some_redeclared_out_proc_c_row {
   cql_bool _has_row_;
@@ -15448,7 +16168,10 @@ cql_fetch_info some_redeclared_out_union_proc_info = {
   .crc = CRC_some_redeclared_out_union_proc,
   .perf_index = &some_redeclared_out_union_proc_perf_index,
 };
-// export: DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INTEGER) USING TRANSACTION;
+/*
+export:
+DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INTEGER) USING TRANSACTION;
+*/
 
 typedef struct some_redeclared_out_union_proc_c_row {
   cql_bool _has_row_;
@@ -15497,7 +16220,10 @@ END;
 */
 
 #define _PROC_ "external_cursor_caller"
-// export: DECLARE PROC external_cursor_caller ();
+/*
+export:
+DECLARE PROC external_cursor_caller ();
+*/
 
 typedef struct external_cursor_caller_shape_storage_row {
   cql_bool _has_row_;
@@ -15544,7 +16270,10 @@ END;
 */
 
 #define _PROC_ "clobber1"
-// export: DECLARE PROC clobber1 (INOUT x TEXT);
+/*
+export:
+DECLARE PROC clobber1 (INOUT x TEXT);
+*/
 void clobber1(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -15563,7 +16292,10 @@ END;
 */
 
 #define _PROC_ "clobber2"
-// export: DECLARE PROC clobber2 (OUT x TEXT);
+/*
+export:
+DECLARE PROC clobber2 (OUT x TEXT);
+*/
 void clobber2(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
@@ -15583,7 +16315,10 @@ END;
 */
 
 #define _PROC_ "mutated_in_arg1"
-// export: DECLARE PROC mutated_in_arg1 (x TEXT);
+/*
+export:
+DECLARE PROC mutated_in_arg1 (x TEXT);
+*/
 void mutated_in_arg1(cql_string_ref _Nullable _in__x) {
   cql_string_ref x = NULL;
 
@@ -15604,7 +16339,10 @@ END;
 */
 
 #define _PROC_ "mutated_in_arg2"
-// export: DECLARE PROC mutated_in_arg2 (x TEXT);
+/*
+export:
+DECLARE PROC mutated_in_arg2 (x TEXT);
+*/
 void mutated_in_arg2(cql_string_ref _Nullable _in__x) {
   cql_string_ref x = NULL;
 
@@ -15627,7 +16365,10 @@ END;
 */
 
 #define _PROC_ "mutated_in_arg3"
-// export: DECLARE PROC mutated_in_arg3 (x TEXT) USING TRANSACTION;
+/*
+export:
+DECLARE PROC mutated_in_arg3 (x TEXT) USING TRANSACTION;
+*/
 CQL_WARN_UNUSED cql_code mutated_in_arg3(sqlite3 *_Nonnull _db_, cql_string_ref _Nullable _in__x) {
   cql_code _rc_ = SQLITE_OK;
   cql_string_ref x = NULL;
@@ -15662,7 +16403,10 @@ END;
 */
 
 #define _PROC_ "mutated_not_null"
-// export: DECLARE PROC mutated_not_null (x TEXT NOT NULL);
+/*
+export:
+DECLARE PROC mutated_not_null (x TEXT NOT NULL);
+*/
 void mutated_not_null(cql_string_ref _Nonnull _in__x) {
   cql_contract_argument_notnull((void *)_in__x, 1);
 
@@ -15672,6 +16416,137 @@ void mutated_not_null(cql_string_ref _Nonnull _in__x) {
   cql_set_string_ref(&x, _literal_25_xyzzy_clobber1);
 
   cql_string_release(x);
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
+*/
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC a_proc_that_needs_dependents ()
+BEGIN
+  DECLARE C CURSOR LIKE (a_foo OBJECT<a_proc_we_need SET>, another_foo OBJECT<a_proc_we_need SET>);
+  FETCH C(a_foo, another_foo) FROM VALUES(a_proc_we_need(), a_proc_we_need());
+  OUT UNION C;
+END;
+*/
+
+#define _PROC_ "a_proc_that_needs_dependents_fetch_results"
+
+#define a_proc_that_needs_dependents_refs_offset cql_offsetof(a_proc_that_needs_dependents_row, a_foo) // count = 2
+static int32_t a_proc_that_needs_dependents_perf_index;
+
+cql_string_proc_name(a_proc_that_needs_dependents_stored_procedure_name, "a_proc_that_needs_dependents");
+
+a_proc_we_need_result_set_ref _Nullable a_proc_that_needs_dependents_get_a_foo(a_proc_that_needs_dependents_result_set_ref _Nonnull result_set, cql_int32 row) {
+  a_proc_that_needs_dependents_row *data = (a_proc_that_needs_dependents_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return (a_proc_we_need_result_set_ref _Nullable )data[row].a_foo;
+}
+
+a_proc_we_need_result_set_ref _Nullable a_proc_that_needs_dependents_get_another_foo(a_proc_that_needs_dependents_result_set_ref _Nonnull result_set, cql_int32 row) {
+  a_proc_that_needs_dependents_row *data = (a_proc_that_needs_dependents_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return (a_proc_we_need_result_set_ref _Nullable )data[row].another_foo;
+}
+
+uint8_t a_proc_that_needs_dependents_data_types[a_proc_that_needs_dependents_data_types_count] = {
+  CQL_DATA_TYPE_OBJECT, // a_foo
+  CQL_DATA_TYPE_OBJECT, // another_foo
+};
+
+#define a_proc_that_needs_dependents_refs_offset cql_offsetof(a_proc_that_needs_dependents_row, a_foo) // count = 2
+
+static cql_uint16 a_proc_that_needs_dependents_col_offsets[] = { 2,
+  cql_offsetof(a_proc_that_needs_dependents_row, a_foo),
+  cql_offsetof(a_proc_that_needs_dependents_row, another_foo)
+};
+
+cql_int32 a_proc_that_needs_dependents_result_count(a_proc_that_needs_dependents_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+cql_fetch_info a_proc_that_needs_dependents_info = {
+  .rc = SQLITE_OK,
+  .data_types = a_proc_that_needs_dependents_data_types,
+  .col_offsets = a_proc_that_needs_dependents_col_offsets,
+  .refs_count = 2,
+  .refs_offset = a_proc_that_needs_dependents_refs_offset,
+  .encode_context_index = -1,
+  .rowsize = sizeof(a_proc_that_needs_dependents_row),
+  .crc = CRC_a_proc_that_needs_dependents,
+  .perf_index = &a_proc_that_needs_dependents_perf_index,
+};
+/*
+export:
+DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
+DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
+DECLARE PROC a_proc_that_needs_dependents () OUT UNION (a_foo OBJECT, another_foo OBJECT) USING TRANSACTION;
+*/
+
+typedef struct a_proc_that_needs_dependents_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_object_ref _Nullable a_foo;
+  cql_object_ref _Nullable another_foo;
+} a_proc_that_needs_dependents_C_row;
+
+#define a_proc_that_needs_dependents_C_refs_offset cql_offsetof(a_proc_that_needs_dependents_C_row, a_foo) // count = 2
+CQL_WARN_UNUSED cql_code a_proc_that_needs_dependents_fetch_results(sqlite3 *_Nonnull _db_, a_proc_that_needs_dependents_result_set_ref _Nullable *_Nonnull _result_set_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_bytebuf _rows_;
+  cql_bytebuf_open(&_rows_);
+  *_result_set_ = NULL;
+  a_proc_that_needs_dependents_C_row C = { ._refs_count_ = 2, ._refs_offset_ = a_proc_that_needs_dependents_C_refs_offset };
+  cql_object_ref _tmp_object_0 = NULL;
+  cql_object_ref _tmp_object_1 = NULL;
+
+  cql_profile_start(CRC_a_proc_that_needs_dependents, &a_proc_that_needs_dependents_perf_index);
+  C._has_row_ = 1;
+  cql_object_release(_tmp_object_0);
+  _tmp_object_0 = NULL;
+  _rc_ = a_proc_we_need_fetch_results(_db_, (a_proc_we_need_result_set_ref *)&_tmp_object_0);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  cql_set_object_ref(&C.a_foo, _tmp_object_0);
+  cql_object_release(_tmp_object_1);
+  _tmp_object_1 = NULL;
+  _rc_ = a_proc_we_need_fetch_results(_db_, (a_proc_we_need_result_set_ref *)&_tmp_object_1);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  cql_set_object_ref(&C.another_foo, _tmp_object_1);
+  cql_retain_row(C);
+  if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  a_proc_that_needs_dependents_info.db = _db_;
+  cql_results_from_data(_rc_, &_rows_, &a_proc_that_needs_dependents_info, (cql_result_set_ref *)_result_set_);
+  a_proc_that_needs_dependents_info.db = NULL;
+  cql_teardown_row(C);
+  cql_object_release(_tmp_object_0);
+  cql_object_release(_tmp_object_1);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC another_proc_that_needs_dependents (a_foo OBJECT<a_proc_we_need SET>)
+BEGIN
+END;
+*/
+
+#define _PROC_ "another_proc_that_needs_dependents"
+/*
+export:
+DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
+DECLARE PROC another_proc_that_needs_dependents (a_foo OBJECT);
+*/
+void another_proc_that_needs_dependents(cql_object_ref _Nullable a_foo) {
+
 }
 #undef _PROC_
 
@@ -15736,7 +16611,10 @@ CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_,
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+/*
+export:
+DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+*/
 CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
@@ -15834,7 +16712,11 @@ cql_fetch_info simple_container_proc_info = {
   .crc = CRC_simple_container_proc,
   .perf_index = &simple_container_proc_perf_index,
 };
-// export: DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
+/*
+export:
+DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT) USING TRANSACTION;
+*/
 
 typedef struct simple_container_proc_C_row {
   cql_bool _has_row_;
@@ -15887,7 +16769,10 @@ END;
 */
 
 #define _PROC_ "end_proc"
-// export: DECLARE PROC end_proc ();
+/*
+export:
+DECLARE PROC end_proc ();
+*/
 void end_proc(void) {
 
 }

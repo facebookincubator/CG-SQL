@@ -526,6 +526,9 @@ cql_noexport void find_misc_attrs(
   find_ast_misc_attr_callback _Nonnull misc_attr_callback,
   void *_Nullable context);
 
+cql_noexport size_t ends_in_cursor(CSTR str);
+cql_noexport size_t ends_in_set(CSTR str);
+
 #ifdef CQL_AMALGAM
 
   // In the amalgam build we see this file only once, we emit the definitions as statics

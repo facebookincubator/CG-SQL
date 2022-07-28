@@ -26,6 +26,7 @@ cql_noexport void gen_root_expr(ast_node *_Nonnull ast);
 cql_noexport void gen_col_or_key(ast_node *_Nonnull ast);
 cql_noexport void gen_params(ast_node *_Nonnull ast);
 cql_noexport void gen_declare_proc_from_create_or_decl(ast_node *_Nonnull ast);
+cql_noexport void gen_declare_proc_closure(ast_node *_Nonnull ast, symtab *already_done);
 cql_noexport void gen_declare_interface_stmt(ast_node *_Nonnull ast);
 cql_noexport void gen_one_stmt(ast_node *_Nonnull stmt);
 cql_noexport void gen_misc_attrs(ast_node *_Nonnull ast);
@@ -33,7 +34,6 @@ cql_noexport void gen_misc_attr_value(ast_node *_Nonnull ast);
 cql_noexport void gen_misc_attr_value_list(ast_node *_Nonnull ast);
 cql_noexport void gen_fk_action(int32_t action);
 cql_noexport void gen_insert_type(ast_node *_Nonnull ast);
-cql_noexport void gen_declare_proc_from_create_proc(ast_node *_Nonnull ast);
 cql_noexport void gen_col_key_list(ast_node *_Nonnull list);
 cql_noexport void gen_typed_names(ast_node *_Nullable ast);
 cql_noexport void gen_data_type(ast_node *_Nonnull ast);
@@ -108,6 +108,11 @@ typedef struct gen_sql_callbacks {
   // semantic analysis.
   gen_sql_callback _Nullable named_type_callback;
   void *_Nullable named_type_context;
+
+  // This callback allows embedded <X SET> types to be recursively walked
+  // during emission of exports
+  gen_sql_callback _Nullable set_kind_callback;
+  void *_Nullable set_kind_context;
 
   // If true, hex literals are converted to decimal.  This is for JSON which does not support hex literals.
   bool_t convert_hex;

@@ -1070,3 +1070,23 @@ cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
   SYMTAB_CLEANUP(callbacks->visited_from);
   SYMTAB_CLEANUP(callbacks->visited_proc);
 }
+
+cql_noexport size_t ends_in_cursor(CSTR str) {
+  size_t len = strlen(str);
+  CSTR tail = " CURSOR";
+  size_t len_tail = strlen(tail);
+  if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
+    return 0;
+  }
+  return len_tail;
+}
+
+cql_noexport size_t ends_in_set(CSTR str) {
+  size_t len = strlen(str);
+  CSTR tail = " SET";
+  size_t len_tail = strlen(tail);
+  if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
+    return 0;
+  }
+  return len_tail;
+}

@@ -4282,6 +4282,50 @@ static inline BOOL CGBSomeRedeclaredOutUnionProcRowEqual(CGBSomeRedeclaredOutUni
   return CGCSomeRedeclaredOutUnionProcRowEqual(CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet1), row1, CGCSomeRedeclaredOutUnionProcFromCGBSomeRedeclaredOutUnionProc(resultSet2), row2);
 }
 
+@class CGBAProcThatNeedsDependents;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBAProcThatNeedsDependents
+@end
+#endif
+
+static inline CGBAProcThatNeedsDependents *CGBAProcThatNeedsDependentsFromCGCAProcThatNeedsDependents(CGCAProcThatNeedsDependentsResultSetRef resultSet)
+{
+  return (__bridge CGBAProcThatNeedsDependents *)resultSet;
+}
+
+static inline CGCAProcThatNeedsDependentsResultSetRef CGCAProcThatNeedsDependentsFromCGBAProcThatNeedsDependents(CGBAProcThatNeedsDependents *resultSet)
+{
+  return (__bridge CGCAProcThatNeedsDependentsResultSetRef)resultSet;
+}
+
+static inline NSObject *_Nullable CGBAProcThatNeedsDependentsGetAFoo(CGBAProcThatNeedsDependents *resultSet, int32_t row)
+{
+  CGCAProcThatNeedsDependentsResultSetRef cResultSet = CGCAProcThatNeedsDependentsFromCGBAProcThatNeedsDependents(resultSet);
+  return (__bridge NSObject *)CGCAProcThatNeedsDependentsGetAFoo(cResultSet, row);
+}
+
+static inline NSObject *_Nullable CGBAProcThatNeedsDependentsGetAnotherFoo(CGBAProcThatNeedsDependents *resultSet, int32_t row)
+{
+  CGCAProcThatNeedsDependentsResultSetRef cResultSet = CGCAProcThatNeedsDependentsFromCGBAProcThatNeedsDependents(resultSet);
+  return (__bridge NSObject *)CGCAProcThatNeedsDependentsGetAnotherFoo(cResultSet, row);
+}
+
+static inline int32_t CGBAProcThatNeedsDependentsResultCount(CGBAProcThatNeedsDependents *resultSet)
+{
+  return CGCAProcThatNeedsDependentsResultCount(CGCAProcThatNeedsDependentsFromCGBAProcThatNeedsDependents(resultSet));
+}
+
+static inline NSUInteger CGBAProcThatNeedsDependentsRowHash(CGBAProcThatNeedsDependents *resultSet, int32_t row)
+{
+  return CGCAProcThatNeedsDependentsRowHash(CGCAProcThatNeedsDependentsFromCGBAProcThatNeedsDependents(resultSet), row);
+}
+
+static inline BOOL CGBAProcThatNeedsDependentsRowEqual(CGBAProcThatNeedsDependents *resultSet1, int32_t row1, CGBAProcThatNeedsDependents *resultSet2, int32_t row2)
+{
+  return CGCAProcThatNeedsDependentsRowEqual(CGCAProcThatNeedsDependentsFromCGBAProcThatNeedsDependents(resultSet1), row1, CGCAProcThatNeedsDependentsFromCGBAProcThatNeedsDependents(resultSet2), row2);
+}
+
 @class CGBSimpleChildProc;
 
 #ifdef CQL_EMIT_OBJC_INTERFACES

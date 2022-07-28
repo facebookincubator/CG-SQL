@@ -2976,8 +2976,8 @@ static void sem_data_type_column(ast_node *ast) {
     EXTRACT_STRING(kind, ast->left);
     ast->sem->kind = kind;
 
-    bool_t is_set = !!sem_ends_in_set(kind);
-    bool_t is_cursor = !!sem_ends_in_cursor(kind);
+    bool_t is_set = !!ends_in_set(kind);
+    bool_t is_cursor = !!ends_in_cursor(kind);
 
     if (is_set || is_cursor) {
       // <T SET> and <T CURSOR> get additional checks
@@ -19484,7 +19484,7 @@ static void sem_declare_cursor_for_expr(ast_node *ast) {
   }
 
   sem_t cursor_flags = SEM_TYPE_BOXED;
-  if (sem_ends_in_set(expr->sem->kind)) {
+  if (ends_in_set(expr->sem->kind)) {
     cursor_flags = SEM_TYPE_USES_OUT_UNION;
   }
 
@@ -19497,26 +19497,6 @@ static void sem_declare_cursor_for_expr(ast_node *ast) {
   ast->sem = cursor->sem;
 
   add_variable(name, cursor);
-}
-
-cql_noexport size_t sem_ends_in_cursor(CSTR str) {
-  size_t len = strlen(str);
-  CSTR tail = " CURSOR";
-  size_t len_tail = strlen(tail);
-  if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
-    return 0;
-  }
-  return len_tail;
-}
-
-cql_noexport size_t sem_ends_in_set(CSTR str) {
-  size_t len = strlen(str);
-  CSTR tail = " SET";
-  size_t len_tail = strlen(tail);
-  if (len < len_tail + 1 || Strcasecmp(tail, str + len - len_tail)) {
-    return 0;
-  }
-  return len_tail;
 }
 
 // Verify that the indicated variable has a valid cursor type
@@ -19537,9 +19517,9 @@ cql_noexport ast_node *sem_find_likeable_from_expr_type(ast_node *expr) {
   CSTR kind = expr->sem->kind;
 
   size_t len = strlen(kind);
-  size_t len_tail = sem_ends_in_cursor(kind);
+  size_t len_tail = ends_in_cursor(kind);
   if (!len_tail) {
-    len_tail = sem_ends_in_set(kind);
+    len_tail = ends_in_set(kind);
     if (!len_tail) {
       CSTR expr_text = dup_expr_text(expr);
       report_error(expr, "CQL0343: variable must be of type object<T CURSOR> or object<T SET> where T is a valid shape name", expr_text);

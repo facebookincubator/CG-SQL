@@ -165,7 +165,10 @@ CQL_WARN_UNUSED cql_code assembly_core_fetch_results(sqlite3 *_Nonnull _db_, ass
   return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
 }
 
-// export: DECLARE PROC assembly_core (id_ INTEGER NOT NULL, name_ TEXT NOT NULL) (x INTEGER NOT NULL, y TEXT, z LONG_INT, flag BOOL);
+/*
+export:
+DECLARE PROC assembly_core (id_ INTEGER NOT NULL, name_ TEXT NOT NULL) (x INTEGER NOT NULL, y TEXT, z LONG_INT, flag BOOL);
+*/
 CQL_WARN_UNUSED cql_code assembly_core(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_int32 id_, cql_string_ref _Nonnull name_) {
   cql_contract_argument_notnull((void *)name_, 2);
 
