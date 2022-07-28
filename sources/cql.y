@@ -2339,7 +2339,7 @@ static void parse_cmd(int argc, char **argv) {
     } else if (strcmp(arg, "--cqlrt") == 0) {
       a = gather_arg_param(a, argc, argv, &options.cqlrt, "for the name of the runtime header");
     } else if (strcmp(arg, "--rt") == 0) {
-      a = gather_arg_param(a, argc, argv, &options.rt, "(e.g. c, objc, java, jason_schema)");
+      a = gather_arg_param(a, argc, argv, &options.rt, "(e.g., c, objc, java, json_schema)");
       rt = find_rtdata(options.rt);
       if (!rt) {
         cql_error("unknown cg runtime '%s'\n", options.rt);
