@@ -32,11 +32,6 @@ $O/cql --in t6.sql --cg $O/x.l --rt lua
 echo demo
 $O/cql --in demo.sql --cg $O/x.l --rt lua
 (cd $O ; lua $O/x.l)
-echo "schema upgrade test"
-$O/cql --in upgrade_test.sql --cg $O/x.l --rt lua
-(cd $O ; lua $O/x.l >$O/lua_upgrade.txt)
-diff lua_upgrade.ref $O/lua_upgrade.txt 
-echo no diffs means success
 
 echo ""
 echo "run test (NOTE: some exception spam is normal, the tests throwing exceptions on purpose)"

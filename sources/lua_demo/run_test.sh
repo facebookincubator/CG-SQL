@@ -8,3 +8,8 @@ set -euo pipefail
 
 lua_demo/prepare_run_test.sh
 lua out/run_test.lua
+
+echo "schema upgrade test"
+lua out/lua_schema_upgrade4.lua >out/lua_upgrade.txt
+diff lua_demo/lua_upgrade.ref out/lua_upgrade.txt
+echo no diffs means success
