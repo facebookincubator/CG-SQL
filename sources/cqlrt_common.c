@@ -4049,3 +4049,20 @@ cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_curso
   cql_bytebuf_close(&b);
   return result;
 }
+
+// To keep the contract as simple as possible we encode everything we
+// need into the fragment array.  Including the size of the output
+// and fragment terminator.  See above.  This also makes the code
+// gen as simple as possible.
+cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_Nonnull frags)
+{
+  // we never try to encode the empty string
+  cql_contract(frags[0]);
+
+  // NOTE: len is the allocation size (includes trailing \0)
+  int32_t len;
+  frags = cql_decode(frags, &len);
+  STACK_BYTES_ALLOC(str, len);
+  cql_expand_frags(str, base, frags);
+  return cql_string_ref_new(str);
+}

@@ -5469,6 +5469,18 @@ BEGIN_TEST(cursor_formatting)
   EXPECT(s3 = "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
 END_TEST(cursor_formatting)
 
+BEGIN_TEST(compressed_strings)
+
+  let x := "hello hello hello hello";
+  let y := cql_compressed("hello hello hello hello");
+  EXPECT(x == y);
+
+  let empty1 := "";
+  let empty2 := cql_compressed("");
+  EXPECT(empty1 == empty2);
+
+END_TEST(compressed_strings)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

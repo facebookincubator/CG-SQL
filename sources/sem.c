@@ -7372,6 +7372,37 @@ static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
   sem_coalesce(ast, 1);  // set "ifnull"
 }
 
+// This is a wrapper function that tells the code generator to compress
+// the string literal into fragments like we do for statements.  This
+// will do nothing unless --compress has been selected
+static void sem_func_cql_compressed(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_context(ast, name, SEM_EXPR_CONTEXT_NONE)) {
+    return;
+  }
+
+  // only one argument
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg = first_arg(arg_list);
+
+  if (!is_strlit(arg)) {
+    report_error(ast, "CQL0421: first argument must be a string literal", name);
+    record_error(ast);
+    return;
+  }
+
+  // the literal type flows through
+  name_ast->sem = ast->sem = arg->sem;
+}
+
 // The usual blob verification stuff.  Note that cql_get_blob_size
 // returns not null (blob size of nil is zero).
 // We can't declare this function with the normal syntax because it
@@ -24004,6 +24035,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(nth_value);
   FUNC_INIT(random);
   FUNC_INIT(likely);
+  FUNC_INIT(cql_compressed);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

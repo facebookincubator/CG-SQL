@@ -1629,4 +1629,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with
 test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be top level 'foo'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'goo'
 test/sem_test.sql:XXXX:1: error: in type_object : CQL0090: object<T SET> has a T that is not a procedure with a result set 'C SET'
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_compressed'
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_compressed'
+test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a string literal 'cql_compressed'
 semantic errors present; no code gen.

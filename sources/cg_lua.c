@@ -1563,6 +1563,20 @@ static void cg_lua_func_cql_inferred_notnull(ast_node *call_ast, charbuf *value)
   cg_lua_func_attest_notnull(call_ast, value, LUA_ATTEST_NOTNULL_VARIANT_INFERRED);
 }
 
+// This is a no-op for now, that is no compression.
+// i.e. lua codegen doesn't have compressed string forms yet so we just emit a normal literal
+static void cg_lua_func_cql_compressed(ast_node *call_ast, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+  EXTRACT_STRING(str, expr);
+
+  cg_lua_string_literal(str, value);
+}
+
 // There's a helper for this method, just call it.  Super easy.
 static void cg_lua_func_changes(ast_node *ast, charbuf *value) {
   bprintf(value, "cql_changes(_db_)");
@@ -5179,6 +5193,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_FUNC_INIT(printf);
   LUA_FUNC_INIT(cql_get_blob_size);
   LUA_FUNC_INIT(cql_inferred_notnull);
+  LUA_FUNC_INIT(cql_compressed);
 
   LUA_EXPR_INIT(num, cg_lua_expr_num, "num", LUA_EXPR_PRI_ROOT);
   LUA_EXPR_INIT(str, cg_lua_expr_str, "STR", LUA_EXPR_PRI_ROOT);

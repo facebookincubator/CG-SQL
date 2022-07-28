@@ -50,6 +50,7 @@ static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym_na
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
 static void cg_declare_simple_var(sem_t sem_type, CSTR name);
 static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type);
+cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output);
 
 cql_noexport void cg_c_init(void);
 
@@ -2587,6 +2588,40 @@ static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *
   cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_CRASH);
 }
 
+// The point of this psuedo function is to make it possible to have CQL users
+// opt-in to the compressed string pieces mode if they have highly duplicated strings
+// this is really the most useful in the schema generator -- more kinds of strings
+// can participate in the pieces plan.
+static void cg_func_cql_compressed(ast_node *call_ast, charbuf *is_null, charbuf *value) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+  EXTRACT_STRING(str, expr);
+
+  // we never try to compress the empty string, that's dumb
+  if (!options.compress || !strcmp(str, "''")) {
+    // Note str is the lexeme, so it is still quoted and escaped.
+    bprintf(is_null, "0");
+    cg_string_literal(str, value);
+  }
+  else {
+    CG_SETUP_RESULT_VAR(expr, SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+    CHARBUF_OPEN(call);
+    CHARBUF_OPEN(unquoted);
+    cg_decode_string_literal(str, &unquoted);
+    bprintf(&call, "cql_uncompress(_pieces_, ");
+    cg_statement_pieces(unquoted.ptr, &call);
+    bprintf(&call, ")");
+    cg_copy_for_create(cg_main_output, result_var.ptr, SEM_TYPE_TEXT, call.ptr);
+    CHARBUF_CLOSE(unquoted);
+    CHARBUF_CLOSE(call);
+    CG_CLEANUP_RESULT_VAR();
+  }
+}
+
 // The `cql_inferred_notnull` function is not used by the programmer directly,
 // but rather inserted via a rewrite during semantic analysis to coerce a value
 // of a nullable type to be nonnull. The reason for this approach, as opposed to
@@ -4339,6 +4374,7 @@ cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output) {
   Contract(in);
   int32_t len = (int32_t)strlen(in);
   Contract(len);
+
   uint32_t count = 0;
 
   CSTR start = in;
@@ -8593,6 +8629,7 @@ cql_noexport void cg_c_init(void) {
   FUNC_INIT(changes);
   FUNC_INIT(printf);
   FUNC_INIT(cql_get_blob_size);
+  FUNC_INIT(cql_compressed);
   FUNC_INIT(cql_inferred_notnull);
 
   EXPR_INIT(num, cg_expr_num, "num", C_EXPR_PRI_ROOT);

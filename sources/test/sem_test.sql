@@ -22501,3 +22501,26 @@ begin
   declare x object<C set>;
   declare y object<test_parent_child set>;
 end;
+
+-- TEST: verify semantic types of cql_compressed (ok)
+-- + {let_stmt}: compressed_string: text notnull variable
+-- - error:
+let compressed_string := cql_compressed("foo foo");
+
+-- TEST: verify cql_compressed fails in sql context
+-- + {assign}: err
+-- + function may not appear in this context 'cql_compressed'
+-- +1 error
+set compressed_string := (select cql_compressed('hello hello'));
+
+-- TEST: verify semantic types of cql_compressed (too many args)
+-- + {assign}: err
+-- + function got incorrect number of arguments 'cql_compressed'
+-- +1 error:
+set compressed_string := cql_compressed("foo foo", 1);
+
+-- TEST: verify semantic types of cql_compressed (not a string)
+-- + {assign}: err
+-- + first argument must be a string literal 'cql_compressed'
+-- +1 error:
+set compressed_string := cql_compressed(1);

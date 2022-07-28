@@ -89135,3 +89135,76 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0090: object<T SET> has a T
         | {type_object}: object<test_parent_child SET>
           | {name test_parent_child SET}
 
+The statement ending at line XXXX
+
+LET compressed_string := cql_compressed("foo foo");
+
+  {let_stmt}: compressed_string: text notnull variable
+  | {name compressed_string}: compressed_string: text notnull variable
+  | {call}: text notnull
+    | {name cql_compressed}: text notnull
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'foo foo'}: text notnull
+
+The statement ending at line XXXX
+
+SET compressed_string := ( SELECT cql_compressed('hello hello') );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_compressed'
+
+  {assign}: err
+  | {name compressed_string}: compressed_string: text notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name cql_compressed}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'hello hello'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET compressed_string := cql_compressed("foo foo", 1);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_compressed'
+
+  {assign}: err
+  | {name compressed_string}: compressed_string: text notnull variable
+  | {call}: err
+    | {name cql_compressed}: err
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'foo foo'}: text notnull
+        | {arg_list}
+          | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SET compressed_string := cql_compressed(1);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a string literal 'cql_compressed'
+
+  {assign}: err
+  | {name compressed_string}: compressed_string: text notnull variable
+  | {call}: err
+    | {name cql_compressed}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
+

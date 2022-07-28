@@ -366,5 +366,6 @@ CQL_EXPORT cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_,
 // Boxing interface (uses generic objects to hold a statement)
 CQL_EXPORT cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
 CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
+CQL_EXPORT cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_Nonnull frags);
 
 CQL_EXTERN_C_END
