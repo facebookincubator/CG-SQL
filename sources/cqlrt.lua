@@ -35,6 +35,10 @@ CQL_DATATYPE_STRING = string.byte("s", 1)
 CQL_DATATYPE_BLOB = string.byte("b", 1)
 CQL_DATATYPE_OBJECT = string.byte("o", 1)
 
+function printf(...)
+  io.write(cql_printf(...))
+end
+
 function cql_is(x,y)
    if x == nil and y == nil then
      return true;

@@ -74,8 +74,10 @@ end;
 
 create procedure go()
 begin
+  begin transaction;
   call lua_upgrade_no_virtual_tables();
   call print_schema();
+  commit transaction;
 end;
 
-@echo lua, "go(sqlite3.open_memory())\n";
+@echo lua, "go(sqlite3.open(arg[1]))\n";
