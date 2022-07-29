@@ -1,0 +1,119 @@
+reference results for version 4
+
+----- g1 -----
+
+type: table
+tbl_name: g1
+CREATE TABLE g1(
+  id INTEGER PRIMARY KEY,
+  name TEXT)
+
+----- lua_upgrade_cql_schema_facets -----
+
+type: table
+tbl_name: lua_upgrade_cql_schema_facets
+CREATE TABLE lua_upgrade_cql_schema_facets(
+  facet TEXT NOT NULL PRIMARY KEY,
+  version LONG_INT NOT NULL)
+
+----- recreate_test_for_unsub -----
+
+type: table
+tbl_name: recreate_test_for_unsub
+CREATE TABLE recreate_test_for_unsub(
+  unsub_id INTEGER,
+  x TEXT)
+
+----- recreate_test_for_unsub_index -----
+
+type: index
+tbl_name: recreate_test_for_unsub
+CREATE INDEX recreate_test_for_unsub_index ON recreate_test_for_unsub (
+  x)
+
+----- recreate_test_for_unsub_trigger -----
+
+type: trigger
+tbl_name: recreate_test_for_unsub
+CREATE TRIGGER recreate_test_for_unsub_trigger BEFORE DELETE ON recreate_test_for_unsub WHEN old.unsub_id = 3 BEGIN DELETE FROM recreate_test_for_unsub WHERE unsub_id = 3; END
+
+----- sqlite_autoindex_lua_upgrade_cql_schema_facets_1 -----
+
+type: index
+tbl_name: lua_upgrade_cql_schema_facets
+
+----- staying_index -----
+
+type: index
+tbl_name: g1
+CREATE INDEX staying_index ON g1 (
+  id)
+
+----- staying_trigger -----
+
+type: trigger
+tbl_name: g1
+CREATE TRIGGER staying_trigger BEFORE DELETE ON g1 BEGIN SELECT 1; END
+
+----- staying_view -----
+
+type: view
+tbl_name: staying_view
+CREATE VIEW staying_view AS SELECT id,
+name FROM g1
+
+----- test_create_table_C -----
+
+type: table
+tbl_name: test_create_table_C
+CREATE TABLE test_create_table_C(
+  colA TEXT,
+  colB LONG_INT,
+  colC LONG_INT)
+
+----- test_for_unsub -----
+
+type: table
+tbl_name: test_for_unsub
+CREATE TABLE test_for_unsub(
+  unsub_id INTEGER,
+  x TEXT)
+
+----- test_for_unsub_index -----
+
+type: index
+tbl_name: test_for_unsub
+CREATE INDEX test_for_unsub_index ON test_for_unsub (
+  x)
+
+----- test_for_unsub_trigger -----
+
+type: trigger
+tbl_name: test_for_unsub
+CREATE TRIGGER test_for_unsub_trigger BEFORE DELETE ON test_for_unsub WHEN old.unsub_id = 3 BEGIN DELETE FROM test_for_unsub WHERE unsub_id = 3; END
+
+----- test_recreate_table_B -----
+
+type: table
+tbl_name: test_recreate_table_B
+CREATE TABLE test_recreate_table_B(
+  colA INTEGER,
+  colB LONG_INT,
+  colC INTEGER)
+
+----- test_view -----
+
+type: view
+tbl_name: test_view
+CREATE VIEW test_view AS SELECT colA,
+colB FROM test_create_table_C
+
+----- use_g1 -----
+
+type: table
+tbl_name: use_g1
+CREATE TABLE use_g1(
+  id INTEGER PRIMARY KEY REFERENCES g1 (
+    id),
+  name2 TEXT)
+
