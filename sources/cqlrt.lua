@@ -733,7 +733,6 @@ function cql_init_extensions(db)
   return sqlite3.OK
 end;
 
-
 function cql_cursor_format(C, types, fields)
   local result = ""
   for i = 1, #fields
@@ -753,4 +752,114 @@ function cql_cursor_format(C, types, fields)
     end
   end
   return result
+end
+
+function _cql_create_upgrader_input_statement_list(str, parse_word)
+  local list = {}
+
+  if #str == 0 then return list end
+  local space = string.byte(" ")
+  local quote = string.byte("'")
+  local lineStartIt = 1
+  while string.byte(str, lineStartIt) == space
+  do
+    lineStartIt = lineStartIt + 1
+  end
+
+  local in_quote = false
+  for i = 1, #str do
+    local p = string.byte(str, i)
+    if in_quote then
+      if p == quote then
+        if p == quote then
+          i = i + 1;
+        else
+          in_quote = false
+        end
+      end
+    elseif p == quote then
+      in_quote = true
+    elseif not in_quote and i == string.find(str, parse_word, i) then
+      if lineStartIt ~= i then
+        currLine = string.sub(str, lineStartIt, i-1)
+        table.insert(list, currLine)
+        lineStartIt = i
+      end
+    end
+  end
+  currLine = string.sub(str, lineStartIt, #str)
+  table.insert(list, currLine)
+  return list
+end
+
+function _cql_create_table_name_from_table_creation_statement(create)
+  local virtual_table_prefix = "CREATE VIRTUAL TABLE "
+  local i = 0
+  local space = string.byte(" ")
+  local start = 1
+  while string.byte(create, start) == space do
+    start = start + 1;
+  end
+
+  if start == string.find(create, virtual_table_prefix, start) then
+    i = string.find(create, "USING ")
+  else
+    i = string.find(create, "[(]")  -- it's a pattern
+  end
+
+  while string.byte(create, i-1) == space do
+    i = i - 1
+  end
+
+  local lineStartIt = i
+  while string.byte(create, lineStartIt - 1) ~= space do
+    lineStartIt = lineStartIt - 1;
+  end
+
+  return string.sub(create, lineStartIt, i-1)
+end
+
+
+function _cql_create_table_name_from_index_creation_statement(index_create)
+  local needle = "ON "
+  local lineStartIt = string.find(index_create, needle) + #needle
+  local i = string.find(index_create, "[(]")
+  local space = string.byte(" ")
+  while string.byte(index_create, i-1) == space do
+    i = i - 1
+  end
+  return string.sub(index_create, lineStartIt, i-1);
+end
+
+
+function cql_rebuild_recreate_group(db, tables, indices, deletes)
+  local tableList = _cql_create_upgrader_input_statement_list(tables, "CREATE ");
+  local indexList = _cql_create_upgrader_input_statement_list(indices, "CREATE ");
+  local deleteList = _cql_create_upgrader_input_statement_list(deletes, "DROP ");
+
+  local rc = sqlite3.OK
+  for i = 1, #deleteList do
+    rc = cql_exec(db, deleteList[i])
+    if rc ~= sqlite3.OK then return rc end
+  end
+  for i = #tableList, 1, -1 do
+    local table_name = _cql_create_table_name_from_table_creation_statement(tableList[i])
+    local drop = "DROP TABLE IF EXISTS "
+    drop = drop .. table_name
+    rc = cql_exec(db, drop)
+    if rc ~= sqlite3.OK then return rc end
+  end
+  for i = 1, #tableList do
+    rc = cql_exec(db, tableList[i])
+    if rc ~= sqlite3.OK then return rc end
+    local table_name = _cql_create_table_name_from_table_creation_statement(tableList[i])
+    for j = 1, #indexList do
+      local index_table_name = _cql_create_table_name_from_index_creation_statement(indexList[j])
+      if table_name == index_table_name then
+        rc = cql_exec(db, indexList[j])
+        if rc ~= sqlite3.OK then return rc end
+      end
+    end
+  end
+  return rc
 end
