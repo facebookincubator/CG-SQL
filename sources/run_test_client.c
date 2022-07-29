@@ -36,6 +36,7 @@ cql_code test_all_column_some_encoded_field(sqlite3 *db);
 cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db);
 cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
 cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db);
+cql_code test_cql_rebuild_recreate_group(sqlite3 *db);
 
 cql_string_ref _Nullable string_create(void);
 cql_blob_ref _Nonnull blob_from_string(cql_string_ref str);
@@ -180,6 +181,11 @@ cql_code run_client(sqlite3 *db) {
   SQL_E(test_cql_contract_argument_notnull_tripwires(db));
   E(!cql_outstanding_refs,
     "outstanding refs in test_cql_contract_argument_notnull_tripwires: %d\n",
+    cql_outstanding_refs);
+
+  SQL_E(test_cql_rebuild_recreate_group(db));
+  E(!cql_outstanding_refs,
+    "outstanding refs in test_cql_rebuild_recreate_group: %d\n",
     cql_outstanding_refs);
 
   return SQLITE_OK;
@@ -1754,4 +1760,26 @@ void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
      // smash
      bytes[index] = byte;
   }
+}
+
+// This test first creates a sample recreate group with twp dependent tables
+// one table with interesting string literals, and an index that will exist in sqlite_master.
+// We will make sure the function succesfully drops and recreates with SQLITE_OK.
+cql_code test_cql_rebuild_recreate_group(sqlite3 *db) {
+  cql_string_ref tables = cql_string_ref_new(" CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT ); "
+                                            "CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT); "
+                                            "CREATE TABLE foo(y text DEFAULT 'it''s, ('); ");
+  cql_string_ref indices = cql_string_ref_new("CREATE INDEX extra_index ON g1 (id); ");
+  cql_string_ref deletes = cql_string_ref_new("DROP TABLE IF EXISTS g2; ");
+  cql_code rc;
+  rc = cql_exec_internal(db, tables);
+  E(rc == SQLITE_OK, "expected succesful table creates\n");
+  rc = cql_exec_internal(db, indices);
+  E(rc == SQLITE_OK, "expected succesful index create\n");
+  rc = cql_rebuild_recreate_group(db, tables, indices, deletes);
+  E(rc == SQLITE_OK, "expected succesful recreate group upgrade\n");
+  cql_string_release(tables);
+  cql_string_release(indices);
+  cql_string_release(deletes);
+  return rc;
 }

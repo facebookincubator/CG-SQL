@@ -4043,7 +4043,7 @@ cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_curso
       }
     }
   }
-  
+
   cql_bytebuf_append_null(&b);
   cql_string_ref result = cql_string_ref_new(b.ptr);
   cql_bytebuf_close(&b);
@@ -4065,4 +4065,187 @@ cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_N
   STACK_BYTES_ALLOC(str, len);
   cql_expand_frags(str, base, frags);
   return cql_string_ref_new(str);
+}
+
+// This function splits a string by the pattern in parseWord.
+// We use this function to listify a series of creates
+// (parseWord = "CREATE ") or deletes (parseWord = "DROP")
+// after receiving a concatenated string from the CQL upgrader.
+// We need some parsing logic with quotes to make sure the parseWord
+// is not found inside string literals.
+static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_string_ref _Nonnull str, char* _Nonnull parse_word)
+{
+  cql_object_ref list = cql_string_list_create();
+  cql_alloc_cstr(c_str, str);
+  if (strlen(c_str) == 0) goto cleanup;
+  char* lineStart = (char*)(c_str);
+  // skip leading whitespace
+  while (lineStart[0] == ' '){
+    lineStart++;
+  }
+
+  // Text has been normalized for SQL so only '' strings no "" strings
+  // hence the only escape sequence is ''  e.g.  'That''s all folks'.
+  // CQL never generates tabs, formfeeds, or other whitespace except inside
+  // quotes, where we already must carefully skip without matching.
+
+  cql_string_ref currLine;
+  cql_int32 bytes;
+
+  bool in_quote = false;
+  char *p;
+  for (p = lineStart; *p; p++) {
+    if (in_quote) {
+      if (p[0] == '\'') {
+        if (p[1] == '\'') {
+          p++;
+        } else {
+          in_quote = false;
+        }
+      }
+    } else if (p[0] == '\'') {
+      in_quote = true;
+    } else if (!in_quote && !strncmp(p, parse_word, sizeof(parse_word) - 1)) {
+      // Add the current statement (i.e. create statement, drop statement) to our list
+      // when we find the delimiting parseWord for the next statement
+      if (lineStart != p) {
+        bytes = (cql_int32)(p - lineStart);
+        char* temp = malloc(bytes + 1);
+        memcpy(temp, lineStart, bytes);
+        temp[bytes] = '\0';
+        currLine = cql_string_ref_new(temp);
+        free(temp);
+        cql_string_list_add_string(list, currLine);
+        cql_string_release(currLine);
+        lineStart = p;
+      }
+    }
+  }
+  // The last statement is pending because we have been adding statements to the list after seeing
+  // the entire statement i.e. beginning of the next statement. We must flush it here.
+  bytes = (cql_int32)(p - lineStart);
+  char* temp = malloc(bytes + 1);
+  memcpy(temp, lineStart, bytes);
+  temp[bytes] = '\0';
+  currLine = cql_string_ref_new(temp);
+  free(temp);
+  cql_string_list_add_string(list, currLine);
+  cql_string_release(currLine);
+cleanup:
+  cql_free_cstr(c_str, str);
+  return list;
+}
+
+// This function assumes the input follows CQL railroad syntax and contains
+// characters uptil atleast the first "(" if it exists
+static char* _Nonnull _cql_create_table_name_from_table_creation_statement(cql_string_ref _Nonnull create)
+{
+  char* p;
+  // https://cgsql.dev/program-diagram#create_virtual_table_stmt
+  // table name always preceeds "USING "
+  cql_alloc_cstr(c_create, create);
+  if (!strncmp("CREATE VIRTUAL TABLE ", c_create, sizeof("CREATE VIRTUAL TABLE ") - 1)) p = strstr(c_create, "USING ");
+  // https://cgsql.dev/program-diagram#create_table_stmt
+  // table name always preceeds the first open paren
+  else p = strchr(c_create, '(');
+  cql_free_cstr(c_create, create);
+  // backspace spaces (if they exist) between table name preceeding pattern. We don't
+  // want extra spaces in our table names.
+  while (p[-1] == ' ') p--;
+  char* lineStart = p;
+  // find space preceeding table name
+  while (lineStart[-1] != ' '){
+    lineStart--;
+  }
+  cql_int32 bytes = (cql_int32)(p - lineStart);
+  char* table_name = malloc(bytes + 1);
+  memcpy(table_name, lineStart, bytes);
+  table_name[bytes] = '\0';
+  return table_name;
+}
+
+// This function is passed in an index creation statement generated from the CQL upgrader.
+// We need this helper to be able to map indices to tables.
+static char* _Nonnull _cql_create_table_name_from_index_creation_statement(cql_string_ref _Nonnull index_create)
+{
+  // table name follows "ON " in the create_index_stmt pattern
+  // table name is followed by an open paren
+  // https://cgsql.dev/program-diagram#create_index_stmt
+  cql_alloc_cstr(c_index_create, index_create);
+  char* lineStart = strstr(c_index_create, "ON ") + strlen("ON ");
+  cql_free_cstr(c_index_create, index_create);
+  char* q = strchr(lineStart, '('); // add space logic
+  // backspace spaces between index name and (
+  while (q[-1] == ' '){
+    q--;
+  }
+  cql_int32 index_bytes = (cql_int32)(q - lineStart);
+  char* index_table_name = malloc(index_bytes + 1);
+  memcpy(index_table_name, lineStart, index_bytes);
+  index_table_name[index_bytes] = '\0';
+  return index_table_name;
+}
+
+// This function provides the naive implementation of cql_rebuild_recreate_group called in
+// the cg_schema CQL upgrader. We take input three recreate-group specific strings.
+// tables: series of semi-colon seperated CREATE (VIRTUAL) TABLE statements
+// indices: series of semi-colon seperated CREATE INDEX statements
+// deletes: series of semi-colon seperated DROP TABLE statements (ex: unsubscribed or deleted tables)
+//
+// We currently always do recreate here (no rebuild). We just drop our tables, and recreate the
+// tables and any indices that might have been dropped.
+cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnull tables, cql_string_ref _Nonnull indices, cql_string_ref _Nonnull deletes)
+{
+  // process parseWord separated strings into lists
+  cql_object_ref tableList = _cql_create_upgrader_input_statement_list(tables, "CREATE ");
+  cql_object_ref indexList = _cql_create_upgrader_input_statement_list(indices, "CREATE ");
+  cql_object_ref deleteList = _cql_create_upgrader_input_statement_list(deletes, "DROP ");
+
+  cql_code rc = SQLITE_OK;
+  // Execute all delete table drops
+  for (cql_int32 i = 0; i < cql_string_list_get_count(deleteList); i++){
+    cql_string_ref delete = cql_string_list_get_string(deleteList, i);
+    rc = cql_exec_internal(db, delete);
+    if (rc != SQLITE_OK) goto cleanup;
+  }
+  // Execute all table drops based on the list of creates given by the CQL
+  // upgrader backwards.
+  // Intuitively, need to drop the tables with the most dependencies first.
+  for (cql_int32 i = cql_string_list_get_count(tableList) - 1; i >= 0; i--){
+    cql_string_ref tableCreate = cql_string_list_get_string(tableList, i);
+    char* table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
+    cql_int32 bytes = (cql_int32)(strlen(table_name)) + sizeof("DROP TABLE IF EXISTS ");
+    char* drop = malloc(bytes);
+    sprintf(drop, "DROP TABLE IF EXISTS %s", table_name);
+    rc = cql_exec(db, drop);
+    free(table_name);
+    free(drop);
+    if (rc != SQLITE_OK) goto cleanup;
+  }
+  // Execute all table creates in the order provided
+  for (cql_int32 i = 0; i < cql_string_list_get_count(tableList); i++){
+    cql_string_ref tableCreate = cql_string_list_get_string(tableList, i);
+    rc = cql_exec_internal(db, tableCreate);
+    if (rc != SQLITE_OK) goto cleanup;
+    char* table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
+    // Indices are already deleted with the table drops
+    // We need to recreate indices alongside the tables incase future table creates refer to the index
+    for (cql_int32 j = 0; j < cql_string_list_get_count(indexList); j++){
+      cql_string_ref indexCreate = cql_string_list_get_string(indexList, j);
+      char* index_table_name = _cql_create_table_name_from_index_creation_statement(indexCreate);
+      if (!strcmp(table_name, index_table_name)) {
+        free(index_table_name);
+        rc = cql_exec_internal(db, indexCreate);
+        if (rc != SQLITE_OK) goto cleanup;
+      } else{
+        free(index_table_name);
+      }
+    }
+    free(table_name);
+  }
+  cleanup:
+    cql_object_release(tableList);
+    cql_object_release(indexList);
+    cql_object_release(deleteList);
+    return rc;
 }
