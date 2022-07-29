@@ -81,9 +81,3 @@ end
 function exit(code)
   print("exit code", code)
 end
-
-function printf(...)
-  io.write(cql_printf(...))
-end
-
--- ---
