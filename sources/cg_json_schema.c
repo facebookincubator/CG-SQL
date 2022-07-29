@@ -2297,7 +2297,8 @@ static void cg_json_declare_vars_type(charbuf *output, ast_node *ast, ast_node *
 
   bool_t first_attr = output->used == 1;
 
-  // we're looking for "declare database object"  and nothing else
+  // we're looking for "declare *database object"  and nothing else. Note the '*',
+  // which indicates that we will match any variable ending with "database".
   if (misc_attrs && !name_list->right && is_object(data_type->sem->sem_type)) {
     EXTRACT_STRING(name, name_list->left);
     if (Strendswith(name, "database")) {
