@@ -3029,7 +3029,13 @@ static void gen_declare_proc_from_create_proc(ast_node *ast) {
 #endif
 }
 
+// the current primary output buffer for the closure of declares
 static charbuf *closure_output;
+
+// The declares we have already emitted, if NULL we are emitting
+// everything every time -- useful for --test output but otherwise
+// just redundant at best.  Note cycles are not possible.
+// even with no checking because declares form a partial order.
 static symtab *closure_emitted;
 
 static bool_t gen_found_set_kind(ast_node *ast, void *context, charbuf *buffer) {
@@ -3090,7 +3096,12 @@ cql_noexport void gen_declare_proc_closure(ast_node *ast, symtab *emitted) {
     gen_printf("%s;\n", current.ptr);
   CHARBUF_CLOSE(current);
 
+  // Make sure we're clean on exit -- mainly so that ASAN leak detection
+  // doesn't think there are roots when we are actually done with the
+  // stuff.  We want to see the leaks if there are any.
   gen_callbacks = NULL;
+  closure_output = NULL;
+  closure_emitted = NULL;
 }
 
 static void gen_typed_name(ast_node *ast) {
