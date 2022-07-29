@@ -9959,21 +9959,21 @@ function cql_startup(_db_)
   --[[
   SET x := 1 * (4 / 3);
   --]]
-  x = 1 * (4 // 3)
+  x = 1 * cql_idiv(4, 3)
 
   -- The statement ending at line XXXX
 
   --[[
   SET x := 1 * 2 / 3;
   --]]
-  x = 1 * 2 // 3
+  x = cql_idiv(1 * 2, 3)
 
   -- The statement ending at line XXXX
 
   --[[
   SET x := 1 + 2 / 3;
   --]]
-  x = 1 + 2 // 3
+  x = 1 + cql_idiv(2, 3)
 
   -- The statement ending at line XXXX
 
@@ -10029,21 +10029,21 @@ function cql_startup(_db_)
   --[[
   SET x := 1 / 2 / 3;
   --]]
-  x = 1 // 2 // 3
+  x = cql_idiv(cql_idiv(1, 2), 3)
 
   -- The statement ending at line XXXX
 
   --[[
   SET x := 1 / (4 / 3);
   --]]
-  x = 1 // (4 // 3)
+  x = cql_idiv(1, cql_idiv(4, 3))
 
   -- The statement ending at line XXXX
 
   --[[
   SET x := 1 / 2;
   --]]
-  x = 1 // 2
+  x = cql_idiv(1, 2)
 
   -- The statement ending at line XXXX
 

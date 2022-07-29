@@ -200,16 +200,45 @@ end
 function cql_idiv(x,y)
   if x == nil or y == nil then
     return nil
+  end
+
+  local sign = 1
+  if x < 0 then
+    sign =  -1
+    x = -x
+  end
+
+  if y < 0 then
+    sign = -sign
+    y = -y
+  end
+
+  if sign < 0 then
+    return -(x // y)
   else
-    return x // y;
+    return (x // y)
   end
 end
 
 function cql_mod(x,y)
   if x == nil or y == nil then
     return nil
+  end
+
+  local sign = 1
+  if x < 0 then
+    sign = -1
+    x = -x
+  end
+
+  if y < 0 then
+    y = -y
+  end
+
+  if sign < 0 then
+    return -(x % y)
   else
-    return x % y;
+    return (x % y)
   end
 end
 

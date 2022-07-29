@@ -3254,13 +3254,13 @@ DECLARE x INTEGER NOT NULL;
 
 -- TEST: a series of paren checks on left association
 -- avoid hard coded divide by zero (hence 4/3 not e.g 1/3)
--- + x = 1 * (4 // 3)
+-- + x = 1 * cql_idiv(4, 3)
 SET x := 1 * (4 / 3);
 
--- + x = 1 * 2 // 3
+-- + x = cql_idiv(1 * 2, 3)
 SET x := 1 * 2 / 3;
 
--- + x = 1 + 2 // 3
+-- + x = 1 + cql_idiv(2, 3)
 SET x := 1 + 2 / 3;
 
 -- + x = 1 + (2 - 3)
@@ -3285,14 +3285,14 @@ SET x := 1 - 2 - (2 - 3);
 -- + x = 1 - 2 - (2 - 3)
 SET x := (1 - 2) - (2 - 3);
 
--- + x = 1 // 2 // 3
+-- + x = cql_idiv(cql_idiv(1, 2), 3)
 SET x := 1 / 2 / 3;
 
 -- avoid hard coded divide by zero
--- + x = 1 // (4 // 3)
+-- + x = cql_idiv(1, cql_idiv(4, 3))
 SET x := 1 / (4 / 3);
 
--- + x = 1 // 2
+-- + x = cql_idiv(1, 2)
 SET x := 1 / 2;
 
 -- + x = 1 * 2 * (3 * 4)

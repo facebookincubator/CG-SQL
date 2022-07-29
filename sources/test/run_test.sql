@@ -53,6 +53,12 @@ BEGIN_TEST(arithmetic)
   EXPECT_SQL_TOO(longs.neg == -1);
   EXPECT_SQL_TOO(-longs.neg == 1);
   EXPECT_SQL_TOO(- -longs.neg == -1);
+  EXPECT_SQL_TOO(-3 / 2 == -1);
+  EXPECT_SQL_TOO(3 / -2 == -1);
+  EXPECT_SQL_TOO(-3 / -2 == 1);
+  EXPECT_SQL_TOO(-3 % 2 == -1);
+  EXPECT_SQL_TOO(3 % -2 == 1);
+  EXPECT_SQL_TOO(-3 % -2 == -1);
 END_TEST(arithmetic)
 
 declare side_effect_0_count integer not null;
@@ -4636,11 +4642,17 @@ BEGIN_TEST(verify_long_constant_forms)
    EXPECT_SQL_TOO(reference == x);
 
    DECLARE z real not null;
-   set z :=  9223372036854775807;
+   set z := 9223372036854775807;
 
    -- this verifies that z was stored as a double
    -- hence adding 0.0 will make no difference
    EXPECT_SQL_TOO(z - 1 == z + 0.0 - 1);
+
+   -- ensure division does not convert to float
+   EXPECT(9223372036854775807 - 9223372036854775807 / 2 * 2 == 1);
+   EXPECT(const(9223372036854775807 - 9223372036854775807 / 2 * 2) == 1);
+   EXPECT(9223372036854775807 >> 1 == 9223372036854775807 / 2);
+   EXPECT(const(9223372036854775807 >> 1 == 9223372036854775807 / 2));
 
    declare C cursor for 
      select 9223372036854775807 v

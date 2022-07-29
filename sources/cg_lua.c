@@ -587,12 +587,21 @@ static void cg_lua_binary(ast_node *ast, CSTR op, charbuf *value, int32_t pri, i
 
   CSTR op_name = ast->type;
 
+  // Integer division in Lua has different truncation policy for negative
+  // numbers than C, we have to emulate the C/SQLite behavior
   if (!strcmp(op, "/")) {
     if (core_type_of(sem_type_result) != SEM_TYPE_REAL) {
        // lua integer division operator
-       op = "//";
        op_name = "idiv";
+       force_call = true;
     }
+  }
+
+  // Integer mod in lua results in different signs for negative
+  // numbers than C. We have to emulate the C/SQLite behavior
+  // Mod is only allowed to operate on integer so we don't have to check
+  if (!strcmp(op, "%")) {
+    force_call = true;
   }
 
   if (!strcmp(op, "~=")) {
