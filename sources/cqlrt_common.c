@@ -4105,7 +4105,7 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
       }
     } else if (p[0] == '\'') {
       in_quote = true;
-    } else if (!in_quote && !strncmp(p, parse_word, sizeof(parse_word) - 1)) {
+    } else if (!in_quote && !strncmp(p, parse_word, strlen(parse_word))) {
       // Add the current statement (i.e. create statement, drop statement) to our list
       // when we find the delimiting parseWord for the next statement
       if (lineStart != p) {
