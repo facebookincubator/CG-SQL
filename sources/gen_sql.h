@@ -161,6 +161,11 @@ typedef struct gen_sql_callbacks {
   // extra documentation and special handling is probably worth the extra
   // boolean storage.
   bool_t long_to_int_conv;
+
+  // Each time a table value function is encountered in the AST, this callback is invoked
+  // this is to allow the table value function reference to be noted and replaced with table name in the generated SQL
+  gen_sql_callback _Nullable table_function_callback;
+  void *_Nullable table_function_context;
 } gen_sql_callbacks;
 
 cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *_Nullable callbacks);

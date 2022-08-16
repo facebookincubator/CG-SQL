@@ -38,6 +38,56 @@ static uint32_t sql_stmt_count = 0;
 
 static gen_sql_callbacks *cg_qp_callbacks = NULL;
 
+// When generating the query plan report there will be no referrence to
+// virtual table. In case we encounter a virtual table call we replace
+// it with a regular table call of the same name and we also emit the
+// create statement of that table to avoid sqlite error.
+//
+// @see cg_qp_create_virtual_table_stmt()
+static bool_t table_function_callback(
+  struct ast_node *_Nonnull ast,
+  void *_Nullable context,
+  charbuf *_Nonnull output)
+{
+  Contract(is_ast_table_function(ast));
+  EXTRACT_STRING(name, ast->left);
+  bprintf(output, "%s", name);
+
+  bprintf(schema_stmts, "CREATE TABLE %s (\n", name);
+
+  sem_join *jptr = ast->sem->jptr;
+  uint32_t size = jptr->tables[0]->count;
+  for (uint32_t i = 0; i < size; i++) {
+    if (i > 0) {
+      bprintf(schema_stmts, ",\n");
+    }
+
+    CSTR type;
+    sem_t core_type = core_type_of(jptr->tables[0]->semtypes[i]);
+    switch (core_type) {
+      case SEM_TYPE_OBJECT:
+      case SEM_TYPE_BOOL:
+      case SEM_TYPE_INTEGER:
+      case SEM_TYPE_LONG_INTEGER:
+        type = "INTEGER";
+        break;
+      case SEM_TYPE_TEXT:
+        type = "TEXT";
+        break;
+      case SEM_TYPE_BLOB:
+        type = "BLOB";
+        break;
+      default :
+        Contract(core_type == SEM_TYPE_REAL);
+        type = "REAL";
+    }
+    bprintf(schema_stmts, "  %s %s", jptr->tables[0]->names[i], type);
+  }
+
+  bprintf(schema_stmts, "\n);\n");
+  return true;
+}
+
 // When generating the query plan report there will be no actual
 // variable values to use in the query.  To get around this
 // we replace all variable references with a type-correct version
@@ -281,6 +331,19 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
   current_procedure_name = NULL;
   current_ok_table_scan = NULL;
   CHARBUF_CLOSE(ok_table_scan_buf);
+}
+
+// Virtual tables requires DB set up otherwise query plan will fail on sql statement
+// referring virtual tables.
+// Getting cg_query_plan.c to codegen virtual table setup in DB requires a lot of boilerplate
+// code. That is un-nessary work to do since virtual table does not impact query plan result
+// because primary key and foreign key are not supported in virtual tables.
+// The simples and stretchforward alternative is to rewrite virtual table to a regular table.
+// That won't affect query plan results.
+static void cg_qp_create_virtual_table_stmt(ast_node *node) {
+  Contract(is_ast_create_virtual_table_stmt(node));
+  EXTRACT_NOTNULL(create_table_stmt, node->right);
+  cg_qp_sql_stmt(create_table_stmt);
 }
 
 static void cg_qp_one_stmt(ast_node *stmt) {
@@ -593,6 +656,8 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
 
   STMT_INIT(create_proc_stmt);
 
+  STMT_INIT(create_virtual_table_stmt);
+
   // schema
   //  * note probably need to add declare select function to this list
   //    that can be needed to correctly parse the body of triggers or views (which might use the function)
@@ -628,6 +693,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_no_annotations;
   callbacks.variables_callback = &variables_callback;
+  callbacks.table_function_callback = &table_function_callback;
   cg_qp_callbacks = &callbacks;
 
   cg_qp_stmt_list(head);

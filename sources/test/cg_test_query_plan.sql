@@ -92,6 +92,13 @@ begin
   delete from t2 where id > new.id;
 end @delete(1);
 
+create virtual table virtual_table using module_name(this, that, the_other) as (
+  id integer,
+  t text
+);
+
+declare select function select_virtual_table(b text) (id long int, t text);
+
 -- Proc with SELECT stmt
 create proc sample()
 begin
@@ -260,4 +267,10 @@ BEGIN
   ELSE
     SELECT 200 c;
   END IF;
+END;
+
+-- proc call a virtual table
+CREATE PROC call_virtual_table()
+BEGIN
+  select id, t from select_virtual_table("abc");
 END;

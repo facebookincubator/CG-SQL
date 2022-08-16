@@ -5,6 +5,7 @@ DECLARE PROC printf NO CHECK;
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
 DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT NOT NULL, idx INTEGER NOT NULL) LONG_INT;
+DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG_INT, t TEXT);
 
 CREATE PROC create_schema()
 BEGIN
@@ -52,9 +53,17 @@ BEGIN
   BEGIN
   DELETE FROM t2 WHERE id > new.id;
   END;
+  CREATE TABLE virtual_table(
+    id INTEGER,
+    t TEXT
+  );
   CREATE TABLE C(
     id INTEGER NOT NULL,
     name TEXT
+  );
+  CREATE TABLE select_virtual_table (
+    id INTEGER,
+    t TEXT
   );
   CREATE TABLE sql_temp(
     id INT NOT NULL PRIMARY KEY,
@@ -429,6 +438,20 @@ BEGIN
 SELECT 100 AS c;
 END;
 
+CREATE PROC populate_query_plan_20()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT id, t\\n  FROM select_virtual_table";
+  INSERT INTO sql_temp(id, sql) VALUES(20, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT id, t
+    FROM select_virtual_table;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(20, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
 
 CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN
@@ -732,6 +755,13 @@ BEGIN
     CALL printf("failed populating query 19\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_20();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 20\n");
+    THROW;
+  END CATCH;
   CALL printf("[\n");
   CALL print_query_violation();
   CALL printf("[\n");
@@ -756,6 +786,7 @@ BEGIN
   CALL print_query_plan(17);
   CALL print_query_plan(18);
   CALL print_query_plan(19);
+  CALL print_query_plan(20);
   CALL printf("[]\n");
   CALL printf("]\n");
   CALL printf("],\n");

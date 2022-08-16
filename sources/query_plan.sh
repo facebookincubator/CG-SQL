@@ -5,8 +5,12 @@
 # LICENSE file in the root directory of this source tree.
 
 DIR="$( dirname -- "$0"; )"
+INPUT="${DIR}/out/qp_in"
 
-cp "$1" "${DIR}/out/qp_in"
+set -euo pipefail
+
+rm -f "${INPUT}"
+cp "$1" "${INPUT}"
 cd "${DIR}" || exit
 
 if ! make > "out/make.out"

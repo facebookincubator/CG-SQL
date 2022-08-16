@@ -204,7 +204,7 @@ cql_noexport void gen_misc_attrs(ast_node *list) {
 
 static void gen_type_kind(CSTR name) {
   // we don't always have an ast node for this, we make a fake one for the callback
-  str_ast_node sast = { 
+  str_ast_node sast = {
     .type = k_ast_str,
     .value = name,
     .filename = "none"
@@ -1619,11 +1619,19 @@ static void gen_table_or_subquery(ast_node *ast) {
     gen_printf(")");
   }
   else if (is_ast_table_function(factor)) {
-    EXTRACT_STRING(name, factor->left);
-    EXTRACT(arg_list, factor->right);
-    gen_printf("%s(", name);
-    gen_arg_list(arg_list);
-    gen_printf(")");
+    bool_t has_table_function_callback = gen_callbacks && gen_callbacks->table_function_callback;
+    bool_t handled_table_function = false;
+    if (has_table_function_callback) {
+      handled_table_function = gen_callbacks->table_function_callback(factor, gen_callbacks->table_function_context, output);
+    }
+
+    if (!handled_table_function) {
+      EXTRACT_STRING(name, factor->left);
+      EXTRACT(arg_list, factor->right);
+      gen_printf("%s(", name);
+      gen_arg_list(arg_list);
+      gen_printf(")");
+    }
   }
   else {
     // this is all that's left
