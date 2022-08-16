@@ -9,6 +9,9 @@ INPUT="${DIR}/out/qp_in"
 
 set -euo pipefail
 
+# shellcheck disable=SC1091
+source common/test_helpers.sh || exit 1
+
 rm -f "${INPUT}"
 cp "$1" "${INPUT}"
 cd "${DIR}" || exit
@@ -22,11 +25,8 @@ fi
 
 CQL="out/cql"
 
-#echo C preprocessing
-cc -DCQL_TEST -E -x c "out/qp_in" >"out/cg_test_query_plan2.sql"
-
 # echo semantic analysis
-if ! ${CQL} --sem --ast --dev --in "out/cg_test_query_plan2.sql" >"out/__temp" 2>"out/cg_test_query_plan.err"
+if ! ${CQL} --sem --ast --dev --in "out/qp_in" >"out/__temp" 2>"out/cg_test_query_plan.err"
 then
     echo "CQL semantic analysis returned error"
     cat "out/cg_test_query_plan.err"
@@ -34,7 +34,7 @@ then
 fi
 
 # echo codegen query plan
-if ! ${CQL} --test --dev --cg "out/cg_test_query_plan.out" --in "out/cg_test_query_plan2.sql" --rt query_plan 2>"out/cg_test_query_plan.err"
+if ! ${CQL} --test --dev --cg "out/cg_test_query_plan.out" --in "out/qp_in" --rt query_plan 2>"out/cg_test_query_plan.err"
 then
     echo "CQL codegen query plan error"
     cat "out/cg_test_query_plan.err"
