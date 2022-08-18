@@ -1261,13 +1261,14 @@ static void cg_schema_manage_recreate_tables(
 
       table_crc ^= crc_charbuf(&migrate_table);
     }
-    bprintf(&update_proc, "    CALL cql_rebuild_recreate_group(");
+    // Construct call to cql_rebuild_recreate_group with CQL compressed strings (with --compress compiler flag)
+    bprintf(&update_proc, "    CALL cql_rebuild_recreate_group(cql_compressed(");
     cg_pretty_quote_plaintext(update_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
-    bprintf(&update_proc, ", ");
+    bprintf(&update_proc, "), cql_compressed(");
     cg_pretty_quote_plaintext(update_indices.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
-    bprintf(&update_proc, ", ");
+    bprintf(&update_proc, "), cql_compressed(");
     cg_pretty_quote_plaintext(delete_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
-    bprintf(&update_proc, ");\n");
+    bprintf(&update_proc, "));\n");
     bprintf(&update_proc, migrate_table.ptr);
     CHARBUF_CLOSE(migrate_table);
     if (is_virtual_ast(ast)) {
