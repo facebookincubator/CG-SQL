@@ -26,6 +26,7 @@ cql_noexport void cg_schema_sqlite_main(ast_node *head) {}
 #include "symtab.h"
 #include "bytebuf.h"
 #include "cg_schema.h"
+#include "encoders.h"
 
 static void cg_generate_schema_by_mode(charbuf *output, int32_t mode);
 static void cg_generate_baseline_tables(charbuf *output);
@@ -341,6 +342,11 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
   bprintf(decls, "DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
   bprintf(decls, "DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;\n");
   bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;\n\n");
+}
+
+static void cg_schema_emit_recreate_update_functions(charbuf *decls) {
+  bprintf(decls, "-- declare recreate update helpers-- \n");
+  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL) USING TRANSACTION;\n");
 }
 
 // Emit all tables versioned as they before modifications, just the original items
@@ -1102,6 +1108,8 @@ static void cg_schema_manage_recreate_tables(
   CHARBUF_OPEN(recreate_without_virtual_tables);
   CHARBUF_OPEN(recreate_only_virtual_tables);
   CHARBUF_OPEN(update_tables);
+  CHARBUF_OPEN(update_indices);
+  CHARBUF_OPEN(delete_tables);
   CHARBUF_OPEN(pending_table_creates);
 
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
@@ -1154,15 +1162,20 @@ static void cg_schema_manage_recreate_tables(
     // recreate if needed
 
     CHARBUF_OPEN(make_table);
-
     if (!deleted) {
+      callbacks.mode = gen_mode_sql;
+      callbacks.long_to_int_conv = true;
+      callbacks.star_callback = cg_expand_star;
       gen_set_output_buffer(&make_table);
       gen_statement_with_callbacks(ast_output, &callbacks);
-      bprintf(&make_table, ";\n");
+      bprintf(&make_table, "; ");
+      init_gen_sql_callbacks(&callbacks);
+      callbacks.mode = gen_mode_no_annotations;
+    } else {
+      // explicitly drop only tables that are unsubscribed or deleted
+      // others dropped inside cql_rebuild_recreate_group
+      bprintf(&delete_tables, "DROP TABLE IF EXISTS %s; ", table_name);
     }
-
-    // note that this will also drop any indices that are on the table
-    bprintf(&update_tables, "    DROP TABLE IF EXISTS %s;\n", table_name);
 
     // if the table is deleted or unsubscribed don't restore its indices
     if (!deleted) {
@@ -1175,12 +1188,19 @@ static void cg_schema_manage_recreate_tables(
         if (index->sem->delete_version > 0) {
           continue;
         }
+        callbacks.mode = gen_mode_sql;
+        callbacks.long_to_int_conv = true;
+        callbacks.star_callback = cg_expand_star;
+        gen_set_output_buffer(&update_indices);
         gen_statement_with_callbacks(index, &callbacks);
-        bprintf(&make_table, ";\n");
+        bprintf(&update_indices, "; ");
+        init_gen_sql_callbacks(&callbacks);
+        callbacks.mode = gen_mode_no_annotations;
       }
     }
-
     table_crc ^= crc_charbuf(&make_table);
+    table_crc ^= crc_charbuf(&delete_tables);
+    table_crc ^= crc_charbuf(&update_indices);
 
     // Now we have to remember that the tables in the recreate annotations have been
     // sorted by reverse ordinal, meaning they are in the correct order to DROP
@@ -1197,7 +1217,7 @@ static void cg_schema_manage_recreate_tables(
     // the tables in the processed group could have FKs and those are handled correctly here.
 
     CHARBUF_OPEN(temp);
-    bindent(&temp, &make_table, 4);
+    bprintf(&temp, "%s", make_table.ptr);
     bprintf(&temp, "%s", pending_table_creates.ptr);
     bclear(&pending_table_creates);
     bprintf(&pending_table_creates, "%s", temp.ptr);
@@ -1229,33 +1249,39 @@ static void cg_schema_manage_recreate_tables(
       bprintf(&facet, "%s_table_crc", table_name);
       migrate_key = table_name;
     }
-
+    CHARBUF_OPEN(update_proc);
+    CHARBUF_OPEN(migrate_table);
     ast_node *migration = find_recreate_migrator(migrate_key);
     if (migration) {
       EXTRACT_STRING(proc, migration->right);
-      CHARBUF_OPEN(migrate_table);
-
       bprintf(&migrate_table, "\n    -- recreate migration procedure required\n");
       bprintf(&migrate_table, "    CALL %s();\n\n", proc);
 
-      bprintf(&update_tables, migrate_table.ptr);
       bprintf(decls, "DECLARE PROC %s() USING TRANSACTION;\n", proc);
 
       table_crc ^= crc_charbuf(&migrate_table);
-
-      CHARBUF_CLOSE(migrate_table);
     }
-
+    bprintf(&update_proc, "    CALL cql_rebuild_recreate_group(");
+    cg_pretty_quote_plaintext(update_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+    bprintf(&update_proc, ", ");
+    cg_pretty_quote_plaintext(update_indices.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+    bprintf(&update_proc, ", ");
+    cg_pretty_quote_plaintext(delete_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+    bprintf(&update_proc, ");\n");
+    bprintf(&update_proc, migrate_table.ptr);
+    CHARBUF_CLOSE(migrate_table);
     if (is_virtual_ast(ast)) {
-      cg_schema_add_recreate_table(&recreate_only_virtual_tables, table_crc, facet, update_tables);
+      cg_schema_add_recreate_table(&recreate_only_virtual_tables, table_crc, facet, update_proc);
     } else {
-      cg_schema_add_recreate_table(&recreate_without_virtual_tables, table_crc, facet, update_tables);
+      cg_schema_add_recreate_table(&recreate_without_virtual_tables, table_crc, facet, update_proc);
     }
-
+    CHARBUF_CLOSE(update_proc);
     CHARBUF_CLOSE(facet);
 
-    // once we emit, we reset the CRC we've been accumulating and reset the buffer of table recreates
+    // once we emit, we reset the CRC we've been accumulating and reset the buffer of table recreates, index creates, and table drops
     table_crc = 0;
+    bclear(&delete_tables);
+    bclear(&update_indices);
     bclear(&update_tables);
   }
 
@@ -1288,6 +1314,8 @@ static void cg_schema_manage_recreate_tables(
   bprintf(output, "END;\n\n");
 
   CHARBUF_CLOSE(pending_table_creates);
+  CHARBUF_CLOSE(delete_tables);
+  CHARBUF_CLOSE(update_indices);
   CHARBUF_CLOSE(update_tables);
   CHARBUF_CLOSE(recreate_only_virtual_tables);
   CHARBUF_CLOSE(recreate_without_virtual_tables);
@@ -1389,6 +1417,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&decls, "-- schema crc %lld\n\n", schema_crc);
 
   cg_schema_emit_facet_functions(&decls);
+  cg_schema_emit_recreate_update_functions(&decls);
   cg_schema_emit_sqlite_master(&decls);
   bprintf(&decls, "-- declare full schema of tables and views to be upgraded and their dependencies -- \n");
   cg_generate_schema_by_mode(&decls, SCHEMA_TO_DECLARE);
