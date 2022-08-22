@@ -689,6 +689,7 @@ interface: '{'
           NAME STRING_LITERAL ','
           DEFINED_IN_FILE STRING_LITERAL ','
           DEFINED_ON_LINE INT_LITERAL ','
+          opt_attributes
           PROJECTION '[' projected_columns ']'
          '}'
   ;

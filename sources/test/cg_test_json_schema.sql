@@ -1513,10 +1513,15 @@ create table t_for_resub(
 
 -- TEST: more clauses, including having and others
 -- + "name" : "interface1"
+-- + "attributes" : [
+-- + "name" : "cql:java_package",
+-- + "value" : "test"
+-- + ],
 -- + "projection" : [
 -- + "name" : "id"
 -- + "type" : "integer",
 -- + "isNotNull" : 0
+@attribute(cql:java_package=test)
 DECLARE INTERFACE interface1 (id INT);
 
 @attribute(cql:implements=interface1)

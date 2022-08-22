@@ -3025,7 +3025,7 @@
     {
       "name" : "test_interface1_implementation_correct",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1523,
+      "definedOnLine" : 1528,
       "args" : [
         {
           "name" : "id_",
@@ -3984,7 +3984,13 @@
     {
       "name" : "interface1",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1520,
+      "definedOnLine" : 1525,
+      "attributes" : [
+        {
+          "name" : "cql:java_package",
+          "value" : "test"
+        }
+      ],
       "projection" : [
         {
           "name" : "id",

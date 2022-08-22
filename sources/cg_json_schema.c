@@ -2157,7 +2157,7 @@ static void cg_defined_on_line(charbuf *output, ast_node *ast) {
   bprintf(output, ",\n\"definedOnLine\" : %d", lineno);
 }
 
-static void cg_json_declare_interface(ast_node *ast) {
+static void cg_json_declare_interface(ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_interface_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -2170,6 +2170,12 @@ static void cg_json_declare_interface(ast_node *ast) {
   bprintf(output, "\"name\" : \"%s\"", name);
   cg_defined_in_file(output, ast);
   cg_defined_on_line(output, ast);
+
+  if (misc_attrs) {
+    bprintf(output, ",\n");
+    cg_json_misc_attrs(output, misc_attrs);
+
+  }
   cg_json_projection(output, ast);
   END_INDENT(interface);
 
@@ -2361,7 +2367,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
     else if (is_ast_declare_vars_type(stmt)) {
       cg_json_declare_vars_type(&attributes_buf, stmt, misc_attrs);
     } else if (is_ast_declare_interface_stmt(stmt)) {
-      cg_json_declare_interface(stmt);
+      cg_json_declare_interface(stmt, misc_attrs);
     }
   }
 
