@@ -94,10 +94,12 @@ end @delete(1);
 
 create virtual table virtual_table using module_name(this, that, the_other) as (
   id integer,
-  t text
+  t text,
+  b blob,
+  r real
 );
 
-declare select function select_virtual_table(b text) (id long int, t text);
+declare select function select_virtual_table(b text) (id long int, t text, b blob, r real);
 
 -- Proc with SELECT stmt
 create proc sample()
@@ -272,5 +274,5 @@ END;
 -- proc call a virtual table
 CREATE PROC call_virtual_table()
 BEGIN
-  select id, t from select_virtual_table("abc");
+  select id, t, b, r from select_virtual_table("abc");
 END;

@@ -5,7 +5,7 @@ DECLARE PROC printf NO CHECK;
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
 DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT NOT NULL, idx INTEGER NOT NULL) LONG_INT;
-DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG_INT, t TEXT);
+DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG_INT, t TEXT, b BLOB, r REAL);
 
 CREATE PROC create_schema()
 BEGIN
@@ -55,7 +55,9 @@ BEGIN
   END;
   CREATE TABLE virtual_table(
     id INTEGER,
-    t TEXT
+    t TEXT,
+    b BLOB,
+    r REAL
   );
   CREATE TABLE C(
     id INTEGER NOT NULL,
@@ -63,7 +65,9 @@ BEGIN
   );
   CREATE TABLE select_virtual_table (
     id INTEGER,
-    t TEXT
+    t TEXT,
+    b BLOB,
+    r REAL
   );
   CREATE TABLE sql_temp(
     id INT NOT NULL PRIMARY KEY,
@@ -441,10 +445,10 @@ END;
 CREATE PROC populate_query_plan_20()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT id, t\\n  FROM select_virtual_table";
+  SET stmt := "SELECT id, t, b, r\\n  FROM select_virtual_table";
   INSERT INTO sql_temp(id, sql) VALUES(20, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT id, t
+  SELECT id, t, b, r
     FROM select_virtual_table;
   LOOP FETCH C
   BEGIN
