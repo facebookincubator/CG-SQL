@@ -2174,8 +2174,8 @@ static void cg_json_declare_interface(ast_node *ast, ast_node *misc_attrs) {
   if (misc_attrs) {
     bprintf(output, ",\n");
     cg_json_misc_attrs(output, misc_attrs);
-
   }
+
   cg_json_projection(output, ast);
   END_INDENT(interface);
 
