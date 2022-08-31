@@ -37,6 +37,8 @@ cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db);
 cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
 cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db);
 cql_code test_cql_rebuild_recreate_group(sqlite3 *db);
+void take_bool(cql_nullable_bool x, cql_nullable_bool y);
+void take_bool_not_null(cql_bool x, cql_bool y);
 
 cql_string_ref _Nullable string_create(void);
 cql_blob_ref _Nonnull blob_from_string(cql_string_ref str);
@@ -70,6 +72,16 @@ static int32_t trace_received = 0;
 #define SQL_E(rc_) { \
   cql_code __saved_rc_ = (rc_); \
   _E(SQLITE_OK == __saved_rc_, __saved_rc_, "failed return code %s:%d %s\n", __FILE__, __LINE__, #rc_); \
+}
+
+#define _EXPECT(cond_,...) { \
+  expectations++; \
+  if (!(cond_)) { \
+    fails++; \
+    if (_VA_ARG_COUNT(__VA_ARGS__) != 0 && (_VA_ARG_FIRST(__VA_ARGS__)) != NULL) { \
+      printf(__VA_ARGS__); \
+    } \
+  } \
 }
 
 cql_code mockable_sqlite3_step(sqlite3_stmt *stmt) {
@@ -1782,4 +1794,15 @@ cql_code test_cql_rebuild_recreate_group(sqlite3 *db) {
   cql_string_release(indices);
   cql_string_release(deletes);
   return rc;
+}
+
+void take_bool(cql_nullable_bool x, cql_nullable_bool y)
+{
+  _EXPECT(x.is_null == y.is_null, "nullable bool is_null normalization error\n");
+  _EXPECT(x.value == y.value, "nullable bool value normalization error\n");
+}
+
+void take_bool_not_null(cql_bool x, cql_bool y)
+{
+  _EXPECT(x == y, "not nullable bool normalization error\n");
 }

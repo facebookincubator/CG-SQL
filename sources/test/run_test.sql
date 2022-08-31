@@ -5493,6 +5493,18 @@ BEGIN_TEST(compressed_strings)
 
 END_TEST(compressed_strings)
 
+-- external implementation will test the exact value passed
+declare proc take_bool_not_null(x bool not null, y bool not null);
+declare proc take_bool(x bool, y bool);
+
+BEGIN_TEST(normalize_bool_on_call)
+   call take_bool(10, true);
+   call take_bool(0, false);
+
+   call take_bool_not_null(10, true);
+   call take_bool_not_null(0, false);
+END_TEST(normalize_bool_on_call)
+
 END_SUITE()
 
 -- manually force tracing on by redefining the macros

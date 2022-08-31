@@ -81,3 +81,17 @@ end
 function exit(code)
   print("exit code", code)
 end
+
+function take_bool(x,y)
+  if x ~= y then
+    print("invariant failed")
+    force_error_exit()
+  end
+end
+
+function take_bool_not_null(x,y)
+  if x ~= y then
+    print("invariant failed")
+    force_error_exit()
+  end
+end

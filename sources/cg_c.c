@@ -6438,10 +6438,23 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
       break;
     }
 
+    // check for bool normalization
+    if (is_bool(sem_type_param) && !is_bool(sem_type_arg)) {
+      // If it's not an exact match at this point we're in the not-null case for sure
+      // or we would have had to box above. If the arg is not a bool, normalize now.
+
+      Invariant(!is_nullable(sem_type_arg));
+      bprintf(invocation, "(!!(%s))", arg_value.ptr);
+      break;
+    }
+
     if (is_nullable(sem_type_param)) {
-      // This is the unfortunate case where we have split out temporary or variable that
-      // the "not nullable" that we need into two parts and we need them back together
-      // for the call... so we just strip off the .value from the value we were given.
+      // This is the unfortunate case where we have split out a temporary or variable
+      // that was already nullable and we want to use it for the call.  The thing is
+      // we've split that nullable into two parts the .value and the .isnull -- what
+      // we want is to just pass the variable itself, so we're going to look at the
+      // value and reconstruct the variable by stripping off the .value
+
       const int32_t dot_value_length = 6;  //  .value is 6 characters.
 
       // if it was not null we'd be boxing, above.
