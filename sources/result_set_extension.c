@@ -5,26 +5,29 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// As applicable given the shared pedigree of this code.
+// These are some  UDFs that are used to access result sets in test code.
+
+// Clarifying the original comments regarding the pedigree of this code:
+//
+// This code is a combination of code to that is original to CG/SQL and public domain
+// code copied from SQLite examples from the SQLite docs.
+//
+// There are no license issues.
 
 #include "cqlrt.h"
 #include "run_test.h"
-#include "alloca.h"
 
-#include <assert.h>
-#include <string.h>
-
-void rsColFunc(
-  sqlite3_context *context,
-  int32_t argc,
-  sqlite3_value **argv)
-{
+// Read the indicated row and column from the result set, if either are out of range
+// then we will produce null.  Otherwise we use the type of the column to create
+// a suitable result variable.  Note that we only support integral values which is
+// good enough for the test code.
+static void rs_col(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
   cql_result_set_ref rs = (cql_result_set_ref)sqlite3_value_int64(argv[0]);
   int32_t row = sqlite3_value_int(argv[1]);
   int32_t col = sqlite3_value_int(argv[2]);
 
   int64_t result = 0;
-  int32_t null_out = row < 0 || row >= rs->count || col < 0 || col >= rs->meta.columnCount;
+  cql_bool null_out = row < 0 || row >= rs->count || col < 0 || col >= rs->meta.columnCount;
 
   if (!null_out) {
     char dataType = CQL_CORE_DATA_TYPE_OF(rs->meta.dataTypes[col]);
@@ -42,7 +45,7 @@ void rsColFunc(
           result = cql_result_set_get_bool_col(rs, row, col);
           break;
         default:
-          null_out = 1;
+          null_out = true;
           break;
       }
     }
@@ -56,22 +59,19 @@ void rsColFunc(
   }
 }
 
-void rsCountFunc(
-  sqlite3_context *context,
-  int32_t argc,
-  sqlite3_value **argv
-){
+// Returns the count of rows in the indicated result set
+static void rs_count(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
   cql_result_set_ref rs = (cql_result_set_ref)sqlite3_value_int64(argv[0]);
   sqlite3_result_int64(context, rs->count);
 }
 
-cql_code cql_init_extensions(sqlite3 *db)
-{
-  cql_code rc = sqlite3_create_function_v2(db, "rscount", 1, SQLITE_UTF8, 0, rsCountFunc, NULL, NULL, NULL);
+// Register the indicated UDFs.  Note, this will be called directly from run_test.sql as a proc
+cql_code cql_init_extensions(sqlite3 *db) {
+  cql_code rc = sqlite3_create_function_v2(db, "rscount", 1, SQLITE_UTF8, 0, rs_count, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
 
-  rc = sqlite3_create_function_v2(db, "rscol", 3, SQLITE_UTF8, 0, rsColFunc, NULL, NULL, NULL);
+  rc = sqlite3_create_function_v2(db, "rscol", 3, SQLITE_UTF8, 0, rs_col, NULL, NULL, NULL);
   return rc;
 }
