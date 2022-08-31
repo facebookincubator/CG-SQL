@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// These are some  UDFs that are used to access result sets in test code.
+// These are some UDFs that are used to access result sets in test code.
 
 // Clarifying the original comments regarding the pedigree of this code:
 //
-// This code is a combination of code to that is original to CG/SQL and public domain
+// This code is a combination of code that is original to CG/SQL and public domain
 // code copied from SQLite examples from the SQLite docs.
 //
 // There are no license issues.
