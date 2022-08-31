@@ -1416,7 +1416,7 @@ json_validate() {
   echo "checking for valid JSON formatting of ${sql_file} (test mode disabled)"
   if  ! ${CQL} --cg "${OUT_DIR}/__temp.out" --in "${sql_file}" --rt json_schema 2>"${OUT_DIR}/cg_test_json_schema.err"
   then
-    cat cg_test_json_schema.err
+    cat "${OUT_DIR}/cg_test_json_schema.err"
     echo "non-test JSON output failed for ${sql_file}"
     failed
   fi
