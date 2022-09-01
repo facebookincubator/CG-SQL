@@ -22368,6 +22368,7 @@ end;
 -- TEST: implementing interface that's not defined
 -- + CREATE PROC test_interface1_missing_interface (id_ INTEGER, name_ TEXT)
 -- + {create_proc_stmt}: err
+-- + {name missing_interface}: err
 -- + error: % interface not found 'missing_interface'
 -- +1 error:
 @attribute(cql:implements=missing_interface)
@@ -22392,6 +22393,33 @@ declare proc interface1(id_ INT, name_ TEXT);
 create proc interface1(id_ INT, name_ TEXT)
 begin
   select id_ id2, name_ name;
+end;
+
+
+-- interfaces for multi-interface test cases
+declare interface interface_foo1 (id integer not null, name text not null);
+declare interface interface_foo2 (id2 integer not null, name text not null);
+
+-- TEST: two interfaces, one not supported
+-- + {misc_attrs}: err
+-- + {create_proc_stmt}: err
+-- + error: % procedure 'interface_proc1' is missing column 'id2' of interface 'interface_foo2'
+-- +1 error:
+@attribute(cql:implements=interface_foo1)
+@attribute(cql:implements=interface_foo2)
+create proc interface_proc1()
+begin
+   select 1 id, "2" name;
+end;
+
+-- TEST: two interfaces, both supported
+-- + create_proc_stmt}: interface_proc2: { id: integer notnull, name: text notnull, id2: integer
+-- - error:
+@attribute(cql:implements=interface_foo1)
+@attribute(cql:implements=interface_foo2)
+create proc interface_proc2()
+begin
+   select 1 id, "2" name, 3 id2;
 end;
 
 -- TEST: declare unchecked select functions (allows variadic UDF params)

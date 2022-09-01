@@ -88570,7 +88570,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0482: interface not found 'missing_
   |   | {dot}
   |   | | {name cql}
   |   | | {name implements}
-  |   | {name missing_interface}: ok
+  |   | {name missing_interface}: err
   | {create_proc_stmt}: err
     | {name test_interface1_missing_interface}: err
     | {proc_params_stmts}
@@ -88673,6 +88673,145 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0481: proc name conflicts with inte
         | {select_orderby}
           | {select_limit}
             | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE interface_foo1 (id INTEGER NOT NULL, name TEXT NOT NULL);
+
+  {declare_interface_stmt}: interface_foo1: { id: integer notnull, name: text notnull }
+  | {name interface_foo1}
+  | {proc_params_stmts}
+    | {typed_names}: interface_foo1: { id: integer notnull, name: text notnull }
+      | {typed_name}: id: integer notnull
+      | | {name id}
+      | | {notnull}: id: integer notnull
+      |   | {type_int}: integer
+      | {typed_names}
+        | {typed_name}: name: text notnull
+          | {name name}
+          | {notnull}: name: text notnull
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE interface_foo2 (id2 INTEGER NOT NULL, name TEXT NOT NULL);
+
+  {declare_interface_stmt}: interface_foo2: { id2: integer notnull, name: text notnull }
+  | {name interface_foo2}
+  | {proc_params_stmts}
+    | {typed_names}: interface_foo2: { id2: integer notnull, name: text notnull }
+      | {typed_name}: id2: integer notnull
+      | | {name id2}
+      | | {notnull}: id2: integer notnull
+      |   | {type_int}: integer
+      | {typed_names}
+        | {typed_name}: name: text notnull
+          | {name name}
+          | {notnull}: name: text notnull
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface_foo1)
+@ATTRIBUTE(cql:implements=interface_foo2)
+CREATE PROC interface_proc1 ()
+BEGIN
+  SELECT 1 AS id, "2" AS name;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'interface_proc1' is missing column 'id2' of interface 'interface_foo2'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  | | | {dot}
+  | | | | {name cql}
+  | | | | {name implements}
+  | | | {name interface_foo1}: ok
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |     | {dot}
+  |     | | {name cql}
+  |     | | {name implements}
+  |     | {name interface_foo2}: ok
+  | {create_proc_stmt}: err
+    | {name interface_proc1}: err
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text notnull }
+          | {select_core_list}: select: { id: integer notnull, name: text notnull }
+          | | {select_core}: select: { id: integer notnull, name: text notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+          |     | | {select_expr}: id: integer notnull
+          |     | | | {int 1}: integer notnull
+          |     | | | {opt_as_alias}
+          |     | |   | {name id}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: name: text notnull
+          |     |     | {strlit '2'}: text notnull
+          |     |     | {opt_as_alias}
+          |     |       | {name name}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:implements=interface_foo1)
+@ATTRIBUTE(cql:implements=interface_foo2)
+CREATE PROC interface_proc2 ()
+BEGIN
+  SELECT 1 AS id, "2" AS name, 3 AS id2;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  | | | {dot}
+  | | | | {name cql}
+  | | | | {name implements}
+  | | | {name interface_foo1}: ok
+  | | {misc_attrs}
+  |   | {misc_attr}
+  |     | {dot}
+  |     | | {name cql}
+  |     | | {name implements}
+  |     | {name interface_foo2}: ok
+  | {create_proc_stmt}: interface_proc2: { id: integer notnull, name: text notnull, id2: integer notnull } dml_proc
+    | {name interface_proc2}: interface_proc2: { id: integer notnull, name: text notnull, id2: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { id: integer notnull, name: text notnull, id2: integer notnull }
+          | {select_core_list}: select: { id: integer notnull, name: text notnull, id2: integer notnull }
+          | | {select_core}: select: { id: integer notnull, name: text notnull, id2: integer notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull, id2: integer notnull }
+          |     | {select_expr_list}: select: { id: integer notnull, name: text notnull, id2: integer notnull }
+          |     | | {select_expr}: id: integer notnull
+          |     | | | {int 1}: integer notnull
+          |     | | | {opt_as_alias}
+          |     | |   | {name id}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: name: text notnull
+          |     |   | | {strlit '2'}: text notnull
+          |     |   | | {opt_as_alias}
+          |     |   |   | {name name}
+          |     |   | {select_expr_list}
+          |     |     | {select_expr}: id2: integer notnull
+          |     |       | {int 3}: integer notnull
+          |     |       | {opt_as_alias}
+          |     |         | {name id2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
 
 The statement ending at line XXXX
 

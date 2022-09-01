@@ -1620,6 +1620,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_
 test/sem_test.sql:XXXX:1: error: in str : CQL0482: interface not found 'missing_interface'
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name conflicts with interface name 'interface1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0481: proc name conflicts with interface name 'interface1'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'interface_proc1' is missing column 'id2' of interface 'interface_foo2'
 test/sem_test.sql:XXXX:1: error: in declare_select_func_stmt : CQL0486: function cannot be both a normal function and an unchecked function 'no_check_select_fun'
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'

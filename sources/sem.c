@@ -17743,27 +17743,21 @@ static bool_t assembly_fragment_expand_cte_tables(
 // Here were going to verify that the procedure in question implements the indicated interface
 // in order to do so it has to have the correct columns with compatible types in any order
 // which is to say the procedures result type has to be a superset of the interface columns
-//   * we will eventually allow more than one interface.
+//   * note there can be more than one interface
 //   * we will eventually allow columns that are compatable with trivial conversion (e.g. not null -> nullable)
-// For now, it's only the subset.
-static void sem_implements_interface(ast_node *misc_attrs, ast_node *create_proc_stmt) {
-  Contract(is_ast_misc_attrs(misc_attrs));
+static void sem_validate_one_interface(CSTR _Nonnull interface_name, ast_node *_Nonnull attr, void *_Nullable context) {
+  ast_node *create_proc_stmt = (ast_node *)context;
+
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
 
   symtab *names = symtab_new();
-
-  attr_value_record data;
-  find_named_cql_attribute(misc_attrs, "implements", &data);
-
   ast_node *name_ast = get_proc_name(create_proc_stmt);
   EXTRACT_STRING(proc_name, name_ast);
 
-  CSTR interface_name = data.value;
-  ast_node *str_ast = data.ast;
-
   ast_node *interface = find_interface_type(interface_name);
   if (!interface) {
-    report_error(str_ast, "CQL0482: interface not found", interface_name);
+    report_error(attr, "CQL0482: interface not found", interface_name);
+    record_error(attr);
     goto error;
   }
 
@@ -17807,7 +17801,6 @@ static void sem_implements_interface(ast_node *misc_attrs, ast_node *create_proc
   goto cleanup;
 
 error:
-  record_error(misc_attrs);
   record_error(create_proc_stmt);
 
 cleanup:
@@ -18491,11 +18484,10 @@ static void sem_create_proc_stmt(ast_node *ast) {
       goto cleanup;
     }
 
-    if (exists_attribute_str(misc_attrs, "implements")) {
-      sem_implements_interface(misc_attrs, ast);
-      if (is_error(misc_attrs)) {
-        goto cleanup;
-      }
+    find_attribute_str(misc_attrs, sem_validate_one_interface, ast, "implements");
+    if (is_error(ast)) {
+      record_error(misc_attrs);
+      goto cleanup;
     }
 
     uint32_t autodrop_count = sem_autodrops(misc_attrs);
@@ -18505,7 +18497,7 @@ static void sem_create_proc_stmt(ast_node *ast) {
 
     if (autodrop_count) {
       if (!result_set_proc && !out_stmt_proc) {
-        // note: out union doesn't  need autodrop, it has no auto-fetcher so it isn't valid either
+        // note: out union doesn't need autodrop, it has no auto-fetcher, so autodrop isn't even valid
         report_error(misc_attrs, "CQL0234: autodrop annotation can only go on a procedure that returns a result set", name);
         record_error(misc_attrs);
         goto cleanup;
