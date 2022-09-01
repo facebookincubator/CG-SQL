@@ -88410,17 +88410,15 @@ BEGIN
   SELECT name_ AS name, id_ AS id;
 END;
 
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'name'
-
-  {stmt_and_attr}: err
-  | {misc_attrs}: err
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
   |   | | {name cql}
   |   | | {name implements}
   |   | {name interface1}: ok
-  | {create_proc_stmt}: err
-    | {name test_interface1_implementation_wrong_order}: err
+  | {create_proc_stmt}: test_interface1_implementation_wrong_order: { name: text, id: integer } dml_proc
+    | {name test_interface1_implementation_wrong_order}: test_interface1_implementation_wrong_order: { name: text, id: integer } dml_proc
     | {proc_params_stmts}
       | {params}: ok
       | | {param}: id_: integer variable in
@@ -88463,7 +88461,7 @@ BEGIN
   SELECT id_ AS id2, name_ AS name;
 END;
 
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: name of the column must match the name of the column defined by interface 'id2'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_interface1_implementation_wrong_name' is missing column 'id' of interface 'interface1'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err
@@ -88516,7 +88514,7 @@ BEGIN
   SELECT id_ AS id;
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0483: procedure results should include all columns defined by the interface 'interface2'
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_interface1_missing_column' is missing column 'name' of interface 'interface2'
 
   {stmt_and_attr}: err
   | {misc_attrs}: err

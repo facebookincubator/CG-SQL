@@ -17740,12 +17740,23 @@ static bool_t assembly_fragment_expand_cte_tables(
   return true;
 }
 
+// Here were going to verify that the procedure in question implements the indicated interface
+// in order to do so it has to have the correct columns with compatible types in any order
+// which is to say the procedures result type has to be a superset of the interface columns
+//   * we will eventually allow more than one interface.
+//   * we will eventually allow columns that are compatable with trivial conversion (e.g. not null -> nullable)
+// For now, it's only the subset.
 static void sem_implements_interface(ast_node *misc_attrs, ast_node *create_proc_stmt) {
   Contract(is_ast_misc_attrs(misc_attrs));
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
 
+  symtab *names = symtab_new();
+
   attr_value_record data;
   find_named_cql_attribute(misc_attrs, "implements", &data);
+
+  ast_node *name_ast = get_proc_name(create_proc_stmt);
+  EXTRACT_STRING(proc_name, name_ast);
 
   CSTR interface_name = data.value;
   ast_node *str_ast = data.ast;
@@ -17757,42 +17768,50 @@ static void sem_implements_interface(ast_node *misc_attrs, ast_node *create_proc
   }
 
   sem_struct *interface_sptr = interface->sem->sptr;
-  sem_struct *proc_sptr      = create_proc_stmt->sem->sptr;
+  sem_struct *proc_sptr = create_proc_stmt->sem->sptr;
 
-  if (proc_sptr->count < interface_sptr->count) {
-    report_error(str_ast, "CQL0483: procedure results should include all columns defined by the interface", interface_name);
-    goto error;
+  // stash the indices of all the column names in the procedure so that we can find them quickly
+  for (uint32_t i = 0; i < proc_sptr->count; i++) {
+    symtab_add(names, proc_sptr->names[i], (void *)(uint64_t)i);
   }
 
   for (uint32_t i = 0; i < interface_sptr->count; ++i) {
-      CSTR proc_column_name = proc_sptr->names[i];
-      CSTR interface_column_name = interface_sptr->names[i];
 
-     if (Strcasecmp(proc_column_name, interface_column_name)) {
-        report_error(create_proc_stmt,
-          "CQL0484: name of the column must match the name of the column defined by interface", proc_column_name);
-        goto error;
-      }
+    CSTR interface_column_name = interface_sptr->names[i];
 
-      sem_t actual_type = proc_sptr->semtypes[i];
-      sem_t expected_type = interface_sptr->semtypes[i];
+    symtab_entry *entry = symtab_find(names, interface_sptr->names[i]);
+    if (!entry) {
+      CSTR msg = dup_printf("CQL0484: procedure '%s' is missing column '%s' of interface '%s'",
+        proc_name, interface_column_name, interface_name);
+      report_error(create_proc_stmt, msg, NULL);
+      goto error;
+    }
 
-      if (
-        core_type_of(actual_type) != core_type_of(expected_type) ||
-        is_nullable(actual_type) != is_nullable(expected_type) ||
-        sensitive_flag(actual_type) != sensitive_flag(expected_type)
-      ) {
-        CSTR error = "CQL0485: column types returned by proc need to be the same as defined on the interface";
-        report_sem_type_mismatch(expected_type, actual_type, create_proc_stmt, error, proc_column_name);
-        goto error;
-      }
+    // the column index in the procedure result type can be different, we saved it above
+    uint32_t j = (uint32_t)(uint64_t)entry->val;
+
+    sem_t actual_type = proc_sptr->semtypes[j];
+    sem_t expected_type = interface_sptr->semtypes[i];
+
+    if (
+      core_type_of(actual_type) != core_type_of(expected_type) ||
+      is_nullable(actual_type) != is_nullable(expected_type) ||
+      sensitive_flag(actual_type) != sensitive_flag(expected_type)
+    ) {
+      CSTR error = "CQL0485: column types returned by proc need to be the same as defined on the interface";
+      report_sem_type_mismatch(expected_type, actual_type, create_proc_stmt, error, interface_column_name);
+      goto error;
+    }
   }
 
-  return;
+  goto cleanup;
 
-  error:
+error:
   record_error(misc_attrs);
   record_error(create_proc_stmt);
+
+cleanup:
+  symtab_delete(names);
 }
 
 // The given procedure was marked with @attribute(cql:assembly_fragment=core)

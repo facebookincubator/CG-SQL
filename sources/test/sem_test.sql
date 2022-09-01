@@ -22264,28 +22264,38 @@ DECLARE PROC uses_broken_thing() (LIKE broken_thing ARGUMENTS);
 DECLARE INTERFACE proc4 (id INT);
 
 -- TEST: attempting to define interface
--- - error
+-- + {declare_interface_stmt}: interface1: { id: integer }
+-- - error:
 DECLARE INTERFACE interface1 (id INT);
 
 -- TEST: attempting to redefine interface with the same signature
--- - error
+-- + {declare_interface_stmt}: interface1: { id: integer }
+-- - error:
 DECLARE INTERFACE interface1 (id INT);
 
 -- TEST: attempting to redefine column with the same name
 -- + {declare_interface_stmt}: err
+-- + error: % duplicate column name 'id'
+-- +1 error:
 DECLARE INTERFACE interface1 (id INT, id TEXT);
 
 -- TEST: attempting to redefine interface with different signature
 -- + {declare_interface_stmt}: err
+-- + error: % DECLARE INTERFACE interface1 (id INTEGER)
+-- + error: % DECLARE INTERFACE interface1 (id INTEGER, name TEXT)
+-- + The above must be identical.
+-- + error: % interface declarations do not match 'interface1'
 DECLARE INTERFACE interface1 (id INT, name TEXT);
 
 -- TEST: attempting to define interface with two columns
+-- + {declare_interface_stmt}: interface2: { id: integer, name: text }
 -- - error:
 DECLARE INTERFACE interface2 (id INT, name TEXT);
 
 -- TEST: this procedure uses interface for its args
+-- verify that the args are rewritten correctly
 -- + CREATE PROC interface_source (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): ok
+-- + {create_proc_stmt}: ok
 -- - error:
 create proc interface_source(like interface2)
 begin
@@ -22293,7 +22303,7 @@ end;
 
 -- TEST: this procedure correctly implements interface
 -- + CREATE PROC test_interface1_implementation_correct (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): ok
+-- + {create_proc_stmt}: test_interface1_implementation_correct: { id: integer, name: text } dml_proc
 -- - error:
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
@@ -22303,7 +22313,9 @@ end;
 
 -- TEST: this procedure returns NOT NULL id column instead of NULLABLE
 -- + CREATE PROC test_interface1_implementation_wrong_nullability (id_ INTEGER NOT NULL)
--- {create_proc_stmt): err
+-- + {create_proc_stmt}: err
+-- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
+-- +1 error:
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_wrong_nullability(id_ INT not null)
 begin
@@ -22312,16 +22324,19 @@ end;
 
 -- TEST: this procedure returns TEXT NOT NULL id column instead of INT NOT NULL
 -- + CREATE PROC test_interface1_implementation_wrong_type (id_ TEXT not null)
--- {create_proc_stmt): err
+-- + {create_proc_stmt}: err
+-- + error: % column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
+-- +1 error:
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_wrong_type(id_ TEXT not null)
 begin
   select id_ id, "5" col2;
 end;
 
--- TEST: this procedure returns id column as second column instead of first
+-- TEST: this procedure returns id column as second column instead of first, this is ok
 -- + CREATE PROC test_interface1_implementation_wrong_order (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): err
+-- + {create_proc_stmt}: test_interface1_implementation_wrong_order: { name: text, id: integer } dml_proc
+-- - error:
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_wrong_order(id_ INT, name_ TEXT)
 begin
@@ -22330,7 +22345,9 @@ end;
 
 -- TEST: first returned column has incorrect name
 -- + CREATE PROC test_interface1_implementation_wrong_name (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): err
+-- + {create_proc_stmt}: err
+-- + error: % procedure 'test_interface1_implementation_wrong_name' is missing column 'id' of interface 'interface1'
+-- +1 error:
 @attribute(cql:implements=interface1)
 create proc test_interface1_implementation_wrong_name(id_ INT, name_ TEXT)
 begin
@@ -22339,7 +22356,9 @@ end;
 
 -- TEST: procedure does not return all columns from the interface
 -- + CREATE PROC test_interface1_missing_column (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): err
+-- + {create_proc_stmt}: err
+-- + error: % procedure 'test_interface1_missing_column' is missing column 'name' of interface 'interface2'
+-- +1 error:
 @attribute(cql:implements=interface2)
 create proc test_interface1_missing_column(id_ INT, name_ TEXT)
 begin
@@ -22348,7 +22367,9 @@ end;
 
 -- TEST: implementing interface that's not defined
 -- + CREATE PROC test_interface1_missing_interface (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): err
+-- + {create_proc_stmt}: err
+-- + error: % interface not found 'missing_interface'
+-- +1 error:
 @attribute(cql:implements=missing_interface)
 create proc test_interface1_missing_interface(id_ INT, name_ TEXT)
 begin
@@ -22357,12 +22378,17 @@ end;
 
 -- TEST: redefining interface as proc (declare)
 -- + DECLARE PROC interface1 (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): err
+-- + {declare_proc_stmt}: err
+-- + error: % proc name conflicts with interface name 'interface1'
+-- +1 error:
 declare proc interface1(id_ INT, name_ TEXT);
 
 -- TEST: redefining interface as proc (create)
 -- + CREATE PROC interface1 (id_ INTEGER, name_ TEXT)
--- {create_proc_stmt): err
+-- + {create_proc_stmt}: err
+-- + {name interface1}: err
+-- + error: % proc name conflicts with interface name 'interface1'
+-- +1 error:
 create proc interface1(id_ INT, name_ TEXT)
 begin
   select id_ id2, name_ name;
