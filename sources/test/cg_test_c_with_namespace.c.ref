@@ -618,42 +618,42 @@ cql_string_literal(_literal_25_xyzzy_clobber1, "xyzzy");
 /*
 DECLARE i0_nullable INTEGER;
 */
-cql_nullable_int32 i0_nullable;
+cql_nullable_int32 i0_nullable = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
 /*
 DECLARE i1_nullable INTEGER;
 */
-cql_nullable_int32 i1_nullable;
+cql_nullable_int32 i1_nullable = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
 /*
 DECLARE r0_nullable REAL;
 */
-cql_nullable_double r0_nullable;
+cql_nullable_double r0_nullable = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
 /*
 DECLARE l0_nullable LONG_INT;
 */
-cql_nullable_int64 l0_nullable;
+cql_nullable_int64 l0_nullable = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
 /*
 DECLARE l1_nullable LONG_INT;
 */
-cql_nullable_int64 l1_nullable;
+cql_nullable_int64 l1_nullable = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
 /*
 DECLARE b0_nullable BOOL;
 */
-cql_nullable_bool b0_nullable;
+cql_nullable_bool b0_nullable = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
@@ -739,8 +739,7 @@ export:
 DECLARE PROC proc_with_return_guard (a INTEGER);
 */
 void proc_with_return_guard(cql_nullable_int32 a) {
-  cql_nullable_int32 x;
-  cql_set_null(x);
+  cql_nullable_int32 x = { .is_null = 1 };
 
   if (!a.is_null) {
     goto cql_cleanup; // return
@@ -752,11 +751,11 @@ cql_cleanup:
 }
 #undef _PROC_
 cql_int32 _between_0_ = 0;
-cql_nullable_int32 _between_1_;
-cql_nullable_int32 _between_2_;
+cql_nullable_int32 _between_1_ = { .is_null = 1 };
+cql_nullable_int32 _between_2_ = { .is_null = 1 };
 cql_int32 _between_3_ = 0;
-cql_nullable_int32 _between_4_;
-cql_nullable_int32 _between_5_;
+cql_nullable_int32 _between_4_ = { .is_null = 1 };
+cql_nullable_int32 _between_5_ = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
@@ -790,7 +789,7 @@ void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
 /*
 DECLARE longint_var LONG_INT;
 */
-cql_nullable_int64 longint_var;
+cql_nullable_int64 longint_var = { .is_null = 1 };
 sqlite3_stmt *foo_cursor_stmt = NULL;
 cql_bool _foo_cursor_has_row_ = 0;
 
@@ -799,7 +798,7 @@ cql_bool _foo_cursor_has_row_ = 0;
 /*
 DECLARE col1 INTEGER;
 */
-cql_nullable_int32 col1;
+cql_nullable_int32 col1 = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
@@ -1426,8 +1425,7 @@ DECLARE PROC insert_rowid_reader () USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int64 row;
-  cql_set_null(row);
+  cql_nullable_int64 row = { .is_null = 1 };
 
   cql_set_notnull(row, sqlite3_last_insert_rowid(_db_));
   _rc_ = SQLITE_OK;
@@ -1453,8 +1451,7 @@ DECLARE PROC changes_reader () USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code changes_reader(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 ct;
-  cql_set_null(ct);
+  cql_nullable_int32 ct = { .is_null = 1 };
 
   cql_set_notnull(ct, sqlite3_changes(_db_));
   _rc_ = SQLITE_OK;
@@ -1492,8 +1489,7 @@ DECLARE PROC xyzzy_test () USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 _tmp_n_int_0;
-  cql_set_null(_tmp_n_int_0);
+  cql_nullable_int32 _tmp_n_int_0 = { .is_null = 1 };
   sqlite3_stmt *xyzzy_cursor_stmt = NULL;
 
   cql_set_notnull(_tmp_n_int_0, 1);
@@ -2548,7 +2544,7 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
-cql_nullable_int32 result;
+cql_nullable_int32 result = { .is_null = 1 };
 
 // The statement ending at line XXXX
 
@@ -3276,8 +3272,7 @@ export:
 DECLARE PROC voidproc ();
 */
 void voidproc(void) {
-  cql_nullable_int32 unused;
-  cql_set_null(unused);
+  cql_nullable_int32 unused = { .is_null = 1 };
 
 
 }
@@ -3842,8 +3837,7 @@ CQL_WARN_UNUSED cql_code no_cleanup_label_needed_proc(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
   no_cleanup_label_needed_proc_C_row C = { 0 };
-  cql_nullable_int32 x;
-  cql_set_null(x);
+  cql_nullable_int32 x = { .is_null = 1 };
 
   // try
   {
@@ -3890,10 +3884,8 @@ DECLARE PROC no_code_after_catch () USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 x;
-  cql_set_null(x);
-  cql_nullable_int32 y;
-  cql_set_null(y);
+  cql_nullable_int32 x = { .is_null = 1 };
+  cql_nullable_int32 y = { .is_null = 1 };
 
   // try
   {
@@ -4897,8 +4889,7 @@ typedef struct call_in_loop_C_row {
 } call_in_loop_C_row;
 CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 i;
-  cql_set_null(i);
+  cql_nullable_int32 i = { .is_null = 1 };
   sqlite3_stmt *C_stmt = NULL;
   call_in_loop_C_row C = { 0 };
 
@@ -4953,10 +4944,8 @@ typedef struct call_in_loop_with_nullable_condition_C_row {
 } call_in_loop_with_nullable_condition_C_row;
 CQL_WARN_UNUSED cql_code call_in_loop_with_nullable_condition(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 i;
-  cql_set_null(i);
-  cql_nullable_bool _tmp_n_bool_0;
-  cql_set_null(_tmp_n_bool_0);
+  cql_nullable_int32 i = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
   sqlite3_stmt *C_stmt = NULL;
   call_in_loop_with_nullable_condition_C_row C = { 0 };
 
@@ -5015,8 +5004,7 @@ typedef struct call_in_loop_boxed_D_row {
 } call_in_loop_boxed_D_row;
 CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 i;
-  cql_set_null(i);
+  cql_nullable_int32 i = { .is_null = 1 };
   sqlite3_stmt *C_stmt = NULL;
   cql_object_ref C_object_ = NULL;
   cql_object_ref box = NULL;
@@ -5232,8 +5220,7 @@ typedef struct call_out_union_in_loop_C_row {
 } call_out_union_in_loop_C_row;
 CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 i;
-  cql_set_null(i);
+  cql_nullable_int32 i = { .is_null = 1 };
   out_union_helper_result_set_ref C_result_set_ = NULL;
   cql_int32 C_row_num_ = 0;
   cql_int32 C_row_count_ = 0;
@@ -5492,10 +5479,8 @@ DECLARE PROC is_test ();
 */
 void is_test(void) {
   cql_bool b = 0;
-  cql_nullable_int32 i;
-  cql_set_null(i);
-  cql_nullable_int32 j;
-  cql_set_null(j);
+  cql_nullable_int32 i = { .is_null = 1 };
+  cql_nullable_int32 j = { .is_null = 1 };
 
   b = 1 == 1;
   b = cql_string_equal(_literal_6_x_, _literal_6_x_);
@@ -5562,10 +5547,8 @@ DECLARE PROC is_not_test ();
 */
 void is_not_test(void) {
   cql_bool b = 0;
-  cql_nullable_int32 i;
-  cql_set_null(i);
-  cql_nullable_int32 j;
-  cql_set_null(j);
+  cql_nullable_int32 i = { .is_null = 1 };
+  cql_nullable_int32 j = { .is_null = 1 };
 
   b = 1 != 1;
   b = !cql_string_equal(_literal_6_x_, _literal_6_x_);
@@ -6604,8 +6587,7 @@ DECLARE PROC use_with_select () USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 x;
-  cql_set_null(x);
+  cql_nullable_int32 x = { .is_null = 1 };
   cql_int32 _tmp_int_0 = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -7511,8 +7493,7 @@ DECLARE PROC compound_select_expr () USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 x;
-  cql_set_null(x);
+  cql_nullable_int32 x = { .is_null = 1 };
   cql_int32 _tmp_int_0 = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
@@ -10019,10 +10000,8 @@ export:
 DECLARE PROC local_cast_int ();
 */
 void local_cast_int(void) {
-  cql_nullable_int32 x;
-  cql_set_null(x);
-  cql_nullable_double r;
-  cql_set_null(r);
+  cql_nullable_int32 x = { .is_null = 1 };
+  cql_nullable_double r = { .is_null = 1 };
 
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_int32)(r.value)));
@@ -10071,10 +10050,8 @@ export:
 DECLARE PROC local_cast_long ();
 */
 void local_cast_long(void) {
-  cql_nullable_int64 x;
-  cql_set_null(x);
-  cql_nullable_double r;
-  cql_set_null(r);
+  cql_nullable_int64 x = { .is_null = 1 };
+  cql_nullable_double r = { .is_null = 1 };
 
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_int64)(r.value)));
@@ -10123,10 +10100,8 @@ export:
 DECLARE PROC local_cast_real ();
 */
 void local_cast_real(void) {
-  cql_nullable_double x;
-  cql_set_null(x);
-  cql_nullable_int32 r;
-  cql_set_null(r);
+  cql_nullable_double x = { .is_null = 1 };
+  cql_nullable_int32 r = { .is_null = 1 };
 
   cql_set_notnull(r, 3);
   cql_set_nullable(x, r.is_null, ((cql_double)(r.value)));
@@ -10175,10 +10150,8 @@ export:
 DECLARE PROC local_cast_bool ();
 */
 void local_cast_bool(void) {
-  cql_nullable_bool x;
-  cql_set_null(x);
-  cql_nullable_double r;
-  cql_set_null(r);
+  cql_nullable_bool x = { .is_null = 1 };
+  cql_nullable_double r = { .is_null = 1 };
 
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_bool)!!(r.value)));
@@ -10231,10 +10204,8 @@ export:
 DECLARE PROC local_cast_from_bool ();
 */
 void local_cast_from_bool(void) {
-  cql_nullable_bool b;
-  cql_set_null(b);
-  cql_nullable_double x;
-  cql_set_null(x);
+  cql_nullable_bool b = { .is_null = 1 };
+  cql_nullable_double x = { .is_null = 1 };
 
   cql_set_notnull(b, 1);
   cql_set_nullable(x, b.is_null, ((cql_double)!!(b.value)));
@@ -10287,10 +10258,8 @@ export:
 DECLARE PROC local_cast_from_bool_no_op ();
 */
 void local_cast_from_bool_no_op(void) {
-  cql_nullable_bool b;
-  cql_set_null(b);
-  cql_nullable_bool x;
-  cql_set_null(x);
+  cql_nullable_bool b = { .is_null = 1 };
+  cql_nullable_bool x = { .is_null = 1 };
 
   cql_set_notnull(b, 1);
   cql_set_nullable(x, b.is_null, b.value);
@@ -10317,8 +10286,7 @@ DECLARE PROC base_proc_savepoint () USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_int32 X;
-  cql_set_null(X);
+  cql_nullable_int32 X = { .is_null = 1 };
 
   _rc_ = cql_exec(_db_,
     "SAVEPOINT base_proc_savepoint");
@@ -13236,12 +13204,9 @@ void various_lets(void) {
   cql_int32 i = 0;
   cql_int64 l = 0;
   cql_string_ref t = NULL;
-  cql_nullable_int64 nl;
-  cql_set_null(nl);
-  cql_nullable_int32 ni;
-  cql_set_null(ni);
-  cql_nullable_double nr;
-  cql_set_null(nr);
+  cql_nullable_int64 nl = { .is_null = 1 };
+  cql_nullable_int32 ni = { .is_null = 1 };
+  cql_nullable_double nr = { .is_null = 1 };
   cql_string_ref nt = NULL;
   cql_int64 sl = 0;
   cql_int32 si = 0;
@@ -13432,66 +13397,36 @@ export:
 DECLARE PROC binary_ops_with_null ();
 */
 void binary_ops_with_null(void) {
-  cql_nullable_int32 add0;
-  cql_set_null(add0);
-  cql_nullable_int32 add1;
-  cql_set_null(add1);
-  cql_nullable_int32 bin_and0;
-  cql_set_null(bin_and0);
-  cql_nullable_int32 bin_and1;
-  cql_set_null(bin_and1);
-  cql_nullable_int32 bin_or0;
-  cql_set_null(bin_or0);
-  cql_nullable_int32 bin_or1;
-  cql_set_null(bin_or1);
-  cql_nullable_int32 div0;
-  cql_set_null(div0);
-  cql_nullable_int32 div1;
-  cql_set_null(div1);
-  cql_nullable_bool ge0;
-  cql_set_null(ge0);
-  cql_nullable_bool ge1;
-  cql_set_null(ge1);
-  cql_nullable_bool gt0;
-  cql_set_null(gt0);
-  cql_nullable_bool gt1;
-  cql_set_null(gt1);
-  cql_nullable_bool le0;
-  cql_set_null(le0);
-  cql_nullable_bool le1;
-  cql_set_null(le1);
-  cql_nullable_bool like0;
-  cql_set_null(like0);
-  cql_nullable_bool like1;
-  cql_set_null(like1);
-  cql_nullable_int32 lshift0;
-  cql_set_null(lshift0);
-  cql_nullable_int32 lshift1;
-  cql_set_null(lshift1);
-  cql_nullable_bool lt0;
-  cql_set_null(lt0);
-  cql_nullable_bool lt1;
-  cql_set_null(lt1);
-  cql_nullable_int32 mod0;
-  cql_set_null(mod0);
-  cql_nullable_int32 mod1;
-  cql_set_null(mod1);
-  cql_nullable_int32 mul0;
-  cql_set_null(mul0);
-  cql_nullable_int32 mul1;
-  cql_set_null(mul1);
-  cql_nullable_bool not_like0;
-  cql_set_null(not_like0);
-  cql_nullable_bool not_like1;
-  cql_set_null(not_like1);
-  cql_nullable_int32 rshift0;
-  cql_set_null(rshift0);
-  cql_nullable_int32 rshift1;
-  cql_set_null(rshift1);
-  cql_nullable_int32 sub0;
-  cql_set_null(sub0);
-  cql_nullable_int32 sub1;
-  cql_set_null(sub1);
+  cql_nullable_int32 add0 = { .is_null = 1 };
+  cql_nullable_int32 add1 = { .is_null = 1 };
+  cql_nullable_int32 bin_and0 = { .is_null = 1 };
+  cql_nullable_int32 bin_and1 = { .is_null = 1 };
+  cql_nullable_int32 bin_or0 = { .is_null = 1 };
+  cql_nullable_int32 bin_or1 = { .is_null = 1 };
+  cql_nullable_int32 div0 = { .is_null = 1 };
+  cql_nullable_int32 div1 = { .is_null = 1 };
+  cql_nullable_bool ge0 = { .is_null = 1 };
+  cql_nullable_bool ge1 = { .is_null = 1 };
+  cql_nullable_bool gt0 = { .is_null = 1 };
+  cql_nullable_bool gt1 = { .is_null = 1 };
+  cql_nullable_bool le0 = { .is_null = 1 };
+  cql_nullable_bool le1 = { .is_null = 1 };
+  cql_nullable_bool like0 = { .is_null = 1 };
+  cql_nullable_bool like1 = { .is_null = 1 };
+  cql_nullable_int32 lshift0 = { .is_null = 1 };
+  cql_nullable_int32 lshift1 = { .is_null = 1 };
+  cql_nullable_bool lt0 = { .is_null = 1 };
+  cql_nullable_bool lt1 = { .is_null = 1 };
+  cql_nullable_int32 mod0 = { .is_null = 1 };
+  cql_nullable_int32 mod1 = { .is_null = 1 };
+  cql_nullable_int32 mul0 = { .is_null = 1 };
+  cql_nullable_int32 mul1 = { .is_null = 1 };
+  cql_nullable_bool not_like0 = { .is_null = 1 };
+  cql_nullable_bool not_like1 = { .is_null = 1 };
+  cql_nullable_int32 rshift0 = { .is_null = 1 };
+  cql_nullable_int32 rshift1 = { .is_null = 1 };
+  cql_nullable_int32 sub0 = { .is_null = 1 };
+  cql_nullable_int32 sub1 = { .is_null = 1 };
 
   cql_set_null(add0);
   cql_set_null(add1);
@@ -14062,8 +13997,7 @@ DECLARE PROC nullability_improvements_are_erased_for_sql () (b INTEGER NOT NULL)
 CQL_WARN_UNUSED cql_code nullability_improvements_are_erased_for_sql(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
-  cql_nullable_int32 a;
-  cql_set_null(a);
+  cql_nullable_int32 a = { .is_null = 1 };
 
   if (!a.is_null) {
     _rc_ = cql_prepare(_db_, _result_stmt,
@@ -14099,8 +14033,7 @@ export:
 DECLARE PROC nullability_improvements_do_not_change_access ();
 */
 void nullability_improvements_do_not_change_access(void) {
-  cql_nullable_int32 a;
-  cql_set_null(a);
+  cql_nullable_int32 a = { .is_null = 1 };
   cql_int32 b = 0;
 
   if (!a.is_null) {
@@ -14557,9 +14490,9 @@ cql_cleanup:
 }
 #undef _PROC_
 cql_int32 sign_val_int = 0;
-cql_nullable_int32 sign_val_nullable;
+cql_nullable_int32 sign_val_nullable = { .is_null = 1 };
 cql_int32 abs_val_int = 0;
-cql_nullable_int32 abs_val_nullable;
+cql_nullable_int32 abs_val_nullable = { .is_null = 1 };
 cql_int64 abs_val_long = 0;
 cql_double abs_val_real = 0;
 cql_bool abs_val_bool = 0;
@@ -14677,16 +14610,11 @@ void arguments_are_evaluated_left_to_right(void) {
   cql_int32 _tmp_int_1 = 0;
   cql_int32 _tmp_int_2 = 0;
   cql_int32 a = 0;
-  cql_nullable_int32 _tmp_n_int_1;
-  cql_set_null(_tmp_n_int_1);
-  cql_nullable_int32 _tmp_n_int_2;
-  cql_set_null(_tmp_n_int_2);
-  cql_nullable_int32 _tmp_n_int_3;
-  cql_set_null(_tmp_n_int_3);
-  cql_nullable_int32 _tmp_n_int_4;
-  cql_set_null(_tmp_n_int_4);
-  cql_nullable_int32 b;
-  cql_set_null(b);
+  cql_nullable_int32 _tmp_n_int_1 = { .is_null = 1 };
+  cql_nullable_int32 _tmp_n_int_2 = { .is_null = 1 };
+  cql_nullable_int32 _tmp_n_int_3 = { .is_null = 1 };
+  cql_nullable_int32 _tmp_n_int_4 = { .is_null = 1 };
+  cql_nullable_int32 b = { .is_null = 1 };
   cql_string_ref _tmp_text_1 = NULL;
   cql_string_ref _tmp_text_2 = NULL;
   cql_string_ref c = NULL;
@@ -14694,8 +14622,7 @@ void arguments_are_evaluated_left_to_right(void) {
   cql_string_ref _tmp_n_text_2 = NULL;
   cql_string_ref d = NULL;
   cql_int32 e = 0;
-  cql_nullable_int32 f;
-  cql_set_null(f);
+  cql_nullable_int32 f = { .is_null = 1 };
   cql_string_ref g = NULL;
   cql_string_ref h = NULL;
 
@@ -14839,18 +14766,12 @@ void multi_call_temp_reuse(void) {
   cql_int32 _tmp_int_3 = 0;
   cql_int32 _tmp_int_4 = 0;
   cql_int32 q = 0;
-  cql_nullable_int32 _tmp_n_int_2;
-  cql_set_null(_tmp_n_int_2);
-  cql_nullable_int32 _tmp_n_int_3;
-  cql_set_null(_tmp_n_int_3);
-  cql_nullable_int32 _tmp_n_int_1;
-  cql_set_null(_tmp_n_int_1);
-  cql_nullable_int32 r;
-  cql_set_null(r);
-  cql_nullable_int32 _tmp_n_int_4;
-  cql_set_null(_tmp_n_int_4);
-  cql_nullable_int32 s;
-  cql_set_null(s);
+  cql_nullable_int32 _tmp_n_int_2 = { .is_null = 1 };
+  cql_nullable_int32 _tmp_n_int_3 = { .is_null = 1 };
+  cql_nullable_int32 _tmp_n_int_1 = { .is_null = 1 };
+  cql_nullable_int32 r = { .is_null = 1 };
+  cql_nullable_int32 _tmp_n_int_4 = { .is_null = 1 };
+  cql_nullable_int32 s = { .is_null = 1 };
 
   f1(&_tmp_int_2);
   f1(&_tmp_int_3);
@@ -14970,14 +14891,10 @@ export:
 DECLARE PROC and_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
 */
 void and_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable_int64 c) {
-  cql_nullable_bool _tmp_n_bool_1;
-  cql_set_null(_tmp_n_bool_1);
-  cql_nullable_bool _tmp_n_bool_3;
-  cql_set_null(_tmp_n_bool_3);
-  cql_nullable_bool _tmp_n_bool_2;
-  cql_set_null(_tmp_n_bool_2);
-  cql_nullable_bool _tmp_n_bool_0;
-  cql_set_null(_tmp_n_bool_0);
+  cql_nullable_bool _tmp_n_bool_1 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_3 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_2 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
 
   cql_combine_nullables(_tmp_n_bool_1, a.is_null, b.is_null, a.value > b.value);
   if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -15027,16 +14944,11 @@ export:
 DECLARE PROC or_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
 */
 void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable_int64 c) {
-  cql_nullable_bool _tmp_n_bool_1;
-  cql_set_null(_tmp_n_bool_1);
-  cql_nullable_bool _tmp_n_bool_3;
-  cql_set_null(_tmp_n_bool_3);
-  cql_nullable_bool _tmp_n_bool_4;
-  cql_set_null(_tmp_n_bool_4);
-  cql_nullable_bool _tmp_n_bool_2;
-  cql_set_null(_tmp_n_bool_2);
-  cql_nullable_bool _tmp_n_bool_0;
-  cql_set_null(_tmp_n_bool_0);
+  cql_nullable_bool _tmp_n_bool_1 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_3 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_4 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_2 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
 
   cql_set_nullable(_tmp_n_bool_1, c.is_null, c.value < 0);
   if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -15928,7 +15840,7 @@ void bigstuff(void) {
 
 // The statement ending at line XXXX
 gr_cursor_row gr_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_cursor_refs_offset };
-cql_nullable_int32 gr_integer;
+cql_nullable_int32 gr_integer = { .is_null = 1 };
 gr_blob_cursor_row gr_blob_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_blob_cursor_refs_offset };
 
 cql_uint16 gr_blob_cursor_cols[] = { 2,
@@ -16252,8 +16164,7 @@ void external_cursor_caller(void) {
     .cursor_size = sizeof(shape_storage),
     .cursor_fields = external_cursor_caller_shape_storage_fields,
   };
-  cql_nullable_int32 result;
-  cql_set_null(result);
+  cql_nullable_int32 result = { .is_null = 1 };
 
   result = external_cursor_func(&shape_storage_dyn);
 
@@ -16783,26 +16694,26 @@ void end_proc(void) {
 /*
 DECLARE end_marker INTEGER;
 */
-cql_nullable_int32 end_marker;
+cql_nullable_int32 end_marker = { .is_null = 1 };
 #define _PROC_ cql_startup
 
 cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
-  cql_nullable_bool _tmp_n_bool_1;
-  cql_nullable_bool _tmp_n_bool_0;
-  cql_nullable_double _tmp_n_double_1;
-  cql_nullable_double _tmp_n_double_2;
-  cql_nullable_double _tmp_n_double_3;
+  cql_nullable_bool _tmp_n_bool_1 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
+  cql_nullable_double _tmp_n_double_1 = { .is_null = 1 };
+  cql_nullable_double _tmp_n_double_2 = { .is_null = 1 };
+  cql_nullable_double _tmp_n_double_3 = { .is_null = 1 };
   cql_int32 _tmp_int_1 = 0;
-  cql_nullable_int32 _tmp_n_int_2;
+  cql_nullable_int32 _tmp_n_int_2 = { .is_null = 1 };
   cql_int32 _tmp_int_2 = 0;
-  cql_nullable_int32 _tmp_n_int_3;
+  cql_nullable_int32 _tmp_n_int_3 = { .is_null = 1 };
   cql_bool _tmp_bool_0 = 0;
-  cql_nullable_int32 _tmp_n_int_0;
-  cql_nullable_bool _tmp_n_bool_2;
-  cql_nullable_int64 _tmp_n_int64_1;
-  cql_nullable_int32 _tmp_n_int_1;
-  cql_nullable_int64 _tmp_n_int64_2;
+  cql_nullable_int32 _tmp_n_int_0 = { .is_null = 1 };
+  cql_nullable_bool _tmp_n_bool_2 = { .is_null = 1 };
+  cql_nullable_int64 _tmp_n_int64_1 = { .is_null = 1 };
+  cql_nullable_int32 _tmp_n_int_1 = { .is_null = 1 };
+  cql_nullable_int64 _tmp_n_int64_2 = { .is_null = 1 };
   cql_string_ref _tmp_text_0 = NULL;
   cql_object_ref _tmp_n_object_1 = NULL;
   cql_object_ref _tmp_object_1 = NULL;

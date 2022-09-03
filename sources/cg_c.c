@@ -39,7 +39,7 @@ static void cg_store_same_type(charbuf *output, CSTR var, sem_t sem_type, CSTR i
 static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR is_null, CSTR value);
 static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name);
 static void cg_proc_result_set(ast_node *ast);
-static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_local);
+static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl);
 static void cg_emit_external_arglist(ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
 static void cg_call_named_external(CSTR name, ast_node *expr_list);
 static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value);
@@ -443,84 +443,13 @@ static void cg_result_set_type_decl(charbuf *output, CSTR sym, CSTR ref) {
 // When emitting a variable reference, you might want the full local variable
 // defintion or just the declaration parts as they would appear in a prototype.
 #define CG_VAR_DECL_PROTO 0
-#define CG_VAR_DECL_LOCAL 1
+#define CG_VAR_DECL_FULL 1
 
 // When emitting parameters we might need to use aliased names
 // for reference types that are mutated.  We only need to do this
 // when emitting the primary proc definition
 #define CG_PROC_PARAMS_NO_ALIAS 0
 #define CG_PROC_PARAMS_IN_ALIAS 1
-
-// Reference types and non-null locals begin at a zero value.  References are especially
-// crucial because if they started at something other than null then we would try to
-// release that pointer on exit which would be bad.  Note that this means that even
-// a non-null text variable (for instance) begins at null when it is initialized.  This is
-// much like the _Nonnull clang option which can't prevent a global variable from starting
-// at null.  It's a bit weird but there isn't really a viable alternative short of some
-// non-null BS value which seems worse.
-static void cg_emit_local_init(charbuf *output, sem_t sem_type)
-{
-  sem_t core_type = core_type_of(sem_type);
-  bool_t notnull = is_not_nullable(sem_type);
-  switch (core_type) {
-    case SEM_TYPE_INTEGER:
-      if (notnull) {
-        bprintf(output, " = 0");
-      }
-      break;
-
-    case SEM_TYPE_TEXT:
-      bprintf(output, " = NULL");
-      break;
-
-    case SEM_TYPE_BLOB:
-      bprintf(output, " = NULL");
-      break;
-
-    case SEM_TYPE_OBJECT:
-      bprintf(output, " = NULL");
-      break;
-
-    case SEM_TYPE_LONG_INTEGER:
-      if (notnull) {
-        bprintf(output, " = 0");
-      }
-      break;
-
-    case SEM_TYPE_REAL:
-      if (notnull) {
-        bprintf(output, " = 0");
-      }
-      break;
-
-    case SEM_TYPE_BOOL:
-      if (notnull) {
-        bprintf(output, " = 0");
-      }
-      break;
-   }
-}
-
-// The nullable primtives get the cql_set_null macro treatment instead of an assigment.
-// So all nullables begin at null.
-static void cg_emit_local_nullable_init(charbuf *output, CSTR name, sem_t sem_type) {
-  sem_t core_type = core_type_of(sem_type);
-  switch (core_type) {
-    case SEM_TYPE_INTEGER:
-    case SEM_TYPE_LONG_INTEGER:
-    case SEM_TYPE_REAL:
-    case SEM_TYPE_BOOL:
-      if (in_proc) {
-        bprintf(output, "cql_set_null(%s);\n", name);
-      }
-      break;
-
-    case SEM_TYPE_TEXT:
-    case SEM_TYPE_OBJECT:
-    case SEM_TYPE_BLOB:
-      break;
-   }
-}
 
 // Emit the nullability annotation for a BLOB, OBJECT, or TEXT variable.
 static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
@@ -543,6 +472,24 @@ static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
   }
 }
 
+static void cg_emit_null_init(charbuf *output, bool_t is_full_decl) {
+  if (is_full_decl) {
+    bprintf(output, " = NULL");
+  }
+}
+
+static void cg_emit_zero_init(charbuf *output, bool_t is_full_decl) {
+  if (is_full_decl) {
+    bprintf(output, " = 0");
+  }
+}
+
+static void cg_emit_isnull_init(charbuf *output, bool_t is_full_decl) {
+  if (is_full_decl) {
+    bprintf(output, " = { .is_null = 1 }");
+  }
+}
+
 // Emit a declaration for a local whose name is base_name and whose type
 // is given by sem_type.   Is_local really only decides if we add ";\n" to
 // the end of the output.  This lets us use the same helper for list of
@@ -552,7 +499,9 @@ static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
 //  * flags might indicate nullable, in which case we need the struct version
 //  * text is always a reference, nullable or no.  But if you make a text local
 //    then we also gotta clean it up.
-static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_local) {
+//  * if the declaration is for a variable then we initialize the variable to 0, or NULL
+//    as appropriate
+static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl) {
   Contract(is_unitary(sem_type) || is_cursor_formal(sem_type));
   Contract(!is_null_type(sem_type));
   Contract(cg_main_output);
@@ -569,45 +518,52 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
   switch (core_type) {
     case SEM_TYPE_CURSOR_FORMAL:
       bprintf(output, "cql_dynamic_cursor *_Nonnull %s", name.ptr);
+      cg_emit_null_init(output, is_full_decl);
       break;
+
     case SEM_TYPE_INTEGER:
       if (notnull) {
         bprintf(output, "%s %s", rt->cql_int32, name.ptr);
+        cg_emit_zero_init(output, is_full_decl);
       }
       else {
         bprintf(output, "cql_nullable_int32 %s", name.ptr);
+        cg_emit_isnull_init(output, is_full_decl);
       }
       break;
 
     case SEM_TYPE_TEXT:
       bprintf(output, "%s ", rt->cql_string_ref);
-      if (!is_local) {
+      if (!is_full_decl) {
         cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
-      if (is_local) {
+      cg_emit_null_init(output, is_full_decl);
+      if (is_full_decl) {
         bprintf(cg_cleanup_output, "  %s(%s);\n", rt->cql_string_release, name.ptr);
       }
       break;
 
     case SEM_TYPE_BLOB:
       bprintf(output, "%s ", rt->cql_blob_ref);
-      if (!is_local) {
+      if (!is_full_decl) {
         cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
-      if (is_local) {
+      cg_emit_null_init(output, is_full_decl);
+      if (is_full_decl) {
         bprintf(cg_cleanup_output, "  %s(%s);\n", rt->cql_blob_release, name.ptr);
       }
       break;
 
-  case SEM_TYPE_OBJECT:
+    case SEM_TYPE_OBJECT:
       bprintf(output, "%s ", rt->cql_object_ref);
-      if (!is_local) {
+      if (!is_full_decl) {
         cg_var_nullability_annotation(output, sem_type);
       }
       bprintf(output, "%s", name.ptr);
-      if (is_local) {
+      cg_emit_null_init(output, is_full_decl);
+      if (is_full_decl) {
         bprintf(cg_cleanup_output, "  %s(%s);\n", rt->cql_object_release, name.ptr);
       }
       break;
@@ -615,37 +571,39 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
     case SEM_TYPE_LONG_INTEGER:
       if (notnull) {
         bprintf(output, "%s %s", rt->cql_int64, name.ptr);
+        cg_emit_zero_init(output, is_full_decl);
       }
       else {
         bprintf(output, "cql_nullable_int64 %s", name.ptr);
+        cg_emit_isnull_init(output, is_full_decl);
       }
       break;
 
     case SEM_TYPE_REAL:
       if (notnull) {
         bprintf(output, "%s %s", rt->cql_double, name.ptr);
+        cg_emit_zero_init(output, is_full_decl);
       }
       else {
         bprintf(output, "cql_nullable_double %s", name.ptr);
+        cg_emit_isnull_init(output, is_full_decl);
       }
       break;
 
     case SEM_TYPE_BOOL:
       if (notnull) {
         bprintf(output, "%s %s", rt->cql_bool, name.ptr);
+        cg_emit_zero_init(output, is_full_decl);
       }
       else {
         bprintf(output, "cql_nullable_bool %s", name.ptr);
+        cg_emit_isnull_init(output, is_full_decl);
       }
       break;
   }
 
-  if (is_local) {
-    cg_emit_local_init(output, sem_type);
+  if (is_full_decl) {
     bprintf(output, ";\n");
-    if (!notnull) {
-      cg_emit_local_nullable_init(output, name.ptr, sem_type);
-    }
   }
   CHARBUF_CLOSE(name);
 }
@@ -803,7 +761,7 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
 
     // Emit scratch if needed.
     if (!(usedmask[index] & mask)) {
-      cg_var_decl(cg_scratch_vars_output, sem_type, var->ptr, CG_VAR_DECL_LOCAL);
+      cg_var_decl(cg_scratch_vars_output, sem_type, var->ptr, CG_VAR_DECL_FULL);
       usedmask[index] |= mask;
     }
   }
@@ -2352,7 +2310,7 @@ static void cg_expr_between_rewrite(
     return;
   }
 
-  cg_var_decl(cg_declarations_output, sem_type_var, var, CG_VAR_DECL_LOCAL);
+  cg_var_decl(cg_declarations_output, sem_type_var, var, CG_VAR_DECL_FULL);
 
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ASSIGN);
   cg_store_same_type(cg_main_output, var, sem_type_var, expr_is_null.ptr, expr_value.ptr);
@@ -2737,7 +2695,7 @@ static void cg_expr_str(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   }
 }
 
-// the "dot" operator (e.g. C.x) is handled on the ID path 
+// the "dot" operator (e.g. C.x) is handled on the ID path
 static void cg_expr_dot(ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // X.Y has a net local name computed by semantic analysis.  Use it like any other id.
   Contract(is_ast_dot(expr));
@@ -4074,7 +4032,7 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 static void cg_declare_simple_var(sem_t sem_type, CSTR name) {
   // if in a variable group we only emit the header part of the declarations
   if (!in_var_group_decl) {
-    cg_var_decl(cg_declarations_output, sem_type, name, CG_VAR_DECL_LOCAL);
+    cg_var_decl(cg_declarations_output, sem_type, name, CG_VAR_DECL_FULL);
   }
   if (!in_proc && !in_var_group_emit) {
     bprintf(cg_header_output, "%s", rt->symbol_visibility);
@@ -4630,7 +4588,7 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
 
 // This handles the expression fragment case, this is rewritten so that
 // the arguments of the expression fragment become columns of one row of table
-// e.g. 
+// e.g.
 // @attribute(cql:shared_fragment)
 // create proc ex_frag(x integer)
 // begin
@@ -4819,7 +4777,7 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
     AST_REWRITE_INFO_RESET();
 
     // emit the declaration
-    cg_var_decl(cg_declarations_output, sem_type_var, alias_name, CG_VAR_DECL_LOCAL);
+    cg_var_decl(cg_declarations_output, sem_type_var, alias_name, CG_VAR_DECL_FULL);
 
     sem_t sem_type_expr = expr->sem->sem_type;
 
@@ -5605,7 +5563,7 @@ static void cg_declare_cursor(ast_node *ast) {
     CHARBUF_OPEN(box_name);
     bprintf(&box_name, "%s_object_", cursor_name);
 
-    cg_var_decl(cg_declarations_output, SEM_TYPE_OBJECT, box_name.ptr, CG_VAR_DECL_LOCAL);
+    cg_var_decl(cg_declarations_output, SEM_TYPE_OBJECT, box_name.ptr, CG_VAR_DECL_FULL);
 
     // the unbox case gets the object from the unbox operation above, so skip if unboxing
 
@@ -5634,7 +5592,7 @@ static void cg_declare_cursor(ast_node *ast) {
       // make the cursor_has_row hidden variable
       CHARBUF_OPEN(temp);
       bprintf(&temp, "_%s_has_row_", cursor_name);
-      cg_var_decl(cg_declarations_output, SEM_TYPE_BOOL | SEM_TYPE_NOTNULL, temp.ptr, CG_VAR_DECL_LOCAL);
+      cg_var_decl(cg_declarations_output, SEM_TYPE_BOOL | SEM_TYPE_NOTNULL, temp.ptr, CG_VAR_DECL_FULL);
       CHARBUF_CLOSE(temp);
     }
   }
@@ -6545,7 +6503,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     if (need_comma) {
       bprintf(&invocation, ", ");
     }
- 
+
     // the out arg is clobbered by the called function, we have to release it first
     bprintf(cg_main_output, "cql_object_release(%s);\n", result_var.ptr);
     bprintf(cg_main_output, "%s = NULL;\n", result_var.ptr);
@@ -6886,7 +6844,7 @@ static void cg_insert_dummy_spec(ast_node *ast) {
   sem_t sem_type_expr = expr->sem->sem_type;
 
   if (!seed_declared) {
-    cg_var_decl(cg_declarations_output, sem_type_var, name, CG_VAR_DECL_LOCAL);
+    cg_var_decl(cg_declarations_output, sem_type_var, name, CG_VAR_DECL_FULL);
     seed_declared = true;
   }
 
@@ -8537,7 +8495,7 @@ cql_noexport void cg_c_init(void) {
 
   Contract(!text_pieces);
   text_pieces = symtab_new_case_sens();
- 
+
   Contract(!emitted_proc_decls);
   emitted_proc_decls = symtab_new();
 

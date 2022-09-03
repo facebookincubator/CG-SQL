@@ -438,7 +438,7 @@ begin
 end;
 
 -- TEST: force a cql_int64 variable to be pushed on the scratch stack
--- + cql_nullable_int64 longint_var;
+-- + cql_nullable_int64 longint_var = { .is_null = 1 };
 declare longint_var long integer;
 
 -- + cql_combine_nullables(_tmp_n_int64_1, l0_nullable.is_null, l1_nullable.is_null, l0_nullable.value + l1_nullable.value);
@@ -4040,9 +4040,9 @@ end;
 -- + cql_int32 i = 0;
 -- + cql_int64 l = 0;
 -- + cql_string_ref t = NULL;
--- + cql_nullable_int64 nl;
--- + cql_nullable_int32 ni;
--- + cql_nullable_double nr;
+-- + cql_nullable_int64 nl = { .is_null = 1 };
+-- + cql_nullable_int32 ni = { .is_null = 1 };
+-- + cql_nullable_double nr = { .is_null = 1 };
 -- + cql_string_ref nt = NULL;
 -- + r = 1.0;
 -- + i = 1;
@@ -4387,8 +4387,7 @@ end;
 
 -- TEST: The improving of nullable variables to be nonnull respects the
 -- underlying nullable representation.
--- + cql_nullable_int32 a;
--- + cql_set_null(a);
+-- + cql_nullable_int32 a = { .is_null = 1 };
 -- + cql_int32 b = 0;
 -- + b = a.value;
 -- + cql_set_notnull(a, 0);
@@ -5139,7 +5138,7 @@ end;
 
 -- TEST: emits the definitions only
 -- + gr_cursor_row gr_cursor = { ._refs_count_ = 1, ._refs_offset_ = gr_cursor_refs_offset };
--- + cql_nullable_int32 gr_integer;
+-- + cql_nullable_int32 gr_integer = { .is_null = 1 };
 --
 -- additional stuff for a cursor that needs to be serialized
 -- note that the arrays are not static for a global cursor
@@ -5340,7 +5339,7 @@ let this_is_the_end := 0xf00d;
 create proc end_proc() begin end;
 
 -- TEST: end marker -- this is the last test
--- + cql_nullable_int32 end_marker;
+-- + cql_nullable_int32 end_marker = { .is_null = 1 };
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------

@@ -53,7 +53,7 @@ cql_cleanup:
 
 // The statement ending at line XXXX
 c_row c = { 0 };
-cql_nullable_int32 x;
+cql_nullable_int32 x = { .is_null = 1 };
 serialized_cursor_row serialized_cursor = { ._refs_count_ = 1, ._refs_offset_ = serialized_cursor_refs_offset };
 
 cql_uint16 serialized_cursor_cols[] = { 2,
