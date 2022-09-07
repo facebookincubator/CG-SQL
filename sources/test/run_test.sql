@@ -5284,11 +5284,11 @@ begin
    begin
       fetch C() from values() @dummy_seed(i) @dummy_nullables;
 
-      -- child1 keys are +500
+      -- ch1 keys are +500
       fetch D() from values() @dummy_seed(i+500) @dummy_nullables;
       update cursor C using D.k1 k1, D.k2 k2;
 
-      -- child2 keys are +1000
+      -- ch2 keys are +1000
       fetch D() from values() @dummy_seed(i+1000) @dummy_nullables;
       update cursor C using D.k3 k3, D.k4 k4;
 
@@ -5300,8 +5300,8 @@ end;
 create proc parent_child()
 begin
   OUT UNION CALL parent() JOIN
-     call ch1() USING (k1, k2) AND
-     call ch2() USING (k3, k4);
+     call ch1() USING (k1, k2) AS ch1 AND
+     call ch2() USING (k3, k4) AS ch2;
 end;
 
 create proc parent_child_simple_pattern()
@@ -5309,7 +5309,7 @@ begin
   declare C cursor for call parent();
   loop fetch C
   begin
-    declare result cursor like (like parent, child1 object<ch1_filter set>, child2 object<ch2_filter set>);
+    declare result cursor like (like parent, ch1 object<ch1_filter set>, ch2 object<ch2_filter set>);
     fetch result from values (from C, ch1_filter(C.k1, C.k2), ch2_filter(C.k3, C.k4));
     out union result;
   end;
@@ -5333,7 +5333,7 @@ begin
      EXPECT(P.v3 == i);
 
      let count_rows := 0;
-     declare C1 cursor for P.child1;
+     declare C1 cursor for P.ch1;
      loop fetch C1
      begin
         -- call printf("  child1: %d %s %d %s %f\n", C1.k1, C1.k2, C1.v1, C1.v2, C1.v3);
@@ -5348,10 +5348,10 @@ begin
      EXPECT(count_rows == case when i % 3 == 2 then 0 else 2 end);
 
      set count_rows := 0;
-     declare C2 cursor for P.child2;
+     declare C2 cursor for P.ch2;
      loop fetch C2
      begin
-        -- call printf("  child2: %d %s %d %s %f\n", C2.k3, C2.k4, C2.v1, C2.v2, C2.v3);
+        -- call printf("  chlld2: %d %s %d %s %f\n", C2.k3, C2.k4, C2.v1, C2.v2, C2.v3);
         EXPECT(P.k3 == C2.k3);
         EXPECT(P.k4 == C2.k4);
         EXPECT(C2.v1 == not not 1000 + i*2 + count_rows);

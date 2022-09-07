@@ -89104,18 +89104,18 @@ BEGIN
     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
   END;
-  DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, child1 OBJECT<test_child SET> NOT NULL);
+  DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, my_child OBJECT<test_child SET> NOT NULL);
   DECLARE __parent__0 CURSOR FOR CALL test_parent(2);
   LOOP FETCH __parent__0
   BEGIN
     FETCH __key__0(x) FROM VALUES(__parent__0.x);
-    FETCH __out_cursor__0(x, child1) FROM VALUES(__parent__0.x, cql_extract_partition(__partition__0, __key__0));
+    FETCH __out_cursor__0(x, my_child) FROM VALUES(__parent__0.x, cql_extract_partition(__partition__0, __key__0));
     OUT UNION __out_cursor__0;
   END;
 END;
 
-  {create_proc_stmt}: __out_cursor__0: test_parent_child: { x: integer, child1: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
-  | {name test_parent_child}: __out_cursor__0: test_parent_child: { x: integer, child1: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
+  {create_proc_stmt}: __out_cursor__0: test_parent_child: { x: integer, my_child: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
+  | {name test_parent_child}: __out_cursor__0: test_parent_child: { x: integer, my_child: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
   | {proc_params_stmts}
     | {stmt_list}: ok
       | {declare_vars_type}: bool notnull
@@ -89169,16 +89169,16 @@ END;
       |             | {name __key__0}: __key__0: select: { x: integer } variable shape_storage value_cursor serialize
       |             | {arg_list}
       |               | {name __child_cursor__0}: __child_cursor__0: test_child: { x: integer } variable dml_proc shape_storage serialize
-      | {declare_cursor_like_typed_names}: __out_cursor__0: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
-      | | {name __out_cursor__0}: __out_cursor__0: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
-      | | {typed_names}: select: { x: integer, child1: object<test_child SET> notnull }
+      | {declare_cursor_like_typed_names}: __out_cursor__0: select: { x: integer, my_child: object<test_child SET> notnull } variable shape_storage value_cursor
+      | | {name __out_cursor__0}: __out_cursor__0: select: { x: integer, my_child: object<test_child SET> notnull } variable shape_storage value_cursor
+      | | {typed_names}: select: { x: integer, my_child: object<test_child SET> notnull }
       |   | {typed_name}: x: integer
       |   | | {name x}
       |   | | {type_int}: x: integer
       |   | {typed_names}
-      |     | {typed_name}: child1: object<test_child SET> notnull
-      |       | {name child1}
-      |       | {notnull}: child1: object<test_child SET> notnull
+      |     | {typed_name}: my_child: object<test_child SET> notnull
+      |       | {name my_child}
+      |       | {notnull}: my_child: object<test_child SET> notnull
       |         | {type_object}: object<test_child SET>
       |           | {name test_child SET}
       | {declare_cursor}: __parent__0: test_parent: { x: integer } variable dml_proc
@@ -89204,13 +89204,13 @@ END;
           |         | {name x}
           | {fetch_values_stmt}: ok
           | | {name_columns_values}
-          |   | {name __out_cursor__0}: __out_cursor__0: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
+          |   | {name __out_cursor__0}: __out_cursor__0: select: { x: integer, my_child: object<test_child SET> notnull } variable shape_storage value_cursor
           |   | {columns_values}: ok
           |     | {column_spec}
           |     | | {name_list}
           |     |   | {name x}: x: integer
           |     |   | {name_list}
-          |     |     | {name child1}: child1: object<test_child SET> notnull
+          |     |     | {name my_child}: my_child: object<test_child SET> notnull
           |     | {insert_list}: ok
           |       | {dot}: __parent__0.x: integer variable
           |       | | {name __parent__0}
@@ -89224,8 +89224,144 @@ END;
           |               | {name __partition__0}: __partition__0: object<partitioning> notnull variable
           |               | {arg_list}
           |                 | {name __key__0}: __key__0: select: { x: integer } variable shape_storage value_cursor serialize
-          | {out_union_stmt}: __out_cursor__0: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
-            | {name __out_cursor__0}: __out_cursor__0: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
+          | {out_union_stmt}: __out_cursor__0: select: { x: integer, my_child: object<test_child SET> notnull } variable shape_storage value_cursor
+            | {name __out_cursor__0}: __out_cursor__0: select: { x: integer, my_child: object<test_child SET> notnull } variable shape_storage value_cursor
+
+The statement ending at line XXXX
+
+CREATE PROC test_parent_child2 ()
+BEGIN
+  DECLARE __result__1 BOOL NOT NULL;
+  DECLARE __key__1 CURSOR LIKE test_child(x);
+  LET __partition__1 := cql_partition_create();
+  DECLARE __child_cursor__1 CURSOR FOR CALL test_child(1);
+  LOOP FETCH __child_cursor__1
+  BEGIN
+    FETCH __key__1(x) FROM VALUES(__child_cursor__1.x);
+    SET __result__1 := cql_partition_cursor(__partition__1, __key__1, __child_cursor__1);
+  END;
+  DECLARE __out_cursor__1 CURSOR LIKE (x INTEGER, child1 OBJECT<test_child SET> NOT NULL);
+  DECLARE __parent__1 CURSOR FOR CALL test_parent(2);
+  LOOP FETCH __parent__1
+  BEGIN
+    FETCH __key__1(x) FROM VALUES(__parent__1.x);
+    FETCH __out_cursor__1(x, child1) FROM VALUES(__parent__1.x, cql_extract_partition(__partition__1, __key__1));
+    OUT UNION __out_cursor__1;
+  END;
+END;
+
+  {create_proc_stmt}: __out_cursor__1: test_parent_child2: { x: integer, child1: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
+  | {name test_parent_child2}: __out_cursor__1: test_parent_child2: { x: integer, child1: object<test_child SET> notnull } variable dml_proc shape_storage uses_out_union value_cursor
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: bool notnull
+      | | {name_list}: __result__1: bool notnull variable was_set
+      | | | {name __result__1}: __result__1: bool notnull variable was_set
+      | | {notnull}: bool notnull
+      |   | {type_bool}: bool
+      | {declare_cursor_like_name}: __key__1: select: { x: integer } variable shape_storage value_cursor serialize
+      | | {name __key__1}: __key__1: select: { x: integer } variable shape_storage value_cursor serialize
+      | | {shape_def}: select: { x: integer }
+      |   | {like}: ok
+      |   | | {name test_child}
+      |   | {name_list}
+      |     | {name x}
+      | {let_stmt}: __partition__1: object<partitioning> notnull variable
+      | | {name __partition__1}: __partition__1: object<partitioning> notnull variable
+      | | {call}: object<partitioning> notnull create_func
+      |   | {name cql_partition_create}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      | {declare_cursor}: __child_cursor__1: test_child: { x: integer } variable dml_proc
+      | | {name __child_cursor__1}: __child_cursor__1: test_child: { x: integer } variable dml_proc shape_storage serialize
+      | | {call_stmt}: test_child: { x: integer } dml_proc
+      |   | {name test_child}: test_child: { x: integer } dml_proc
+      |   | {expr_list}: ok
+      |     | {int 1}: integer notnull
+      | {loop_stmt}: ok
+      | | {fetch_stmt}: __child_cursor__1: test_child: { x: integer } variable dml_proc shape_storage
+      | | | {name __child_cursor__1}: __child_cursor__1: test_child: { x: integer } variable dml_proc shape_storage
+      | | {stmt_list}: ok
+      |   | {fetch_values_stmt}: ok
+      |   | | {name_columns_values}
+      |   |   | {name __key__1}: __key__1: select: { x: integer } variable shape_storage value_cursor serialize
+      |   |   | {columns_values}: ok
+      |   |     | {column_spec}
+      |   |     | | {name_list}
+      |   |     |   | {name x}: x: integer
+      |   |     | {insert_list}: ok
+      |   |       | {dot}: __child_cursor__1.x: integer variable
+      |   |         | {name __child_cursor__1}
+      |   |         | {name x}
+      |   | {assign}: __result__1: bool notnull variable was_set
+      |     | {name __result__1}: __result__1: bool notnull variable was_set
+      |     | {call}: bool notnull
+      |       | {name cql_partition_cursor}
+      |       | {call_arg_list}
+      |         | {call_filter_clause}
+      |         | {arg_list}: ok
+      |           | {name __partition__1}: __partition__1: object<partitioning> notnull variable
+      |           | {arg_list}
+      |             | {name __key__1}: __key__1: select: { x: integer } variable shape_storage value_cursor serialize
+      |             | {arg_list}
+      |               | {name __child_cursor__1}: __child_cursor__1: test_child: { x: integer } variable dml_proc shape_storage serialize
+      | {declare_cursor_like_typed_names}: __out_cursor__1: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
+      | | {name __out_cursor__1}: __out_cursor__1: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
+      | | {typed_names}: select: { x: integer, child1: object<test_child SET> notnull }
+      |   | {typed_name}: x: integer
+      |   | | {name x}
+      |   | | {type_int}: x: integer
+      |   | {typed_names}
+      |     | {typed_name}: child1: object<test_child SET> notnull
+      |       | {name child1}
+      |       | {notnull}: child1: object<test_child SET> notnull
+      |         | {type_object}: object<test_child SET>
+      |           | {name test_child SET}
+      | {declare_cursor}: __parent__1: test_parent: { x: integer } variable dml_proc
+      | | {name __parent__1}: __parent__1: test_parent: { x: integer } variable dml_proc shape_storage
+      | | {call_stmt}: test_parent: { x: integer } dml_proc
+      |   | {name test_parent}: test_parent: { x: integer } dml_proc
+      |   | {expr_list}: ok
+      |     | {int 2}: integer notnull
+      | {loop_stmt}: ok
+        | {fetch_stmt}: __parent__1: test_parent: { x: integer } variable dml_proc shape_storage
+        | | {name __parent__1}: __parent__1: test_parent: { x: integer } variable dml_proc shape_storage
+        | {stmt_list}: ok
+          | {fetch_values_stmt}: ok
+          | | {name_columns_values}
+          |   | {name __key__1}: __key__1: select: { x: integer } variable shape_storage value_cursor serialize
+          |   | {columns_values}: ok
+          |     | {column_spec}
+          |     | | {name_list}
+          |     |   | {name x}: x: integer
+          |     | {insert_list}: ok
+          |       | {dot}: __parent__1.x: integer variable
+          |         | {name __parent__1}
+          |         | {name x}
+          | {fetch_values_stmt}: ok
+          | | {name_columns_values}
+          |   | {name __out_cursor__1}: __out_cursor__1: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
+          |   | {columns_values}: ok
+          |     | {column_spec}
+          |     | | {name_list}
+          |     |   | {name x}: x: integer
+          |     |   | {name_list}
+          |     |     | {name child1}: child1: object<test_child SET> notnull
+          |     | {insert_list}: ok
+          |       | {dot}: __parent__1.x: integer variable
+          |       | | {name __parent__1}
+          |       | | {name x}
+          |       | {insert_list}
+          |         | {call}: object notnull create_func
+          |           | {name cql_extract_partition}
+          |           | {call_arg_list}
+          |             | {call_filter_clause}
+          |             | {arg_list}: ok
+          |               | {name __partition__1}: __partition__1: object<partitioning> notnull variable
+          |               | {arg_list}
+          |                 | {name __key__1}: __key__1: select: { x: integer } variable shape_storage value_cursor serialize
+          | {out_union_stmt}: __out_cursor__1: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
+            | {name __out_cursor__1}: __out_cursor__1: select: { x: integer, child1: object<test_child SET> notnull } variable shape_storage value_cursor
 
 The statement ending at line XXXX
 

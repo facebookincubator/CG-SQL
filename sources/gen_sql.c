@@ -3702,13 +3702,24 @@ static void gen_child_results(ast_node *ast) {
 
     EXTRACT_NOTNULL(child_result, item->left);
     EXTRACT_NOTNULL(call_stmt, child_result->left);
-    EXTRACT_NOTNULL(name_list, child_result->right);
+    EXTRACT_NOTNULL(named_result, child_result->right);
+
+    EXTRACT_NOTNULL(name_list, named_result->right);
+    CSTR child_column_name = NULL;
+    if (named_result->left) {
+      EXTRACT_STRING(name, named_result->left);
+      child_column_name = name;
+    }
 
     gen_printf("\n  ");
     gen_call_stmt(call_stmt);
     gen_printf(" USING (");
     gen_name_list(name_list);
     gen_printf(")");
+
+    if (child_column_name) {
+      gen_printf(" AS %s", child_column_name);
+    }
 
     if (item->right) {
       gen_printf(" AND");

@@ -1965,7 +1965,8 @@ child_results[result]:
    ;
 
 child_result:
-  call_stmt USING '(' name_list ')' { $child_result = new_ast_child_result($call_stmt, $name_list); }
+  call_stmt USING '(' name_list ')' { $child_result = new_ast_child_result($call_stmt, new_ast_named_result(NULL, $name_list)); }
+  | call_stmt USING '(' name_list ')' AS name { $child_result = new_ast_child_result($call_stmt, new_ast_named_result($name, $name_list)); }
   ;
 
 if_stmt:

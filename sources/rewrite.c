@@ -1833,7 +1833,8 @@ static ast_node *rewrite_child_partition_creation(ast_node *child_results, int32
 
   EXTRACT_NOTNULL(child_result, child_results->left);
   EXTRACT_NOTNULL(call_stmt, child_result->left);
-  EXTRACT_NOTNULL(name_list, child_result->right);
+  EXTRACT_NOTNULL(named_result, child_result->right);
+  EXTRACT_NOTNULL(name_list, named_result->right);
   EXTRACT_STRING(proc_name, call_stmt->left);
 
   CSTR key_name = dup_printf("__key__%d", cursor_num);
@@ -1937,10 +1938,20 @@ static ast_node *build_child_typed_names(ast_node *child_results, int32_t child_
   Contract(is_ast_child_results(child_results));
   EXTRACT_NOTNULL(child_result, child_results->left);
   EXTRACT_NOTNULL(call_stmt, child_result->left);
-  EXTRACT_NOTNULL(name_list, child_result->right);
+  EXTRACT_NOTNULL(named_result, child_result->right);
+  EXTRACT_NOTNULL(name_list, named_result->right);
   EXTRACT_STRING(proc_name, call_stmt->left);
 
-  CSTR child_column_name = dup_printf("child%d", child_index);
+  // optional child result name
+  CSTR child_column_name = NULL;
+  if (named_result->left) {
+    EXTRACT_STRING(name, named_result->left);
+    child_column_name = name;
+  }
+
+  if (!child_column_name) {
+    child_column_name = dup_printf("child%d", child_index);
+  }
 
   return new_ast_typed_names(
     new_ast_typed_name(
