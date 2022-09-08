@@ -13,7 +13,7 @@
 /* Useful code for getting more verbose errors
 @echo c,"#undef cql_error_trace\n";
 @echo c,'#define cql_error_trace() \
-   fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))';
+  fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))';
 @echo c,"\n\n";
 */
 
@@ -28,14 +28,14 @@ declare function string_from_blob(b blob @sensitive) create text not null;
 declare procedure cql_init_extensions() using transaction;
 
 declare enum floats real (
-   one = 1.0,
-   two = 2.0
+  one = 1.0,
+  two = 2.0
 );
 
 declare enum longs long_int (
-   one = 1,
-   big = 0x100000000,
-   neg = -1
+  one = 1,
+  big = 0x100000000,
+  neg = -1
 );
 
 call cql_init_extensions();
@@ -67,27 +67,27 @@ declare side_effect_null_count integer not null;
 
 create proc side_effect_0(out result integer)
 begin
-   set result := 0;
-   set side_effect_0_count := side_effect_0_count + 1;
+  set result := 0;
+  set side_effect_0_count := side_effect_0_count + 1;
 end;
 
 create proc side_effect_1(out result integer)
 begin
-   set result := 1;
-   set side_effect_1_count := side_effect_1_count + 1;
+  set result := 1;
+  set side_effect_1_count := side_effect_1_count + 1;
 end;
 
 create proc side_effect_null(out result integer)
 begin
-   set result := null;
-   set side_effect_null_count := side_effect_null_count + 1;
+  set result := null;
+  set side_effect_null_count := side_effect_null_count + 1;
 end;
 
 create proc reset_counts()
 begin
-   set side_effect_0_count := 0;
-   set side_effect_1_count := 0;
-   set side_effect_null_count := 0;
+  set side_effect_0_count := 0;
+  set side_effect_1_count := 0;
+  set side_effect_null_count := 0;
 end;
 
 BEGIN_TEST(logical_operations)
@@ -222,7 +222,7 @@ set zero := 0;
 declare one integer not null;
 set one := 1;
 
- -- logical and short-circuit verify 1/0 not evaluated
+-- logical and short-circuit verify 1/0 not evaluated
 BEGIN_TEST(local_operations_early_out)
   EXPECT_SQL_TOO(not (0 and 1/zero));
   EXPECT_SQL_TOO(1 or 1/zero);
@@ -531,9 +531,9 @@ END_TEST(nested_select_expressions)
 
 create proc make_bools()
 begin
-    select true x
-    union all
-    select false x;
+  select true x
+  union all
+  select false x;
 end;
 
 BEGIN_TEST(bool_round_trip)
@@ -1318,7 +1318,7 @@ BEGIN_TEST(cast_expr)
 END_TEST(cast_expr)
 
 BEGIN_TEST(union_all_test)
- declare C cursor for
+  declare C cursor for
     select 1 as A, 2 as B
     union all
     select 3 as A, 4 as B;
@@ -1331,7 +1331,7 @@ BEGIN_TEST(union_all_test)
 END_TEST(union_all_test)
 
 BEGIN_TEST(union_test)
- declare C cursor for
+  declare C cursor for
     select 1 as A, 2 as B
     union
     select 1 as A, 2 as B;
@@ -1343,7 +1343,7 @@ BEGIN_TEST(union_test)
 END_TEST(union_test)
 
 BEGIN_TEST(union_test_with_nullable)
- declare C cursor for
+  declare C cursor for
     select nullable(121) as A, 212 as B
     union
     select nullable(121) as A, 212 as B;
@@ -1355,9 +1355,9 @@ BEGIN_TEST(union_test_with_nullable)
 END_TEST(union_test_with_nullable)
 
 BEGIN_TEST(with_test)
- declare C cursor for
-  with X(A,B) as ( select 1,2)
-  select * from X;
+  declare C cursor for
+    with X(A,B) as ( select 1,2)
+    select * from X;
 
   fetch C;
   EXPECT(C.A = 1);
@@ -1370,16 +1370,16 @@ BEGIN_TEST(with_recursive_test)
 declare C cursor for
   with recursive
     c1(current) as (
-     select 1
-     union all
-     select current+1 from c1
-     limit 5
+      select 1
+      union all
+      select current+1 from c1
+      limit 5
     ),
     c2(current) as (
-     select 6
-     union all
-     select current+1 from c2
-     limit 5
+      select 6
+      union all
+      select current+1 from c2
+      limit 5
     )
   select current as X from c1
   union all
@@ -1536,7 +1536,7 @@ begin
     set s := printf("not nullable blob %d", i);
     set b2 := blob_from_string(s);
     insert into blob_table(id, b1, b2) values (i, b1, b2);
-     set i := i + 1;
+    set i := i + 1;
   end;
 end;
 
@@ -1550,16 +1550,16 @@ BEGIN_TEST(blob_data_manip)
 
   loop fetch C
   begin
-     declare s1, s2 text;
-     EXPECT(i == C.id);
+    declare s1, s2 text;
+    EXPECT(i == C.id);
 
-     set s1 := string_from_blob(c.b1);
-     EXPECT(s1 == printf("nullable blob %d", i)); -- nullable blob failed to round trip
+    set s1 := string_from_blob(c.b1);
+    EXPECT(s1 == printf("nullable blob %d", i)); -- nullable blob failed to round trip
 
-     set s2 := string_from_blob(c.b2);
-     EXPECT(s2 == printf("not nullable blob %d", i)); -- not nullable blob failed to round trip
+    set s2 := string_from_blob(c.b2);
+    EXPECT(s2 == printf("not nullable blob %d", i)); -- not nullable blob failed to round trip
 
-     set i := i + 1;
+    set i := i + 1;
   end;
 
   EXPECT(i == count); -- wrong number of rows
@@ -1589,7 +1589,7 @@ begin
     set s := printf("not nullable blob %d", i);
     set b2 := blob_from_string(s);
     insert into blob_table(id, b1, b2) values (i, b1, b2);
-     set i := i + 1;
+    set i := i + 1;
   end;
 end;
 
@@ -1603,18 +1603,18 @@ BEGIN_TEST(blob_data_manip_nullables)
 
   loop fetch C
   begin
-     declare s1, s2 text;
-     set s1 := string_from_blob(C.b1);
-     EXPECT(i == C.id);
-     if i % 2 == 0 then
-       set s1 := string_from_blob(C.b1);
-       EXPECT(s1 == printf("nullable blob %d", i)); -- nullable blob failed to round trip
-     else
-       EXPECT(C.b1 is null);
-     end if;
-     set s2 := string_from_blob(C.b2);
-     EXPECT(s2 == printf("not nullable blob %d", i)); -- not nullable blob failed to round trip
-     set i := i + 1;
+    declare s1, s2 text;
+    set s1 := string_from_blob(C.b1);
+    EXPECT(i == C.id);
+    if i % 2 == 0 then
+      set s1 := string_from_blob(C.b1);
+      EXPECT(s1 == printf("nullable blob %d", i)); -- nullable blob failed to round trip
+    else
+      EXPECT(C.b1 is null);
+    end if;
+    set s2 := string_from_blob(C.b2);
+    EXPECT(s2 == printf("not nullable blob %d", i)); -- not nullable blob failed to round trip
+    set i := i + 1;
   end;
 
   EXPECT(i == count); -- wrong number of rows
@@ -2702,12 +2702,12 @@ begin
 end;
 
 BEGIN_TEST(decoded_value_with_encode_context)
- declare C cursor for call out_union_dml_with_encode_context();
- fetch C;
+  declare C cursor for call out_union_dml_with_encode_context();
+  fetch C;
 
- EXPECT(C.x IS 66);
- EXPECT(C.y IS 'abc');
- EXPECT(C.z IS 'xyz');
+  EXPECT(C.x IS 66);
+  EXPECT(C.y IS 'abc');
+  EXPECT(C.z IS 'xyz');
 END_TEST(decoded_value_with_encode_context)
 
 BEGIN_TEST(encoded_values)
@@ -2816,10 +2816,10 @@ begin
 end;
 
 BEGIN_TEST(read_partially_vault_cursor)
- declare C cursor fetch from call load_some_encoded_field();
+  declare C cursor fetch from call load_some_encoded_field();
 
- EXPECT(C.x IS 66);
- EXPECT(C.y IS 'bogus');
+  EXPECT(C.x IS 66);
+  EXPECT(C.y IS 'bogus');
 END_TEST(read_partially_vault_cursor)
 
 @attribute(cql:vault_sensitive=(z, (y)))
@@ -2834,11 +2834,11 @@ begin
 end;
 
 BEGIN_TEST(read_partially_encode_with_encode_context_cursor)
- declare C cursor fetch from call load_some_encoded_field_with_encode_context();
+  declare C cursor fetch from call load_some_encoded_field_with_encode_context();
 
- EXPECT(C.x IS 66);
- EXPECT(C.y IS 'bogus');
- EXPECT(C.z IS 'context');
+  EXPECT(C.x IS 66);
+  EXPECT(C.y IS 'bogus');
+  EXPECT(C.z IS 'context');
 END_TEST(read_partially_encode_with_encode_context_cursor)
 
 @attribute(cql:emit_setters)
@@ -3235,9 +3235,9 @@ END_TEST(numeric_casts)
 
 create proc dummy(seed integer not null, i integer not null, r real not null, b bool not null)
 begin
-   EXPECT(seed == i);
-   EXPECT(seed == r);
-   EXPECT(not seed == not b);
+  EXPECT(seed == i);
+  EXPECT(seed == r);
+  EXPECT(not seed == not b);
 end;
 
 BEGIN_TEST(cursor_args)
@@ -3586,7 +3586,7 @@ BEGIN_TEST(null_statement)
   set x := 0;
   loop fetch C
   begin
-     set x := x + 1;
+    set x := x + 1;
   end;
   EXPECT(x == 0);
 END_TEST(null_statement)
@@ -3631,10 +3631,10 @@ BEGIN_TEST(call_in_loop)
   set i := 0;
   while i < 5
   begin
-     set i := i + 1;
-     declare C cursor for call simple_select();
-     fetch C;
-     EXPECT(C.x == 1);
+    set i := i + 1;
+    declare C cursor for call simple_select();
+    fetch C;
+    EXPECT(C.x == 1);
   end;
 END_TEST(call_in_loop)
 
@@ -3643,13 +3643,13 @@ BEGIN_TEST(call_in_loop_boxed)
   set i := 0;
   while i < 5
   begin
-     set i := i + 1;
-     declare C cursor for call simple_select();
-     declare box object<C cursor>;
-     set box from cursor C;
-     declare D cursor for box;
-     fetch D;
-     EXPECT(D.x == 1);
+    set i := i + 1;
+    declare C cursor for call simple_select();
+    declare box object<C cursor>;
+    set box from cursor C;
+    declare D cursor for box;
+    fetch D;
+    EXPECT(D.x == 1);
   end;
 END_TEST(call_in_loop_boxed)
 
@@ -3665,10 +3665,10 @@ BEGIN_TEST(call_out_union_in_loop)
   set i := 0;
   while i < 5
   begin
-     set i := i + 1;
-     declare C cursor for call out_union_helper();
-     fetch C;
-     EXPECT(C.x == 1);
+    set i := i + 1;
+    declare C cursor for call out_union_helper();
+    fetch C;
+    EXPECT(C.x == 1);
   end;
 END_TEST(call_out_union_in_loop)
 
@@ -3727,7 +3727,7 @@ end;
 create proc out_union_nil_result()
 begin
   if 0 then
-     call out_union();
+    call out_union();
   end if;
 end;
 
@@ -3736,7 +3736,7 @@ end;
 create proc out_union_nil_result_dml()
 begin
   if 0 then
-     call out_union_dml();
+    call out_union_dml();
   end if;
 end;
 
@@ -3762,15 +3762,15 @@ BEGIN_TEST(nested_rc_values)
     let e1 := @rc;
     EXPECT(e1 == 1); -- SQLITE_ERROR
     begin try
-       let e2 := @rc;
-       EXPECT(e2 == 1); -- SQLITE_ERROR
-       -- force constraint error
-       insert into foo using 1 id;
-       insert into foo using 1 id;
+      let e2 := @rc;
+      EXPECT(e2 == 1); -- SQLITE_ERROR
+      -- force constraint error
+      insert into foo using 1 id;
+      insert into foo using 1 id;
     end try;
     begin catch
-       let e3 := @rc;
-       EXPECT(e3 == 19); -- SQLITE_CONSTRAINT
+      let e3 := @rc;
+      EXPECT(e3 == 19); -- SQLITE_CONSTRAINT
     end catch;
     let e4 := @rc;
     EXPECT(e4 == 1); -- back to SQLITE_ERROR
@@ -3926,10 +3926,10 @@ end;
 create proc shared_consumer()
 begin
   with
-   source1(id, t) as (values (1100, 'x_x'), (1101, 'zz')),
-   source2(id, t) as (values (4500, 'y_y'), (4501, 'zz')),
-   t1(*) as (call f2('x%', 1000, 2000, 10) using source1 as source),
-   t2(*) as (call f2('y%', 4000, 5000, 20) using source2 as source)
+    source1(id, t) as (values (1100, 'x_x'), (1101, 'zz')),
+    source2(id, t) as (values (4500, 'y_y'), (4501, 'zz')),
+    t1(*) as (call f2('x%', 1000, 2000, 10) using source1 as source),
+    t2(*) as (call f2('y%', 4000, 5000, 20) using source2 as source)
   select * from t1
   union all
   select * from t2;
@@ -4069,13 +4069,13 @@ END_TEST(conditional_fragment_no_with)
 
 @attribute(cql:shared_fragment)
 create proc skip_notnulls(
- a_ integer not null,
- b_ bool not null,
- c_ long not null,
- d_ real not null,
- e_ text not null,
- f_ blob not null,
- g_ object not null)
+  a_ integer not null,
+  b_ bool not null,
+  c_ long not null,
+  d_ real not null,
+  e_ text not null,
+  f_ blob not null,
+  g_ object not null)
 begin
   if a_ == 0 then
     select a_ - 100 result;
@@ -4114,13 +4114,13 @@ END_TEST(skip_notnulls)
 
 @attribute(cql:shared_fragment)
 create proc skip_nullables(
- a_ integer,
- b_ bool,
- c_ long,
- d_ real,
- e_ text,
- f_ blob,
- g_ object)
+  a_ integer,
+  b_ bool,
+  c_ long,
+  d_ real,
+  e_ text,
+  f_ blob,
+  g_ object)
 begin
   if a_ == 0 then
     select a_ - 100 result;
@@ -4196,8 +4196,8 @@ BEGIN_TEST(inline_proc)
       abs(x-10) s2,
       max_func(x - ten(), abs_func(x - ten())) m1,
       max(x - 10, abs(x - 10)) m2
-   from
-     (call numbers(20));
+    from
+      (call numbers(20));
 
   loop fetch C
   begin
@@ -4614,50 +4614,50 @@ declare const group long_constants (
 @emit_constants long_constants;
 
 BEGIN_TEST(verify_long_constant_forms)
-   let reference := long_const_1  - 1;
+  let reference := long_const_1  - 1;
 
-   EXPECT_SQL_TOO(reference = -9223372036854775808L);
-   EXPECT_SQL_TOO(reference = -9223372036854775808);
-   EXPECT_SQL_TOO(reference = const(-9223372036854775808L));
-   EXPECT_SQL_TOO(reference = const(-9223372036854775808));
-   EXPECT_SQL_TOO(reference = long_const_2);
-   EXPECT_SQL_TOO(reference = long_const_3);
+  EXPECT_SQL_TOO(reference = -9223372036854775808L);
+  EXPECT_SQL_TOO(reference = -9223372036854775808);
+  EXPECT_SQL_TOO(reference = const(-9223372036854775808L));
+  EXPECT_SQL_TOO(reference = const(-9223372036854775808));
+  EXPECT_SQL_TOO(reference = long_const_2);
+  EXPECT_SQL_TOO(reference = long_const_3);
 
-   LET x := -9223372036854775808L;
-   EXPECT_SQL_TOO(reference == x);
+  LET x := -9223372036854775808L;
+  EXPECT_SQL_TOO(reference == x);
 
-   SET x := -9223372036854775808;
-   EXPECT_SQL_TOO(reference == x);
+  SET x := -9223372036854775808;
+  EXPECT_SQL_TOO(reference == x);
 
-   SET x := const(-9223372036854775808L);
-   EXPECT_SQL_TOO(reference == x);
+  SET x := const(-9223372036854775808L);
+  EXPECT_SQL_TOO(reference == x);
 
-   SET x := const(-9223372036854775808);
-   EXPECT_SQL_TOO(reference == x);
+  SET x := const(-9223372036854775808);
+  EXPECT_SQL_TOO(reference == x);
 
-   SET x := long_const_2;
-   EXPECT_SQL_TOO(reference == x);
+  SET x := long_const_2;
+  EXPECT_SQL_TOO(reference == x);
 
-   SET x := long_const_3;
-   EXPECT_SQL_TOO(reference == x);
+  SET x := long_const_3;
+  EXPECT_SQL_TOO(reference == x);
 
-   DECLARE z real not null;
-   set z := 9223372036854775807;
+  DECLARE z real not null;
+  set z := 9223372036854775807;
 
-   -- this verifies that z was stored as a double
-   -- hence adding 0.0 will make no difference
-   EXPECT_SQL_TOO(z - 1 == z + 0.0 - 1);
+  -- this verifies that z was stored as a double
+  -- hence adding 0.0 will make no difference
+  EXPECT_SQL_TOO(z - 1 == z + 0.0 - 1);
 
-   -- ensure division does not convert to float
-   EXPECT(9223372036854775807 - 9223372036854775807 / 2 * 2 == 1);
-   EXPECT(const(9223372036854775807 - 9223372036854775807 / 2 * 2) == 1);
-   EXPECT(9223372036854775807 >> 1 == 9223372036854775807 / 2);
-   EXPECT(const(9223372036854775807 >> 1 == 9223372036854775807 / 2));
+  -- ensure division does not convert to float
+  EXPECT(9223372036854775807 - 9223372036854775807 / 2 * 2 == 1);
+  EXPECT(const(9223372036854775807 - 9223372036854775807 / 2 * 2) == 1);
+  EXPECT(9223372036854775807 >> 1 == 9223372036854775807 / 2);
+  EXPECT(const(9223372036854775807 >> 1 == 9223372036854775807 / 2));
 
-   declare C cursor for 
-     select 9223372036854775807 v
-     union all
-     select 9223372036854775807.0 v;
+  declare C cursor for
+    select 9223372036854775807 v
+    union all
+    select 9223372036854775807.0 v;
 
   -- this verifies that if we mean to fetch a float we get a float
   -- even if the value in the select is a long
@@ -4665,7 +4665,7 @@ BEGIN_TEST(verify_long_constant_forms)
   EXPECT(z == C.v);
   FETCH C;
   EXPECT(z == C.v);
-   
+
 END_TEST(verify_long_constant_forms)
 
 #ifndef LUA_RUN_TEST
@@ -4740,32 +4740,32 @@ BEGIN_TEST(clobber_blobs)
   let i := 0;
   while i < 100
   begin
-     set i := i + 1;
+    set i := i + 1;
 
-     -- refresh the blob from the cursor, it's good now (again)
-     set my_blob from cursor cursor_both;
-     if my_blob is null throw;
+    -- refresh the blob from the cursor, it's good now (again)
+    set my_blob from cursor cursor_both;
+    if my_blob is null throw;
 
-     -- same buffer will be smashed 10 times
-     let j := 0;
-     while j < 10
-     begin
-       set j := j + 1;
+    -- same buffer will be smashed 10 times
+    let j := 0;
+    while j < 10
+    begin
+      set j := j + 1;
 
-       -- invoke da smasher
-       call corrupt_blob_with_invalid_shenanigans(my_blob);
+      -- invoke da smasher
+      call corrupt_blob_with_invalid_shenanigans(my_blob);
 
-       begin try
-         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
-         fetch test_cursor_both from my_blob;
-         set good := good + 1;
-       end try;
-       begin catch
-         set bad := bad + 1;
-       end catch;
+      begin try
+        -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
+        fetch test_cursor_both from my_blob;
+        set good := good + 1;
+      end try;
+      begin catch
+        set bad := bad + 1;
+      end catch;
 
-       set attempt := attempt + 1;
-     end;
+      set attempt := attempt + 1;
+    end;
   end;
 
   call printf("blob corruption results: good: %d, bad: %d\n", good, bad);
@@ -4833,7 +4833,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       not C.b as b;
+      not C.b as b;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4842,7 +4842,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.i + 1 as i;
+      C.i + 1 as i;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4851,7 +4851,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.l + 1 as l;
+      C.l + 1 as l;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4860,7 +4860,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.r + 1 as r;
+      C.r + 1 as r;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4869,7 +4869,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       "different" as t;
+      "different" as t;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4878,7 +4878,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       not C.b as b0;
+      not C.b as b0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4887,7 +4887,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.i + 1 as i0;
+      C.i + 1 as i0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4896,7 +4896,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.l + 1 as l0;
+      C.l + 1 as l0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4905,7 +4905,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.r + 1 as r0;
+      C.r + 1 as r0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4914,7 +4914,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       "different" as t0;
+      "different" as t0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4923,7 +4923,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as b0;
+      NULL as b0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4932,7 +4932,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as i0;
+      NULL as i0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4941,7 +4941,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as l0;
+      NULL as l0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4950,7 +4950,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as r0;
+      NULL as r0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -4959,7 +4959,7 @@ BEGIN_TEST(cursor_hash)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as t0;
+      NULL as t0;
 
     set hash2 := cql_cursor_hash(D);
     EXPECT(hash1 != hash2);  -- now different
@@ -5003,7 +5003,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       not C.b as b;
+      not C.b as b;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5011,7 +5011,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.i + 1 as i;
+      C.i + 1 as i;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5019,7 +5019,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.l + 1 as l;
+      C.l + 1 as l;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5027,7 +5027,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.r + 1 as r;
+      C.r + 1 as r;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5035,7 +5035,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       "different" as t;
+      "different" as t;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5043,7 +5043,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       not C.b as b0;
+      not C.b as b0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5051,7 +5051,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.i + 1 as i0;
+      C.i + 1 as i0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5059,7 +5059,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.l + 1 as l0;
+      C.l + 1 as l0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5067,7 +5067,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       C.r + 1 as r0;
+      C.r + 1 as r0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5075,7 +5075,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       "different" as t0;
+      "different" as t0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5083,7 +5083,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as b0;
+      NULL as b0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5091,7 +5091,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as i0;
+      NULL as i0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5099,7 +5099,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as l0;
+      NULL as l0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5107,7 +5107,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as r0;
+      NULL as r0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5115,7 +5115,7 @@ BEGIN_TEST(cursor_equal)
     fetch D() from values () @DUMMY_SEED(i) @DUMMY_NULLABLES;
 
     update cursor D using
-       NULL as t0;
+      NULL as t0;
 
     EXPECT(NOT cql_cursors_equal(C, D));
 
@@ -5214,42 +5214,42 @@ END_TEST(child_results)
 
 create proc ch1()
 begin
-   let i := 0;
-   let base := 500;
-   declare C cursor like (k1 integer, k2 text, v1 bool, v2 text, v3 real);
-   declare K cursor like C(k1,k2);
-   while i < 10
-   begin
-      -- note that 1/3 of parents do not have this child
-      if i % 3 != 2 then
-        fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
-        fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
-        out union C;
-        fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
-        out union C;
-      end if;
-      set i := i + 1;
-   end;
+  let i := 0;
+  let base := 500;
+  declare C cursor like (k1 integer, k2 text, v1 bool, v2 text, v3 real);
+  declare K cursor like C(k1,k2);
+  while i < 10
+  begin
+    -- note that 1/3 of parents do not have this child
+    if i % 3 != 2 then
+      fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
+      fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
+      out union C;
+      fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
+      out union C;
+    end if;
+    set i := i + 1;
+  end;
 end;
 
 create proc ch2()
 begin
-   let i := 0;
-   let base := 1000;
-   declare C cursor like (k3 integer, k4 text, v1 bool, v2 text, v3 real);
-   declare K cursor like C(k3, k4);
-   while i < 10
-   begin
-      -- note that 1/3 of parents do not have this child
-      if i % 3 != 1 then
-        fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
-        fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
-        out union C;
-        fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
-        out union C;
-      end if;
-      set i := i + 1;
-   end;
+  let i := 0;
+  let base := 1000;
+  declare C cursor like (k3 integer, k4 text, v1 bool, v2 text, v3 real);
+  declare K cursor like C(k3, k4);
+  while i < 10
+  begin
+    -- note that 1/3 of parents do not have this child
+    if i % 3 != 1 then
+      fetch K() from values() @dummy_seed(base+i) @dummy_nullables;
+      fetch C(like K) from values(from K) @dummy_seed(base+i*2) @dummy_nullables;
+      out union C;
+      fetch C(like K) from values(from K) @dummy_seed(base+i*2+1) @dummy_nullables;
+      out union C;
+    end if;
+    set i := i + 1;
+  end;
 end;
 
 create proc ch1_filter(k1 integer, k2 text)
@@ -5257,9 +5257,9 @@ begin
   declare C cursor for call ch1();
   loop fetch C
   begin
-     if C.k1 == k1 and C.k2 == k2 then 
-       out union C;
-     end if;
+    if C.k1 == k1 and C.k2 == k2 then
+      out union C;
+    end if;
   end;
 end;
 
@@ -5268,40 +5268,40 @@ begin
   declare C cursor for call ch2();
   loop fetch C
   begin
-     if C.k3 == k3 and C.k4 == k4 then 
-       out union C;
-     end if;
+    if C.k3 == k3 and C.k4 == k4 then
+      out union C;
+    end if;
   end;
 end;
 
 
 create proc parent()
 begin
-   let i := 0;
-   declare C cursor like (k1 integer, k2 text, k3 integer, k4 text, v1 bool, v2 text, v3 real);
-   declare D cursor like C;
-   while i < 10
-   begin
-      fetch C() from values() @dummy_seed(i) @dummy_nullables;
+  let i := 0;
+  declare C cursor like (k1 integer, k2 text, k3 integer, k4 text, v1 bool, v2 text, v3 real);
+  declare D cursor like C;
+  while i < 10
+  begin
+    fetch C() from values() @dummy_seed(i) @dummy_nullables;
 
-      -- ch1 keys are +500
-      fetch D() from values() @dummy_seed(i+500) @dummy_nullables;
-      update cursor C using D.k1 k1, D.k2 k2;
+    -- ch1 keys are +500
+    fetch D() from values() @dummy_seed(i+500) @dummy_nullables;
+    update cursor C using D.k1 k1, D.k2 k2;
 
-      -- ch2 keys are +1000
-      fetch D() from values() @dummy_seed(i+1000) @dummy_nullables;
-      update cursor C using D.k3 k3, D.k4 k4;
+    -- ch2 keys are +1000
+    fetch D() from values() @dummy_seed(i+1000) @dummy_nullables;
+    update cursor C using D.k3 k3, D.k4 k4;
 
-      out union C;
-      set i := i + 1;
-   end;
+    out union C;
+    set i := i + 1;
+  end;
 end;
 
 create proc parent_child()
 begin
   OUT UNION CALL parent() JOIN
-     call ch1() USING (k1, k2) AS ch1 AND
-     call ch2() USING (k3, k4) AS ch2;
+    call ch1() USING (k1, k2) AS ch1 AND
+    call ch2() USING (k3, k4) AS ch2;
 end;
 
 create proc parent_child_simple_pattern()
@@ -5322,47 +5322,44 @@ begin
 
   loop fetch P
   begin
-     -- call printf("%d) %d %s %d %s\n", i, P.k1, P.k2, P.k3, P.k4);
-     EXPECT(P.k1 == i+500);
-     EXPECT(P.k2 == printf("k2_%d", i+500));
-     EXPECT(P.k3 == i+1000);
-     EXPECT(P.k4 == printf("k4_%d", i+1000));
-     EXPECT(P.k4 == printf("k4_%d", i+1000));
-     EXPECT(P.v1 == not not i);
-     EXPECT(P.v2 == printf("v2_%d", i));
-     EXPECT(P.v3 == i);
+    EXPECT(P.k1 == i+500);
+    EXPECT(P.k2 == printf("k2_%d", i+500));
+    EXPECT(P.k3 == i+1000);
+    EXPECT(P.k4 == printf("k4_%d", i+1000));
+    EXPECT(P.k4 == printf("k4_%d", i+1000));
+    EXPECT(P.v1 == not not i);
+    EXPECT(P.v2 == printf("v2_%d", i));
+    EXPECT(P.v3 == i);
 
-     let count_rows := 0;
-     declare C1 cursor for P.ch1;
-     loop fetch C1
-     begin
-        -- call printf("  child1: %d %s %d %s %f\n", C1.k1, C1.k2, C1.v1, C1.v2, C1.v3);
-        EXPECT(P.k1 == C1.k1);
-        EXPECT(P.k2 == C1.k2);
-        EXPECT(C1.v1 == not not 500 + i*2 + count_rows);
-        EXPECT(C1.v2 == printf("v2_%d", 500 + i*2 + count_rows));
-        EXPECT(C1.v3 == 500 + i*2 + count_rows);
-        set count_rows := count_rows + 1;
-     end;
+    let count_rows := 0;
+    declare C1 cursor for P.ch1;
+    loop fetch C1
+    begin
+      EXPECT(P.k1 == C1.k1);
+      EXPECT(P.k2 == C1.k2);
+      EXPECT(C1.v1 == not not 500 + i*2 + count_rows);
+      EXPECT(C1.v2 == printf("v2_%d", 500 + i*2 + count_rows));
+      EXPECT(C1.v3 == 500 + i*2 + count_rows);
+      set count_rows := count_rows + 1;
+    end;
 
-     EXPECT(count_rows == case when i % 3 == 2 then 0 else 2 end);
+    EXPECT(count_rows == case when i % 3 == 2 then 0 else 2 end);
 
-     set count_rows := 0;
-     declare C2 cursor for P.ch2;
-     loop fetch C2
-     begin
-        -- call printf("  chlld2: %d %s %d %s %f\n", C2.k3, C2.k4, C2.v1, C2.v2, C2.v3);
-        EXPECT(P.k3 == C2.k3);
-        EXPECT(P.k4 == C2.k4);
-        EXPECT(C2.v1 == not not 1000 + i*2 + count_rows);
-        EXPECT(C2.v2 == printf("v2_%d", 1000 + i*2 + count_rows));
-        EXPECT(C2.v3 == 1000 + i*2 + count_rows);
-        set count_rows := count_rows + 1;
-     end;
+    set count_rows := 0;
+    declare C2 cursor for P.ch2;
+    loop fetch C2
+    begin
+      EXPECT(P.k3 == C2.k3);
+      EXPECT(P.k4 == C2.k4);
+      EXPECT(C2.v1 == not not 1000 + i*2 + count_rows);
+      EXPECT(C2.v2 == printf("v2_%d", 1000 + i*2 + count_rows));
+      EXPECT(C2.v3 == 1000 + i*2 + count_rows);
+      set count_rows := count_rows + 1;
+    end;
 
-     EXPECT(count_rows = case when i % 3 == 1 then 0 else 2 end);
+    EXPECT(count_rows = case when i % 3 == 1 then 0 else 2 end);
 
-     set i := i + 1;
+    set i := i + 1;
   end;
 end;
 
@@ -5385,28 +5382,28 @@ BEGIN_TEST(string_dictionary)
   let i := 1;
   while i <= 512
   begin
-     let dict := cql_string_dictionary_create();
+    let dict := cql_string_dictionary_create();
 
-     let j := 0;
-     while j < i
-     begin
-       let added := cql_string_dictionary_add(dict, printf("%d", j), printf("%d", j*100));
-       EXPECT(added);
+    let j := 0;
+    while j < i
+    begin
+      let added := cql_string_dictionary_add(dict, printf("%d", j), printf("%d", j*100));
+      EXPECT(added);
 
-       set added := cql_string_dictionary_add(dict, printf("%d", j), "0");
-       EXPECT(NOT added);
-       set j := j + 2;
-     end;
+      set added := cql_string_dictionary_add(dict, printf("%d", j), "0");
+      EXPECT(NOT added);
+      set j := j + 2;
+    end;
 
-     set j := 0;
-     while j < i
-     begin
-       let result := cql_string_dictionary_find(dict, printf("%d", j));
-       EXPECT(case when j % 2 then result IS NULL else result == printf("%d", j*100) end);
-       set j := j + 1;
-     end;
+    set j := 0;
+    while j < i
+    begin
+      let result := cql_string_dictionary_find(dict, printf("%d", j));
+      EXPECT(case when j % 2 then result IS NULL else result == printf("%d", j*100) end);
+      set j := j + 1;
+    end;
 
-     set i := i * 2;
+    set i := i * 2;
   end;
 
   -- test null lookup, always fails
@@ -5441,7 +5438,7 @@ BEGIN_TEST(cql_contains_column_def)
 END_TEST(cql_contains_column_def)
 
 -- cql utilities for making a basic string list
--- this is not a very functional list but schema helpers might need 
+-- this is not a very functional list but schema helpers might need
 -- generic lists of strings so we offer these based on bytebuf
 
 DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
@@ -5474,7 +5471,7 @@ BEGIN_TEST(cursor_formatting)
   EXPECT(s2 = "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
 
   declare D cursor like (a_bool bool not null, an_int int not null, a_long long not null, a_real real not null, a_string text not null, a_blob blob not null);
-   
+
   -- not null values
   fetch D(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1);
   LET s3 := cql_cursor_format(D);
@@ -5498,11 +5495,11 @@ declare proc take_bool_not_null(x bool not null, y bool not null);
 declare proc take_bool(x bool, y bool);
 
 BEGIN_TEST(normalize_bool_on_call)
-   call take_bool(10, true);
-   call take_bool(0, false);
+  call take_bool(10, true);
+  call take_bool(0, false);
 
-   call take_bool_not_null(10, true);
-   call take_bool_not_null(0, false);
+  call take_bool_not_null(10, true);
+  call take_bool_not_null(0, false);
 END_TEST(normalize_bool_on_call)
 
 END_SUITE()
@@ -5518,17 +5515,17 @@ create table does_not_exist(id integer);
 
 create proc fails_because_bogus_table()
 begin
-   begin try
-     declare D cursor for select * from does_not_exist;
-   end try;
-   begin catch
-     -- Without tracing this failure code can be seen, the cursor D
-     -- will be finalized as part of cleanup and THAT success will be
-     -- the sqlite3_errmsg() result.  Tracing lets you see the error as it happens.
-     drop table if exists does_not_exist;
-     -- now we save the code
-     throw;
-   end catch;
+  begin try
+    declare D cursor for select * from does_not_exist;
+  end try;
+  begin catch
+    -- Without tracing this failure code can be seen, the cursor D
+    -- will be finalized as part of cleanup and THAT success will be
+    -- the sqlite3_errmsg() result.  Tracing lets you see the error as it happens.
+    drop table if exists does_not_exist;
+    -- now we save the code
+    throw;
+  end catch;
 end;
 
 -- Called in the test client to verify that we hit tripwires when passing NULL
