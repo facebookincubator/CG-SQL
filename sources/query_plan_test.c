@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   }
 
   if (rc) {
-    fprintf(stderr, "sqlite error: %s\n", sqlite3_errmsg(db));
+    fprintf(stderr, "sqlite error: code = %d, msg = %s\n", rc, sqlite3_errmsg(db));
   }
 
   sqlite3_close(db);
