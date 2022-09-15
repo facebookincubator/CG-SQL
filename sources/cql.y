@@ -2756,8 +2756,6 @@ static void cql_usage() {
     "  specifies the name of package a generated java class will be a part of\n"
     "--java_fragment_interface_mode\n"
     "  sets the Java codegen mode to generate interfaces for base and extension fragments\n"
-    "--java_imports name\n"
-    "  fully qualified name to import in the emitted java source\n"
     "--c_include_namespace\n"
     "  for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>\n"
     "--c_include_path\n"

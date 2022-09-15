@@ -101,8 +101,6 @@ typedef struct cmd_options {
   char *java_class_under_test;
   char *java_package_name;
   bool_t java_fragment_interface_mode;
-  char **java_imports;
-  int32_t java_imports_count;
   char *cqlrt;
   bool_t dev;                           // option use to activate features in development or dev features
 } cmd_options;

@@ -70,8 +70,6 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
   specifies the name of package a generated java class will be a part of
 --java_fragment_interface_mode
   sets the Java codegen mode to generate interfaces for base and extension fragments
---java_imports name
-  fully qualified name to import in the emitted java source
 --c_include_namespace
   for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>
 --c_include_path
