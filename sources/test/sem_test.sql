@@ -21283,6 +21283,382 @@ let sign_of_some_value := sign(-42);
 -- - error:
 select sign(-1);
 
+-- TEST: simple backing table
+-- + {create_table_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+-- - error:
+@attribute(cql:backing_table)
+create table simple_backing_table(
+  k blob primary key,
+  v blob not null
+);
+
+-- TEST: simple backing table with versions and pk external
+-- + {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull, v: blob notnull } deleted backing @create(1) @delete(22)
+-- - error:
+@attribute(cql:backing_table)
+create table simple_backing_table_with_versions(
+  k blob not null,
+  v blob not null,
+  constraint pk_1 primary key (k)
+) @create(1) @delete(22);
+
+-- TEST: simple backed table
+-- + {create_table_stmt}: simple_backed_table: { id: integer notnull primary_key, name: text notnull } backed
+-- - error:
+@attribute(cql:backed_by=simple_backing_table)
+create table simple_backed_table(
+  id integer primary key,
+  name text not null
+);
+
+-- TEST: simple backed table loose pk
+-- + {create_table_stmt}: simple_backed_table_2: { id: integer notnull, name: text notnull } backed
+-- - error:
+@attribute(cql:backed_by=simple_backing_table)
+create table simple_backed_table_2(
+  id integer,
+  name text not null,
+  constraint pk1 primary key (id)
+);
+
+-- TEST: simple backed table with versions
+-- {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_with_versions'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table simple_backed_table_with_versions(
+  id integer primary key,
+  name text not null
+) @create(2) @delete(12);
+
+-- TEST: virtual tables cannot be backing storage
+-- + {create_virtual_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it is a virtual table 'virtual_backing_illegal'
+-- +1 error:
+@attribute(cql:backing_table)
+create virtual table virtual_backing_illegal using module_name(args) as (
+  id integer,
+  t text
+);
+
+-- TEST: temp tables cannot be backing storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it is redundantly marked TEMP 'temp_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create temp table temp_backing(
+  id integer,
+  t text
+);
+
+-- TEST: without rowid tables cannot be backing storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it is redundantly marked WITHOUT ROWID 'norowid_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table norowid_backing(
+  id integer,
+  t text
+) without rowid;
+
+-- TEST: tables with constraints cannot be backing storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it has at least one invalid constraint 'constraint_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table constraint_backing(
+  id integer,
+  t text,
+ CONSTRAINT ak1 UNIQUE (id)
+);
+
+-- TEST: table with column with primary key can be backing store
+-- + {create_table_stmt}: pk_col_backing: { id: integer notnull primary_key, t: text } backing
+-- - error:
+@attribute(cql:backing_table)
+create table pk_col_backing(
+  id integer primary key,
+  t text
+);
+
+-- TEST: table with column with foreign key cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 'id' has a foreign key in 'fk_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table fk_col_backing(
+  id integer references foo(id),
+  t text
+);
+
+-- TEST: table with column with unique key cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 'id' has a unique key in 'uk_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table uk_col_backing(
+  id integer unique,
+  t text
+);
+
+-- TEST: table with hidden column cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 'id' is a hidden column in 'hidden_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table hidden_col_backing(
+  id integer hidden,
+  t text
+);
+
+-- TEST: table with autoinc column cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 'id' specifies auto increment in 'autoinc_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table autoinc_col_backing(
+  id integer primary key autoincrement,
+  t text
+);
+
+-- TEST: table with autoinc column cannot be backing store
+-- + {create_table_stmt}: conflict_clause_col_backing: { id: integer notnull primary_key, t: text } backing
+-- - error:
+@attribute(cql:backing_table)
+create table conflict_clause_col_backing(
+  id integer primary key on conflict abort,
+  t text
+);
+
+-- TEST: table with check constraint on column cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 'id' has a check expression in 'check_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table check_col_backing(
+  id integer check(id = 5),
+  t text
+);
+
+-- TEST: table with collate on column cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 't' specifies collation order in 'collate_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table collate_col_backing(
+  id integer,
+  t text collate nocase
+);
+
+-- TEST: table with default value on column cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 'id' has a default value in 'default_value_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table default_value_col_backing(
+  id integer default 5,
+  t text
+);
+
+-- TEST: table with deleted column cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 't' has delete attribute in 'deleted_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table deleted_col_backing(
+  id integer,
+  t text @delete(7)
+);
+
+-- TEST: table with create column cannot be backing store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: column 't' has create attribute in 'created_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table created_col_backing(
+  id integer,
+  t text @create(7)
+);
+
+-- TEST: table with @recreate is not valid
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it is declared using @recreate 'recreate_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table recreate_backing(
+  id integer,
+  t text
+) @recreate;
+
+-- TEST: simple backed table with versions
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_versions'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table simple_backed_table_versions(
+  id integer primary key,
+  name text not null
+) @create(2) @delete(12);
+
+-- TEST: virtual tables cannot be backed storage
+-- + {create_virtual_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it is a virtual table 'virtual_backed_illegal'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create virtual table virtual_backed_illegal using module_name(args) as (
+  id integer,
+  t text
+);
+
+-- TEST: temp tables cannot be backed storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it is redundantly marked TEMP 'temp_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create temp table temp_backed(
+  id integer,
+  t text
+);
+
+-- TEST: without rowid tables cannot be backed storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it is redundantly marked WITHOUT ROWID 'norowid_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table norowid_backed(
+  id integer,
+  t text
+) without rowid;
+
+-- TEST: tables with constraints cannot be backed storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it has at least one invalid constraint 'constraint_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table constraint_backed(
+  id integer,
+  t text,
+ CONSTRAINT ak1 UNIQUE (id)
+);
+
+-- TEST: table with column with primary key can be backed store
+-- + {create_table_stmt}: pk_col_backed: { id: integer notnull primary_key, t: text } backed
+-- - error:
+@attribute(cql:backed_by=simple_backing_table)
+create table pk_col_backed(
+  id integer primary key,
+  t text
+);
+
+-- TEST: table with column with foreign key cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 'id' has a foreign key in 'fk_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table fk_col_backed(
+  id integer references foo(id),
+  t text
+);
+
+-- TEST: table with column with unique key cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 'id' has a unique key in 'uk_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table uk_col_backed(
+  id integer unique,
+  t text
+);
+
+-- TEST: table with hidden column cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 'id' is a hidden column in 'hidden_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table hidden_col_backed(
+  id integer hidden,
+  t text
+);
+
+-- TEST: table with autoinc column cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 'id' specifies auto increment in 'autoinc_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table autoinc_col_backed(
+  id integer primary key autoincrement,
+  t text
+);
+
+-- TEST: table with autoinc column cannot be backed store
+-- + {create_table_stmt}: conflict_clause_col_backed: { id: integer notnull primary_key, t: text } backed
+-- - error:
+@attribute(cql:backed_by=simple_backing_table)
+create table conflict_clause_col_backed(
+  id integer primary key on conflict abort,
+  t text
+);
+
+-- TEST: table with check constraint on column cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 'id' has a check expression in 'check_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table check_col_backed(
+  id integer check(id = 5),
+  t text
+);
+
+-- TEST: table with collate on column cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 't' specifies collation order in 'collate_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table collate_col_backed(
+  id integer,
+  t text collate nocase
+);
+
+-- TEST: table with default value on column cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 'id' has a default value in 'default_value_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table default_value_col_backed(
+  id integer default 5,
+  t text
+);
+
+-- TEST: table with deleted column cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 't' has delete attribute in 'deleted_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table deleted_col_backed(
+  id integer,
+  t text @delete(7)
+);
+
+-- TEST: table with create column cannot be backed store
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: column 't' has create attribute in 'created_col_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table created_col_backed(
+  id integer,
+  t text @create(7)
+);
+
+-- TEST: table with @recreate is not valid
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'recreate_backed'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table recreate_backed(
+  id integer,
+  t text
+) @recreate;
+
 @attribute(cql:blob_storage)
 create table structured_storage(
   id integer not null,

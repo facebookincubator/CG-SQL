@@ -84884,6 +84884,1443 @@ SELECT sign(-1);
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE simple_backing_table(
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name simple_backing_table}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: v: blob notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name v}
+            | | {type_blob}: blob
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE simple_backing_table_with_versions(
+  k BLOB NOT NULL,
+  v BLOB NOT NULL,
+  CONSTRAINT pk_1 PRIMARY KEY (k)
+) @CREATE(1) @DELETE(22);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull, v: blob notnull } deleted backing @create(1) @delete(22)
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {create_attr}
+    | |   | {version_annotation}
+    | |   | | {int 1}
+    | |   | {delete_attr}
+    | |     | {version_annotation}
+    | |       | {int 22}
+    | | {name simple_backing_table_with_versions}
+    | {col_key_list}
+      | {col_def}: k: blob notnull
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {col_def}: v: blob notnull
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |   | | {name v}
+        |   | | {type_blob}: blob
+        |   | {col_attrs_not_null}: ok
+        | {col_key_list}
+          | {pk_def}
+            | {name pk_1}
+            | {indexed_columns_conflict_clause}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name k}: k: blob notnull
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE simple_backed_table(
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: simple_backed_table: { id: integer notnull primary_key, name: text notnull } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name simple_backed_table}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: name: text notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name name}
+            | | {type_text}: text
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE simple_backed_table_2(
+  id INTEGER,
+  name TEXT NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id)
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: simple_backed_table_2: { id: integer notnull, name: text notnull } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name simple_backed_table_2}
+    | {col_key_list}
+      | {col_def}: id: integer notnull
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: name: text notnull
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |   | | {name name}
+        |   | | {type_text}: text
+        |   | {col_attrs_not_null}: ok
+        | {col_key_list}
+          | {pk_def}
+            | {name pk1}
+            | {indexed_columns_conflict_clause}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name id}: id: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE simple_backed_table_with_versions(
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+) @CREATE(2) @DELETE(12);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_with_versions'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {create_attr}
+    | |   | {version_annotation}
+    | |   | | {int 2}
+    | |   | {delete_attr}
+    | |     | {version_annotation}
+    | |       | {int 12}
+    | | {name simple_backed_table_with_versions}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: name: text notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name name}
+            | | {type_text}: text
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE VIRTUAL TABLE virtual_backing_illegal USING module_name (args) AS (
+  id INTEGER,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0483: table is not suitable for use as backing storage: it is a virtual table 'virtual_backing_illegal'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_virtual_table_stmt}: err
+    | {module_info}
+    | | {name module_name}
+    | | {misc_attr_value_list}
+    |   | {name args}
+    | {create_table_stmt}
+      | {create_table_name_flags}
+      | | {table_flags_attrs}
+      | | | {int 0}
+      | | | {recreate_attr}
+      | | {name virtual_backing_illegal}
+      | {col_key_list}
+        | {col_def}
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |     | {name id}
+        |     | {type_int}
+        | {col_key_list}
+          | {col_def}
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+                | {name t}
+                | {type_text}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TEMP TABLE temp_backing(
+  id INTEGER,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it is redundantly marked TEMP 'temp_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 1}
+    | | {name temp_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE norowid_backing(
+  id INTEGER,
+  t TEXT
+) WITHOUT ROWID;
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it is redundantly marked WITHOUT ROWID 'norowid_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 4}
+    | | {name norowid_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE constraint_backing(
+  id INTEGER,
+  t TEXT,
+  CONSTRAINT ak1 UNIQUE (id)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it has at least one invalid constraint 'constraint_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name constraint_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name t}
+        |     | {type_text}: text
+        | {col_key_list}
+          | {unq_def}
+            | {name ak1}
+            | {indexed_columns_conflict_clause}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name id}: id: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE pk_col_backing(
+  id INTEGER PRIMARY KEY,
+  t TEXT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: pk_col_backing: { id: integer notnull primary_key, t: text } backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name pk_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE fk_col_backing(
+  id INTEGER REFERENCES foo (id),
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a foreign key in 'fk_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name fk_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer foreign_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_fk}: ok
+      |     | {fk_target_options}
+      |       | {fk_target}
+      |       | | {name foo}
+      |       | | {name_list}
+      |       |   | {name id}: id: integer notnull
+      |       | {int 0}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE uk_col_backing(
+  id INTEGER UNIQUE,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a unique key in 'uk_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name uk_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer unique_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_unique}: ok
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE hidden_col_backing(
+  id INTEGER HIDDEN,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' is a hidden column in 'hidden_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name hidden_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_hidden}: ok
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE autoinc_col_backing(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' specifies auto increment in 'autoinc_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name autoinc_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key autoinc
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      |       | {col_attrs_autoinc}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE conflict_clause_col_backing(
+  id INTEGER PRIMARY KEY ON CONFLICT ABORT,
+  t TEXT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: conflict_clause_col_backing: { id: integer notnull primary_key, t: text } backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name conflict_clause_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      |       | {int 1}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE check_col_backing(
+  id INTEGER CHECK(id = 5) ,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a check expression in 'check_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name check_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer has_check
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_check}: ok
+      |     | {eq}: bool
+      |       | {name id}: id: integer has_check
+      |       | {int 5}: integer notnull
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE collate_col_backing(
+  id INTEGER,
+  t TEXT COLLATE nocase
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 't' specifies collation order in 'collate_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name collate_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text has_collate
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name t}
+            | | {type_text}: text
+            | {col_attrs_collate}: ok
+              | {name nocase}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE default_value_col_backing(
+  id INTEGER DEFAULT 5,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a default value in 'default_value_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name default_value_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer has_default
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_default}: ok
+      |     | {int 5}: integer notnull
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE deleted_col_backing(
+  id INTEGER,
+  t TEXT @DELETE(7)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 't' has delete attribute in 'deleted_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name deleted_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text deleted @delete(7)
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name t}
+            | | {type_text}: text
+            | {delete_attr}: ok
+              | {version_annotation}
+                | {int 7}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE created_col_backing(
+  id INTEGER,
+  t TEXT @CREATE(7)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 't' has create attribute in 'created_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name created_col_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text @create(7)
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name t}
+            | | {type_text}: text
+            | {create_attr}: ok
+              | {version_annotation}
+                | {int 7}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE recreate_backing(
+  id INTEGER,
+  t TEXT
+) @RECREATE;
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it is declared using @recreate 'recreate_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name recreate_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE simple_backed_table_versions(
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+) @CREATE(2) @DELETE(12);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_versions'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {create_attr}
+    | |   | {version_annotation}
+    | |   | | {int 2}
+    | |   | {delete_attr}
+    | |     | {version_annotation}
+    | |       | {int 12}
+    | | {name simple_backed_table_versions}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: name: text notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name name}
+            | | {type_text}: text
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE VIRTUAL TABLE virtual_backed_illegal USING module_name (args) AS (
+  id INTEGER,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0487: table is not suitable for use as backed storage: it is a virtual table 'virtual_backed_illegal'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_virtual_table_stmt}: err
+    | {module_info}
+    | | {name module_name}
+    | | {misc_attr_value_list}
+    |   | {name args}
+    | {create_table_stmt}
+      | {create_table_name_flags}
+      | | {table_flags_attrs}
+      | | | {int 0}
+      | | | {recreate_attr}
+      | | {name virtual_backed_illegal}
+      | {col_key_list}
+        | {col_def}
+        | | {col_def_type_attrs}
+        |   | {col_def_name_type}
+        |     | {name id}
+        |     | {type_int}
+        | {col_key_list}
+          | {col_def}
+            | {col_def_type_attrs}
+              | {col_def_name_type}
+                | {name t}
+                | {type_text}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TEMP TABLE temp_backed(
+  id INTEGER,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is redundantly marked TEMP 'temp_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 1}
+    | | {name temp_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE norowid_backed(
+  id INTEGER,
+  t TEXT
+) WITHOUT ROWID;
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is redundantly marked WITHOUT ROWID 'norowid_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 4}
+    | | {name norowid_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE constraint_backed(
+  id INTEGER,
+  t TEXT,
+  CONSTRAINT ak1 UNIQUE (id)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it has at least one invalid constraint 'constraint_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name constraint_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name t}
+        |     | {type_text}: text
+        | {col_key_list}
+          | {unq_def}
+            | {name ak1}
+            | {indexed_columns_conflict_clause}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {name id}: id: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE pk_col_backed(
+  id INTEGER PRIMARY KEY,
+  t TEXT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: pk_col_backed: { id: integer notnull primary_key, t: text } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name pk_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE fk_col_backed(
+  id INTEGER REFERENCES foo (id),
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' has a foreign key in 'fk_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name fk_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer foreign_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_fk}: ok
+      |     | {fk_target_options}
+      |       | {fk_target}
+      |       | | {name foo}
+      |       | | {name_list}
+      |       |   | {name id}: id: integer notnull
+      |       | {int 0}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE uk_col_backed(
+  id INTEGER UNIQUE,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' has a unique key in 'uk_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name uk_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer unique_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_unique}: ok
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE hidden_col_backed(
+  id INTEGER HIDDEN,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' is a hidden column in 'hidden_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name hidden_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_hidden}: ok
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE autoinc_col_backed(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' specifies auto increment in 'autoinc_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name autoinc_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key autoinc
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      |       | {col_attrs_autoinc}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE conflict_clause_col_backed(
+  id INTEGER PRIMARY KEY ON CONFLICT ABORT,
+  t TEXT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: conflict_clause_col_backed: { id: integer notnull primary_key, t: text } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name conflict_clause_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      |       | {int 1}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE check_col_backed(
+  id INTEGER CHECK(id = 5) ,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' has a check expression in 'check_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name check_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer has_check
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_check}: ok
+      |     | {eq}: bool
+      |       | {name id}: id: integer has_check
+      |       | {int 5}: integer notnull
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE collate_col_backed(
+  id INTEGER,
+  t TEXT COLLATE nocase
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 't' specifies collation order in 'collate_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name collate_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text has_collate
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name t}
+            | | {type_text}: text
+            | {col_attrs_collate}: ok
+              | {name nocase}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE default_value_col_backed(
+  id INTEGER DEFAULT 5,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' has a default value in 'default_value_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name default_value_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer has_default
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_default}: ok
+      |     | {int 5}: integer notnull
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE deleted_col_backed(
+  id INTEGER,
+  t TEXT @DELETE(7)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 't' has delete attribute in 'deleted_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name deleted_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text deleted @delete(7)
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name t}
+            | | {type_text}: text
+            | {delete_attr}: ok
+              | {version_annotation}
+                | {int 7}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE created_col_backed(
+  id INTEGER,
+  t TEXT @CREATE(7)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 't' has create attribute in 'created_col_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name created_col_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text @create(7)
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name t}
+            | | {type_text}: text
+            | {create_attr}: ok
+              | {version_annotation}
+                | {int 7}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE recreate_backed(
+  id INTEGER,
+  t TEXT
+) @RECREATE;
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'recreate_backed'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | | {name recreate_backed}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE structured_storage(
   id INTEGER NOT NULL,

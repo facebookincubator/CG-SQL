@@ -482,7 +482,7 @@ static void ast_find_ast_misc_attr_callback(
 // Helper function to extract the specified string type attribute (if any) from the misc attributes
 // provided, and invoke the callback function
 cql_noexport uint32_t find_attribute_str(
-  ast_node *_Nullable misc_attr_list,
+  ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
   void *_Nullable context,
   const char *attribute_name)
@@ -500,10 +500,26 @@ cql_noexport uint32_t find_attribute_str(
   return misc.count;
 }
 
+static bool_t find_named_attr(
+  ast_node *_Nonnull misc_attr_list,
+  CSTR _Nonnull name)
+{
+  Contract(is_ast_misc_attrs(misc_attr_list));
+
+  misc_attrs_type misc = {
+    .presence_only = 1,
+    .attribute_name = name,
+    .count = 0,
+  };
+
+  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
+  return !!misc.count;
+}
+
 // Helper function to extract the specified number type attribute (if any) from the misc attributes
 // provided, and invoke the callback function
 cql_noexport uint32_t find_attribute_num(
-  ast_node *_Nullable misc_attr_list,
+  ast_node *_Nonnull misc_attr_list,
   find_ast_num_node_callback _Nullable callback,
   void *_Nullable context,
   const char *attribute_name)
@@ -600,43 +616,33 @@ cql_noexport uint32_t find_identity_columns(
 }
 
 // Helper function to extract the shared fragment node (if any) from the misc attributes
-// provided, and invoke the callback function.
-cql_noexport uint32_t find_shared_fragment_attr(
-  ast_node *_Nullable misc_attr_list)
+cql_noexport uint32_t find_shared_fragment_attr(ast_node *_Nonnull misc_attr_list)
 {
-  Contract(is_ast_misc_attrs(misc_attr_list));
-
-  misc_attrs_type misc = {
-    .presence_only = 1,
-    .attribute_name = "shared_fragment",
-    .count = 0,
-  };
-
-  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
-  return misc.count;
+  return find_named_attr(misc_attr_list, "shared_fragment");
 }
 
 // Helper function to extract the blob storage node (if any) from the misc attributes
-// provided, and invoke the callback function.
-cql_noexport bool_t find_blob_storage_attr(
-  ast_node *_Nullable misc_attr_list)
+cql_noexport bool_t find_blob_storage_attr(ast_node *_Nonnull misc_attr_list)
 {
-  Contract(is_ast_misc_attrs(misc_attr_list));
+  return find_named_attr(misc_attr_list, "blob_storage");
+}
 
-  misc_attrs_type misc = {
-    .presence_only = 1,
-    .attribute_name = "blob_storage",
-    .count = 0,
-  };
+// Helper function to extract the backing table node (if any) from the misc attributes
+cql_noexport uint32_t find_backing_table_attr(ast_node *_Nonnull misc_attr_list)
+{
+  return find_named_attr(misc_attr_list, "backing_table");
+}
 
-  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
-  return misc.count != 0;
+// Helper function to extract the backed table node (if any) from the misc attributes
+cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list)
+{
+  return find_attribute_str(misc_attr_list, NULL, NULL, "backed_by");
 }
 
 // Helper function to extract the base fragment node (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_base_fragment_attr(
-  ast_node *_Nullable misc_attr_list,
+  ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
   void *_Nullable context)
 {
@@ -646,7 +652,7 @@ cql_noexport uint32_t find_base_fragment_attr(
 // Helper function to extract the extension fragment node (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_extension_fragment_attr(
-  ast_node *_Nullable misc_attr_list,
+  ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
   void *_Nullable context)
 {
@@ -656,7 +662,7 @@ cql_noexport uint32_t find_extension_fragment_attr(
 // Helper function to extract the assembled fragment node (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_assembly_query_attr(
-  ast_node *_Nullable misc_attr_list,
+  ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
   void *_Nullable context)
 {
@@ -721,13 +727,28 @@ cql_noexport uint32_t find_proc_frag_type(ast_node *ast) {
   return find_fragment_attr_type(misc_attrs, NULL);
 }
 
-
-// helper to get the fragment type of a given procedure
+// helper to look for the blob storage attribute
 cql_noexport bool_t is_table_blob_storage(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   return misc_attrs && find_blob_storage_attr(misc_attrs);
+}
+
+// helper to look for the backed table attribute
+cql_noexport bool_t is_table_backed(ast_node *ast) {
+  Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  return misc_attrs && find_backed_table_attr(misc_attrs);
+}
+
+// helper to look for the backing table attribute
+cql_noexport bool_t is_table_backing(ast_node *ast) {
+  Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
+
+  return misc_attrs && find_backing_table_attr(misc_attrs);
 }
 
 // This can be easily called in the debugger

@@ -1156,6 +1156,16 @@ cql_noexport bool_t was_set_variable(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_WAS_SET);
 }
 
+/*
+cql_noexport bool_t is_backing(sem_t sem_type) {
+  return !!(sem_type & SEM_TYPE_BACKING);
+}
+
+cql_noexport bool_t is_backed(sem_t sem_type) {
+  return !!(sem_type & SEM_TYPE_BACKED);
+}
+*/
+
 cql_noexport bool_t is_inout_parameter(sem_t sem_type) {
   return is_in_parameter(sem_type) && is_out_parameter(sem_type);
 }
@@ -2157,6 +2167,12 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_WAS_SET) {
     bprintf(out, " was_set");
+  }
+  if (sem_type & SEM_TYPE_BACKING) {
+    bprintf(out, " backing");
+  }
+  if (sem_type & SEM_TYPE_BACKED) {
+    bprintf(out, " backed");
   }
 }
 
@@ -13325,6 +13341,293 @@ static void sem_validate_table_for_blob_storage(ast_node *ast) {
   }
 }
 
+static void report_invalid_backing_column(ast_node *ast, CSTR reason, CSTR column, CSTR table) {
+  Contract(ast);
+  Contract(reason);
+  Contract(table);
+
+  CSTR err_msg = dup_printf("CQL0483: table is not suitable for use as backing storage: column '%s' %s in", column, reason);
+  report_error(ast, err_msg, table);
+  record_error(ast);
+}
+
+// validate that the indicated col_def is ok for blob storage
+// this basically means it has to be ultra simple
+// no autoinc, no fk, no pk, no default value
+static void sem_backing_col_def(ast_node *table_ast, ast_node *def, CSTR table_name) {
+  Contract(is_ast_col_def(def));
+  EXTRACT_NOTNULL(col_def_type_attrs, def->left);
+
+  EXTRACT_ANY(attrs, col_def_type_attrs->right);
+  EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
+  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_STRING(col_name, name_ast);
+
+  // if we find anything weird, it's an error
+  for (ast_node *ast = attrs; ast; ast = ast->right) {
+    if (is_ast_col_attrs_not_null(ast) || is_ast_sensitive_attr(ast)) {
+        // these basic column attributes are allowed
+    }
+    else if (is_ast_col_attrs_pk(ast)) {
+      EXTRACT_NOTNULL(autoinc_and_conflict_clause, ast->left);
+      EXTRACT(col_attrs_autoinc, autoinc_and_conflict_clause->left);
+
+      // conflict clause is ok, we can ignore it, autoinc is not supported until we do "stage 2"
+      // of this feature, initially the pk is just a blob and all the playload is in another blob
+
+      if (col_attrs_autoinc) {
+        report_invalid_backing_column(table_ast, "specifies auto increment", col_name, table_name);
+        return;
+      }
+    }
+    else if (is_ast_create_attr(ast)) {
+      // backing tables do not support schema changes at this time
+      report_invalid_backing_column(table_ast, "has create attribute", col_name, table_name);
+      return;
+    }
+    else if (is_ast_delete_attr(ast)) {
+      // backing tables do not support schema changes at this time
+      report_invalid_backing_column(table_ast, "has delete attribute", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_default(ast)) {
+      // In principle we could support this, but we don't for now.
+      report_invalid_backing_column(table_ast, "has a default value", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_check(ast)) {
+      report_invalid_backing_column(table_ast, "has a check expression", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_collate(ast)) {
+      report_invalid_backing_column(table_ast, "specifies collation order", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_fk(ast)) {
+      report_invalid_backing_column(table_ast, "has a foreign key", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_hidden(ast)) {
+      report_invalid_backing_column(table_ast, "is a hidden column", col_name, table_name);
+      return;
+    }
+    else {
+      // this is all that's left
+      Contract(is_ast_col_attrs_unique(ast));
+      report_invalid_backing_column(table_ast, "has a unique key", col_name, table_name);
+      return;
+    }
+  }
+}
+
+static void report_invalid_backing(ast_node *ast, CSTR reason, CSTR table) {
+  Contract(ast);
+  Contract(reason);
+  Contract(table);
+
+  CSTR err_msg = dup_printf("CQL0483: table is not suitable for use as backing storage: %s", reason);
+  report_error(ast, err_msg, table);
+  record_error(ast);
+}
+
+static void sem_validate_table_for_backing(ast_node *ast) {
+  Contract(is_ast_create_table_stmt(ast));
+  EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_ANY(table_attrs, table_flags_attrs->right);
+  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(col_key_list, ast->right);
+
+  Contract(!is_error(ast));
+
+  int32_t temp = flags & TABLE_IS_TEMP;
+  int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
+
+  if (temp) {
+    report_invalid_backing(ast, "it is redundantly marked TEMP", name);
+    return;
+  }
+
+  if (no_rowid) {
+    report_invalid_backing(ast, "it is redundantly marked WITHOUT ROWID", name);
+    return;
+  }
+
+  // check the column defs, error out if we find any constraints
+  for (ast_node *item = col_key_list; item; item = item->right) {
+    Contract(is_ast_col_key_list(item));
+    EXTRACT_ANY_NOTNULL(def, item->left);
+
+    // PK is allowed
+    if (is_ast_pk_def(def)) {
+      continue;
+    }
+
+    if (!is_ast_col_def(def)) {
+      report_invalid_backing(ast, "it has at least one invalid constraint", name);
+      return;
+    }
+
+    sem_backing_col_def(ast, def, name);
+    if (is_error(ast)) {
+      return;
+    }
+  }
+
+  while (table_attrs) {
+    if (is_ast_recreate_attr(table_attrs)) {
+      report_invalid_backing(ast, "it is declared using @recreate", name);
+      return;
+    }
+    table_attrs = table_attrs->right;
+  }
+}
+
+
+static void report_invalid_backed_column(ast_node *ast, CSTR reason, CSTR column, CSTR table) {
+  Contract(ast);
+  Contract(reason);
+  Contract(table);
+
+  CSTR err_msg = dup_printf("CQL0487: table is not suitable for use as backed storage: column '%s' %s in", column, reason);
+  report_error(ast, err_msg, table);
+  record_error(ast);
+}
+
+// validate that the indicated col_def is ok for blob storage
+// this basically means it has to be ultra simple
+// no autoinc, no fk, no default value, no unique constraints etc.
+static void sem_backed_col_def(ast_node *table_ast, ast_node *def, CSTR table_name) {
+  Contract(is_ast_col_def(def));
+  EXTRACT_NOTNULL(col_def_type_attrs, def->left);
+
+  EXTRACT_ANY(attrs, col_def_type_attrs->right);
+  EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
+  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_STRING(col_name, name_ast);
+
+  // if we find anything weird, it's an error
+  for (ast_node *ast = attrs; ast; ast = ast->right) {
+    if (is_ast_col_attrs_not_null(ast) || is_ast_sensitive_attr(ast)) {
+        // these basic column attributes are allowed
+    }
+    else if (is_ast_col_attrs_pk(ast)) {
+      EXTRACT_NOTNULL(autoinc_and_conflict_clause, ast->left);
+      EXTRACT(col_attrs_autoinc, autoinc_and_conflict_clause->left);
+
+      // conflict clause is ok, we can ignore it, autoinc is not supported until we do "stage 2"
+      // of this feature, initially the pk is just a blob and all the playload is in another blob
+
+      if (col_attrs_autoinc) {
+        report_invalid_backed_column(table_ast, "specifies auto increment", col_name, table_name);
+        return;
+      }
+    }
+    else if (is_ast_create_attr(ast)) {
+      // backed tables do not use schema annotations, they can change at whim
+      report_invalid_backed_column(table_ast, "has create attribute", col_name, table_name);
+      return;
+    }
+    else if (is_ast_delete_attr(ast)) {
+      // backed tables do not use schema annotations, they can change at whim
+      report_invalid_backed_column(table_ast, "has delete attribute", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_default(ast)) {
+      // In principle we could support this, but we don't for now.
+      report_invalid_backed_column(table_ast, "has a default value", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_check(ast)) {
+      report_invalid_backed_column(table_ast, "has a check expression", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_collate(ast)) {
+      report_invalid_backed_column(table_ast, "specifies collation order", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_fk(ast)) {
+      // these could be supported when the backing table is allowed to have an explicit FK column or columns to match
+      report_invalid_backed_column(table_ast, "has a foreign key", col_name, table_name);
+      return;
+    }
+    else if (is_ast_col_attrs_hidden(ast)) {
+      report_invalid_backed_column(table_ast, "is a hidden column", col_name, table_name);
+      return;
+    }
+    else {
+      // this is all that's left
+      Contract(is_ast_col_attrs_unique(ast));
+      report_invalid_backed_column(table_ast, "has a unique key", col_name, table_name);
+      return;
+    }
+  }
+}
+
+static void report_invalid_backed(ast_node *ast, CSTR reason, CSTR table) {
+  Contract(ast);
+  Contract(reason);
+  Contract(table);
+
+  CSTR err_msg = dup_printf("CQL0487: table is not suitable for use as backed storage: %s", reason);
+  report_error(ast, err_msg, table);
+  record_error(ast);
+}
+
+static void sem_validate_table_for_backed(ast_node *ast) {
+  Contract(is_ast_create_table_stmt(ast));
+  EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+  EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
+  EXTRACT_ANY(table_attrs, table_flags_attrs->right);
+  EXTRACT_OPTION(flags, table_flags_attrs->left);
+  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(col_key_list, ast->right);
+
+  Contract(!is_error(ast));
+
+  int32_t temp = flags & TABLE_IS_TEMP;
+  int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
+
+  if (temp) {
+    report_invalid_backed(ast, "it is redundantly marked TEMP", name);
+    return;
+  }
+
+  if (no_rowid) {
+    report_invalid_backed(ast, "it is redundantly marked WITHOUT ROWID", name);
+    return;
+  }
+
+  // check the column defs, error out if we find any constraints
+  for (ast_node *item = col_key_list; item; item = item->right) {
+    Contract(is_ast_col_key_list(item));
+    EXTRACT_ANY_NOTNULL(def, item->left);
+
+    // PK is allowed
+    if (is_ast_pk_def(def)) {
+      continue;
+    }
+
+    if (!is_ast_col_def(def)) {
+      report_invalid_backed(ast, "it has at least one invalid constraint", name);
+      return;
+    }
+
+    sem_backed_col_def(ast, def, name);
+    if (is_error(ast)) {
+      return;
+    }
+  }
+
+  if (table_attrs) {
+    report_invalid_backed(ast, "it is declared using schema directives (@recreate, @create etc.)", name);
+    return;
+  }
+}
+
 // Unlike the other parts of DDL we actually deeply care about the tables.
 // We have to grab all the columns and column types out of it and create
 // the appropriate sem_struct, as well as the sem_join with just one table.
@@ -13565,6 +13868,22 @@ static void sem_create_table_stmt(ast_node *ast) {
       }
     }
 
+    if (is_table_backing(ast)) {
+      sem_validate_table_for_backing(ast);
+      if (is_error(ast)) {
+        goto cleanup;
+      }
+      ast->sem->sem_type |= SEM_TYPE_BACKING;
+    }
+
+    if (is_table_backed(ast)) {
+      sem_validate_table_for_backed(ast);
+      if (is_error(ast)) {
+        goto cleanup;
+      }
+      ast->sem->sem_type |= SEM_TYPE_BACKED;
+    }
+
     if (validating_previous_schema) {
       sem_validate_previous_table(ast);
     }
@@ -13607,6 +13926,16 @@ void sem_create_virtual_table_stmt(ast_node *ast) {
 
   if (is_table_blob_storage(ast)) {
     report_invalid_blob_storage(ast, "it is a virtual table", name);
+    return;
+  }
+
+  if (is_table_backing(ast)) {
+    report_invalid_backing(ast, "it is a virtual table", name);
+    return;
+  }
+
+  if (is_table_backed(ast)) {
+    report_invalid_backed(ast, "it is a virtual table", name);
     return;
   }
 
