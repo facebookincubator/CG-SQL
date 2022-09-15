@@ -1160,11 +1160,11 @@ cql_noexport bool_t was_set_variable(sem_t sem_type) {
 cql_noexport bool_t is_backing(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_BACKING);
 }
+*/
 
 cql_noexport bool_t is_backed(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_BACKED);
 }
-*/
 
 cql_noexport bool_t is_inout_parameter(sem_t sem_type) {
   return is_in_parameter(sem_type) && is_out_parameter(sem_type);
@@ -7179,6 +7179,82 @@ static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
   return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_CONSTRAINT));
 }
 
+
+// Cql_blob_get(blob, table.column) -- this will ultimately expand into
+// user_defined_blob_get(blob, hash_code) but we need the table form so that we know the
+// result type accurately.  The rewrite happens when we use gen_sql with for_sqlite true.
+// In all other stages, it stays as is.  As a consequence, we also get a dependency on the
+// backed table.  When we visit this kind of node we also want to create a dependency on
+// the backing table.
+static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  *is_aggregate = false;
+
+  // round can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  if (!sem_validate_arg_count(ast, arg_count, 2)) {
+    return;
+  }
+
+  ast_node *blob_expr = first_arg(arg_list);
+
+  sem_expr(blob_expr);
+  if (is_error(blob_expr)) {
+    record_error(ast);
+    return;
+  }
+
+  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, "cql_blob_get")) {
+    record_error(ast);
+    return;
+  }
+
+  ast_node *table_expr = second_arg(arg_list);
+
+  if (!is_ast_dot(table_expr) || !is_ast_str(table_expr->left) || !is_ast_str(table_expr->right)) {
+    report_error(table_expr, "CQL0257: argument must be table.column where table is a backed table", NULL);
+    record_error(ast);
+    return;
+  }
+
+  EXTRACT_STRING(tname, table_expr->left);
+  EXTRACT_STRING(cname, table_expr->right);
+
+  // give a better error if the table is not found
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
+      tname,
+      table_expr->left,
+      "CQL0095: table/view not defined");
+  if (!table_ast) {
+    record_error(ast);
+    return;
+  }
+
+  if (!is_backed(table_ast->sem->sem_type)) {
+    report_error(table_expr, "CQL0095: not a backed table", tname);
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type = find_column_type(tname, cname);
+  if (!sem_type) {
+    report_error(table_expr, "CQL0095: column not found in table", cname);
+    record_error(ast);
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem(sem_type);
+
+  // ast->sem->name is not set here because e.g. cql_blob_get(x, foo.bar) is not named "x"
+}
+
 // You can count anything, you always get an integer
 static void sem_special_func_count(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
@@ -7779,6 +7855,8 @@ static void sem_func_ifnull_crash(ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(ast, arg_count, SEM_EXPR_CONTEXT_NONE);
 }
 
+// Special function that tells us the expression as been already verified to be not null
+// due to control flow or other context.
 static void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT_NOTNULL(arg_list, call_arg_list->right);
@@ -24367,8 +24445,8 @@ cql_noexport void sem_main(ast_node *ast) {
   SPECIAL_FUNC_INIT(count);
   SPECIAL_FUNC_INIT(iif);
   SPECIAL_FUNC_INIT(ptr);
-
   SPECIAL_FUNC_INIT(cql_inferred_notnull);
+  SPECIAL_FUNC_INIT(cql_blob_get);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");

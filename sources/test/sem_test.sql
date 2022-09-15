@@ -21686,6 +21686,98 @@ begin
   fetch D from B;
 end;
 
+@attribute(cql:backed_by=simple_backing_table)
+create table basic_table(
+  id integer not null
+);
+
+-- TEST: correct call to blob_get
+-- + {call}: integer notnull
+-- - error:
+create proc blob_get()
+begin
+  declare x blob;
+  let z := (select cql_blob_get(x, basic_table.id));
+end;
+
+-- TEST: blob get table not using a table.column as the 2nd arg
+-- + {call}: err
+-- + error: % argument must be table.column where table is a backed table
+-- +1 error:
+create proc blob_get_not_dot_operator()
+begin
+  declare x blob;
+  let z := (select cql_blob_get(x, 1 + 2));
+end;
+
+-- TEST: blob get table doesn't exist
+-- + {call}: err
+-- + error: % table/view not defined 'table_not_exists'
+-- +1 error:
+create proc blob_get_table_wrong()
+begin
+  declare x blob;
+  let z := (select cql_blob_get(x, table_not_exists.id));
+end;
+
+-- TEST: blob get column doesn't exist
+-- + {call}: err
+-- + error: % column not found in table 'col_not_exists'
+-- +1 error:
+create proc blob_get_column_wrong()
+begin
+  declare x blob;
+  let z := (select cql_blob_get(x, basic_table.col_not_exists));
+end;
+
+-- TEST: blob get wrong argument count
+-- + {call}: err
+-- + error: % function got incorrect number of arguments 'cql_blob_get'
+-- +1 error:
+create proc blob_get_column_wrong_arg_count()
+begin
+  declare x blob;
+  let z := (select cql_blob_get(x));
+end;
+
+-- TEST: blob get called outside of SQL context
+-- + {call}: err
+-- + error: % function may not appear in this context 'cql_blob_get'
+-- +1 error:
+create proc blob_get_column_context_wrong()
+begin
+  declare x blob;
+  let z :=  cql_blob_get(x);
+end;
+
+-- TEST: blob get wrong argument type
+-- + {call}: err
+-- + error: % incompatible types in expression 'cql_blob_get'
+-- +1 error:
+create proc blob_get_column_wrong_arg_type()
+begin
+  let z := (select cql_blob_get(1, basic_table.id));
+end;
+
+-- TEST: blob get arg expression has errors
+-- + {call}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+create proc blob_get_column_bad_expr()
+begin
+  let z := (select cql_blob_get(not "x", basic_table.id));
+end;
+
+-- TEST: blob get table expression is not a backing table
+-- + {call}: err
+-- + error: % not a backed table 'simple_backing_table'
+-- +1 error:
+create proc blob_get_not_backed_table()
+begin
+  declare x blob;
+  let z := (select cql_blob_get(x, simple_backing_table.k));
+end;
+
 -- TEST: verify type check on columns
 -- + error: % in the cursor and the blob type, all columns must be an exact type match (expected text notnull; found integer notnull) 'name'
 -- +1 error:

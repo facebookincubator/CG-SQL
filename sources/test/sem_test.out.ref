@@ -86413,6 +86413,397 @@ END;
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE basic_table(
+  id INTEGER NOT NULL
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: basic_table: { id: integer notnull } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name basic_table}
+    | {col_key_list}
+      | {col_def}: id: integer notnull
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name id}
+          | | {type_int}: integer
+          | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := ( SELECT cql_blob_get(x, basic_table.id) );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name blob_get}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: z: integer notnull variable
+        | {name z}: z: integer notnull variable
+        | {select_stmt}: _anon: integer notnull
+          | {select_core_list}: select: { _anon: integer notnull }
+          | | {select_core}: select: { _anon: integer notnull }
+          |   | {select_expr_list_con}: select: { _anon: integer notnull }
+          |     | {select_expr_list}: select: { _anon: integer notnull }
+          |     | | {select_expr}: integer notnull
+          |     |   | {call}: integer notnull
+          |     |     | {name cql_blob_get}: integer notnull
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name x}: x: blob variable
+          |     |         | {arg_list}
+          |     |           | {dot}
+          |     |             | {name basic_table}
+          |     |             | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_not_dot_operator ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := ( SELECT cql_blob_get(x, 1 + 2) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in add : CQL0257: argument must be table.column where table is a backed table
+
+  {create_proc_stmt}: err
+  | {name blob_get_not_dot_operator}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name x}: x: blob variable
+          |     |         | {arg_list}
+          |     |           | {add}
+          |     |             | {int 1}
+          |     |             | {int 2}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_table_wrong ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := ( SELECT cql_blob_get(x, table_not_exists.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'table_not_exists'
+
+  {create_proc_stmt}: err
+  | {name blob_get_table_wrong}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name x}: x: blob variable
+          |     |         | {arg_list}
+          |     |           | {dot}
+          |     |             | {name table_not_exists}
+          |     |             | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_column_wrong ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := ( SELECT cql_blob_get(x, basic_table.col_not_exists) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0095: column not found in table 'col_not_exists'
+
+  {create_proc_stmt}: err
+  | {name blob_get_column_wrong}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name x}: x: blob variable
+          |     |         | {arg_list}
+          |     |           | {dot}
+          |     |             | {name basic_table}
+          |     |             | {name col_not_exists}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_column_wrong_arg_count ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := ( SELECT cql_blob_get(x) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_blob_get'
+
+  {create_proc_stmt}: err
+  | {name blob_get_column_wrong_arg_count}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get}: err
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name x}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_column_context_wrong ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := cql_blob_get(x);
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_blob_get'
+
+  {create_proc_stmt}: err
+  | {name blob_get_column_context_wrong}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {call}: err
+          | {name cql_blob_get}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name x}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_column_wrong_arg_type ()
+BEGIN
+  LET z := ( SELECT cql_blob_get(1, basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in expression 'cql_blob_get'
+
+  {create_proc_stmt}: err
+  | {name blob_get_column_wrong_arg_type}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {int 1}: err
+          |     |         | {arg_list}
+          |     |           | {dot}
+          |     |             | {name basic_table}
+          |     |             | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_column_bad_expr ()
+BEGIN
+  LET z := ( SELECT cql_blob_get(NOT "x", basic_table.id) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name blob_get_column_bad_expr}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {not}: err
+          |     |         | | {strlit 'x'}: text notnull
+          |     |         | {arg_list}
+          |     |           | {dot}
+          |     |             | {name basic_table}
+          |     |             | {name id}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_not_backed_table ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := ( SELECT cql_blob_get(x, simple_backing_table.k) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0095: not a backed table 'simple_backing_table'
+
+  {create_proc_stmt}: err
+  | {name blob_get_not_backed_table}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name x}: x: blob variable
+          |     |         | {arg_list}
+          |     |           | {dot}
+          |     |             | {name simple_backing_table}
+          |     |             | {name k}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 CREATE PROC blob_serialization_test_type_mismatch ()
 BEGIN
   DECLARE C CURSOR FOR SELECT 1 AS id, 5 AS name;
