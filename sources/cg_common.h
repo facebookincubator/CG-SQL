@@ -180,6 +180,7 @@ CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, rt->symbol_prefix, ##__VA_ARGS__)
 #define NO_OP_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_no_op)
 #define DDL_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_any_ddl_stmt)
 #define STD_DML_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_std_dml_exec_stmt)
+#define COMMON_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_common_ ## x)
 #define FUNC_INIT(x) symtab_add(cg_funcs, # x, (void *)cg_func_ ## x)
 #define EXPR_INIT(x, func, str, pri_new) \
   static cg_expr_dispatch expr_disp_ ## x = { func, str, pri_new }; \
@@ -271,6 +272,35 @@ cql_noexport void cg_no_op(ast_node *_Nonnull ast);
 cql_noexport bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
 
 cql_noexport int32_t cg_find_first_line(ast_node *_Nonnull ast);
+
+// blob config helpers
+cql_noexport void cg_common_blob_get_key_type_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_val_type_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_key_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_val_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_create_key_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_create_val_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_update_key_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_update_val_stmt(ast_node *_Nonnull ast);
+
+typedef struct cg_blob_mappings_struct {
+  CSTR _Nullable blob_get_key_type;
+  CSTR _Nullable blob_get_val_type;
+  CSTR _Nullable blob_get_key;
+  CSTR _Nullable blob_get_val;
+  CSTR _Nullable blob_create_key;
+  CSTR _Nullable blob_create_val;
+  CSTR _Nullable blob_update_key;
+  CSTR _Nullable blob_update_val;
+  bool_t blob_get_key_use_offsets;
+  bool_t blob_get_val_use_offsets;
+  bool_t blob_create_key_use_offsets;
+  bool_t blob_create_val_use_offsets;
+  bool_t blob_update_key_use_offsets;
+  bool_t blob_update_val_use_offsets;
+} cg_blob_mappings_t;
+
+cql_data_decl( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 
 // Hashing helpers
 

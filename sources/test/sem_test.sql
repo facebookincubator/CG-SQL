@@ -21778,6 +21778,52 @@ begin
   let z := (select cql_blob_get(x, simple_backing_table.k));
 end;
 
+
+
+--  all of these blob config items have no error cases
+-- we just verify that they are going to produce no errors
+
+-- TEST: get key type
+-- + ok
+-- - error:
+@BLOB_GET_KEY_TYPE BGETKEY_TYPE;
+
+-- TEST: get value type
+-- + ok
+-- - error:
+@BLOB_GET_VAL_TYPE BGETVAL_TYPE;
+
+-- TEST: get key field
+-- + ok
+-- - error:
+@BLOB_GET_KEY BGETKEY;
+
+-- TEST: get value field
+-- + ok
+-- - error:
+@BLOB_GET_VAL BGETVAL;
+
+-- TEST: create key
+-- + ok
+-- - error:
+@BLOB_CREATE_KEY BCREATEKEY;
+
+-- TEST: create value
+-- + ok
+-- - error:
+@BLOB_CREATE_VAL BCREATEVAL;
+
+-- TEST: update key
+-- + ok
+-- - error:
+@BLOB_UPDATE_KEY BUPDATEKEY;
+
+-- TEST: update value
+-- + ok
+-- - error:
+@BLOB_UPDATE_VAL BUPDATEVAL;
+
+
 -- TEST: verify type check on columns
 -- + error: % in the cursor and the blob type, all columns must be an exact type match (expected text notnull; found integer notnull) 'name'
 -- +1 error:

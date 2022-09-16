@@ -263,6 +263,14 @@ STATEMENT                    { return STATEMENT; }
 TYPE                         { return TYPE; }
 @ATTRIBUTE                   { return AT_ATTRIBUTE; }
 @BEGIN_SCHEMA_REGION         { return AT_BEGIN_SCHEMA_REGION; }
+@BLOB_GET_KEY_TYPE           { return AT_BLOB_GET_KEY_TYPE ; }
+@BLOB_GET_VAL_TYPE           { return AT_BLOB_GET_VAL_TYPE ; }
+@BLOB_GET_KEY                { return AT_BLOB_GET_KEY ; }
+@BLOB_GET_VAL                { return AT_BLOB_GET_VAL ; }
+@BLOB_CREATE_KEY             { return AT_BLOB_CREATE_KEY ; }
+@BLOB_CREATE_VAL             { return AT_BLOB_CREATE_VAL; }
+@BLOB_UPDATE_KEY             { return AT_BLOB_UPDATE_KEY; }
+@BLOB_UPDATE_VAL             { return AT_BLOB_UPDATE_VAL; }
 @CREATE                      { return AT_CREATE; }
 @DECLARE_DEPLOYABLE_REGION   { return AT_DECLARE_DEPLOYABLE_REGION; }
 @DECLARE_SCHEMA_REGION       { return AT_DECLARE_SCHEMA_REGION; }

@@ -1759,6 +1759,34 @@ CREATE TABLE unary_plus_default_value(
   x INTEGER DEFAULT 7
 );
 
+@BLOB_GET_KEY_TYPE bgetkey_type;
+
+@BLOB_GET_VAL_TYPE bgetval_type;
+
+@BLOB_GET_KEY bgetkey;
+
+@BLOB_GET_VAL bgetval;
+
+@BLOB_CREATE_KEY bcreatekey;
+
+@BLOB_CREATE_VAL bcreateval;
+
+@BLOB_UPDATE_KEY bupdatekey;
+
+@BLOB_UPDATE_VAL bupdateval;
+
+@BLOB_GET_KEY bgetkey_offs OFFSET;
+
+@BLOB_GET_VAL bgetval_offs OFFSET;
+
+@BLOB_CREATE_KEY bcreatekey_offs OFFSET;
+
+@BLOB_CREATE_VAL bcreateval_offs OFFSET;
+
+@BLOB_UPDATE_KEY bupdatekey_offs OFFSET;
+
+@BLOB_UPDATE_VAL bupdateval_offs OFFSET;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

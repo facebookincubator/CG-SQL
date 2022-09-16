@@ -31,6 +31,8 @@ cql_data_defn( charbuf *_Nullable cg_declarations_output );
 cql_data_defn( charbuf *_Nullable cg_scratch_vars_output );
 cql_data_defn( charbuf *_Nullable cg_cleanup_output );
 cql_data_defn( charbuf *_Nullable cg_pieces_output );
+cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
+
 
 // Prints a symbol name, along with any configured prefix, to the specified buffer.
 // Multiple CSTRs may be supplied to build the name, which will be concatenated
@@ -102,7 +104,9 @@ cql_noexport void cg_common_init(void)
   ALLOC_AND_OPEN_CHARBUF_REF(cg_declarations_output);
   ALLOC_AND_OPEN_CHARBUF_REF(cg_scratch_vars_output);
   ALLOC_AND_OPEN_CHARBUF_REF(cg_cleanup_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_pieces_output)
+  ALLOC_AND_OPEN_CHARBUF_REF(cg_pieces_output);
+
+  cg_blob_mappings = calloc(1, sizeof(cg_blob_mappings_t));
 }
 
 // lots of AST nodes require no action -- this guy is very good at that.
@@ -299,6 +303,74 @@ int32_t cg_find_first_line_recursive(ast_node *ast, CSTR filename) {
   return line;
 }
 
+cql_noexport void cg_common_blob_get_key_type_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_key_type_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  cg_blob_mappings->blob_get_key_type = name;
+}
+
+cql_noexport void cg_common_blob_get_val_type_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_val_type_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  cg_blob_mappings->blob_get_val_type = name;
+}
+
+cql_noexport void cg_common_blob_get_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_key_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  cg_blob_mappings->blob_get_key = name;
+  cg_blob_mappings->blob_get_key_use_offsets = !!offset;
+}
+
+cql_noexport void cg_common_blob_get_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_val_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  cg_blob_mappings->blob_get_val = name;
+  cg_blob_mappings->blob_get_val_use_offsets = !!offset;
+}
+
+cql_noexport void cg_common_blob_create_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_create_key_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  cg_blob_mappings->blob_create_key = name;
+  cg_blob_mappings->blob_create_key_use_offsets = !!offset;
+}
+
+cql_noexport void cg_common_blob_create_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_create_val_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  cg_blob_mappings->blob_create_val = name;
+  cg_blob_mappings->blob_create_val_use_offsets = !!offset;
+}
+
+cql_noexport void cg_common_blob_update_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_update_key_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  cg_blob_mappings->blob_update_key = name;
+  cg_blob_mappings->blob_update_key_use_offsets = !!offset;
+}
+
+cql_noexport void cg_common_blob_update_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_update_val_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  cg_blob_mappings->blob_update_val = name;
+  cg_blob_mappings->blob_update_val_use_offsets = !!offset;
+}
+
 // What's going on here is that the AST is generated on REDUCE operations.
 // that means the line number at the time any AST node was generated is
 // the largest line number anywhere in that AST.  But if we're looking for
@@ -324,6 +396,9 @@ cql_noexport void cg_common_cleanup() {
   CLEANUP_CHARBUF_REF(cg_scratch_vars_output);
   CLEANUP_CHARBUF_REF(cg_cleanup_output);
   CLEANUP_CHARBUF_REF(cg_pieces_output)
+
+  free(cg_blob_mappings);
+  cg_blob_mappings = 0;
 }
 
 #endif

@@ -24202,6 +24202,59 @@ static void sem_emit_constants_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+// The blob state functions affect codegen only, there is nothing that can go wrong with them
+// during semantic analysis so they all just mark the result ok.  During codegen we will keep
+// track of the currently mapped items and make them available to sql echo so that the
+// appropriate replacements can be made
+
+// always good to go, see above
+static void sem_blob_get_key_type_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_key_type_stmt(ast));
+  record_ok(ast);
+}
+
+// always good to go, see above
+static void sem_blob_get_val_type_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_val_type_stmt(ast));
+  record_ok(ast);
+}
+
+// always good to go, see above
+static void sem_blob_get_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_key_stmt(ast));
+  record_ok(ast);
+}
+
+// always good to go, see above
+static void sem_blob_get_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_val_stmt(ast));
+  record_ok(ast);
+}
+
+// always good to go, see above
+static void sem_blob_create_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_create_key_stmt(ast));
+  record_ok(ast);
+}
+
+// always good to go, see above
+static void sem_blob_create_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_create_val_stmt(ast));
+  record_ok(ast);
+}
+
+// always good to go, see above
+static void sem_blob_update_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_update_key_stmt(ast));
+  record_ok(ast);
+}
+
+// always good to go, see above
+static void sem_blob_update_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_update_val_stmt(ast));
+  record_ok(ast);
+}
+
 // Most codegen types are not compatible with previous schema generation because it adds stuff to the AST
 // and that stuff isn't even fully type evaluated.  So the best thing to do is punt on codegen if we
 // did that sort of validation.
@@ -24386,6 +24439,15 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);
   STMT_INIT(emit_constants_stmt);
+
+  STMT_INIT(blob_get_key_type_stmt);
+  STMT_INIT(blob_get_val_type_stmt);
+  STMT_INIT(blob_get_key_stmt);
+  STMT_INIT(blob_get_val_stmt);
+  STMT_INIT(blob_create_key_stmt);
+  STMT_INIT(blob_create_val_stmt);
+  STMT_INIT(blob_update_key_stmt);
+  STMT_INIT(blob_update_val_stmt);
 
   AGGR_FUNC_INIT(max);
   AGGR_FUNC_INIT(min);

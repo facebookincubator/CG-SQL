@@ -203,6 +203,7 @@ static void cql_reset_globals(void);
 %token RS ">>"
 
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
+%token AT_BLOB_GET_KEY_TYPE AT_BLOB_GET_VAL_TYPE AT_BLOB_GET_KEY AT_BLOB_GET_VAL AT_BLOB_CREATE_KEY AT_BLOB_CREATE_VAL AT_BLOB_UPDATE_KEY AT_BLOB_UPDATE_VAL
 %token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ "NULL" DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_GROUP AT_EMIT_ENUMS AT_EMIT_CONSTANTS
 %token OBJECT TEXT BLOB LONG_ "LONG" INT_ "INT" INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
@@ -307,6 +308,9 @@ static void cql_reset_globals(void);
 %type <aval> while_stmt
 %type <aval> enforce_strict_stmt enforce_normal_stmt enforce_reset_stmt enforce_push_stmt enforce_pop_stmt
 %type <aval> enforcement_options shape_def shape_def_base
+%type <aval> blob_get_key_type_stmt blob_get_val_type_stmt blob_get_key_stmt blob_get_val_stmt
+%type <aval> blob_create_key_stmt blob_create_val_stmt blob_update_key_stmt blob_update_val_stmt
+%type <aval> opt_use_offset
 
 %start program
 
@@ -390,6 +394,14 @@ any_stmt:
     alter_table_add_column_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
+  | blob_get_key_type_stmt
+  | blob_get_val_type_stmt
+  | blob_get_key_stmt
+  | blob_get_val_stmt
+  | blob_create_key_stmt
+  | blob_create_val_stmt
+  | blob_update_key_stmt
+  | blob_update_val_stmt
   | call_stmt
   | close_stmt
   | commit_return_stmt
@@ -2201,6 +2213,43 @@ enforce_push_stmt:
 
 enforce_pop_stmt:
   AT_ENFORCE_POP { $enforce_pop_stmt = new_ast_enforce_pop_stmt(); }
+  ;
+
+opt_use_offset:
+  /* nil */ { $opt_use_offset = new_ast_opt(0); }
+  | OFFSET  { $opt_use_offset = new_ast_opt(1); }
+  ;
+
+blob_get_key_type_stmt:
+  AT_BLOB_GET_KEY_TYPE name { $blob_get_key_type_stmt = new_ast_blob_get_key_type_stmt($name); }
+  ;
+
+blob_get_val_type_stmt:
+  AT_BLOB_GET_VAL_TYPE name { $blob_get_val_type_stmt = new_ast_blob_get_val_type_stmt($name); }
+  ;
+
+blob_get_key_stmt:
+  AT_BLOB_GET_KEY name opt_use_offset { $blob_get_key_stmt = new_ast_blob_get_key_stmt($name, $opt_use_offset); }
+  ;
+
+blob_get_val_stmt:
+  AT_BLOB_GET_VAL name opt_use_offset { $blob_get_val_stmt = new_ast_blob_get_val_stmt($name, $opt_use_offset); }
+  ;
+
+blob_create_key_stmt:
+  AT_BLOB_CREATE_KEY name opt_use_offset { $blob_create_key_stmt = new_ast_blob_create_key_stmt($name, $opt_use_offset); }
+  ;
+
+blob_create_val_stmt:
+  AT_BLOB_CREATE_VAL name opt_use_offset { $blob_create_val_stmt = new_ast_blob_create_val_stmt($name, $opt_use_offset); }
+  ;
+
+blob_update_key_stmt:
+  AT_BLOB_UPDATE_KEY name opt_use_offset  { $blob_update_key_stmt = new_ast_blob_update_key_stmt($name, $opt_use_offset); }
+  ;
+
+blob_update_val_stmt:
+  AT_BLOB_UPDATE_VAL name opt_use_offset { $blob_update_val_stmt = new_ast_blob_update_val_stmt($name, $opt_use_offset); }
   ;
 
 %%

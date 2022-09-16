@@ -4056,6 +4056,68 @@ static void gen_with_upsert_stmt(ast_node *ast) {
   gen_upsert_stmt(upsert_stmt);
 }
 
+static void gen_blob_get_key_type_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_key_type_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  gen_printf("@BLOB_GET_KEY_TYPE %s", name);
+}
+
+static void gen_blob_get_val_type_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_val_type_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  gen_printf("@BLOB_GET_VAL_TYPE %s", name);
+}
+
+static void gen_blob_get_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_key_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  gen_printf("@BLOB_GET_KEY %s%s", name, offset ? " OFFSET" : "");
+}
+
+static void gen_blob_get_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_get_val_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  gen_printf("@BLOB_GET_VAL %s%s", name, offset ? " OFFSET" : "");
+}
+
+static void gen_blob_create_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_create_key_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  gen_printf("@BLOB_CREATE_KEY %s%s", name, offset ? " OFFSET" : "");
+}
+
+static void gen_blob_create_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_create_val_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  gen_printf("@BLOB_CREATE_VAL %s%s", name, offset ? " OFFSET" : "");
+}
+
+static void gen_blob_update_key_stmt(ast_node *ast) {
+  Contract(is_ast_blob_update_key_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  gen_printf("@BLOB_UPDATE_KEY %s%s", name, offset ? " OFFSET" : "");
+}
+
+static void gen_blob_update_val_stmt(ast_node *ast) {
+  Contract(is_ast_blob_update_val_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_OPTION(offset, ast->right);
+
+  gen_printf("@BLOB_UPDATE_VAL %s%s", name, offset ? " OFFSET" : "");
+}
+
 static void gen_explain_stmt(ast_node *ast) {
   Contract(is_ast_explain_stmt(ast));
   EXTRACT_OPTION(query_plan, ast->left);
@@ -4232,6 +4294,15 @@ cql_noexport void gen_init() {
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);
   STMT_INIT(emit_constants_stmt);
+
+  STMT_INIT(blob_get_key_type_stmt);
+  STMT_INIT(blob_get_val_type_stmt);
+  STMT_INIT(blob_get_key_stmt);
+  STMT_INIT(blob_get_val_stmt);
+  STMT_INIT(blob_create_key_stmt);
+  STMT_INIT(blob_create_val_stmt);
+  STMT_INIT(blob_update_key_stmt);
+  STMT_INIT(blob_update_val_stmt);
 
   EXPR_INIT(num, gen_expr_num, "NUM", EXPR_PRI_ROOT);
   EXPR_INIT(str, gen_expr_str, "STR", EXPR_PRI_ROOT);

@@ -193,6 +193,14 @@ s/[[:<:]]WITHOUT[[:>:]]/"WITHOUT"/g
 # Now, we replace attributes.
 s/[[:<:]]AT_ATTRIBUTE[[:>:]]/"@ATTRIBUTE"/g
 s/[[:<:]]AT_BEGIN_SCHEMA_REGION[[:>:]]/"@BEGIN_SCHEMA_REGION"/g
+s/[[:<:]]AT_BLOB_GET_KEY_TYPE[[:>:]]/"@BLOB_GET_KEY_TYPE"/g
+s/[[:<:]]AT_BLOB_GET_VAL_TYPE[[:>:]]/"@BLOB_GET_VAL_TYPE"/g
+s/[[:<:]]AT_BLOB_GET_KEY[[:>:]]/"@BLOB_GET_KEY"/g
+s/[[:<:]]AT_BLOB_GET_VAL[[:>:]]/"@BLOB_GET_VAL"/g
+s/[[:<:]]AT_BLOB_CREATE_KEY[[:>:]]/"@BLOB_GET_VAL"/g
+s/[[:<:]]AT_BLOB_CREATE_VAL[[:>:]]/"@BLOB_GET_VAL"/g
+s/[[:<:]]AT_BLOB_UPDATE_KEY[[:>:]]/"@BLOB_UPDATE_KEY"/g
+s/[[:<:]]AT_BLOB_UPDATE_VAL[[:>:]]/"@BLOB_UPDATE_VAL"/g
 s/[[:<:]]AT_CREATE[[:>:]]/"@CREATE"/g
 s/[[:<:]]AT_DECLARE_DEPLOYABLE_REGION[[:>:]]/"@DECLARE_DEPLOYABLE_REGION"/g
 s/[[:<:]]AT_DECLARE_SCHEMA_REGION[[:>:]]/"@DECLARE_SCHEMA_REGION"/g

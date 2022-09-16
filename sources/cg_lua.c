@@ -5141,6 +5141,15 @@ cql_noexport void cg_lua_init(void) {
   LUA_STD_DML_STMT_INIT(update_stmt);
   LUA_STD_DML_STMT_INIT(with_update_stmt);
 
+  COMMON_STMT_INIT(blob_get_key_type_stmt);
+  COMMON_STMT_INIT(blob_get_val_type_stmt);
+  COMMON_STMT_INIT(blob_get_key_stmt);
+  COMMON_STMT_INIT(blob_get_val_stmt);
+  COMMON_STMT_INIT(blob_create_key_stmt);
+  COMMON_STMT_INIT(blob_create_val_stmt);
+  COMMON_STMT_INIT(blob_update_key_stmt);
+  COMMON_STMT_INIT(blob_update_val_stmt);
+
   // insert forms have some special processing for the 'seed' case
   LUA_STMT_INIT(insert_stmt);
   LUA_STMT_INIT(with_insert_stmt);

@@ -5331,6 +5331,24 @@ begin
   out union C;
 end;
 
+-- these are largely no-op directives until we generate SQL for them
+-- at this point we just make sure we can generate these without crashing
+
+@blob_get_key_type bgetkey_type;
+@blob_get_val_type bgetval_type;
+@blob_get_key bgetkey;
+@blob_get_val bgetval;
+@blob_create_key bcreatekey;
+@blob_create_val bcreateval;
+@blob_update_key bupdatekey;
+@blob_update_val bupdateval;
+@blob_get_key bgetkey_offs offset;
+@blob_get_val bgetval_offs offset;
+@blob_create_key bcreatekey_offs offset;
+@blob_create_val bcreateval_offs offset;
+@blob_update_key bupdatekey_offs offset;
+@blob_update_val bupdateval_offs offset;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

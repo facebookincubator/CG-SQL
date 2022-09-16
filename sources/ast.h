@@ -926,5 +926,13 @@ AST(region_list);
 AST1(proc_savepoint_stmt);
 AST0(rollback_return_stmt);
 AST0(commit_return_stmt);
+AST1(blob_get_key_type_stmt)
+AST1(blob_get_val_type_stmt)
+AST(blob_get_key_stmt)
+AST(blob_get_val_stmt)
+AST(blob_create_key_stmt)
+AST(blob_create_val_stmt)
+AST(blob_update_key_stmt)
+AST(blob_update_val_stmt)
 
 #pragma clang diagnostic pop

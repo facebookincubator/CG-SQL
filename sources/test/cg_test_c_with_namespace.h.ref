@@ -3759,6 +3759,34 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 extern CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_container_proc_result_set_ref _Nullable *_Nonnull _result_set_);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

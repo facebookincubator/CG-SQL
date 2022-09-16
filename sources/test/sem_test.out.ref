@@ -86804,6 +86804,68 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0095: not a backed table 'simple_ba
 
 The statement ending at line XXXX
 
+@BLOB_GET_KEY_TYPE BGETKEY_TYPE;
+
+  {blob_get_key_type_stmt}: ok
+  | {name BGETKEY_TYPE}
+
+The statement ending at line XXXX
+
+@BLOB_GET_VAL_TYPE BGETVAL_TYPE;
+
+  {blob_get_val_type_stmt}: ok
+  | {name BGETVAL_TYPE}
+
+The statement ending at line XXXX
+
+@BLOB_GET_KEY BGETKEY;
+
+  {blob_get_key_stmt}: ok
+  | {name BGETKEY}
+  | {int 0}
+
+The statement ending at line XXXX
+
+@BLOB_GET_VAL BGETVAL;
+
+  {blob_get_val_stmt}: ok
+  | {name BGETVAL}
+  | {int 0}
+
+The statement ending at line XXXX
+
+@BLOB_CREATE_KEY BCREATEKEY;
+
+  {blob_create_key_stmt}: ok
+  | {name BCREATEKEY}
+  | {int 0}
+
+The statement ending at line XXXX
+
+@BLOB_CREATE_VAL BCREATEVAL;
+
+  {blob_create_val_stmt}: ok
+  | {name BCREATEVAL}
+  | {int 0}
+
+The statement ending at line XXXX
+
+@BLOB_UPDATE_KEY BUPDATEKEY;
+
+  {blob_update_key_stmt}: ok
+  | {name BUPDATEKEY}
+  | {int 0}
+
+The statement ending at line XXXX
+
+@BLOB_UPDATE_VAL BUPDATEVAL;
+
+  {blob_update_val_stmt}: ok
+  | {name BUPDATEVAL}
+  | {int 0}
+
+The statement ending at line XXXX
+
 CREATE PROC blob_serialization_test_type_mismatch ()
 BEGIN
   DECLARE C CURSOR FOR SELECT 1 AS id, 5 AS name;
