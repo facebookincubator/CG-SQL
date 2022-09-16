@@ -86469,7 +86469,7 @@ END;
           |     |       | {arg_list}: ok
           |     |         | {name x}: x: blob variable
           |     |         | {arg_list}
-          |     |           | {dot}
+          |     |           | {dot}: integer notnull
           |     |             | {name basic_table}
           |     |             | {name id}
           |     | {select_from_etc}: ok

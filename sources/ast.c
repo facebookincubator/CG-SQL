@@ -1101,3 +1101,63 @@ cql_noexport size_t ends_in_set(CSTR str) {
   const char tail[] = " SET";
   return Strendswith(str, tail) ? sizeof(tail) - 1 : 0;
 }
+
+static bool_t has_pk_col_attr_def(CSTR reqd, ast_node *def) {
+  Contract(is_ast_col_def(def));
+  EXTRACT_NOTNULL(col_def_type_attrs, def->left);
+  EXTRACT_ANY(attrs, col_def_type_attrs->right);
+  EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
+  EXTRACT_STRING(name, col_def_name_type->left);
+
+  if (!Strcasecmp(reqd, name)) {
+    for (ast_node *attr = attrs; attr; attr = attr->right) {
+      if (is_ast_col_attrs_pk(attr)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+static int32_t get_pk_def_offset(CSTR reqd, ast_node *def) {
+  Contract(is_ast_pk_def(def));
+  EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+  EXTRACT(indexed_columns, indexed_columns_conflict_clause->left);
+
+  int offset = 0;
+  for (ast_node *item = indexed_columns; item; item = item->right, offset++) {
+    EXTRACT_NOTNULL(indexed_column, item->left);
+    EXTRACT_ANY_NOTNULL(col, indexed_column->left);
+    if (is_ast_str(col)) {
+      EXTRACT_STRING(name, col);
+      if (!Strcasecmp(name, reqd)) {
+        return offset;
+      }
+    }
+  }
+  return -1;
+}
+
+cql_noexport int32_t get_table_pk_col_offset(ast_node *create_table_stmt, CSTR name) {
+  Contract(is_ast_create_table_stmt(create_table_stmt));
+  EXTRACT_NOTNULL(col_key_list, create_table_stmt->right);
+
+  for (ast_node *item = col_key_list; item; item = item->right) {
+    Contract(is_ast_col_key_list(item));
+    EXTRACT_ANY_NOTNULL(def, item->left);
+
+    if (is_ast_col_def(def)) {
+      if (has_pk_col_attr_def(name, def)) {
+        return 0;
+      }
+    }
+    else if (is_ast_pk_def(def)) {
+      int32_t result = get_pk_def_offset(name, def);
+      if (result >= 0) {
+        return result;
+      }
+    }
+  }
+
+  return -1;
+}

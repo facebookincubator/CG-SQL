@@ -242,4 +242,6 @@ DECLARE PROC a_proc_that_needs_dependents () OUT UNION (a_foo OBJECT<a_proc_we_n
 DECLARE PROC another_proc_that_needs_dependents (a_foo OBJECT<a_proc_we_need SET>);
 DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
 DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
+DECLARE PROC use_cql_blob_get_backed () USING TRANSACTION;
+DECLARE PROC use_cql_blob_get_backed2 () USING TRANSACTION;
 DECLARE PROC end_proc ();

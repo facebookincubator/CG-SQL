@@ -3775,16 +3775,10 @@ extern CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_No
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code use_cql_blob_get_backed(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 extern cql_int32 this_is_the_end;

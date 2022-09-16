@@ -12,6 +12,8 @@
 cql_noexport void cg_common_cleanup() {}
 void cql_exit_on_semantic_errors(ast_node *head) {}
 
+cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
+
 #else
 
 #include "cg_common.h"

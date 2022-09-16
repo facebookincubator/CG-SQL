@@ -16669,6 +16669,68 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_cql_blob_get_backed ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT cql_blob_get(k, backed.pk), cql_blob_get(v, backed.flag), cql_blob_get(v, backed.storage), cql_blob_get(v, backed.id), cql_blob_get(v, backed.name), cql_blob_get(v, backed.age)
+    FROM backing;
+END;
+*/
+
+#define _PROC_ "use_cql_blob_get_backed"
+/*
+export:
+DECLARE PROC use_cql_blob_get_backed () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code use_cql_blob_get_backed(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT bgetkey(k, 0), bgetval(v, 1055660242183705531), bgetval(v, -7635294210585028660), bgetval(v, -9155171551243524439), bgetval(v, -6946718245010482247), bgetval(v, -1118059189291406095) "
+      "FROM backing");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_cql_blob_get_backed2 ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT cql_blob_get(k, backed2.pk1), cql_blob_get(k, backed2.pk2), cql_blob_get(v, backed2.id), cql_blob_get(v, backed2.extra), cql_blob_get(v, backed2.name)
+    FROM backing;
+END;
+*/
+
+#define _PROC_ "use_cql_blob_get_backed2"
+/*
+export:
+DECLARE PROC use_cql_blob_get_backed2 () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *C_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT bgetkey(k, 0), bgetkey(k, 1), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
+      "FROM backing");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

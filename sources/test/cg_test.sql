@@ -5336,18 +5336,64 @@ end;
 
 @blob_get_key_type bgetkey_type;
 @blob_get_val_type bgetval_type;
-@blob_get_key bgetkey;
+@blob_get_key bgetkey offset;
 @blob_get_val bgetval;
-@blob_create_key bcreatekey;
+@blob_create_key bcreatekey offset;
 @blob_create_val bcreateval;
-@blob_update_key bupdatekey;
+@blob_update_key bupdatekey offset;
 @blob_update_val bupdateval;
-@blob_get_key bgetkey_offs offset;
-@blob_get_val bgetval_offs offset;
-@blob_create_key bcreatekey_offs offset;
-@blob_create_val bcreateval_offs offset;
-@blob_update_key bupdatekey_offs offset;
-@blob_update_val bupdateval_offs offset;
+
+@attribute(cql:backing)
+create table backing(
+  k blob primary key,
+  v blob
+);
+
+@attribute(cql:backed_by=backing)
+create table backed(
+  pk int primary key,
+  flag bool not null,
+  id long,
+  name text,
+  age real,
+  storage blob
+);
+
+@attribute(cql:backed_by=backing)
+create table backed2(
+  pk1 int,
+  pk2 int,
+  flag bool not null,
+  id long,
+  name text,
+  extra int,
+  primary key(pk1, pk2)
+);
+
+-- TEST: cql_blob_get should expand to the correct calls and hash codes
+-- + "SELECT bgetkey(k, 0), bgetval(v, 1055660242183705531), bgetval(v, -7635294210585028660), bgetval(v, -9155171551243524439), bgetval(v, -6946718245010482247), bgetval(v, -1118059189291406095) "
+create proc use_cql_blob_get_backed()
+begin
+  declare C cursor for select
+    cql_blob_get(k, backed.pk),
+    cql_blob_get(v, backed.flag),
+    cql_blob_get(v, backed.storage),
+    cql_blob_get(v, backed.id),
+    cql_blob_get(v, backed.name),
+    cql_blob_get(v, backed.age) from backing;
+end;
+
+-- TEST: cql_blob_get should expand to the correct calls and hash codes
+-- + "SELECT bgetkey(k, 0), bgetkey(k, 1), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
+create proc use_cql_blob_get_backed2()
+begin
+  declare C cursor for select
+    cql_blob_get(k, backed2.pk1),
+    cql_blob_get(k, backed2.pk2),
+    cql_blob_get(v, backed2.id),
+    cql_blob_get(v, backed2.extra),
+    cql_blob_get(v, backed2.name) from backing;
+end;
 
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------

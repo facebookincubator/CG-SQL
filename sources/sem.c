@@ -7180,7 +7180,7 @@ static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
 }
 
 
-// Cql_blob_get(blob, table.column) -- this will ultimately expand into
+// cql_blob_get(blob, table.column) -- this will ultimately expand into
 // user_defined_blob_get(blob, hash_code) but we need the table form so that we know the
 // result type accurately.  The rewrite happens when we use gen_sql with for_sqlite true.
 // In all other stages, it stays as is.  As a consequence, we also get a dependency on the
@@ -7250,7 +7250,7 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
     return;
   }
 
-  name_ast->sem = ast->sem = new_sem(sem_type);
+  table_expr->sem = name_ast->sem = ast->sem = new_sem(sem_type);
 
   // ast->sem->name is not set here because e.g. cql_blob_get(x, foo.bar) is not named "x"
 }

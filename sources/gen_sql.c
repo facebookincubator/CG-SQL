@@ -22,6 +22,7 @@ cql_noexport void gen_stmt_list_to_stdout(ast_node *ast) {}
 // validate the tree shape in painful detail as we go
 
 #include "cql.h"
+#include "cg_common.h"
 #include "ast.h"
 #include "gen_sql.h"
 #include "sem.h"
@@ -1065,6 +1066,87 @@ static void gen_expr_not_in(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new
   if (pri_new < pri) gen_printf(")");
 }
 
+// This is only called when doing for_sqlite output which
+// presumes that semantic analysis has already happened. Its
+// otherwise meaningless.  There must also be live blob mappings
+// again all this would be screen out much earlier if it was otherwise.
+static void gen_field_hash(ast_node *ast) {
+  Contract(is_ast_dot(ast));
+  Contract(cg_blob_mappings);
+  Contract(ast->sem);
+  EXTRACT_STRING(cname, ast->right);
+
+  CHARBUF_OPEN(tmp);
+
+  bprintf(&tmp, "%s:", cname);  // TODO convert column name to camel case with helper first
+  sem_t sem_type = ast->sem->sem_type;
+
+  if (is_nullable(sem_type)) {
+    bprintf(&tmp, "?");
+  }
+
+  switch (core_type_of(sem_type)) {
+    case SEM_TYPE_BOOL:
+      bprintf(&tmp, "Bool");
+      break;
+    case SEM_TYPE_INTEGER:
+      bprintf(&tmp, "Int32");
+      break;
+    case SEM_TYPE_LONG_INTEGER:
+      bprintf(&tmp, "Int64");
+      break;
+    case SEM_TYPE_TEXT:
+      bprintf(&tmp, "String");
+      break;
+    case SEM_TYPE_REAL:
+      bprintf(&tmp, "Float");
+      break;
+    case SEM_TYPE_BLOB:
+      bprintf(&tmp, "Blob");
+      break;
+  }
+
+  int64_t hash = sha256_charbuf(&tmp);
+  gen_printf("%lld", (llint_t)hash);
+  CHARBUF_CLOSE(tmp);
+}
+
+static void gen_cql_blob_get(ast_node *ast) {
+  Contract(is_ast_call(ast));
+  Contract(cg_blob_mappings);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  ast_node *table_expr = second_arg(arg_list);
+
+  EXTRACT_STRING(tname, table_expr->left);
+  EXTRACT_STRING(cname, table_expr->right);
+
+  // table known to exist (and not deleted) already
+  ast_node *table_ast = find_table_or_view_even_deleted(tname);
+  Invariant(table_ast);
+
+  int32_t pk_col_offset = get_table_pk_col_offset(table_ast, cname);
+
+  CSTR func = pk_col_offset >= 0 ?
+    cg_blob_mappings->blob_get_key : cg_blob_mappings->blob_get_val;
+
+  bool_t offsets = pk_col_offset >= 0 ?
+    cg_blob_mappings->blob_get_key_use_offsets : cg_blob_mappings->blob_get_val_use_offsets;
+
+  gen_printf("%s(", func);
+  gen_root_expr(first_arg(arg_list));
+
+  if (offsets) {
+    gen_printf(", %d)", pk_col_offset);
+  }
+  else {
+    gen_printf(", ");
+    gen_field_hash(table_expr);
+    gen_printf(")");
+  }
+}
+
 static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -1079,6 +1161,11 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   // the product of a rewrite rule and should not be visible to users.
   if (!Strcasecmp("cql_inferred_notnull", name)) {
     gen_arg_list(arg_list);
+    return;
+  }
+
+  if (for_sqlite() && cg_blob_mappings && !Strcasecmp("cql_blob_get", name)) {
+    gen_cql_blob_get(ast);
     return;
   }
 
