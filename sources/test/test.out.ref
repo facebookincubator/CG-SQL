@@ -1752,6 +1752,13 @@ OUT UNION CALL foo(a, b, c) JOIN
   CALL bar(a, b) USING (u, v) AND
   CALL baz(1, 3) USING (x, y) AS my_child;
 
+@ATTRIBUTE(unary_plus_test=5)
+LET x := y;
+
+CREATE TABLE unary_plus_default_value(
+  x INTEGER DEFAULT 7
+);
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

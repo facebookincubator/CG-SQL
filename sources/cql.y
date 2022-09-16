@@ -672,6 +672,7 @@ misc_attr_value:
   | const_expr  { $misc_attr_value = $const_expr; }
   | '(' misc_attr_value_list ')'  { $misc_attr_value = $misc_attr_value_list; }
   | '-' num_literal  { $misc_attr_value = new_ast_uminus($num_literal);}
+  | '+' num_literal  { $misc_attr_value = $num_literal;}
   ;
 
 misc_attr:
@@ -858,6 +859,7 @@ col_attrs[result]:
     $result = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
   }
   | DEFAULT '-' num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default(new_ast_uminus($num_literal), $ca);}
+  | DEFAULT '+' num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($num_literal, $ca);}
   | DEFAULT num_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($num_literal, $ca);}
   | DEFAULT const_expr col_attrs[ca]  { $result = new_ast_col_attrs_default($const_expr, $ca);}
   | DEFAULT str_literal col_attrs[ca]  { $result = new_ast_col_attrs_default($str_literal, $ca);}
@@ -1008,6 +1010,7 @@ math_expr[result]:
   | math_expr[lhs] IS_TRUE  { $result = new_ast_is_true($lhs); }
   | math_expr[lhs] IS_FALSE  { $result = new_ast_is_false($lhs); }
   | '-' math_expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
+  | '+' math_expr[rhs] %prec UMINUS  { $result = $rhs; }
   | '~' math_expr[rhs]  { $result = new_ast_tilde($rhs); }
   | NOT math_expr[rhs]  { $result = new_ast_not($rhs); }
   | math_expr[lhs] '=' math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }

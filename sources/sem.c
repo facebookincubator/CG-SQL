@@ -2906,8 +2906,8 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
   sem_join *jptr = new_sem_join(j1->count + j2->count);
 
    // the join type will tell us which side(s) need not null removed
-  sem_t strip_left;
-  sem_t strip_right;
+  sem_t strip_left = 0;
+  sem_t strip_right = 0;
 
   switch (join_type) {
     case JOIN_INNER:
@@ -14515,13 +14515,13 @@ static void sem_if_stmt(ast_node *ast) {
   FLOW_PUSH_CONTEXT_BRANCH_GROUP();
 
   // IF [cond_action]
+  EXTRACT(elseif, if_alt->left);
+  EXTRACT_NAMED(elsenode, else, if_alt->right);
+
   sem_cond_action(cond_action);
   if (is_error(cond_action)) {
     goto error;
   }
-
-  EXTRACT(elseif, if_alt->left);
-  EXTRACT_NAMED(elsenode, else, if_alt->right);
 
   if (elseif) {
     sem_elseif_list(elseif);
@@ -24009,7 +24009,7 @@ static void sem_schema_ad_hoc_migration_stmt_for_version(ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
 
-  CSTR name;
+  CSTR name = NULL;
   int32_t version = -1; // sentinel indicating it's not yet set
 
   if (!sem_validate_version(SCHEMA_ANNOTATION_AD_HOC, ast, &version, &name)) {

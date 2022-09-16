@@ -466,7 +466,7 @@ static void cg_lua_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, char
       prefix = "_tmp";
     }
 
-    uint64_t *usedmask;
+    uint64_t *usedmask = NULL;
 
     switch (core_type) {
       case SEM_TYPE_INTEGER:
@@ -2151,7 +2151,7 @@ static void cg_lua_emit_proc_prototype(ast_node *ast, charbuf *proc_decl) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  CSTR name;
+  CSTR name = NULL;
 
   // in lua declare generates nothing so it's always this case
   Invariant(is_ast_create_proc_stmt(ast));

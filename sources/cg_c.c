@@ -723,7 +723,7 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
       prefix = "_tmp";
     }
 
-    uint64_t *usedmask;
+    uint64_t *usedmask = NULL;
 
     switch (core_type) {
       case SEM_TYPE_INTEGER:
@@ -3524,7 +3524,7 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t for
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  CSTR name;
+  CSTR name = NULL;
 
   if (is_ast_create_proc_stmt(ast)) {
     EXTRACT_STRING(n, ast->left);
