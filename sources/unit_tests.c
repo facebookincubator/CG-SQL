@@ -38,7 +38,7 @@ static bool test_frag_tricky_case() {
   uint32_t count = cg_statement_pieces("atest btest ", &tmp);
   cg_c_cleanup();
   CHARBUF_CLOSE(tmp);
-  
+
   // two tokens, no going off the end and making extra tokens!
   return count == 2;
 }
@@ -145,6 +145,54 @@ static bool test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result
   return Strncasecmp("Aac", "aaB", 2) == 0;
 }
 
+static bool test_sha256_example1() {
+  CHARBUF_OPEN(temp);
+  bprintf(&temp, "Foo:x:String");
+  bool result = sha256_charbuf(&temp) == -5028419846961717871L;
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_sha256_example2() {
+  CHARBUF_OPEN(temp);
+  bprintf(&temp, "id:?Int64");
+  bool result = sha256_charbuf(&temp) == -9155171551243524439L;
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_sha256_example3() {
+  CHARBUF_OPEN(temp);
+  bprintf(&temp, "x:String");
+  bool result = sha256_charbuf(&temp) == -6620767298254076690L;
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_sha256_example4() {
+  CHARBUF_OPEN(temp);
+  bprintf(&temp, "fooBar:?Int64");
+  bool result = sha256_charbuf(&temp) == -6345014076009057275L;
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_sha256_example5() {
+  CHARBUF_OPEN(temp);
+  bprintf(&temp, "XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.");
+  bool result = sha256_charbuf(&temp) == -8121930428982087348L;
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
+static bool test_sha256_example6() {
+  CHARBUF_OPEN(temp);
+  bprintf(&temp, "XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.123456789");
+  bool result = sha256_charbuf(&temp) ==  -4563262961718308998L;
+  CHARBUF_CLOSE(temp);
+  return result;
+}
+
 cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_Strdup__empty_string());
   TEST_ASSERT(test_Strdup__one_character_string());
@@ -171,6 +219,12 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than());
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
   TEST_ASSERT(test_frag_tricky_case());
+  TEST_ASSERT(test_sha256_example1());
+  TEST_ASSERT(test_sha256_example2());
+  TEST_ASSERT(test_sha256_example3());
+  TEST_ASSERT(test_sha256_example4());
+  TEST_ASSERT(test_sha256_example5());
+  TEST_ASSERT(test_sha256_example6());
 }
 
 #endif

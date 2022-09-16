@@ -254,12 +254,23 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
   return true;
 }
 
-
 // Produce a crc of a given charbuf using the CRC helpers.
 cql_noexport crc_t crc_charbuf(charbuf *input) {
   crc_t crc = crc_init();
   crc = crc_update(crc, (const unsigned char *)input->ptr, input->used);
   return crc_finalize(crc);
+}
+
+// Produce a sha256 reduced to 64 bits using the SHA256 helpers
+cql_noexport int64_t sha256_charbuf(charbuf *input) {
+  SHA256_CTX ctx;
+  sha256_init(&ctx);
+  sha256_update(&ctx, (const SHA256_BYTE *)input->ptr, input->used - 1);
+  SHA256_BYTE hash_bytes[64];
+  sha256_final(&ctx, hash_bytes);
+  int64_t *h = (int64_t *)hash_bytes;
+  int64_t hash = h[0] ^ h[1] ^h[2] ^ h[3];
+  return hash;
 }
 
 // See cg_find_first_line for more details on why this is what it is.

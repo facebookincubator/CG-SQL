@@ -37,6 +37,7 @@ process_headers() {
   cat "compat.h"
   cat "rewrite.h"
   cat "rt.h"
+  cat "sha256.h"
   cat "printf.h"
   cat "flow.h"
 
@@ -72,6 +73,7 @@ process_c_files() {
   cat "rt_common.c"
   cat "rewrite.c"
   cat "sem.c"
+  cat "sha256.c"
   cat "symtab.c"
   cat "unit_tests.c"
 

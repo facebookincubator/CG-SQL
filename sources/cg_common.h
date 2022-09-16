@@ -13,6 +13,7 @@
 #include "sem.h"
 #include "symtab.h"
 #include "crc64xz.h"
+#include "sha256.h"
 
 // When emitting code for a sql statement you might need to prepare it expecting
 // to use the sql statement yourself, or you may just want to run the SQL.
@@ -269,6 +270,9 @@ cql_noexport void cg_no_op(ast_node *_Nonnull ast);
 // For expanding select *
 cql_noexport bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
 
-cql_noexport crc_t crc_charbuf(charbuf *_Nonnull input);
-
 cql_noexport int32_t cg_find_first_line(ast_node *_Nonnull ast);
+
+// Hashing helpers
+
+cql_noexport crc_t crc_charbuf(charbuf *_Nonnull input);
+cql_noexport int64_t sha256_charbuf(charbuf *_Nonnull input);
