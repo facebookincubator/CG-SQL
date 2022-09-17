@@ -7224,12 +7224,12 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
     return;
   }
 
-  EXTRACT_STRING(tname, table_expr->left);
-  EXTRACT_STRING(cname, table_expr->right);
+  EXTRACT_STRING(t_name, table_expr->left);
+  EXTRACT_STRING(c_name, table_expr->right);
 
   // give a better error if the table is not found
   ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
-      tname,
+      t_name,
       table_expr->left,
       "CQL0095: table/view not defined");
   if (!table_ast) {
@@ -7238,14 +7238,15 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
   }
 
   if (!is_backed(table_ast->sem->sem_type)) {
-    report_error(table_expr, "CQL0095: not a backed table", tname);
+    report_error(table_expr, "CQL0488: the indicated table is not declared for backed storage", t_name);
     record_error(ast);
     return;
   }
 
-  sem_t sem_type = find_column_type(tname, cname);
+  sem_t sem_type = find_column_type(t_name, c_name);
   if (!sem_type) {
-    report_error(table_expr, "CQL0095: column not found in table", cname);
+    CSTR err_data = dup_printf("%s.%s", t_name, c_name);
+    report_error(table_expr, "CQL0489: the indicated column is not present in the named backed storage", err_data);
     record_error(ast);
     return;
   }
