@@ -21722,7 +21722,7 @@ end;
 
 -- TEST: blob get column doesn't exist
 -- + {call}: err
--- + error: % column not found in table 'col_not_exists'
+-- + error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 -- +1 error:
 create proc blob_get_column_wrong()
 begin
@@ -21770,7 +21770,7 @@ end;
 
 -- TEST: blob get table expression is not a backing table
 -- + {call}: err
--- + error: % not a backed table 'simple_backing_table'
+-- + error: % the indicated table is not declared for backed storage 'simple_backing_table'
 -- +1 error:
 create proc blob_get_not_backed_table()
 begin

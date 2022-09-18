@@ -86576,7 +86576,7 @@ BEGIN
   LET z := ( SELECT cql_blob_get(x, basic_table.col_not_exists) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0095: column not found in table 'col_not_exists'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0489: the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
 
   {create_proc_stmt}: err
   | {name blob_get_column_wrong}: err
@@ -86766,7 +86766,7 @@ BEGIN
   LET z := ( SELECT cql_blob_get(x, simple_backing_table.k) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0095: not a backed table 'simple_backing_table'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not declared for backed storage 'simple_backing_table'
 
   {create_proc_stmt}: err
   | {name blob_get_not_backed_table}: err
