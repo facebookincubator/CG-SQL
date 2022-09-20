@@ -3132,22 +3132,8 @@ cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *
 // release the references in a cursor using the types and offsets info
 static void cql_clear_references_before_deserialization(cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
-  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
-  uint8_t *types = dyn_cursor->cursor_data_types;
-  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
-  uint16_t count = offsets[0];
-
-  for (uint16_t i = 0; i < count; i++) {
-    uint16_t offset = offsets[i+1];
-    uint8_t type = types[i];
-
-    uint8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
-
-    if (core_data_type == CQL_DATA_TYPE_STRING || core_data_type == CQL_DATA_TYPE_BLOB) {
-      cql_release(*(cql_type_ref *)(cursor + offset));
-      *(cql_type_ref *)(cursor + offset) = NULL;
-    }
-  }
+  // this is just a normal release of ref columns from the dyn cursor structure
+  cql_release_offsets(dyn_cursor->cursor_data, dyn_cursor->cursor_refs_count, dyn_cursor->cursor_refs_offset);
 }
 
 #define cql_read_var(buf, var) \

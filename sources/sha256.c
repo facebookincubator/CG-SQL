@@ -63,8 +63,14 @@ void sha256_transform(SHA256_CTX *ctx, const SHA256_BYTE data[])
 {
 	SHA256_WORD a, b, c, d, e, f, g, h, i, j, t1, t2, m[64];
 
-	for (i = 0, j = 0; i < 16; ++i, j += 4)
-		m[i] = (SHA256_WORD)(((uint64_t)data[j] << 24) | (uint64_t)data[j + 1] << 16) | ((uint64_t)data[j + 2] << 8L) | (data[j + 3]);
+	for (i = 0, j = 0; i < 16; ++i, j += 4) {
+		m[i] = (SHA256_WORD)(
+                  ((uint64_t)data[j] << 24) |
+                  ((uint64_t)data[j + 1] << 16) |
+                  ((uint64_t)data[j + 2] << 8L) |
+                   (uint64_t)data[j + 3]
+                );
+        }
 
 	for ( ; i < 64; ++i)
 		m[i] = SIG1(m[i - 2]) + m[i - 7] + SIG0(m[i - 15]) + m[i - 16];
