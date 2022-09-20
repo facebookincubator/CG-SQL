@@ -244,4 +244,5 @@ DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
 DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
 DECLARE PROC use_cql_blob_get_backed () USING TRANSACTION;
 DECLARE PROC use_cql_blob_get_backed2 () USING TRANSACTION;
+DECLARE PROC use_generated_fragment () (pk INTEGER NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB);
 DECLARE PROC end_proc ();

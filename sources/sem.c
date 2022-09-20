@@ -13975,6 +13975,10 @@ static void sem_create_table_stmt(ast_node *ast) {
       add_table_or_view(ast);
 
       sem_record_annotation_from_vers_info(&table_vers_info);
+
+      if (is_backed(ast->sem->sem_type)) {
+        rewrite_shared_fragment_from_backed_table(ast);
+      }
     }
   }
 

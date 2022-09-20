@@ -109,19 +109,33 @@ cql_noexport void cg_common_init(void)
   ALLOC_AND_OPEN_CHARBUF_REF(cg_pieces_output);
 
   cg_blob_mappings = calloc(1, sizeof(cg_blob_mappings_t));
+
+  // Default mappings, these are going to be overwritten almost certainly
+  // but we need some not null default or else everywhere the mapping code
+  // will have to deal with nulls.
+  cg_blob_mappings->blob_get_key_type = "bgetkey_type";
+  cg_blob_mappings->blob_get_val_type = "bgetval_type";
+  cg_blob_mappings->blob_get_key = "bgetkey";
+  cg_blob_mappings->blob_get_key_use_offsets = true;
+  cg_blob_mappings->blob_get_val = "bgetval";
+  cg_blob_mappings->blob_create_key = "bcreatekey";
+  cg_blob_mappings->blob_create_key_use_offsets = true;
+  cg_blob_mappings->blob_create_val = "bcreateval";
+  cg_blob_mappings->blob_update_key = "bupdatekey";
+  cg_blob_mappings->blob_update_key_use_offsets = true;
+  cg_blob_mappings->blob_update_val = "bupdateval";
 }
 
 // lots of AST nodes require no action -- this guy is very good at that.
 cql_noexport void cg_no_op(ast_node * ast) {
 }
 
-cql_noexport void extract_base_path_without_extension(charbuf *_Nonnull output,
-    CSTR _Nonnull file_name) {
+cql_noexport void extract_base_path_without_extension(charbuf *_Nonnull output, CSTR _Nonnull file_name) {
   size_t file_name_length = strlen(file_name);
 
   Contract(file_name_length > 0);
 
-  char* last_slash_ptr = strrchr(file_name, '/');
+  CSTR last_slash_ptr = strrchr(file_name, '/');
 
   // Slash cannot be the last character of the string
   if (last_slash_ptr == &file_name[file_name_length - 1] ) {
@@ -131,7 +145,7 @@ cql_noexport void extract_base_path_without_extension(charbuf *_Nonnull output,
 
   size_t begin_index = last_slash_ptr ? (size_t)(last_slash_ptr - file_name) + 1 : 0;
 
-  char* last_dot_ptr = strrchr(file_name, '.');
+  CSTR last_dot_ptr = strrchr(file_name, '.');
 
   // Dot cannot be the last character of the string
   if (last_dot_ptr == &file_name[file_name_length - 1] ) {

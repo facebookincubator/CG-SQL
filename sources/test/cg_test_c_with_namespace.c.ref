@@ -587,6 +587,7 @@ typedef struct simple_container_proc_row {
   cql_object_ref _Nullable c;
 } simple_container_proc_row;
 #endif
+extern CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -16728,6 +16729,142 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_generated_fragment ()
+BEGIN
+  WITH
+  _backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+  SELECT *
+    FROM _backed;
+END;
+*/
+
+#define _PROC_ "use_generated_fragment"
+static int32_t use_generated_fragment_perf_index;
+
+cql_string_proc_name(use_generated_fragment_stored_procedure_name, "use_generated_fragment");
+
+typedef struct use_generated_fragment_row {
+  cql_int32 pk;
+  cql_bool flag;
+  cql_nullable_int64 id;
+  cql_nullable_double age;
+  cql_string_ref _Nullable name;
+  cql_blob_ref _Nullable storage;
+} use_generated_fragment_row;
+
+cql_int32 use_generated_fragment_get_pk(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].pk;
+}
+
+cql_bool use_generated_fragment_get_flag(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].flag;
+}
+
+cql_bool use_generated_fragment_get_id_is_null(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id.is_null;
+}
+
+cql_int64 use_generated_fragment_get_id_value(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id.value;
+}
+
+cql_string_ref _Nullable use_generated_fragment_get_name(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].name;
+}
+
+cql_bool use_generated_fragment_get_age_is_null(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].age.is_null;
+}
+
+cql_double use_generated_fragment_get_age_value(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].age.value;
+}
+
+cql_blob_ref _Nullable use_generated_fragment_get_storage(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].storage;
+}
+
+uint8_t use_generated_fragment_data_types[use_generated_fragment_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // pk
+  CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // flag
+  CQL_DATA_TYPE_INT64, // id
+  CQL_DATA_TYPE_STRING, // name
+  CQL_DATA_TYPE_DOUBLE, // age
+  CQL_DATA_TYPE_BLOB, // storage
+};
+
+#define use_generated_fragment_refs_offset cql_offsetof(use_generated_fragment_row, name) // count = 2
+
+static cql_uint16 use_generated_fragment_col_offsets[] = { 6,
+  cql_offsetof(use_generated_fragment_row, pk),
+  cql_offsetof(use_generated_fragment_row, flag),
+  cql_offsetof(use_generated_fragment_row, id),
+  cql_offsetof(use_generated_fragment_row, name),
+  cql_offsetof(use_generated_fragment_row, age),
+  cql_offsetof(use_generated_fragment_row, storage)
+};
+
+cql_int32 use_generated_fragment_result_count(use_generated_fragment_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code use_generated_fragment_fetch_results(sqlite3 *_Nonnull _db_, use_generated_fragment_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_use_generated_fragment, &use_generated_fragment_perf_index);
+  cql_code rc = use_generated_fragment(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = use_generated_fragment_data_types,
+    .col_offsets = use_generated_fragment_col_offsets,
+    .refs_count = 2,
+    .refs_offset = use_generated_fragment_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(use_generated_fragment_row),
+    .crc = CRC_use_generated_fragment,
+    .perf_index = &use_generated_fragment_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC use_generated_fragment () (pk INTEGER NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB);
+*/
+CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    3, NULL,
+  "WITH "
+    "_backed (pk, flag, id, name, age, storage) AS (",
+  "SELECT bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
+      "FROM backing AS T",
+  ") "
+    "SELECT pk, flag, id, name, age, storage "
+      "FROM _backed"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
 #undef _PROC_

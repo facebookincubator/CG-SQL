@@ -4420,4 +4420,72 @@ static inline BOOL CGBSimpleContainerProcRowEqual(CGBSimpleContainerProc *result
   return CGCSimpleContainerProcRowEqual(CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet1), row1, CGCSimpleContainerProcFromCGBSimpleContainerProc(resultSet2), row2);
 }
 
+@class CGBUseGeneratedFragment;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUseGeneratedFragment
+@end
+#endif
+
+static inline CGBUseGeneratedFragment *CGBUseGeneratedFragmentFromCGCUseGeneratedFragment(CGCUseGeneratedFragmentResultSetRef resultSet)
+{
+  return (__bridge CGBUseGeneratedFragment *)resultSet;
+}
+
+static inline CGCUseGeneratedFragmentResultSetRef CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(CGBUseGeneratedFragment *resultSet)
+{
+  return (__bridge CGCUseGeneratedFragmentResultSetRef)resultSet;
+}
+
+static inline int32_t CGBUseGeneratedFragmentGetPk(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
+  return CGCUseGeneratedFragmentGetPk(cResultSet, row);
+}
+
+static inline BOOL CGBUseGeneratedFragmentGetFlag(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
+  return CGCUseGeneratedFragmentGetFlag(cResultSet, row) ? YES : NO;
+}
+
+static inline NSNumber *_Nullable CGBUseGeneratedFragmentGetId(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
+  return CGCUseGeneratedFragmentGetIdIsNull(cResultSet, row) ? nil : @(CGCUseGeneratedFragmentGetIdValue(cResultSet, row));
+}
+
+static inline NSString *_Nullable CGBUseGeneratedFragmentGetName(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
+  return (__bridge NSString *)CGCUseGeneratedFragmentGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBUseGeneratedFragmentGetAge(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
+  return CGCUseGeneratedFragmentGetAgeIsNull(cResultSet, row) ? nil : @(CGCUseGeneratedFragmentGetAgeValue(cResultSet, row));
+}
+
+static inline NSData *_Nullable CGBUseGeneratedFragmentGetStorage(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
+  return (__bridge NSData *)CGCUseGeneratedFragmentGetStorage(cResultSet, row);
+}
+
+static inline int32_t CGBUseGeneratedFragmentResultCount(CGBUseGeneratedFragment *resultSet)
+{
+  return CGCUseGeneratedFragmentResultCount(CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet));
+}
+
+static inline NSUInteger CGBUseGeneratedFragmentRowHash(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  return CGCUseGeneratedFragmentRowHash(CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet), row);
+}
+
+static inline BOOL CGBUseGeneratedFragmentRowEqual(CGBUseGeneratedFragment *resultSet1, int32_t row1, CGBUseGeneratedFragment *resultSet2, int32_t row2)
+{
+  return CGCUseGeneratedFragmentRowEqual(CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet1), row1, CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END

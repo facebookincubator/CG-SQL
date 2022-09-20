@@ -5395,6 +5395,23 @@ begin
     cql_blob_get(v, backed2.name) from backing;
 end;
 
+-- TEST: we should have created a shared fragment called _backed
+-- + _backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT pk, flag, id, name, age, storage "
+-- + FROM _backed
+create proc use_generated_fragment()
+begin
+  with (call _backed())
+  select * from _backed;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

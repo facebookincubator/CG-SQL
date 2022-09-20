@@ -1161,3 +1161,20 @@ cql_noexport int32_t get_table_pk_col_offset(ast_node *create_table_stmt, CSTR n
 
   return -1;
 }
+
+// store the discovered attribute in the given storage
+static void record_string_value(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
+  if (_context) {
+    CSTR *target = (CSTR *)_context;
+    *target = name;
+  }
+}
+
+// Helper function extracts the named string fragment and gets its value as a string
+// if there is no such attribute or the attribute is not a string you get NULL.
+cql_noexport CSTR get_named_string_attribute_value(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name)
+{
+  CSTR result = NULL;
+  find_attribute_str(misc_attr_list, record_string_value, &result, name);
+  return result;
+}
