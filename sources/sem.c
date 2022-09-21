@@ -1813,10 +1813,11 @@ cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_
   return table_ast;
 }
 
-// Like `find_usable_and_not_deleted_table_or_view`, but merely returns true if
-// there is such a table, else false: No errors are reported. This can be used
-// to check whether or not a to-be-introduced name will shadow something that is
-// already in scope and usable.
+// The idea here is that CTE names should not be allowed to hide real table names
+// because this pattern really confuses people.  So we look to see if a usable table
+// exists with the given name in the given scope and give an error.  The exception
+// here is that it's normal to hide the definition of a backed table because it
+// isn't real.  But otherwise if the name already exists an error is coming.
 static bool_t name_hides_root_table(CSTR name) {
   Contract(name);
 

@@ -2447,6 +2447,9 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
   Invariant(!is_error(stmt_and_attr->right));
 }
 
+// This is the magic, we have tracked the backed tables so now we can  insert calls to
+// the generated shared fragments (see above) for each such table.  Once we've done that,
+// the select will "just work." because the backed table has been aliased by a correct CTE.
 cql_noexport void rewrite_select_for_backed_tables(
   ast_node *_Nonnull stmt,
   list_item *_Nonnull backed_tables_list)

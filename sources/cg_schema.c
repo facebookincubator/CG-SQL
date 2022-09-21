@@ -91,6 +91,11 @@ static bool_t include_from_region(CSTR region, int32_t mode) {
   return true;
 }
 
+// These tables do not get deployed, they are logical constructs only
+static bool_t is_table_not_physical(ast_node *table_ast) {
+  return is_table_blob_storage(table_ast) || is_table_backed(table_ast);
+}
+
 // Sort the annotations in place: the order is:
 //  * schema version
 //  * annotation types (all creates before deletes)
@@ -433,8 +438,8 @@ static void cg_generate_baseline_tables(charbuf *output) {
       continue;
     }
 
-    bool_t is_blob_storage = is_table_blob_storage(ast);
-    if (is_blob_storage) {
+    bool_t is_non_physical = is_table_not_physical(ast);
+    if (is_non_physical) {
       continue;
     }
 
@@ -529,11 +534,11 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
 
     Invariant(is_ast_create_table_stmt(ast));
 
-    // Note that we do not filter out blob_storage tables universally, their type might be mentioned
+    // Note that we do not filter out non-physical tables universally, their type might be mentioned
     // as part of the type descriminator in other parts of schema, so the declaration will stay.
     // They will get the usual region treatment for dependencies.  However, in no case will
     // SQLite ever see these tables.
-    if (schema_sqlite && is_table_blob_storage(ast)) {
+    if (schema_sqlite && is_table_not_physical(ast)) {
       continue;
     }
 
@@ -1548,8 +1553,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
       continue;
     }
 
-    // no schema maintenance for blob storage tables, they aren't physical tables
-    if (is_ast_create_table_stmt(note->target_ast) && is_table_blob_storage(note->target_ast)) {
+    // no schema maintenance for non-physical tables, they aren't actually created
+    if (is_ast_create_table_stmt(note->target_ast) && is_table_not_physical(note->target_ast)) {
       continue;
     }
 
