@@ -177,7 +177,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_WAS_SET       _64(0x100000000000) // set on in args if they are set (hence we own the value)
 #define SEM_TYPE_BACKING       _64(0x200000000000) // set on tables that are used for backing store
 #define SEM_TYPE_BACKED        _64(0x400000000000) // set on tables/exprs that have a backing store
-#define SEM_TYPE_FLAGS         _64(0x7FFFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_PARTIAL_PK    _64(0x800000000000) // set if column is a primary key
+#define SEM_TYPE_FLAGS         _64(0xFFFFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
@@ -219,6 +220,7 @@ cql_noexport bool_t is_struct(sem_t sem_type);
 cql_noexport bool_t is_cursor(sem_t sem_type);
 cql_noexport bool_t is_auto_cursor(sem_t sem_type);
 cql_noexport bool_t is_primary_key(sem_t sem_type);
+cql_noexport bool_t is_partial_pk(sem_t sem_type);
 cql_noexport bool_t is_foreign_key(sem_t sem_type);
 cql_noexport bool_t is_sem_error(sem_node *sem);
 cql_noexport bool_t is_error(ast_node *ast);

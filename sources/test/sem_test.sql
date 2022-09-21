@@ -1195,7 +1195,7 @@ create index index_10 on foo(id) where 'hi';
 
 -- TEST: validate primary key columns, ok
 -- - error:
--- + {create_table_stmt}: simple_pk_table: { id: integer notnull }
+-- + {create_table_stmt}: simple_pk_table: { id: integer notnull partial_pk }
 create table simple_pk_table(
   id integer not null,
   PRIMARY KEY (id)
@@ -4046,7 +4046,7 @@ create table pk_test(id integer primary key);
 -- TEST: create table with PK out of line to force not null
 -- - error:
 -- semantic type and coldef must both be notnull
--- + {create_table_stmt}: pk_test_2: { id: integer notnull }
+-- + {create_table_stmt}: pk_test_2: { id: integer notnull partial_pk }
 -- + {col_def}: id: integer notnull
 create table pk_test_2(
   id integer,
@@ -6538,7 +6538,7 @@ end;
 insert into hides_id_not_name values('x');
 
 -- TEST: create a table with more mixed column stuff for use testing alter statements later
--- + {create_table_stmt}: trickier_alter_target: { id: integer notnull, added: text }
+-- + {create_table_stmt}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
 -- - error:
 create table trickier_alter_target(
   id integer,
@@ -6549,20 +6549,20 @@ create table trickier_alter_target(
 
 -- TEST: try to add id --> doesn't work
 -- + {alter_table_add_column_stmt}: err
--- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
+-- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
 -- + error: % added column must already be reflected in declared schema, with @create, exact name match required 'id'
 -- +1 error:
 alter table trickier_alter_target add column id integer;
 
 -- TEST: try to add something_deleted --> doesn't work
 -- + {alter_table_add_column_stmt}: err
--- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
+-- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
 -- + error: % added column must already be reflected in declared schema, with @create, exact name match required 'something_deleted'
 -- +1 error:
 alter table trickier_alter_target add column something_deleted text;
 
 -- TEST: try to add 'added' -> works!
--- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
+-- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
 -- + alter_table_add_column_stmt}: ok
 -- + {col_def}: added: text
 -- - error:
@@ -17662,7 +17662,7 @@ SET pr2 := proc_as_func("t");
 create table conflict_clause_t(id int not null on conflict fail);
 
 -- TEST: test create table with pk column on conflict clause rollback
--- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
+-- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
 -- + {indexed_columns_conflict_clause}
 -- + {int 0}
 -- - error:
@@ -21292,8 +21292,29 @@ create table simple_backing_table(
   v blob not null
 );
 
+-- TEST: simple backing table with no pk
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it does not have a primary key 'simple_backing_table_missing_pk'
+-- +1 error:
+@attribute(cql:backing_table)
+create table simple_backing_table_missing_pk(
+  k blob not null,
+  v blob not null
+);
+
+-- TEST: simple backing table with only pk
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it has only primary key columns 'simple_backing_table_only_pk'
+-- +1 error:
+@attribute(cql:backing_table)
+create table simple_backing_table_only_pk(
+  k blob not null,
+  v blob not null,
+  primary key (k,v)
+);
+
 -- TEST: simple backing table with versions and pk external
--- + {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull, v: blob notnull } deleted backing @create(1) @delete(22)
+-- + {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull partial_pk, v: blob notnull } deleted backing @create(1) @delete(22)
 -- - error:
 @attribute(cql:backing_table)
 create table simple_backing_table_with_versions(
@@ -21311,8 +21332,27 @@ create table simple_backed_table(
   name text not null
 );
 
+-- TEST: no primary key
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it does not have a primary key 'no_pk_backed_table'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table no_pk_backed_table(
+  id integer,
+  name text not null
+);
+
+-- TEST: only primary key
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it has only primary key columns 'only_pk_backed_table'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table only_pk_backed_table(
+  id integer primary key
+);
+
 -- TEST: simple backed table loose pk
--- + {create_table_stmt}: simple_backed_table_2: { id: integer notnull, name: text notnull } backed
+-- + {create_table_stmt}: simple_backed_table_2: { id: integer notnull partial_pk, name: text notnull } backed
 -- - error:
 @attribute(cql:backed_by=simple_backing_table)
 create table simple_backed_table_2(
@@ -21330,6 +21370,16 @@ create table simple_backed_table_with_versions(
   id integer primary key,
   name text not null
 ) @create(2) @delete(12);
+
+-- TEST: non blob columns are not valid in backing storage during stage 1
+-- + {create_table_stmt}: err
+-- +error: xxxx
+-- +1 error
+@attribute(cql:backing_table)
+create table has_non_blob_columns(
+  id integer primary key,
+  v blob not null
+);
 
 -- TEST: virtual tables cannot be backing storage
 -- + {create_virtual_table_stmt}: err
@@ -21357,8 +21407,8 @@ create temp table temp_backing(
 -- +1 error:
 @attribute(cql:backing_table)
 create table norowid_backing(
-  id integer,
-  t text
+  k blob,
+  v blob
 ) without rowid;
 
 -- TEST: tables with constraints cannot be backing storage
@@ -21367,18 +21417,18 @@ create table norowid_backing(
 -- +1 error:
 @attribute(cql:backing_table)
 create table constraint_backing(
-  id integer,
-  t text,
- CONSTRAINT ak1 UNIQUE (id)
+  k blob primary key,
+  v blob,
+ CONSTRAINT ak1 UNIQUE (v)
 );
 
 -- TEST: table with column with primary key can be backing store
--- + {create_table_stmt}: pk_col_backing: { id: integer notnull primary_key, t: text } backing
+-- + {create_table_stmt}: pk_col_backing: { k: blob notnull primary_key, v: blob } backing
 -- - error:
 @attribute(cql:backing_table)
 create table pk_col_backing(
-  id integer primary key,
-  t text
+  k blob primary key,
+  v blob
 );
 
 -- TEST: table with column with foreign key cannot be backing store
@@ -21403,12 +21453,12 @@ create table uk_col_backing(
 
 -- TEST: table with hidden column cannot be backing store
 -- + {create_table_stmt}: err
--- + error: % table is not suitable for use as backing storage: column 'id' is a hidden column in 'hidden_col_backing'
+-- + error: % table is not suitable for use as backing storage: column 'v' is a hidden column in 'hidden_col_backing'
 -- +1 error:
 @attribute(cql:backing_table)
 create table hidden_col_backing(
-  id integer hidden,
-  t text
+  k blob primary key,
+  v blob hidden not null
 );
 
 -- TEST: table with autoinc column cannot be backing store
@@ -21418,16 +21468,16 @@ create table hidden_col_backing(
 @attribute(cql:backing_table)
 create table autoinc_col_backing(
   id integer primary key autoincrement,
-  t text
+  v blob not null
 );
 
--- TEST: table with autoinc column cannot be backing store
--- + {create_table_stmt}: conflict_clause_col_backing: { id: integer notnull primary_key, t: text } backing
+-- TEST: table with conflict clause is ok for backing store
+-- + {create_table_stmt}: conflict_clause_col_backing: { k: blob notnull primary_key, v: blob notnull } backing
 -- - error:
 @attribute(cql:backing_table)
 create table conflict_clause_col_backing(
-  id integer primary key on conflict abort,
-  t text
+  k blob primary key on conflict abort,
+  v blob not null
 );
 
 -- TEST: table with check constraint on column cannot be backing store
@@ -21436,8 +21486,8 @@ create table conflict_clause_col_backing(
 -- +1 error:
 @attribute(cql:backing_table)
 create table check_col_backing(
-  id integer check(id = 5),
-  t text
+  k blob primary key,
+  id integer check(id = 5)
 );
 
 -- TEST: table with collate on column cannot be backing store
@@ -21446,7 +21496,7 @@ create table check_col_backing(
 -- +1 error:
 @attribute(cql:backing_table)
 create table collate_col_backing(
-  id integer,
+  k blob primary key,
   t text collate nocase
 );
 
@@ -21457,27 +21507,27 @@ create table collate_col_backing(
 @attribute(cql:backing_table)
 create table default_value_col_backing(
   id integer default 5,
-  t text
+  v blob not null
 );
 
 -- TEST: table with deleted column cannot be backing store
 -- + {create_table_stmt}: err
--- + error: % table is not suitable for use as backing storage: column 't' has delete attribute in 'deleted_col_backing'
+-- + error: % table is not suitable for use as backing storage: column 'v' has delete attribute in 'deleted_col_backing'
 -- +1 error:
 @attribute(cql:backing_table)
 create table deleted_col_backing(
-  id integer,
-  t text @delete(7)
+  k blob primary key,
+  v blob @delete(11)
 );
 
 -- TEST: table with create column cannot be backing store
 -- + {create_table_stmt}: err
--- + error: % table is not suitable for use as backing storage: column 't' has create attribute in 'created_col_backing'
+-- + error: % table is not suitable for use as backing storage: column 'v' has create attribute in 'created_col_backing'
 -- +1 error:
 @attribute(cql:backing_table)
 create table created_col_backing(
-  id integer,
-  t text @create(7)
+  k blob primary key,
+  v blob @create(11)
 );
 
 -- TEST: table with @recreate is not valid
@@ -21486,9 +21536,18 @@ create table created_col_backing(
 -- +1 error:
 @attribute(cql:backing_table)
 create table recreate_backing(
-  id integer,
-  t text
+  k blob primary key,
+  v blob not null
 ) @recreate;
+
+-- TEST: table with @recreate is not valid
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it does not have exactly two blob columns 'one_col_backing'
+-- +1 error:
+@attribute(cql:backing_table)
+create table one_col_backing(
+  k blob primary key
+);
 
 -- TEST: simple backed table with versions
 -- + {create_table_stmt}: err
@@ -21675,7 +21734,7 @@ create table created_col_backed(
 -- +1 error:
 @attribute(cql:backed_by=simple_backing_table)
 create table recreate_backed(
-  id integer,
+  id integer primary key,
   t text
 ) @recreate;
 
@@ -21708,7 +21767,8 @@ end;
 
 @attribute(cql:backed_by=simple_backing_table)
 create table basic_table(
-  id integer not null
+  id integer primary key,
+  name text
 );
 
 -- TEST: correct call to blob_get_type

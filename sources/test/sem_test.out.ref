@@ -4890,13 +4890,13 @@ CREATE TABLE simple_pk_table(
   PRIMARY KEY (id)
 );
 
-  {create_table_stmt}: simple_pk_table: { id: integer notnull }
+  {create_table_stmt}: simple_pk_table: { id: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | {name simple_pk_table}
   | {col_key_list}
-    | {col_def}: id: integer notnull
+    | {col_def}: id: integer notnull partial_pk
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
@@ -4970,7 +4970,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0143: more than one primary key in 
           | {indexed_columns_conflict_clause}
             | {indexed_columns}
               | {indexed_column}
-                | {name id}: id: integer notnull
+                | {name id}: id: integer notnull partial_pk
 
 The statement ending at line XXXX
 
@@ -14713,13 +14713,13 @@ CREATE TABLE pk_test_2(
   PRIMARY KEY (id)
 );
 
-  {create_table_stmt}: pk_test_2: { id: integer notnull }
+  {create_table_stmt}: pk_test_2: { id: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | {name pk_test_2}
   | {col_key_list}
-    | {col_def}: id: integer notnull
+    | {col_def}: id: integer notnull partial_pk
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
@@ -25292,13 +25292,13 @@ CREATE TABLE trickier_alter_target(
   PRIMARY KEY (id)
 );
 
-  {create_table_stmt}: trickier_alter_target: { id: integer notnull, added: text }
+  {create_table_stmt}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | {name trickier_alter_target}
   | {col_key_list}
-    | {col_def}: id: integer notnull
+    | {col_def}: id: integer notnull partial_pk
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name id}
@@ -25338,7 +25338,7 @@ ALTER TABLE trickier_alter_target ADD COLUMN id INTEGER;
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'id'
 
   {alter_table_add_column_stmt}: err
-  | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
+  | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
   | {col_def}: id: integer
     | {col_def_type_attrs}: ok
       | {col_def_name_type}
@@ -25352,7 +25352,7 @@ ALTER TABLE trickier_alter_target ADD COLUMN something_deleted TEXT;
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'something_deleted'
 
   {alter_table_add_column_stmt}: err
-  | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
+  | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
   | {col_def}: something_deleted: text
     | {col_def_type_attrs}: ok
       | {col_def_name_type}
@@ -25364,7 +25364,7 @@ The statement ending at line XXXX
 ALTER TABLE trickier_alter_target ADD COLUMN added TEXT;
 
   {alter_table_add_column_stmt}: ok
-  | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull, added: text }
+  | {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
   | {col_def}: added: text
     | {col_def_type_attrs}: ok
       | {col_def_name_type}
@@ -37206,19 +37206,19 @@ CREATE TABLE referenceable_2(
   PRIMARY KEY (a, b)
 );
 
-  {create_table_stmt}: referenceable_2: { a: integer notnull, b: real notnull }
+  {create_table_stmt}: referenceable_2: { a: integer notnull partial_pk, b: real notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | {name referenceable_2}
   | {col_key_list}
-    | {col_def}: a: integer notnull
+    | {col_def}: a: integer notnull partial_pk
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |     | {name a}
     |     | {type_int}: integer
     | {col_key_list}
-      | {col_def}: b: real notnull
+      | {col_def}: b: real notnull partial_pk
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name b}
@@ -37318,9 +37318,9 @@ CREATE TABLE reference_2_pk(
               | {fk_target}
               | | {name referenceable_2}
               | | {name_list}
-              |   | {name a}: a: integer notnull
+              |   | {name a}: a: integer notnull partial_pk
               |   | {name_list}
-              |     | {name b}: b: real notnull
+              |     | {name b}: b: real notnull partial_pk
               | {int 0}
 
 The statement ending at line XXXX
@@ -37359,9 +37359,9 @@ CREATE TABLE reference_2_wrong_order_pk(
               | {fk_target}
               | | {name referenceable_2}
               | | {name_list}
-              |   | {name b}: b: real notnull
+              |   | {name b}: b: real notnull partial_pk
               |   | {name_list}
-              |     | {name a}: a: integer notnull
+              |     | {name a}: a: integer notnull partial_pk
               | {int 0}
 
 The statement ending at line XXXX
@@ -70613,13 +70613,13 @@ CREATE TABLE conflict_clause_pk(
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
-  {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
+  {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | {name conflict_clause_pk}
   | {col_key_list}
-    | {col_def}: id: integer notnull
+    | {col_def}: id: integer notnull partial_pk
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
@@ -84920,6 +84920,88 @@ CREATE TABLE simple_backing_table(
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
+CREATE TABLE simple_backing_table_missing_pk(
+  k BLOB NOT NULL,
+  v BLOB NOT NULL
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it does not have a primary key 'simple_backing_table_missing_pk'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name simple_backing_table_missing_pk}
+    | {col_key_list}
+      | {col_def}: k: blob notnull
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {col_def}: v: blob notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name v}
+            | | {type_blob}: blob
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE simple_backing_table_only_pk(
+  k BLOB NOT NULL,
+  v BLOB NOT NULL,
+  PRIMARY KEY (k, v)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it has only primary key columns 'simple_backing_table_only_pk'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name simple_backing_table_only_pk}
+    | {col_key_list}
+      | {col_def}: k: blob notnull partial_pk
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_not_null}: ok
+      | {col_key_list}
+        | {col_def}: v: blob notnull partial_pk
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |   | | {name v}
+        |   | | {type_blob}: blob
+        |   | {col_attrs_not_null}: ok
+        | {col_key_list}
+          | {pk_def}
+            | {indexed_columns_conflict_clause}
+              | {indexed_columns}
+                | {indexed_column}
+                | | {name k}: k: blob notnull
+                | {indexed_columns}
+                  | {indexed_column}
+                    | {name v}: v: blob notnull
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
 CREATE TABLE simple_backing_table_with_versions(
   k BLOB NOT NULL,
   v BLOB NOT NULL,
@@ -84932,7 +85014,7 @@ CREATE TABLE simple_backing_table_with_versions(
   |   | {dot}
   |     | {name cql}
   |     | {name backing_table}
-  | {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull, v: blob notnull } deleted backing @create(1) @delete(22)
+  | {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull partial_pk, v: blob notnull } deleted backing @create(1) @delete(22)
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
@@ -84944,7 +85026,7 @@ CREATE TABLE simple_backing_table_with_versions(
     | |       | {int 22}
     | | {name simple_backing_table_with_versions}
     | {col_key_list}
-      | {col_def}: k: blob notnull
+      | {col_def}: k: blob notnull partial_pk
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name k}
@@ -85004,6 +85086,72 @@ CREATE TABLE simple_backed_table(
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE no_pk_backed_table(
+  id INTEGER,
+  name TEXT NOT NULL
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it does not have a primary key 'no_pk_backed_table'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name no_pk_backed_table}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: name: text notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name name}
+            | | {type_text}: text
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE only_pk_backed_table(
+  id INTEGER PRIMARY KEY
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it has only primary key columns 'only_pk_backed_table'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name only_pk_backed_table}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name id}
+          | | {type_int}: integer
+          | {col_attrs_pk}: ok
+            | {autoinc_and_conflict_clause}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE simple_backed_table_2(
   id INTEGER,
   name TEXT NOT NULL,
@@ -85017,13 +85165,13 @@ CREATE TABLE simple_backed_table_2(
   |   | | {name cql}
   |   | | {name backed_by}
   |   | {name simple_backing_table}: ok
-  | {create_table_stmt}: simple_backed_table_2: { id: integer notnull, name: text notnull } backed
+  | {create_table_stmt}: simple_backed_table_2: { id: integer notnull partial_pk, name: text notnull } backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
     | | {name simple_backed_table_2}
     | {col_key_list}
-      | {col_def}: id: integer notnull
+      | {col_def}: id: integer notnull partial_pk
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |     | {name id}
@@ -85085,6 +85233,43 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
             | {col_def_name_type}
             | | {name name}
             | | {type_text}: text
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE has_non_blob_columns(
+  id INTEGER PRIMARY KEY,
+  v BLOB NOT NULL
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a column that is not a blob in 'has_non_blob_columns'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name has_non_blob_columns}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: v: blob notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name v}
+            | | {type_blob}: blob
             | {col_attrs_not_null}: ok
 
 The statement ending at line XXXX
@@ -85165,8 +85350,8 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE norowid_backing(
-  id INTEGER,
-  t TEXT
+  k BLOB,
+  v BLOB
 ) WITHOUT ROWID;
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it is redundantly marked WITHOUT ROWID 'norowid_backing'
@@ -85183,25 +85368,25 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {int 4}
     | | {name norowid_backing}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: k: blob
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |     | {name id}
-      |     | {type_int}: integer
+      |     | {name k}
+      |     | {type_blob}: blob
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+              | {name v}
+              | {type_blob}: blob
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE constraint_backing(
-  id INTEGER,
-  t TEXT,
-  CONSTRAINT ak1 UNIQUE (id)
+  k BLOB PRIMARY KEY,
+  v BLOB,
+  CONSTRAINT ak1 UNIQUE (v)
 );
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it has at least one invalid constraint 'constraint_backing'
@@ -85218,31 +85403,33 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {int 0}
     | | {name constraint_backing}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |     | {name id}
-      |     | {type_int}: integer
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob
         | | {col_def_type_attrs}: ok
         |   | {col_def_name_type}
-        |     | {name t}
-        |     | {type_text}: text
+        |     | {name v}
+        |     | {type_blob}: blob
         | {col_key_list}
           | {unq_def}
             | {name ak1}
             | {indexed_columns_conflict_clause}
               | {indexed_columns}
                 | {indexed_column}
-                  | {name id}: id: integer
+                  | {name v}: v: blob
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE pk_col_backing(
-  id INTEGER PRIMARY KEY,
-  t TEXT
+  k BLOB PRIMARY KEY,
+  v BLOB
 );
 
   {stmt_and_attr}: ok
@@ -85251,25 +85438,25 @@ CREATE TABLE pk_col_backing(
   |   | {dot}
   |     | {name cql}
   |     | {name backing_table}
-  | {create_table_stmt}: pk_col_backing: { id: integer notnull primary_key, t: text } backing
+  | {create_table_stmt}: pk_col_backing: { k: blob notnull primary_key, v: blob } backing
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
     | | {name pk_col_backing}
     | {col_key_list}
-      | {col_def}: id: integer notnull primary_key
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |   | | {name id}
-      |   | | {type_int}: integer
+      |   | | {name k}
+      |   | | {type_blob}: blob
       |   | {col_attrs_pk}: ok
       |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+              | {name v}
+              | {type_blob}: blob
 
 The statement ending at line XXXX
 
@@ -85351,11 +85538,11 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE hidden_col_backing(
-  id INTEGER HIDDEN,
-  t TEXT
+  k BLOB PRIMARY KEY,
+  v BLOB HIDDEN NOT NULL
 );
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' is a hidden column in 'hidden_col_backing'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'v' is a hidden column in 'hidden_col_backing'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -85369,25 +85556,28 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {int 0}
     | | {name hidden_col_backing}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |   | | {name id}
-      |   | | {type_int}: integer
-      |   | {col_attrs_hidden}: ok
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob notnull
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+            | | {name v}
+            | | {type_blob}: blob
+            | {col_attrs_hidden}: ok
+              | {col_attrs_not_null}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE autoinc_col_backing(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  t TEXT
+  v BLOB NOT NULL
 );
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' specifies auto increment in 'autoinc_col_backing'
@@ -85413,18 +85603,19 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
       |     | {autoinc_and_conflict_clause}
       |       | {col_attrs_autoinc}
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob notnull
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+            | | {name v}
+            | | {type_blob}: blob
+            | {col_attrs_not_null}: ok
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE conflict_clause_col_backing(
-  id INTEGER PRIMARY KEY ON CONFLICT ABORT,
-  t TEXT
+  k BLOB PRIMARY KEY ON CONFLICT ABORT,
+  v BLOB NOT NULL
 );
 
   {stmt_and_attr}: ok
@@ -85433,33 +85624,34 @@ CREATE TABLE conflict_clause_col_backing(
   |   | {dot}
   |     | {name cql}
   |     | {name backing_table}
-  | {create_table_stmt}: conflict_clause_col_backing: { id: integer notnull primary_key, t: text } backing
+  | {create_table_stmt}: conflict_clause_col_backing: { k: blob notnull primary_key, v: blob notnull } backing
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
     | | {name conflict_clause_col_backing}
     | {col_key_list}
-      | {col_def}: id: integer notnull primary_key
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |   | | {name id}
-      |   | | {type_int}: integer
+      |   | | {name k}
+      |   | | {type_blob}: blob
       |   | {col_attrs_pk}: ok
       |     | {autoinc_and_conflict_clause}
       |       | {int 1}
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob notnull
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+            | | {name v}
+            | | {type_blob}: blob
+            | {col_attrs_not_null}: ok
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE check_col_backing(
-  id INTEGER CHECK(id = 5) ,
-  t TEXT
+  k BLOB PRIMARY KEY,
+  id INTEGER CHECK(id = 5) 
 );
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a check expression in 'check_col_backing'
@@ -85476,27 +85668,29 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {int 0}
     | | {name check_col_backing}
     | {col_key_list}
-      | {col_def}: id: integer has_check
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |   | | {name id}
-      |   | | {type_int}: integer
-      |   | {col_attrs_check}: ok
-      |     | {eq}: bool
-      |       | {name id}: id: integer has_check
-      |       | {int 5}: integer notnull
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: id: integer has_check
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+            | | {name id}
+            | | {type_int}: integer
+            | {col_attrs_check}: ok
+              | {eq}: bool
+                | {name id}: id: integer has_check
+                | {int 5}: integer notnull
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE collate_col_backing(
-  id INTEGER,
+  k BLOB PRIMARY KEY,
   t TEXT COLLATE nocase
 );
 
@@ -85514,11 +85708,13 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {int 0}
     | | {name collate_col_backing}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |     | {name id}
-      |     | {type_int}: integer
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
         | {col_def}: t: text has_collate
           | {col_def_type_attrs}: ok
@@ -85533,7 +85729,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE default_value_col_backing(
   id INTEGER DEFAULT 5,
-  t TEXT
+  v BLOB NOT NULL
 );
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a default value in 'default_value_col_backing'
@@ -85558,21 +85754,22 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
       |   | {col_attrs_default}: ok
       |     | {int 5}: integer notnull
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob notnull
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+            | | {name v}
+            | | {type_blob}: blob
+            | {col_attrs_not_null}: ok
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE deleted_col_backing(
-  id INTEGER,
-  t TEXT @DELETE(7)
+  k BLOB PRIMARY KEY,
+  v BLOB @DELETE(11)
 );
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 't' has delete attribute in 'deleted_col_backing'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'v' has delete attribute in 'deleted_col_backing'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -85586,30 +85783,32 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {int 0}
     | | {name deleted_col_backing}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |     | {name id}
-      |     | {type_int}: integer
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text deleted @delete(7)
+        | {col_def}: v: blob deleted @delete(11)
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-            | | {name t}
-            | | {type_text}: text
+            | | {name v}
+            | | {type_blob}: blob
             | {delete_attr}: ok
               | {version_annotation}
-                | {int 7}
+                | {int 11}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE created_col_backing(
-  id INTEGER,
-  t TEXT @CREATE(7)
+  k BLOB PRIMARY KEY,
+  v BLOB @CREATE(11)
 );
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 't' has create attribute in 'created_col_backing'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'v' has create attribute in 'created_col_backing'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -85623,27 +85822,29 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {int 0}
     | | {name created_col_backing}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |     | {name id}
-      |     | {type_int}: integer
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text @create(7)
+        | {col_def}: v: blob @create(11)
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-            | | {name t}
-            | | {type_text}: text
+            | | {name v}
+            | | {type_blob}: blob
             | {create_attr}: ok
               | {version_annotation}
-                | {int 7}
+                | {int 11}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE recreate_backing(
-  id INTEGER,
-  t TEXT
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
 ) @RECREATE;
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it is declared using @recreate 'recreate_backing'
@@ -85661,17 +85862,49 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
     | | | {recreate_attr}
     | | {name recreate_backing}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: k: blob notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |     | {name id}
-      |     | {type_int}: integer
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text
+        | {col_def}: v: blob notnull
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+            | | {name v}
+            | | {type_blob}: blob
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE one_col_backing(
+  k BLOB PRIMARY KEY
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it does not have exactly two blob columns 'one_col_backing'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name one_col_backing}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name k}
+          | | {type_blob}: blob
+          | {col_attrs_pk}: ok
+            | {autoinc_and_conflict_clause}
 
 The statement ending at line XXXX
 
@@ -86357,7 +86590,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE recreate_backed(
-  id INTEGER,
+  id INTEGER PRIMARY KEY,
   t TEXT
 ) @RECREATE;
 
@@ -86377,11 +86610,13 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
     | | | {recreate_attr}
     | | {name recreate_backed}
     | {col_key_list}
-      | {col_def}: id: integer
+      | {col_def}: id: integer notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
-      |     | {name id}
-      |     | {type_int}: integer
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
         | {col_def}: t: text
           | {col_def_type_attrs}: ok
@@ -86485,7 +86720,8 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE basic_table(
-  id INTEGER NOT NULL
+  id INTEGER PRIMARY KEY,
+  name TEXT
 );
 
   {stmt_and_attr}: ok
@@ -86495,18 +86731,25 @@ CREATE TABLE basic_table(
   |   | | {name cql}
   |   | | {name backed_by}
   |   | {name simple_backing_table}: ok
-  | {create_table_stmt}: basic_table: { id: integer notnull } backed
+  | {create_table_stmt}: basic_table: { id: integer notnull primary_key, name: text } backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
     | | {name basic_table}
     | {col_key_list}
-      | {col_def}: id: integer notnull
-        | {col_def_type_attrs}: ok
-          | {col_def_name_type}
-          | | {name id}
-          | | {type_int}: integer
-          | {col_attrs_not_null}: ok
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: name: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name name}
+              | {type_text}: text
 
 The statement ending at line XXXX
 
@@ -86701,20 +86944,20 @@ END;
       | | {type_blob}: blob
       | {let_stmt}: z: integer notnull variable
         | {name z}: z: integer notnull variable
-        | {select_stmt}: _anon: integer notnull
-          | {select_core_list}: select: { _anon: integer notnull }
-          | | {select_core}: select: { _anon: integer notnull }
-          |   | {select_expr_list_con}: select: { _anon: integer notnull }
-          |     | {select_expr_list}: select: { _anon: integer notnull }
-          |     | | {select_expr}: integer notnull
-          |     |   | {call}: integer notnull
-          |     |     | {name cql_blob_get}: integer notnull
+        | {select_stmt}: _anon: integer notnull primary_key
+          | {select_core_list}: select: { _anon: integer notnull primary_key }
+          | | {select_core}: select: { _anon: integer notnull primary_key }
+          |   | {select_expr_list_con}: select: { _anon: integer notnull primary_key }
+          |     | {select_expr_list}: select: { _anon: integer notnull primary_key }
+          |     | | {select_expr}: integer notnull primary_key
+          |     |   | {call}: integer notnull primary_key
+          |     |     | {name cql_blob_get}: integer notnull primary_key
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
           |     |       | {arg_list}: ok
           |     |         | {name x}: x: blob variable
           |     |         | {arg_list}
-          |     |           | {dot}: integer notnull
+          |     |           | {dot}: integer notnull primary_key
           |     |             | {name basic_table}
           |     |             | {name id}
           |     | {select_from_etc}: ok

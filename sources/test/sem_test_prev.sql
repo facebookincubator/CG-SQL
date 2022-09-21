@@ -94,7 +94,7 @@ create table t_additional_attribute_mismatch(a int not null, b int not null, pri
 create table t_columns_removed(id integer);
 
 -- create table with added facet not present in the previous
-create table t_attribute_added(a int not null, primary key (a));
+create table t_attribute_added(a int not null, unique (a));
 
 -- create table with additional column and no @create
 create table t_additional_column(a int not null, b int);
@@ -636,7 +636,7 @@ create table t_column_default_value_changed(id integer, id2 integer not null def
 create table t_column_default_value_ok(id integer, id2 integer not null default 1);
 
 -- TEST: create table with additional attribute
--- + {create_table_stmt}: t_additional_attribute_present: { a: integer notnull, b: integer notnull }
+-- + {create_table_stmt}: t_additional_attribute_present: { a: integer notnull partial_pk, b: integer notnull partial_pk }
 -- The previous schema isn't marked validated only the original schema is
 -- - validated
 -- - error:
@@ -855,7 +855,7 @@ end;
 -- +1 error:
 create table t_removed_facet(
   id integer not null,
-  primary key (id)
+  constraint uk unique (id)
 );
 
 -- TEST: column different in not a typical way
@@ -865,7 +865,7 @@ create table t_subtle_column_change(
 );
 
 -- TEST: columns added interleaved
--- +  {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull }
+-- + {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull partial_pk }
 -- - error:
 create table t_several_columns_added_interleaved(
   col1 integer,
@@ -1073,7 +1073,7 @@ end;
 create table conflict_clause_t(id int not null on conflict fail);
 
 -- TEST: test create table with pk column on conflict clause rollback
--- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
+-- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
 -- + {indexed_columns_conflict_clause}
 -- + {int 0}
 -- - error:

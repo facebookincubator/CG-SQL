@@ -646,7 +646,7 @@ CREATE TABLE t_additional_attribute_present(
   PRIMARY KEY (a, b)
 );
 
-  {create_table_stmt}: t_additional_attribute_present: { a: integer notnull, b: integer notnull } validated
+  {create_table_stmt}: t_additional_attribute_present: { a: integer notnull partial_pk, b: integer notnull partial_pk } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -730,7 +730,7 @@ The statement ending at line XXXX
 
 CREATE TABLE t_attribute_added(
   a INTEGER NOT NULL,
-  PRIMARY KEY (a)
+  UNIQUE (a)
 );
 
   {create_table_stmt}: err
@@ -746,7 +746,7 @@ CREATE TABLE t_attribute_added(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {pk_def}
+      | {unq_def}
         | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
@@ -1533,7 +1533,7 @@ CREATE TABLE t_several_columns_added_interleaved(
   PRIMARY KEY (col1)
 );
 
-  {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull, col2: integer, col3: integer } validated
+  {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull partial_pk, col2: integer, col3: integer } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -2264,7 +2264,7 @@ CREATE TABLE conflict_clause_pk(
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
-  {create_table_stmt}: conflict_clause_pk: { id: integer notnull } validated
+  {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk } validated
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -2897,7 +2897,7 @@ CREATE TABLE t_additional_attribute_present(
   PRIMARY KEY (a, b)
 );
 
-  {create_table_stmt}: t_additional_attribute_present: { a: integer notnull, b: integer notnull }
+  {create_table_stmt}: t_additional_attribute_present: { a: integer notnull partial_pk, b: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -3699,7 +3699,7 @@ The statement ending at line XXXX
 
 CREATE TABLE t_removed_facet(
   id INTEGER NOT NULL,
-  PRIMARY KEY (id)
+  CONSTRAINT uk UNIQUE (id)
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0133: non-column facets have been removed from the table 't_removed_facet'
@@ -3717,7 +3717,8 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0133: non-column face
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {pk_def}
+      | {unq_def}
+        | {name uk}
         | {indexed_columns_conflict_clause}
           | {indexed_columns}
             | {indexed_column}
@@ -3761,7 +3762,7 @@ CREATE TABLE t_several_columns_added_interleaved(
   PRIMARY KEY (col1)
 );
 
-  {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull }
+  {create_table_stmt}: t_several_columns_added_interleaved: { col1: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -4598,7 +4599,7 @@ CREATE TABLE conflict_clause_pk(
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
-  {create_table_stmt}: conflict_clause_pk: { id: integer notnull }
+  {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}

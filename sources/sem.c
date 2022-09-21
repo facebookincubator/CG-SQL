@@ -1117,6 +1117,10 @@ cql_noexport bool_t is_primary_key(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_PK);
 }
 
+cql_noexport bool_t is_partial_pk(sem_t sem_type) {
+  return !!(sem_type & SEM_TYPE_PARTIAL_PK);
+}
+
 cql_noexport bool_t is_foreign_key(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_FK);
 }
@@ -2179,6 +2183,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_BACKED) {
     bprintf(out, " backed");
+  }
+  if (sem_type & SEM_TYPE_PARTIAL_PK) {
+    bprintf(out, " partial_pk");
   }
 }
 
@@ -3908,7 +3915,14 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
   // because `sptr` and `jptr` are uniquely referenced at this point:
   // `sem_pk_def` is only called via `sem_constraints` which in turn is only
   // called from `sem_create_table_stmt` which allocates new values.
-  sem_update_column_type(table_ast, indexed_columns, SEM_TYPE_NOTNULL);
+  // All the columns of a pk constraint are marked with "partial pk", although
+  // strangely there might be only one such column.  Still this clarifies the
+  // origin -- a PK attribute or a PK constraint.  The existing flag means
+  // the PK attribute on the column so this is unambiguously a constraint and
+  // all pk columns get *something* now.  This helps us navigate pk columns
+  // in other cases like backing storage without re-doing complex analysis
+  // of attributes.
+  sem_update_column_type(table_ast, indexed_columns, SEM_TYPE_NOTNULL | SEM_TYPE_PARTIAL_PK);
 }
 
 // Currently the only known builtin migration proc are
@@ -12580,9 +12594,14 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
     return;
   }
 
-  // It's ok for the column types to differ in sensitivity; this results in no represenation differences.
-  sem_t cur_type = def->sem->sem_type & sem_not(SEM_TYPE_SENSITIVE | SEM_TYPE_DELETED);
-  sem_t prev_type = prev_def->sem->sem_type & sem_not(SEM_TYPE_SENSITIVE | SEM_TYPE_DELETED);
+  // Partial pk is caught later by checking the PK constraint, which is more diagnostic so we don't
+  // detect that here.  Likewise weith SEM_TYPE_FK, this is caught later by the FK contraint or the
+  // FK attribute.
+
+  sem_t ok_diffs = SEM_TYPE_SENSITIVE | SEM_TYPE_DELETED | SEM_TYPE_FK | SEM_TYPE_PARTIAL_PK;
+
+  sem_t cur_type = def->sem->sem_type & sem_not(ok_diffs);
+  sem_t prev_type = prev_def->sem->sem_type & sem_not(ok_diffs);
 
   if (cur_type != prev_type) {
     report_error(name_ast, "CQL0120: column type is different between previous and current schema", name);
@@ -13514,6 +13533,7 @@ static void sem_backing_col_def(ast_node *table_ast, ast_node *def, CSTR table_n
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
   EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_ANY_NOTNULL(col_type, col_def_name_type->right);
   EXTRACT_STRING(col_name, name_ast);
 
   // if we find anything weird, it's an error
@@ -13549,27 +13569,38 @@ static void sem_backing_col_def(ast_node *table_ast, ast_node *def, CSTR table_n
       return;
     }
     else if (is_ast_col_attrs_check(ast)) {
+      // In principle we could support this, but we don't for now.
       report_invalid_backing_column(table_ast, "has a check expression", col_name, table_name);
       return;
     }
     else if (is_ast_col_attrs_collate(ast)) {
+      // In principle we could support this, but we don't for now.  Assuming it makes sense for blobs?
       report_invalid_backing_column(table_ast, "specifies collation order", col_name, table_name);
       return;
     }
     else if (is_ast_col_attrs_fk(ast)) {
+      // In principle we could support this, but we don't for now.  Planned for "Stage 3"
       report_invalid_backing_column(table_ast, "has a foreign key", col_name, table_name);
       return;
     }
     else if (is_ast_col_attrs_hidden(ast)) {
+      // Doesn't make a lot of sense for a backing store, invalid.
       report_invalid_backing_column(table_ast, "is a hidden column", col_name, table_name);
       return;
     }
     else {
-      // this is all that's left
-      Contract(is_ast_col_attrs_unique(ast));
+      // In principle we could support this, but we don't for now.  Planned for "Stage 3"
+      // There are no other attribute types hence the "invariant"
+      Invariant(is_ast_col_attrs_unique(ast));
       report_invalid_backing_column(table_ast, "has a unique key", col_name, table_name);
       return;
     }
+  }
+
+  // Stage 1 limitation, the backing store is always a key blob and a value blob, hence non blobs are illegal
+  if (!is_ast_type_blob(col_type)) {
+   report_invalid_backing_column(table_ast, "has a column that is not a blob", col_name, table_name);
+   return;
   }
 }
 
@@ -13594,9 +13625,13 @@ static void sem_validate_table_for_backing(ast_node *ast) {
   EXTRACT_NOTNULL(col_key_list, ast->right);
 
   Contract(!is_error(ast));
+  Contract(ast->sem);  // semantic type already computed
 
   int32_t temp = flags & TABLE_IS_TEMP;
   int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
+  int32_t col_count = 0;
+  bool_t has_key = false;
+  bool_t has_value = false;
 
   if (temp) {
     report_invalid_backing(ast, "it is redundantly marked TEMP", name);
@@ -13623,10 +13658,31 @@ static void sem_validate_table_for_backing(ast_node *ast) {
       return;
     }
 
+    col_count++;
+    sem_t sem_type = def->sem->sem_type;
+    bool_t is_pk = is_primary_key(sem_type) || is_partial_pk(sem_type);
+    has_key |= is_pk;
+    has_value |= !is_pk;
+
     sem_backing_col_def(ast, def, name);
     if (is_error(ast)) {
       return;
     }
+  }
+
+  if (col_count != 2) {
+    report_invalid_backing(ast, "it does not have exactly two blob columns", name);
+    return;
+  }
+
+  if (!has_key) {
+    report_invalid_backing(ast, "it does not have a primary key", name);
+    return;
+  }
+
+  if (!has_value) {
+    report_invalid_backing(ast, "it has only primary key columns", name);
+    return;
   }
 
   while (table_attrs) {
@@ -13637,7 +13693,6 @@ static void sem_validate_table_for_backing(ast_node *ast) {
     table_attrs = table_attrs->right;
   }
 }
-
 
 static void report_invalid_backed_column(ast_node *ast, CSTR reason, CSTR column, CSTR table) {
   Contract(ast);
@@ -13760,6 +13815,8 @@ static void sem_validate_table_for_backed(ast_node *ast) {
 
   int32_t temp = flags & TABLE_IS_TEMP;
   int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
+  bool_t has_key = false;
+  bool_t has_value = false;
 
   if (temp) {
     report_invalid_backed(ast, "it is redundantly marked TEMP", name);
@@ -13786,11 +13843,27 @@ static void sem_validate_table_for_backed(ast_node *ast) {
       return;
     }
 
+    sem_t sem_type = def->sem->sem_type;
+    bool_t is_pk = is_primary_key(sem_type) || is_partial_pk(sem_type);
+    has_key |= is_pk;
+    has_value |= !is_pk;
+
     sem_backed_col_def(ast, def, name);
     if (is_error(ast)) {
       return;
     }
   }
+
+  if (!has_key) {
+    report_invalid_backed(ast, "it does not have a primary key", name);
+    return;
+  }
+
+  if (!has_value) {
+    report_invalid_backed(ast, "it has only primary key columns", name);
+    return;
+  }
+
 
   if (table_attrs) {
     report_invalid_backed(ast, "it is declared using schema directives (@recreate, @create etc.)", name);
@@ -13980,7 +14053,7 @@ static void sem_create_table_stmt(ast_node *ast) {
     goto cleanup;;
   }
 
-  // Constraints may have computed non-nullability changes
+  // Constraints may have computed type changes
   // if there are any such changes we need to apply them to the def
   // node so that the types are consistent.
 
@@ -13998,6 +14071,10 @@ static void sem_create_table_stmt(ast_node *ast) {
 
       if (not_nullable_flag(sptr->semtypes[col]) && !not_nullable_flag(def->sem->sem_type)) {
         sem_add_flags(def, SEM_TYPE_NOTNULL);
+      }
+
+      if (is_partial_pk(sptr->semtypes[col]) && !is_partial_pk(def->sem->sem_type)) {
+        sem_add_flags(def, SEM_TYPE_PARTIAL_PK);
       }
       col++;
     }
