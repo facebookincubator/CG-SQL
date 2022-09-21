@@ -8350,6 +8350,41 @@ function big_switch_label(x)
   until true
 
 end
+
+-- The statement ending at line XXXX
+
+--[[
+@ATTRIBUTE(cql:private)
+CREATE PROC explain_equery_plan_backed (OUT x BOOL NOT NULL)
+BEGIN
+  EXPLAIN QUERY PLAN
+  WITH
+  backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+  SELECT *
+    FROM backed;
+END;
+--]]
+
+function explain_equery_plan_backed(_db_)
+  local _rc_ = CQL_OK
+  local _result_stmt = nil
+  local x = false
+
+  _rc_, _result_stmt = cql_prepare_var(_db_, 
+    3, nil,
+    {
+    "EXPLAIN QUERY PLAN WITH backed (pk, flag, id, name, age, storage) AS (",
+    "SELECT bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) FROM backing AS T WHERE bgetkey_type(T.k) = -1622391684721028952",
+    ") SELECT pk, flag, id, name, age, storage FROM backed"
+    }
+  )
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
+  return _rc_, _result_stmt, x
+end
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

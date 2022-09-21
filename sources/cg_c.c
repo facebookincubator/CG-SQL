@@ -6830,6 +6830,14 @@ static void cg_select_stmt(ast_node *ast) {
 }
 
 // DML with PREPARE.  The ast has the statement.
+// Note: _result_ is the output variable for the sqlite3_stmt we generate
+//       this was previously added when the stored proc params were generated.
+static void cg_explain_stmt(ast_node *ast) {
+  Contract(is_ast_explain_stmt(ast));
+  cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
+}
+
+// DML with PREPARE.  The ast has the statement.
 static void cg_with_select_stmt(ast_node *ast) {
   Contract(is_ast_with_select_stmt(ast));
   cg_select_stmt(ast);
@@ -8557,6 +8565,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(with_upsert_stmt);
 
   // these DML methods need to use prepare and have other processing other than just EXEC
+  STMT_INIT(explain_stmt);
   STMT_INIT(select_stmt);
   STMT_INIT(with_select_stmt);
 

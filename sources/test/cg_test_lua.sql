@@ -5083,6 +5083,41 @@ begin
   end;
 end;
 
+@attribute(cql:backing_table)
+create table backing(
+  k blob primary key,
+  v blob
+);
+
+@attribute(cql:backed_by=backing)
+create table backed(
+  pk int primary key,
+  flag bool not null,
+  id long,
+  name text,
+  age real,
+  storage blob
+);
+
+-- TEST: explain query plan with replacement
+-- + EXPLAIN QUERY PLAN 
+-- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT pk, flag, id, name, age, storage
+-- + FROM backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
+@attribute(cql:private)
+create proc explain_equery_plan_backed(out x bool not null)
+begin
+  explain query plan select * from backed;
+end;
+
 -- we just have to successfully ignore these
 -- there is no codegen, this is a semantic analysis thing
 declare interface should_not_frag(id integer);

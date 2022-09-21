@@ -5343,7 +5343,7 @@ end;
 @blob_update_key bupdatekey offset;
 @blob_update_val bupdateval;
 
-@attribute(cql:backing)
+@attribute(cql:backing_table)
 create table backing(
   k blob primary key,
   v blob
@@ -5404,12 +5404,134 @@ end;
 -- + bgetval(T.v, -1118059189291406095),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT pk, flag, id, name, age, storage "
+-- + SELECT pk, flag, id, name, age, storage
 -- + FROM _backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
 create proc use_generated_fragment()
 begin
   with (call _backed())
   select * from _backed;
+end;
+
+-- TEST: we swap in the shared fragment and get the columns from it
+-- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT pk, flag, id, name, age, storage
+-- + FROM backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
+create proc use_backed_table_directly()
+begin
+  select * from backed;
+end;
+
+-- TEST: we swap in the shared fragment and get the columns from it
+-- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT pk, flag, id, name, age, storage
+-- + FROM backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- verify this is a NOT result set proc
+-- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+create proc use_backed_table_with_cursor()
+begin
+  declare C cursor for select * from backed;
+end;
+
+-- TEST: we swap in the shared fragment and get the columns from it
+-- + one (x) AS (SELECT 1),
+-- + two (x) AS (SELECT 2)
+-- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT pk, flag, id, name, age, storage
+-- + FROM backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- verify this is a result set proc
+-- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+create proc use_backed_table_directly_in_with_select()
+begin
+  with one(*) as (select 1 x), two(*) as (select 2 x)
+  select * from backed;
+end;
+
+-- TEST: we swap in the shared fragment and get the columns from it
+-- + one (x) AS (SELECT 1),
+-- + two (x) AS (SELECT 2)
+-- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT pk, flag, id, name, age, storage
+-- + FROM backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- verify this is NOT a result set proc
+-- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+create proc use_backed_table_with_selet_and_cursor()
+begin
+  declare C cursor for
+  with one(*) as (select 1 x), two(*) as (select 2 x)
+  select * from backed;
+end;
+
+-- TEST: select expression with backed table
+-- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT flag
+-- + FROM backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- verify this is NOT a result set proc
+-- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+create proc use_backed_table_select_expr(out x bool not null)
+begin
+  set x := (select flag from backed);
+end;
+
+-- TEST: explain query plan with replacement
+-- + EXPLAIN QUERY PLAN 
+-- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT bgetkey(T.k, 0),
+-- + bgetval(T.v, 1055660242183705531),
+-- + bgetval(T.v, -9155171551243524439),
+-- + bgetval(T.v, -6946718245010482247),
+-- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -7635294210585028660
+-- + FROM backing AS T
+-- + SELECT pk, flag, id, name, age, storage
+-- + FROM backed
+-- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- verify this is a result set proc
+-- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+@attribute(cql:private)
+create proc explain_equery_plan_backed(out x bool not null)
+begin
+  explain query plan select * from backed;
 end;
 
 --------------------------------------------------------------------

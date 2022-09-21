@@ -2364,9 +2364,26 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
                 ),
                 NULL
               ),
-              // empty where etc.
+              // use where to constraint the row type
               new_ast_select_where(
-                NULL,
+                new_ast_opt_where(
+                  new_ast_eq(
+                    new_ast_call(
+                      new_ast_str("cql_blob_get_type"),
+                      new_ast_call_arg_list(
+                        new_ast_call_filter_clause(NULL, NULL),
+                        new_ast_arg_list(
+                          new_ast_dot(
+                            new_ast_str("T"),
+                            new_ast_str(backing_key)
+                          ),
+                          NULL
+                        )
+                      )
+                    ),
+                    new_ast_num(NUM_LONG, gen_type_hash(backed_table))
+                  )
+                ),
                 new_ast_select_groupby(
                   NULL,
                   new_ast_select_having(
@@ -2418,8 +2435,8 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
       )
     );
 
-  // to view the generated procedure as text
-  // gen_stmt_list_to_stdout(new_ast_stmt_list(stmt, NULL));
+  // stdout the rewrite for debugging if needed
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(stmt_and_attr, NULL));
 
   AST_REWRITE_INFO_RESET();
 
@@ -2428,6 +2445,83 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
   // so we skip into the statement.
   sem_one_stmt(stmt_and_attr->right);
   Invariant(!is_error(stmt_and_attr->right));
+}
+
+cql_noexport void rewrite_select_for_backed_tables(
+  ast_node *_Nonnull stmt,
+  list_item *_Nonnull backed_tables_list)
+{
+  Contract(is_ast_select_stmt(stmt) || is_ast_with_select_stmt(stmt));
+  Contract(backed_tables_list);
+
+  AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);
+
+  symtab *backed = symtab_new();
+
+  ast_node *backed_cte_tables = NULL;
+  ast_node *cte_tail = NULL;
+
+  for (list_item *item = backed_tables_list; item; item = item->next) {
+    EXTRACT_NOTNULL(table_or_subquery, item->ast);
+    EXTRACT_STRING(backed_table_name, table_or_subquery->left);
+    CSTR backed_proc_name = dup_printf("_%s", backed_table_name);
+
+    if (symtab_add(backed, backed_table_name, NULL)) {
+      // need a new backed table CTE for this one
+      backed_cte_tables = new_ast_cte_tables(
+        new_ast_cte_table(
+          new_ast_cte_decl(
+            new_ast_str(backed_table_name),
+            new_ast_star()
+          ),
+          new_ast_shared_cte(
+            new_ast_call_stmt(
+              new_ast_str(backed_proc_name),
+              NULL
+            ),
+            NULL
+          )
+        ),
+        backed_cte_tables
+      );
+
+      if (cte_tail == NULL) {
+        cte_tail = backed_cte_tables;
+      }
+    }
+  }
+
+  Invariant(cte_tail);
+
+  if (is_ast_select_stmt(stmt)) {
+    // convert the SELECT to a WITH SELECT and add backing table CTEs
+    ast_node *with_select_stmt = new_ast_with_select_stmt(
+      new_ast_with(
+        backed_cte_tables
+      ),
+      new_ast_select_stmt(stmt->left, stmt->right)
+    );
+    stmt->type = k_ast_with_select_stmt;
+    ast_set_left(stmt, with_select_stmt->left);
+    ast_set_right(stmt, with_select_stmt->right);
+  }
+  else {
+    // add the backed table CTEs to the front of the list
+    Invariant(is_ast_with_select_stmt(stmt));
+    EXTRACT(with, stmt->left);
+    EXTRACT(cte_tables, with->left);
+    ast_set_right(cte_tail, cte_tables);
+    ast_set_left(with, cte_tail);
+  }
+
+  // stdout the rewrite for debugging if needed
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(stmt, NULL));
+
+  AST_REWRITE_INFO_RESET();
+
+  symtab_delete(backed);
+
+  sem_select(stmt);
 }
 
 #endif

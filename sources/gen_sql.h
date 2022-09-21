@@ -18,6 +18,7 @@ cql_noexport void gen_set_output_buffer(struct charbuf *_Nonnull buffer);
 
 typedef void (*_Nonnull gen_func)(ast_node *_Nonnull ast);
 
+cql_noexport CSTR _Nonnull gen_type_hash(ast_node *_Nonnull ast);
 cql_noexport void gen_stmt_list_to_stdout(ast_node *_Nullable ast);
 cql_noexport void gen_select_core(ast_node *_Nonnull ast);
 cql_noexport void gen_one_stmt_to_stdout(ast_node *_Nonnull ast);

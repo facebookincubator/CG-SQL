@@ -4478,6 +4478,11 @@ static void cg_lua_with_select_stmt(ast_node *ast) {
   cg_lua_select_stmt(ast);
 }
 
+static void cg_lua_explain_stmt(ast_node *ast) {
+  Contract(is_ast_explain_stmt(ast));
+  cg_lua_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
+}
+
 static void cg_lua_insert_dummy_spec(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->left); // the seed expr
 
@@ -5157,6 +5162,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(with_upsert_stmt);
 
   // these DML methods need to use prepare and have other processing other than just EXEC
+  LUA_STMT_INIT(explain_stmt);
   LUA_STMT_INIT(select_stmt);
   LUA_STMT_INIT(with_select_stmt);
 

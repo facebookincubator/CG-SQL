@@ -204,7 +204,7 @@ semantic_test() {
 code_gen_c_test() {
   echo '--------------------------------- STAGE 5 -- C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --dev --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -274,7 +274,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test with namespace enabled
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_namespace.h" "${OUT_DIR}/cg_test_c_with_namespace.c" "${OUT_DIR}/cg_test_imports_with_namespace.ref" --in "${TEST_DIR}/cg_test.sq"l --global_proc cql_startup --c_include_namespace test_namespace --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --dev --test --cg "${OUT_DIR}/cg_test_c_with_namespace.h" "${OUT_DIR}/cg_test_c_with_namespace.c" "${OUT_DIR}/cg_test_imports_with_namespace.ref" --in "${TEST_DIR}/cg_test.sq"l --global_proc cql_startup --c_include_namespace test_namespace --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -289,7 +289,7 @@ code_gen_c_test() {
   fi
 
   echo running codegen test with c_include_path specified
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_header.h" "${OUT_DIR}/cg_test_c_with_header.c" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --c_include_path "somewhere/something.h" 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --dev --test --cg "${OUT_DIR}/cg_test_c_with_header.h" "${OUT_DIR}/cg_test_c_with_header.c" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --c_include_path "somewhere/something.h" 2>"${OUT_DIR}/cg_test_c.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_c.err"
@@ -541,7 +541,7 @@ code_gen_java_test() {
 code_gen_objc_test() {
   echo '--------------------------------- STAGE 7 -- OBJ-C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
+  if ! ${CQL} --dev --test --cg "${OUT_DIR}/cg_test_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_objc.err"
@@ -607,7 +607,7 @@ assorted_errors_test() {
 
 # the output file is not writeable, should cause an error
 
-  if ${CQL} --cg /xx/yy/zz /xx/yy/zzz --in "${TEST_DIR}/cg_test.sql" --global_proc xx 2>"${OUT_DIR}/unwriteable.err"
+  if ${CQL} --dev --cg /xx/yy/zz /xx/yy/zzz --in "${TEST_DIR}/cg_test.sql" --global_proc xx 2>"${OUT_DIR}/unwriteable.err"
   then
     echo "failed writing to unwriteable file should have failed, but didn't"
     failed
@@ -617,7 +617,7 @@ assorted_errors_test() {
 
 # wrong number of args specified in --cg (for objc)
 
-  if ${CQL} --cg "${OUT_DIR}/__temp" "${OUT_DIR}/__temp2" --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_1_2.err"
+  if ${CQL} --dev --cg "${OUT_DIR}/__temp" "${OUT_DIR}/__temp2" --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/cg_1_2.err"
   then
     echo "objc rt should require 1 files for the cg param but two were passed, should have failed"
     failed
@@ -757,7 +757,7 @@ assorted_errors_test() {
 
 # more than one proc in java file
 
-  if ${CQL} --rt java --in "${TEST_DIR}/cg_test.sql" --cg "${OUT_DIR}/dummy.out" --java_package_name dummy 2>"${OUT_DIR}/java_rt_many_procs.err"
+  if ${CQL} --dev --rt java --in "${TEST_DIR}/cg_test.sql" --cg "${OUT_DIR}/dummy.out" --java_package_name dummy 2>"${OUT_DIR}/java_rt_many_procs.err"
   then
     echo "failed aborting a java rt codegen with more than one proc"
     failed
@@ -1095,7 +1095,7 @@ misc_cases() {
   on_diff_exit bigquote.err
 
   echo running alternate cqlrt.h test
-  if ! ${CQL} --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/cg_test.sql" --global_proc x --cqlrt alternate_cqlrt.h 2>"${OUT_DIR}/alt_cqlrt.err"
+  if ! ${CQL} --dev --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/cg_test.sql" --global_proc x --cqlrt alternate_cqlrt.h 2>"${OUT_DIR}/alt_cqlrt.err"
   then
     echo alternate cqlrt test failed
     failed
@@ -1110,215 +1110,7 @@ misc_cases() {
   on_diff_exit alt_cqlrt.err
 
   echo running too few -cg arguments with --generate_exports test
-  if ${CQL} --cg "${OUT_DIR}/__temp.c" "${OUT_DIR}/__temp.h" --in "${TEST_DIR}/cg_test.sql" --global_proc x --generate_exports 2>"${OUT_DIR}/gen_exports_args.err"
-  then
-    echo too few --cg args test failed
-    failed
-  fi
-
-  on_diff_exit gen_exports_args.err
-
-  echo running invalid include regions test
-  if ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions bogus --exclude_regions shared 2>"${OUT_DIR}/inc_invalid_regions.err"
-  then
-    echo invalid include region test failed
-    failed
-  fi
-
-  on_diff_exit inc_invalid_regions.err
-
-  echo running invalid exclude regions test
-  if ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions bogus 2>"${OUT_DIR}/excl_invalid_regions.err"
-  then
-    echo invalid exclude region test failed
-    failed
-  fi
-
-  on_diff_exit excl_invalid_regions.err
-
-  echo running global proc is needed but not present test
-  if ${CQL} --cg "${OUT_DIR}/__temp.c" "${OUT_DIR}/__temp.h" --in "${TEST_DIR}/bigquote.sql" 2>"${OUT_DIR}/global_proc_needed.err"
-  then
-    echo global proc needed but absent failed
-    failed
-  fi
-
-  echo '---------------------------------'
-  echo running code gen for migration test
-
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade 2>"${OUT_DIR}/cg_test_schema_upgrade.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_upgrade.err"
-    failed
-  fi
-
-  echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_schema_upgrade.sql" "${OUT_DIR}/cg_test_schema_upgrade.out"
-  then
-    echo failed verification
-    failed
-  fi
-
-  echo "  compiling the upgrade script with CQL"
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_upgrade.h" "${OUT_DIR}/cg_test_schema_upgrade.c" --in "${OUT_DIR}/cg_test_schema_upgrade.out"
-  then
-    echo CQL compilation failed
-    failed;
-  fi
-
-  echo "  compiling the upgrade script with C"
-  if ! do_make cg_test_schema_upgrade
-  then
-    echo CQL migration script compilation failed.
-    failed;
-  fi
-
-  echo "  computing diffs (empty if none)"
-
-  on_diff_exit cg_test_schema_upgrade.out
-  on_diff_exit cg_test_schema_upgrade.err
-
-  echo '---------------------------------'
-  echo running code gen to produce previous schema
-
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_prev.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --rt schema 2>"${OUT_DIR}/cg_test_schema_prev.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_prev.err"
-    failed
-  fi
-
-  echo '---------------------------------'
-  echo running code gen to produce raw sqlite schema
-
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_sqlite.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --rt schema_sqlite 2>"${OUT_DIR}/cg_test_schema_sqlite.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_sqlite.err"
-    failed
-  fi
-
-  echo combining generated previous schema with itself to ensure it self validates
-
-  cat "${OUT_DIR}/cg_test_schema_prev.out" > "${OUT_DIR}/prev_loop.out"
-  echo "@previous_schema;" >> "${OUT_DIR}/prev_loop.out"
-  cat "${OUT_DIR}/cg_test_schema_prev.out" >> "${OUT_DIR}/prev_loop.out"
-
-  if ! ${CQL} --cg "${OUT_DIR}/prev_twice.out" --in "${OUT_DIR}/prev_loop.out" --rt schema 2>"${OUT_DIR}/cg_test_schema_prev_twice.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_prev_twice.err"
-    failed
-  fi
-
-  echo comparing the generated previous schema from that combination and it should be identical to the original
-
-  if ! ${CQL} --cg "${OUT_DIR}/prev_thrice.out" --in "${OUT_DIR}/prev_twice.out" --rt schema 2>"${OUT_DIR}/cg_test_schema_prev_thrice.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_prev_thrice.err"
-    failed
-  fi
-
-  echo "  computing diffs after several applications (empty if none)"
-  __on_diff_exit "${OUT_DIR}/cg_test_schema_prev.out" "${OUT_DIR}/prev_twice.out"
-  __on_diff_exit "${OUT_DIR}/prev_twice.out" "${OUT_DIR}/prev_thrice.out"
-
-  echo "  computing previous schema diffs from reference (empty if none)"
-  on_diff_exit cg_test_schema_prev.out
-  on_diff_exit cg_test_schema_prev.err
-
-  echo "  computing sqlite schema diffs from reference (empty if none)"
-  on_diff_exit cg_test_schema_sqlite.out
-  on_diff_exit cg_test_schema_sqlite.err
-
-  echo "  running schema migration with include/exclude args"
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --include_regions extra --exclude_regions shared 2>"${OUT_DIR}/cg_test_schema_partial_upgrade.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_partial_upgrade.err"
-    failed
-  fi
-
-  echo "  compiling the upgrade script with CQL"
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_partial_upgrade.h" "${OUT_DIR}/cg_test_schema_partial_upgrade.c" --in "${OUT_DIR}/cg_test_schema_partial_upgrade.out"
-  then
-    echo CQL compilation failed
-    failed;
-  fi
-
-  echo "  computing diffs (empty if none)"
-  on_diff_exit cg_test_schema_partial_upgrade.out
-  on_diff_exit cg_test_schema_partial_upgrade.err
-
-  echo "  running schema migration with min version args"
-  if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_min_version_upgrade.out" --in "${TEST_DIR}/cg_test_schema_upgrade.sql" --global_proc test --rt schema_upgrade --min_schema_version 3 2>"${OUT_DIR}/cg_test_schema_min_version_upgrade.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_schema_min_version_upgrade.err"
-    failed
-  fi
-
-  echo "  computing diffs (empty if none)"
-  on_diff_exit cg_test_schema_min_version_upgrade.out
-  on_diff_exit cg_test_schema_min_version_upgrade.err
-}
-
-misc_cases() {
-  echo '--------------------------------- STAGE 10 -- MISC CASES'
-  echo running usage test
-  if ! ${CQL} >"${OUT_DIR}/usage.out" 2>"${OUT_DIR}/usage.err"
-  then
-    echo usage test failed
-    failed
-  fi
-  on_diff_exit usage.out
-
-  echo running simple error test
-  if ${CQL} --in "${TEST_DIR}/error.sql" >"${OUT_DIR}/error.out" 2>"${OUT_DIR}/simple_error.err"
-  then
-    echo simple error test failed
-    failed
-  fi
-
-  on_diff_exit simple_error.err
-
-  echo running previous schema and codegen incompatible test
-  if ${CQL} --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/cg_test_prev_invalid.sql" 2>"${OUT_DIR}/prev_and_codegen_incompat.err"
-  then
-    echo previous schema and codegen are supposed to be incompatible
-    failed
-  fi
-
-  on_diff_exit prev_and_codegen_incompat.err
-
-  echo running big quote test
-  if ! ${CQL} --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/bigquote.sql" --global_proc x >/dev/null 2>"${OUT_DIR}/bigquote.err"
-  then
-    echo big quote test failed
-    failed
-  fi
-
-  on_diff_exit bigquote.err
-
-  echo running alternate cqlrt.h test
-  if ! ${CQL} --cg "${OUT_DIR}/__temp.h" "${OUT_DIR}/__temp.c" --in "${TEST_DIR}/cg_test.sql" --global_proc x --cqlrt alternate_cqlrt.h 2>"${OUT_DIR}/alt_cqlrt.err"
-  then
-    echo alternate cqlrt test failed
-    failed
-  fi
-
-  if ! grep alternate_cqlrt.h "${OUT_DIR}/__temp.h" >/dev/null
-  then
-    echo alternate cqlrt did not appear in the output header
-    failed
-  fi
-
-  on_diff_exit alt_cqlrt.err
-
-  echo running too few -cg arguments with --generate_exports test
-  if ${CQL} --cg "${OUT_DIR}/__temp.c" "${OUT_DIR}/__temp.h" --in "${TEST_DIR}/cg_test.sql" --global_proc x --generate_exports 2>"${OUT_DIR}/gen_exports_args.err"
+  if ${CQL} --dev --cg "${OUT_DIR}/__temp.c" "${OUT_DIR}/__temp.h" --in "${TEST_DIR}/cg_test.sql" --global_proc x --generate_exports 2>"${OUT_DIR}/gen_exports_args.err"
   then
     echo too few --cg args test failed
     failed
@@ -1356,7 +1148,7 @@ misc_cases() {
   echo running test where output file cannot be written
   create_unwritable_file "${OUT_DIR}/unwritable.h.out"
   create_unwritable_file "${OUT_DIR}/unwritable.c.out"
-  if ${CQL} --cg "${OUT_DIR}/unwritable.h".out "${OUT_DIR}/unwritable.c".out --in "${TEST_DIR}/cg_test.sql" --rt c --global_proc cql_startup 2>"${OUT_DIR}/write_fail.err"
+  if ${CQL} --dev --cg "${OUT_DIR}/unwritable.h".out "${OUT_DIR}/unwritable.c".out --in "${TEST_DIR}/cg_test.sql" --rt c --global_proc cql_startup 2>"${OUT_DIR}/write_fail.err"
   then
     echo writing should have failed
     failed
@@ -1788,7 +1580,7 @@ unit_tests() {
 code_gen_lua_test() {
   echo '--------------------------------- STAGE 19 -- LUA CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_lua.lua" --in "${TEST_DIR}/cg_test_lua.sql" --global_proc cql_startup --rt lua 2>"${OUT_DIR}/cg_test_lua.err"
+  if ! ${CQL} --dev --test --cg "${OUT_DIR}/cg_test_lua.lua" --in "${TEST_DIR}/cg_test_lua.sql" --global_proc cql_startup --rt lua 2>"${OUT_DIR}/cg_test_lua.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/cg_test_lua.err"

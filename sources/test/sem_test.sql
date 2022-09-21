@@ -21520,6 +21520,26 @@ create temp table temp_backed(
   t text
 );
 
+-- TEST: table is backed by a table that does not exist
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: backing table does not exist 'not_exists_table'
+-- +1 error:
+@attribute(cql:backed_by=not_exists_table)
+create table backed_by_not_exists(
+  id integer,
+  t text
+);
+
+-- TEST: table is backed by a table that is not backing storage
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: table exists but is not a valid backing table 'foo'
+-- +1 error:
+@attribute(cql:backed_by=foo)
+create table backed_by_non_backing(
+  id integer,
+  t text
+);
+
 -- TEST: without rowid tables cannot be backed storage
 -- + {create_table_stmt}: err
 -- + error: % table is not suitable for use as backed storage: it is redundantly marked WITHOUT ROWID 'norowid_backed'
@@ -21691,7 +21711,55 @@ create table basic_table(
   id integer not null
 );
 
+-- TEST: correct call to blob_get_type
+-- + {name cql_blob_get_type}: longint sensitive
+-- - error:
+create proc blob_get_type()
+begin
+  declare x blob @sensitive;
+  let z := (select cql_blob_get_type(x));
+end;
+
+-- TEST: blob get type wrong argument count
+-- + {call}: err
+-- + error: % function got incorrect number of arguments 'cql_blob_get_type'
+-- +1 error:
+create proc blob_get_type_wrong_arg_count()
+begin
+  declare x blob;
+  let z := (select cql_blob_get_type());
+end;
+
+-- TEST: blob get type wrong argument type
+-- + {call}: err
+-- + error: % incompatible types in expression 'cql_blob_get_type'
+-- +1 error:
+create proc blob_get_type_wrong_arg_type()
+begin
+  let z := (select cql_blob_get_type(1));
+end;
+
+-- TEST: blob get type arg expression has errors
+-- + {call}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+create proc blob_get_type_bad_expr()
+begin
+  let z := (select cql_blob_get_type(not "x"));
+end;
+
+-- TEST: blob get type called outside of SQL context
+-- + {call}: err
+-- + error: % function may not appear in this context 'cql_blob_get_type'
+-- +1 error:
+create proc blob_get_type_context_wrong()
+begin
+  declare x blob;
+  let z :=  cql_blob_get_type(x);
+end;
+
 -- TEST: correct call to blob_get
+-- + {name cql_blob_get}: integer notnull
 -- + {call}: integer notnull
 -- - error:
 create proc blob_get()

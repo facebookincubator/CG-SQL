@@ -52,6 +52,10 @@ cql_noexport void print_sem_type(struct sem_node *sem) {}
 #define CQL_FROM_RECREATE "cql:from_recreate"
 #define CQL_MODULE_WARN "cql:module_must_not_be_deleted_see_docs_for_CQL0392"
 
+// As we walk sql expressions we note the ast nodes that hold table names that
+// are backed tables so that we can swap them out later
+static list_item *backed_tables_list;
+
 // These are the symbol tables with the ast dispatch when we get to an ast node
 // we look it up here and call the appropriate function whose name matches the ast
 // node type.
@@ -145,7 +149,7 @@ typedef void sem_special_func(ast_node *ast, uint32_t arg_count, bool_t *is_aggr
 static void sem_stmt_list(ast_node *ast);
 static void sem_stmt_list_in_current_flow_context(ast_node *ast);
 static void sem_stmt_list_within_loop(ast_node *stmt_list, ast_node *true_expr);
-static void sem_select(ast_node *node);
+static void sem_select_rewrite_backing(ast_node *node);
 static void sem_select_core_list(ast_node *ast);
 static void sem_query_parts(ast_node *node);
 static void sem_table_function(ast_node *node);
@@ -1156,11 +1160,9 @@ cql_noexport bool_t was_set_variable(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_WAS_SET);
 }
 
-/*
 cql_noexport bool_t is_backing(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_BACKING);
 }
-*/
 
 cql_noexport bool_t is_backed(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_BACKED);
@@ -1815,10 +1817,13 @@ cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_
 // there is such a table, else false: No errors are reported. This can be used
 // to check whether or not a to-be-introduced name will shadow something that is
 // already in scope and usable.
-static bool_t is_usable_and_not_deleted_table_or_view(CSTR name) {
+static bool_t name_hides_root_table(CSTR name) {
   Contract(name);
 
-  return !!find_usable_and_not_deleted_table_or_view(name, NULL, NULL);
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(name, NULL, NULL);
+
+  // it's ok to hide a backed table with a CTE, that's the point
+  return table_ast && !is_backed(table_ast->sem->sem_type);
 }
 
 static void add_cte(ast_node *ast) {
@@ -7179,6 +7184,47 @@ static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
   return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_CONSTRAINT));
 }
 
+// cql_blob_get_type(blob) -- this will ultimately expand into
+// user_defined_blob_get_type(blob).  We have this helper because it returns nullable or not
+// nullable depending on the input blob.  Otherwise this is very nearly a normal function.
+static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+  Contract(is_ast_call(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  *is_aggregate = false;
+
+  // cql_blob_get_type can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *blob_expr = first_arg(arg_list);
+
+  sem_expr(blob_expr);
+  if (is_error(blob_expr)) {
+    record_error(ast);
+    return;
+  }
+
+  if (!sem_verify_compat(blob_expr, blob_expr->sem->sem_type, SEM_TYPE_BLOB, "cql_blob_get_type")) {
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type = blob_expr->sem->sem_type;
+
+  sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | combined_flags);
+
+  // ast->sem->name is not set here because e.g. cql_blob_get(x, foo.bar) is not named "x"
+}
 
 // cql_blob_get(blob, table.column) -- this will ultimately expand into
 // user_defined_blob_get(blob, hash_code) but we need the table form so that we know the
@@ -7194,7 +7240,7 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
 
   *is_aggregate = false;
 
-  // round can only appear inside of SQL
+  // cql_blob_get can only appear inside of SQL
   if (!sem_validate_appear_inside_sql_stmt(ast)) {
     return;
   }
@@ -7251,7 +7297,11 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
     return;
   }
 
-  table_expr->sem = name_ast->sem = ast->sem = new_sem(sem_type);
+  sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
+
+  combined_flags = combine_flags(combined_flags, blob_expr->sem->sem_type);
+
+  table_expr->sem = name_ast->sem = ast->sem = new_sem(sem_type | combined_flags);
 
   // ast->sem->name is not set here because e.g. cql_blob_get(x, foo.bar) is not named "x"
 }
@@ -9756,6 +9806,10 @@ static void sem_table_or_subquery(ast_node *ast) {
       return;
     }
 
+    if (is_backed(table_ast->sem->sem_type)) {
+      add_item_to_list(&backed_tables_list, ast);
+    }
+
     sem_node *sem = new_sem(SEM_TYPE_JOIN);
     sem->jptr = sem_join_from_sem_struct(table_ast->sem->sptr);
     ast->sem = factor->sem = sem;
@@ -10893,7 +10947,7 @@ static void sem_select_core_list(ast_node *ast) {
 }
 
 // Any select in any context (used when a select appears within another statement)
-static void sem_select(ast_node *ast) {
+cql_noexport void sem_select(ast_node *ast) {
   select_level++;
   if (is_ast_with_select_stmt(ast)) {
     sem_with_select(ast);
@@ -10908,12 +10962,31 @@ static void sem_select(ast_node *ast) {
   select_level--;
 }
 
+static void sem_select_rewrite_backing(ast_node *ast) {
+  // normally only the top level select statement needs a backing list and does
+  // replacement, however, an EXPLAIN can happen at any level at that causes the
+  // top level statement handles to do analysis -- when that happens each nested
+  // EXPLAIN needs its own select rewrite.  This will happen naturally because
+  // the nested selects will call sem_select_rewrite_backing
+  list_item *saved_backing_list = backed_tables_list;
+  backed_tables_list = NULL;
+
+  sem_select(ast);
+
+  if (backed_tables_list && (is_ast_select_stmt(ast) || is_ast_with_select_stmt(ast))) {
+    rewrite_select_for_backed_tables(ast, backed_tables_list);
+  }
+
+  backed_tables_list = saved_backing_list;
+}
+
 // Top level statement list processing for select, not that a select statement
 // can't appear in other places (such as a nested expression).  This is only for
 // select in the context of a statement list.  Others use just 'sem_select'
 static void sem_select_stmt(ast_node *stmt) {
-   sem_select(stmt);
-   sem_update_proc_type_for_select(stmt);
+  sem_select_rewrite_backing(stmt);
+
+  sem_update_proc_type_for_select(stmt);
 }
 
 // Any explain in any context (used when a explain appears within another statement)
@@ -11008,7 +11081,7 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
     return;
   }
 
-  if (is_usable_and_not_deleted_table_or_view(name)) {
+  if (name_hides_root_table(name)) {
     report_error(ast, "CQL0437: common table name shadows previously declared table or view", name);
     record_error(ast);
     return;
@@ -11910,11 +11983,11 @@ cleanup:
   sem_pop_cte_state();
 }
 
-// top level with stmt
+// top level with-select stmt
 static void sem_with_select_stmt(ast_node *stmt) {
   Contract(is_ast_with_select_stmt(stmt));
   Invariant(cte_cur == NULL);
-  sem_select(stmt);
+  sem_select_rewrite_backing(stmt);
   sem_update_proc_type_for_select(stmt);
   Invariant(cte_cur == NULL);
 }
@@ -13664,8 +13737,25 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   Contract(!is_error(ast));
+
+  // the table has the attribute or we would not be here
+  CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+  Contract(backing_table_name);
+
+  ast_node *backing_table = find_table_or_view_even_deleted(backing_table_name);
+
+  if (!backing_table) {
+    report_invalid_backed(ast, "backing table does not exist", backing_table_name);
+    return;
+  }
+
+  if (!is_backing(backing_table->sem->sem_type)) {
+    report_invalid_backed(ast, "table exists but is not a valid backing table", backing_table_name);
+    return;
+  }
 
   int32_t temp = flags & TABLE_IS_TEMP;
   int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
@@ -19848,7 +19938,7 @@ static void sem_declare_cursor(ast_node *ast) {
     // DECLARE [name] CURSOR FOR [select_stmt]
     // or
     // DECLARE [name] CURSOR FOR [explain_stmt]
-    sem_select(select_stmt);
+    sem_select_rewrite_backing(select_stmt);
     if (is_error(select_stmt)) {
       record_error(ast);
       return;
@@ -22829,7 +22919,7 @@ static void sem_expr_select(ast_node *ast, CSTR cstr) {
   }
 
   // (select ...)
-  sem_select(ast);
+  sem_select_rewrite_backing(ast);
   if (is_error(ast)) {
     return;
   }
@@ -24514,6 +24604,7 @@ cql_noexport void sem_main(ast_node *ast) {
   SPECIAL_FUNC_INIT(ptr);
   SPECIAL_FUNC_INIT(cql_inferred_notnull);
   SPECIAL_FUNC_INIT(cql_blob_get);
+  SPECIAL_FUNC_INIT(cql_blob_get_type);
 
   EXPR_INIT(num, sem_expr_num, "NUM");
   EXPR_INIT(str, sem_expr_str, "STR");

@@ -85795,6 +85795,76 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:backed_by=not_exists_table)
+CREATE TABLE backed_by_not_exists(
+  id INTEGER,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: backing table does not exist 'not_exists_table'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name not_exists_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backed_by_not_exists}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=foo)
+CREATE TABLE backed_by_non_backing(
+  id INTEGER,
+  t TEXT
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: table exists but is not a valid backing table 'foo'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name foo}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backed_by_non_backing}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE norowid_backed(
   id INTEGER,
@@ -86437,6 +86507,181 @@ CREATE TABLE basic_table(
           | | {name id}
           | | {type_int}: integer
           | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_type ()
+BEGIN
+  DECLARE x BLOB @SENSITIVE;
+  LET z := ( SELECT cql_blob_get_type(x) );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name blob_get_type}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: blob sensitive
+      | | {name_list}: x: blob variable sensitive
+      | | | {name x}: x: blob variable sensitive
+      | | {sensitive_attr}: blob sensitive
+      |   | {type_blob}: blob
+      | {let_stmt}: z: longint variable sensitive
+        | {name z}: z: longint variable sensitive
+        | {select_stmt}: _anon: longint sensitive
+          | {select_core_list}: select: { _anon: longint sensitive }
+          | | {select_core}: select: { _anon: longint sensitive }
+          |   | {select_expr_list_con}: select: { _anon: longint sensitive }
+          |     | {select_expr_list}: select: { _anon: longint sensitive }
+          |     | | {select_expr}: longint sensitive
+          |     |   | {call}: longint sensitive
+          |     |     | {name cql_blob_get_type}: longint sensitive
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {name x}: x: blob variable sensitive
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_type_wrong_arg_count ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := ( SELECT cql_blob_get_type() );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_blob_get_type'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_wrong_arg_count}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get_type}: err
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_type_wrong_arg_type ()
+BEGIN
+  LET z := ( SELECT cql_blob_get_type(1) );
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in expression 'cql_blob_get_type'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_wrong_arg_type}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {int 1}: err
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_type_bad_expr ()
+BEGIN
+  LET z := ( SELECT cql_blob_get_type(NOT "x") );
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_bad_expr}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name z}
+        | {select_stmt}: err
+          | {select_core_list}: err
+          | | {select_core}: err
+          |   | {select_expr_list_con}: err
+          |     | {select_expr_list}: err
+          |     | | {select_expr}: err
+          |     |   | {call}: err
+          |     |     | {name cql_blob_get_type}
+          |     |     | {call_arg_list}
+          |     |       | {call_filter_clause}
+          |     |       | {arg_list}: ok
+          |     |         | {not}: err
+          |     |           | {strlit 'x'}: text notnull
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC blob_get_type_context_wrong ()
+BEGIN
+  DECLARE x BLOB;
+  LET z := cql_blob_get_type(x);
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_blob_get_type'
+
+  {create_proc_stmt}: err
+  | {name blob_get_type_context_wrong}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: blob
+      | | {name_list}: x: blob variable
+      | | | {name x}: x: blob variable
+      | | {type_blob}: blob
+      | {let_stmt}: err
+        | {name z}
+        | {call}: err
+          | {name cql_blob_get_type}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name x}
 
 The statement ending at line XXXX
 

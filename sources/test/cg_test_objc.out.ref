@@ -4488,4 +4488,140 @@ static inline BOOL CGBUseGeneratedFragmentRowEqual(CGBUseGeneratedFragment *resu
   return CGCUseGeneratedFragmentRowEqual(CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet1), row1, CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet2), row2);
 }
 
+@class CGBUseBackedTableDirectly;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUseBackedTableDirectly
+@end
+#endif
+
+static inline CGBUseBackedTableDirectly *CGBUseBackedTableDirectlyFromCGCUseBackedTableDirectly(CGCUseBackedTableDirectlyResultSetRef resultSet)
+{
+  return (__bridge CGBUseBackedTableDirectly *)resultSet;
+}
+
+static inline CGCUseBackedTableDirectlyResultSetRef CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(CGBUseBackedTableDirectly *resultSet)
+{
+  return (__bridge CGCUseBackedTableDirectlyResultSetRef)resultSet;
+}
+
+static inline int32_t CGBUseBackedTableDirectlyGetPk(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
+  return CGCUseBackedTableDirectlyGetPk(cResultSet, row);
+}
+
+static inline BOOL CGBUseBackedTableDirectlyGetFlag(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
+  return CGCUseBackedTableDirectlyGetFlag(cResultSet, row) ? YES : NO;
+}
+
+static inline NSNumber *_Nullable CGBUseBackedTableDirectlyGetId(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
+  return CGCUseBackedTableDirectlyGetIdIsNull(cResultSet, row) ? nil : @(CGCUseBackedTableDirectlyGetIdValue(cResultSet, row));
+}
+
+static inline NSString *_Nullable CGBUseBackedTableDirectlyGetName(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
+  return (__bridge NSString *)CGCUseBackedTableDirectlyGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBUseBackedTableDirectlyGetAge(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
+  return CGCUseBackedTableDirectlyGetAgeIsNull(cResultSet, row) ? nil : @(CGCUseBackedTableDirectlyGetAgeValue(cResultSet, row));
+}
+
+static inline NSData *_Nullable CGBUseBackedTableDirectlyGetStorage(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
+  return (__bridge NSData *)CGCUseBackedTableDirectlyGetStorage(cResultSet, row);
+}
+
+static inline int32_t CGBUseBackedTableDirectlyResultCount(CGBUseBackedTableDirectly *resultSet)
+{
+  return CGCUseBackedTableDirectlyResultCount(CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet));
+}
+
+static inline NSUInteger CGBUseBackedTableDirectlyRowHash(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  return CGCUseBackedTableDirectlyRowHash(CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet), row);
+}
+
+static inline BOOL CGBUseBackedTableDirectlyRowEqual(CGBUseBackedTableDirectly *resultSet1, int32_t row1, CGBUseBackedTableDirectly *resultSet2, int32_t row2)
+{
+  return CGCUseBackedTableDirectlyRowEqual(CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet1), row1, CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet2), row2);
+}
+
+@class CGBUseBackedTableDirectlyInWithSelect;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBUseBackedTableDirectlyInWithSelect
+@end
+#endif
+
+static inline CGBUseBackedTableDirectlyInWithSelect *CGBUseBackedTableDirectlyInWithSelectFromCGCUseBackedTableDirectlyInWithSelect(CGCUseBackedTableDirectlyInWithSelectResultSetRef resultSet)
+{
+  return (__bridge CGBUseBackedTableDirectlyInWithSelect *)resultSet;
+}
+
+static inline CGCUseBackedTableDirectlyInWithSelectResultSetRef CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(CGBUseBackedTableDirectlyInWithSelect *resultSet)
+{
+  return (__bridge CGCUseBackedTableDirectlyInWithSelectResultSetRef)resultSet;
+}
+
+static inline int32_t CGBUseBackedTableDirectlyInWithSelectGetPk(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyInWithSelectResultSetRef cResultSet = CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet);
+  return CGCUseBackedTableDirectlyInWithSelectGetPk(cResultSet, row);
+}
+
+static inline BOOL CGBUseBackedTableDirectlyInWithSelectGetFlag(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyInWithSelectResultSetRef cResultSet = CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet);
+  return CGCUseBackedTableDirectlyInWithSelectGetFlag(cResultSet, row) ? YES : NO;
+}
+
+static inline NSNumber *_Nullable CGBUseBackedTableDirectlyInWithSelectGetId(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyInWithSelectResultSetRef cResultSet = CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet);
+  return CGCUseBackedTableDirectlyInWithSelectGetIdIsNull(cResultSet, row) ? nil : @(CGCUseBackedTableDirectlyInWithSelectGetIdValue(cResultSet, row));
+}
+
+static inline NSString *_Nullable CGBUseBackedTableDirectlyInWithSelectGetName(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyInWithSelectResultSetRef cResultSet = CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet);
+  return (__bridge NSString *)CGCUseBackedTableDirectlyInWithSelectGetName(cResultSet, row);
+}
+
+static inline NSNumber *_Nullable CGBUseBackedTableDirectlyInWithSelectGetAge(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyInWithSelectResultSetRef cResultSet = CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet);
+  return CGCUseBackedTableDirectlyInWithSelectGetAgeIsNull(cResultSet, row) ? nil : @(CGCUseBackedTableDirectlyInWithSelectGetAgeValue(cResultSet, row));
+}
+
+static inline NSData *_Nullable CGBUseBackedTableDirectlyInWithSelectGetStorage(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyInWithSelectResultSetRef cResultSet = CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet);
+  return (__bridge NSData *)CGCUseBackedTableDirectlyInWithSelectGetStorage(cResultSet, row);
+}
+
+static inline int32_t CGBUseBackedTableDirectlyInWithSelectResultCount(CGBUseBackedTableDirectlyInWithSelect *resultSet)
+{
+  return CGCUseBackedTableDirectlyInWithSelectResultCount(CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet));
+}
+
+static inline NSUInteger CGBUseBackedTableDirectlyInWithSelectRowHash(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  return CGCUseBackedTableDirectlyInWithSelectRowHash(CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet), row);
+}
+
+static inline BOOL CGBUseBackedTableDirectlyInWithSelectRowEqual(CGBUseBackedTableDirectlyInWithSelect *resultSet1, int32_t row1, CGBUseBackedTableDirectlyInWithSelect *resultSet2, int32_t row2)
+{
+  return CGCUseBackedTableDirectlyInWithSelectRowEqual(CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet1), row1, CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet2), row2);
+}
+
 NS_ASSUME_NONNULL_END
