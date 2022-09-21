@@ -329,7 +329,7 @@ CQL_EXPORT cql_bool cql_facet_upsert(cql_object_ref _Nullable facets, cql_string
 CQL_EXPORT cql_int64 cql_facet_find(cql_object_ref _Nullable  facets, cql_string_ref _Nonnull key);
 
 // For internal use by the runtime only
-CQL_EXPORT cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)());
+CQL_EXPORT cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)(void *_Nonnull));
 CQL_EXPORT void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull obj);
 
 CQL_EXPORT cql_object_ref _Nonnull cql_partition_create(void);
