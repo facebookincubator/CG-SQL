@@ -2271,7 +2271,8 @@ static ast_node *rewrite_backed_expr_list(ast_node *backed_table, CSTR key, CSTR
     return NULL;
   }
 
-  bool_t is_key_column = get_table_pk_col_offset(backed_table, sptr->names[index]) >= 0;
+  sem_t sem_type = sptr->semtypes[index];
+  bool_t is_key_column = is_primary_key(sem_type) || is_partial_pk(sem_type);
 
   ast_node *result = new_ast_select_expr_list(
     new_ast_select_expr(
@@ -2341,9 +2342,11 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
 
   // figure out the column order of the key and value columns in the backing store
   // the options are "key, value" or "value, key"
-  bool_t is_kv = get_table_pk_col_offset(backing_table, sptr_backing->names[0]) >= 0;
-  CSTR backing_key = sptr_backing->names[!is_kv]; // if the order is kv then the key is column 0, else 1
-  CSTR backing_val = sptr_backing->names[is_kv];  // if the oder is kv then the value is colume 1, else 0
+  sem_t sem_type = sptr_backing->semtypes[0];
+  bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+  CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
+  CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
 
   ast_node *select_expr_list = rewrite_backed_expr_list(backed_table, backing_key, backing_val, 0);
 

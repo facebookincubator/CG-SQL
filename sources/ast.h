@@ -243,8 +243,6 @@ cql_noexport bool_t is_primitive(ast_node *_Nullable  node);
 cql_noexport bool_t is_proc(ast_node *_Nullable node);
 cql_noexport bool_t is_region(ast_node *_Nonnull ast);
 
-cql_noexport int32_t get_table_pk_col_offset(ast_node *_Nonnull create_table_stmt, CSTR _Nonnull name);
-
 cql_noexport ast_node *_Nullable get_proc_params(ast_node *_Nonnull ast);
 cql_noexport ast_node *_Nonnull get_proc_name(ast_node *_Nonnull ast);
 cql_noexport ast_node *_Nullable get_func_params(ast_node *_Nonnull func_stmt);

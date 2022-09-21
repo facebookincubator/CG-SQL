@@ -1152,6 +1152,44 @@ static void gen_cql_blob_get_type(ast_node *ast) {
   gen_printf(")");
 }
 
+#define CQL_SEARCH_COL_KEYS true
+#define CQL_SEARCH_COL_VALUES false
+
+static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool_t search_for_keys) {
+  // this can only be used after semantic analysis
+  Contract(is_ast_create_table_stmt(create_table_stmt));
+  Contract(create_table_stmt->sem);
+  Contract(create_table_stmt->sem->sptr);
+
+  sem_struct *sptr = create_table_stmt->sem->sptr;
+  int32_t result = 0;
+
+  for (int32_t i = 0; i < sptr->count; i++) {
+    sem_t sem_type = sptr->semtypes[i];
+    bool_t is_pk = is_primary_key(sem_type) || is_partial_pk(sem_type);
+    bool_t is_correct_type = search_for_keys == is_pk;
+
+    // Note that we ALWAYS exit on this path because by this point names are known to be valid.
+    // Semantic errors would have stopped codegen well before we get here on any other path.
+    if (!Strcasecmp(name, sptr->names[i])) {
+      // Found the name either use the computed result so far or -1
+      if (!is_correct_type) {
+        result = -1;
+      }
+      break;
+    }
+
+    if (is_correct_type) {
+      // We're looking for the offset in the keys or the values so we only advance the returned
+      // offset when we find the column type that matches.  e.g. when looking for value columns
+      // we skip over pk columns entirely, they just don't count.
+      result++;
+    }
+  }
+
+  return result;
+}
+
 static void gen_cql_blob_get(ast_node *ast) {
   Contract(is_ast_call(ast));
   Contract(cg_blob_mappings);
@@ -1167,7 +1205,7 @@ static void gen_cql_blob_get(ast_node *ast) {
   ast_node *table_ast = find_table_or_view_even_deleted(tname);
   Invariant(table_ast);
 
-  int32_t pk_col_offset = get_table_pk_col_offset(table_ast, cname);
+  int32_t pk_col_offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_KEYS);
 
   CSTR func = pk_col_offset >= 0 ?
     cg_blob_mappings->blob_get_key : cg_blob_mappings->blob_get_val;
@@ -1179,7 +1217,15 @@ static void gen_cql_blob_get(ast_node *ast) {
   gen_root_expr(first_arg(arg_list));
 
   if (offsets) {
-    gen_printf(", %d)", pk_col_offset);
+    int32_t offset = pk_col_offset;
+    if (offset < 0) {
+      // if column not part of the key then we need to index the value, not the key
+      offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
+      // we know it's a valid column so it's either a key or it isn't
+      // since it isn't a key it must be a value
+      Invariant(offset >= 0);
+    }
+    gen_printf(", %d)", offset);
   }
   else {
     gen_printf(", ");

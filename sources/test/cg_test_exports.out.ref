@@ -248,6 +248,7 @@ DECLARE PROC use_generated_fragment () (pk INTEGER NOT NULL, flag BOOL NOT NULL,
 DECLARE PROC use_backed_table_directly () (pk INTEGER NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB);
 DECLARE PROC use_backed_table_with_cursor () USING TRANSACTION;
 DECLARE PROC use_backed_table_directly_in_with_select () (pk INTEGER NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB);
-DECLARE PROC use_backed_table_with_selet_and_cursor () USING TRANSACTION;
+DECLARE PROC use_backed_table_with_select_and_cursor () USING TRANSACTION;
 DECLARE PROC use_backed_table_select_expr (OUT x BOOL NOT NULL) USING TRANSACTION;
+DECLARE PROC use_backed_table_select_expr_value_offsets (OUT x BOOL NOT NULL) USING TRANSACTION;
 DECLARE PROC end_proc ();

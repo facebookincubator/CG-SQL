@@ -590,7 +590,7 @@ typedef struct simple_container_proc_row {
 extern CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
-// static CQL_WARN_UNUSED cql_code explain_equery_plan_backed(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_bool *_Nonnull x);
+// static CQL_WARN_UNUSED cql_code explain_query_plan_backed(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_bool *_Nonnull x);
 cql_string_literal(_literal_1_text_, "text");
 cql_string_literal(_literal_2_This_is_a_test_, "This is a \" \\ test '' \n \" ");
 cql_string_literal(_literal_3_b_, "b");
@@ -17195,7 +17195,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_backed_table_with_selet_and_cursor ()
+CREATE PROC use_backed_table_with_select_and_cursor ()
 BEGIN
   DECLARE C CURSOR FOR WITH
   backed (pk, flag, id, name, age, storage) AS (CALL _backed()),
@@ -17206,12 +17206,12 @@ BEGIN
 END;
 */
 
-#define _PROC_ "use_backed_table_with_selet_and_cursor"
+#define _PROC_ "use_backed_table_with_select_and_cursor"
 /*
 export:
-DECLARE PROC use_backed_table_with_selet_and_cursor () USING TRANSACTION;
+DECLARE PROC use_backed_table_with_select_and_cursor () USING TRANSACTION;
 */
-CQL_WARN_UNUSED cql_code use_backed_table_with_selet_and_cursor(sqlite3 *_Nonnull _db_) {
+CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   sqlite3_stmt *C_stmt = NULL;
 
@@ -17289,7 +17289,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC explain_equery_plan_backed (OUT x BOOL NOT NULL)
+CREATE PROC explain_query_plan_backed (OUT x BOOL NOT NULL)
 BEGIN
   EXPLAIN QUERY PLAN
   WITH
@@ -17299,12 +17299,12 @@ BEGIN
 END;
 */
 
-#define _PROC_ "explain_equery_plan_backed"
+#define _PROC_ "explain_query_plan_backed"
 /*
 private:
-DECLARE PROC explain_equery_plan_backed (OUT x BOOL NOT NULL) (iselectid INTEGER NOT NULL, iorder INTEGER NOT NULL, ifrom INTEGER NOT NULL, zdetail TEXT NOT NULL);
+DECLARE PROC explain_query_plan_backed (OUT x BOOL NOT NULL) (iselectid INTEGER NOT NULL, iorder INTEGER NOT NULL, ifrom INTEGER NOT NULL, zdetail TEXT NOT NULL);
 */
-static CQL_WARN_UNUSED cql_code explain_equery_plan_backed(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_bool *_Nonnull x) {
+static CQL_WARN_UNUSED cql_code explain_query_plan_backed(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_bool *_Nonnull x) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
   *x = 0; // set out arg to non-garbage
@@ -17325,6 +17325,54 @@ static CQL_WARN_UNUSED cql_code explain_equery_plan_backed(sqlite3 *_Nonnull _db
 
 cql_cleanup:
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC use_backed_table_select_expr_value_offsets (OUT x BOOL NOT NULL)
+BEGIN
+  SET x := ( WITH
+  backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+  SELECT flag
+    FROM backed );
+END;
+*/
+
+#define _PROC_ "use_backed_table_select_expr_value_offsets"
+/*
+export:
+DECLARE PROC use_backed_table_select_expr_value_offsets (OUT x BOOL NOT NULL) USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull x) {
+  cql_contract_argument_notnull((void *)x, 1);
+
+  cql_code _rc_ = SQLITE_OK;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  *x = 0; // set out arg to non-garbage
+  _rc_ = cql_prepare_var(_db_, &_temp_stmt,
+    3, NULL,
+  "WITH "
+    "backed (pk, flag, id, name, age, storage) AS (",
+  "SELECT bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+  ") "
+    "SELECT flag "
+      "FROM backed"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    *x = sqlite3_column_int(_temp_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp_stmt);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
 #undef _PROC_

@@ -5487,7 +5487,7 @@ end;
 -- + WHERE bgetkey_type(T.k) = -1622391684721028952
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
-create proc use_backed_table_with_selet_and_cursor()
+create proc use_backed_table_with_select_and_cursor()
 begin
   declare C cursor for
   with one(*) as (select 1 x), two(*) as (select 2 x)
@@ -5529,9 +5529,19 @@ end;
 -- verify this is a result set proc
 -- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 @attribute(cql:private)
-create proc explain_equery_plan_backed(out x bool not null)
+create proc explain_query_plan_backed(out x bool not null)
 begin
   explain query plan select * from backed;
+end;
+
+-- try the path where we use offsets in the value blob
+@blob_get_val bgetval offset;
+
+-- TEST: we should get value indexes 0, 1, 2, 3, 4 not hashes
+-- + SELECT bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4)
+create proc use_backed_table_select_expr_value_offsets(out x bool not null)
+begin
+  set x := (select flag from backed);
 end;
 
 --------------------------------------------------------------------

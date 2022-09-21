@@ -3871,12 +3871,17 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
-extern CQL_WARN_UNUSED cql_code use_backed_table_with_selet_and_cursor(sqlite3 *_Nonnull _db_);
+extern CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull x);
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull x);
 
 // The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
