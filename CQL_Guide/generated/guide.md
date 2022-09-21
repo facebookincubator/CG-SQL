@@ -7901,6 +7901,50 @@ Each _attribute value_ can be:
 
 Since the _attribute values_ can nest its possible to represent arbitrarily complex data types in an attribute.  You can even represent a LISP program.
 
+### Global attributes
+
+While the most common use case for attributes is to be attached to other entities (e.g., tables, columns), CQL also lets you define
+"global" attributes, which are included in the top level `attributes` section of the JSON output. To specify global attributes you can
+declare a variable ending with the suffix "database" and attach attributes to it. CQL will merge together all the attributes
+from all the variables ending with "database" and place them in the `attributes` section of the JSON output.
+
+The main usage of global attributes is as a way to propagate configurations across an entire CQL build. You can, for instance,
+include these attributes in some root file that you `#include` in the rest of your CQL code, and by doing this these attributes
+will be visible everywhere else.
+
+
+Example:
+
+```sql
+@attribute(attribute_1 = "value_1")
+@attribute(attribute_2 = "value_2")
+declare database object;
+
+@attribute(attribute_3 = "value_3")
+declare some_other_database object;
+```
+
+Generates:
+
+```json
+    {
+      "attributes": [
+        {
+          "name": "attribute_1",
+          "value": "value_1"
+        },
+        {
+          "name": "attribute_2",
+          "value": "value_2"
+        },
+        {
+          "name": "attribute_3",
+          "value": "value_3"
+        }
+      ]
+    }
+```
+
 ## Foreign Keys
 
 Foreign keys appear only in tables, the list of keys contains zero or more entries of this form:
@@ -7983,7 +8027,6 @@ The views section contains the list of all views in the schema, it is zero or mo
   * **deletedVersion** : optional, the schema version number in the @delete directive
 * **_region information_** : optional, see the section on Region Info
 * **_attributes_** : optional, see the section on attributes, they appear in many places
-* **_columns_** : an array of column definitions, see the section on columns
 * **_projection_** : an array of projected columns from the view, the view result if you will, see the section on projections
 * **select** : the text of the select statement that defined the view
 * **selectArgs** : the names of arguments any unbound expressions ("?") in the view
@@ -8535,6 +8578,7 @@ Note that atypical binding forces procedures into the "general" section.
 * **name** : the name of the procedure
 * **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
 * **definedOnLine** : the line number of the file where the procedure is declared
+* **attributes** : optional, see the section on attributes, they appear in many places
 * **projection**: An array of projections. See [the section on projections](#projections)
 
 Example
@@ -9593,9 +9637,6 @@ NOTE: different result types require a different number of output files with dif
 ### --java_fragment_interface_mode
 * Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.
 
-### --java_imports name
-* Fully qualified name to import in the emitted java source.
-
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
 * if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
@@ -9701,7 +9742,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Jul 24 11:43:35 PDT 2022
+Snapshot as of Wed Sep 21 00:38:28 PDT 2022
 
 ### Operators and Literals
 
@@ -9737,7 +9778,9 @@ REALLIT /* floating point literal */
 ```
 ### Statement/Type Keywords
 ```
-"@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@CREATE"
+"@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@BLOB_GET_KEY"
+"@BLOB_GET_KEY_TYPE" "@BLOB_GET_VAL" "@BLOB_GET_VAL_TYPE"
+"@BLOB_UPDATE_KEY" "@BLOB_UPDATE_VAL" "@CREATE"
 "@DECLARE_DEPLOYABLE_REGION" "@DECLARE_SCHEMA_REGION"
 "@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
 "@EMIT_ENUMS" "@EMIT_GROUP" "@END_SCHEMA_REGION"
@@ -9802,6 +9845,14 @@ any_stmt:
     alter_table_add_column_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
+  | blob_get_key_type_stmt
+  | blob_get_val_type_stmt
+  | blob_get_key_stmt
+  | blob_get_val_stmt
+  | blob_create_key_stmt
+  | blob_create_val_stmt
+  | blob_update_key_stmt
+  | blob_update_val_stmt
   | call_stmt
   | close_stmt
   | commit_return_stmt
@@ -10061,6 +10112,7 @@ misc_attr_value:
   | const_expr
   | '(' misc_attr_value_list ')'
   | '-' num_literal
+  | '+' num_literal
   ;
 
 misc_attr:
@@ -10209,6 +10261,7 @@ col_attrs:
   | "PRIMARY" "KEY" opt_conflict_clause col_attrs
   | "PRIMARY" "KEY" opt_conflict_clause "AUTOINCREMENT" col_attrs
   | "DEFAULT" '-' num_literal col_attrs
+  | "DEFAULT" '+' num_literal col_attrs
   | "DEFAULT" num_literal col_attrs
   | "DEFAULT" const_expr col_attrs
   | "DEFAULT" str_literal col_attrs
@@ -10341,6 +10394,7 @@ math_expr:
   | math_expr "IS TRUE"
   | math_expr "IS FALSE"
   | '-' math_expr
+  | '+' math_expr
   | '~' math_expr
   | "NOT" math_expr
   | math_expr '=' math_expr
@@ -11140,6 +11194,7 @@ child_results:
 
 child_result:
   call_stmt "USING" '(' name_list ')'
+  | call_stmt "USING" '(' name_list ')' "AS" name
   ;
 
 if_stmt:
@@ -11338,6 +11393,43 @@ enforce_push_stmt:
 
 enforce_pop_stmt:
   "@ENFORCE_POP"
+  ;
+
+opt_use_offset:
+  /* nil */
+  | "OFFSET"
+  ;
+
+blob_get_key_type_stmt:
+  "@BLOB_GET_KEY_TYPE" name
+  ;
+
+blob_get_val_type_stmt:
+  "@BLOB_GET_VAL_TYPE" name
+  ;
+
+blob_get_key_stmt:
+  "@BLOB_GET_KEY" name opt_use_offset
+  ;
+
+blob_get_val_stmt:
+  "@BLOB_GET_VAL" name opt_use_offset
+  ;
+
+blob_create_key_stmt:
+  "@BLOB_GET_VAL" name opt_use_offset
+  ;
+
+blob_create_val_stmt:
+  "@BLOB_GET_VAL" name opt_use_offset
+  ;
+
+blob_update_key_stmt:
+  "@BLOB_UPDATE_KEY" name opt_use_offset
+  ;
+
+blob_update_val_stmt:
+  "@BLOB_UPDATE_VAL" name opt_use_offset
   ;
 
 ```
@@ -15941,13 +16033,25 @@ In a `CREATE PROCEDURE` / `DECLARE PROCEDURE` statement, the given name conflict
 
 Interface with the name provided in `cql:implements` attribute does not exist
 
-### CQL0483: procedure results should include all columns defined by the interface 'name'
+### CQL0483: table is not suitable for use as backing storage: [reason] 'table_name'
 
-Procedure should return at least all columns defined by the interface.
+The indicated table was marked with `@attribute(cql:backing_table)`.  This indicates
+that the table is going to be used to as a generic storage location stored in the database.
 
-### CQL0484: name of the column must match the name of the column defined by interface
+There are a number of reasons why a table might not be a valid as backing storage.
 
-Procedure should return at least all columns defined by the interface and column names should be the same (and defined in the same order).
+For instance:
+
+* it has foreign keys
+* it has constraints
+* it is a virtual table
+* it has schema versioning
+
+This error indicates that one of these items is present. The specific cause is included in the text of the message.
+
+### CQL0484: procedure '%s' is missing column '%s' of interface '%s'
+
+Procedure should return all columns defined by the interface (and possibly others).  The columns may be returned in any order.
 
 ### CQL0485: column types returned by proc need to be the same as defined on the interface
 
@@ -15969,6 +16073,34 @@ DECLARE SELECT FUNCTION foo() t text;
 
 Make sure the redeclaration of the function is consistent with the original declaration, or remove the redeclaration.
 
+### CQL0487: table is not suitable as backed storage: [reason] 'table_name'
+
+The indicated table was marked with `@attribute(cql:backing_table)`.  This indicates
+that the table is going to be used to as a generic storage location stored in the database.
+
+There are a number of reasons why a table might not be a valid as backing storage.
+
+For instance:
+
+* it has foreign keys
+* it has constraints
+* it is a virtual table
+* it has schema versioning
+
+This error indicates that one of these items is present. The specific cause is included in the text of the message.
+
+### CQL0488: the indicated table is not declared for backed storage 'table_name'
+
+When declaring a backed table, you must specify the physical table that will hold its data.  The backed table
+is marked with `@attribute(cql:backed_by=table_name)`.  The backing table is marked with `@attribute(cql:backing)`.
+The backing and backed_by attributes applies extra checks to tables to ensure they are suitable candidates.
+
+This error indicates that the named table is not marked as a backed table.
+
+### CQL0489: the indicated column is not present in the named backed storage 'table_name.column_name'
+
+The named table is a backed table, but it does not have the indicated column.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -15981,7 +16113,7 @@ Make sure the redeclaration of the function is consistent with the original decl
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Jul 24 11:43:35 PDT 2022
+Snapshot as of Wed Sep 21 00:38:28 PDT 2022
 
 ### Rules
 
@@ -16609,6 +16741,7 @@ interface: '{'
           '"name"' ':' STRING_LITERAL ','
           '"definedInFile"' ':' STRING_LITERAL ','
           '"definedOnLine"' ':' INT_LITERAL ','
+          opt_attributes
           '"projection"' ':' '[' projected_columns ']'
          '}'
   ;

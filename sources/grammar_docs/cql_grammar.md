@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Jul 24 11:43:35 PDT 2022
+Snapshot as of Wed Sep 21 00:38:28 PDT 2022
 
 ### Operators and Literals
 
@@ -49,7 +49,9 @@ REALLIT /* floating point literal */
 ```
 ### Statement/Type Keywords
 ```
-"@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@CREATE"
+"@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@BLOB_GET_KEY"
+"@BLOB_GET_KEY_TYPE" "@BLOB_GET_VAL" "@BLOB_GET_VAL_TYPE"
+"@BLOB_UPDATE_KEY" "@BLOB_UPDATE_VAL" "@CREATE"
 "@DECLARE_DEPLOYABLE_REGION" "@DECLARE_SCHEMA_REGION"
 "@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
 "@EMIT_ENUMS" "@EMIT_GROUP" "@END_SCHEMA_REGION"
@@ -114,6 +116,14 @@ any_stmt:
     alter_table_add_column_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
+  | blob_get_key_type_stmt
+  | blob_get_val_type_stmt
+  | blob_get_key_stmt
+  | blob_get_val_stmt
+  | blob_create_key_stmt
+  | blob_create_val_stmt
+  | blob_update_key_stmt
+  | blob_update_val_stmt
   | call_stmt
   | close_stmt
   | commit_return_stmt
@@ -373,6 +383,7 @@ misc_attr_value:
   | const_expr
   | '(' misc_attr_value_list ')'
   | '-' num_literal
+  | '+' num_literal
   ;
 
 misc_attr:
@@ -521,6 +532,7 @@ col_attrs:
   | "PRIMARY" "KEY" opt_conflict_clause col_attrs
   | "PRIMARY" "KEY" opt_conflict_clause "AUTOINCREMENT" col_attrs
   | "DEFAULT" '-' num_literal col_attrs
+  | "DEFAULT" '+' num_literal col_attrs
   | "DEFAULT" num_literal col_attrs
   | "DEFAULT" const_expr col_attrs
   | "DEFAULT" str_literal col_attrs
@@ -653,6 +665,7 @@ math_expr:
   | math_expr "IS TRUE"
   | math_expr "IS FALSE"
   | '-' math_expr
+  | '+' math_expr
   | '~' math_expr
   | "NOT" math_expr
   | math_expr '=' math_expr
@@ -1452,6 +1465,7 @@ child_results:
 
 child_result:
   call_stmt "USING" '(' name_list ')'
+  | call_stmt "USING" '(' name_list ')' "AS" name
   ;
 
 if_stmt:
@@ -1650,6 +1664,43 @@ enforce_push_stmt:
 
 enforce_pop_stmt:
   "@ENFORCE_POP"
+  ;
+
+opt_use_offset:
+  /* nil */
+  | "OFFSET"
+  ;
+
+blob_get_key_type_stmt:
+  "@BLOB_GET_KEY_TYPE" name
+  ;
+
+blob_get_val_type_stmt:
+  "@BLOB_GET_VAL_TYPE" name
+  ;
+
+blob_get_key_stmt:
+  "@BLOB_GET_KEY" name opt_use_offset
+  ;
+
+blob_get_val_stmt:
+  "@BLOB_GET_VAL" name opt_use_offset
+  ;
+
+blob_create_key_stmt:
+  "@BLOB_GET_VAL" name opt_use_offset
+  ;
+
+blob_create_val_stmt:
+  "@BLOB_GET_VAL" name opt_use_offset
+  ;
+
+blob_update_key_stmt:
+  "@BLOB_UPDATE_KEY" name opt_use_offset
+  ;
+
+blob_update_val_stmt:
+  "@BLOB_UPDATE_VAL" name opt_use_offset
   ;
 
 ```
