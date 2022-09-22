@@ -768,6 +768,14 @@ static void gen_select_opts(ast_node *ast) {
   }
 }
 
+static void gen_binary_no_spaces(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  if (pri_new < pri) gen_printf("(");
+  gen_expr(ast->left, pri_new);
+  gen_printf("%s", op);
+  gen_expr(ast->right, pri_new + 1);
+  if (pri_new < pri) gen_printf(")");
+}
+
 static void gen_binary(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   // We add parens if our priority is less than the parent priority
@@ -4542,6 +4550,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(exists_expr, gen_expr_exists, "EXISTS", EXPR_PRI_ROOT);
   EXPR_INIT(cast_expr, gen_expr_cast, "CAST", EXPR_PRI_ROOT);
   EXPR_INIT(concat, gen_concat, "||", EXPR_PRI_CONCAT);
+  EXPR_INIT(reverse_apply, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
 }
 
 cql_export void gen_cleanup() {

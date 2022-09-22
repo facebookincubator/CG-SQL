@@ -1464,6 +1464,146 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
+DECLARE real_result2 REAL;
+
+  {declare_vars_type}: real
+  | {name_list}: real_result2: real variable was_set
+  | | {name real_result2}: real_result2: real variable was_set
+  | {type_real}: real
+
+The statement ending at line XXXX
+
+DECLARE FUNC simple_func2 (arg1 INTEGER NOT NULL, arg2 INTEGER NOT NULL, arg3 INTEGER NOT NULL) REAL NOT NULL;
+
+  {declare_func_stmt}: real notnull
+  | {name simple_func2}: real notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: integer notnull variable in
+    | | | {param_detail}: arg1: integer notnull variable in
+    | |   | {name arg1}: arg1: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: arg2: integer notnull variable in
+    |   | | {param_detail}: arg2: integer notnull variable in
+    |   |   | {name arg2}: arg2: integer notnull variable in
+    |   |   | {notnull}: integer notnull
+    |   |     | {type_int}: integer
+    |   | {params}
+    |     | {param}: arg3: integer notnull variable in
+    |       | {param_detail}: arg3: integer notnull variable in
+    |         | {name arg3}: arg3: integer notnull variable in
+    |         | {notnull}: integer notnull
+    |           | {type_int}: integer
+    | {notnull}: real notnull
+      | {type_real}: real
+
+The statement ending at line XXXX
+
+SET real_result2 := simple_func2(2, 3, 4);
+
+  {assign}: real_result2: real variable was_set
+  | {name real_result2}: real_result2: real variable was_set
+  | {call}: real notnull
+    | {name simple_func2}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 2}: integer notnull
+        | {arg_list}
+          | {int 3}: integer notnull
+          | {arg_list}
+            | {int 4}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE int_result INTEGER;
+
+  {declare_vars_type}: integer
+  | {name_list}: int_result: integer variable was_set
+  | | {name int_result}: int_result: integer variable was_set
+  | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC simple_func3 (arg1 INTEGER NOT NULL) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name simple_func3}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: integer notnull variable in
+    |   | {param_detail}: arg1: integer notnull variable in
+    |     | {name arg1}: arg1: integer notnull variable in
+    |     | {notnull}: integer notnull
+    |       | {type_int}: integer
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+SET int_result := simple_func3(2);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name simple_func3}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE real_result4 REAL;
+
+  {declare_vars_type}: real
+  | {name_list}: real_result4: real variable was_set
+  | | {name real_result4}: real_result4: real variable was_set
+  | {type_real}: real
+
+The statement ending at line XXXX
+
+SET real_result4 := simple_func2(simple_func3(1), 2, 3);
+
+  {assign}: real_result4: real variable was_set
+  | {name real_result4}: real_result4: real variable was_set
+  | {call}: real notnull
+    | {name simple_func2}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {call}: integer notnull
+        | | {name simple_func3}
+        | | {call_arg_list}
+        |   | {call_filter_clause}
+        |   | {arg_list}: ok
+        |     | {int 1}: integer notnull
+        | {arg_list}
+          | {int 2}: integer notnull
+          | {arg_list}
+            | {int 3}: integer notnull
+
+The statement ending at line XXXX
+
+SET real_result4 := simple_func2(1, 2);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided to procedure 'simple_func2'
+
+  {assign}: err
+  | {name real_result4}: real_result4: real variable was_set
+  | {call}: err
+    | {name simple_func2}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
+        | {arg_list}
+          | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
 SELECT -'x' IS NULL;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in '-'

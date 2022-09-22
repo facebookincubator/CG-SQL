@@ -1015,6 +1015,12 @@ SELECT 'x' REGEXP 'y';
 
 SELECT 'x' MATCH 'y';
 
+SELECT 1:min(2);
+
+DECLARE FUNC dummy_func (x TEXT, y INTEGER) INTEGER;
+
+SELECT "a":dummy_func(3);
+
 CREATE TEMP TRIGGER IF NOT EXISTS trigger1
   BEFORE DELETE ON target_table1
   FOR EACH ROW

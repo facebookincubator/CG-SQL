@@ -957,6 +957,32 @@ cleanup:
   symtab_delete(used_names);
 }
 
+// Walk through the ast and grab the arg list as well as the function name.
+// Create a new call node using these two and the argument passed in
+// prior to the ':' symbol.
+cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
+  Contract(is_ast_reverse_apply(head));
+  EXTRACT_ANY_NOTNULL(argument, head->left);
+  EXTRACT_NOTNULL(call, head->right);
+  EXTRACT_ANY_NOTNULL(function_name, call->left);
+  EXTRACT_NOTNULL(call_arg_list, call->right);
+  // This may be NULL if the function only has one argument
+  EXTRACT(arg_list, call_arg_list->right);
+
+  AST_REWRITE_INFO_SET(head->lineno, head->filename);
+
+  ast_node* new_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL),
+                                new_ast_arg_list(argument, arg_list));
+  ast_node* new_call = new_ast_call(function_name, new_arg_list);
+
+  AST_REWRITE_INFO_RESET();
+
+  ast_set_right(head, new_call->right);
+  ast_set_left(head, new_call->left);
+  head->type = new_call->type;
+
+}
+
 // Walk the param list looking for any of the "like T" forms
 // if any is found, replace that parameter with the table/shape columns
 cql_noexport void rewrite_params(ast_node *head, bytebuf *args_info) {

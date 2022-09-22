@@ -960,6 +960,12 @@ select 'x' REGEXP 'y';
 
 select 'x' MATCH 'y';
 
+select 1:min(2);
+
+declare function dummy_func(x text, y integer) integer;
+
+select "a":dummy_func(3);
+
 create temp trigger if not exists trigger1
    before delete on target_table1
    for each row

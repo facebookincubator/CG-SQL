@@ -1431,6 +1431,25 @@ BEGIN_TEST(external_functions)
   EXPECT(text_result like "%Hello%");
 END_TEST(external_functions)
 
+BEGIN_TEST(rev_appl_operator)
+  declare int_out integer;
+  declare int_result integer not null;
+
+  set int_result := 100:run_test_math(int_out);
+  EXPECT_SQL_TOO(int_out == 500);
+  EXPECT_SQL_TOO(int_result == 700);
+
+  declare int_out2 integer;
+  declare int_out3 integer;
+  declare int_result2 integer not null;
+
+  -- test left associativity, given that this does not raise any errors, we know this is left associative
+  set int_result2 := 10:run_test_math(int_out2):run_test_math(int_out3);
+  EXPECT_SQL_TOO(int_out2 == 50);
+  EXPECT_SQL_TOO(int_out3 == 350);
+  EXPECT_SQL_TOO(int_result2 == 490);
+END_TEST(rev_appl_operator)
+
 declare function set_create() create object not null;
 declare function set_add(_set object not null, _key text not null) bool not null;
 declare function set_contains(_set object not null, _key text not null) bool not null;

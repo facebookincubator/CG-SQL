@@ -29,6 +29,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in is : CQL0009: incompatible types in expression 'IS'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in '-'
+test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided to procedure 'simple_func2'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in '-'
 test/sem_test.sql:XXXX:1: error: in star : CQL0052: select * cannot be used with no FROM clause
 test/sem_test.sql:XXXX:1: error: in star : CQL0055: all columns in the select must have a name

@@ -47,5 +47,6 @@ cql_noexport bool_t try_rewrite_blob_fetch_forms(ast_node *_Nonnull ast);
 cql_noexport void rewrite_out_union_parent_child_stmt(ast_node *_Nonnull ast);
 cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull backed_table);
 cql_noexport void rewrite_select_for_backed_tables(ast_node *_Nonnull stmt, list_item *_Nonnull backed_tables_list);
+cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head);
 
 #endif

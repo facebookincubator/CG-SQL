@@ -980,6 +980,15 @@ call:
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
       $call = new_ast_call($name, call_arg_list);
   }
+  | basic_expr ':' name '(' arg_list ')' {
+      $call = new_ast_reverse_apply(
+        $basic_expr,
+        new_ast_call(
+          $name,
+          new_ast_call_arg_list(
+            new_ast_call_filter_clause(NULL, NULL),
+            $arg_list)));
+  }
   ;
 
 basic_expr:

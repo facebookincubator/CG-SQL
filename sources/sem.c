@@ -9359,6 +9359,14 @@ additional_checks:
   }
 }
 
+// Validates the right arg of ':', and then rewrites the ast node
+static void sem_reverse_apply(ast_node *ast, CSTR op) {
+  Contract(is_ast_reverse_apply(ast));
+
+  rewrite_reverse_apply(ast);
+  sem_expr_call(ast, op);
+}
+
 static void sem_opt_filter_clause(ast_node *ast) {
   Contract(is_ast_opt_filter_clause(ast));
   EXTRACT_NOTNULL(opt_where, ast->left);
@@ -24742,6 +24750,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(cast_expr, sem_expr_cast, "CAST");
   EXPR_INIT(case_expr, sem_expr_case, "CASE");
   EXPR_INIT(concat, sem_concat, "||");
+  EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
 
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);

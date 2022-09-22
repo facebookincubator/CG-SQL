@@ -328,6 +328,55 @@ select  - NOT 'x';
 -- +1 error:
 select NOT - 'x';
 
+
+declare real_result2 real;
+
+-- TEST: declare function for ':' test
+-- - error:
+declare function simple_func2(arg1 integer not null, arg2 integer not null, arg3 integer not null) real not null;
+
+-- TEST: colon operator used with the right number of args does not report errors
+-- + {name simple_func2}
+-- + {arg_list}: ok
+-- + {int 2}: integer notnull
+-- + {arg_list}
+-- + {int 3}: integer notnull
+-- + {arg_list}
+-- + {int 4}: integer notnull
+-- - error:
+SET real_result2 := 2:simple_func2(3, 4);
+
+declare int_result int;
+declare function simple_func3(arg1 integer not null) int not null;
+
+-- TEST: colon operator when only one arg exists
+-- + {name simple_func3}
+-- + {arg_list}: ok
+-- + {int 2}: integer notnull
+-- - error:
+SET int_result := 2:simple_func3();
+
+declare real_result4 real;
+
+-- TEST: colon operator is actually left-associative
+-- + {name simple_func2}
+-- + {arg_list}: ok
+-- + {call}: integer notnull
+-- + {name simple_func3}
+-- + {arg_list}: ok
+-- + {int 1}: integer notnull
+-- + {arg_list}
+-- + {int 2}: integer notnull
+-- + {arg_list}
+-- + {int 3}: integer notnull
+-- - error:
+SET real_result4 := 1:simple_func3():simple_func2(2,3);
+
+-- TEST: failure when the wrong number of arguments for a function are provided
+-- + {call}: err
+-- + error: in call : CQL0212: too few arguments provided to procedure 'simple_func2'
+SET real_result4 := 1:simple_func2(2);
+
 -- TEST: unary is null or is not null does not double report errors
 -- + {is}: err
 -- + error: % string operand not allowed in '-'
