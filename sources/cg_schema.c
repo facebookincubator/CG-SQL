@@ -1648,7 +1648,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
       }
 
       case SCHEMA_ANNOTATION_DELETE_TABLE:
-        bprintf(&drops, "  DROP TABLE IF EXISTS %s;\n", target_name);
+        bprintf(&drops, "  DROP TABLE IF EXISTS %s; --@delete\n", target_name);
         break;
 
       // Note: @create is invalid for INDEX/VIEW/TRIGGER so there can be no such annotation
@@ -1666,9 +1666,21 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         // annotation not generated for such cases as it would be a no-op anyway
         Invariant(!note->target_ast->sem->recreate);
 
-        // unsub demands a drop
-        bprintf(&upgrade, "      -- unsubscription of %s\n\n", target_name);
-        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n", target_name);
+        // current status: unsubscribed this will cause a drop later
+        note->target_ast->sem->sem_type |= SCHEMA_FLAG_UNSUB;
+        break;
+
+      case SCHEMA_ANNOTATION_RESUB:
+        // @recreate tables do not need unsub, they will just delete like they usually do
+        // annotation not generated for such cases as it would be a no-op anyway
+        Invariant(!note->target_ast->sem->recreate);
+
+        // emit a create if not exists at this version
+        // note that we do not (!) emit a drop here because it's possible that
+        // something else will be later added to this schema rev causing it
+        // to re-run and we want it to be idempotent
+
+        bprintf(&upgrade, "      -- resubscribe to %s\n\n", target_name);
 
         list_item *index_list = note->target_ast->sem->index_list;
 
@@ -1685,21 +1697,9 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
         bprintf(&upgrade, "\n");
 
-        // current status: unsubcribed
-        note->target_ast->sem->sem_type |= SCHEMA_FLAG_UNSUB;
-        break;
-
-      case SCHEMA_ANNOTATION_RESUB:
-        // @recreate tables do not need unsub, they will just delete like they usually do
-        // annotation not generated for such cases as it would be a no-op anyway
-        Invariant(!note->target_ast->sem->recreate);
-
-        // emit a create if not exists at this version
-        // note that we do not (!) emit a drop here because it's possible that
-        // something else will be later added to this schema rev causing it
-        // to re-run and we want it to be idempotent
-
-        bprintf(&upgrade, "      -- resubscribe to %s\n\n", target_name);
+        // if a stale version exists we have to wipe it because we are about to
+        // emit a clean version.
+        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n", target_name);
 
         gen_sql_callbacks callbacks;
         init_gen_sql_callbacks(&callbacks);
@@ -1743,6 +1743,32 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   cg_schema_end_version(&main, &upgrade, &pending, prev_version, &version_bits);
+
+
+  // compute additional drops due to net unsubscription
+
+  // we want the tables in DROP order
+  reverse_list(&all_tables_list);
+
+  for (list_item *item = all_tables_list; item; item = item->next) {
+    ast_node *ast = item->ast;
+
+    Invariant(is_ast_create_table_stmt(ast));
+
+    // note that we do not have to check all of these guys for region and so forth
+    // we only set the UNSUB flag on the tables that were in scope for this upgrade anyway.
+
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+    EXTRACT_STRING(table_name, create_table_name_flags->right);
+
+    if (ast->sem->sem_type & SCHEMA_FLAG_UNSUB) {
+      bprintf(&drops, "  DROP TABLE IF EXISTS %s; --@unsub\n", table_name);
+    }
+  }
+
+  // put the list back in original order, this is redundant but in case some later code ends
+  // up using it, they will be very suprised if this isn't done
+  reverse_list(&all_tables_list);
 
   if (drops.used > 1) {
     bprintf(&main, "    CALL %s_cql_drop_tables();\n", global_proc_name);

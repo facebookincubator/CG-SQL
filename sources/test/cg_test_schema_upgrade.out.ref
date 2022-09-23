@@ -713,10 +713,19 @@ END;
 @attribute(cql:private)
 CREATE PROC test_cql_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS deleted_virtual_table;
-  DROP TABLE IF EXISTS added_table;
-  DROP TABLE IF EXISTS delete_first;
-  DROP TABLE IF EXISTS delete__second;
+  DROP TABLE IF EXISTS deleted_virtual_table; --@delete
+  DROP TABLE IF EXISTS added_table; --@delete
+  DROP TABLE IF EXISTS delete_first; --@delete
+  DROP TABLE IF EXISTS delete__second; --@delete
+END;
+
+@attribute(cql:private)
+CREATE PROC test_cleanup_unused_versions()
+BEGIN
+  WITH
+    V(v) AS (VALUES (1)),
+    F(f) AS (SELECT 'cql_schema_v'||v from V)
+  DELETE FROM test_cql_schema_facets WHERE facet IN (SELECT f from F);
 END;
 
 @attribute(cql:private)
@@ -742,18 +751,6 @@ BEGIN
     END IF;
 
     CALL test_get_table_defs();
-
-    ---- upgrade to schema version 1 ----
-
-    CALL test_cql_get_version_crc(1, schema_version);
-    IF schema_version != -4108819336203325818 THEN
-      -- unsubscription of unsub_voyage
-
-      DROP TABLE IF EXISTS unsub_voyage;
-      CALL test_cql_set_facet_version('unsub_voyage_index_index_crc', -1);
-
-      CALL test_cql_set_version_crc(1, -4108819336203325818);
-    END IF;
 
     ---- upgrade to schema version 2 ----
 
@@ -861,7 +858,7 @@ BEGIN
     ---- upgrade to schema version 5 ----
 
     CALL test_cql_get_version_crc(5, schema_version);
-    IF schema_version != -1492993726649784360 THEN
+    IF schema_version != -7105685711971290941 THEN
       -- altering table foo to add column name TEXT;
 
       IF NOT test_column_exists('foo', 'name TEXT') THEN 
@@ -874,6 +871,9 @@ BEGIN
 
       -- resubscribe to unsub_voyage
 
+      CALL test_cql_set_facet_version('unsub_voyage_index_index_crc', -1);
+
+      DROP TABLE IF EXISTS unsub_voyage;
       CREATE TABLE IF NOT EXISTS unsub_voyage(
         v1 INTEGER,
         v3 TEXT,
@@ -886,7 +886,7 @@ BEGIN
         CALL test_cql_set_facet_version('MyAdHocMigrationScript', 5);
       END IF;
 
-      CALL test_cql_set_version_crc(5, -1492993726649784360);
+      CALL test_cql_set_version_crc(5, -7105685711971290941);
     END IF;
 
     ---- upgrade to schema version 6 ----
@@ -932,6 +932,7 @@ BEGIN
     CALL test_cql_create_all_views();
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
+    CALL test_cleanup_unused_versions();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
     CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 5377774390710455553);

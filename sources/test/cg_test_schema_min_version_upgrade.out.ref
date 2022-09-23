@@ -648,10 +648,10 @@ END;
 @attribute(cql:private)
 CREATE PROC test_cql_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS deleted_virtual_table;
-  DROP TABLE IF EXISTS added_table;
-  DROP TABLE IF EXISTS delete_first;
-  DROP TABLE IF EXISTS delete__second;
+  DROP TABLE IF EXISTS deleted_virtual_table; --@delete
+  DROP TABLE IF EXISTS added_table; --@delete
+  DROP TABLE IF EXISTS delete_first; --@delete
+  DROP TABLE IF EXISTS delete__second; --@delete
 END;
 
 @attribute(cql:private)
@@ -744,7 +744,7 @@ BEGIN
     ---- upgrade to schema version 5 ----
 
     CALL test_cql_get_version_crc(5, schema_version);
-    IF schema_version != -1975005727281932260 THEN
+    IF schema_version != -635381173759117062 THEN
       -- altering table foo to add column name TEXT;
 
       IF NOT test_column_exists('foo', 'name TEXT') THEN 
@@ -763,6 +763,9 @@ BEGIN
 
       -- resubscribe to unsub_voyage
 
+      CALL test_cql_set_facet_version('unsub_voyage_index_index_crc', -1);
+
+      DROP TABLE IF EXISTS unsub_voyage;
       CREATE TABLE IF NOT EXISTS unsub_voyage(
         v1 INTEGER,
         v3 TEXT,
@@ -775,7 +778,7 @@ BEGIN
         CALL test_cql_set_facet_version('MyAdHocMigrationScript', 5);
       END IF;
 
-      CALL test_cql_set_version_crc(5, -1975005727281932260);
+      CALL test_cql_set_version_crc(5, -635381173759117062);
     END IF;
 
     ---- upgrade to schema version 6 ----
