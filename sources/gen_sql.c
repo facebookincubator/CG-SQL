@@ -1142,9 +1142,9 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
      }
   }
   int64_t hash = sha256_charbuf(&tmp);
-  CSTR result = dup_printf("%lld", (llint_t)hash);
   CHARBUF_CLOSE(tmp);
-  return result;
+
+  return dup_printf("%lld", (llint_t)hash);
 }
 
 static void gen_cql_blob_get_type(ast_node *ast) {
@@ -1242,6 +1242,74 @@ static void gen_cql_blob_get(ast_node *ast) {
   }
 }
 
+#define BLOB_TYPE_BOOL   0
+#define BLOB_TYPE_INT32  1
+#define BLOB_TYPE_INT64  2
+#define BLOB_TYPE_FLOAT  3
+#define BLOB_TYPE_STRING 4
+#define BLOB_TYPE_BLOB   5
+#define BLOB_TYPE_ENTITY 6
+
+static int32_t sem_type_to_blob_type[] = {
+   -1, // NULL
+  BLOB_TYPE_BOOL,
+  BLOB_TYPE_INT32,
+  BLOB_TYPE_INT64,
+  BLOB_TYPE_FLOAT,
+  BLOB_TYPE_STRING,
+  BLOB_TYPE_BLOB,
+  BLOB_TYPE_ENTITY
+};
+
+static void gen_cql_blob_create(ast_node *ast) {
+  Contract(is_ast_call(ast));
+  Contract(cg_blob_mappings);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  ast_node *table_name_ast = first_arg(arg_list);
+
+  EXTRACT_STRING(t_name, table_name_ast);
+
+  ast_node *arg3 = third_arg(arg_list);
+  sem_t sem_type3 = arg3->sem->sem_type;
+  bool_t is_pk = is_primary_key(sem_type3) || is_partial_pk(sem_type3);
+
+  CSTR func = is_pk ?
+      cg_blob_mappings->blob_create_key :
+      cg_blob_mappings->blob_create_val;
+
+  bool_t use_offsets = is_pk ?
+      cg_blob_mappings->blob_create_key_use_offsets :
+      cg_blob_mappings->blob_create_val_use_offsets;
+
+  // table known to exist (and not deleted) already
+  ast_node *table_ast = find_table_or_view_even_deleted(t_name);
+  Invariant(table_ast);
+
+  gen_printf("%s(%s", func, gen_type_hash(table_ast));
+
+  // 2n+1 args already confirmed, safe to do this
+  for (ast_node *args = arg_list->right; args; args = args->right->right) {
+     ast_node *val = first_arg(args);
+     ast_node *col = second_arg(args);
+     gen_printf(", ");
+     gen_root_expr(val);
+     if (!use_offsets) {
+       gen_printf(", ");
+       gen_field_hash(col);
+     }
+     gen_printf(", %d", sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
+  }
+
+ // rico
+
+  gen_printf(")");
+
+
+}
+
+
 static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -1266,6 +1334,10 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
     }
     else if (!Strcasecmp("cql_blob_get_type", name)) {
       gen_cql_blob_get_type(ast);
+      return;
+    }
+    else if (!Strcasecmp("cql_blob_create", name)) {
+      gen_cql_blob_create(ast);
       return;
     }
   }

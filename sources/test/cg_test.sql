@@ -5544,6 +5544,68 @@ begin
   set x := (select flag from backed);
 end;
 
+@attribute(cql:backed_by=backing)
+create table small_backed(
+  pk int primary key,
+  x text,
+  y real
+);
+
+-- TEST: simple insert with values
+-- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7))
+-- + INSERT INTO backing(k, v) SELECT
+-- + bcreatekey(-9132470325614587332, V.pk, 1),
+-- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) 
+-- + FROM _vals AS V
+create proc insert_backed_values()
+begin
+  insert into small_backed values(1, "2", 3.14),  (4, "5", 6),  (7, "8", 9.7);
+end;
+
+-- TEST: simple with-insert using values
+-- + U (x, y, z) AS (VALUES(1, '2', 3.14))
+-- + V (x, y, z) AS (VALUES(1, '2', 3.14))
+-- + _vals (pk, x, y) AS (SELECT x, y, z 
+-- + FROM V)
+-- + INSERT INTO backing(k, v) SELECT
+-- + bcreatekey(-9132470325614587332, V.pk, 1),
+-- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) 
+-- + FROM _vals AS V
+create proc insert_backed_values_using_with()
+begin
+  with
+    U(x,y,z) as (values (1, "2", 3.14)), -- just here to verify that we can keep many CTES
+    V(x,y,z) as (values (1, "2", 3.14))
+  insert into small_backed select * from V;
+end;
+
+-- TEST: simple insert using form
+-- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14))
+-- + INSERT INTO backing(k, v) SELECT
+-- + bcreatekey(-9132470325614587332, V.pk, 1),
+-- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) 
+-- + FROM _vals AS V
+create proc insert_backed_values_using_form()
+begin
+  insert into small_backed using 1 pk, "2" x, 3.14 y;
+end;
+
+-- TEST: insert from a select
+-- + small_backed (pk, x, y) AS (
+-- + SELECT bgetkey(T.k, 0) AS pk, bgetval(T.v, 0) AS x, bgetval(T.v, 1) AS y 
+-- + FROM backing AS T 
+-- + WHERE bgetkey_type(T.k) = -9132470325614587332
+-- + _vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50 
+-- + FROM small_backed AS B) 
+-- + INSERT INTO backing(k, v) SELECT
+-- + bcreatekey(-9132470325614587332, V.pk, 1),
+-- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) 
+-- + FROM _vals AS V
+create proc inserted_backed_from_select()
+begin
+  insert into small_backed select pk+1000, B.x||'x', B.y+50 from small_backed B;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

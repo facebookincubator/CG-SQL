@@ -251,4 +251,8 @@ DECLARE PROC use_backed_table_directly_in_with_select () (pk INTEGER NOT NULL, f
 DECLARE PROC use_backed_table_with_select_and_cursor () USING TRANSACTION;
 DECLARE PROC use_backed_table_select_expr (OUT x BOOL NOT NULL) USING TRANSACTION;
 DECLARE PROC use_backed_table_select_expr_value_offsets (OUT x BOOL NOT NULL) USING TRANSACTION;
+DECLARE PROC insert_backed_values () USING TRANSACTION;
+DECLARE PROC insert_backed_values_using_with () USING TRANSACTION;
+DECLARE PROC insert_backed_values_using_form () USING TRANSACTION;
+DECLARE PROC inserted_backed_from_select () USING TRANSACTION;
 DECLARE PROC end_proc ();

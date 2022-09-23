@@ -21422,7 +21422,7 @@ create table simple_backed_table_with_versions(
 
 -- TEST: non blob columns are not valid in backing storage during stage 1
 -- + {create_table_stmt}: err
--- +error: xxxx
+-- + error: % table is not suitable for use as backing storage: column 'id' has a column that is not a blob in 'has_non_blob_columns'
 -- +1 error
 @attribute(cql:backing_table)
 create table has_non_blob_columns(
@@ -21820,6 +21820,12 @@ create table basic_table(
   name text
 );
 
+@attribute(cql:backed_by=simple_backing_table)
+create table basic_table2(
+  id integer primary key,
+  name text
+);
+
 -- TEST: correct call to blob_get_type
 -- + {name cql_blob_get_type}: longint sensitive
 -- - error:
@@ -21955,7 +21961,116 @@ begin
   let z := (select cql_blob_get(x, simple_backing_table.k));
 end;
 
+-- TEST: correct call to cql_blob_create
+-- + {name cql_blob_create}: blob notnull
+-- + {call}: blob notnull
+-- - error:
+create proc blob_create()
+begin
+  let z := (select cql_blob_create(basic_table, 1, basic_table.id));
+end;
 
+-- TEST: cql_blob_create arg 1 is not even a string
+-- + {call}: err
+-- + error: % argument 1 must be a table name that is a backed table 'cql_blob_create'
+-- +1 error:
+create proc blob_create_not_a_string()
+begin
+  let z := (select cql_blob_create(1, 1, basic_table.id));
+end;
+
+-- TEST: cql blob create mixed tables
+-- + {call}: err
+-- + error: % the indicated table is not consistently used through all of cql_blob_create 'basic_table2'
+-- +1 error:
+create proc blob_create_different_tables()
+begin
+  let z := (select cql_blob_create(basic_table, 1, basic_table.id, 2, basic_table2.id));
+end;
+
+-- TEST: cql_blob_create first arg not a table
+-- + {call}: err
+-- + error: % table/view not defined 'not_a_table'
+-- +1 error:
+create proc blob_create_arg_one_error()
+begin
+  let z := (select cql_blob_create(not_a_table, 1, basic_table.id));
+end;
+
+-- TEST: blob create not using a table.column as the 3nd arg
+-- + {call}: err
+-- + error: % argument must be table.column where table is a backed table
+-- +1 error:
+create proc blob_create_not_dot_operator()
+begin
+  let z := (select cql_blob_create(basic_table, 1, 1 + 2));
+end;
+
+-- TEST: blob create table doesn't exist
+-- + {call}: err
+-- + error: % table/view not defined 'table_not_exists'
+-- +1 error:
+create proc blob_create_table_wrong()
+begin
+  let z := (select cql_blob_create(basic_table, 1, table_not_exists.id));
+end;
+
+-- TEST: blob create column doesn't exist
+-- + {call}: err
+-- + error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
+-- +1 error:
+create proc blob_create_column_wrong()
+begin
+  declare x blob;
+  let z := (select cql_blob_create(basic_table, 1, basic_table.col_not_exists));
+end;
+
+-- TEST: blob create wrong argument count
+-- + {call}: err
+-- + error: % function got incorrect number of arguments 'cql_blob_create'
+-- +1 error:
+create proc blob_create_column_wrong_arg_count()
+begin
+  declare x blob;
+  let z := (select cql_blob_create(1));
+end;
+
+-- TEST: blob create called outside of SQL context
+-- + {call}: err
+-- + error: % function may not appear in this context 'cql_blob_create'
+-- +1 error:
+create proc blob_create_column_context_wrong()
+begin
+  declare x blob;
+  let z :=  cql_blob_create(x);
+end;
+
+-- TEST: blob create wrong argument type
+-- + {call}: err
+-- + error: % incompatible types in expression 'cql_blob_create'
+-- +1 error:
+create proc blob_create_column_wrong_arg_type()
+begin
+  let z := (select cql_blob_create(basic_table, "x", basic_table.id));
+end;
+
+-- TEST: blob create arg expression has errors
+-- + {call}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+create proc blob_create_column_bad_expr()
+begin
+  let z := (select cql_blob_create(basic_table, not "x", basic_table.id));
+end;
+
+-- TEST: blob create table expression is not a backing table
+-- + {call}: err
+-- + error: % the indicated table is not declared for backed storage 'simple_backing_table'
+-- +1 error:
+create proc blob_create_not_backed_table()
+begin
+  let z := (select cql_blob_create(simple_backing_table, x, simple_backing_table.k));
+end;
 
 --  all of these blob config items have no error cases
 -- we just verify that they are going to produce no errors

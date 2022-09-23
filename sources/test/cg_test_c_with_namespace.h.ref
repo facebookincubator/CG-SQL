@@ -3884,6 +3884,18 @@ extern CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _
 extern CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_Nonnull _db_, cql_bool *_Nonnull x);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code insert_backed_values(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

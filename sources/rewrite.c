@@ -40,6 +40,7 @@ static bool_t rewrite_one_def(ast_node *head);
 static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names);
 static void rewrite_from_shape_args(ast_node *head);
 
+
 // @PROC can be used in place of an ID in various places
 // replace that name if appropriate
 cql_noexport void rewrite_proclit(ast_node *ast) {
@@ -2476,18 +2477,11 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
   Invariant(!is_error(stmt_and_attr->right));
 }
 
-// This is the magic, we have tracked the backed tables so now we can  insert calls to
-// the generated shared fragments (see above) for each such table.  Once we've done that,
-// the select will "just work." because the backed table has been aliased by a correct CTE.
-cql_noexport void rewrite_select_for_backed_tables(
-  ast_node *_Nonnull stmt,
-  list_item *_Nonnull backed_tables_list)
+static void rewrite_backed_table_ctes(
+  list_item *backed_tables_list,
+  ast_node **pcte_tables,
+  ast_node **pcte_tail)
 {
-  Contract(is_ast_select_stmt(stmt) || is_ast_with_select_stmt(stmt));
-  Contract(backed_tables_list);
-
-  AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);
-
   symtab *backed = symtab_new();
 
   ast_node *backed_cte_tables = NULL;
@@ -2523,7 +2517,31 @@ cql_noexport void rewrite_select_for_backed_tables(
     }
   }
 
+  *pcte_tail = cte_tail;
+  *pcte_tables = backed_cte_tables;
+
+  symtab_delete(backed);
+}
+
+// This is the magic, we have tracked the backed tables so now we can  insert calls to
+// the generated shared fragments (see above) for each such table.  Once we've done that,
+// the select will "just work." because the backed table has been aliased by a correct CTE.
+cql_noexport void rewrite_select_for_backed_tables(
+  ast_node *_Nonnull stmt,
+  list_item *_Nonnull backed_tables_list)
+{
+  Contract(is_ast_select_stmt(stmt) || is_ast_with_select_stmt(stmt));
+  Contract(backed_tables_list);
+
+  AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);
+
+  ast_node *backed_cte_tables = NULL;
+  ast_node *cte_tail = NULL;
+
+  rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
+  
   Invariant(cte_tail);
+  Invariant(backed_cte_tables);
 
   if (is_ast_select_stmt(stmt)) {
     // convert the SELECT to a WITH SELECT and add backing table CTEs
@@ -2551,9 +2569,336 @@ cql_noexport void rewrite_select_for_backed_tables(
 
   AST_REWRITE_INFO_RESET();
 
-  symtab_delete(backed);
-
   sem_select(stmt);
+}
+
+// This walks the name list and generates either the args for the key or the args for the value
+// both are just going to be V.col_name from the _vals alias and the backed table.column
+static ast_node *rewrite_create_blob_args(bool_t for_key, ast_node *backed_table, ast_node *name_list)
+{
+  if (!name_list) {
+    return NULL;
+  }
+
+  EXTRACT_STRING(name, name_list->left);
+  sem_struct *sptr = backed_table->sem->sptr;
+  int32_t icol = sem_column_index(sptr, name);
+  Invariant(icol >= 0);  // must be valid name, already checked!
+  sem_t sem_type = sptr->semtypes[icol];
+  bool_t is_key = is_primary_key(sem_type) || is_partial_pk(sem_type);
+  CSTR backed_table_name = sptr->struct_name;
+
+  if (is_key == for_key) {
+    return new_ast_arg_list(
+      new_ast_dot(new_ast_str("V"), new_ast_str(name)),
+      new_ast_arg_list(
+        new_ast_dot(new_ast_str(backed_table_name), new_ast_str(name)),
+        rewrite_create_blob_args(for_key, backed_table, name_list->right)
+      )
+    );
+  }
+  else {
+    return rewrite_create_blob_args(for_key, backed_table, name_list->right);
+  }
+}
+
+// This walks the name list and generates either the key create call or the value create call
+// This is the fixed part of the call.
+static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast_node *name_list) {
+  return new_ast_call(
+    new_ast_str("cql_blob_create"),
+    new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL),
+      new_ast_arg_list(
+        new_ast_str(backed_table->sem->sptr->struct_name),
+        rewrite_create_blob_args(for_key, backed_table, name_list)
+      )
+    )
+  );
+}
+
+// This helper creates the select list we will need to get the values out
+// from the statement that was the insert list (it could be values or a select statement)
+static ast_node *rewrite_insert_list_as_select_values(ast_node *insert_list) {
+  return new_ast_select_stmt(
+    new_ast_select_core_list(
+      new_ast_select_core(
+        new_ast_select_values(),
+        new_ast_values(
+            insert_list,
+            NULL
+        )
+      ),
+      NULL
+    ),
+    new_ast_select_orderby(
+      NULL,
+      new_ast_select_limit(
+        NULL,
+        new_ast_select_offset(
+          NULL,
+          NULL
+        )
+      )
+    )
+  );
+}
+
+// The general insert pattern converts something like this:
+//
+// insert into backed values(1,2,3), (4,5,6), (7,8,9);
+//
+// into:
+//
+// WITH
+// _vals (pk, x, y) AS (VALUES(1, "2", 3.14), (4, "5", 6), (7, "8", 9.7))
+// INSERT INTO backing(k, v)
+//   SELECT bcreatekey(9032558069325805135L, V.pk, 1),
+//          bcreateval(9032558069325805135L, V.x, 7953209610392031882L, 4, V.y, 4501343740738089802L, 3)
+//   FROM _vals V;
+//
+// To do this we need to:
+//  * make the _vals CTE out of the values clause
+//  * add a select clause that maps the values
+//
+// This code uses cql_blob_create(...) to which ultimately expands into whatever the blob create
+// functions will be when sql code gen happens.
+//
+// cql_blob_create calls look like
+//
+// cql_blob_create(backed_type, val1, backed_type.col1, val2, backed_type.col2, ...)
+//
+// Those calls expand to include the hash codes if needed and field types.
+//
+cql_noexport void rewrite_insert_statement_for_backed_table(
+  ast_node *ast,
+  list_item *backed_tables_list)
+{
+  ast_node *with_node = NULL;
+  ast_node *stmt = NULL;
+
+  if (is_ast_with_insert_stmt(ast)) {
+    EXTRACT_NOTNULL(with, ast->left)
+    EXTRACT_NOTNULL(insert_stmt, ast->right);
+    stmt = insert_stmt;
+    with_node = with;
+  }
+  else {
+    Contract(is_ast_insert_stmt(ast));
+    stmt = ast;
+  }
+
+  Invariant(is_ast_insert_stmt(stmt));
+  EXTRACT_ANY_NOTNULL(insert_type, stmt->left);
+  EXTRACT_NOTNULL(name_columns_values, stmt->right);
+  EXTRACT_STRING(backed_table_name, name_columns_values->left);
+  EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
+  EXTRACT(insert_dummy_spec, insert_type->left);
+
+  // table has already been checked, it exists, it's legal and it's backed
+  ast_node *backed_table = find_table_or_view_even_deleted(backed_table_name);
+  Contract(is_ast_create_table_stmt(backed_table));
+  Contract(is_backed(backed_table->sem->sem_type));
+
+  EXTRACT_MISC_ATTRS(backed_table, misc_attrs);
+
+  CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+  Invariant(backing_table_name);  // already validated
+  ast_node *backing_table = find_table_or_view_even_deleted(backing_table_name);
+  Invariant(backing_table);  // already validated
+  sem_struct *sptr_backing = backing_table->sem->sptr;
+  Invariant(sptr_backing);  // table must havea sem_struct
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  // Some explicit contract to clarify which error you have made...
+
+  // the INSERT... USING form must already be resolved by the time we get here
+  Contract(!is_ast_expr_names(columns_values));
+
+  // DEFAULT VALUES is not allowed for backed tables, this should have already errored out
+  Contract(!is_ast_default_columns_values(columns_values));
+
+  // Standard columns_values node is the only option
+  Contract(is_ast_columns_values(columns_values));
+
+  EXTRACT(column_spec, columns_values->left);
+  EXTRACT_ANY(insert_list, columns_values->right);
+
+  // Most insert types are rewritten into select form including the standard values clause
+  // but the insert forms that came from a cursor, args, or some other shape are still written
+  // using an insert list, these are just vanilla values.  Dummy default and all that sort
+  // of business likewise applies to simple insert lists and all of that processing is done.
+  // If we find an insert list form the first step is to normalize the insert list into a
+  // select...values. We do this so thatwe have just one rewrite path after this point, and
+  // because it's stupid simple
+
+  if (is_ast_insert_list(insert_list)) {
+    ast_node *select_stmt = rewrite_insert_list_as_select_values(insert_list);
+    // debug output if needed
+    // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
+    insert_list = select_stmt;
+  }
+
+  // Now either the incoming list came in before it was transformed, in which case contract
+  // is broken, or we fixed the one legal case above.  We have an select statement or
+  // a broken caller.
+  Contract(is_select_stmt(insert_list));
+
+  EXTRACT_NOTNULL(name_list, column_spec->left);
+
+  // make a CTE table _vals that will hold the selected data using the user-provided name list
+  ast_node *cte_table_vals = new_ast_cte_table(
+    new_ast_cte_decl(
+      new_ast_str("_vals"),
+      name_list
+    ),
+    insert_list
+  );
+
+  ast_node *key_expr = rewrite_blob_create(true, backed_table, name_list);
+  ast_node *val_expr = rewrite_blob_create(false, backed_table, name_list);
+
+  // now we need expressions for the key and value
+  // this is a stub for now
+  ast_node *select_expr_list = new_ast_select_expr_list(
+    new_ast_select_expr(key_expr, NULL),
+    new_ast_select_expr_list(
+      new_ast_select_expr(val_expr, NULL),
+      NULL
+    )
+  );
+
+  ast_node *select_stmt =
+    new_ast_select_stmt(
+      new_ast_select_core_list(
+        new_ast_select_core(
+          NULL,
+          new_ast_select_expr_list_con(
+            // computed select list (see above)
+            select_expr_list,
+            // from insert values, with short alias "V"
+            new_ast_select_from_etc(
+              new_ast_table_or_subquery_list(
+                new_ast_table_or_subquery(
+                  new_ast_str("_vals"),
+                  new_ast_opt_as_alias(new_ast_str("V"))
+                ),
+                NULL
+              ),
+              // use where to constraint the row type
+              new_ast_select_where(
+                NULL,
+                new_ast_select_groupby(
+                  NULL,
+                  new_ast_select_having(
+                    NULL,
+                    NULL
+                  )
+                )
+              )
+            )
+          )
+        ),
+        NULL
+      ),
+      // empty orderby, limit, offset
+      new_ast_select_orderby(
+        NULL,
+        new_ast_select_limit(
+          NULL,
+          new_ast_select_offset(
+            NULL,
+            NULL
+          )
+        )
+      )
+    );
+
+  // for debugging dump the generated select statement
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
+
+
+  // figure out the column order of the key and value columns in the backing store
+  // the options are "key, value" or "value, key"
+  sem_t sem_type = sptr_backing->semtypes[0];
+  bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+  CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
+  CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
+
+  ast_node *new_name_columns_values = new_ast_name_columns_values(
+    new_ast_str(backing_table_name),
+    new_ast_columns_values(
+      new_ast_column_spec(
+        new_ast_name_list(
+          new_ast_str(backing_key),
+          new_ast_name_list(
+            new_ast_str(backing_val),
+            NULL
+          )
+        )
+      ),
+      select_stmt
+    )
+  );
+
+  ast_set_right(stmt, new_name_columns_values);
+  // for debugging dump the generated insert statement
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+
+  if (with_node) {
+    EXTRACT_NOTNULL(cte_tables, with_node->left);
+
+    while (cte_tables->right) {
+      Contract(is_ast_cte_tables(cte_tables));
+      cte_tables = cte_tables->right;
+    }
+
+    Contract(is_ast_cte_tables(cte_tables));
+    ast_set_right(cte_tables, new_ast_cte_tables(cte_table_vals, NULL));
+  }
+  else {
+    ast_node *with_insert_stmt = new_ast_with_insert_stmt(
+      with_node = new_ast_with(
+        new_ast_cte_tables(cte_table_vals, NULL)
+      ),
+      new_ast_insert_stmt(
+        stmt->left,
+        stmt->right
+      )
+    );
+    ast->type = with_insert_stmt->type;
+    ast_set_left(ast, with_insert_stmt->left);
+    ast_set_right(ast, with_insert_stmt->right);
+  }
+
+  if (backed_tables_list) {
+    ast_node *backed_cte_tables = NULL;
+    ast_node *cte_tail = NULL;
+
+    rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
+  
+    Invariant(cte_tail);
+    Invariant(backed_cte_tables);
+
+    ast_set_right(cte_tail, with_node->left);
+    ast_set_left(with_node, backed_cte_tables);
+  }
+
+  // for debugging, dump the generated ast without trying to validate it at all
+  // print_root_ast(ast);
+  //
+  // for debugging dump the generated insert statement
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+
+  AST_REWRITE_INFO_RESET();
+
+  // the insert statement is top level, when it re-enters it expects the cte state to be nil
+  cte_state *saved = cte_cur;
+  cte_cur = NULL;
+    sem_one_stmt(ast);
+  cte_cur = saved;
 }
 
 #endif

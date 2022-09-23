@@ -9,6 +9,7 @@
 
 #include "charbuf.h"
 #include "ast.h"
+#include "sem.h"
 
 cql_data_decl( int32_t gen_stmt_level );
 

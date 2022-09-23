@@ -230,6 +230,8 @@ cql_noexport bool_t is_in_parameter(sem_t sem_type);
 cql_noexport bool_t is_out_parameter(sem_t sem_type);
 cql_noexport bool_t is_cursor_formal(sem_t sem_type);
 cql_noexport bool_t was_set_variable(sem_t sem_type);
+cql_noexport bool_t is_backing(sem_t sem_type);
+cql_noexport bool_t is_backed(sem_t sem_type);
 cql_noexport bool_t is_inout_parameter(sem_t sem_type);
 cql_noexport bool_t is_dml_proc(sem_t sem_type);
 cql_noexport bool_t is_text(sem_t sem_type);
@@ -311,6 +313,12 @@ cql_noexport void sem_select(ast_node *node);
 
 #endif
 
+// the current chain of common table expressions (for WITH clauses)
+typedef struct cte_state {
+  struct cte_state *prev;
+  symtab *ctes;
+} cte_state;
+
 cql_data_decl( bytebuf *schema_annotations );
 cql_data_decl( bytebuf *recreate_annotations );
 
@@ -328,6 +336,7 @@ cql_data_decl( struct list_item *all_constant_groups_list );
 cql_data_decl( symtab *schema_regions );
 cql_data_decl( ast_node *current_proc );
 cql_data_decl( charbuf *error_capture );
+cql_data_decl( cte_state *cte_cur );
 
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc

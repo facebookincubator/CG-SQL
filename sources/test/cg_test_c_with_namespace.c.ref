@@ -17376,6 +17376,150 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC insert_backed_values ()
+BEGIN
+  WITH
+  _vals (pk, x, y) AS (VALUES(1, "2", 3.14), (4, "5", 6), (7, "8", 9.7))
+  INSERT INTO backing(k, v) SELECT cql_blob_create(small_backed, V.pk, small_backed.pk), cql_blob_create(small_backed, V.x, small_backed.x, V.y, small_backed.y)
+    FROM _vals AS V;
+END;
+*/
+
+#define _PROC_ "insert_backed_values"
+/*
+export:
+DECLARE PROC insert_backed_values () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code insert_backed_values(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "WITH "
+    "_vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7)) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+      "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC insert_backed_values_using_with ()
+BEGIN
+  WITH
+  U (x, y, z) AS (VALUES(1, "2", 3.14)),
+  V (x, y, z) AS (VALUES(1, "2", 3.14)),
+  _vals (pk, x, y) AS (SELECT *
+    FROM V)
+  INSERT INTO backing(k, v) SELECT cql_blob_create(small_backed, V.pk, small_backed.pk), cql_blob_create(small_backed, V.x, small_backed.x, V.y, small_backed.y)
+    FROM _vals AS V;
+END;
+*/
+
+#define _PROC_ "insert_backed_values_using_with"
+/*
+export:
+DECLARE PROC insert_backed_values_using_with () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "WITH "
+    "U (x, y, z) AS (VALUES(1, '2', 3.14)), "
+    "V (x, y, z) AS (VALUES(1, '2', 3.14)), "
+    "_vals (pk, x, y) AS (SELECT x, y, z "
+      "FROM V) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+      "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC insert_backed_values_using_form ()
+BEGIN
+  WITH
+  _vals (pk, x, y) AS (VALUES(1, "2", 3.14))
+  INSERT INTO backing(k, v) SELECT cql_blob_create(small_backed, V.pk, small_backed.pk), cql_blob_create(small_backed, V.x, small_backed.x, V.y, small_backed.y)
+    FROM _vals AS V;
+END;
+*/
+
+#define _PROC_ "insert_backed_values_using_form"
+/*
+export:
+DECLARE PROC insert_backed_values_using_form () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "WITH "
+    "_vals (pk, x, y) AS (VALUES(1, '2', 3.14)) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+      "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC inserted_backed_from_select ()
+BEGIN
+  WITH
+  small_backed (pk, x, y) AS (CALL _small_backed()),
+  _vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50
+    FROM small_backed AS B)
+  INSERT INTO backing(k, v) SELECT cql_blob_create(small_backed, V.pk, small_backed.pk), cql_blob_create(small_backed, V.x, small_backed.x, V.y, small_backed.y)
+    FROM _vals AS V;
+END;
+*/
+
+#define _PROC_ "inserted_backed_from_select"
+/*
+export:
+DECLARE PROC inserted_backed_from_select () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "small_backed (pk, x, y) AS (",
+  "SELECT bgetkey(T.k, 0) AS pk, bgetval(T.v, 0) AS x, bgetval(T.v, 1) AS y "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -9132470325614587332",
+  "), "
+    "_vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50 "
+      "FROM small_backed AS B) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+      "FROM _vals AS V"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

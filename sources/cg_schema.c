@@ -1717,7 +1717,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           bprintf(&upgrade, ";\n\n");
         CHARBUF_CLOSE(sql_out);
 
-        // current status: subcribed
+        // current status: subscribed
         note->target_ast->sem->sem_type &= sem_not(SCHEMA_FLAG_UNSUB);
         break;
 
