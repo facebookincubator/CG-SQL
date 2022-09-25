@@ -2384,7 +2384,13 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
           NULL,
           new_ast_select_expr_list_con(
             // computed select list (see above)
-            select_expr_list,
+            new_ast_select_expr_list(
+              new_ast_select_expr(
+                new_ast_str("rowid"),
+                NULL
+              ),
+              select_expr_list
+            ),
             // from backing store, with short alias "T"
             new_ast_select_from_etc(
               new_ast_table_or_subquery_list(

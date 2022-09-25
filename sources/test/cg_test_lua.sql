@@ -5101,15 +5101,15 @@ create table backed(
 
 -- TEST: explain query plan with replacement
 -- + EXPLAIN QUERY PLAN 
--- + backed (pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT bgetkey(T.k, 0),
+-- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+-- + SELECT rowid, bgetkey(T.k, 0),
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -1118059189291406095),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT pk, flag, id, name, age, storage
+-- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
 -- + WHERE bgetkey_type(T.k) = -1622391684721028952
 @attribute(cql:private)

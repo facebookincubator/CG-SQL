@@ -8359,7 +8359,7 @@ CREATE PROC explain_equery_plan_backed (OUT x BOOL NOT NULL)
 BEGIN
   EXPLAIN QUERY PLAN
   WITH
-  backed (pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
   SELECT *
     FROM backed;
 END;
@@ -8373,9 +8373,9 @@ function explain_equery_plan_backed(_db_)
   _rc_, _result_stmt = cql_prepare_var(_db_, 
     3, nil,
     {
-    "EXPLAIN QUERY PLAN WITH backed (pk, flag, id, name, age, storage) AS (",
-    "SELECT bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) FROM backing AS T WHERE bgetkey_type(T.k) = -1622391684721028952",
-    ") SELECT pk, flag, id, name, age, storage FROM backed"
+    "EXPLAIN QUERY PLAN WITH backed (rowid, pk, flag, id, name, age, storage) AS (",
+    "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) FROM backing AS T WHERE bgetkey_type(T.k) = -1622391684721028952",
+    ") SELECT rowid, pk, flag, id, name, age, storage FROM backed"
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end

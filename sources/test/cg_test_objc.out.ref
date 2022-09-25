@@ -4437,6 +4437,12 @@ static inline CGCUseGeneratedFragmentResultSetRef CGCUseGeneratedFragmentFromCGB
   return (__bridge CGCUseGeneratedFragmentResultSetRef)resultSet;
 }
 
+static inline int64_t CGBUseGeneratedFragmentGetRowid(CGBUseGeneratedFragment *resultSet, int32_t row)
+{
+  CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
+  return CGCUseGeneratedFragmentGetRowid(cResultSet, row);
+}
+
 static inline int32_t CGBUseGeneratedFragmentGetPk(CGBUseGeneratedFragment *resultSet, int32_t row)
 {
   CGCUseGeneratedFragmentResultSetRef cResultSet = CGCUseGeneratedFragmentFromCGBUseGeneratedFragment(resultSet);
@@ -4505,6 +4511,12 @@ static inline CGCUseBackedTableDirectlyResultSetRef CGCUseBackedTableDirectlyFro
   return (__bridge CGCUseBackedTableDirectlyResultSetRef)resultSet;
 }
 
+static inline int64_t CGBUseBackedTableDirectlyGetRowid(CGBUseBackedTableDirectly *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
+  return CGCUseBackedTableDirectlyGetRowid(cResultSet, row);
+}
+
 static inline int32_t CGBUseBackedTableDirectlyGetPk(CGBUseBackedTableDirectly *resultSet, int32_t row)
 {
   CGCUseBackedTableDirectlyResultSetRef cResultSet = CGCUseBackedTableDirectlyFromCGBUseBackedTableDirectly(resultSet);
@@ -4571,6 +4583,12 @@ static inline CGBUseBackedTableDirectlyInWithSelect *CGBUseBackedTableDirectlyIn
 static inline CGCUseBackedTableDirectlyInWithSelectResultSetRef CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(CGBUseBackedTableDirectlyInWithSelect *resultSet)
 {
   return (__bridge CGCUseBackedTableDirectlyInWithSelectResultSetRef)resultSet;
+}
+
+static inline int64_t CGBUseBackedTableDirectlyInWithSelectGetRowid(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
+{
+  CGCUseBackedTableDirectlyInWithSelectResultSetRef cResultSet = CGCUseBackedTableDirectlyInWithSelectFromCGBUseBackedTableDirectlyInWithSelect(resultSet);
+  return CGCUseBackedTableDirectlyInWithSelectGetRowid(cResultSet, row);
 }
 
 static inline int32_t CGBUseBackedTableDirectlyInWithSelectGetPk(CGBUseBackedTableDirectlyInWithSelect *resultSet, int32_t row)
