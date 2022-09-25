@@ -65,6 +65,140 @@ static void rs_count(sqlite3_context *context, int32_t argc, sqlite3_value **arg
   sqlite3_result_int64(context, rs->count);
 }
 
+// this is nothing like a generic blob format but it's enough to do some tests
+// the blobs that are stored can only be integers of course but since the
+// codegen is the same for all types it still makes for a useful test
+typedef struct test_blob {
+  int64_t type;
+  int64_t int1;
+  int64_t int2;
+  int64_t int3;
+} test_blob;
+
+// Returns the indicated integer
+static void bgetval_type(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
+    sqlite3_result_null(context);
+    return;
+  }
+  sqlite3_result_int64(context, b->type);
+}
+
+// Returns the indicated integer
+static void bgetval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
+    sqlite3_result_null(context);
+    return;
+  }
+
+  int64_t index = sqlite3_value_int64(argv[1]);
+
+  switch (index) {
+  case 0:
+    sqlite3_result_int64(context, b->int1);
+    break;
+  case 1:
+    sqlite3_result_int64(context, b->int2);
+    break;
+  case 2:
+    sqlite3_result_int64(context, b->int3);
+    break;
+  default:
+    sqlite3_result_null(context);
+    break;
+  }
+}
+
+// Update the value store
+static void bupdateval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
+  if (argc < 1) {
+    sqlite3_result_null(context);
+    return;
+  }
+
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
+    sqlite3_result_null(context);
+    return;
+  }
+
+  for (int32_t i = 1; i < argc; i += 2) {
+
+    int64_t index = sqlite3_value_int64(argv[i+1]);
+    int64_t val = sqlite3_value_int64(argv[i]);
+
+    switch (index) {
+    case 0:
+      b->int1 = val;
+      break;
+    case 1:
+      b->int2 = val;
+      break;
+    case 2:
+      b->int3 = val;
+      break;
+    }
+  }
+  sqlite3_result_blob(context, b, sizeof(*b), SQLITE_TRANSIENT);
+}
+
+// Update the value store
+static void bupdatekey(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
+  if (argc < 1) {
+    sqlite3_result_null(context);
+    return;
+  }
+
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
+    sqlite3_result_null(context);
+    return;
+  }
+
+  for (int32_t i = 1; i < argc; i++) {
+
+    int64_t index = i-1;
+    int64_t val = sqlite3_value_int64(argv[i]);
+
+    switch (index) {
+    case 0:
+      b->int1 = val;
+      break;
+    case 1:
+      b->int2 = val;
+      break;
+    case 2:
+      b->int3 = val;
+      break;
+    }
+  }
+  sqlite3_result_blob(context, b, sizeof(*b), SQLITE_TRANSIENT);
+}
+
+// Returns a blob with the given integers in place
+static void bcreateval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
+  if (argc < 1) {
+    sqlite3_result_null(context);
+  }
+
+  test_blob b = {
+    .type = sqlite3_value_int64(argv[0])
+  };
+
+  if (argc > 2) {
+    b.int1 = sqlite3_value_int64(argv[1]);
+  }
+  if (argc > 4) {
+    b.int2 = sqlite3_value_int64(argv[3]);
+  }
+  if (argc > 6) {
+    b.int3 = sqlite3_value_int64(argv[5]);
+  }
+  sqlite3_result_blob(context, &b, sizeof(b), SQLITE_TRANSIENT);
+}
+
 // Register the indicated UDFs.  Note, this will be called directly from run_test.sql as a proc
 cql_code cql_init_extensions(sqlite3 *db) {
   cql_code rc = sqlite3_create_function_v2(db, "rscount", 1, SQLITE_UTF8, 0, rs_count, NULL, NULL, NULL);
@@ -73,5 +207,49 @@ cql_code cql_init_extensions(sqlite3 *db) {
   }
 
   rc = sqlite3_create_function_v2(db, "rscol", 3, SQLITE_UTF8, 0, rs_col, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bgetval_type", 1, SQLITE_UTF8, 0, bgetval_type, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bgetkey_type", 1, SQLITE_UTF8, 0, bgetval_type, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bgetval", 2, SQLITE_UTF8, 0, bgetval, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bgetkey", 2, SQLITE_UTF8, 0, bgetval, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bcreateval", -1, SQLITE_UTF8, 0, bcreateval, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bcreatekey", -1, SQLITE_UTF8, 0, bcreateval, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bupdateval", -1, SQLITE_UTF8, 0, bupdateval, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
+  rc = sqlite3_create_function_v2(db, "bupdatekey", -1, SQLITE_UTF8, 0, bupdatekey, NULL, NULL, NULL);
+  if (rc != SQLITE_OK) {
+    return rc;
+  }
+
   return rc;
 }
