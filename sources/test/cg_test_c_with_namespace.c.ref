@@ -17624,6 +17624,58 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC test_blob_update_expand ()
+BEGIN
+  DECLARE b BLOB;
+  LET x := ( SELECT cql_blob_update(b, 1, backed.pk) );
+  LET z := ( SELECT cql_blob_update(b, 21, backed.age, "dave", backed.name) );
+END;
+*/
+
+#define _PROC_ "test_blob_update_expand"
+/*
+export:
+DECLARE PROC test_blob_update_expand () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_blob_ref b = NULL;
+  cql_blob_ref x = NULL;
+  sqlite3_stmt *_temp_stmt = NULL;
+  cql_blob_ref z = NULL;
+
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT bupdatekey(?, 1, 0)");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                CQL_DATA_TYPE_BLOB, b);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    cql_column_blob_ref(_temp_stmt, 0, &x);
+  cql_finalize_stmt(&_temp_stmt);
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT bupdateval(?, 21, -1118059189291406095, 3, 'dave', -6946718245010482247, 4)");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                CQL_DATA_TYPE_BLOB, b);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    cql_column_blob_ref(_temp_stmt, 0, &z);
+  cql_finalize_stmt(&_temp_stmt);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_blob_release(b);
+  cql_blob_release(x);
+  cql_finalize_stmt(&_temp_stmt);
+  cql_blob_release(z);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

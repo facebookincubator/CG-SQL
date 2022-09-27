@@ -1302,13 +1302,63 @@ static void gen_cql_blob_create(ast_node *ast) {
      gen_printf(", %d", sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
   }
 
- // rico
-
   gen_printf(")");
-
-
 }
 
+static void gen_cql_blob_update(ast_node *ast) {
+  Contract(is_ast_call(ast));
+  Contract(cg_blob_mappings);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // known to be dot operator and known to have a table
+  EXTRACT_NOTNULL(dot, third_arg(arg_list));
+  EXTRACT_STRING(t_name, dot->left);
+
+  sem_t sem_type_dot = dot->sem->sem_type;
+  bool_t is_pk = is_primary_key(sem_type_dot) || is_partial_pk(sem_type_dot);
+
+  CSTR func = is_pk ?
+      cg_blob_mappings->blob_update_key :
+      cg_blob_mappings->blob_update_val;
+
+  bool_t use_offsets = is_pk ?
+      cg_blob_mappings->blob_update_key_use_offsets :
+      cg_blob_mappings->blob_update_val_use_offsets;
+
+  // table known to exist (and not deleted) already
+  ast_node *table_ast = find_table_or_view_even_deleted(t_name);
+  Invariant(table_ast);
+
+  gen_printf("%s(", func);
+  gen_root_expr(first_arg(arg_list));
+
+  // 2n+1 args already confirmed, safe to do this
+  for (ast_node *args = arg_list->right; args; args = args->right->right) {
+     ast_node *val = first_arg(args);
+     ast_node *col = second_arg(args);
+     EXTRACT_STRING(cname, col->right);
+     gen_printf(", ");
+     gen_root_expr(val);
+     if (use_offsets) {
+      // we know it's a valid column
+      int32_t offset = get_table_col_offset(table_ast, cname,
+         is_pk ? CQL_SEARCH_COL_KEYS : CQL_SEARCH_COL_VALUES);
+      Invariant(offset >= 0);
+      gen_printf(", %d", offset);
+     }
+     else {
+       gen_printf(", ");
+       gen_field_hash(col);
+     }
+     if (!is_pk) {
+       // you never need the item types for the key blob becasue it always has all the fields
+       gen_printf(", %d", sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
+     }
+  }
+
+  gen_printf(")");
+}
 
 static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
@@ -1338,6 +1388,10 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
     }
     else if (!Strcasecmp("cql_blob_create", name)) {
       gen_cql_blob_create(ast);
+      return;
+    }
+    else if (!Strcasecmp("cql_blob_update", name)) {
+      gen_cql_blob_update(ast);
       return;
     }
   }

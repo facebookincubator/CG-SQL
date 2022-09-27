@@ -5627,6 +5627,16 @@ begin
   delete from small_backed;
 end;
 
+-- TEST: use cql_blob_update and validate hash codes etc.
+-- + "SELECT bupdatekey(?, 1, 0)"
+-- + "SELECT bupdateval(?, 21, -1118059189291406095, 3, 'dave', -6946718245010482247, 4)"
+create proc test_blob_update_expand()
+begin
+  declare b blob;
+  let x := (select cql_blob_update(b, 1, backed.pk));
+  let z := (select cql_blob_update(b, 21, backed.age, "dave", backed.name));
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

@@ -21961,6 +21961,145 @@ begin
   let z := (select cql_blob_get(x, simple_backing_table.k));
 end;
 
+-- TEST: correct call to cql_blob_update
+-- + {name cql_blob_update}: blob notnull
+-- + {call}: blob notnull
+-- - error:
+create proc blob_update()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id));
+end;
+
+-- TEST: correct cql_blob_update arg 1 is not a valid expr
+-- + {call}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+create proc blob_update_bogus_arg1()
+begin
+  let z := (select cql_blob_update(not 'x', 1, basic_table.id));
+end;
+
+-- TEST: cql blob update mixed tables
+-- + {call}: err
+-- + error: % the indicated table is not consistently used through all of cql_blob_update 'basic_table2'
+-- +1 error:
+create proc blob_update_different_tables()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id, 2, basic_table2.id));
+end;
+
+-- TEST: cql_blob_update first arg not a table
+-- + {call}: err
+-- + error: % incompatible types in expression 'cql_blob_update'
+-- +1 error:
+create proc blob_update_arg_one_error()
+begin
+  declare not_a_blob integer;
+  let z := (select cql_blob_update(not_a_blob, 1, basic_table.id));
+end;
+
+-- TEST: blob update not using a table.column as the 3nd arg
+-- + {call}: err
+-- + error: % argument must be table.column where table is a backed table
+-- +1 error:
+create proc blob_update_not_dot_operator()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, 1 + 2));
+end;
+
+-- TEST: blob update not using a table.column in a later arg
+-- + {call}: err
+-- + error: % argument must be table.column where table is a backed table
+-- +1 error:
+create proc blob_update_not_dot_operator_later_arg()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id, 2, 1 + 2));
+end;
+
+-- TEST: blob update table doesn't exist
+-- + {call}: err
+-- + error: % table/view not defined 'table_not_exists'
+-- +1 error:
+create proc blob_update_table_wrong()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, table_not_exists.id));
+end;
+
+-- TEST: blob update table doesn't exist
+-- + {call}: err
+-- + error: % table/view not defined 'table_not_exists'
+-- +1 error:
+create proc blob_update_table_wrong_later_arg()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.id, 2, table_not_exists.id));
+end;
+
+-- TEST: blob update column doesn't exist
+-- + {call}: err
+-- + error: % the indicated column is not present in the named backed storage 'basic_table.col_not_exists'
+-- +1 error:
+create proc blob_update_column_wrong()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, 1, basic_table.col_not_exists));
+end;
+
+-- TEST: blob update wrong argument count
+-- + {call}: err
+-- + error: % function got incorrect number of arguments 'cql_blob_update'
+-- +1 error:
+create proc blob_update_column_wrong_arg_count()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b));
+end;
+
+-- TEST: blob update called outside of SQL context
+-- + {call}: err
+-- + error: % function may not appear in this context 'cql_blob_update'
+-- +1 error:
+create proc blob_update_column_context_wrong()
+begin
+  declare b blob;
+  let z :=  cql_blob_update(x);
+end;
+
+-- TEST: blob update wrong argument type
+-- + {call}: err
+-- + error: % incompatible types in expression 'cql_blob_update'
+-- +1 error:
+create proc blob_update_column_wrong_arg_type()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, "x", basic_table.id));
+end;
+
+-- TEST: blob update arg expression has errors
+-- + {call}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+create proc blob_update_column_bad_expr()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, not "x", basic_table.id));
+end;
+
+-- TEST: blob update table expression is not a backing table
+-- + {call}: err
+-- + error: % the indicated table is not declared for backed storage 'simple_backing_table'
+-- +1 error:
+create proc blob_update_not_backed_table()
+begin
+  declare b blob;
+  let z := (select cql_blob_update(b, x, simple_backing_table.k));
+end;
+
 -- TEST: correct call to cql_blob_create
 -- + {name cql_blob_create}: blob notnull
 -- + {call}: blob notnull

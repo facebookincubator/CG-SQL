@@ -3905,6 +3905,9 @@ extern CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_);
 extern CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX
