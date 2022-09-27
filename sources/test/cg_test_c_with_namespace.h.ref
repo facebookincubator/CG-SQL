@@ -3899,6 +3899,12 @@ extern CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnul
 extern CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

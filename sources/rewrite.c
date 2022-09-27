@@ -2907,4 +2907,166 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   cte_cur = saved;
 }
 
+cql_noexport void rewrite_delete_statement_for_backed_table(
+  ast_node *ast,
+  list_item *backed_tables_list)
+{
+  ast_node *stmt = NULL;
+  ast_node *with_node = NULL;
+
+  if (is_ast_with_delete_stmt(ast)) {
+    EXTRACT_NOTNULL(with, ast->left)
+    EXTRACT_NOTNULL(delete_stmt, ast->right);
+    stmt = delete_stmt;
+    with_node = with;
+  }
+  else {
+    Contract(is_ast_delete_stmt(ast));
+    stmt = ast;
+  }
+
+  Invariant(is_ast_delete_stmt(stmt));
+  EXTRACT_STRING(backed_table_name, stmt->left);
+  EXTRACT(opt_where, stmt->right);
+
+  // table has already been checked, it exists, it's legal and it's backed
+  ast_node *backed_table = find_table_or_view_even_deleted(backed_table_name);
+  Contract(is_ast_create_table_stmt(backed_table));
+  Contract(is_backed(backed_table->sem->sem_type));
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  // the deleted table needs to be added to the referenced backed tables
+  add_item_to_list(
+    &backed_tables_list,
+    new_ast_table_or_subquery(new_ast_str(backed_table_name), NULL)
+  );
+
+  // we are going to need the name of the backing table
+
+  EXTRACT_MISC_ATTRS(backed_table, misc_attrs);
+
+  CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+  Invariant(backing_table_name);  // already validated
+
+  // the new where clause has at its core a select statement that generates the
+  // rowids of the rows to be deleted.  This is using the existing where clause
+  // against a from clause that is just the backed table.
+
+  ast_node *select_stmt =
+    new_ast_select_stmt(
+      new_ast_select_core_list(
+        new_ast_select_core(
+          NULL,
+          new_ast_select_expr_list_con(
+            // select list is just "rowid"
+            new_ast_select_expr_list(
+              new_ast_select_expr(
+                new_ast_str("rowid"),
+                NULL
+              ),
+              NULL
+            ),
+            // from clause is just the backed table which will will alias a CTE as usual
+            new_ast_select_from_etc(
+              new_ast_table_or_subquery_list(
+                new_ast_table_or_subquery(
+                  new_ast_str(backed_table_name),
+                  NULL
+                ),
+                NULL
+              ),
+              // use where to hold the previous where clause if any
+              new_ast_select_where(
+                opt_where,
+                new_ast_select_groupby(
+                  NULL,
+                  new_ast_select_having(
+                    NULL,
+                    NULL
+                  )
+                )
+              )
+            )
+          )
+        ),
+        NULL
+      ),
+      // empty orderby, limit, offset
+      new_ast_select_orderby(
+        NULL,
+        new_ast_select_limit(
+          NULL,
+          new_ast_select_offset(
+            NULL,
+            NULL
+          )
+        )
+      )
+    );
+
+  // for debugging print just the select statement
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
+
+  // the new where clause for the delete statement is going to be something like
+  // rowid IN (select rowid from selected rows)
+
+  ast_node *new_opt_where =
+    new_ast_opt_where(
+     new_ast_in_pred(
+       new_ast_str("rowid"),
+       select_stmt
+     )
+  );
+
+  // replace the target table and where clause of the backed table
+  // with the backing table and adjusted where clause
+
+  ast_set_left(stmt, new_ast_str(backing_table_name));
+  ast_set_right(stmt, new_opt_where);
+
+  // now add the backed tables and convert the node to a with delete if necessary
+
+  ast_node *backed_cte_tables = NULL;
+  ast_node *cte_tail = NULL;
+
+  rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
+  
+  Invariant(cte_tail);
+  Invariant(backed_cte_tables);
+
+  if (!with_node) {
+    // convert the DELETE to a WITH DELETE  and add backing table CTEs
+    ast_node *with_delete_stmt = new_ast_with_delete_stmt(
+      new_ast_with(
+        backed_cte_tables
+      ),
+      new_ast_delete_stmt(stmt->left, stmt->right)
+    );
+    stmt->type = k_ast_with_delete_stmt;
+    ast_set_left(stmt, with_delete_stmt->left);
+    ast_set_right(stmt, with_delete_stmt->right);
+  }
+  else {
+    // add the backed table CTEs to the front of the list
+    EXTRACT(cte_tables, with_node->left);
+    ast_set_right(cte_tail, cte_tables);
+    ast_set_left(with_node, backed_cte_tables);
+  }
+
+  // for debugging, dump the generated ast without trying to validate it at all
+  // print_root_ast(ast);
+  //
+  // for debugging dump the generated delete statement
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+
+  AST_REWRITE_INFO_RESET();
+
+  // the insert statement is top level, when it re-enters it expects the cte state to be nil
+  cte_state *saved = cte_cur;
+  cte_cur = NULL;
+    sem_one_stmt(ast);
+  cte_cur = saved;
+}
+
 #endif

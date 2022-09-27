@@ -255,4 +255,6 @@ DECLARE PROC insert_backed_values () USING TRANSACTION;
 DECLARE PROC insert_backed_values_using_with () USING TRANSACTION;
 DECLARE PROC insert_backed_values_using_form () USING TRANSACTION;
 DECLARE PROC inserted_backed_from_select () USING TRANSACTION;
+DECLARE PROC delete_from_backed () USING TRANSACTION;
+DECLARE PROC delete_from_backed_no_where_clause () USING TRANSACTION;
 DECLARE PROC end_proc ();

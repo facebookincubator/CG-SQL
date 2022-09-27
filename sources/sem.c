@@ -11092,11 +11092,7 @@ cql_noexport void sem_select(ast_node *ast) {
 }
 
 static void sem_select_rewrite_backing(ast_node *ast) {
-  // normally only the top level select statement needs a backing list and does
-  // replacement, however, an EXPLAIN can happen at any level at that causes the
-  // top level statement handles to do analysis -- when that happens each nested
-  // EXPLAIN needs its own select rewrite.  This will happen naturally because
-  // the nested selects will call sem_select_rewrite_backing
+  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
   list_item *backed_tables_list_saved = backed_tables_list;
   backed_tables_list = NULL;
 
@@ -14902,6 +14898,10 @@ static void sem_delete_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT(opt_where, ast->right);
 
+  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
+  list_item *backed_tables_list_saved = backed_tables_list;
+  backed_tables_list = NULL;
+
   // DELETE FROM [name]
 
   ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
@@ -14941,6 +14941,19 @@ static void sem_delete_stmt(ast_node *ast) {
   POP_JOIN();
 
   record_ok(ast);
+
+  // rewrite top level delete statements if needed
+  if (!is_error(ast) && is_backed(table_ast->sem->sem_type)) {
+    if (is_ast_with_delete_stmt(ast->parent)) {
+      rewrite_delete_statement_for_backed_table(ast->parent, backed_tables_list);
+    }
+    else {
+      rewrite_delete_statement_for_backed_table(ast, backed_tables_list);
+    }
+  }
+
+
+  backed_tables_list = backed_tables_list_saved;
 }
 
 // Top level WITH-DELETE form -- create the CTE context and then process
@@ -15577,11 +15590,7 @@ static void sem_insert_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT(insert_dummy_spec, insert_type->left);
 
-  // normally only the top insert select statement needs a backing list and does
-  // replacement, however, an EXPLAIN can happen at any level at that causes the
-  // top level statement handles to do analysis -- when that happens each nested
-  // EXPLAIN needs its own select rewrite.  This will happen naturally because
-  // the nested selects will call sem_select_rewrite_backing
+  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
   list_item *backed_tables_list_saved = backed_tables_list;
   backed_tables_list = NULL;
 
@@ -15694,11 +15703,11 @@ static void sem_insert_stmt(ast_node *ast) {
 
   // rewrite top level insert statements if needed
   if (!is_error(ast) && is_backed(table_ast->sem->sem_type)) {
-    if (is_ast_stmt_list(ast->parent)) {
-      rewrite_insert_statement_for_backed_table(ast, backed_tables_list);
-    }
-    else if (is_ast_with_insert_stmt(ast->parent)) {
+    if (is_ast_with_insert_stmt(ast->parent)) {
       rewrite_insert_statement_for_backed_table(ast->parent, backed_tables_list);
+    }
+    else {
+      rewrite_insert_statement_for_backed_table(ast, backed_tables_list);
     }
   }
 

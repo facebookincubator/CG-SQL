@@ -17544,6 +17544,86 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC delete_from_backed ()
+BEGIN
+  WITH
+  small_backed (rowid, pk, x, y) AS (CALL _small_backed())
+  DELETE FROM backing WHERE rowid IN (SELECT rowid
+    FROM small_backed
+    WHERE pk = 12345);
+END;
+*/
+
+#define _PROC_ "delete_from_backed"
+/*
+export:
+DECLARE PROC delete_from_backed () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "small_backed (rowid, pk, x, y) AS (",
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -9132470325614587332",
+  ") "
+    "DELETE FROM backing WHERE rowid IN (SELECT rowid "
+      "FROM small_backed "
+      "WHERE pk = 12345)"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC delete_from_backed_no_where_clause ()
+BEGIN
+  WITH
+  small_backed (rowid, pk, x, y) AS (CALL _small_backed()),
+  v (x) AS (VALUES(1))
+  DELETE FROM backing WHERE rowid IN (SELECT rowid
+    FROM small_backed);
+END;
+*/
+
+#define _PROC_ "delete_from_backed_no_where_clause"
+/*
+export:
+DECLARE PROC delete_from_backed_no_where_clause () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "small_backed (rowid, pk, x, y) AS (",
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -9132470325614587332",
+  "), "
+    "v (x) AS (VALUES(1)) "
+    "DELETE FROM backing WHERE rowid IN (SELECT rowid "
+      "FROM small_backed)"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

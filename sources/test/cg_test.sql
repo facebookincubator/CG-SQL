@@ -5606,6 +5606,27 @@ begin
   insert into small_backed select pk+1000, B.x||'x', B.y+50 from small_backed B;
 end;
 
+-- TEST: delete from backed
+-- + small_backed (rowid, pk, x, y)
+-- + DELETE FROM backing WHERE rowid IN (SELECT rowid
+-- + FROM small_backed
+-- + WHERE pk = 12345)
+create proc delete_from_backed()
+begin
+  delete from small_backed where pk = 12345;
+end;
+
+-- TEST: delete from backed with no where clause
+-- + small_backed (rowid, pk, x, y)
+-- + DELETE FROM backing WHERE rowid IN (SELECT rowid
+-- + FROM small_backed)
+-- + v (x) AS (VALUES(1)
+create proc delete_from_backed_no_where_clause()
+begin
+  with v(x) as (values(1)) -- force the with select form
+  delete from small_backed;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
