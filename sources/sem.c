@@ -55,6 +55,27 @@ cql_noexport void print_sem_type(struct sem_node *sem) {}
 // As we walk sql expressions we note the ast nodes that hold table names that
 // are backed tables so that we can swap them out later
 static list_item *backed_tables_list;
+static bool_t in_backing_rewrite;
+
+#define BEGIN_BACKING_REWRITE() \
+  bool_t began_backing_rewrite = false; \
+  list_item *backed_tables_list_saved = NULL; \
+  if (!in_backing_rewrite) { \
+    backed_tables_list_saved = backed_tables_list; \
+    backed_tables_list = NULL; \
+    in_backing_rewrite = true; \
+    began_backing_rewrite = true; \
+  }
+
+#define END_BACKING_REWRITE() \
+  if (began_backing_rewrite) { \
+    backed_tables_list = backed_tables_list_saved; \
+    in_backing_rewrite = false; \
+  }
+
+#define BACKING_REWRITE_NEEDED(ast, table_ast) \
+  (!is_error(ast) && began_backing_rewrite && \
+   (backed_tables_list || (table_ast != NULL && is_backed(table_ast->sem->sem_type))))
 
 // These are the symbol tables with the ast dispatch when we get to an ast node
 // we look it up here and call the appropriate function whose name matches the ast
@@ -11221,17 +11242,18 @@ cql_noexport void sem_select(ast_node *ast) {
 }
 
 static void sem_select_rewrite_backing(ast_node *ast) {
-  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
-  list_item *backed_tables_list_saved = backed_tables_list;
-  backed_tables_list = NULL;
+  BEGIN_BACKING_REWRITE();
 
   sem_select(ast);
 
-  if (backed_tables_list && (is_ast_select_stmt(ast) || is_ast_with_select_stmt(ast))) {
+  // select doesn't have a target table like INSERT/UPDATE/DELETE just FROM tables
+  ast_node *target_table = NULL;
+
+  if (BACKING_REWRITE_NEEDED(ast, target_table)) {
     rewrite_select_for_backed_tables(ast, backed_tables_list);
   }
 
-  backed_tables_list = backed_tables_list_saved;
+  END_BACKING_REWRITE();
 }
 
 // Top level statement list processing for select, not that a select statement
@@ -15018,6 +15040,15 @@ static void sem_guard_stmt(ast_node *ast) {
   rewrite_guard_stmt_to_if_stmt(ast);
 }
 
+// if the statement has a with clause, get the with version
+static ast_node *sem_recover_with_stmt(ast_node *ast) {
+  if (ast->parent && ast->parent->left && is_ast_with(ast->parent->left)) {
+    return ast->parent;
+  }
+  return ast;
+}
+
+
 // This is the delete analyzer, it sets up a joinscope for the table being
 // deleted and the validates the WHERE if present against that joinscope.
 // Additionally we verify that the table actually was defined and is not a view.
@@ -15027,9 +15058,7 @@ static void sem_delete_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT(opt_where, ast->right);
 
-  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
-  list_item *backed_tables_list_saved = backed_tables_list;
-  backed_tables_list = NULL;
+  BEGIN_BACKING_REWRITE();
 
   // DELETE FROM [name]
 
@@ -15039,12 +15068,12 @@ static void sem_delete_stmt(ast_node *ast) {
     "CQL0151: table in delete statement does not exist");
   if (!table_ast) {
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   sem_non_blob_storage_table(ast, table_ast);
   if (is_error(ast)) {
-    return;
+    goto cleanup;
   }
 
   name_ast->sem = table_ast->sem;
@@ -15052,7 +15081,7 @@ static void sem_delete_stmt(ast_node *ast) {
   if (!is_ast_create_table_stmt(table_ast)) {
     report_error(name_ast, "CQL0152: cannot delete from a view", name);
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   PUSH_JOIN(where_scope, table_ast->sem->jptr);
@@ -15063,7 +15092,7 @@ static void sem_delete_stmt(ast_node *ast) {
     if (is_error(opt_where)) {
       record_error(ast);
       POP_JOIN();
-      return;
+      goto cleanup;
     }
   }
 
@@ -15072,18 +15101,16 @@ static void sem_delete_stmt(ast_node *ast) {
   record_ok(ast);
 
   // rewrite top level delete statements if needed
-  if (!is_error(ast) && is_backed(table_ast->sem->sem_type)) {
-    if (is_ast_with_delete_stmt(ast->parent)) {
-      rewrite_delete_statement_for_backed_table(ast->parent, backed_tables_list);
-    }
-    else {
-      rewrite_delete_statement_for_backed_table(ast, backed_tables_list);
-    }
+  if (BACKING_REWRITE_NEEDED(ast, table_ast)) {
+    rewrite_delete_statement_for_backed_table(sem_recover_with_stmt(ast), backed_tables_list);
   }
 
+cleanup:
 
-  backed_tables_list = backed_tables_list_saved;
+  END_BACKING_REWRITE();
 }
+
+
 
 // Top level WITH-DELETE form -- create the CTE context and then process
 // the delete statement.
@@ -15230,9 +15257,7 @@ static void sem_update_stmt(ast_node *ast) {
   bool_t error = true;
   bool_t join_pushed = false;
 
-  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
-  list_item *backed_tables_list_saved = backed_tables_list;
-  backed_tables_list = NULL;
+  BEGIN_BACKING_REWRITE();
 
   // update [table] SET [update_list]
 
@@ -15317,19 +15342,11 @@ cleanup:
     POP_JOIN();
   }
 
-  if (!error) {
-    // rewrite top level update statements if needed
-    if (is_backed(table_ast->sem->sem_type)) {
-      if (is_ast_with_update_stmt(ast->parent)) {
-        rewrite_update_statement_for_backed_table(ast->parent, backed_tables_list);
-      }
-      else {
-        rewrite_update_statement_for_backed_table(ast, backed_tables_list);
-      }
-    }
+  if (BACKING_REWRITE_NEEDED(ast, table_ast)) {
+    rewrite_update_statement_for_backed_table(sem_recover_with_stmt(ast), backed_tables_list);
   }
 
-  backed_tables_list = backed_tables_list_saved;
+  END_BACKING_REWRITE();
 }
 
 // The column list specifies the columns we will provide, they must exist and be unique.
@@ -15737,9 +15754,7 @@ static void sem_insert_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT(insert_dummy_spec, insert_type->left);
 
-  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
-  list_item *backed_tables_list_saved = backed_tables_list;
-  backed_tables_list = NULL;
+  BEGIN_BACKING_REWRITE();
 
   // INSERT [conflict resolution] INTO name [( name_list )] VALUES (insert_list)
   // INSERT [conflict resolution] INTO name [( name_list )] SELECT ...
@@ -15751,7 +15766,7 @@ static void sem_insert_stmt(ast_node *ast) {
     "CQL0160: table in insert statement does not exist");
   if (!table_ast) {
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   name_ast->sem = table_ast->sem;
@@ -15759,13 +15774,13 @@ static void sem_insert_stmt(ast_node *ast) {
   if (!is_ast_create_table_stmt(table_ast)) {
     report_error(name_ast, "CQL0161: cannot insert into a view", name);
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   if (in_upsert && is_backed(table_ast->sem->sem_type)) {
     report_error(ast, "backed tables are not supported in the upsert form (yet)", NULL);
     record_error(ast);
-    return;
+    goto cleanup;
   }
 
   // expr_names node is a sugar syntax we need to rewrite it to a SQL syntax
@@ -15781,13 +15796,13 @@ static void sem_insert_stmt(ast_node *ast) {
     sem_select_stmt(columns_values);
     if (is_error(columns_values)) {
       record_error(ast);
-      return;
+      goto cleanup;
     }
 
     sem_verify_no_anon_columns(columns_values);
     if (is_error(columns_values)) {
       record_error(ast);
-      return;
+      goto cleanup;
     }
 
     rewrite_select_stmt_to_columns_values(columns_values);
@@ -15801,14 +15816,14 @@ static void sem_insert_stmt(ast_node *ast) {
     if (!is_ast_insert_normal(insert_type)) {
       report_error(insert_type, "CQL0283: upsert syntax only supports INSERT INTO", name);
       record_error(ast);
-      return;
+      goto cleanup;
     }
     else if (is_ast_default_columns_values(columns_values)) {
       // INSERT [conflict resolution] INTO name DEFAULT VALUES
       // insert statement with default values can not be used in an upsert statement
       report_error(insert_type, "CQL0316: upsert-clause is not compatible with DEFAULT VALUES", name);
       record_error(ast);
-      return;
+      goto cleanup;
     }
 
     Contract(!current_upsert_table_ast);
@@ -15821,12 +15836,12 @@ static void sem_insert_stmt(ast_node *ast) {
     rewrite_like_column_spec_if_needed(columns_values);
     if (is_error(columns_values)) {
       record_error(ast);
-      return;
+      goto cleanup;
     }
 
     rewrite_from_shape_if_needed(ast, columns_values);
     if (is_error(ast)) {
-      return;
+      goto cleanup;
     }
 
     sem_column_spec_and_values(ast, table_ast);
@@ -15848,23 +15863,20 @@ static void sem_insert_stmt(ast_node *ast) {
           "CQL0315: mandatory column with no default value in INSERT INTO name DEFAULT VALUES statement",
           sptr->names[i]);
         record_error(ast);
-        return;
+        goto cleanup;
       }
     }
     record_ok(ast);
   }
 
   // rewrite top level insert statements if needed
-  if (!is_error(ast) && is_backed(table_ast->sem->sem_type)) {
-    if (is_ast_with_insert_stmt(ast->parent)) {
-      rewrite_insert_statement_for_backed_table(ast->parent, backed_tables_list);
-    }
-    else {
-      rewrite_insert_statement_for_backed_table(ast, backed_tables_list);
-    }
+  if (BACKING_REWRITE_NEEDED(ast, table_ast)) {
+    rewrite_insert_statement_for_backed_table(sem_recover_with_stmt(ast), backed_tables_list);
   }
 
-  backed_tables_list = backed_tables_list_saved;
+cleanup:
+
+  END_BACKING_REWRITE();
 }
 
 // Recursively goes through all the node to find the root select_stmt with SELECT token and
@@ -22836,6 +22848,8 @@ static void sem_stmt_list_in_current_flow_context(ast_node *head) {
 
   bool_t error = false;
   for (ast_node *ast = head; ast; ast = ast->right) {
+    // ensures we always clear this before ending any top level statement
+    Invariant(!in_backing_rewrite); 
     ast_node *stmt = first_stmt_in_stmt_list(ast);
     sem_one_stmt(stmt);
     if (is_error(stmt)) {
@@ -22858,6 +22872,9 @@ static void sem_stmt_list_in_current_flow_context(ast_node *head) {
 // goes wrong the first node in the list is marked as "error" so that callers
 // can see that the net statement list is in error without walking each node.
 static void sem_stmt_list(ast_node *head) {
+  // ensures we always clear this before ending any top level statement
+  Invariant(!in_backing_rewrite);
+
   // For any list of statements, any improvements made within cannot be assumed
   // to be valid afterwards. We therefore need to create a new context.
   FLOW_PUSH_CONTEXT_NORMAL();
@@ -25210,6 +25227,8 @@ cql_noexport void sem_cleanup() {
   global_notnull_improvements = NULL;
   current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
   current_proc_contains_try_is_proc_body = false;
+  in_backing_rewrite = false;
+  backed_tables_list = NULL;
 }
 
 #endif
@@ -25232,7 +25251,6 @@ cql_data_defn( bool_t use_encode );
 cql_data_defn( CSTR _Nullable encode_context_column );
 cql_data_defn( symtab *encode_columns );
 cql_data_defn( cte_state *cte_cur );
-
 
 // If creating debug/test output, we will hold errors for a given statement in this buffer.
 cql_data_defn( charbuf *error_capture );

@@ -93189,3 +93189,170 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a str
       | {arg_list}: ok
         | {int 1}: integer notnull
 
+The statement ending at line XXXX
+
+CREATE TABLE dummy_table_for_backed_test(
+  id INTEGER
+);
+
+  {create_table_stmt}: dummy_table_for_backed_test: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name dummy_table_for_backed_test}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+WITH
+simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
+INSERT INTO dummy_table_for_backed_test(id) SELECT id
+  FROM simple_backed_table;
+
+  {with_insert_stmt}: ok
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |     | | {name simple_backed_table}
+  |     | | {name_list}
+  |     |   | {name rowid}
+  |     |   | {name_list}
+  |     |     | {name id}
+  |     |     | {name_list}
+  |     |       | {name name}
+  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  | {insert_stmt}: ok
+    | {insert_normal}
+    | {name_columns_values}
+      | {name dummy_table_for_backed_test}: dummy_table_for_backed_test: { id: integer }
+      | {columns_values}: ok
+        | {column_spec}
+        | | {name_list}
+        |   | {name id}: id: integer
+        | {select_stmt}: select: { id: integer notnull }
+          | {select_core_list}: select: { id: integer notnull }
+          | | {select_core}: select: { id: integer notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull }
+          |     | {select_expr_list}: select: { id: integer notnull }
+          |     | | {select_expr}: id: integer notnull
+          |     |   | {name id}: id: integer notnull
+          |     | {select_from_etc}: TABLE { simple_backed_table: simple_backed_table }
+          |       | {table_or_subquery_list}: TABLE { simple_backed_table: simple_backed_table }
+          |       | | {table_or_subquery}: TABLE { simple_backed_table: simple_backed_table }
+          |       |   | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
+DELETE FROM dummy_table_for_backed_test WHERE id IN (SELECT id
+  FROM simple_backed_table);
+
+  {with_delete_stmt}: ok
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |     | | {name simple_backed_table}
+  |     | | {name_list}
+  |     |   | {name rowid}
+  |     |   | {name_list}
+  |     |     | {name id}
+  |     |     | {name_list}
+  |     |       | {name name}
+  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  | {delete_stmt}: ok
+    | {name dummy_table_for_backed_test}: dummy_table_for_backed_test: { id: integer }
+    | {opt_where}: bool
+      | {in_pred}: bool
+        | {name id}: id: integer
+        | {select_stmt}: id: integer
+          | {select_core_list}: select: { id: integer notnull }
+          | | {select_core}: select: { id: integer notnull }
+          |   | {select_expr_list_con}: select: { id: integer notnull }
+          |     | {select_expr_list}: select: { id: integer notnull }
+          |     | | {select_expr}: id: integer notnull
+          |     |   | {name id}: id: integer notnull
+          |     | {select_from_etc}: TABLE { simple_backed_table: simple_backed_table }
+          |       | {table_or_subquery_list}: TABLE { simple_backed_table: simple_backed_table }
+          |       | | {table_or_subquery}: TABLE { simple_backed_table: simple_backed_table }
+          |       |   | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
+UPDATE dummy_table_for_backed_test
+SET id = id + 1
+  WHERE id IN (SELECT id
+  FROM simple_backed_table);
+
+  {with_update_stmt}: dummy_table_for_backed_test: { id: integer }
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |     | | {name simple_backed_table}
+  |     | | {name_list}
+  |     |   | {name rowid}
+  |     |   | {name_list}
+  |     |     | {name id}
+  |     |     | {name_list}
+  |     |       | {name name}
+  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  | {update_stmt}: dummy_table_for_backed_test: { id: integer }
+    | {name dummy_table_for_backed_test}: dummy_table_for_backed_test: { id: integer }
+    | {update_set}
+      | {update_list}: ok
+      | | {update_entry}: id: integer
+      |   | {name id}: id: integer
+      |   | {add}: integer
+      |     | {name id}: id: integer
+      |     | {int 1}: integer notnull
+      | {update_where}
+        | {opt_where}: bool
+        | | {in_pred}: bool
+        |   | {name id}: id: integer
+        |   | {select_stmt}: id: integer
+        |     | {select_core_list}: select: { id: integer notnull }
+        |     | | {select_core}: select: { id: integer notnull }
+        |     |   | {select_expr_list_con}: select: { id: integer notnull }
+        |     |     | {select_expr_list}: select: { id: integer notnull }
+        |     |     | | {select_expr}: id: integer notnull
+        |     |     |   | {name id}: id: integer notnull
+        |     |     | {select_from_etc}: TABLE { simple_backed_table: simple_backed_table }
+        |     |       | {table_or_subquery_list}: TABLE { simple_backed_table: simple_backed_table }
+        |     |       | | {table_or_subquery}: TABLE { simple_backed_table: simple_backed_table }
+        |     |       |   | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+        |     |       | {select_where}
+        |     |         | {select_groupby}
+        |     |           | {select_having}
+        |     | {select_orderby}
+        |       | {select_limit}
+        |         | {select_offset}
+        | {update_orderby}
+

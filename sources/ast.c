@@ -151,7 +151,6 @@ cql_noexport void ast_set_left(ast_node *parent, ast_node *left) {
   }
 }
 
-
 cql_noexport ast_node *new_ast(const char *type, ast_node *left, ast_node *right) {
   Contract(current_file && yylineno > 0);
   ast_node *ast = _ast_pool_new(ast_node);

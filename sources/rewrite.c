@@ -2483,6 +2483,9 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
   Invariant(!is_error(stmt_and_attr->right));
 }
 
+// Here we find all of the backed tables that have been mentioned in this statement
+// from the backed tables list and produce a chain of CTEs that define them.  This
+// can then be linked into some other statement (see below)
 static void rewrite_backed_table_ctes(
   list_item *backed_tables_list,
   ast_node **pcte_tables,
@@ -2529,17 +2532,15 @@ static void rewrite_backed_table_ctes(
   symtab_delete(backed);
 }
 
-// This is the magic, we have tracked the backed tables so now we can  insert calls to
+// This is the magic, we have tracked the backed tables so now we can insert calls to
 // the generated shared fragments (see above) for each such table.  Once we've done that,
 // the select will "just work." because the backed table has been aliased by a correct CTE.
-cql_noexport void rewrite_select_for_backed_tables(
+cql_noexport void rewrite_statement_backed_table_ctes(
   ast_node *_Nonnull stmt,
   list_item *_Nonnull backed_tables_list)
 {
-  Contract(is_ast_select_stmt(stmt) || is_ast_with_select_stmt(stmt));
+  Contract(stmt);
   Contract(backed_tables_list);
-
-  AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);
 
   ast_node *backed_cte_tables = NULL;
   ast_node *cte_tail = NULL;
@@ -2549,29 +2550,54 @@ cql_noexport void rewrite_select_for_backed_tables(
   Invariant(cte_tail);
   Invariant(backed_cte_tables);
 
-  if (is_ast_select_stmt(stmt)) {
-    // convert the SELECT to a WITH SELECT and add backing table CTEs
-    ast_node *with_select_stmt = new_ast_with_select_stmt(
-      new_ast_with(
-        backed_cte_tables
-      ),
-      new_ast_select_stmt(stmt->left, stmt->right)
-    );
-    stmt->type = k_ast_with_select_stmt;
-    ast_set_left(stmt, with_select_stmt->left);
-    ast_set_right(stmt, with_select_stmt->right);
-  }
-  else {
+  if (is_ast_with(stmt->left)) {
     // add the backed table CTEs to the front of the list
-    Invariant(is_ast_with_select_stmt(stmt));
     EXTRACT(with, stmt->left);
     EXTRACT(cte_tables, with->left);
     ast_set_right(cte_tail, cte_tables);
     ast_set_left(with, cte_tail);
   }
+  else {
+    // preserve the old (left, right) in a nested node and swap in the "with" node
+    ast_set_right(stmt, new_ast(stmt->type, stmt->left, stmt->right));
+    ast_set_left(stmt, new_ast_with(backed_cte_tables));
+
+    // map the node type to the with form
+    if (stmt->type == k_ast_select_stmt) {
+      stmt->type = k_ast_with_select_stmt;
+    }
+    else if (stmt->type == k_ast_update_stmt) {
+      stmt->type = k_ast_with_update_stmt;
+    }
+    else if (stmt->type == k_ast_delete_stmt) {
+      stmt->type = k_ast_with_delete_stmt;
+    }
+    else { 
+      // this is all that's left
+      Invariant(stmt->type == k_ast_insert_stmt);
+      stmt->type = k_ast_with_insert_stmt;
+    }
+  }
 
   // stdout the rewrite for debugging if needed
   // gen_stmt_list_to_stdout(new_ast_stmt_list(stmt, NULL));
+}
+
+// Select is the simplest case, all we have to do is add the references
+// to the backed tables to the select statement converting it into
+// a with select in the process rewrite_statement_backed_table_ctes
+// does exactly this job.  All the statement types use that helper
+// to get the CTE structure correct.
+cql_noexport void rewrite_select_for_backed_tables(
+  ast_node *_Nonnull stmt,
+  list_item *_Nonnull backed_tables_list)
+{
+  Contract(is_ast_select_stmt(stmt) || is_ast_with_select_stmt(stmt));
+  Contract(backed_tables_list);
+
+  AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);
+
+  rewrite_statement_backed_table_ctes(stmt, backed_tables_list);
 
   AST_REWRITE_INFO_RESET();
 
@@ -2659,7 +2685,12 @@ static ast_node *rewrite_update_blob_args(bool_t for_key, ast_node *backed_table
 
 // This walks the name list and generates either the key update call or the value update call
 // This is the fixed part of the call.
-static ast_node *rewrite_blob_update(bool_t for_key, sem_struct *sptr_backing, ast_node *backed_table, ast_node *update_list) {
+static ast_node *rewrite_blob_update(
+  bool_t for_key,
+  sem_struct *sptr_backing,
+  ast_node *backed_table,
+  ast_node *update_list)
+{
 
   // if there are no args for this blob type then do not make the blob update call at all.
   ast_node *arg_list = rewrite_update_blob_args(for_key, backed_table, update_list);
@@ -2748,6 +2779,8 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   ast_node *ast,
   list_item *backed_tables_list)
 {
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
   ast_node *with_node = NULL;
   ast_node *stmt = NULL;
 
@@ -2769,10 +2802,13 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT(insert_dummy_spec, insert_type->left);
 
-  // table has already been checked, it exists, it's legal and it's backed
+  // table has already been checked, it exists, it's legal
+  // but it might not be backed, in which case we have less work to do
   ast_node *backed_table = find_table_or_view_even_deleted(backed_table_name);
   Contract(is_ast_create_table_stmt(backed_table));
-  Contract(is_backed(backed_table->sem->sem_type));
+  if (!is_backed(backed_table->sem->sem_type)) {
+    goto replace_backed_tables_only;
+  }
 
   EXTRACT_MISC_ATTRS(backed_table, misc_attrs);
 
@@ -2782,8 +2818,6 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   Invariant(backing_table);  // already validated
   sem_struct *sptr_backing = backing_table->sem->sptr;
   Invariant(sptr_backing);  // table must have a sem_struct
-
-  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
   // Some explicit contract to clarify which error you have made...
 
@@ -2892,7 +2926,6 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   // for debugging dump the generated select statement
   // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
 
-
   // figure out the column order of the key and value columns in the backing store
   // the options are "key, value" or "value, key"
   sem_t sem_type = sptr_backing->semtypes[0];
@@ -2947,17 +2980,10 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
     ast_set_right(ast, with_insert_stmt->right);
   }
 
+replace_backed_tables_only:
+
   if (backed_tables_list) {
-    ast_node *backed_cte_tables = NULL;
-    ast_node *cte_tail = NULL;
-
-    rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
-  
-    Invariant(cte_tail);
-    Invariant(backed_cte_tables);
-
-    ast_set_right(cte_tail, with_node->left);
-    ast_set_left(with_node, backed_cte_tables);
+    rewrite_statement_backed_table_ctes(stmt, backed_tables_list);
   }
 
   // for debugging, dump the generated ast without trying to validate it at all
@@ -2979,8 +3005,7 @@ static ast_node *rewrite_select_rowid(
   CSTR backed_table_name,
   ast_node *opt_where,
   ast_node *opt_orderby,
-  ast_node *opt_limit
-)
+  ast_node *opt_limit)
 {
   return
     new_ast_select_stmt(
@@ -3039,14 +3064,14 @@ cql_noexport void rewrite_delete_statement_for_backed_table(
   ast_node *ast,
   list_item *backed_tables_list)
 {
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
   ast_node *stmt = NULL;
-  ast_node *with_node = NULL;
 
   if (is_ast_with_delete_stmt(ast)) {
     EXTRACT_NOTNULL(with, ast->left)
     EXTRACT_NOTNULL(delete_stmt, ast->right);
     stmt = delete_stmt;
-    with_node = with;
   }
   else {
     Contract(is_ast_delete_stmt(ast));
@@ -3057,12 +3082,13 @@ cql_noexport void rewrite_delete_statement_for_backed_table(
   EXTRACT_STRING(backed_table_name, stmt->left);
   EXTRACT(opt_where, stmt->right);
 
-  // table has already been checked, it exists, it's legal and it's backed
+  // table has already been checked, it exists, it's legal
+  // but it might not be backed, in which case we have less work to do
   ast_node *backed_table = find_table_or_view_even_deleted(backed_table_name);
   Contract(is_ast_create_table_stmt(backed_table));
-  Contract(is_backed(backed_table->sem->sem_type));
-
-  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+  if (!is_backed(backed_table->sem->sem_type)) {
+    goto replace_backed_tables_only;
+  }
 
   // the deleted table needs to be added to the referenced backed tables
   add_item_to_list(
@@ -3103,44 +3129,14 @@ cql_noexport void rewrite_delete_statement_for_backed_table(
   ast_set_left(stmt, new_ast_str(backing_table_name));
   ast_set_right(stmt, new_opt_where);
 
+replace_backed_tables_only:
+
   // now add the backed tables and convert the node to a with delete if necessary
-
-  ast_node *backed_cte_tables = NULL;
-  ast_node *cte_tail = NULL;
-
-  rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
-  
-  Invariant(cte_tail);
-  Invariant(backed_cte_tables);
-
-  if (!with_node) {
-    // convert the DELETE to a WITH DELETE  and add backing table CTEs
-    ast_node *with_delete_stmt = new_ast_with_delete_stmt(
-      new_ast_with(
-        backed_cte_tables
-      ),
-      new_ast_delete_stmt(stmt->left, stmt->right)
-    );
-    stmt->type = k_ast_with_delete_stmt;
-    ast_set_left(stmt, with_delete_stmt->left);
-    ast_set_right(stmt, with_delete_stmt->right);
-  }
-  else {
-    // add the backed table CTEs to the front of the list
-    EXTRACT(cte_tables, with_node->left);
-    ast_set_right(cte_tail, cte_tables);
-    ast_set_left(with_node, backed_cte_tables);
-  }
-
-  // for debugging, dump the generated ast without trying to validate it at all
-  // print_root_ast(ast);
-  //
-  // for debugging dump the generated delete statement
-  // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+  rewrite_statement_backed_table_ctes(ast, backed_tables_list);
 
   AST_REWRITE_INFO_RESET();
 
-  // the insert statement is top level, when it re-enters it expects the cte state to be nil
+  // the delete statement is top level, when it re-enters it expects the cte state to be nil
   cte_state *saved = cte_cur;
   cte_cur = NULL;
     sem_one_stmt(ast);
@@ -3151,14 +3147,14 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   ast_node *ast,
   list_item *backed_tables_list)
 {
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
   ast_node *stmt = NULL;
-  ast_node *with_node = NULL;
 
   if (is_ast_with_update_stmt(ast)) {
     EXTRACT_NOTNULL(with, ast->left)
     EXTRACT_NOTNULL(update_stmt, ast->right);
     stmt = update_stmt;
-    with_node = with;
   }
   else {
     Contract(is_ast_update_stmt(ast));
@@ -3176,12 +3172,13 @@ cql_noexport void rewrite_update_statement_for_backed_table(
 
   EXTRACT_STRING(backed_table_name, stmt->left);
 
-  // table has already been checked, it exists, it's legal and it's backed
+  // table has already been checked, it exists, it's legal
+  // but it might not be backed, in which case we have less work to do
   ast_node *backed_table = find_table_or_view_even_deleted(backed_table_name);
   Contract(is_ast_create_table_stmt(backed_table));
-  Contract(is_backed(backed_table->sem->sem_type));
-
-  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+  if (!is_backed(backed_table->sem->sem_type)) {
+    goto replace_backed_tables_only;
+  }
 
   // the updated table needs to be added to the referenced backed tables
   add_item_to_list(
@@ -3263,40 +3260,10 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   ast_set_left(update_orderby, NULL); // opt orderby handled in the select
   ast_set_right(update_orderby, NULL); // opt limit handled in the select
 
-  // now add the backed tables and convert the node to a with update if necessary
+replace_backed_tables_only:
 
-  ast_node *backed_cte_tables = NULL;
-  ast_node *cte_tail = NULL;
-
-  rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
-  
-  Invariant(cte_tail);
-  Invariant(backed_cte_tables);
-
-  if (!with_node) {
-    // convert the UPDATE to a WITH UPDATE  and add backing table CTEs
-    ast_node *with_update_stmt = new_ast_with_update_stmt(
-      new_ast_with(
-        backed_cte_tables
-      ),
-      new_ast_update_stmt(stmt->left, stmt->right)
-    );
-    stmt->type = k_ast_with_update_stmt;
-    ast_set_left(stmt, with_update_stmt->left);
-    ast_set_right(stmt, with_update_stmt->right);
-  }
-  else {
-    // add the backed table CTEs to the front of the list
-    EXTRACT(cte_tables, with_node->left);
-    ast_set_right(cte_tail, cte_tables);
-    ast_set_left(with_node, backed_cte_tables);
-  }
-
-  // for debugging, dump the generated ast without trying to validate it at all
-  // print_root_ast(ast);
-  //
-  // for debugging dump the generated update statement
-  // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+  // now add the backed tables and convert the node to a with delete if necessary
+  rewrite_statement_backed_table_ctes(ast, backed_tables_list);
 
   AST_REWRITE_INFO_RESET();
 

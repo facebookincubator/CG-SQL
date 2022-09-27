@@ -23532,3 +23532,27 @@ set compressed_string := cql_compressed("foo foo", 1);
 -- + first argument must be a string literal 'cql_compressed'
 -- +1 error:
 set compressed_string := cql_compressed(1);
+
+-- - error:
+create table dummy_table_for_backed_test(id integer);
+
+-- TEST: inserting using simple_backed should work even if it isn't the target
+-- verify rewrite only
+-- + {with_insert_stmt}: ok
+-- + simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
+-- - error:
+insert into dummy_table_for_backed_test select id from simple_backed_table;
+
+-- TEST: deleting using simple_backed should work even if it isn't the target
+-- verify successful rewrite only
+-- + {with_delete_stmt}: ok
+-- + simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
+-- - error:
+delete from dummy_table_for_backed_test where id in (select id from simple_backed_table);
+
+-- TEST: updatingg using simple_backed should work even if it isn't the target
+-- verify successful rewrite only
+-- + {with_update_stmt}: dummy_table_for_backed_test: { id: integer }
+-- + simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
+-- - error:
+update dummy_table_for_backed_test set id = id + 1 where id in (select id from simple_backed_table);
