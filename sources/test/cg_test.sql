@@ -5544,6 +5544,9 @@ begin
   set x := (select flag from backed);
 end;
 
+-- go back to the other way
+@blob_get_val bgetval;
+
 @attribute(cql:backed_by=backing)
 create table small_backed(
   pk int primary key,
@@ -5592,7 +5595,7 @@ end;
 
 -- TEST: insert from a select
 -- + small_backed (rowid, pk, x, y) AS (
--- + SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 0) AS x, bgetval(T.v, 1) AS y
+-- + SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 7953209610392031882) AS x, bgetval(T.v, 4501343740738089802) AS y
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -9132470325614587332
 -- + _vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50
@@ -5635,6 +5638,56 @@ begin
   declare b blob;
   let x := (select cql_blob_update(b, 1, backed.pk));
   let z := (select cql_blob_update(b, 21, backed.age, "dave", backed.name));
+end;
+
+
+-- TEST: simple update into backed table value only
+-- + UPDATE backing
+-- + SET v = bupdateval(v, 'foo', -6946718245010482247, 4) "
+-- + WHERE rowid IN (SELECT rowid
+-- + FROM backed
+-- + WHERE name = 'one')
+create proc update_backed_set_value()
+begin
+  update backed set name = 'foo' where name = 'one';
+end;
+
+-- TEST: simple update into backed table value only, using with clause
+-- + V (x) AS (VALUES(1))
+-- + UPDATE backing
+-- + SET v = bupdateval(v, 'goo', -6946718245010482247, 4) "
+-- + WHERE rowid IN (SELECT rowid
+-- + FROM backed
+-- + WHERE name = 'with_update')
+create proc update_backed_with_clause()
+begin
+  with V(x) as (values(1)) -- force a with clause
+  update backed set name = 'goo' where name = 'with_update';
+end;
+
+-- TEST: simple update into backed table key only
+-- + UPDATE backing
+-- + SET k = bupdatekey(k, 100, 0)
+-- + WHERE rowid IN (SELECT rowid
+-- + FROM backed
+-- + WHERE name = 'two')
+create proc update_backed_set_key()
+begin
+  update backed set pk = 100  where name = 'two';
+end;
+
+-- TEST: update key and value, add other clauses
+-- + UPDATE backing
+-- + SET k = bupdatekey(k, 100, 0)
+-- + v = bupdateval(v, 77, -1118059189291406095, 3)
+-- + WHERE rowid IN (SELECT rowid
+-- + FROM backed
+-- + WHERE name = 'three'
+-- + ORDER BY age
+-- + LIMIT 7)
+create proc update_backed_set_both()
+begin
+  update backed set pk = 100, age = 77 where name = 'three' order by age limit 7;
 end;
 
 --------------------------------------------------------------------

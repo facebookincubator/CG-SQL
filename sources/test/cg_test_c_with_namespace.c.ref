@@ -17528,7 +17528,7 @@ CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
     "small_backed (rowid, pk, x, y) AS (",
-  "SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 0) AS x, bgetval(T.v, 1) AS y "
+  "SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 7953209610392031882) AS x, bgetval(T.v, 4501343740738089802) AS y "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -9132470325614587332",
   "), "
@@ -17569,7 +17569,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
     "small_backed (rowid, pk, x, y) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1) "
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 7953209610392031882), bgetval(T.v, 4501343740738089802) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -9132470325614587332",
   ") "
@@ -17609,7 +17609,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _d
     3, NULL,
   "WITH "
     "small_backed (rowid, pk, x, y) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1) "
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 7953209610392031882), bgetval(T.v, 4501343740738089802) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -9132470325614587332",
   "), "
@@ -17673,6 +17673,190 @@ cql_cleanup:
   cql_blob_release(x);
   cql_finalize_stmt(&_temp_stmt);
   cql_blob_release(z);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC update_backed_set_value ()
+BEGIN
+  WITH
+  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  UPDATE backing
+  SET v = cql_blob_update(v, 'foo', backed.name)
+    WHERE rowid IN (SELECT rowid
+    FROM backed
+    WHERE name = 'one');
+END;
+*/
+
+#define _PROC_ "update_backed_set_value"
+/*
+export:
+DECLARE PROC update_backed_set_value () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "backed (rowid, pk, flag, id, name, age, storage) AS (",
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+  ") "
+    "UPDATE backing "
+    "SET v = bupdateval(v, 'foo', -6946718245010482247, 4) "
+      "WHERE rowid IN (SELECT rowid "
+      "FROM backed "
+      "WHERE name = 'one')"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC update_backed_with_clause ()
+BEGIN
+  WITH
+  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed()),
+  V (x) AS (VALUES(1))
+  UPDATE backing
+  SET v = cql_blob_update(v, 'goo', backed.name)
+    WHERE rowid IN (SELECT rowid
+    FROM backed
+    WHERE name = 'with_update');
+END;
+*/
+
+#define _PROC_ "update_backed_with_clause"
+/*
+export:
+DECLARE PROC update_backed_with_clause () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "backed (rowid, pk, flag, id, name, age, storage) AS (",
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+  "), "
+    "V (x) AS (VALUES(1)) "
+    "UPDATE backing "
+    "SET v = bupdateval(v, 'goo', -6946718245010482247, 4) "
+      "WHERE rowid IN (SELECT rowid "
+      "FROM backed "
+      "WHERE name = 'with_update')"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC update_backed_set_key ()
+BEGIN
+  WITH
+  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  UPDATE backing
+  SET k = cql_blob_update(k, 100, backed.pk)
+    WHERE rowid IN (SELECT rowid
+    FROM backed
+    WHERE name = 'two');
+END;
+*/
+
+#define _PROC_ "update_backed_set_key"
+/*
+export:
+DECLARE PROC update_backed_set_key () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "backed (rowid, pk, flag, id, name, age, storage) AS (",
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+  ") "
+    "UPDATE backing "
+    "SET k = bupdatekey(k, 100, 0) "
+      "WHERE rowid IN (SELECT rowid "
+      "FROM backed "
+      "WHERE name = 'two')"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC update_backed_set_both ()
+BEGIN
+  WITH
+  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  UPDATE backing
+  SET k = cql_blob_update(k, 100, backed.pk),
+  v = cql_blob_update(v, 77, backed.age)
+    WHERE rowid IN (SELECT rowid
+    FROM backed
+    WHERE name = 'three'
+  ORDER BY age
+  LIMIT 7);
+END;
+*/
+
+#define _PROC_ "update_backed_set_both"
+/*
+export:
+DECLARE PROC update_backed_set_both () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "backed (rowid, pk, flag, id, name, age, storage) AS (",
+  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+  ") "
+    "UPDATE backing "
+    "SET k = bupdatekey(k, 100, 0), "
+    "v = bupdateval(v, 77, -1118059189291406095, 3) "
+      "WHERE rowid IN (SELECT rowid "
+      "FROM backed "
+      "WHERE name = 'three' "
+    "ORDER BY age "
+    "LIMIT 7)"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
   return _rc_;
 }
 #undef _PROC_

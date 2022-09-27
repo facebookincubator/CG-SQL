@@ -50,5 +50,6 @@ cql_noexport void rewrite_select_for_backed_tables(ast_node *_Nonnull stmt, list
 cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head);
 cql_noexport void rewrite_insert_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 cql_noexport void rewrite_delete_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
+cql_noexport void rewrite_update_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 
 #endif

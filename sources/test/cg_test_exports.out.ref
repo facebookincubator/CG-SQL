@@ -258,4 +258,8 @@ DECLARE PROC inserted_backed_from_select () USING TRANSACTION;
 DECLARE PROC delete_from_backed () USING TRANSACTION;
 DECLARE PROC delete_from_backed_no_where_clause () USING TRANSACTION;
 DECLARE PROC test_blob_update_expand () USING TRANSACTION;
+DECLARE PROC update_backed_set_value () USING TRANSACTION;
+DECLARE PROC update_backed_with_clause () USING TRANSACTION;
+DECLARE PROC update_backed_set_key () USING TRANSACTION;
+DECLARE PROC update_backed_set_both () USING TRANSACTION;
 DECLARE PROC end_proc ();

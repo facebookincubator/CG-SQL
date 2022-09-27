@@ -1594,6 +1594,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in expression 'cql_blob_update'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated table is not declared for backed storage 'simple_backing_table'
+test/sem_test.sql:XXXX:1: error: in insert_stmt : backed tables are not supported in the upsert form (yet)
 test/sem_test.sql:XXXX:1: error: in num : CQL0257: argument 1 must be a table name that is a backed table 'cql_blob_create'
 test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not consistently used through all of cql_blob_create 'basic_table2'
 test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'not_a_table'

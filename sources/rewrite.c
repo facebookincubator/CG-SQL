@@ -2365,7 +2365,7 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
   ast_node *backing_table = find_table_or_view_even_deleted(backing_table_name);
   Invariant(backing_table);  // already validated
   sem_struct *sptr_backing = backing_table->sem->sptr;
-  Invariant(sptr_backing);  // table must havea sem_struct
+  Invariant(sptr_backing);  // table must have a sem_struct
 
   // figure out the column order of the key and value columns in the backing store
   // the options are "key, value" or "value, key"
@@ -2623,6 +2623,74 @@ static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast
   );
 }
 
+// This walks the update list and generates either the args for the key or the args for the value
+// the values come from the assignment in the update entry list
+static ast_node *rewrite_update_blob_args(bool_t for_key, ast_node *backed_table, ast_node *update_list)
+{
+  if (!update_list) {
+    return NULL;
+  }
+  Contract(is_ast_update_list(update_list));
+
+  EXTRACT_NOTNULL(update_entry, update_list->left);
+  EXTRACT_STRING(name, update_entry->left);
+  EXTRACT_ANY_NOTNULL(expr, update_entry->right);
+
+  sem_struct *sptr = backed_table->sem->sptr;
+  int32_t icol = sem_column_index(sptr, name);
+  Invariant(icol >= 0);  // must be valid name, already checked!
+  sem_t sem_type = sptr->semtypes[icol];
+  bool_t is_key = is_primary_key(sem_type) || is_partial_pk(sem_type);
+  CSTR backed_table_name = sptr->struct_name;
+
+  if (is_key == for_key) {
+    return new_ast_arg_list(
+      expr,
+      new_ast_arg_list(
+        new_ast_dot(new_ast_str(backed_table_name), new_ast_str(name)),
+        rewrite_update_blob_args(for_key, backed_table, update_list->right)
+      )
+    );
+  }
+  else {
+    return rewrite_update_blob_args(for_key, backed_table, update_list->right);
+  }
+}
+
+// This walks the name list and generates either the key update call or the value update call
+// This is the fixed part of the call.
+static ast_node *rewrite_blob_update(bool_t for_key, sem_struct *sptr_backing, ast_node *backed_table, ast_node *update_list) {
+
+  // if there are no args for this blob type then do not make the blob update call at all.
+  ast_node *arg_list = rewrite_update_blob_args(for_key, backed_table, update_list);
+  if (!arg_list) {
+    return NULL;
+  }
+
+  sem_t sem_type = sptr_backing->semtypes[0];
+  bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+  CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
+  CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
+
+  CSTR blob_name = for_key ? backing_key : backing_val;
+
+  ast_node *blob_val = new_ast_str(blob_name);
+
+  Contract(is_ast_update_list(update_list));
+
+  return new_ast_call(
+    new_ast_str("cql_blob_update"),
+    new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL),
+      new_ast_arg_list(
+        blob_val,
+        arg_list
+      )
+    )
+  );
+}
+
 // This helper creates the select list we will need to get the values out
 // from the statement that was the insert list (it could be values or a select statement)
 static ast_node *rewrite_insert_list_as_select_values(ast_node *insert_list) {
@@ -2713,7 +2781,7 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   ast_node *backing_table = find_table_or_view_even_deleted(backing_table_name);
   Invariant(backing_table);  // already validated
   sem_struct *sptr_backing = backing_table->sem->sptr;
-  Invariant(sptr_backing);  // table must havea sem_struct
+  Invariant(sptr_backing);  // table must have a sem_struct
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
@@ -2907,6 +2975,66 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   cte_cur = saved;
 }
 
+static ast_node *rewrite_select_rowid(
+  CSTR backed_table_name,
+  ast_node *opt_where,
+  ast_node *opt_orderby,
+  ast_node *opt_limit
+)
+{
+  return
+    new_ast_select_stmt(
+      new_ast_select_core_list(
+        new_ast_select_core(
+          NULL,
+          new_ast_select_expr_list_con(
+            // select list is just "rowid"
+            new_ast_select_expr_list(
+              new_ast_select_expr(
+                new_ast_str("rowid"),
+                NULL
+              ),
+              NULL
+            ),
+            // from clause is just the backed table which will will alias a CTE as usual
+            new_ast_select_from_etc(
+              new_ast_table_or_subquery_list(
+                new_ast_table_or_subquery(
+                  new_ast_str(backed_table_name),
+                  NULL
+                ),
+                NULL
+              ),
+              // use where to hold the previous where clause if any
+              new_ast_select_where(
+                opt_where,
+                new_ast_select_groupby(
+                  NULL,
+                  new_ast_select_having(
+                    NULL,
+                    NULL
+                  )
+                )
+              )
+            )
+          )
+        ),
+        NULL
+      ),
+      // empty orderby, limit, offset
+      new_ast_select_orderby(
+        opt_orderby,
+        new_ast_select_limit(
+          opt_limit,
+          new_ast_select_offset(
+            NULL,
+            NULL
+          )
+        )
+      )
+    );
+}
+
 cql_noexport void rewrite_delete_statement_for_backed_table(
   ast_node *ast,
   list_item *backed_tables_list)
@@ -2953,57 +3081,7 @@ cql_noexport void rewrite_delete_statement_for_backed_table(
   // rowids of the rows to be deleted.  This is using the existing where clause
   // against a from clause that is just the backed table.
 
-  ast_node *select_stmt =
-    new_ast_select_stmt(
-      new_ast_select_core_list(
-        new_ast_select_core(
-          NULL,
-          new_ast_select_expr_list_con(
-            // select list is just "rowid"
-            new_ast_select_expr_list(
-              new_ast_select_expr(
-                new_ast_str("rowid"),
-                NULL
-              ),
-              NULL
-            ),
-            // from clause is just the backed table which will will alias a CTE as usual
-            new_ast_select_from_etc(
-              new_ast_table_or_subquery_list(
-                new_ast_table_or_subquery(
-                  new_ast_str(backed_table_name),
-                  NULL
-                ),
-                NULL
-              ),
-              // use where to hold the previous where clause if any
-              new_ast_select_where(
-                opt_where,
-                new_ast_select_groupby(
-                  NULL,
-                  new_ast_select_having(
-                    NULL,
-                    NULL
-                  )
-                )
-              )
-            )
-          )
-        ),
-        NULL
-      ),
-      // empty orderby, limit, offset
-      new_ast_select_orderby(
-        NULL,
-        new_ast_select_limit(
-          NULL,
-          new_ast_select_offset(
-            NULL,
-            NULL
-          )
-        )
-      )
-    );
+  ast_node *select_stmt = rewrite_select_rowid(backed_table_name, opt_where, NULL, NULL);
 
   // for debugging print just the select statement
   // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
@@ -3063,6 +3141,166 @@ cql_noexport void rewrite_delete_statement_for_backed_table(
   AST_REWRITE_INFO_RESET();
 
   // the insert statement is top level, when it re-enters it expects the cte state to be nil
+  cte_state *saved = cte_cur;
+  cte_cur = NULL;
+    sem_one_stmt(ast);
+  cte_cur = saved;
+}
+
+cql_noexport void rewrite_update_statement_for_backed_table(
+  ast_node *ast,
+  list_item *backed_tables_list)
+{
+  ast_node *stmt = NULL;
+  ast_node *with_node = NULL;
+
+  if (is_ast_with_update_stmt(ast)) {
+    EXTRACT_NOTNULL(with, ast->left)
+    EXTRACT_NOTNULL(update_stmt, ast->right);
+    stmt = update_stmt;
+    with_node = with;
+  }
+  else {
+    Contract(is_ast_update_stmt(ast));
+    stmt = ast;
+  }
+
+  Invariant(is_ast_update_stmt(stmt));
+  EXTRACT_NOTNULL(update_set, stmt->right);
+  EXTRACT_NOTNULL(update_list, update_set->left);
+  EXTRACT_NOTNULL(update_where, update_set->right);
+  EXTRACT(opt_where, update_where->left);
+  EXTRACT_NOTNULL(update_orderby, update_where->right);
+  EXTRACT(opt_orderby, update_orderby->left);
+  EXTRACT(opt_limit, update_orderby->right);
+
+  EXTRACT_STRING(backed_table_name, stmt->left);
+
+  // table has already been checked, it exists, it's legal and it's backed
+  ast_node *backed_table = find_table_or_view_even_deleted(backed_table_name);
+  Contract(is_ast_create_table_stmt(backed_table));
+  Contract(is_backed(backed_table->sem->sem_type));
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  // the updated table needs to be added to the referenced backed tables
+  add_item_to_list(
+    &backed_tables_list,
+    new_ast_table_or_subquery(new_ast_str(backed_table_name), NULL)
+  );
+
+  // we are going to need the name of the backing table
+
+  EXTRACT_MISC_ATTRS(backed_table, misc_attrs);
+
+  CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+  Invariant(backing_table_name);  // already validated
+  ast_node *backing_table = find_table_or_view_even_deleted(backing_table_name);
+  Invariant(backing_table);  // already validated
+  sem_struct *sptr_backing = backing_table->sem->sptr;
+  Invariant(sptr_backing);  // table must have a sem_struct
+
+  // figure out the column order of the key and value columns in the backing store
+  // the options are "key, value" or "value, key"
+  sem_t sem_type = sptr_backing->semtypes[0];
+  bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+  CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
+  CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
+
+  // the new where clause has at its core a select statement that generates the
+  // rowids of the rows to be updated.  This is using the existing where clause
+  // against a from clause that is just the backed table.
+
+  ast_node *select_stmt = rewrite_select_rowid(
+     backed_table_name,
+     opt_where,
+     opt_orderby,
+     opt_limit);
+
+  // for debugging print just the select statement
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(select_stmt, NULL));
+
+  // the new where clause for the update statement is going to be something like
+  // rowid IN (select rowid from selected rows)
+
+  ast_node *key_expr = rewrite_blob_update(true, sptr_backing, backed_table, update_list);
+  ast_node *val_expr = rewrite_blob_update(false, sptr_backing, backed_table, update_list);
+
+  ast_node *new_update_list = new_ast_update_list(NULL, NULL);  // fake list head
+  ast_node *up_tail = new_update_list;
+  if (key_expr) {
+    ast_node *new = new_ast_update_list(
+      new_ast_update_entry(new_ast_str(backing_key), key_expr),
+      NULL
+    );
+    ast_set_right(up_tail, new);
+    up_tail =  new;
+  }
+
+  if (val_expr) {
+    ast_node *new = new_ast_update_list(
+      new_ast_update_entry(new_ast_str(backing_val), val_expr),
+      NULL
+    );
+    ast_set_right(up_tail, new);
+  }
+
+  ast_node *new_opt_where =
+    new_ast_opt_where(
+     new_ast_in_pred(
+       new_ast_str("rowid"),
+       select_stmt
+     )
+  );
+
+  // replace the target table and where clause of the backed table
+  // with the backing table and adjusted where clause
+
+  ast_set_left(stmt, new_ast_str(backing_table_name));
+  ast_set_left(update_set, new_update_list->right);
+  ast_set_left(update_where, new_opt_where);
+  ast_set_left(update_orderby, NULL); // opt orderby handled in the select
+  ast_set_right(update_orderby, NULL); // opt limit handled in the select
+
+  // now add the backed tables and convert the node to a with update if necessary
+
+  ast_node *backed_cte_tables = NULL;
+  ast_node *cte_tail = NULL;
+
+  rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
+  
+  Invariant(cte_tail);
+  Invariant(backed_cte_tables);
+
+  if (!with_node) {
+    // convert the UPDATE to a WITH UPDATE  and add backing table CTEs
+    ast_node *with_update_stmt = new_ast_with_update_stmt(
+      new_ast_with(
+        backed_cte_tables
+      ),
+      new_ast_update_stmt(stmt->left, stmt->right)
+    );
+    stmt->type = k_ast_with_update_stmt;
+    ast_set_left(stmt, with_update_stmt->left);
+    ast_set_right(stmt, with_update_stmt->right);
+  }
+  else {
+    // add the backed table CTEs to the front of the list
+    EXTRACT(cte_tables, with_node->left);
+    ast_set_right(cte_tail, cte_tables);
+    ast_set_left(with_node, backed_cte_tables);
+  }
+
+  // for debugging, dump the generated ast without trying to validate it at all
+  // print_root_ast(ast);
+  //
+  // for debugging dump the generated update statement
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+
+  AST_REWRITE_INFO_RESET();
+
+  // the update statement is top level, when it re-enters it expects the cte state to be nil
   cte_state *saved = cte_cur;
   cte_cur = NULL;
     sem_one_stmt(ast);

@@ -454,19 +454,13 @@ select *;
 -- + {insert_stmt}: err
 -- + error: % all columns in the select must have a name
 -- +1 error:
-insert into foo(id)
-   select * from (
-     select 1
-   );
+insert into foo(id) select * from (select 1);
 
 -- TEST: anonymous columns produce an error (with T.* syntax too)
 -- + {insert_stmt}: err
 -- + error: % all columns in the select must have a name
 -- +1 error:
-insert into foo(id)
-   select T.* from (
-     select 1
-   ) as T;
+insert into foo(id) select T.* from (select 1) as T;
 
 -- TEST: select where statement
 -- + {select_stmt}: select: { T: integer notnull }
@@ -22099,6 +22093,13 @@ begin
   declare b blob;
   let z := (select cql_blob_update(b, x, simple_backing_table.k));
 end;
+
+--  TEST: insert into backing table in upsert form not supported yet
+-- + {upsert_stmt}: err
+-- + error: % backed tables are not supported in the upsert form (yet)
+-- +1 error:
+INSERT INTO basic_table(id, name) values (1, 'foo')
+  ON CONFLICT(word) DO NOTHING;
 
 -- TEST: correct call to cql_blob_create
 -- + {name cql_blob_create}: blob notnull

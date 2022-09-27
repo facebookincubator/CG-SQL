@@ -15226,6 +15226,14 @@ static void sem_update_stmt(ast_node *ast) {
   EXTRACT(opt_limit, update_orderby->right);
   ast_node *table_ast = NULL;
 
+  // Any early out is an error, cleanup is needed to get the POP_JOIN
+  bool_t error = true;
+  bool_t join_pushed = false;
+
+  // top level statements can be re-entered (rarely) e.g. nested EXPLAIN, allow them to nest
+  list_item *backed_tables_list_saved = backed_tables_list;
+  backed_tables_list = NULL;
+
   // update [table] SET [update_list]
 
   if (name_ast) {
@@ -15236,32 +15244,28 @@ static void sem_update_stmt(ast_node *ast) {
       name_ast,
       "CQL0154: table in update statement does not exist");
     if (!table_ast) {
-      record_error(ast);
-      return;
+      goto cleanup;
     }
 
     name_ast->sem = table_ast->sem;
 
     if (!is_ast_create_table_stmt(table_ast)) {
       report_error(name_ast, "CQL0155: cannot update a view", name);
-      record_error(ast);
-      return;
+      goto cleanup;
     }
 
     // This means we're in upsert statement subtree therefore the table name
     // should not be included in the update statement
     if (in_upsert) {
       report_error(name_ast, "CQL0281: upsert statement does not include table name in the update statement", name);
-      record_error(ast);
-      return;
+      goto cleanup;
     }
   } else {
     // This means we're in an upsert statement therefore the table name should not
     // be provided in the update statement of upsert otherwise it's a symantical error
     if (!in_upsert) {
       report_error(ast, "CQL0282: update statement require table name", NULL);
-      record_error(ast);
-      return;
+      goto cleanup;
     }
     Contract(current_upsert_table_ast);
     table_ast = current_upsert_table_ast;
@@ -15269,10 +15273,8 @@ static void sem_update_stmt(ast_node *ast) {
 
   ast->sem = table_ast->sem;
 
-  // Any early out at this point is an error, cleanup is needed to get the POP_JOIN
-  bool_t error = true;
-
   PUSH_JOIN(update_scope, table_ast->sem->jptr);
+  join_pushed = true;
 
   sem_update_list(update_list);
   if (is_error(update_list)) {
@@ -15311,7 +15313,23 @@ cleanup:
     record_error(ast);
   }
 
-  POP_JOIN();
+  if (join_pushed) {
+    POP_JOIN();
+  }
+
+  if (!error) {
+    // rewrite top level update statements if needed
+    if (is_backed(table_ast->sem->sem_type)) {
+      if (is_ast_with_update_stmt(ast->parent)) {
+        rewrite_update_statement_for_backed_table(ast->parent, backed_tables_list);
+      }
+      else {
+        rewrite_update_statement_for_backed_table(ast, backed_tables_list);
+      }
+    }
+  }
+
+  backed_tables_list = backed_tables_list_saved;
 }
 
 // The column list specifies the columns we will provide, they must exist and be unique.
@@ -15740,6 +15758,12 @@ static void sem_insert_stmt(ast_node *ast) {
 
   if (!is_ast_create_table_stmt(table_ast)) {
     report_error(name_ast, "CQL0161: cannot insert into a view", name);
+    record_error(ast);
+    return;
+  }
+
+  if (in_upsert && is_backed(table_ast->sem->sem_type)) {
+    report_error(ast, "backed tables are not supported in the upsert form (yet)", NULL);
     record_error(ast);
     return;
   }

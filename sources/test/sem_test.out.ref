@@ -88099,6 +88099,42 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated t
 
 The statement ending at line XXXX
 
+INSERT INTO basic_table(id, name) VALUES(1, 'foo')
+ON CONFLICT (word) DO NOTHING;
+
+test/sem_test.sql:XXXX:1: error: in insert_stmt : backed tables are not supported in the upsert form (yet)
+
+  {upsert_stmt}: err
+  | {insert_stmt}: err
+  | | {insert_normal}
+  | | {name_columns_values}
+  |   | {name basic_table}: basic_table: { id: integer notnull primary_key, name: text } backed
+  |   | {columns_values}
+  |     | {column_spec}
+  |     | | {name_list}
+  |     |   | {name id}
+  |     |   | {name_list}
+  |     |     | {name name}
+  |     | {select_stmt}
+  |       | {select_core_list}
+  |       | | {select_core}
+  |       |   | {select_values}
+  |       |   | {values}
+  |       |     | {insert_list}
+  |       |       | {int 1}
+  |       |       | {insert_list}
+  |       |         | {strlit 'foo'}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {upsert_update}
+    | {conflict_target}
+      | {indexed_columns}
+        | {indexed_column}
+          | {name word}
+
+The statement ending at line XXXX
+
 CREATE PROC blob_create ()
 BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, 1, basic_table.id) );
