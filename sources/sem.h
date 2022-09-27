@@ -52,6 +52,7 @@ typedef struct sem_node {
   CSTR name;                        // for named expressions in select columns etc.
   CSTR kind;                        // the Foo in object<Foo>, not a variable or column name
   CSTR error;                       // error text for test output, not used otherwise
+  CSTR backed_table;                // if this is a column in a backed table, the name of that table
   struct sem_struct *sptr;          // encoded struct if any
   struct sem_join *jptr;            // encoded join if any
   int32_t create_version;           // create version if any (really only for tables and columns)
@@ -74,6 +75,7 @@ typedef struct sem_struct {
   CSTR *names;                    // field names
   CSTR *kinds;                    // the "kind" text of each column, if any, e.g. integer<foo> foo is the kind
   sem_t *semtypes;                // typecode for each field
+  bool_t is_backed;               // original backed table source
 } sem_struct;
 
 // for the data type of (parts of) the FROM clause

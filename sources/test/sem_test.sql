@@ -21367,12 +21367,12 @@ create table simple_backing_table_with_versions(
 ) @create(1) @delete(22);
 
 -- TEST: simple backed table
--- + {create_table_stmt}: simple_backed_table: { id: integer notnull primary_key, name: text notnull } backed
+-- + {create_table_stmt}: simple_backed_table: { id: integer notnull primary_key, name: text<cool_text> notnull } backed
 -- - error:
 @attribute(cql:backed_by=simple_backing_table)
 create table simple_backed_table(
   id integer primary key,
-  name text not null
+  name text<cool_text> not null
 );
 
 -- TEST: no primary key
@@ -21811,7 +21811,7 @@ end;
 @attribute(cql:backed_by=simple_backing_table)
 create table basic_table(
   id integer primary key,
-  name text
+  name text<cool_text>
 );
 
 @attribute(cql:backed_by=simple_backing_table)
@@ -23535,6 +23535,12 @@ set compressed_string := cql_compressed(1);
 
 -- - error:
 create table dummy_table_for_backed_test(id integer);
+
+-- TEST: extract columns from backed table
+-- ensure kind "cool_text" is preserved
+-- + {declare_cursor}: backed_cursor: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } variable dml_proc
+-- + {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+declare backed_cursor CURSOR for select * from simple_backed_table;
 
 -- TEST: inserting using simple_backed should work even if it isn't the target
 -- verify rewrite only

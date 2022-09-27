@@ -233,6 +233,7 @@ static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name);
 static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_orderby);
 static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table);
 static ast_node *sem_synthesize_current_locals();
+static CSTR find_column_kind(CSTR table_name, CSTR column_name);
 
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
@@ -2544,7 +2545,12 @@ static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
 static sem_struct *new_sem_struct_strip_table_flags(sem_struct *sptr) {
   sem_t allowed_flags = SEM_TYPE_CORE | SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE | SEM_TYPE_HIDDEN_COL | SEM_TYPE_ALIAS;
 
-  return sem_clone_struct_strip_flags(sptr, sem_not(allowed_flags));
+  sem_struct *result = sem_clone_struct_strip_flags(sptr, sem_not(allowed_flags));
+
+  // when copying from a table, keep the is_backed flag
+  result->is_backed = sptr->is_backed;
+  
+  return result;
 }
 
 // Create a base join type from a single struct.
@@ -5760,6 +5766,7 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
   sem_t sem_type = 0;
   CSTR col = NULL;
   CSTR kind = NULL;
+  CSTR backed_table = NULL;
   sem_join *found_jptr = NULL;
   sem_t *type = NULL;
 
@@ -5813,6 +5820,7 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
             sem_type = table->semtypes[j];
             col = table->names[j];
             kind = table->kinds[j];
+            backed_table = table->is_backed ? table->struct_name : NULL;
             found_jptr = jptr;
             // Store this for setting type_ptr later, if successful.
             type = &table->semtypes[j];
@@ -5834,6 +5842,7 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
     ast->sem = new_sem(sem_type);
     ast->sem->name = col; // be sure to use the canonical name
     ast->sem->kind = kind; // use the kind if there is one
+    ast->sem->backed_table = backed_table;  // remember the backed table if there is one
     if (found_jptr && found_jptr == monitor_jptr) {
       symtab_add(monitor_symtab, col, NULL);
     }
@@ -7249,8 +7258,6 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | combined_flags);
-
-  // ast->sem->name is not set here because e.g. cql_blob_get(x, foo.bar) is not named "x"
 }
 
 // cql_blob_create(backed_type, value, backed_type.col, value2, backed_type.col, ...), 
@@ -7574,7 +7581,7 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
 
   table_expr->sem = name_ast->sem = ast->sem = new_sem(sem_type | combined_flags);
 
-  // ast->sem->name is not set here because e.g. cql_blob_get(x, foo.bar) is not named "x"
+  table_expr->sem->kind = find_column_kind(t_name, c_name);
 }
 
 // You can count anything, you always get an integer
@@ -15298,7 +15305,20 @@ static void sem_update_stmt(ast_node *ast) {
 
   ast->sem = table_ast->sem;
 
-  PUSH_JOIN(update_scope, table_ast->sem->jptr);
+  sem_join join = *table_ast->sem->jptr;
+
+  // we record this so we can find it on the join when we do a name lookup
+  // note this jptr is especially handy because when we start an insert/update operation
+  // we begin with a pushed join of just the original table
+  if (is_backed(table_ast->sem->sem_type)) {
+    sem_struct *sptr_new  = _ast_pool_new(sem_struct);
+    *sptr_new = *join.tables[0]; // clone existing value (shallow copy)
+    join.tables = _ast_pool_new(sem_struct *);
+    join.tables[0] = sptr_new;
+    sptr_new->is_backed = true;
+  }
+
+  PUSH_JOIN(update_scope, &join);
   join_pushed = true;
 
   sem_update_list(update_list);
@@ -17320,7 +17340,7 @@ static void sem_validate_unique_names_struct_type(ast_node *ast) {
 }
 
 // Find the column type of a column in a table. Return 0 if not found
-sem_t find_column_type(CSTR table_name, CSTR column_name) {
+cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name) {
   ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   if (table_ast) {
     for (int32_t i = 0; i < table_ast->sem->sptr->count; i++) {
@@ -17329,7 +17349,22 @@ sem_t find_column_type(CSTR table_name, CSTR column_name) {
       }
     }
   }
-  return false;
+  return 0;
+}
+
+// Find the column kind of a column in a table. Return NULL if not found
+static CSTR find_column_kind(CSTR table_name, CSTR column_name) {
+  CSTR result = NULL;
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+  if (table_ast) {
+    for (int32_t i = 0; i < table_ast->sem->sptr->count; i++) {
+      if (!Strcasecmp(column_name, table_ast->sem->sptr->names[i])) {
+        result = table_ast->sem->sptr->kinds[i];
+        break;
+      }
+    }
+  }
+  return result;
 }
 
 static void report_dummy_test_error(ast_node *target, CSTR message, CSTR subject, int32_t *error) {

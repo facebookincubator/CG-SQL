@@ -17,6 +17,26 @@
 @echo c,"\n\n";
 */
 
+-- for the test cases, all the blob function will be offset based rather than hash based
+-- this makes the dumb test implementation of these b* functions easier
+@blob_get_key_type bgetkey_type;
+@blob_get_val_type bgetval_type;
+@blob_get_key bgetkey offset;
+@blob_get_val bgetval offset;
+@blob_create_key bcreatekey offset;
+@blob_create_val bcreateval offset;
+@blob_update_key bupdatekey offset;
+@blob_update_val bupdateval offset;
+
+declare select function bgetkey_type(b blob) long;
+declare select function bgetval_type(b blob) long;
+declare select function bgetkey(b blob, iarg integer) long;
+declare select function bgetval(b blob, iarg integer) long;
+declare select function bcreateval no check blob;
+declare select function bcreatekey no check blob;
+declare select function bupdateval no check blob;
+declare select function bupdatekey no check blob;
+
 declare function get_blob_byte(b blob not null, i integer not null) integer not null;
 declare function get_blob_size(b blob not null) integer not null;
 declare function create_truncated_blob(b blob not null, truncated_size integer not null) create blob not null;
@@ -38,6 +58,23 @@ declare enum longs long_int (
   neg = -1
 );
 
+create proc make_schema()
+begin
+  @attribute(cql:backing_table)
+  create table backing(
+    k blob primary key,
+    v blob not null
+  );
+end;
+
+@attribute(cql:backed_by=backing)
+create table backed (
+  id integer primary key,
+  v1 integer not null,
+  v2 integer not null
+);
+
+call make_schema();
 call cql_init_extensions();
 
 BEGIN_TEST(arithmetic)
@@ -5520,6 +5557,73 @@ BEGIN_TEST(normalize_bool_on_call)
   call take_bool_not_null(10, true);
   call take_bool_not_null(0, false);
 END_TEST(normalize_bool_on_call)
+
+#ifndef LUA_RUN_TEST
+
+-- lua test code doesn't yet have bgetval and friends defined
+
+BEGIN_TEST(blob_funcs)
+  let b := (select bcreateval(112233, 1234, 1, 5678, 1));
+  EXPECT(112233 == (select bgetkey_type(b)));
+  EXPECT(1234 == (select bgetval(b,0)));
+  EXPECT(5678 == (select bgetval(b,1)));
+
+  set b := (select bupdateval(b, 3456, 1, 1));
+  EXPECT(1234 == (select bgetval(b,0)));
+  EXPECT(3456 == (select bgetval(b,1)));
+
+  set b := (select bupdatekey(b, 2345, 0));
+  EXPECT(2345 == (select bgetval(b,0)));
+  EXPECT(3456 == (select bgetval(b,1)));
+
+  -- seed some data
+  insert into backed values (1, 100, 101), (2, 200, 201);
+
+  -- validate count and the math of the columns
+  let r := 0;
+  declare C cursor for select * from backed;
+  loop fetch C
+  begin
+    EXPECT(C.v1 = 100*C.id);
+    EXPECT(C.v2 = 100*C.id+1);
+    set r := r + 1;
+  end;
+  EXPECT(r == 2);
+
+  -- update some keys and values
+  update backed set id=3, v1=300, v2=301 where id = 2;
+  update backed set id=4, v1=400, v2=401 where v1 = 100;
+
+  -- reverify it still makes sense
+  set r := 0;
+  declare D cursor for select * from backed;
+  loop fetch D
+  begin
+    EXPECT(D.v1 = 100*D.id);
+    EXPECT(D.v2 = 100*D.id+1);
+    set r := r + 1;
+  end;
+  EXPECT(r == 2);
+
+  -- delete one row
+  delete from backed where v2 = 401;
+
+  -- validate again, use aggregate functions and nested select alternatives
+  EXPECT(1 == (select count(*) from backed));
+  EXPECT(300 == (select v1 from backed where id = 3));
+
+  -- update using the values already in the table
+  update backed set id = id + 1, v1 = v1 + 100, v2 = backed.v2 + 100;
+
+  EXPECT(400 == (select v1 from backed where id = 4));
+
+  -- another swizzle using values to update keys and keys to update values
+  update backed set id = (v1 + 100)/100, v1 = (id+1)*100, v2 = v2 + 100;
+
+  EXPECT(500 == (select v1 from backed where id = 5));
+END_TEST(blob_funcs)
+
+#endif
 
 END_SUITE()
 

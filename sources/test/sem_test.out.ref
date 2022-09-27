@@ -85192,7 +85192,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE simple_backed_table(
   id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL
+  name TEXT<cool_text> NOT NULL
 );
 
   {stmt_and_attr}: ok
@@ -85202,7 +85202,7 @@ CREATE TABLE simple_backed_table(
   |   | | {name cql}
   |   | | {name backed_by}
   |   | {name simple_backing_table}: ok
-  | {create_table_stmt}: simple_backed_table: { id: integer notnull primary_key, name: text notnull } backed
+  | {create_table_stmt}: simple_backed_table: { id: integer notnull primary_key, name: text<cool_text> notnull } backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
@@ -85216,11 +85216,12 @@ CREATE TABLE simple_backed_table(
       |   | {col_attrs_pk}: ok
       |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: name: text notnull
+        | {col_def}: name: text<cool_text> notnull
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
             | | {name name}
-            | | {type_text}: text
+            | | {type_text}: text<cool_text>
+            |   | {name cool_text}
             | {col_attrs_not_null}: ok
 
 The statement ending at line XXXX
@@ -86861,7 +86862,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE basic_table(
   id INTEGER PRIMARY KEY,
-  name TEXT
+  name TEXT<cool_text>
 );
 
   {stmt_and_attr}: ok
@@ -86871,7 +86872,7 @@ CREATE TABLE basic_table(
   |   | | {name cql}
   |   | | {name backed_by}
   |   | {name simple_backing_table}: ok
-  | {create_table_stmt}: basic_table: { id: integer notnull primary_key, name: text } backed
+  | {create_table_stmt}: basic_table: { id: integer notnull primary_key, name: text<cool_text> } backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
@@ -86885,11 +86886,12 @@ CREATE TABLE basic_table(
       |   | {col_attrs_pk}: ok
       |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: name: text
+        | {col_def}: name: text<cool_text>
           | {col_def_type_attrs}: ok
             | {col_def_name_type}
               | {name name}
-              | {type_text}: text
+              | {type_text}: text<cool_text>
+                | {name cool_text}
 
 The statement ending at line XXXX
 
@@ -88108,7 +88110,7 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : backed tables are not supporte
   | {insert_stmt}: err
   | | {insert_normal}
   | | {name_columns_values}
-  |   | {name basic_table}: basic_table: { id: integer notnull primary_key, name: text } backed
+  |   | {name basic_table}: basic_table: { id: integer notnull primary_key, name: text<cool_text> } backed
   |   | {columns_values}
   |     | {column_spec}
   |     | | {name_list}
@@ -93209,6 +93211,47 @@ CREATE TABLE dummy_table_for_backed_test(
 
 The statement ending at line XXXX
 
+DECLARE backed_cursor CURSOR FOR WITH
+simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
+SELECT *
+  FROM simple_backed_table;
+
+  {declare_cursor}: backed_cursor: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } variable dml_proc
+  | {name backed_cursor}: backed_cursor: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } variable dml_proc
+  | {with_select_stmt}: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+    | {with}
+    | | {cte_tables}: ok
+    |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+    |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+    |     | | {name simple_backed_table}
+    |     | | {name_list}
+    |     |   | {name rowid}
+    |     |   | {name_list}
+    |     |     | {name id}
+    |     |     | {name_list}
+    |     |       | {name name}
+    |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+    |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+    |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+    | {select_stmt}: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+      | {select_core_list}: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+      | | {select_core}: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+      |   | {select_expr_list_con}: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+      |     | {select_expr_list}: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+      |     | | {star}: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+      |     | {select_from_etc}: TABLE { simple_backed_table: simple_backed_table }
+      |       | {table_or_subquery_list}: TABLE { simple_backed_table: simple_backed_table }
+      |       | | {table_or_subquery}: TABLE { simple_backed_table: simple_backed_table }
+      |       |   | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
 WITH
 simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
 INSERT INTO dummy_table_for_backed_test(id) SELECT id
@@ -93217,8 +93260,8 @@ INSERT INTO dummy_table_for_backed_test(id) SELECT id
   {with_insert_stmt}: ok
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
-  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | | {name simple_backed_table}
   |     | | {name_list}
   |     |   | {name rowid}
@@ -93226,9 +93269,9 @@ INSERT INTO dummy_table_for_backed_test(id) SELECT id
   |     |     | {name id}
   |     |     | {name_list}
   |     |       | {name name}
-  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
-  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
-  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
   | {insert_stmt}: ok
     | {insert_normal}
     | {name_columns_values}
@@ -93265,8 +93308,8 @@ DELETE FROM dummy_table_for_backed_test WHERE id IN (SELECT id
   {with_delete_stmt}: ok
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
-  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | | {name simple_backed_table}
   |     | | {name_list}
   |     |   | {name rowid}
@@ -93274,9 +93317,9 @@ DELETE FROM dummy_table_for_backed_test WHERE id IN (SELECT id
   |     |     | {name id}
   |     |     | {name_list}
   |     |       | {name name}
-  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
-  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
-  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
   | {delete_stmt}: ok
     | {name dummy_table_for_backed_test}: dummy_table_for_backed_test: { id: integer }
     | {opt_where}: bool
@@ -93312,8 +93355,8 @@ SET id = id + 1
   {with_update_stmt}: dummy_table_for_backed_test: { id: integer }
   | {with}
   | | {cte_tables}: ok
-  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
-  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull }
+  |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
+  |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | | {name simple_backed_table}
   |     | | {name_list}
   |     |   | {name rowid}
@@ -93321,9 +93364,9 @@ SET id = id + 1
   |     |     | {name id}
   |     |     | {name_list}
   |     |       | {name name}
-  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
-  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
-  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text notnull } dml_proc
+  |     | {shared_cte}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+  |       | {call_stmt}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
+  |         | {name _simple_backed_table}: _simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } dml_proc
   | {update_stmt}: dummy_table_for_backed_test: { id: integer }
     | {name dummy_table_for_backed_test}: dummy_table_for_backed_test: { id: integer }
     | {update_set}
