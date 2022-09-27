@@ -74,6 +74,12 @@ create table backed (
   v2 integer not null
 );
 
+@attribute(cql:backed_by=backing)
+create table backed2 (
+  id integer primary key,
+  v1 integer
+);
+
 call make_schema();
 call cql_init_extensions();
 
@@ -5621,6 +5627,10 @@ BEGIN_TEST(blob_funcs)
   update backed set id = (v1 + 100)/100, v1 = (id+1)*100, v2 = v2 + 100;
 
   EXPECT(500 == (select v1 from backed where id = 5));
+
+  -- insert a row with only key and no value
+  insert into backed2(id) values(1);
+  EXPECT(1 == (select id from backed2));
 END_TEST(blob_funcs)
 
 #endif

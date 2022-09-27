@@ -22172,7 +22172,7 @@ end;
 create proc blob_create_column_wrong_arg_count()
 begin
   declare x blob;
-  let z := (select cql_blob_create(1));
+  let z := (select cql_blob_create());
 end;
 
 -- TEST: blob create called outside of SQL context

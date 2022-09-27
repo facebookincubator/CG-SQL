@@ -88436,7 +88436,7 @@ The statement ending at line XXXX
 CREATE PROC blob_create_column_wrong_arg_count ()
 BEGIN
   DECLARE x BLOB;
-  LET z := ( SELECT cql_blob_create(1) );
+  LET z := ( SELECT cql_blob_create() );
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_blob_create'
@@ -88461,8 +88461,6 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
           |     |     | {name cql_blob_create}: err
           |     |     | {call_arg_list}
           |     |       | {call_filter_clause}
-          |     |       | {arg_list}: ok
-          |     |         | {int 1}
           |     | {select_from_etc}: ok
           |       | {select_where}
           |         | {select_groupby}

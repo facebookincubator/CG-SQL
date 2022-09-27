@@ -7288,7 +7288,7 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
   }
 
   // at least one column and the type
-  if (arg_count % 2 != 1 || arg_count < 3) {
+  if (arg_count % 2 != 1) {
     // force arg count error
     sem_validate_arg_count(ast, arg_count, arg_count + 1);
     return;

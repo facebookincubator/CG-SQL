@@ -1271,9 +1271,17 @@ static void gen_cql_blob_create(ast_node *ast) {
 
   EXTRACT_STRING(t_name, table_name_ast);
 
-  ast_node *arg3 = third_arg(arg_list);
-  sem_t sem_type3 = arg3->sem->sem_type;
-  bool_t is_pk = is_primary_key(sem_type3) || is_partial_pk(sem_type3);
+  bool_t is_pk = false;
+
+  // If there is no third arg then this is a create for a value column for sure
+  // only the value blob can be devoid of data, the key column has at least
+  // one not null column.  The degenerate form insert backed(id) values(1)
+  // leads to only one arg so is_pk will stay false.
+  if (arg_list->right && arg_list->right->right) {
+    ast_node *arg3 = third_arg(arg_list);
+    sem_t sem_type3 = arg3->sem->sem_type;
+    is_pk = is_primary_key(sem_type3) || is_partial_pk(sem_type3);
+  }
 
   CSTR func = is_pk ?
       cg_blob_mappings->blob_create_key :
