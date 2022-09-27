@@ -37,21 +37,18 @@ cql_noexport void cg_udf_main(struct ast_node *root) {
 
   for (list_item *item = all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
-    Contract(is_ast_declare_func_stmt(any_func) || is_ast_declare_select_func_stmt(any_func));
-    if (is_ast_declare_select_func_stmt(any_func)) {
+    bool_t is_select_func =
+      is_ast_declare_select_func_stmt(any_func) ||
+      is_ast_declare_select_func_no_check_stmt(any_func);
+    Contract(is_select_func  || is_ast_declare_func_stmt(any_func));
+
+    if (is_select_func) {
       EXTRACT_STRING(name, any_func->left);
-      EXTRACT_NOTNULL(func_params_return, any_func->right);
-      EXTRACT(params, func_params_return->left);
-      int32_t count = 0;
-      while (params) {
-        count++;
-        params = params->right;
-      }
 
       bprintf(&body_file, "  sqlite3_create_function_v2(\n");
       bprintf(&body_file, "    _db_,\n");
       bprintf(&body_file, "    \"%s\",\n", name);
-      bprintf(&body_file, "    %d,\n", count);
+      bprintf(&body_file, "    -1,\n"); // stub function takes any number of args
       bprintf(&body_file, "    SQLITE_UTF8 | SQLITE_DETERMINISTIC,\n");
       bprintf(&body_file, "    NULL,\n");
       bprintf(&body_file, "    &_udf_callback,\n");

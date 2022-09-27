@@ -64170,7 +64170,7 @@ CREATE TABLE with_check_expr_udf(
   CHECK (v > SqlUserFunc(1))
 );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0393: user function cannot appear in a constraint expression  'SqlUserFunc'
+test/sem_test.sql:XXXX:1: error: in call : CQL0393: not deterministic user function cannot appear in a constraint expression  'SqlUserFunc'
 
   {create_table_stmt}: err
   | {create_table_name_flags}

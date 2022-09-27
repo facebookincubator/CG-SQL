@@ -29,6 +29,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {}
 static void cg_qp_one_stmt(ast_node *stmt);
 
 static charbuf *schema_stmts;
+static charbuf *backed_tables;
 static charbuf *query_plans;
 static CSTR current_procedure_name;
 static charbuf *current_ok_table_scan;
@@ -229,9 +230,20 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
 
 static void cg_qp_sql_stmt(ast_node *ast) {
   if (ast->sem->delete_version <= 0) {
-    gen_set_output_buffer(schema_stmts);
+    charbuf *out = schema_stmts;
+    if (is_backing(ast->sem->sem_type)) {
+      bprintf(out, "@attribute(cql:backing_table)\n");
+    }
+    if (is_backed(ast->sem->sem_type)) {
+      out = backed_tables;
+
+      EXTRACT_MISC_ATTRS(ast, misc_attrs);
+      CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+      bprintf(out, "@attribute(cql:backed_by=%s)\n", backing_table_name);
+    }
+    gen_set_output_buffer(out);
     gen_statement_with_callbacks(ast, cg_qp_callbacks);
-    bprintf(schema_stmts, ";\n");
+    bprintf(out, ";\n");
   }
 }
 
@@ -403,8 +415,19 @@ static void cg_qp_emit_declare_func(charbuf *output) {
   gen_set_output_buffer(output);
   for (list_item *item = all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
-    Contract(is_ast_declare_func_stmt(any_func) || is_ast_declare_select_func_stmt(any_func));
-    if (is_ast_declare_select_func_stmt(any_func)) {
+    bool_t is_select_func = 
+      is_ast_declare_select_func_stmt(any_func) || 
+      is_ast_declare_select_func_no_check_stmt(any_func);
+    Contract(is_select_func  || is_ast_declare_func_stmt(any_func));
+
+    if (is_select_func) {
+
+      EXTRACT_MISC_ATTRS(any_func, misc_attrs);
+      bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
+      if (deterministic) {
+        bprintf(output, "@attribute(cql:deterministic)\n");
+      }
+
       gen_statement_with_callbacks(any_func, cg_qp_callbacks);
       bprintf(output, ";\n");
     }
@@ -412,36 +435,41 @@ static void cg_qp_emit_declare_func(charbuf *output) {
 }
 
 static void cg_qp_emit_create_schema_proc(charbuf *output) {
-  bprintf(output, "CREATE PROC create_schema()\n"
-                  "BEGIN\n");
-  bindent(output,    schema_stmts, 2);
-  bprintf(output, "  CREATE TABLE sql_temp(\n"
-                  "    id INT NOT NULL PRIMARY KEY,\n"
-                  "    sql TEXT NOT NULL\n"
-                  "  ) WITHOUT ROWID;\n"
-                  "  CREATE TABLE plan_temp(\n"
-                  "    iselectid INT NOT NULL,\n"
-                  "    iorder INT NOT NULL,\n"
-                  "    ifrom INT NOT NULL,\n"
-                  "    zdetail TEXT NOT NULL,\n"
-                  "    sql_id INT NOT NULL,\n"
-                  "    FOREIGN KEY (sql_id) REFERENCES sql_temp(id)\n"
-                  "  );\n"
-                  "  CREATE TABLE no_table_scan(\n"
-                  "    table_name TEXT NOT NULL PRIMARY KEY\n"
-                  "  );\n"
-                  "  CREATE TABLE table_scan_alert(\n"
-                  "    info TEXT NOT NULL\n"
-                  "  );\n"
-                  "  CREATE TABLE b_tree_alert(\n"
-                  "    info TEXT NOT NULL\n"
-                  "  );\n"
-                  "  CREATE TABLE ok_table_scan(\n"
-                  "    sql_id INT NOT NULL PRIMARY KEY,\n"
-                  "    proc_name TEXT NOT NULL,\n"
-                  "    table_names TEXT NOT NULL\n"
-                  "  ) WITHOUT ROWID;\n"
-                  "END;\n");
+  bprintf(output,
+    "CREATE PROC create_schema()\n"
+    "BEGIN\n");
+  bindent(output, schema_stmts, 2);
+  bprintf(output,
+    "  CREATE TABLE sql_temp(\n"
+    "    id INT NOT NULL PRIMARY KEY,\n"
+    "    sql TEXT NOT NULL\n"
+    "  ) WITHOUT ROWID;\n"
+    "  CREATE TABLE plan_temp(\n"
+    "    iselectid INT NOT NULL,\n"
+    "    iorder INT NOT NULL,\n"
+    "    ifrom INT NOT NULL,\n"
+    "    zdetail TEXT NOT NULL,\n"
+    "    sql_id INT NOT NULL,\n"
+    "    FOREIGN KEY (sql_id) REFERENCES sql_temp(id)\n"
+    "  );\n"
+    "  CREATE TABLE no_table_scan(\n"
+    "    table_name TEXT NOT NULL PRIMARY KEY\n"
+    "  );\n"
+    "  CREATE TABLE table_scan_alert(\n"
+    "    info TEXT NOT NULL\n"
+    "  );\n"
+    "  CREATE TABLE b_tree_alert(\n"
+    "    info TEXT NOT NULL\n"
+    "  );\n"
+    "  CREATE TABLE ok_table_scan(\n"
+    "    sql_id INT NOT NULL PRIMARY KEY,\n"
+    "    proc_name TEXT NOT NULL,\n"
+    "    table_names TEXT NOT NULL\n"
+    "  ) WITHOUT ROWID;\n"
+    "END;\n"
+  );
+
+  bprintf(output, "%s", backed_tables->ptr);
 }
 
 static void emit_populate_tables_proc(charbuf *output) {
@@ -685,6 +713,8 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   query_plans = &query_plans_buf;
   CHARBUF_OPEN(schema_stmts_buf);
   schema_stmts = &schema_stmts_buf;
+  CHARBUF_OPEN(backed_tables_buf);
+  backed_tables = &backed_tables_buf;
   CHARBUF_OPEN(output_buf);
 
   bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
@@ -778,6 +808,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   cql_write_file(options.file_names[0], output_buf.ptr);
 
   CHARBUF_CLOSE(output_buf);
+  CHARBUF_CLOSE(backed_tables_buf);
   CHARBUF_CLOSE(schema_stmts_buf);
   CHARBUF_CLOSE(query_plans_buf);
 
@@ -785,6 +816,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   // all of these should have been freed already.  This is the final safety net to prevent
   // non-reporting of leaks.
 
+  backed_tables = NULL;
   schema_stmts = NULL;
   query_plans = NULL;
   cg_qp_callbacks = NULL;

@@ -9267,10 +9267,12 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
       return;
     }
 
-    // We don't know if UDF is deterministic or not (we need notation for that at some point)
-    // for now forbid UDF in a constraint
-    if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_CONSTRAINT)) {
-      report_error(ast, "CQL0393: user function cannot appear in a constraint expression ", name);
+    EXTRACT_MISC_ATTRS(user_func, misc_attrs);
+    bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
+
+    // forbid non-deterministic UDF in an constraint
+    if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_CONSTRAINT) && !deterministic) {
+      report_error(ast, "CQL0393: not deterministic user function cannot appear in a constraint expression ", name);
       record_error(ast);
       return;
     }

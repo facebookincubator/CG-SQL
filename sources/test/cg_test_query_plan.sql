@@ -50,6 +50,14 @@
 -- + CREATE PROC ids_from_string (str text)
 -- + I (id) AS (CALL ids_from_string('1')),
 -- + E (id) AS (CALL ids_from_string('1'))
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bgetkey_type (x BLOB NOT NULL) LONG_INT NOT NULL;
+-- + @attribute(cql:backing_table)
+-- + CREATE TABLE backing(
+-- + CREATE INDEX backing_index ON backing (bgetkey_type(k));
+-- + @attribute(cql:backed_by=backing)
+-- + CREATE TABLE backed(
+-- + SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
 -- - Error
 @attribute(cql:no_table_scan)
 create table t1(id int primary key, name text);
@@ -276,3 +284,52 @@ CREATE PROC call_virtual_table()
 BEGIN
   select id, t, b, r from select_virtual_table("abc");
 END;
+
+@attribute(cql:backing_table)
+create table backing(
+  k blob primary key,
+  v blob not null
+);
+
+@attribute(cql:backed_by=backing)
+create table backed(
+  id integer primary key,
+  name text
+);
+
+-- blob access stubs, it doesn't matter what they return, they aren't
+-- semantically checked, but we do want them in the UDF output
+
+@attribute(cql:deterministic)
+DECLARE SELECT FUNCTION bgetkey_type(x blob not null) long not null;
+
+@attribute(cql:deterministic)
+DECLARE SELECT FUNCTION bgetval_type(x blob not null) long not null;
+
+@attribute(cql:deterministic)
+declare select function bgetkey no check blob;
+
+@attribute(cql:deterministic)
+declare select function bgetval no check blob;
+
+@attribute(cql:deterministic)
+declare select function bcreatekey no check blob;
+
+@attribute(cql:deterministic)
+declare select function bcreateval no check blob;
+
+@attribute(cql:deterministic)
+declare select function bupdatekey no check blob;
+
+@attribute(cql:deterministic)
+declare select function bupdateval no check blob;
+
+create index backing_index on backing(bgetkey_type(k));
+
+-- proc to read from a backed table
+create proc read_from_backed_table()
+begin
+  select * from backed where name = 'x';
+end;
+
+

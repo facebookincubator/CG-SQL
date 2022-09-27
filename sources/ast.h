@@ -486,6 +486,7 @@ cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list);
 cql_noexport uint32_t find_backing_table_attr(ast_node *_Nonnull misc_attr_list);
 
 cql_noexport CSTR _Nullable get_named_string_attribute_value(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
+cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
 
 cql_noexport uint32_t find_base_fragment_attr(
   ast_node *_Nonnull misc_attr_list,

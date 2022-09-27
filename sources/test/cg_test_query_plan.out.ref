@@ -6,6 +6,22 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
 DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT NOT NULL, idx INTEGER NOT NULL) LONG_INT;
 DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG_INT, t TEXT, b BLOB, r REAL);
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bgetkey_type (x BLOB NOT NULL) LONG_INT NOT NULL;
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bgetval_type (x BLOB NOT NULL) LONG_INT NOT NULL;
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bgetval NO CHECK BLOB;
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bcreatekey NO CHECK BLOB;
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bcreateval NO CHECK BLOB;
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
+@attribute(cql:deterministic)
+DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
 
 CREATE PROC create_schema()
 BEGIN
@@ -69,6 +85,12 @@ BEGIN
     b BLOB,
     r REAL
   );
+  @attribute(cql:backing_table)
+  CREATE TABLE backing(
+    k BLOB PRIMARY KEY,
+    v BLOB NOT NULL
+  );
+  CREATE INDEX backing_index ON backing (bgetkey_type(k));
   CREATE TABLE sql_temp(
     id INT NOT NULL PRIMARY KEY,
     sql TEXT NOT NULL
@@ -96,6 +118,11 @@ BEGIN
     table_names TEXT NOT NULL
   ) WITHOUT ROWID;
 END;
+@attribute(cql:backed_by=backing)
+CREATE TABLE backed(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+);
 
 CREATE PROC populate_no_table_scan()
 BEGIN
@@ -456,6 +483,23 @@ BEGIN
   END;
 END;
 
+CREATE PROC populate_query_plan_21()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
+  INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  backed (rowid, id, name) AS (CALL _backed())
+  SELECT *
+    FROM backed
+    WHERE name = 'x';
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(21, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
 
 CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN
@@ -766,6 +810,13 @@ BEGIN
     CALL printf("failed populating query 20\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_21();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 21\n");
+    THROW;
+  END CATCH;
   CALL printf("[\n");
   CALL print_query_violation();
   CALL printf("[\n");
@@ -791,6 +842,7 @@ BEGIN
   CALL print_query_plan(18);
   CALL print_query_plan(19);
   CALL print_query_plan(20);
+  CALL print_query_plan(21);
   CALL printf("[]\n");
   CALL printf("]\n");
   CALL printf("],\n");

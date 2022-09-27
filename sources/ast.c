@@ -499,10 +499,8 @@ cql_noexport uint32_t find_attribute_str(
   return misc.count;
 }
 
-static bool_t find_named_attr(
-  ast_node *_Nonnull misc_attr_list,
-  CSTR _Nonnull name)
-{
+// check for the presence of the given attribute (duplicates are ok)
+cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name) {
   Contract(is_ast_misc_attrs(misc_attr_list));
 
   misc_attrs_type misc = {
