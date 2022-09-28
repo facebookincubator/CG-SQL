@@ -85226,6 +85226,66 @@ CREATE TABLE simple_backed_table(
 
 The statement ending at line XXXX
 
+CREATE TRIGGER bogus_backed_trigger
+  BEFORE DELETE ON simple_backed_table
+BEGIN
+  DELETE FROM bar WHERE rate > id;
+END;
+
+test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0493: backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
+
+  {create_trigger_stmt}: err
+  | {int 0}
+  | {trigger_body_vers}
+    | {trigger_def}
+      | {name bogus_backed_trigger}
+      | {trigger_condition}
+        | {int 4}
+        | {trigger_op_target}
+          | {trigger_operation}
+          | | {int 64}
+          | {trigger_target_action}
+            | {name simple_backed_table}
+            | {trigger_action}
+              | {int 0}
+              | {trigger_when_stmts}
+                | {stmt_list}
+                  | {delete_stmt}
+                    | {name bar}
+                    | {opt_where}
+                      | {gt}
+                        | {name rate}
+                        | {name id}
+
+The statement ending at line XXXX
+
+DROP TABLE simple_backed_table;
+
+test/sem_test.sql:XXXX:1: error: in drop_table_stmt : CQL0493: backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
+
+  {drop_table_stmt}: err
+  | {name simple_backed_table}
+
+The statement ending at line XXXX
+
+CREATE INDEX oh_no_you_dont ON simple_backed_table (id);
+
+test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0493: backed storage tables may not be used in indexes/triggers/drop 'simple_backed_table'
+
+  {create_index_stmt}: err
+  | {create_index_on_list}
+  | | {name oh_no_you_dont}
+  | | {name simple_backed_table}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name id}
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE no_pk_backed_table(
   id INTEGER,
@@ -87153,7 +87213,7 @@ BEGIN
   LET z := ( SELECT cql_blob_get(x, 1 + 2) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in add : CQL0257: argument must be table.column where table is a backed table 'cql_blob_get'
+test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column where table is a backed table 'cql_blob_get'
 
   {create_proc_stmt}: err
   | {name blob_get_not_dot_operator}: err
@@ -87659,7 +87719,7 @@ BEGIN
   LET z := ( SELECT cql_blob_update(b, 1, 1 + 2) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in add : CQL0257: argument must be table.column where table is a backed table 'cql_blob_update'
+test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column where table is a backed table 'cql_blob_update'
 
   {create_proc_stmt}: err
   | {name blob_update_not_dot_operator}: err
@@ -88104,7 +88164,7 @@ The statement ending at line XXXX
 INSERT INTO basic_table(id, name) VALUES(1, 'foo')
 ON CONFLICT (word) DO NOTHING;
 
-test/sem_test.sql:XXXX:1: error: in insert_stmt : backed tables are not supported in the upsert form (yet)
+test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0492: backed tables are not supported in the upsert form (yet)
 
   {upsert_stmt}: err
   | {insert_stmt}: err
@@ -88181,7 +88241,7 @@ BEGIN
   LET z := ( SELECT cql_blob_create(1, 1, basic_table.id) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0257: argument 1 must be a table name that is a backed table 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in num : CQL0491: argument 1 must be a table name that is a backed table 'cql_blob_create'
 
   {create_proc_stmt}: err
   | {name blob_create_not_a_string}: err
@@ -88310,7 +88370,7 @@ BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, 1, 1 + 2) );
 END;
 
-test/sem_test.sql:XXXX:1: error: in add : CQL0257: argument must be table.column where table is a backed table 'cql_blob_create'
+test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column where table is a backed table 'cql_blob_create'
 
   {create_proc_stmt}: err
   | {name blob_create_not_dot_operator}: err
