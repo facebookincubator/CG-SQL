@@ -45,7 +45,7 @@ BEGIN_SUITE()
 
 declare function blob_from_string(str text @sensitive) create blob not null;
 declare function string_from_blob(b blob @sensitive) create text not null;
-declare procedure cql_init_extensions() using transaction;
+declare procedure _cql_init_extensions() using transaction;
 
 declare enum floats real (
   one = 1.0,
@@ -81,7 +81,7 @@ create table backed2 (
 );
 
 call make_schema();
-call cql_init_extensions();
+call _cql_init_extensions();
 
 BEGIN_TEST(arithmetic)
   EXPECT_SQL_TOO((1 + 2) * 3 == 9);
@@ -5564,21 +5564,31 @@ BEGIN_TEST(normalize_bool_on_call)
   call take_bool_not_null(0, false);
 END_TEST(normalize_bool_on_call)
 
+
+-- This test code works in LUA but only if you force the type hash codes
+-- to be 32 bits.  There is no context:result_int64 in luasqlite3 and
+-- so you either use the integer version and lose 32 bits or else you
+-- use the number version and get floating point round off which also
+-- results in test failures.  The floating point bugs are especially
+-- hard to notice because the type codes are often approximately correct!
+--
+-- You can test the codegen with LUA if you adjust the hash code in
+-- cg_common.c to be 32 bits by masking the high bits off.  This is
+-- not something we can ship.
+
 #ifndef LUA_RUN_TEST
 
--- lua test code doesn't yet have bgetval and friends defined
-
 BEGIN_TEST(blob_funcs)
-  let b := (select bcreateval(112233, 1234, 1, 5678, 1));
+  let b := (select bcreateval(112233, 0, 1234, 1, 1, 5678, 1));
   EXPECT(112233 == (select bgetkey_type(b)));
   EXPECT(1234 == (select bgetval(b,0)));
   EXPECT(5678 == (select bgetval(b,1)));
 
-  set b := (select bupdateval(b, 3456, 1, 1));
+  set b := (select bupdateval(b, 1, 3456, 1));
   EXPECT(1234 == (select bgetval(b,0)));
   EXPECT(3456 == (select bgetval(b,1)));
 
-  set b := (select bupdatekey(b, 2345, 0));
+  set b := (select bupdatekey(b, 0, 2345));
   EXPECT(2345 == (select bgetval(b,0)));
   EXPECT(3456 == (select bgetval(b,1)));
 

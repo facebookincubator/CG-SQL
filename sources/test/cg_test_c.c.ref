@@ -17423,7 +17423,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec(_db_,
     "WITH "
     "_vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7)) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -17461,7 +17461,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_)
     "V (x, y, z) AS (VALUES(1, '2', 3.14)), "
     "_vals (pk, x, y) AS (SELECT x, y, z "
       "FROM V) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -17493,7 +17493,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnull _db_)
   _rc_ = cql_exec(_db_,
     "WITH "
     "_vals (pk, x, y) AS (VALUES(1, '2', 3.14)) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -17534,7 +17534,7 @@ CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_) {
   "), "
     "_vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50 "
       "FROM small_backed AS B) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17649,7 +17649,7 @@ CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_) {
   cql_blob_ref z = NULL;
 
   _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "SELECT bupdatekey(?, 1, 0)");
+    "SELECT bupdatekey(?, 0, 1)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
                 CQL_DATA_TYPE_BLOB, b);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17658,7 +17658,7 @@ CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_) {
     cql_column_blob_ref(_temp_stmt, 0, &x);
   cql_finalize_stmt(&_temp_stmt);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "SELECT bupdateval(?, 21, -1118059189291406095, 3, 'dave', -6946718245010482247, 4)");
+    "SELECT bupdateval(?, -1118059189291406095, 21, 3, -6946718245010482247, 'dave', 4)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
                 CQL_DATA_TYPE_BLOB, b);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17708,7 +17708,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
       "WHERE bgetkey_type(T.k) = -1622391684721028952",
   ") "
     "UPDATE backing "
-    "SET v = bupdateval(v, 'foo', -6946718245010482247, 4) "
+    "SET v = bupdateval(v, -6946718245010482247, 'foo', 4) "
       "WHERE rowid IN (SELECT rowid "
       "FROM backed "
       "WHERE name = 'one')"
@@ -17754,7 +17754,7 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
   "), "
     "V (x) AS (VALUES(1)) "
     "UPDATE backing "
-    "SET v = bupdateval(v, 'goo', -6946718245010482247, 4) "
+    "SET v = bupdateval(v, -6946718245010482247, 'goo', 4) "
       "WHERE rowid IN (SELECT rowid "
       "FROM backed "
       "WHERE name = 'with_update')"
@@ -17798,7 +17798,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
       "WHERE bgetkey_type(T.k) = -1622391684721028952",
   ") "
     "UPDATE backing "
-    "SET k = bupdatekey(k, 100, 0) "
+    "SET k = bupdatekey(k, 0, 100) "
       "WHERE rowid IN (SELECT rowid "
       "FROM backed "
       "WHERE name = 'two')"
@@ -17845,8 +17845,8 @@ CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
       "WHERE bgetkey_type(T.k) = -1622391684721028952",
   ") "
     "UPDATE backing "
-    "SET k = bupdatekey(k, 100, 0), "
-    "v = bupdateval(v, 77, -1118059189291406095, 3) "
+    "SET k = bupdatekey(k, 0, 100), "
+    "v = bupdateval(v, -1118059189291406095, 77, 3) "
       "WHERE rowid IN (SELECT rowid "
       "FROM backed "
       "WHERE name = 'three' "

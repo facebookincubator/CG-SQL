@@ -1301,12 +1301,24 @@ static void gen_cql_blob_create(ast_node *ast) {
   for (ast_node *args = arg_list->right; args; args = args->right->right) {
      ast_node *val = first_arg(args);
      ast_node *col = second_arg(args);
-     gen_printf(", ");
-     gen_root_expr(val);
-     if (!use_offsets) {
+     if (use_offsets) {
+       // when creating a key blob all columns are present in order, so no need to
+       // emit the offsets, they are assumed.  However, value blobs can have
+       // some or all of the values and might skip some
+       if (!is_pk) {
+         EXTRACT_STRING(cname, col->right);
+         int32_t offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
+         gen_printf(", %d", offset);
+       }
+     }
+     else {
        gen_printf(", ");
        gen_field_hash(col);
      }
+
+     gen_printf(", ");
+     gen_root_expr(val);
+
      gen_printf(", %d", sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
   }
 
@@ -1346,8 +1358,6 @@ static void gen_cql_blob_update(ast_node *ast) {
      ast_node *val = first_arg(args);
      ast_node *col = second_arg(args);
      EXTRACT_STRING(cname, col->right);
-     gen_printf(", ");
-     gen_root_expr(val);
      if (use_offsets) {
       // we know it's a valid column
       int32_t offset = get_table_col_offset(table_ast, cname,
@@ -1359,6 +1369,8 @@ static void gen_cql_blob_update(ast_node *ast) {
        gen_printf(", ");
        gen_field_hash(col);
      }
+     gen_printf(", ");
+     gen_root_expr(val);
      if (!is_pk) {
        // you never need the item types for the key blob becasue it always has all the fields
        gen_printf(", %d", sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);

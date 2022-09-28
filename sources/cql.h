@@ -580,6 +580,8 @@ typedef struct rtdata {
   const char *cql_result_set_has_identity_columns;
   // Template for the java method copy.
   const char *cql_result_set_copy;
+
+  void (*cql_post_common_init)(void);
 } rtdata;
 
 cql_data_decl( rtdata *rt );

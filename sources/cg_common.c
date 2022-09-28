@@ -124,6 +124,8 @@ cql_noexport void cg_common_init(void)
   cg_blob_mappings->blob_update_key = "bupdatekey";
   cg_blob_mappings->blob_update_key_use_offsets = true;
   cg_blob_mappings->blob_update_val = "bupdateval";
+
+  if (rt->cql_post_common_init) rt->cql_post_common_init();
 }
 
 // lots of AST nodes require no action -- this guy is very good at that.

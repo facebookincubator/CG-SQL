@@ -5558,7 +5558,7 @@ create table small_backed(
 -- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7))
 -- + INSERT INTO backing(k, v) SELECT
 -- + bcreatekey(-9132470325614587332, V.pk, 1),
--- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3)
+-- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values()
 begin
@@ -5571,8 +5571,8 @@ end;
 -- + _vals (pk, x, y) AS (SELECT x, y, z
 -- + FROM V)
 -- + INSERT INTO backing(k, v) SELECT
--- + bcreatekey(-9132470325614587332, V.pk, 1),
--- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3)
+-- + bcreatekey(-9132470325614587332, V.pk, 1)
+-- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
 -- + FROM _vals AS V
 create proc insert_backed_values_using_with()
 begin
@@ -5585,8 +5585,8 @@ end;
 -- TEST: simple insert using form
 -- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14))
 -- + INSERT INTO backing(k, v) SELECT
--- + bcreatekey(-9132470325614587332, V.pk, 1),
--- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3)
+-- + bcreatekey(-9132470325614587332, V.pk, 1)
+-- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values_using_form()
 begin
@@ -5601,8 +5601,8 @@ end;
 -- + _vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50
 -- + FROM small_backed AS B)
 -- + INSERT INTO backing(k, v) SELECT
--- + bcreatekey(-9132470325614587332, V.pk, 1),
--- + bcreateval(-9132470325614587332, V.x, 7953209610392031882, 4, V.y, 4501343740738089802, 3)
+-- + bcreatekey(-9132470325614587332, V.pk, 1)
+-- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
 -- + FROM _vals AS V
 create proc inserted_backed_from_select()
 begin
@@ -5631,8 +5631,8 @@ begin
 end;
 
 -- TEST: use cql_blob_update and validate hash codes etc.
--- + "SELECT bupdatekey(?, 1, 0)"
--- + "SELECT bupdateval(?, 21, -1118059189291406095, 3, 'dave', -6946718245010482247, 4)"
+-- + SELECT bupdatekey(?, 0, 1)
+-- + SELECT bupdateval(?, -1118059189291406095, 21, 3, -6946718245010482247, 'dave', 4)
 create proc test_blob_update_expand()
 begin
   declare b blob;
@@ -5643,7 +5643,7 @@ end;
 
 -- TEST: simple update into backed table value only
 -- + UPDATE backing
--- + SET v = bupdateval(v, 'foo', -6946718245010482247, 4) "
+-- + SET v = bupdateval(v, -6946718245010482247, 'foo', 4) 
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM backed
 -- + WHERE name = 'one')
@@ -5655,7 +5655,7 @@ end;
 -- TEST: simple update into backed table value only, using with clause
 -- + V (x) AS (VALUES(1))
 -- + UPDATE backing
--- + SET v = bupdateval(v, 'goo', -6946718245010482247, 4) "
+-- + SET v = bupdateval(v, -6946718245010482247, 'goo', 4)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM backed
 -- + WHERE name = 'with_update')
@@ -5667,7 +5667,7 @@ end;
 
 -- TEST: simple update into backed table key only
 -- + UPDATE backing
--- + SET k = bupdatekey(k, 100, 0)
+-- + SET k = bupdatekey(k, 0, 100)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM backed
 -- + WHERE name = 'two')
@@ -5678,8 +5678,8 @@ end;
 
 -- TEST: update key and value, add other clauses
 -- + UPDATE backing
--- + SET k = bupdatekey(k, 100, 0)
--- + v = bupdateval(v, 77, -1118059189291406095, 3)
+-- + SET k = bupdatekey(k, 0, 100)
+-- + v = bupdateval(v, -1118059189291406095, 77, 3)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM backed
 -- + WHERE name = 'three'
