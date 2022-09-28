@@ -8,6 +8,7 @@ set -euo pipefail
 
 lua_demo/prepare_run_test.sh
 lua out/run_test.lua
+xxxx
 
 echo "schema upgrade test"
 

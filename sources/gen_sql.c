@@ -1303,7 +1303,17 @@ static void gen_cql_blob_create(ast_node *ast) {
      ast_node *col = second_arg(args);
      gen_printf(", ");
      gen_root_expr(val);
-     if (!use_offsets) {
+     if (use_offsets) {
+       // when creating a key blob all columns are present in order, so no need to
+       // emit the offsets, they are assumed.  However, value blobs can have
+       // some or all of the values and might skip some
+       if (!is_pk) {
+         EXTRACT_STRING(cname, col->right);
+         int32_t offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
+         gen_printf(", %d", offset);
+       }
+     }
+     else {
        gen_printf(", ");
        gen_field_hash(col);
      }

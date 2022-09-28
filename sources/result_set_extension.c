@@ -178,8 +178,8 @@ static void bupdatekey(sqlite3_context *context, int32_t argc, sqlite3_value **a
   sqlite3_result_blob(context, b, sizeof(*b), SQLITE_TRANSIENT);
 }
 
-// Returns a blob with the given integers in place
-static void bcreateval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
+// Returns a blob with the given integers in place (noi offsets)
+static void bcreatekey(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
   if (argc < 1) {
     sqlite3_result_null(context);
   }
@@ -200,8 +200,40 @@ static void bcreateval(sqlite3_context *context, int32_t argc, sqlite3_value **a
   sqlite3_result_blob(context, &b, sizeof(b), SQLITE_TRANSIENT);
 }
 
+// Create a value store, note that some offsets be missing
+static void bcreateval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
+  if (argc < 1) {
+    sqlite3_result_null(context);
+    return;
+  }
+
+  test_blob b = {
+    .type = sqlite3_value_int64(argv[0])
+  };
+
+  for (int32_t i = 1; i + 3 <= argc; i += 3) {
+    int64_t val = sqlite3_value_int64(argv[i]);
+    int64_t index = sqlite3_value_int64(argv[i+1]);
+    // type would be argv[i+2] but for this test it's all integers
+
+    switch (index) {
+    case 0:
+      b.int1 = val;
+      break;
+    case 1:
+      b.int2 = val;
+      break;
+    case 2:
+      b.int3 = val;
+      break;
+    }
+  }
+  sqlite3_result_blob(context, &b, sizeof(b), SQLITE_TRANSIENT);
+}
+
+
 // Register the indicated UDFs.  Note, this will be called directly from run_test.sql as a proc
-cql_code cql_init_extensions(sqlite3 *db) {
+cql_code _cql_init_extensions(sqlite3 *db) {
   cql_code rc = sqlite3_create_function_v2(db, "rscount", 1, SQLITE_UTF8, 0, rs_count, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
@@ -237,7 +269,7 @@ cql_code cql_init_extensions(sqlite3 *db) {
     return rc;
   }
 
-  rc = sqlite3_create_function_v2(db, "bcreatekey", -1, SQLITE_UTF8, 0, bcreateval, NULL, NULL, NULL);
+  rc = sqlite3_create_function_v2(db, "bcreatekey", -1, SQLITE_UTF8, 0, bcreatekey, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }

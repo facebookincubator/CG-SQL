@@ -45,7 +45,7 @@ BEGIN_SUITE()
 
 declare function blob_from_string(str text @sensitive) create blob not null;
 declare function string_from_blob(b blob @sensitive) create text not null;
-declare procedure cql_init_extensions() using transaction;
+declare procedure _cql_init_extensions() using transaction;
 
 declare enum floats real (
   one = 1.0,
@@ -80,8 +80,8 @@ create table backed2 (
   v1 integer
 );
 
+call _cql_init_extensions();
 call make_schema();
-call cql_init_extensions();
 
 BEGIN_TEST(arithmetic)
   EXPECT_SQL_TOO((1 + 2) * 3 == 9);
@@ -5564,12 +5564,8 @@ BEGIN_TEST(normalize_bool_on_call)
   call take_bool_not_null(0, false);
 END_TEST(normalize_bool_on_call)
 
-#ifndef LUA_RUN_TEST
-
--- lua test code doesn't yet have bgetval and friends defined
-
 BEGIN_TEST(blob_funcs)
-  let b := (select bcreateval(112233, 1234, 1, 5678, 1));
+  let b := (select bcreateval(112233, 1234, 0, 1, 5678, 1, 1));
   EXPECT(112233 == (select bgetkey_type(b)));
   EXPECT(1234 == (select bgetval(b,0)));
   EXPECT(5678 == (select bgetval(b,1)));
@@ -5583,7 +5579,16 @@ BEGIN_TEST(blob_funcs)
   EXPECT(3456 == (select bgetval(b,1)));
 
   -- seed some data
+  call printf("inserting into backed, 1, 100, 101, 2, 200, 201\n");
   insert into backed values (1, 100, 101), (2, 200, 201);
+
+  call printf("backing rows %d\n", (select count(*) from backing));
+  declare BB cursor for select * from backing;
+  loop fetch BB
+  begin
+    call printf("%s\n", (select cast(BB.k as text) || " -- " || cast(BB.v as text)));
+    call printf("key -- %ld\n", (select cql_blob_get_type(BB.k)));
+  end;
 
   -- validate count and the math of the columns
   let r := 0;
@@ -5632,8 +5637,6 @@ BEGIN_TEST(blob_funcs)
   insert into backed2(id) values(1);
   EXPECT(1 == (select id from backed2));
 END_TEST(blob_funcs)
-
-#endif
 
 END_SUITE()
 
