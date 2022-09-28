@@ -469,6 +469,11 @@ static void cg_dummy_test_emit_integer_value(charbuf *output, sem_t col_type, in
 static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed) {
   Contract(is_ast_create_table_stmt(table_ast));
 
+  // do not emit populate for backing tables, let backed tables do the job
+  if (is_backing(table_ast->sem->sem_type)) {
+    return;
+  }
+
   sem_struct *sptr = table_ast->sem->sptr;
   CSTR table_name = sptr->struct_name;
   bool_t add_row;
@@ -706,6 +711,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   callbacks.if_not_exists_callback = cg_test_helpers_force_if_not_exists;
   callbacks.mode = gen_mode_no_annotations;
 
+  CHARBUF_OPEN(gen_declare_backed);
   CHARBUF_OPEN(gen_create_tables);
   CHARBUF_OPEN(gen_drop_tables);
   CHARBUF_OPEN(gen_populate_tables);
@@ -724,7 +730,11 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     EXTRACT_ANY_NOTNULL(table_or_view, item->ast);
     Invariant(is_ast_create_table_stmt(table_or_view) || is_ast_create_view_stmt(table_or_view));
     CSTR table_name = get_table_or_view_name(table_or_view);
-    bprintf(&gen_drop_tables, "DROP %s IF EXISTS %s;\n", is_ast_create_table_stmt(table_or_view) ? "TABLE" : "VIEW", table_name);
+   
+    // backed tables are not to be dropped, they don't exist physically
+    if (!is_backed(table_or_view->sem->sem_type)) {
+      bprintf(&gen_drop_tables, "DROP %s IF EXISTS %s;\n", is_ast_create_table_stmt(table_or_view) ? "TABLE" : "VIEW", table_name);
+    }
   }
 
   // Reverse the list to get the tables back into a safe-to-declare order that we can loop over
@@ -745,10 +755,25 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
       ast_to_emit = table_or_view->parent;
     }
 
+    // backing tables need their attribute
+    if (is_backing(ast_to_emit->sem->sem_type)) {
+      bprintf(&gen_create_tables, "@attribute(cql:backing_table)\n");
+    }
+
+    // backed tables are declared not created, emit them into their own stream
+
+    charbuf *out = &gen_create_tables;
+    if (is_backed(ast_to_emit->sem->sem_type)) {
+      EXTRACT_MISC_ATTRS(ast_to_emit, misc_attrs);
+      out = &gen_declare_backed;
+      CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+      bprintf(out, "@attribute(cql:backed_by=%s)\n", backing_table_name);
+    }
+
     // First thing we need is the CREATE DDL for the item in question, make that now
-    gen_set_output_buffer(&gen_create_tables);
+    gen_set_output_buffer(out);
     gen_statement_with_callbacks(ast_to_emit, &callbacks);
-    bprintf(&gen_create_tables, ";\n");
+    bprintf(out, ";\n");
 
     // Next we need the DDL for any indices that may be on the table, we'll generate
     // the CREATE for those indices and a DROP for the indices.  The CREATE goes with
@@ -800,6 +825,12 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   bprintf(cg_th_procs, "BEGIN\n");
   bindent(cg_th_procs, &gen_create_tables, 2);
   bprintf(cg_th_procs, "END;\n");
+
+  // declare the backed tables only (i.e. keep them out of the proc)
+  if (gen_declare_backed.used > 1) {
+    bprintf(cg_th_procs, "\n%s", gen_declare_backed.ptr);
+  }
+  
 
   // Create the triggers proc.
   //
@@ -872,6 +903,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   CHARBUF_CLOSE(gen_populate_tables);
   CHARBUF_CLOSE(gen_drop_tables);
   CHARBUF_CLOSE(gen_create_tables);
+  CHARBUF_CLOSE(gen_declare_backed);
   CHARBUF_CLOSE(drop_triggers);
   CHARBUF_CLOSE(create_triggers);
 }

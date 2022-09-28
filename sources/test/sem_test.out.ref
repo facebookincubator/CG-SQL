@@ -25792,7 +25792,7 @@ INSERT INTO bar(id, name, rate) VALUES(_seed_, printf('name_%d', _seed_), _seed_
 
   {insert_stmt}: ok
   | {insert_normal}
-  | | {insert_dummy_spec}: integer notnull
+  | | {seed_stub}
   |   | {add}: integer notnull
   |   | | {int 1}: integer notnull
   |   | | {int 2}: integer notnull
@@ -26386,7 +26386,7 @@ INSERT INTO blob_table_test(b) VALUES(CAST(printf('b_%d', _seed_) AS BLOB)) @DUM
 
   {insert_stmt}: ok
   | {insert_normal}
-  | | {insert_dummy_spec}: integer notnull
+  | | {seed_stub}
   |   | {int 1}: integer notnull
   |   | {int 2}
   | {name_columns_values}
@@ -53055,7 +53055,7 @@ END;
     | {stmt_list}: ok
       | {insert_stmt}: ok
         | {insert_normal}
-        | | {insert_dummy_spec}: integer notnull
+        | | {seed_stub}
         |   | {int 1}: integer notnull
         |   | {int 2}
         | {name_columns_values}
@@ -57596,7 +57596,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
   {insert_stmt}: err
   | {insert_normal}
-  | | {insert_dummy_spec}: integer notnull
+  | | {seed_stub}
   |   | {int 1}: integer notnull
   |   | {int 0}
   | {name_columns_values}
@@ -57614,7 +57614,7 @@ INSERT INTO foo(id) VALUES(NULL) @DUMMY_SEED(1);
 
   {insert_stmt}: ok
   | {insert_normal}
-  | | {insert_dummy_spec}: integer notnull
+  | | {seed_stub}
   |   | {int 1}: integer notnull
   |   | {int 0}
   | {name_columns_values}
@@ -57634,7 +57634,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
   {insert_stmt}: err
   | {insert_normal}
-  | | {insert_dummy_spec}: integer notnull
+  | | {seed_stub}
   |   | {int 1}: integer notnull
   |   | {int 0}
   | {name_columns_values}
@@ -61722,7 +61722,7 @@ END;
     | {stmt_list}: ok
       | {insert_stmt}: ok
         | {insert_normal}
-        | | {insert_dummy_spec}: integer notnull
+        | | {seed_stub}
         |   | {int 9}: integer notnull
         |   | {int 3}
         | {name_columns_values}

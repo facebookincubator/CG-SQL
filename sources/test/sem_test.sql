@@ -6706,7 +6706,7 @@ insert into bar (id, name, rate) values (1, 'bazzle', 3) @dummy_seed(not 'x');
 -- TEST: ok to go insert with dummy values
 -- note that the insert statement has been mutated!!
 -- + INSERT INTO bar(id, name, rate) VALUES(_seed_, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(1 + 2) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
--- + {insert_dummy_spec}: integer notnull
+-- + {seed_stub}
 -- + {call}: text notnull
 -- + {name printf}: text notnull
 -- + {strlit 'name_%d'}: text notnull

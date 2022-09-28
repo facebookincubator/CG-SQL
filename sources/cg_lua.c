@@ -4504,7 +4504,7 @@ static void cg_lua_insert_dummy_spec(ast_node *ast) {
 static void cg_lua_opt_seed_process(ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
-  EXTRACT(insert_dummy_spec, insert_type->left);
+  EXTRACT_ANY(insert_dummy_spec, insert_type->left);
 
   if (insert_dummy_spec) {
     cg_lua_insert_dummy_spec(insert_dummy_spec);

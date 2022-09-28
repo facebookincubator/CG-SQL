@@ -3001,7 +3001,7 @@ cql_noexport void gen_insert_type(ast_node *ast) {
 }
 
 static void gen_insert_dummy_spec(ast_node *ast) {
-  Contract(is_ast_insert_dummy_spec(ast));
+  Contract(is_ast_insert_dummy_spec(ast) || is_ast_seed_stub(ast));
   EXTRACT_ANY_NOTNULL(seed_expr, ast->left);
   EXTRACT_OPTION(flags, ast->right);
 
@@ -3068,7 +3068,7 @@ static void gen_insert_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(name_columns_values, ast->right);
   EXTRACT_STRING(name, name_columns_values->left);
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
-  EXTRACT(insert_dummy_spec, insert_type->left);
+  EXTRACT_ANY(insert_dummy_spec, insert_type->left);
 
   gen_insert_type(insert_type);
   gen_printf(" INTO %s", name);

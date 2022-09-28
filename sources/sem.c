@@ -15619,7 +15619,12 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
   EXTRACT_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT(name_list, column_spec->left);
-  EXTRACT(insert_dummy_spec, insert_type->left);
+  EXTRACT_ANY(insert_dummy_spec, insert_type->left);
+
+  // seed replacement has already happened, don't do it again when we re-analyze after a rewrite
+  if (is_ast_seed_stub(insert_dummy_spec)) {
+    insert_dummy_spec = NULL;
+  }
 
   ast_node *select_stmt = NULL;
   ast_node *insert_list = NULL;
@@ -15779,6 +15784,14 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
     }
   }
 
+  // clobber the dummy seed once it has been used, if we do semantic analysis again
+  // we don't want to reconsider it, and later rewrites should not see it
+  if (insert_dummy_spec) {
+    AST_REWRITE_INFO_SET(insert_dummy_spec->lineno, insert_dummy_spec->filename);
+    ast_set_left(insert_type, new_ast_seed_stub(insert_dummy_spec->left, insert_dummy_spec->right));
+    AST_REWRITE_INFO_RESET();
+  }
+
   if (valid) {
     if (select_stmt) {
       valid = sem_validate_compatible_table_cols_select(table_ast, name_list, select_stmt);
@@ -15809,7 +15822,12 @@ static void sem_insert_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
-  EXTRACT(insert_dummy_spec, insert_type->left);
+  EXTRACT_ANY(insert_dummy_spec, insert_type->left);
+
+  // seed replacement has already happened, don't do it again when we re-analyze after a rewrite
+  if (is_ast_seed_stub(insert_dummy_spec)) {
+    insert_dummy_spec = NULL;
+  }
 
   BEGIN_BACKING_REWRITE();
 

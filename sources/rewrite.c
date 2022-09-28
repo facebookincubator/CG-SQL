@@ -2863,11 +2863,9 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   }
 
   Invariant(is_ast_insert_stmt(stmt));
-  EXTRACT_ANY_NOTNULL(insert_type, stmt->left);
   EXTRACT_NOTNULL(name_columns_values, stmt->right);
   EXTRACT_STRING(backed_table_name, name_columns_values->left);
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
-  EXTRACT(insert_dummy_spec, insert_type->left);
 
   // table has already been checked, it exists, it's legal
   // but it might not be backed, in which case we have less work to do

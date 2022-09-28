@@ -2790,3 +2790,59 @@ CREATE PROC test_MyProc_read_trig_test_t3()
 BEGIN
   SELECT * FROM trig_test_t3;
 END;
+
+-- The statement ending at line XXXX
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+
+CREATE PROC test_uses_backed_table_create_tables()
+BEGIN
+  @attribute(cql:backing_table)
+  CREATE TABLE IF NOT EXISTS backing(
+    k BLOB PRIMARY KEY,
+    v BLOB
+  );
+  CREATE INDEX IF NOT EXISTS backing_type_index ON backing (cql_blob_get_type(k));
+END;
+
+@attribute(cql:backed_by=backing)
+CREATE TABLE IF NOT EXISTS backed(
+  pk INTEGER PRIMARY KEY,
+  x TEXT,
+  y REAL
+);
+
+CREATE PROC test_uses_backed_table_create_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
+CREATE PROC test_uses_backed_table_populate_tables()
+BEGIN
+  INSERT OR IGNORE INTO backed(pk) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO backed(pk) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+END;
+
+CREATE PROC test_uses_backed_table_drop_tables()
+BEGIN
+  DROP TABLE IF EXISTS backing;
+END;
+
+CREATE PROC test_uses_backed_table_drop_triggers()
+BEGIN
+  IF @rc THEN END IF;
+END;
+
+CREATE PROC test_uses_backed_table_read_backing()
+BEGIN
+  SELECT * FROM backing;
+END;
+
+CREATE PROC test_uses_backed_table_read_backed()
+BEGIN
+  SELECT * FROM backed;
+END;
+
+CREATE PROC test_uses_backed_table_drop_indexes()
+BEGIN
+  DROP INDEX IF EXISTS backing_type_index;
+END;

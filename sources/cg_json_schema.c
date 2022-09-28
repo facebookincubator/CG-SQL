@@ -1867,7 +1867,6 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
   EXTRACT_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY(columns_values_right, columns_values->right);
-  EXTRACT(insert_dummy_spec, insert_type->left);
   EXTRACT(name_list, column_spec->left);
 
   // use the canonical name (which may be case-sensitively different)

@@ -982,3 +982,40 @@ BEGIN
   SELECT 1 AS dummy
     FROM trig_test_t4;
 END;
+
+@attribute(cql:backing_table)
+create table backing(
+  k blob primary key,
+  v blob
+);
+
+create index backing_type_index on backing(cql_blob_get_type(k));
+
+@attribute(cql:backed_by=backing)
+create table backed(
+  pk int primary key,
+  x text,
+  y real
+);
+
+-- TEST: backed tables
+-- * backed tables are not created, only declared
+-- * backing tables do not get inserts, we insert into backed tables
+-- * backed/backing tables should have attributes
+-- + INSERT OR IGNORE INTO backed(pk) VALUES(1) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO backed(pk) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+-- - INSERT OR IGNORE INTO backing
+-- + DROP TABLE IF EXISTS backing;
+-- - DROP TABLE IF EXISTS backed;
+-- + DROP INDEX IF EXISTS backing_type_index;
+-- + CREATE INDEX IF NOT EXISTS backing_type_index ON backing (cql_blob_get_type(k));
+-- + @attribute(cql:backing_table)
+-- + CREATE TABLE IF NOT EXISTS backing(
+-- + @attribute(cql:backed_by=backing)
+@attribute(cql:backed_by=backing)
+@attribute(cql:autotest=(dummy_test))
+create proc uses_backed_table()
+begin
+  select * from backed;
+end;
+
