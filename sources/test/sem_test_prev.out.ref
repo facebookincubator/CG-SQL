@@ -2408,6 +2408,77 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE backing(
+  k BLOB PRIMARY KEY,
+  v BLOB
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: backing: { k: blob notnull primary_key, v: blob } validated backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backing}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: v: blob
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name v}
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=backing)
+CREATE TABLE backed(
+  id INTEGER NOT NULL PRIMARY KEY,
+  val TEXT NOT NULL
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name backing}: ok
+  | {create_table_stmt}: backed: { id: integer notnull primary_key, val: text notnull } validated backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backed}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      |     | {col_attrs_pk}
+      |       | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: val: text notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name val}
+            | | {type_text}: text
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok
@@ -4753,4 +4824,74 @@ test/sem_test_prev.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub dir
   {schema_unsub_stmt}: err
   | {version_annotation}
     | {int 28}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE backing(
+  k BLOB PRIMARY KEY,
+  v BLOB
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: backing: { k: blob notnull primary_key, v: blob } backing
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backing}
+    | {col_key_list}
+      | {col_def}: k: blob notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name k}
+      |   | | {type_blob}: blob
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: v: blob
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name v}
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=backing)
+CREATE TABLE backed(
+  guid INTEGER NOT NULL PRIMARY KEY,
+  gal TEXT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name backing}: ok
+  | {create_table_stmt}: backed: { guid: integer notnull primary_key, gal: text } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backed}
+    | {col_key_list}
+      | {col_def}: guid: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name guid}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      |     | {col_attrs_pk}
+      |       | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: gal: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name gal}
+              | {type_text}: text
 

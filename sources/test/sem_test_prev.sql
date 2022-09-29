@@ -517,6 +517,23 @@ create table unsub_resub_trickery(id integer);
 -- - error:
 @resub (26, unsub_resub_trickery);
 
+-- TEST backing table ok
+-- - error:
+@attribute(cql:backing_table)
+create table backing (
+  k blob primary key,
+  v blob
+);
+
+-- TEST backed table ok
+-- + {create_table_stmt}: backed: { id: integer notnull primary_key, val: text notnull } validated backed
+-- - error:
+@attribute(cql:backed_by=backing)
+create table backed (
+  id int not null primary key,
+  val text not null
+);
+
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
 ------------------------------------------------------------------------------------------------------------
@@ -1134,3 +1151,20 @@ create table unsub_resub_trickery(id integer);
 -- + error: % @unsub directive must provide a table
 -- +1 error:
 @unsub (28);
+
+-- TEST backing table ok
+-- - error:
+@attribute(cql:backing_table)
+create table backing (
+  k blob primary key,
+  v blob
+);
+
+-- TEST backed table ok even though it changed a lot
+-- + {create_table_stmt}: backed: { guid: integer notnull primary_key, gal: text } backed
+-- - error:
+@attribute(cql:backed_by=backing)
+create table backed (
+  guid int not null primary key,
+  gal text 
+);

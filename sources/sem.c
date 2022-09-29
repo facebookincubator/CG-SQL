@@ -13117,11 +13117,13 @@ static void sem_validate_previous_table(ast_node *prev_table) {
 
   bool_t is_temp = !!(prev_flags & TABLE_IS_TEMP);
 
+  bool_t is_table_backed = is_backed(prev_table->sem->sem_type);
+
   // validation of @deleted tables is a thing, so we need deleted tables, too
   ast_node *ast = find_table_or_view_even_deleted(name);
 
-  if (!ast && is_temp) {
-    // temp table totally gone, that's ok
+  if (!ast && (is_temp || is_table_backed)) {
+    // temp table or backed table totally gone, that's ok
     return;
   }
 
@@ -13149,6 +13151,12 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   // but using their own rules.  That happens in sem_validate_all_tables_not_in_previous.
   // Once this flag is set sem_validate_all_tables_not_in_previous won't consider this table.
   sem_add_flags(ast, SEM_TYPE_VALIDATED);
+
+  if (is_table_backed) {
+    // backed tables can be changed pretty much at whim, if the mandatory fields
+    // are consistent they keep their data
+    return;
+  }
 
   version_attrs_info prev_info;
   init_version_attrs_info(&prev_info, name, prev_table, prev_table_attrs);
