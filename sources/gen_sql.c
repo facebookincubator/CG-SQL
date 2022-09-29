@@ -1074,13 +1074,17 @@ static void gen_expr_not_in(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new
   if (pri_new < pri) gen_printf(")");
 }
 
-
+// Append field name and type to the buffer.  Canonicalize column name to camel case.
+// Many languages use camel case property names and we want to make it easy
+// for them to bind to fields and generate hashes.  We have to pick some
+// canonical thing so we canonicalize to camelCase.  It's not perfect but it seems
+// like the best trade-off. Lots of languages wrap SQLite columns.
 static void gen_append_field_desc(charbuf *tmp, CSTR cname, sem_t sem_type) {
-  // TODO convert column name to camel case with helper first
-  bprintf(tmp, "%s:", cname);
+  cg_sym_name(cg_symbol_case_camel, tmp, "", cname, NULL); // no prefix camel
+  bputc(tmp, ':');
 
   if (is_nullable(sem_type)) {
-    bprintf(tmp, "?");
+    bputc(tmp, '?');
   }
 
   switch (core_type_of(sem_type)) {
