@@ -534,6 +534,15 @@ create table backed (
   val text not null
 );
 
+-- TEST new backed table ok, ok to add backed tables with no create attributes even if we are on higher version
+-- + {create_table_stmt}: new_backed_table: { id: integer notnull primary_key, val: text notnull } backed
+-- - error:
+@attribute(cql:backed_by=backing)
+create table new_backed_table (
+  id int not null primary key,
+  val text not null
+);
+
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
 ------------------------------------------------------------------------------------------------------------

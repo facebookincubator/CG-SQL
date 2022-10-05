@@ -2479,6 +2479,43 @@ CREATE TABLE backed(
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:backed_by=backing)
+CREATE TABLE new_backed_table(
+  id INTEGER NOT NULL PRIMARY KEY,
+  val TEXT NOT NULL
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name backing}: ok
+  | {create_table_stmt}: new_backed_table: { id: integer notnull primary_key, val: text notnull } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name new_backed_table}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_not_null}: ok
+      |     | {col_attrs_pk}
+      |       | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: val: text notnull
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+            | | {name val}
+            | | {type_text}: text
+            | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok

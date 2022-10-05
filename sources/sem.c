@@ -23606,7 +23606,8 @@ static void sem_validate_all_tables_not_in_previous(ast_node *root) {
     Invariant(is_ast_create_table_stmt(ast));
 
     // no need to report on tables that are already in error state
-    if (!is_error(ast)) {
+    // backed tables are likewise exempted
+    if (!is_error(ast) && !is_backed(ast->sem->sem_type)) {
       EXTRACT_NOTNULL(create_table_name_flags, ast->left);
       EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
       EXTRACT_STRING(name, name_ast);
