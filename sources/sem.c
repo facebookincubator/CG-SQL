@@ -17080,8 +17080,14 @@ static void sem_param(ast_node *ast) {
 //     * for now punt on that, as the non-object cases are very valuable
 //  With all that done we just make a fake ast node that has the type we need in it
 //  and return that.  The type is the usual struct_type
+//
+// The "likeable_for" arg tells us if we need the result for proc arguments or
+// for a value cursor (or equivalent).  If it's proc args then we want to keep
+// the OUT arg bit of the arguments.  If it's for values we lose it and just
+// keep the procedure shape.
 static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeable_for) {
   Contract(is_ast_like(like_ast));
+  Contract(likeable_for == LIKEABLE_FOR_ARGS || likeable_for == LIKEABLE_FOR_VALUES);
 
   EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
   EXTRACT_STRING(like_name, name_ast);
@@ -17177,8 +17183,14 @@ error:
 // we only need the names, not even the types.  But we might need either.
 // (e.g. declare cursor X like Y needs the type info)
 //
+// We flow "likeable_for" through the search, it tells us if we need the result
+// for proc arguments or for a value cursor (or equivalent).  If it's proc args
+// then we want to keep the OUT bit of the arguments.  If it's for values
+// we lose it and just keep the type info.  This only matters if the source of shape
+// is ultimately procedure arguments
 cql_noexport ast_node *sem_find_shape_def_base(ast_node *like_ast, int32_t likeable_for) {
   Contract(is_ast_like(like_ast));
+  Contract(likeable_for == LIKEABLE_FOR_ARGS || likeable_for == LIKEABLE_FOR_VALUES);
 
   if (like_ast->right) {
     // from arguments form, only proc names allowed
@@ -17249,8 +17261,33 @@ error:
   return NULL;
 }
 
+// This is the main worker to create a shape for use in a like clause.  We're
+// going to get the base name -- the "foo" in "LIKE foo" -- and then if there are
+// qualifiers we evaluate those.  The qualifiers were first non-existent
+// (i.e. you could only get the exact named shape) and then extended so that you
+// could choose a subset of the columns by name e.g. "LIKE foo(x,y,z)" and
+// recently you can do "LIKE foo(-x, -y)" meaning everything but those two columns.
+//
+// This is also terribly handy for debugging because you could do something like:
+//
+// declare pk cursor like mytable(id1, id2);
+// fetch pk from data_cursor(like pk);
+// call printf("%s\n", cql_cursor_format(pk));
+//
+// or declare print_this cursor like mytable(-big_blob);  fetch etc.
+//
+// you can already do the above if you name the columns, but you can't make a general
+// purpose macro that does it for any pk.
+//
+// We flow "likeable_for" through the search, it tells us if we need the result
+// for proc arguments or for a value cursor (or equivalent).  If it's proc args
+// then we want to keep the OUT bit of the arguments.  If it's for values
+// we lose it and just keep the type info.  This only matters if the source of shape
+// is ultimately procedure arguments.
 cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_for) {
   Contract(is_ast_shape_def(shape_def));
+  Contract(likeable_for == LIKEABLE_FOR_ARGS || likeable_for == LIKEABLE_FOR_VALUES);
+
   EXTRACT_NOTNULL(like, shape_def->left);
   EXTRACT(shape_exprs, shape_def->right);
   bool_t *desired = NULL;
@@ -17262,6 +17299,7 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
   }
 
   if (shape_exprs) {
+    // at the moment we only have x and -x notation so duplicates don't make any sense
     if (!sem_verify_no_duplicate_shape_exprs(shape_exprs)) {
       goto error;
     }
@@ -21370,12 +21408,14 @@ static void sem_loop_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+// extracts the name from a name_list
 static CSTR name_from_name_list_node(ast_node *ast) {
   Contract(is_ast_name_list(ast));
   EXTRACT_STRING(name, ast->left);
   return name;
 }
 
+// extracts the name from a region_spec
 static CSTR name_from_region_list_node(ast_node *ast) {
   Contract(is_ast_region_list(ast));
   EXTRACT_NOTNULL(region_spec, ast->left);
@@ -21383,6 +21423,7 @@ static CSTR name_from_region_list_node(ast_node *ast) {
   return name;
 }
 
+// extracts the name from a shape_expr
 static CSTR name_from_shape_expr_node(ast_node *ast) {
   Contract(is_ast_shape_exprs(ast));
   EXTRACT_NOTNULL(shape_expr, ast->left);
@@ -21392,6 +21433,13 @@ static CSTR name_from_shape_expr_node(ast_node *ast) {
 
 typedef CSTR (*name_func)(ast_node *ast);
 
+// There are many cases where we have a list of things (which means you follow it
+// by going ->right at each node until null) where there are names in the left
+// payload.  The payload can be slightly different but this helps us to find
+// any duplicates regardless of where the name is.  You provide a function that
+// extracts the name from the left.  This is n^2 which ends up being mostly ok
+// because n is usually pretty small.  Like single digits.  If it ever matters
+// this could use a temporary name table to do the job.
 static bool_t sem_verify_no_duplicate_names_func(ast_node *list, name_func func) {
   Contract(list);
   Contract(func);
