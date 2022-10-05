@@ -3049,6 +3049,29 @@ static void gen_shape_def_base(ast_node *ast) {
   }
 }
 
+static void gen_shape_expr(ast_node *ast) {
+  Contract(is_ast_shape_expr(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  if (!ast->right) {
+    gen_printf("-");
+  }
+  gen_printf("%s", name);
+}
+
+static void gen_shape_exprs(ast_node *ast) {
+ Contract(is_ast_shape_exprs(ast));
+ 
+  while (ast) {
+    Contract(is_ast_shape_exprs(ast));
+    gen_shape_expr(ast->left);
+    if (ast->right) {
+      gen_printf(", ");
+    }
+    ast = ast->right;
+  }
+}
+
 static void gen_shape_def(ast_node *ast) {
   Contract(is_ast_shape_def(ast));
   EXTRACT_NOTNULL(like, ast->left);
@@ -3056,7 +3079,7 @@ static void gen_shape_def(ast_node *ast) {
 
   if (ast->right) {
     gen_printf("(");
-    gen_name_list(ast->right);
+    gen_shape_exprs(ast->right);
     gen_printf(")");
   }
 }

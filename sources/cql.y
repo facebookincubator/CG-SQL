@@ -307,7 +307,7 @@ static void cql_reset_globals(void);
 %type <aval> version_annotation
 %type <aval> while_stmt
 %type <aval> enforce_strict_stmt enforce_normal_stmt enforce_reset_stmt enforce_push_stmt enforce_pop_stmt
-%type <aval> enforcement_options shape_def shape_def_base
+%type <aval> enforcement_options shape_def shape_def_base shape_expr shape_exprs
 %type <aval> blob_get_key_type_stmt blob_get_val_type_stmt blob_get_key_stmt blob_get_val_stmt
 %type <aval> blob_create_key_stmt blob_create_val_stmt blob_update_key_stmt blob_update_val_stmt
 %type <aval> opt_use_offset
@@ -654,9 +654,19 @@ check_def:
   | CHECK '(' expr ')'  { $check_def = new_ast_check_def(NULL, $expr); }
   ;
 
+shape_exprs[result] :
+  shape_expr ',' shape_exprs[next] { $result = new_ast_shape_exprs($shape_expr, $next); }
+  | shape_expr { $result = new_ast_shape_exprs($shape_expr, NULL); }
+  ;
+
+shape_expr:
+  name  { $shape_expr = new_ast_shape_expr($name, $name); }
+  | '-' name  { $shape_expr = new_ast_shape_expr($name, NULL); }
+  ;
+
 shape_def:
     shape_def_base  { $shape_def = new_ast_shape_def($shape_def_base, NULL); }
-  | shape_def_base '(' name_list ')' { $shape_def = new_ast_shape_def($shape_def_base, $name_list); }
+  | shape_def_base '(' shape_exprs ')' { $shape_def = new_ast_shape_def($shape_def_base, $shape_exprs); }
   ;
 
 shape_def_base:

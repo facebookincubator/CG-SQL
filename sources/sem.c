@@ -215,6 +215,7 @@ static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
 static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
 static void sem_verify_no_anon_columns(ast_node *ast);
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
+static bool_t sem_verify_no_duplicate_shape_exprs(ast_node *shape_exprs);
 static sem_t *find_mutable_type(CSTR name, CSTR scope);
 static void sem_set_notnull_improved(CSTR name, CSTR scope);
 static void sem_unset_notnull_improved(CSTR name, CSTR scope);
@@ -17251,38 +17252,42 @@ error:
 cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_for) {
   Contract(is_ast_shape_def(shape_def));
   EXTRACT_NOTNULL(like, shape_def->left);
-  EXTRACT(name_list, shape_def->right);
+  EXTRACT(shape_exprs, shape_def->right);
+  bool_t *desired = NULL;
+  ast_node *result = NULL;
 
   ast_node *base_shape = sem_find_shape_def_base(like, likeable_for);
   if (!base_shape) {
     goto error;
   }
 
-  if (name_list) {
-    if (!sem_verify_no_duplicate_names(name_list)) {
+  if (shape_exprs) {
+    if (!sem_verify_no_duplicate_shape_exprs(shape_exprs)) {
       goto error;
     }
 
     sem_struct *sptr_old = base_shape->sem->sptr;
     Invariant(sptr_old);
 
+    uint32_t old_count = sptr_old->count;
+    bool_t adding = !!shape_exprs->left->right;
 
-    ast_node *iter = name_list;
-    uint32_t count = 0;
-
-    while (iter) {
-      count++;
-      iter = iter->right;
+    // set the desired columns to all on or all off depending on if we are adding or not
+    desired = (bool_t *)malloc(old_count);
+    for (int32_t i = 0; i < old_count; i++) {
+       desired[i] = !adding;
     }
 
-    Invariant(count >= 1);
-    sem_struct *sptr_new = new_sem_struct("select", count);
+    ast_node *iter = shape_exprs;
 
-    int32_t inew = 0;
-    iter = name_list;
-
+    // walk the shape expressions to see which columns we want or do not want
     while (iter) {
-      EXTRACT_STRING(name, iter->left);
+      EXTRACT_STRING(name, iter->left->left);
+      bool_t adding_item = !!iter->left->right;
+      if (adding != adding_item) {
+        report_error(iter->left, "CQL0494: mixing adding and removing columns from a shape", name);
+        goto error;
+      }
 
       int32_t iold = find_col_in_sptr(sptr_old, name);
       if (iold < 0) {
@@ -17290,26 +17295,57 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
         goto error;
       }
 
-      sptr_new->names[inew] = sptr_old->names[iold];
-      sptr_new->semtypes[inew] = sptr_old->semtypes[iold];
-      sptr_new->kinds[inew] = sptr_old->kinds[iold];
+      desired[iold] = adding;
       iter = iter->right;
-      inew++;
+    }
+
+    // figure out how many columns in the desired result
+    uint32_t count = 0;
+    for (int32_t i = 0; i < old_count; i++) {
+      count += desired[i];
+    }
+
+    if (count == 0) {
+      report_error(shape_exprs, "CQL0495: no columns were selected in the LIKE expression", NULL);
+      goto error;
+    }
+
+    sem_struct *sptr_new = new_sem_struct("select", count);
+
+    int32_t inew = 0;
+
+    // now make the new structure based on the desired columns
+    for (int32_t iold = 0; iold < old_count; iold++) {
+      if (desired[iold]) {
+        sptr_new->names[inew] = sptr_old->names[iold];
+        sptr_new->semtypes[inew] = sptr_old->semtypes[iold];
+        sptr_new->kinds[inew] = sptr_old->kinds[iold];
+        inew++;
+      }
     }
 
     AST_REWRITE_INFO_SET(base_shape->lineno, base_shape->filename);
-    ast_node *result = new_ast_shape_def(NULL, NULL);
+    result = new_ast_shape_def(NULL, NULL);
     result->sem = new_sem(SEM_TYPE_STRUCT);
     result->sem->sptr = sptr_new;
     AST_REWRITE_INFO_RESET();
-    return result;
+    goto cleanup;
   }
-
-  return base_shape;
+  else {
+    result = base_shape;
+    goto cleanup;
+  }
 
 error:
   record_error(shape_def);
-  return NULL;
+  result = NULL;
+
+cleanup:
+  if (desired) {
+    free(desired);
+  }
+
+  return result;
 }
 
 // All we have to do here is walk the parameter list and use the helper above
@@ -21347,6 +21383,13 @@ static CSTR name_from_region_list_node(ast_node *ast) {
   return name;
 }
 
+static CSTR name_from_shape_expr_node(ast_node *ast) {
+  Contract(is_ast_shape_exprs(ast));
+  EXTRACT_NOTNULL(shape_expr, ast->left);
+  EXTRACT_STRING(name, shape_expr->left);
+  return name;
+}
+
 typedef CSTR (*name_func)(ast_node *ast);
 
 static bool_t sem_verify_no_duplicate_names_func(ast_node *list, name_func func) {
@@ -21378,6 +21421,14 @@ static bool_t sem_verify_no_duplicate_names_func(ast_node *list, name_func func)
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list) {
   Contract(is_ast_name_list(name_list));
   return sem_verify_no_duplicate_names_func(name_list, name_from_name_list_node);
+}
+
+// There are many cases where a list of names must have no duplicates;
+// This helper walks the list and reports an error if there are two
+// names that are case-insensitively the same.
+static bool_t sem_verify_no_duplicate_shape_exprs(ast_node *shape_exprs) {
+  Contract(is_ast_shape_exprs(shape_exprs));
+  return sem_verify_no_duplicate_names_func(shape_exprs, name_from_shape_expr_node);
 }
 
 // Just like the above except it's a region list (so there is an extra node in the AST)

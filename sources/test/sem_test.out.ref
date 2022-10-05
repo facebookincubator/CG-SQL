@@ -7086,33 +7086,41 @@ The statement ending at line XXXX
 
 DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, id);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
+test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0206: duplicate name in list 'id'
 
   {declare_cursor_like_name}: err
   | {name reduced_cursor}
   | {shape_def}: err
     | {like}: ok
     | | {name extended_cursor}
-    | {name_list}
-      | {name id}
-      | {name_list}
-        | {name id}
+    | {shape_exprs}
+      | {shape_expr}
+      | | {name id}
+      | | {name id}
+      | {shape_exprs}
+        | {shape_expr}
+          | {name id}
+          | {name id}
 
 The statement ending at line XXXX
 
 DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, not_a_valid_name);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_valid_name'
+test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0069: name not found 'not_a_valid_name'
 
   {declare_cursor_like_name}: err
   | {name reduced_cursor}
   | {shape_def}: err
     | {like}: ok
     | | {name extended_cursor}
-    | {name_list}
-      | {name id}
-      | {name_list}
-        | {name not_a_valid_name}
+    | {shape_exprs}
+      | {shape_expr}
+      | | {name id}
+      | | {name id}
+      | {shape_exprs}
+        | {shape_expr}
+          | {name not_a_valid_name}
+          | {name not_a_valid_name}
 
 The statement ending at line XXXX
 
@@ -7123,10 +7131,73 @@ DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, cost);
   | {shape_def}: select: { id: integer<some_key>, cost: real<dollars> }
     | {like}: ok
     | | {name extended_cursor}
-    | {name_list}
-      | {name id}
-      | {name_list}
-        | {name cost}
+    | {shape_exprs}
+      | {shape_expr}
+      | | {name id}
+      | | {name id}
+      | {shape_exprs}
+        | {shape_expr}
+          | {name cost}
+          | {name cost}
+
+The statement ending at line XXXX
+
+DECLARE reduced_cursor2 CURSOR LIKE extended_cursor(-id, cost);
+
+test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0494: mixing adding and removing columns from a shape 'cost'
+
+  {declare_cursor_like_name}: err
+  | {name reduced_cursor2}
+  | {shape_def}: err
+    | {like}: ok
+    | | {name extended_cursor}
+    | {shape_exprs}
+      | {shape_expr}
+      | | {name id}
+      | {shape_exprs}
+        | {shape_expr}
+          | {name cost}
+          | {name cost}
+
+The statement ending at line XXXX
+
+DECLARE reduced_cursor3 CURSOR LIKE extended_cursor(-id);
+
+  {declare_cursor_like_name}: reduced_cursor3: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+  | {name reduced_cursor3}: reduced_cursor3: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
+  | {shape_def}: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
+    | {like}: ok
+    | | {name extended_cursor}
+    | {shape_exprs}
+      | {shape_expr}
+        | {name id}
+
+The statement ending at line XXXX
+
+DECLARE reduced_cursor4 CURSOR LIKE extended_cursor(-id, -xx, -yy, -value, -cost);
+
+test/sem_test.sql:XXXX:1: error: in shape_exprs : CQL0495: no columns were selected in the LIKE expression
+
+  {declare_cursor_like_name}: err
+  | {name reduced_cursor4}
+  | {shape_def}: err
+    | {like}: ok
+    | | {name extended_cursor}
+    | {shape_exprs}
+      | {shape_expr}
+      | | {name id}
+      | {shape_exprs}
+        | {shape_expr}
+        | | {name xx}
+        | {shape_exprs}
+          | {shape_expr}
+          | | {name yy}
+          | {shape_exprs}
+            | {shape_expr}
+            | | {name value}
+            | {shape_exprs}
+              | {shape_expr}
+                | {name cost}
 
 The statement ending at line XXXX
 
@@ -92896,8 +92967,10 @@ END;
       | | {shape_def}: select: { x: integer }
       |   | {like}: ok
       |   | | {name test_child}
-      |   | {name_list}
-      |     | {name x}
+      |   | {shape_exprs}
+      |     | {shape_expr}
+      |       | {name x}
+      |       | {name x}
       | {let_stmt}: __partition__0: object<partitioning> notnull variable
       | | {name __partition__0}: __partition__0: object<partitioning> notnull variable
       | | {call}: object<partitioning> notnull create_func
@@ -93032,8 +93105,10 @@ END;
       | | {shape_def}: select: { x: integer }
       |   | {like}: ok
       |   | | {name test_child}
-      |   | {name_list}
-      |     | {name x}
+      |   | {shape_exprs}
+      |     | {shape_expr}
+      |       | {name x}
+      |       | {name x}
       | {let_stmt}: __partition__1: object<partitioning> notnull variable
       | | {name __partition__1}: __partition__1: object<partitioning> notnull variable
       | | {call}: object<partitioning> notnull create_func

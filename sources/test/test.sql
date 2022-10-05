@@ -1629,6 +1629,8 @@ create table unary_plus_default_value(
 @blob_update_key bupdatekey_offs offset;
 @blob_update_val bupdateval_offs offset;
 
+declare proc foo(like X(-x));
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

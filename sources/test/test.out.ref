@@ -1793,6 +1793,8 @@ CREATE TABLE unary_plus_default_value(
 
 @BLOB_UPDATE_VAL bupdateval_offs OFFSET;
 
+DECLARE PROC foo (LIKE X(-x));
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

@@ -1895,6 +1895,24 @@ declare reduced_cursor cursor like extended_cursor(id, not_a_valid_name);
 -- - error:
 declare reduced_cursor cursor like extended_cursor(id, cost);
 
+-- TEST: try to make a shape with both additive and subtractive form
+-- + {declare_cursor_like_name}: err
+-- + {shape_def}: err
+-- + error: % mixing adding and removing columns from a shape 'cost'
+-- +1 error:
+declare reduced_cursor2 cursor like extended_cursor(-id, cost);
+
+-- TEST: try to make a cursor by removing columns
+-- + {shape_def}: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
+-- - error:
+declare reduced_cursor3 cursor like extended_cursor(-id);
+
+-- TEST: try to make a cursor by removing columns but remove everything
+-- + {declare_cursor_like_name}: err
+-- + error: % no columns were selected in the LIKE expression
+-- +1 error:
+declare reduced_cursor4 cursor like extended_cursor(-id, -xx, -yy, -value, -cost);
+
 -- TEST: try to create a duplicate cursor
 -- + error: % duplicate variable name in the same scope 'my_cursor'
 -- +1 error:

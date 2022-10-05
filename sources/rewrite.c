@@ -1840,6 +1840,19 @@ rewrite_or_fail:
 
 static int32_t cursor_base;
 
+static ast_node *shape_exprs_from_name_list(ast_node *ast) {
+  if (!ast) {
+    return NULL;
+  }
+
+  Contract(is_ast_name_list(ast));
+
+  // the additive form of shape expression
+  ast_node *shape_expr = new_ast_shape_expr(ast->left, ast->left);
+
+  return new_ast_shape_exprs(shape_expr, shape_exprs_from_name_list(ast->right));
+}
+
 // This creates the statements for each child partition creation
 static ast_node *rewrite_child_partition_creation(ast_node *child_results, int32_t cursor_num, ast_node *tail) {
   if (!child_results) {
@@ -1876,7 +1889,7 @@ static ast_node *rewrite_child_partition_creation(ast_node *child_results, int32
             new_ast_str(proc_name),
             NULL
           ),
-          name_list
+          shape_exprs_from_name_list(name_list)
         )
       ),
     new_ast_stmt_list(
