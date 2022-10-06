@@ -943,5 +943,6 @@ AST(blob_create_val_stmt)
 AST(blob_update_key_stmt)
 AST(blob_update_val_stmt)
 AST(seed_stub)
+AST(str_chain)
 
 #pragma clang diagnostic pop

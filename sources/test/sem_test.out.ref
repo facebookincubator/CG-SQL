@@ -77523,6 +77523,23 @@ END;
 
 The statement ending at line XXXX
 
+CREATE PROC string_chain ()
+BEGIN
+  LET z := "abc\n123\r\n\x02lmnop''";
+END;
+
+  {create_proc_stmt}: ok
+  | {name string_chain}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: z: text notnull variable
+        | {name z}: z: text notnull variable
+        | {strlit 'abc
+123
+lmnop'''''}: text notnull
+
+The statement ending at line XXXX
+
 DECLARE PROC requires_out_text_notnull (OUT t TEXT NOT NULL);
 
   {declare_proc_stmt}: ok
