@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Sep 21 00:38:28 2022
+// Snapshot as of Wed Oct  5 13:02:03 2022
 
 
 const PREC = {
@@ -57,7 +57,9 @@ module.exports = grammar({
     col_key_list: $ => choice($.col_key_def, seq($.col_key_def, ',', $.col_key_list)),
     col_key_def: $ => choice($.col_def, $.pk_def, $.fk_def, $.unq_def, $.check_def, $.shape_def),
     check_def: $ => choice(seq($.CONSTRAINT, $.name, $.CHECK, '(', $.expr, ')'), seq($.CHECK, '(', $.expr, ')')),
-    shape_def: $ => choice($.shape_def_base, seq($.shape_def_base, '(', $.name_list, ')')),
+    shape_exprs: $ => choice(seq($.shape_expr, ',', $.shape_exprs), $.shape_expr),
+    shape_expr: $ => choice($.name, seq('-', $.name)),
+    shape_def: $ => choice($.shape_def_base, seq($.shape_def_base, '(', $.shape_exprs, ')')),
     shape_def_base: $ => choice(seq($.LIKE, $.name), seq($.LIKE, $.name, $.ARGUMENTS)),
     col_name: $ => $.name,
     misc_attr_key: $ => choice($.name, seq($.name, ':', $.name)),
@@ -101,7 +103,7 @@ module.exports = grammar({
     const_expr: $ => seq($.CONST, '(', $.expr, ')'),
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
-    call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause))),
+    call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.basic_expr, ':', $.name, '(', optional($.arg_list), ')')),
     basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')')),
     IS_NOT_TRUE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('true'))),
     IS_NOT_FALSE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('false'))),

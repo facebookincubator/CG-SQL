@@ -9,6 +9,9 @@ s/[[:<:]]IS_TEMP[[:>:]]/'"isTemp"' ':'/g
 s/[[:<:]]IF_NOT_EXISTS[[:>:]]/'"ifNotExists"' ':'/g
 s/[[:<:]]WITHOUT_ROWID[[:>:]]/'"withoutRowid"' ':'/g
 s/[[:<:]]IS_ADDED[[:>:]]/'"isAdded"' ':'/g
+s/[[:<:]]IS_BACKED[[:>:]]/'"isBacked"' ':'/g
+s/[[:<:]]IS_BACKING[[:>:]]/'"isBacking"' ':'/g
+s/[[:<:]]TYPE_HASH[[:>:]]/'"typeHash"' ':'/g
 s/[[:<:]]ADDED_VERSION[[:>:]]/'"addedVersion"' ':'/g
 s/[[:<:]]ADDED_MIGRATION_PROC[[:>:]]/'"addedMigrationProc"' ':'/g
 s/[[:<:]]IS_DELETED[[:>:]]/'"isDeleted"' ':'/g

@@ -36,6 +36,9 @@ int fileno(FILE *);
 \"moduleArgs\"[ \t]*:            { return MODULE_ARGS; }
 \"argOrigin\"[ \t]*:             { return ARG_ORIGIN; }
 \"isTemp\"[ \t]*:                { return IS_TEMP; }
+\"isBacked\"[ \t]*:              { return IS_BACKED; }
+\"isBacking\"[ \t]*:             { return IS_BACKING; }
+\"typeHash\"[ \t]*:              { return TYPE_HASH; }
 \"ifNotExists\"[ \t]*:           { return IF_NOT_EXISTS; }
 \"withoutRowid\"[ \t]*:          { return WITHOUT_ROWID; }
 \"isAdded\"[ \t]*:               { return IS_ADDED; }

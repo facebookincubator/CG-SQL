@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Sep 21 00:38:28 PDT 2022
+Snapshot as of Wed Oct  5 13:02:03 PDT 2022
 
 ### Operators and Literals
 
@@ -353,9 +353,19 @@ check_def:
   | "CHECK" '(' expr ')'
   ;
 
+shape_exprs :
+  shape_expr ',' shape_exprs
+  | shape_expr
+  ;
+
+shape_expr:
+  name
+  | '-' name
+  ;
+
 shape_def:
     shape_def_base
-  | shape_def_base '(' name_list ')'
+  | shape_def_base '(' shape_exprs ')'
   ;
 
 shape_def_base:
@@ -623,6 +633,7 @@ raise_expr:
 call:
   name '(' arg_list ')' opt_filter_clause
   | name '(' "DISTINCT" arg_list ')' opt_filter_clause
+  | basic_expr ':' name '(' arg_list ')'
   ;
 
 basic_expr:

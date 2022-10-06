@@ -326,6 +326,7 @@ typedef struct col_info {
   // Inputs
   ast_node *def;
   ast_node *attrs;
+  bool_t is_backed;  // true if the table we're emitting is backed
 
   // We write to these
   charbuf *col_pk;
@@ -723,6 +724,10 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
     }
   }
 
+  if (info->is_backed) {
+    bprintf(output, ",\n\"typeHash\" : %s", get_field_hash(name, sem_type));
+  }
+
   // end with mandatory columns, this makes the json validation with yacc a little easier
   bprintf(output, ",\n\"isPrimaryKey\" : %d", !!(sem_type & SEM_TYPE_PK));
   bprintf(output, ",\n\"isUniqueKey\" : %d", !!(sem_type & SEM_TYPE_UK));
@@ -995,7 +1000,9 @@ static void cg_json_check_def(charbuf *output, ast_node *def) {
 // That's ok, those are just buffered up and emitted with each section.
 // All this several passes business just results in for sure all the column direct
 // stuff comes before non column related stuff in each section.
-static void cg_json_col_key_list(charbuf *output, ast_node *list) {
+static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
+  Contract(is_ast_create_table_stmt(ast));
+  EXTRACT_ANY(list, ast->right);
   Contract(is_ast_col_key_list(list));
 
   CHARBUF_OPEN(col_pk);
@@ -1006,6 +1013,7 @@ static void cg_json_col_key_list(charbuf *output, ast_node *list) {
   info.col_pk = &col_pk;
   info.col_uk = &col_uk;
   info.col_fk = &col_fk;
+  info.is_backed = is_backed(ast->sem->sem_type);
 
   {
     bprintf(output, "\"columns\" : [\n");
@@ -1591,6 +1599,14 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
      bprintf(output, ",\n\"resubscribedVersion\" : %d", ast->sem->resub_version);
   }
 
+  if (is_backing(ast->sem->sem_type)) {
+    bprintf(output, ",\n\"isBacking\" : 1");
+  }
+  else if (is_backed(ast->sem->sem_type)) {
+    bprintf(output, ",\n\"isBacked\" : 1");
+    bprintf(output, ",\n\"typeHash\" : %s", gen_type_hash(ast));
+  }
+
   if (ast->sem->region) {
     cg_json_emit_region_info(output, ast);
   }
@@ -1639,7 +1655,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   }
 
   COMMA;
-  cg_json_col_key_list(output, col_key_list);
+  cg_json_col_key_list(output, ast);
 
   END_INDENT(table);
   END_LIST;

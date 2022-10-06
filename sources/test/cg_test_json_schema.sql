@@ -668,6 +668,28 @@ create table recreated_in_a_group(
  id integer
 ) @recreate(my_recreate_group);
 
+-- TEST: emit backing table
+-- + "isBacking" : 1,
+@attribute(cql:backing_table)
+create table backing(
+  k blob primary key,
+  v blob not null
+);
+
+-- TEST: emit backed table
+-- + "isBacked" : 1,
+-- type hash
+-- + "typeHash" : 2105552408096159860,
+-- field hashes
+-- + "typeHash" : -5886701367367956936,
+-- + "typeHash" : -6639502068221071091,
+-- + "typeHash" : 4276741016019094617,
+@attribute(cql:backed_by=backing)
+create table backed(
+  id integer primary key,
+  name text not null,
+  details text
+);
 
 -- TEST: insert with select is not a simple insert form
 -- + "name" : "insert_with_select",

@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Sep 21 00:38:28 PDT 2022
+Snapshot as of Wed Oct  5 13:02:03 PDT 2022
 
 ### Rules
 
@@ -50,6 +50,12 @@ opt_tables: | tables
 tables: table | table ',' tables
   ;
 
+opt_backing_details: | '"isBacking"' ':' '1' ',' | '"isBacked"' ':' '1' ',' '"typeHash"' ':' num_literal ','
+  ;
+
+opt_type_hash: | '"typeHash"' ':' num_literal ','
+  ;
+
 table: '{'
        '"name"' ':' STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
@@ -64,6 +70,7 @@ table: '{'
        opt_recreate_group_name
        opt_unsub_version
        opt_resub_version
+       opt_backing_details
        opt_region_info
        opt_table_indices
        opt_attributes
@@ -195,6 +202,7 @@ column: '{'
         opt_default_value
         opt_collate
         opt_check_expr
+        opt_type_hash
         '"isPrimaryKey"' ':' BOOL_LITERAL ','
         '"isUniqueKey"' ':' BOOL_LITERAL ','
         '"isAutoIncrement"' ':' BOOL_LITERAL

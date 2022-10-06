@@ -9742,7 +9742,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Sep 21 00:38:28 PDT 2022
+Snapshot as of Wed Oct  5 13:02:03 PDT 2022
 
 ### Operators and Literals
 
@@ -10082,9 +10082,19 @@ check_def:
   | "CHECK" '(' expr ')'
   ;
 
+shape_exprs :
+  shape_expr ',' shape_exprs
+  | shape_expr
+  ;
+
+shape_expr:
+  name
+  | '-' name
+  ;
+
 shape_def:
     shape_def_base
-  | shape_def_base '(' name_list ')'
+  | shape_def_base '(' shape_exprs ')'
   ;
 
 shape_def_base:
@@ -10352,6 +10362,7 @@ raise_expr:
 call:
   name '(' arg_list ')' opt_filter_clause
   | name '(' "DISTINCT" arg_list ')' opt_filter_clause
+  | basic_expr ':' name '(' arg_list ')'
   ;
 
 basic_expr:
@@ -14899,12 +14910,12 @@ The attribute itself does nothing other than hopefully cause you to read this do
 
 ----
 
-### CQL0393: user function cannot appear in a constraint expression 'function_name'
+### CQL0393: not deterministic user function cannot appear in a constraint expression 'function_name'
 
 `CHECK` expressions and partial indexes (`CREATE INDEX` with a `WHERE` clause) require that the expressions
-be deterministic.  User defined functions may or may not be deterministic. Since there is at this time no way
-to declare them one way or the otherw UDFs cannot appear inside these constraints to avoid potentially
-weird bugs.  This is likely to change in the future when there is a way to declare deterministic UDFs.
+be deterministic.  User defined functions may or may not be deterministic.
+
+Use @attribute(cql:deterministic) on a UDF declaration (declare select function...) to mark it deterministic and allow its use in an index.
 
 ----
 
@@ -16101,6 +16112,76 @@ This error indicates that the named table is not marked as a backed table.
 
 The named table is a backed table, but it does not have the indicated column.
 
+### CQL0490: argument must be table.column where table is a backed table 'function"
+
+The database blob access functions `cql_blob_get`, `cql_blob_create`, `cql_blob_update` all allow you to specify the backed
+table name and column you are trying to read/create/update.  The named function was called with a table.column combination
+where the table is not a backed table, hence the call is invalid.  Note that normally this error doesn't happen
+because these functions are typically called by CQL itself as part of the rewriting process for backed tables.  However it is
+possible to use them manually, hence they are error checked.
+
+
+### CQL0491: argument 1 must be a table name that is a backed table 'cql_blob_create'
+
+When using the `cql_blob_create` helper function, the first argument must be a valid backed table (i.e. one that
+was marked with `@attribute(cql:backed_by=some_backing_table))`.  The type signature of this table is used
+to create a hash valid for the type of the blob that is created.  This error indicates that the first argument
+is not even an identifier, much less a table name that is backed.  There are more specific errors if the table
+is not found or the table is not backed.  Note that normally this error doesn't happen because this functions is
+typically called by CQL itself as part of the rewriting process for backed tables.  However it is possible
+to `cql_blob_create` manually, hence it is error checked.
+
+### CQL0492: backed tables are not supported in the upsert form (yet)
+
+The upsert form does not yet support backed tables.  This work is planned and should appear soon.
+
+### CQL0493: backed storage tables may not be used in indexes/triggers/drop 'table_name'
+
+The indicated table name was marked as backed storage.  Therefore it does not have a physical manifestation,
+and therefore it cannot be used in an index or in a trigger.  You may be able to get the index or trigger
+you want by creating an index on the backing storage and then using the blob access functions to index
+a column or check colulmns in a trigger.  For instance this index is pretty normal:
+
+```
+@attribute(cql:backing_table)
+create table backing (
+  k blob primary key,
+  v blob not null
+);
+
+create index backing_type_index on backing(cql_blob_get_type(k));
+```
+
+This gives you a useful index on the type field of the blob for all backed tables that use `backing_table`.
+
+But generally, physical operations like indices, triggers, and drop are not applicable to backed tables.
+
+### CQL0494: mixing adding and removing columns from a shape 'name'
+
+When selecting columns from a shape you can use this form
+
+```
+LIKE some_shape(name1, name2)
+```
+
+to extract the named columns or this form
+
+```
+LIKE some_shape(-name1, -name2)
+```
+
+to extract everything but the named columns.  You can't mix the positive and negative forms
+
+### CQL0495: no columns were selected in the LIKE expression
+
+An expression that is supposed to select some columns from a shape such as
+
+```
+LIKE some_shape(-name1, -name2)
+```
+
+ended up removing all the columns from `some_shape`.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -16113,7 +16194,7 @@ The named table is a backed table, but it does not have the indicated column.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Sep 21 00:38:28 PDT 2022
+Snapshot as of Wed Oct  5 13:02:03 PDT 2022
 
 ### Rules
 
@@ -16151,6 +16232,12 @@ opt_tables: | tables
 tables: table | table ',' tables
   ;
 
+opt_backing_details: | '"isBacking"' ':' '1' ',' | '"isBacked"' ':' '1' ',' '"typeHash"' ':' num_literal ','
+  ;
+
+opt_type_hash: | '"typeHash"' ':' num_literal ','
+  ;
+
 table: '{'
        '"name"' ':' STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
@@ -16165,6 +16252,7 @@ table: '{'
        opt_recreate_group_name
        opt_unsub_version
        opt_resub_version
+       opt_backing_details
        opt_region_info
        opt_table_indices
        opt_attributes
@@ -16296,6 +16384,7 @@ column: '{'
         opt_default_value
         opt_collate
         opt_check_expr
+        opt_type_hash
         '"isPrimaryKey"' ':' BOOL_LITERAL ','
         '"isUniqueKey"' ':' BOOL_LITERAL ','
         '"isAutoIncrement"' ':' BOOL_LITERAL
@@ -19328,3 +19417,6 @@ unique to your runtime.
 
 There are tracing macros to help with debugability.  Providing some
 useful versions of those can be of great help in production environments.
+
+
+

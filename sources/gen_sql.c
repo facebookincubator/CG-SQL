@@ -1109,6 +1109,19 @@ static void gen_append_field_desc(charbuf *tmp, CSTR cname, sem_t sem_type) {
   }
 }
 
+// This is the same as the standard field hash but it doesn't emit it
+// to an output stream and it takes ad hoc parameters, suitable for external
+// callers but otherwise the same.  They could be folded but there's nothing
+// to fold really other than the sha256 stuff which is already folded...
+cql_noexport CSTR get_field_hash(CSTR name, sem_t sem_type) {
+  CHARBUF_OPEN(tmp);
+  gen_append_field_desc(&tmp, name, sem_type);
+  int64_t hash = sha256_charbuf(&tmp);
+  CSTR result = dup_printf("%lld", (llint_t)hash);
+  CHARBUF_CLOSE(tmp);
+  return result;
+}
+
 // This is only called when doing for_sqlite output which
 // presumes that semantic analysis has already happened. Its
 // otherwise meaningless.  There must also be live blob mappings
@@ -3061,7 +3074,7 @@ static void gen_shape_expr(ast_node *ast) {
 
 static void gen_shape_exprs(ast_node *ast) {
  Contract(is_ast_shape_exprs(ast));
- 
+
   while (ast) {
     Contract(is_ast_shape_exprs(ast));
     gen_shape_expr(ast->left);

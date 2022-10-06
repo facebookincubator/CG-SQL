@@ -2259,7 +2259,7 @@
          <ul>
             <li><a href="#col_key_def" title="col_key_def">col_key_def</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="shape_def">shape_def:</a></p><svg width="419" height="69">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="shape_expr">shape_expr:</a></p><svg width="201" height="69">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -2290,23 +2290,74 @@
   </style>
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon><a href="#shape_def_base" title="shape_def_base">
-            <rect x="31" y="3" width="126" height="32"></rect>
-            <rect x="29" y="1" width="126" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="39" y="21">shape_def_base</text></a><rect x="197" y="35" width="26" height="32" rx="10"></rect>
-         <rect x="195" y="33" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="205" y="53">(</text><a href="#name_list" title="name_list">
-            <rect x="243" y="35" width="82" height="32"></rect>
-            <rect x="241" y="33" width="82" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="251" y="53">name_list</text></a><rect x="345" y="35" width="26" height="32" rx="10"></rect>
-         <rect x="343" y="33" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="353" y="53">)</text>
-         <path class="line" d="m17 17 h2 m0 0 h10 m126 0 h10 m20 0 h10 m0 0 h184 m-214 0 h20 m194 0 h20 m-234 0 q10 0 10 10 m214 0 q0 -10 10 -10 m-224 10 v12 m214 0 v-12 m-214 12 q0 10 10 10 m194 0 q10 0 10 -10 m-204 10 h10 m26 0 h10 m0 0 h10 m82 0 h10 m0 0 h10 m26 0 h10 m23 -32 h-3"></path>
-         <polygon points="409 17 417 13 417 21"></polygon>
-         <polygon points="409 17 401 13 401 21"></polygon></svg><p>
+         <polygon points="17 17 9 13 9 21"></polygon>
+         <rect x="51" y="35" width="26" height="32" rx="10"></rect>
+         <rect x="49" y="33" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="53">-</text><a href="#name" title="name">
+            <rect x="117" y="3" width="56" height="32"></rect>
+            <rect x="115" y="1" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="125" y="21">name</text></a><path class="line" d="m17 17 h2 m20 0 h10 m0 0 h36 m-66 0 h20 m46 0 h20 m-86 0 q10 0 10 10 m66 0 q0 -10 10 -10 m-76 10 v12 m66 0 v-12 m-66 12 q0 10 10 10 m46 0 q10 0 10 -10 m-56 10 h10 m26 0 h10 m20 -32 h10 m56 0 h10 m3 0 h-3"></path>
+         <polygon points="191 17 199 13 199 21"></polygon>
+         <polygon points="191 17 183 13 183 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#shape_expr" title="shape_expr">shape_expr</a></div>
+               <div>         ::= '-'? <a href="#name" title="name">name</a></div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#shape_def" title="shape_def">shape_def</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="shape_def">shape_def:</a></p><svg width="471" height="97">
+         <defs>
+            <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+         </defs>
+         <polygon points="9 61 1 57 1 65"></polygon>
+         <polygon points="17 61 9 57 9 65"></polygon><a href="#shape_def_base" title="shape_def_base">
+            <rect x="31" y="47" width="126" height="32"></rect>
+            <rect x="29" y="45" width="126" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="39" y="65">shape_def_base</text></a><rect x="197" y="47" width="26" height="32" rx="10"></rect>
+         <rect x="195" y="45" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="205" y="65">(</text><a href="#shape_expr" title="shape_expr">
+            <rect x="263" y="47" width="94" height="32"></rect>
+            <rect x="261" y="45" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="271" y="65">shape_expr</text></a><rect x="263" y="3" width="24" height="32" rx="10"></rect>
+         <rect x="261" y="1" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="271" y="21">,</text>
+         <rect x="397" y="47" width="26" height="32" rx="10"></rect>
+         <rect x="395" y="45" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="405" y="65">)</text>
+         <path class="line" d="m17 61 h2 m0 0 h10 m126 0 h10 m20 0 h10 m26 0 h10 m20 0 h10 m94 0 h10 m-134 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -24 q0 -10 10 -10 m114 44 l20 0 m-20 0 q10 0 10 -10 l0 -24 q0 -10 -10 -10 m-114 0 h10 m24 0 h10 m0 0 h70 m20 44 h10 m26 0 h10 m-266 0 h20 m246 0 h20 m-286 0 q10 0 10 10 m266 0 q0 -10 10 -10 m-276 10 v14 m266 0 v-14 m-266 14 q0 10 10 10 m246 0 q10 0 10 -10 m-256 10 h10 m0 0 h236 m23 -34 h-3"></path>
+         <polygon points="461 61 469 57 469 65"></polygon>
+         <polygon points="461 61 453 57 453 65"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#shape_def" title="shape_def">shape_def</a></div>
-               <div>         ::= <a href="#shape_def_base" title="shape_def_base">shape_def_base</a> ( '(' <a href="#name_list" title="name_list">name_list</a> ')' )?</div></code></div>
+               <div>         ::= <a href="#shape_def_base" title="shape_def_base">shape_def_base</a> ( '(' <a href="#shape_expr" title="shape_expr">shape_expr</a> ( ',' <a href="#shape_expr" title="shape_expr">shape_expr</a> )* ')' )?</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -3885,6 +3936,7 @@
             <li><a href="#set_stmt" title="set_stmt">set_stmt</a></li>
             <li><a href="#shape_arguments" title="shape_arguments">shape_arguments</a></li>
             <li><a href="#shape_def_base" title="shape_def_base">shape_def_base</a></li>
+            <li><a href="#shape_expr" title="shape_expr">shape_expr</a></li>
             <li><a href="#table_function" title="table_function">table_function</a></li>
             <li><a href="#table_or_subquery" title="table_or_subquery">table_or_subquery</a></li>
             <li><a href="#trigger_def" title="trigger_def">trigger_def</a></li>
@@ -3999,7 +4051,6 @@
             <li><a href="#join_cond" title="join_cond">join_cond</a></li>
             <li><a href="#opt_name_list" title="opt_name_list">opt_name_list</a></li>
             <li><a href="#opt_of" title="opt_of">opt_of</a></li>
-            <li><a href="#shape_def" title="shape_def">shape_def</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_name_list">opt_name_list:</a></p><svg width="181" height="57">
          <defs>
@@ -4802,7 +4853,7 @@
          <ul>
             <li><a href="#basic_expr" title="basic_expr">basic_expr</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="call">call:</a></p><svg width="587" height="69">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="call">call:</a></p><svg width="627" height="113">
          <defs>
             <style type="text/css">
     @namespace "http://www.w3.org/2000/svg";
@@ -4834,26 +4885,43 @@
          </defs>
          <polygon points="9 17 1 13 1 21"></polygon>
          <polygon points="17 17 9 13 9 21"></polygon><a href="#name" title="name">
-            <rect x="31" y="3" width="56" height="32"></rect>
-            <rect x="29" y="1" width="56" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="39" y="21">name</text></a><rect x="107" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="105" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="115" y="21">(</text>
-         <rect x="173" y="35" width="86" height="32" rx="10"></rect>
-         <rect x="171" y="33" width="86" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="181" y="53">DISTINCT</text><a href="#arg_list" title="arg_list">
-            <rect x="299" y="3" width="68" height="32"></rect>
-            <rect x="297" y="1" width="68" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="307" y="21">arg_list</text></a><rect x="387" y="3" width="26" height="32" rx="10"></rect>
-         <rect x="385" y="1" width="26" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="395" y="21">)</text><a href="#opt_filter_clause" title="opt_filter_clause">
-            <rect x="433" y="3" width="126" height="32"></rect>
-            <rect x="431" y="1" width="126" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="441" y="21">opt_filter_clause</text></a><path class="line" d="m17 17 h2 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m0 0 h96 m-126 0 h20 m106 0 h20 m-146 0 q10 0 10 10 m126 0 q0 -10 10 -10 m-136 10 v12 m126 0 v-12 m-126 12 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m86 0 h10 m20 -32 h10 m68 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m126 0 h10 m3 0 h-3"></path>
-         <polygon points="577 17 585 13 585 21"></polygon>
-         <polygon points="577 17 569 13 569 21"></polygon></svg><p>
+            <rect x="51" y="3" width="56" height="32"></rect>
+            <rect x="49" y="1" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="21">name</text></a><rect x="127" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="125" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="135" y="21">(</text>
+         <rect x="193" y="35" width="86" height="32" rx="10"></rect>
+         <rect x="191" y="33" width="86" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="201" y="53">DISTINCT</text><a href="#arg_list" title="arg_list">
+            <rect x="319" y="3" width="68" height="32"></rect>
+            <rect x="317" y="1" width="68" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="327" y="21">arg_list</text></a><rect x="407" y="3" width="26" height="32" rx="10"></rect>
+         <rect x="405" y="1" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="415" y="21">)</text><a href="#opt_filter_clause" title="opt_filter_clause">
+            <rect x="453" y="3" width="126" height="32"></rect>
+            <rect x="451" y="1" width="126" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="461" y="21">opt_filter_clause</text></a><a href="#basic_expr" title="basic_expr">
+            <rect x="51" y="79" width="88" height="32"></rect>
+            <rect x="49" y="77" width="88" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="97">basic_expr</text></a><rect x="159" y="79" width="24" height="32" rx="10"></rect>
+         <rect x="157" y="77" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="167" y="97">:</text><a href="#name" title="name">
+            <rect x="203" y="79" width="56" height="32"></rect>
+            <rect x="201" y="77" width="56" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="211" y="97">name</text></a><rect x="279" y="79" width="26" height="32" rx="10"></rect>
+         <rect x="277" y="77" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="287" y="97">(</text><a href="#arg_list" title="arg_list">
+            <rect x="325" y="79" width="68" height="32"></rect>
+            <rect x="323" y="77" width="68" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="333" y="97">arg_list</text></a><rect x="413" y="79" width="26" height="32" rx="10"></rect>
+         <rect x="411" y="77" width="26" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="421" y="97">)</text>
+         <path class="line" d="m17 17 h2 m20 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m20 0 h10 m0 0 h96 m-126 0 h20 m106 0 h20 m-146 0 q10 0 10 10 m126 0 q0 -10 10 -10 m-136 10 v12 m126 0 v-12 m-126 12 q0 10 10 10 m106 0 q10 0 10 -10 m-116 10 h10 m86 0 h10 m20 -32 h10 m68 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m126 0 h10 m-568 0 h20 m548 0 h20 m-588 0 q10 0 10 10 m568 0 q0 -10 10 -10 m-578 10 v56 m568 0 v-56 m-568 56 q0 10 10 10 m548 0 q10 0 10 -10 m-558 10 h10 m88 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m56 0 h10 m0 0 h10 m26 0 h10 m0 0 h10 m68 0 h10 m0 0 h10 m26 0 h10 m0 0 h140 m23 -76 h-3"></path>
+         <polygon points="617 17 625 13 625 21"></polygon>
+         <polygon points="617 17 609 13 609 21"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#call" title="call">call</a>     ::= <a href="#name" title="name">name</a> '(' 'DISTINCT'? <a href="#arg_list" title="arg_list">arg_list</a> ')' <a href="#opt_filter_clause" title="opt_filter_clause">opt_filter_clause</a></div></code></div>
+               <div><a href="#call" title="call">call</a>     ::= <a href="#name" title="name">name</a> '(' 'DISTINCT'? <a href="#arg_list" title="arg_list">arg_list</a> ')' <a href="#opt_filter_clause" title="opt_filter_clause">opt_filter_clause</a></div>
+               <div>           | <a href="#basic_expr" title="basic_expr">basic_expr</a> ':' <a href="#name" title="name">name</a> '(' <a href="#arg_list" title="arg_list">arg_list</a> ')'</div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -5003,6 +5071,7 @@
       </p>
       <p>referenced by:
          <ul>
+            <li><a href="#call" title="call">call</a></li>
             <li><a href="#math_expr" title="math_expr">math_expr</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="math_expr">math_expr:</a></p><svg width="805" height="1577">
