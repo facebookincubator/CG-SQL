@@ -19674,6 +19674,15 @@ begin
   let x := a;
 end;
 
+-- TEST: make a multi-part string literal
+-- +  LET z := "abc\n123\r\n\x02lmnop''";
+create proc string_chain()
+begin
+  let z := "abc\n" 
+     "123\r\n\x02" 
+     "lmnop''";
+end;
+
 -- Used in the following test.
 declare proc requires_out_text_notnull(out t text not null);
 

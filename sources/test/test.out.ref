@@ -1795,6 +1795,8 @@ CREATE TABLE unary_plus_default_value(
 
 DECLARE PROC foo (LIKE X(-x));
 
+LET z := "abc\n123\r\n\x02lmnop''";
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

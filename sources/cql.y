@@ -78,6 +78,7 @@ static void parse_cleanup();
 static void cql_usage();
 static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
+static ast_node *reduce_str_chain(ast_node *str_chain);
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
@@ -233,7 +234,7 @@ static void cql_reset_globals(void);
 %type <aval> col_key_list col_key_def col_def col_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
 %type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
-%type <aval> col_attrs str_literal num_literal any_literal const_expr
+%type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
 %type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args opt_conflict_clause
 %type <aval> col_calc col_calcs column_calculation
 
@@ -945,8 +946,17 @@ data_type_with_options:
   ;
 
 str_literal:
-  STRLIT  { $str_literal = new_ast_str($STRLIT);}
-  | CSTRLIT  { $str_literal = new_ast_cstr($CSTRLIT); }
+  str_chain { $str_literal = reduce_str_chain($str_chain); }
+  ;
+
+str_chain[result]:
+  str_leaf { $result = new_ast_str_chain($str_leaf, NULL); }
+  | str_leaf str_chain[next] { $result = new_ast_str_chain($str_leaf, $next); }
+  ;
+
+str_leaf:
+  STRLIT  { $str_leaf = new_ast_str($STRLIT);}
+  | CSTRLIT  { $str_leaf = new_ast_cstr($CSTRLIT); }
   ;
 
 num_literal:
@@ -2874,11 +2884,14 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt)
   }
 }
 
+// creates a column definition node with a doc comment if needed
 static ast_node *make_coldef_node(ast_node *col_def_type_attrs, ast_node *misc_attrs)
 {
   // This is the equivalent of:
   //
   // $col_def = new_ast_col_def(col_def_type_attrs, $misc_attrs);
+  //
+  // (with optional comment node)
 
   CSTR comment = get_last_doc_comment();
   if (comment) {
@@ -2888,4 +2901,39 @@ static ast_node *make_coldef_node(ast_node *col_def_type_attrs, ast_node *misc_a
   }
 
   return new_ast_col_def(col_def_type_attrs, misc_attrs);
+}
+
+// When a chain of strings appears like this "xxx" "yyy" we reduce it to a single
+// string literal by concatenating all the pieces.
+static ast_node *reduce_str_chain(ast_node *str_chain) {
+  Contract(is_ast_str_chain(str_chain));
+
+  // trivial case, length one chain
+  if (!str_chain->right) {
+    return str_chain->left;
+  }
+
+  CHARBUF_OPEN(tmp);
+  CHARBUF_OPEN(result);
+
+  for (ast_node *item = str_chain; item; item = item->right) {
+    Invariant(is_ast_str_chain(item));
+    Invariant(is_ast_str(item->left));
+
+    str_ast_node *str_node = (str_ast_node *)item->left;
+    cg_decode_string_literal(str_node->value, &tmp);
+  }
+
+  cg_encode_string_literal(tmp.ptr, &result);
+  ast_node *lit = new_ast_str(Strdup(result.ptr));
+
+  // this just forces the literal to be echoed as a C literal
+  // so that it is prettier in the echoed output, otherwise no difference
+  // all literals are stored in SQL format.
+  ((str_ast_node *)lit)->cstr_literal = true;
+
+  CHARBUF_CLOSE(result);
+  CHARBUF_CLOSE(tmp);
+
+  return lit;
 }
