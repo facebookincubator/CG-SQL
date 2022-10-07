@@ -952,6 +952,7 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined (while in schema region 'dep2_region', accessing an object that isn't in a region is invalid) 'bar'
 test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0066: if a table is marked @recreate, its indices must be in its schema region 'invalid_wrong_group_index'
 test/sem_test.sql:XXXX:1: error: in call : CQL0395: table valued functions may not be used in an expression context 'tvf'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'does_not_exist'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'id'
 test/sem_test.sql:XXXX:1: error: in str : CQL0249: function is not a table-valued-function 'SqlUserFunc'

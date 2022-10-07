@@ -11118,13 +11118,27 @@ declare select function tvf(id integer) (foo text);
 -- +1 error:
 select 1 where tvf(5) = 1;
 
--- TEST: use a table valued function
+-- TEST: use a table valued function, test expansion of from clause too
 -- + {create_proc_stmt}: using_tvf: { foo: text } dml_proc
 -- + {select_stmt}: select: { foo: text }
+-- rewrite to use locals
+-- + FROM tvf(LOCALS.v);
 -- - error:
 create proc using_tvf()
 begin
-  select * from tvf(1);
+  let v := 1;
+  select * from tvf(from locals);
+end;
+
+-- TEST: expand using 'from' bogus source of args
+-- + {create_proc_stmt}: err
+-- + {arg_list}: err
+-- + error: % name not found 'does_not_exist'
+-- +1 error:
+create proc using_tvf_error()
+begin
+  let v := 1;
+  select * from tvf(from does_not_exist);
 end;
 
 -- TEST: use a table valued function but with a arg error

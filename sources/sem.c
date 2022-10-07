@@ -10451,6 +10451,12 @@ static void sem_table_function(ast_node *ast) {
   EXTRACT_NOTNULL(func_params_return, user_func->right);
   EXTRACT(params, func_params_return->left);
 
+  // expand any FROM forms in the arg list
+  if (!rewrite_shape_forms_in_list_if_needed(arg_list)) {
+    record_error(ast);
+    return;
+  }
+
   if (is_ast_declare_select_func_no_check_stmt(user_func)) {
     sem_arg_list(arg_list, IS_NOT_COUNT);
     if (arg_list && is_error(arg_list)) {

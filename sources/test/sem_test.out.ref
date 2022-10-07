@@ -46816,14 +46816,18 @@ The statement ending at line XXXX
 
 CREATE PROC using_tvf ()
 BEGIN
+  LET v := 1;
   SELECT *
-    FROM tvf(1);
+    FROM tvf(LOCALS.v);
 END;
 
   {create_proc_stmt}: using_tvf: { foo: text } dml_proc
   | {name using_tvf}: using_tvf: { foo: text } dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
+      | {let_stmt}: v: integer notnull variable
+      | | {name v}: v: integer notnull variable
+      | | {int 1}: integer notnull
       | {select_stmt}: select: { foo: text }
         | {select_core_list}: select: { foo: text }
         | | {select_core}: select: { foo: text }
@@ -46835,8 +46839,49 @@ END;
         |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
         |       |   | {table_function}: TABLE { tvf: select } table_valued_function
         |       |     | {name tvf}: TABLE { tvf: select } table_valued_function
-        |       |     | {arg_list}
-        |       |       | {int 1}: integer notnull
+        |       |     | {arg_list}: ok
+        |       |       | {dot}: v: integer notnull variable
+        |       |         | {name LOCALS}
+        |       |         | {name v}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC using_tvf_error ()
+BEGIN
+  LET v := 1;
+  SELECT *
+    FROM tvf(FROM does_not_exist);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'does_not_exist'
+
+  {create_proc_stmt}: err
+  | {name using_tvf_error}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {let_stmt}: v: integer notnull variable
+      | | {name v}: v: integer notnull variable
+      | | {int 1}: integer notnull
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {star}
+        |     | {select_from_etc}: err
+        |       | {table_or_subquery_list}: err
+        |       | | {table_or_subquery}: err
+        |       |   | {table_function}: err
+        |       |     | {name tvf}
+        |       |     | {arg_list}: err
+        |       |       | {from_shape}
+        |       |         | {name does_not_exist}: err
         |       | {select_where}
         |         | {select_groupby}
         |           | {select_having}
@@ -46869,7 +46914,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
         |       | | {table_or_subquery}: err
         |       |   | {table_function}: err
         |       |     | {name tvf}
-        |       |     | {arg_list}
+        |       |     | {arg_list}: ok
         |       |       | {not}: err
         |       |         | {strlit 'x'}: text notnull
         |       | {select_where}
@@ -46904,7 +46949,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
         |       | | {table_or_subquery}: err
         |       |   | {table_function}: err
         |       |     | {name tvf}
-        |       |     | {arg_list}
+        |       |     | {arg_list}: ok
         |       |       | {strlit 'x'}: err
         |       | {select_where}
         |         | {select_groupby}
@@ -46937,7 +46982,7 @@ END;
         |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
         |       |   | {table_function}: TABLE { tvf: select } table_valued_function
         |       |     | {name tvf}: TABLE { tvf: select } table_valued_function
-        |       |     | {arg_list}
+        |       |     | {arg_list}: ok
         |       |       | {int 1}: integer notnull
         |       | {select_where}
         |         | {opt_where}: bool
@@ -46976,7 +47021,7 @@ END;
         |       | | {table_or_subquery}: TABLE { T1: select } table_valued_function
         |       |   | {table_function}: TABLE { T1: select } table_valued_function
         |       |   | | {name tvf}: TABLE { T1: select } table_valued_function
-        |       |   | | {arg_list}
+        |       |   | | {arg_list}: ok
         |       |   |   | {int 1}: integer notnull
         |       |   | {opt_as_alias}
         |       |     | {name T1}
@@ -47108,7 +47153,7 @@ END;
         |       | | {table_or_subquery}: TABLE { ReadFromRowset: select } table_valued_function
         |       |   | {table_function}: TABLE { ReadFromRowset: select } table_valued_function
         |       |     | {name ReadFromRowset}: TABLE { ReadFromRowset: select } table_valued_function
-        |       |     | {arg_list}
+        |       |     | {arg_list}: ok
         |       |       | {name rowset}: rowset: object<rowset> variable in
         |       | {select_where}
         |         | {select_groupby}
@@ -69379,7 +69424,7 @@ SELECT *
   |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       |         | {table_function}: TABLE { tvf: select } table_valued_function
   |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       |           | {arg_list}
+  |       |           | {arg_list}: ok
   |       |             | {int 1}: integer notnull
   |       | {select_where}
   |         | {select_groupby}
@@ -69413,7 +69458,7 @@ test/sem_test.sql:XXXX:1: error: in join_target : CQL0371: table valued function
   |       |       | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       |         | {table_function}: TABLE { tvf: select } table_valued_function
   |       |           | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       |           | {arg_list}
+  |       |           | {arg_list}: ok
   |       |             | {int 1}: integer notnull
   |       | {select_where}
   |         | {select_groupby}
@@ -69441,7 +69486,7 @@ test/sem_test.sql:XXXX:1: error: in join_target : CQL0371: table valued function
   |       | | {table_or_subquery}: TABLE { tvf: select } table_valued_function
   |       | | | {table_function}: TABLE { tvf: select } table_valued_function
   |       | |   | {name tvf}: TABLE { tvf: select } table_valued_function
-  |       | |   | {arg_list}
+  |       | |   | {arg_list}: ok
   |       | |     | {int 1}: integer notnull
   |       | | {join_target_list}
   |       |   | {join_target}: err
