@@ -5406,7 +5406,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM _backed
--- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- + WHERE bgetkey_type(T.k) = 7437534416349388823
 create proc use_generated_fragment()
 begin
   with (call _backed())
@@ -5424,7 +5424,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- + WHERE bgetkey_type(T.k) = 7437534416349388823
 create proc use_backed_table_directly()
 begin
   select * from backed;
@@ -5441,7 +5441,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- + WHERE bgetkey_type(T.k) = 7437534416349388823
 -- verify this is a NOT result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_with_cursor()
@@ -5462,7 +5462,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- + WHERE bgetkey_type(T.k) = 7437534416349388823
 -- verify this is a result set proc
 -- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_directly_in_with_select()
@@ -5484,7 +5484,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- + WHERE bgetkey_type(T.k) = 7437534416349388823
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_with_select_and_cursor()
@@ -5505,7 +5505,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT flag
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- + WHERE bgetkey_type(T.k) = 7437534416349388823
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_select_expr(out x bool not null)
@@ -5525,7 +5525,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -1622391684721028952
+-- + WHERE bgetkey_type(T.k) = 7437534416349388823
 -- verify this is a result set proc
 -- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 @attribute(cql:private)
@@ -5557,8 +5557,8 @@ create table small_backed(
 -- TEST: simple insert with values
 -- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7))
 -- + INSERT INTO backing(k, v) SELECT
--- + bcreatekey(-9132470325614587332, V.pk, 1),
--- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
+-- + bcreatekey(-4190907309554122430, V.pk, 1),
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values()
 begin
@@ -5571,8 +5571,8 @@ end;
 -- + _vals (pk, x, y) AS (SELECT x, y, z
 -- + FROM V)
 -- + INSERT INTO backing(k, v) SELECT
--- + bcreatekey(-9132470325614587332, V.pk, 1)
--- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+-- + bcreatekey(-4190907309554122430, V.pk, 1)
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
 -- + FROM _vals AS V
 create proc insert_backed_values_using_with()
 begin
@@ -5585,8 +5585,8 @@ end;
 -- TEST: simple insert using form
 -- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14))
 -- + INSERT INTO backing(k, v) SELECT
--- + bcreatekey(-9132470325614587332, V.pk, 1)
--- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
+-- + bcreatekey(-4190907309554122430, V.pk, 1)
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values_using_form()
 begin
@@ -5597,12 +5597,12 @@ end;
 -- + small_backed (rowid, pk, x, y) AS (
 -- + SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 7953209610392031882) AS x, bgetval(T.v, 4501343740738089802) AS y
 -- + FROM backing AS T
--- + WHERE bgetkey_type(T.k) = -9132470325614587332
+-- + WHERE bgetkey_type(T.k) = -4190907309554122430
 -- + _vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50
 -- + FROM small_backed AS B)
--- + INSERT INTO backing(k, v) SELECT
--- + bcreatekey(-9132470325614587332, V.pk, 1)
--- + bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+-- + INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
+-- + bcreatekey(-4190907309554122430, V.pk, 1)
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
 -- + FROM _vals AS V
 create proc inserted_backed_from_select()
 begin

@@ -1149,13 +1149,17 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   sem_struct *sptr = ast->sem->sptr;
 
   CHARBUF_OPEN(tmp);
-  bprintf(&tmp, "%s:", sptr->struct_name);
+  // Canonicalize to pascal
+  cg_sym_name(cg_symbol_case_pascal, &tmp, "", sptr->struct_name, NULL); // no prefix pascal
+  bool_t first = true;
 
   for (int32_t i = 0; i < sptr->count; i++) {
      CSTR cname = sptr->names[i];
      sem_t sem_type = sptr->semtypes[i];
      if (!is_nullable(sem_type)) {
+       bputc(&tmp, first ? ':' : ',');
        gen_append_field_desc(&tmp, cname, sem_type);
+       first = false;
      }
   }
   int64_t hash = sha256_charbuf(&tmp);

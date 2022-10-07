@@ -16867,7 +16867,7 @@ CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_
     "_backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "SELECT rowid, pk, flag, id, name, age, storage "
       "FROM _backed"
@@ -17012,7 +17012,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlit
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "SELECT rowid, pk, flag, id, name, age, storage "
       "FROM backed"
@@ -17053,7 +17053,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_cursor(sqlite3 *_Nonnull _db_) {
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "SELECT rowid, pk, flag, id, name, age, storage "
       "FROM backed"
@@ -17200,7 +17200,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonn
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   "), "
     "one (x) AS (SELECT 1), "
     "two (x) AS (SELECT 2) "
@@ -17245,7 +17245,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnu
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   "), "
     "one (x) AS (SELECT 1), "
     "two (x) AS (SELECT 2) "
@@ -17291,7 +17291,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cq
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "SELECT flag "
       "FROM backed"
@@ -17339,7 +17339,7 @@ static CQL_WARN_UNUSED cql_code explain_query_plan_backed(sqlite3 *_Nonnull _db_
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "SELECT rowid, pk, flag, id, name, age, storage "
       "FROM backed"
@@ -17383,7 +17383,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "SELECT flag "
       "FROM backed"
@@ -17423,7 +17423,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec(_db_,
     "WITH "
     "_vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7)) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -17461,7 +17461,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_)
     "V (x, y, z) AS (VALUES(1, '2', 3.14)), "
     "_vals (pk, x, y) AS (SELECT x, y, z "
       "FROM V) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -17493,7 +17493,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnull _db_)
   _rc_ = cql_exec(_db_,
     "WITH "
     "_vals (pk, x, y) AS (VALUES(1, '2', 3.14)) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -17530,11 +17530,11 @@ CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_) {
     "small_backed (rowid, pk, x, y) AS (",
   "SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 7953209610392031882) AS x, bgetval(T.v, 4501343740738089802) AS y "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -9132470325614587332",
+      "WHERE bgetkey_type(T.k) = -4190907309554122430",
   "), "
     "_vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50 "
       "FROM small_backed AS B) "
-    "INSERT INTO backing(k, v) SELECT bcreatekey(-9132470325614587332, V.pk, 1), bcreateval(-9132470325614587332, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
       "FROM _vals AS V"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17571,7 +17571,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_) {
     "small_backed (rowid, pk, x, y) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 7953209610392031882), bgetval(T.v, 4501343740738089802) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -9132470325614587332",
+      "WHERE bgetkey_type(T.k) = -4190907309554122430",
   ") "
     "DELETE FROM backing WHERE rowid IN (SELECT rowid "
       "FROM small_backed "
@@ -17611,7 +17611,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _d
     "small_backed (rowid, pk, x, y) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 7953209610392031882), bgetval(T.v, 4501343740738089802) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -9132470325614587332",
+      "WHERE bgetkey_type(T.k) = -4190907309554122430",
   "), "
     "v (x) AS (VALUES(1)) "
     "DELETE FROM backing WHERE rowid IN (SELECT rowid "
@@ -17705,7 +17705,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "UPDATE backing "
     "SET v = bupdateval(v, -6946718245010482247, 'foo', 4) "
@@ -17750,7 +17750,7 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   "), "
     "V (x) AS (VALUES(1)) "
     "UPDATE backing "
@@ -17795,7 +17795,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "UPDATE backing "
     "SET k = bupdatekey(k, 0, 100) "
@@ -17842,7 +17842,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
   "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -1118059189291406095), bgetval(T.v, -7635294210585028660) "
       "FROM backing AS T "
-      "WHERE bgetkey_type(T.k) = -1622391684721028952",
+      "WHERE bgetkey_type(T.k) = 7437534416349388823",
   ") "
     "UPDATE backing "
     "SET k = bupdatekey(k, 0, 100), "

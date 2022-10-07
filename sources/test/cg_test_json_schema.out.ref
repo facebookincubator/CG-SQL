@@ -1168,7 +1168,7 @@
       "isDeleted" : 0,
       "isRecreated": 0,
       "isBacked" : 1,
-      "typeHash" : 2105552408096159860,
+      "typeHash" : -8913718785021915616,
       "attributes" : [
         {
           "name" : "cql:backed_by",

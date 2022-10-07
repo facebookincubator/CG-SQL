@@ -679,7 +679,7 @@ create table backing(
 -- TEST: emit backed table
 -- + "isBacked" : 1,
 -- type hash
--- + "typeHash" : 2105552408096159860,
+-- + "typeHash" : -8913718785021915616,
 -- field hashes
 -- + "typeHash" : -5886701367367956936,
 -- + "typeHash" : -6639502068221071091,
