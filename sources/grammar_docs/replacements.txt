@@ -181,6 +181,7 @@ s/[[:<:]]UPDATE[[:>:]]/"UPDATE"/g
 s/[[:<:]]UPSERT[[:>:]]/"UPSERT"/g
 s/[[:<:]]USING[[:>:]]/"USING"/g
 s/[[:<:]]VALUES[[:>:]]/"VALUES"/g
+s/[[:<:]]VAR[[:>:]]/"VAR"/g
 s/[[:<:]]VIEW[[:>:]]/"VIEW"/g
 s/[[:<:]]VIRTUAL[[:>:]]/"VIRTUAL"/g
 s/[[:<:]]WHEN[[:>:]]/"WHEN"/g

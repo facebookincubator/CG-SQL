@@ -214,7 +214,7 @@ static void cql_reset_globals(void);
 %token DESC INNER AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT AT_EPONYMOUS
 %token HIDDEN UNIQUE HAVING SET LET TO DISTINCTROW ENUM
-%token FUNC FUNCTION PROC PROCEDURE INTERFACE BEGIN_ "BEGIN" OUT INOUT CURSOR DECLARE TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
+%token FUNC FUNCTION PROC PROCEDURE INTERFACE BEGIN_ "BEGIN" OUT INOUT CURSOR DECLARE VAR TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN COLUMNS RENAME ALTER
@@ -1855,6 +1855,7 @@ params[result]:
 /* these forms are just storage */
 declare_simple_var_stmt:
   DECLARE name_list data_type_with_options  { $declare_simple_var_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  | VAR name_list data_type_with_options  { $declare_simple_var_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
   | DECLARE name CURSOR shape_def  { $declare_simple_var_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_simple_var_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
   | DECLARE name CURSOR LIKE '(' typed_names ')' { $declare_simple_var_stmt = new_ast_declare_cursor_like_typed_names($name, $typed_names); }

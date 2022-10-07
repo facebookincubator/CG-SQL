@@ -240,6 +240,7 @@ OUT                          { return OUT; }
 INOUT                        { return INOUT; }
 CURSOR                       { return CURSOR; }
 DECLARE                      { return DECLARE; }
+VAR                          { return VAR; }
 FETCH                        { return FETCH; }
 LOOP                         { return LOOP; }
 LEAVE                        { return LEAVE; }

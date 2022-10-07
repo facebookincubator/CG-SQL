@@ -343,6 +343,9 @@ leave;
 -- simple declare
 declare a, b, c int;
 
+-- simple declare
+var var_a, var_b, var_c int;
+
 -- simple cursor declare
 declare a cursor for select b from c;
 
@@ -726,6 +729,9 @@ declare function foo(x integer, y text not null) integer not null;
 -- declare an object variable
 declare obj_var object;
 
+-- declare an object variable
+var var_obj_var object;
+
 -- declare a function that returns a created object
 declare function createobj() create object;
 
@@ -815,6 +821,9 @@ insert into foo() values();
 
 -- use a blob the simplest way
 declare foo blob;
+
+-- use a blob the simplest way
+var var_foo blob;
 
 -- trickier usage
 declare function foo(x blob not null) create blob not null;
@@ -936,6 +945,11 @@ fetch a_cursor(x) from arguments @dummy_seed(7) @dummy_defaults;
 fetch to_cursor from from_cursor;
 
 insert into foo(a,b) from arguments;
+
+create proc var_x( like table_name, id integer)
+begin
+  var x integer;
+end;
 
 create proc x( like table_name, id integer)
 begin
