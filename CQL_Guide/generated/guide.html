@@ -1458,10 +1458,11 @@ UNARY:          ~  -</code></pre>
 <li>the \0NNN octal form is not supported, and</li>
 <li>embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs in such cases)</li>
 </ul></li>
-<li>a single quoted string is a SQL style string literal
+<li>A single quoted string is a SQL style string literal
 <ul>
 <li>No escape sequences are supported other than <code>''</code> to indicate a single quote character (this is just like normal SQLite)</li>
 </ul></li>
+<li>A sequence of single or double quoted strings separated by whitespce such as “xx” ‘yy’ “zz” which are concatenated to make one literal</li>
 <li>The sequence <span class="citation" data-cites="FILE">@FILE</span>(“some_string”) is a special string literal
 <ul>
 <li>the value of this literal is the path of the current compiland starting at the letters in <code>some_string</code>, or</li>
@@ -7384,7 +7385,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Oct 5 13:02:03 PDT 2022</p>
+<p>Snapshot as of Fri Oct 7 12:55:31 PDT 2022</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7957,6 +7958,15 @@ data_type_with_options:
   ;
 
 str_literal:
+  str_chain
+  ;
+
+str_chain:
+  str_leaf
+  | str_leaf str_chain
+  ;
+
+str_leaf:
   &quot;sql-string-literal&quot;
   | &quot;c-string-literal&quot;
   ;
@@ -11379,7 +11389,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Oct 5 13:02:03 PDT 2022</p>
+<p>Snapshot as of Fri Oct 7 12:55:32 PDT 2022</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

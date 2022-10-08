@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Oct  5 13:02:03 2022
+// Snapshot as of Fri Oct  7 12:55:31 2022
 
 
 const PREC = {
@@ -98,7 +98,9 @@ module.exports = grammar({
     data_type_numeric: $ => choice(seq($.INT, optional($.opt_kind)), seq($.INTEGER, optional($.opt_kind)), seq($.REAL, optional($.opt_kind)), seq($.LONG, optional($.opt_kind)), seq($.BOOL, optional($.opt_kind)), seq($.LONG, $.INTEGER, optional($.opt_kind)), seq($.LONG, $.INT, optional($.opt_kind)), seq($.LONG_INT, optional($.opt_kind)), seq($.LONG_INTEGER, optional($.opt_kind))),
     data_type_any: $ => choice($.data_type_numeric, seq($.TEXT, optional($.opt_kind)), seq($.BLOB, optional($.opt_kind)), seq($.OBJECT, optional($.opt_kind)), seq($.OBJECT, '<', $.name, $.CURSOR, '>'), seq($.OBJECT, '<', $.name, $.SET, '>'), $.ID),
     data_type_with_options: $ => choice($.data_type_any, seq($.data_type_any, $.NOT, $.NULL), seq($.data_type_any, $.AT_SENSITIVE), seq($.data_type_any, $.AT_SENSITIVE, $.NOT, $.NULL), seq($.data_type_any, $.NOT, $.NULL, $.AT_SENSITIVE)),
-    str_literal: $ => choice($.STR_LIT, $.C_STR_LIT),
+    str_literal: $ => $.str_chain,
+    str_chain: $ => choice($.str_leaf, seq($.str_leaf, $.str_chain)),
+    str_leaf: $ => choice($.STR_LIT, $.C_STR_LIT),
     num_literal: $ => choice($.INT_LIT, $.LONG_LIT, $.REAL_LIT, $.TRUE, $.FALSE),
     const_expr: $ => seq($.CONST, '(', $.expr, ')'),
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),

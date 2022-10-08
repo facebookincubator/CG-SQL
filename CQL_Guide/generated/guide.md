@@ -856,8 +856,9 @@ There are a number of literal objects that may be expressed in CQL.  These are a
   * the \xNN form for embedded hex characters is supported, however
   * the \0NNN octal form is not supported, and
   * embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs in such cases)
-* a single quoted string is a SQL style string literal
+* A single quoted string is a SQL style string literal
   * No escape sequences are supported other than `''` to indicate a single quote character (this is just like normal SQLite)
+* A sequence of single or double quoted strings separated by whitespce such as "xx" 'yy' "zz" which are concatenated to make one literal
 * The sequence @FILE("some_string") is a special string literal
   * the value of this literal is the path of the current compiland starting at the letters in `some_string`, or
   * the entire path of the current compiland if `some_string` does not occur in the path
@@ -9742,7 +9743,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Oct  5 13:02:03 PDT 2022
+Snapshot as of Fri Oct  7 12:55:31 PDT 2022
 
 ### Operators and Literals
 
@@ -10327,6 +10328,15 @@ data_type_with_options:
   ;
 
 str_literal:
+  str_chain
+  ;
+
+str_chain:
+  str_leaf
+  | str_leaf str_chain
+  ;
+
+str_leaf:
   "sql-string-literal"
   | "c-string-literal"
   ;
@@ -16194,7 +16204,7 @@ ended up removing all the columns from `some_shape`.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Oct  5 13:02:03 PDT 2022
+Snapshot as of Fri Oct  7 12:55:32 PDT 2022
 
 ### Rules
 

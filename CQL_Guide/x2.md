@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Oct  5 13:02:03 PDT 2022
+Snapshot as of Fri Oct  7 12:55:31 PDT 2022
 
 ### Operators and Literals
 
@@ -598,6 +598,15 @@ data_type_with_options:
   ;
 
 str_literal:
+  str_chain
+  ;
+
+str_chain:
+  str_leaf
+  | str_leaf str_chain
+  ;
+
+str_leaf:
   "sql-string-literal"
   | "c-string-literal"
   ;
