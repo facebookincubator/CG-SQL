@@ -160,6 +160,26 @@ CREATE TABLE unsub_recreated(
   anything TEXT
 ) @RECREATE;
 
+CREATE TABLE backing(
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
+);
+
+CREATE TABLE backed(
+  x INTEGER PRIMARY KEY,
+  y INTEGER
+);
+
+CREATE TABLE recreate_backing(
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
+) @RECREATE(foo);
+
+CREATE TABLE recreate_backed(
+  x INTEGER PRIMARY KEY,
+  y INTEGER
+) @RECREATE(foo);
+
 @begin_schema_region other;
 CREATE TABLE unsub_voyage(
   v1 INTEGER,

@@ -13951,7 +13951,6 @@ static void sem_validate_table_for_backing(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
@@ -14016,14 +14015,6 @@ static void sem_validate_table_for_backing(ast_node *ast) {
   if (!has_value) {
     report_invalid_backing(ast, "it has only primary key columns", name);
     return;
-  }
-
-  while (table_attrs) {
-    if (is_ast_recreate_attr(table_attrs)) {
-      report_invalid_backing(ast, "it is declared using @recreate", name);
-      return;
-    }
-    table_attrs = table_attrs->right;
   }
 }
 
@@ -14121,7 +14112,6 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-  EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
@@ -14197,9 +14187,31 @@ static void sem_validate_table_for_backed(ast_node *ast) {
     return;
   }
 
+  Invariant(!is_error(backing_table));
+  Invariant(!is_error(ast));
 
-  if (table_attrs) {
-    report_invalid_backed(ast, "it is declared using schema directives (@recreate, @create etc.)", name);
+  sem_node *backing_sem = backing_table->sem;
+  sem_node *backed_sem = ast->sem;
+
+  if (backed_sem->create_version > 0 || backed_sem->delete_version > 0) {
+    report_invalid_backed(ast, "it is declared using schema directives (@create or @delete", name);
+    return;
+  }
+
+  if (backing_sem->recreate != backed_sem->recreate) {
+    // the recreate attribute is moot in reality but having them match
+    // means the user is saying they know that their backed storage could go away
+    // if the backing table were to change
+    report_invalid_backed(ast, "@recreate attribute doesn't match the backing table", name);
+    return;
+  }
+
+  CSTR backing_group = backing_sem->recreate_group_name ? backing_sem->recreate_group_name : "";
+  CSTR backed_group = backed_sem->recreate_group_name ? backed_sem->recreate_group_name : "";
+
+  if (Strcasecmp(backing_group, backed_group)) {
+    // if a group was specified they should match
+    report_invalid_backed(ast, "@recreate group doesn't match the backing table", name);
     return;
   }
 }

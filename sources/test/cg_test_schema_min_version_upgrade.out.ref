@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc -6259977074757541212
+-- schema crc -500604338629658506
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -185,6 +185,26 @@ CREATE TABLE blob_storage_baseline_table(
 CREATE TABLE unsub_recreated(
   anything TEXT
 ) @RECREATE;
+
+CREATE TABLE backing(
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
+);
+
+CREATE TABLE backed(
+  x INTEGER PRIMARY KEY,
+  y INTEGER
+);
+
+CREATE TABLE recreate_backing(
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
+) @RECREATE(foo);
+
+CREATE TABLE recreate_backed(
+  x INTEGER PRIMARY KEY,
+  y INTEGER
+) @RECREATE(foo);
 
 @begin_schema_region other;
 CREATE TABLE unsub_voyage(
@@ -561,7 +581,7 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
 BEGIN
-  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == -8999819264853103655 RETURN; 
+  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 5030725314763617330 RETURN; 
   IF cql_facet_find(test_facets, 'unsub_recreated_table_crc') != 5219629355929215323 THEN
     CALL cql_rebuild_recreate_group(cql_compressed(""), cql_compressed(""), cql_compressed("DROP TABLE IF EXISTS unsub_recreated; "));
     CALL test_cql_set_facet_version('unsub_recreated_table_crc', 5219629355929215323);
@@ -569,6 +589,10 @@ BEGIN
   IF cql_facet_find(test_facets, 'table_to_recreate_table_crc') != -3246234300517746946 THEN
     CALL cql_rebuild_recreate_group(cql_compressed("CREATE TABLE table_to_recreate( id INTEGER NOT NULL, name TEXT ); "), cql_compressed(""), cql_compressed(""));
     CALL test_cql_set_facet_version('table_to_recreate_table_crc', -3246234300517746946);
+  END IF;
+  IF cql_facet_find(test_facets, 'foo_group_crc') != -4964453042684218320 THEN
+    CALL cql_rebuild_recreate_group(cql_compressed("CREATE TABLE recreate_backing( k BLOB PRIMARY KEY, v BLOB NOT NULL ); "), cql_compressed(""), cql_compressed(""));
+    CALL test_cql_set_facet_version('foo_group_crc', -4964453042684218320);
   END IF;
   IF cql_facet_find(test_facets, 'gr1_group_crc') != 6680656105974661729 THEN
     CALL cql_rebuild_recreate_group(cql_compressed("CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT ); CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT ); "), cql_compressed("CREATE INDEX gr1_index ON g1 (name); CREATE INDEX gr1_index2 ON g1 (name, id); "), cql_compressed(""));
@@ -582,7 +606,7 @@ BEGIN
     CALL cql_rebuild_recreate_group(cql_compressed("CREATE TABLE grouped_table_1( id INTEGER NOT NULL, name TEXT ); CREATE TABLE grouped_table_2( id INTEGER NOT NULL, name TEXT ); CREATE TABLE grouped_table_3( id INTEGER NOT NULL, name TEXT ); "), cql_compressed(""), cql_compressed(""));
     CALL test_cql_set_facet_version('my_group_group_crc', -5749224930715671870);
   END IF;
-  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', -8999819264853103655);
+  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', 5030725314763617330);
 END;
 
 -- recreate all the virtual @recreate tables that might have changed
@@ -666,7 +690,7 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
-  IF cql_facet_find(test_facets, 'cql_schema_crc_no_virtual') <> 5377774390710455553 THEN
+  IF cql_facet_find(test_facets, 'cql_schema_crc_no_virtual') <> -3727851963893061967 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -827,11 +851,11 @@ BEGIN
     CALL test_cleanup_unused_versions();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 5377774390710455553);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -3727851963893061967);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', -6259977074757541212);
+    CALL test_cql_set_facet_version('cql_schema_crc', -500604338629658506);
   END IF;
 END;
 
@@ -874,7 +898,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> -6259977074757541212 THEN
+  IF schema_crc <> -500604338629658506 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

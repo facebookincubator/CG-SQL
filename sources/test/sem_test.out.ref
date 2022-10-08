@@ -85533,7 +85533,7 @@ CREATE TABLE simple_backed_table_with_versions(
   name TEXT NOT NULL
 ) @CREATE(2) @DELETE(12);
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_with_versions'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_with_versions'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -86181,15 +86181,13 @@ CREATE TABLE recreate_backing(
   v BLOB NOT NULL
 ) @RECREATE;
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it is declared using @recreate 'recreate_backing'
-
-  {stmt_and_attr}: err
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
   |     | {name cql}
   |     | {name backing_table}
-  | {create_table_stmt}: err
+  | {create_table_stmt}: recreate_backing: { k: blob notnull primary_key, v: blob notnull } backing @recreate
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
@@ -86248,7 +86246,7 @@ CREATE TABLE simple_backed_table_versions(
   name TEXT NOT NULL
 ) @CREATE(2) @DELETE(12);
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_versions'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_versions'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -86928,7 +86926,7 @@ CREATE TABLE recreate_backed(
   t TEXT
 ) @RECREATE;
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'recreate_backed'
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: @recreate attribute doesn't match the backing table 'recreate_backed'
 
   {stmt_and_attr}: err
   | {misc_attrs}: ok
@@ -86943,6 +86941,45 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
     | | | {int 0}
     | | | {recreate_attr}
     | | {name recreate_backed}
+    | {col_key_list}
+      | {col_def}: id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: t: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name t}
+              | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=recreate_backing)
+CREATE TABLE recreate_backed_wrong_group(
+  id INTEGER PRIMARY KEY,
+  t TEXT
+) @RECREATE(wrong_group_name);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: @recreate group doesn't match the backing table 'recreate_backed_wrong_group'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name recreate_backing}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | | {recreate_attr}
+    | |   | {name wrong_group_name}
+    | | {name recreate_backed_wrong_group}
     | {col_key_list}
       | {col_def}: id: integer notnull primary_key
       | | {col_def_type_attrs}: ok

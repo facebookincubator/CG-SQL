@@ -1130,10 +1130,15 @@ static void cg_schema_manage_recreate_tables(
     EXTRACT_NOTNULL(recreate_attr, note->annotation_ast);
     EXTRACT(delete_attr, recreate_attr->right);
 
-    // this covers either deleted or unsubscribed
-
     ast_node *ast = note->target_ast;
     ast_node *ast_output = ast;
+
+    // no schema maintenance for non-physical tables, they aren't actually created
+    if (is_ast_create_table_stmt(ast) && is_table_not_physical(ast)) {
+      continue;
+    }
+
+    // this covers either deleted or unsubscribed
     bool_t deleted = is_deleted(ast);
 
     Invariant(is_ast_create_table_stmt(ast));

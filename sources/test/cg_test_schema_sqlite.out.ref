@@ -122,6 +122,16 @@ CREATE TABLE unsub_recreated(
   anything TEXT
 );
 
+CREATE TABLE backing(
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
+);
+
+CREATE TABLE recreate_backing(
+  k BLOB PRIMARY KEY,
+  v BLOB NOT NULL
+);
+
 CREATE TABLE unsub_voyage(
   v1 INTEGER,
   v3 TEXT,

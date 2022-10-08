@@ -272,6 +272,30 @@ begin
   select 1;
 end;
 
+@attribute(cql:backing_table)
+create table backing(
+ k blob primary key,
+ v blob not null
+);
+
+@attribute(cql:backed_by=backing)
+create table backed(
+  x integer primary key,
+  y integer
+);
+
+@attribute(cql:backing_table)
+create table recreate_backing(
+ k blob primary key,
+ v blob not null
+) @recreate(foo);
+
+@attribute(cql:backed_by=recreate_backing)
+create table recreate_backed(
+  x integer primary key,
+  y integer
+) @recreate(foo);
+
 @unsub(1, unsub_recreated);
 
 @begin_schema_region other;
