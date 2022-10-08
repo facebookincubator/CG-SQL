@@ -191,7 +191,7 @@ typedef struct schema_annotation {
 #define SEM_EXPR_CONTEXT_GROUP_BY       0x0040
 #define SEM_EXPR_CONTEXT_LIMIT          0x0080
 #define SEM_EXPR_CONTEXT_OFFSET         0x0100
-#define SEM_EXPR_CONTEXT_TABLE_FUNC     0x0200
+#define SEM_EXPR_CONTEXT_UDF            0x0200
 #define SEM_EXPR_CONTEXT_WINDOW         0x0400
 #define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800
 #define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000

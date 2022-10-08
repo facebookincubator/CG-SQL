@@ -5724,7 +5724,7 @@ static sem_resolve sem_try_resolve_variable(ast_node *ast, CSTR name, CSTR scope
   sem_t sem_type = variable->sem->sem_type;
 
   if (is_object(sem_type) &&
-      CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_TABLE_FUNC)) {
+      CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_UDF)) {
     report_resolve_error(ast, "CQL0064: object variables may not appear in the context"
                               " of a SQL statement (except table-valued functions)", name);
     record_resolve_error(ast);
@@ -7071,7 +7071,7 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
                     |SEM_EXPR_CONTEXT_WHERE
                     |SEM_EXPR_CONTEXT_ON
                     |SEM_EXPR_CONTEXT_HAVING
-                    |SEM_EXPR_CONTEXT_TABLE_FUNC;
+                    |SEM_EXPR_CONTEXT_UDF;
 
     if (CURRENT_EXPR_CONTEXT_IS_NOT(valid)) {
       report_error( ast, "CQL0078: [not] in (select ...) is only allowed inside "
@@ -7155,7 +7155,7 @@ static bool_t sem_validate_exists_context(ast_node *ast) {
             SEM_EXPR_CONTEXT_HAVING |
             SEM_EXPR_CONTEXT_WHERE |
             SEM_EXPR_CONTEXT_ON |
-            SEM_EXPR_CONTEXT_TABLE_FUNC);
+            SEM_EXPR_CONTEXT_UDF);
 }
 
 // Compute the type of an exists subexpression.  The context must be valid
@@ -8844,7 +8844,7 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
                                      SEM_EXPR_CONTEXT_GROUP_BY |
                                      SEM_EXPR_CONTEXT_ORDER_BY |
                                      SEM_EXPR_CONTEXT_CONSTRAINT |
-                                     SEM_EXPR_CONTEXT_TABLE_FUNC)) {
+                                     SEM_EXPR_CONTEXT_UDF)) {
     return;
   }
 
@@ -8932,7 +8932,7 @@ static void sem_special_func_ptr(ast_node *ast, uint32_t arg_count, bool_t *is_a
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
+  PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_UDF);
   sem_arg_list(arg_list, IS_NOT_COUNT);
   if (arg_list && is_error(arg_list)) {
     record_error(ast);
@@ -9015,7 +9015,7 @@ static bool sem_validate_db_func_with_no_args(ast_node *ast, uint32_t arg_count)
           SEM_EXPR_CONTEXT_ON |
           SEM_EXPR_CONTEXT_WHERE |
           SEM_EXPR_CONTEXT_HAVING |
-          SEM_EXPR_CONTEXT_TABLE_FUNC |
+          SEM_EXPR_CONTEXT_UDF |
           SEM_EXPR_CONTEXT_NONE)) {
             return 1;
   }
@@ -9179,7 +9179,7 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
         SEM_EXPR_CONTEXT_GROUP_BY |
         SEM_EXPR_CONTEXT_ORDER_BY |
         SEM_EXPR_CONTEXT_CONSTRAINT |
-        SEM_EXPR_CONTEXT_TABLE_FUNC |
+        SEM_EXPR_CONTEXT_UDF |
         SEM_EXPR_CONTEXT_NONE))
   {
     return;
@@ -9258,6 +9258,8 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
   EXTRACT_NOTNULL(func_params_return, user_func->right);
   EXTRACT(params, func_params_return->left);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
+  bool_t sql_udf_context = false;
+
 
   if (is_ast_declare_func_stmt(user_func)) {
     if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
@@ -9265,6 +9267,9 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
       record_error(ast);
       return;
     }
+
+    // normal declare function call
+    sql_udf_context = false;
   }
   else {
     // Must be a select func (is_ast_declare_select_func or is_ast_declare_select_func_no_check) case (verified above)
@@ -9283,7 +9288,10 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
       record_error(ast);
       return;
     }
+
+    sql_udf_context = true;
   }
+
 
   if (is_struct(user_func->sem->sem_type)) {
     report_error(ast, "CQL0395: table valued functions may not be used in an expression context", name);
@@ -9295,14 +9303,19 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
   if (is_ast_declare_select_func_no_check_stmt(user_func)) {
     record_ok(ast);
   } else {
-    sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
+    if (sql_udf_context) {
+      PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_UDF);
+        sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
+      POP_EXPR_CONTEXT();
+    }
+    else {
+      sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
+    }
   }
 
-  if (is_error(ast)) {
-    return;
+  if (!is_error(ast)) {
+    ast->sem = ret_data_type->sem;
   }
-
-  ast->sem = ret_data_type->sem;
 }
 
 // We're looking for this shape, simple select with just the skeleton
@@ -10466,7 +10479,7 @@ static void sem_table_function(ast_node *ast) {
     record_ok(ast);
   } else {
     // SQL Func context is basically the same the ON context but allows for Object types
-    PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_TABLE_FUNC);
+    PUSH_EXPR_CONTEXT(SEM_EXPR_CONTEXT_UDF);
     sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
     POP_EXPR_CONTEXT();
   }

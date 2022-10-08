@@ -35,6 +35,58 @@ CQL_DATATYPE_STRING = string.byte("s", 1)
 CQL_DATATYPE_BLOB = string.byte("b", 1)
 CQL_DATATYPE_OBJECT = string.byte("o", 1)
 
+-- each statment can have optional data associated with it
+cql_stmt_data = {}
+cql_stmt_meta = {}
+setmetatable(cql_stmt_data, cql_stmt_meta)
+
+-- the keys will be statements, data lives only as long as the statement does
+cql_stmt_meta.__mode = "k"
+
+-- The keys will be object ids (numbers) the values are statements
+-- Data lives only as long as the statement.  We have to do this
+-- two step funny business so that we can go from an object id to a statement
+-- and then from the statement to the values for the id with everything
+-- weak on the statement
+cql_id_binding = {}
+cql_id_binding_meta = {}
+setmetatable(cql_id_binding, cql_id_binding_meta)
+cql_id_binding_meta.__mode = "kv"
+
+-- each binding gets its own id, with 2^64 and at one per ns we would
+-- wrap around every 150 years... by which time wrapping is pretty safe
+cql_next_id = 0;
+
+-- the whole point of this function is to assign the value to the statement
+-- in such a way that it will not be strongly held when when the statement is gone
+function cql_set_aux_value_for_stmt(stmt, value)
+  -- if we ever want to be multi-threaded this has to be interlocked
+  cql_next_id = cql_next_id + 1
+
+  id = cql_next_id
+  cql_id_binding[id] = stmt
+  if cql_stmt_data[stmt] == nil then
+    cql_stmt_data[stmt] = {}
+  end
+  -- this value will go away when the stmt goes away
+  cql_stmt_data[stmt][id] = value
+  return id
+end
+
+function cql_get_aux_value_for_id(id)
+  -- get the statement if it exists, get statement data if it exists
+  -- these are weak so it's possible to ask after the statement expired
+  -- this isn't fatal but we need to give nil back in those cases
+  local stmt = cql_id_binding[id]
+  if stmt ~= nil then
+     local stmt_data = cql_stmt_data[stmt]
+     if stmt_data ~= nil then
+        return stmt_data[id]
+     end
+  end
+  return nil
+end
+
 function printf(...)
   io.write(cql_printf(...))
 end
@@ -414,7 +466,11 @@ function cql_exec(db, sql)
 end
 
 function cql_bind_one(stmt, bind_index, value, code)
-  if value ~= nil and code == CQL_DATATYPE_BLOB or code == CQL_DATATYPE_BLOB_NOTNULL then
+  if value == nil then
+    rc = stmt:bind(bind_index, nil)
+  elseif code == CQL_DATATYPE_OBJECT or code == CQL_DATATYPE_OBJECT_NOTNULL then
+    rc = stmt:bind(bind_index, cql_set_aux_value_for_stmt(stmt, value))
+  elseif code == CQL_DATATYPE_BLOB or code == CQL_DATATYPE_BLOB_NOTNULL then
     rc = stmt:bind_blob(bind_index, value)
   else
     rc = stmt:bind(bind_index, value)
@@ -732,35 +788,6 @@ end
 function cql_last_insert_rowid(db)
   return db:last_insert_rowid()
 end
-
-cql_user_data = {}
-
-function cql_set_user_data(k, v)
-   cql_user_data[k] = v
-end
-
-function cql_init_extensions(db)
-  db:create_function(
-    "rscount",
-    1,
-    function(ctx,rs)
-      local ud = context:user_data()
-      rs = ud[rs]
-      print(#rs)
-      ctx:result_number(#rs)
-    end,
-    cql_user_data
-  )
-   db:create_function(
-    "rscol",
-    3,
-    function(ctx,rs, row, col)
-      print(#rs)
-      ctx:result_number(rs[row][col])
-    end
-  )
-  return sqlite3.OK
-end;
 
 function cql_cursor_format(C, types, fields)
   local result = ""

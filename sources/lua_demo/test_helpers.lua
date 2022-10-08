@@ -7,7 +7,6 @@ LICENSE file in the root directory of this source tree.
 
 -- TESTING METHODS --
 
-
 -- this is better done with string.pack but this is human
 -- readable and therefore easier to debug and it works just
 -- as well for the test case
@@ -116,7 +115,29 @@ function bgetval(context, b, offs)
   context:result_int(r)
 end
 
+function rscount(context, rsid)
+  local rs = cql_get_aux_value_for_id(rsid)
+  context:result_int(#rs)
+end
+
+function rscol(context, rsid, rownum, colnum)
+  local rs = cql_get_aux_value_for_id(rsid)
+  local row = rs[rownum+1]
+
+  -- columns are not in order so we just hard code the order for the test
+  if colnum == 0 then
+    k = "v"
+  else
+    k = "vsq"
+  end
+
+  result = row[k]
+  context:result_int(result)
+end
+
 function _cql_init_extensions(db)
+  db:create_function("rscount", 1, rscount)
+  db:create_function("rscol", 3, rscol)
   db:create_function("bupdateval", -1, bupdateval)
   db:create_function("bupdatekey", -1, bupdatekey)
   db:create_function("bcreateval", -1, bcreateval)

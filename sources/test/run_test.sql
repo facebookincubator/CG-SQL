@@ -3013,8 +3013,6 @@ declare select function rscol(rs long, row integer not null, col integer not nul
 -- the virtual-table-like construct that we have created and in so doing
 -- test the runtime binding facilities needed by ptr(x)
 
-#ifndef LUA_RUN_TEST
-
 BEGIN_TEST(rowset_reading)
   declare start, stop, cur integer not null;
   set start := 10;
@@ -3041,8 +3039,6 @@ BEGIN_TEST(rowset_reading)
   end;
 
 END_TEST(rowset_reading)
-
-#endif
 
 BEGIN_TEST(rowset_reading_language_support)
   declare cur integer not null;
