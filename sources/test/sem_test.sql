@@ -21469,7 +21469,7 @@ create table simple_backed_table_2(
 
 -- TEST: simple backed table with versions
 -- {create_table_stmt}: err
--- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_with_versions'
+-- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_with_versions'
 -- +1 error:
 @attribute(cql:backed_by=simple_backing_table)
 create table simple_backed_table_with_versions(
@@ -21636,10 +21636,9 @@ create table created_col_backing(
   v blob @create(11)
 );
 
--- TEST: table with @recreate is not valid
--- + {create_table_stmt}: err
--- + error: % table is not suitable for use as backing storage: it is declared using @recreate 'recreate_backing'
--- +1 error:
+-- TEST: table with @recreate is ok, it's really only interesting for in-memory tables
+-- + {create_table_stmt}: recreate_backing: { k: blob notnull primary_key, v: blob notnull } backing @recreate
+-- - error
 @attribute(cql:backing_table)
 create table recreate_backing(
   k blob primary key,
@@ -21657,7 +21656,7 @@ create table one_col_backing(
 
 -- TEST: simple backed table with versions
 -- + {create_table_stmt}: err
--- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'simple_backed_table_versions'
+-- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@create or @delete 'simple_backed_table_versions'
 -- +1 error:
 @attribute(cql:backed_by=simple_backing_table)
 create table simple_backed_table_versions(
@@ -21834,15 +21833,25 @@ create table created_col_backed(
   t text @create(7)
 );
 
--- TEST: table with @recreate is not valid
+-- TEST: table with non matching @recreate is not valid
 -- + {create_table_stmt}: err
--- + error: % table is not suitable for use as backed storage: it is declared using schema directives (@recreate, @create etc.) 'recreate_backed'
+-- + error: % table is not suitable for use as backed storage: @recreate attribute doesn't match the backing table 'recreate_backed'
 -- +1 error:
 @attribute(cql:backed_by=simple_backing_table)
 create table recreate_backed(
   id integer primary key,
   t text
 ) @recreate;
+
+-- TEST: table with non matching @recreate is not valid
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: @recreate group doesn't match the backing table 'recreate_backed_wrong_group'
+-- +1 error:
+@attribute(cql:backed_by=recreate_backing)
+create table recreate_backed_wrong_group(
+  id integer primary key,
+  t text
+) @recreate(wrong_group_name);
 
 @attribute(cql:blob_storage)
 create table structured_storage(

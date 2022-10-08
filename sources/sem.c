@@ -14017,14 +14017,6 @@ static void sem_validate_table_for_backing(ast_node *ast) {
     report_invalid_backing(ast, "it has only primary key columns", name);
     return;
   }
-
-  while (table_attrs) {
-    if (is_ast_recreate_attr(table_attrs)) {
-      report_invalid_backing(ast, "it is declared using @recreate", name);
-      return;
-    }
-    table_attrs = table_attrs->right;
-  }
 }
 
 static void report_invalid_backed_column(ast_node *ast, CSTR reason, CSTR column, CSTR table) {
@@ -14197,9 +14189,31 @@ static void sem_validate_table_for_backed(ast_node *ast) {
     return;
   }
 
+  Invariant(!is_error(backing_table));
+  Invariant(!is_error(ast));
 
-  if (table_attrs) {
-    report_invalid_backed(ast, "it is declared using schema directives (@recreate, @create etc.)", name);
+  sem_node *backing_sem = backing_table->sem;
+  sem_node *backed_sem = ast->sem;
+
+  if (backed_sem->create_version > 0 || backed_sem->delete_version > 0) {
+    report_invalid_backed(ast, "it is declared using schema directives (@create or @delete", name);
+    return;
+  }
+
+  if (backing_sem->recreate != backed_sem->recreate) {
+    // the recreate attribute is moot in reality but having them match
+    // means the user is saying they know that their backed storage could go away
+    // if the backing table were to change
+    report_invalid_backed(ast, "@recreate attribute doesn't match the backing table", name);
+    return;
+  }
+
+  CSTR backing_group = backing_sem->recreate_group_name ? backing_sem->recreate_group_name : "";
+  CSTR backed_group = backed_sem->recreate_group_name ? backed_sem->recreate_group_name : "";
+
+  if (Strcasecmp(backing_group, backed_group)) {
+    // if a group was specified they should match
+    report_invalid_backed(ast, "@recreate group doesn't match the backing table", name);
     return;
   }
 }
