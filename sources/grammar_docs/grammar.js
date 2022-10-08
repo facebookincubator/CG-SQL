@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Oct  7 12:55:31 2022
+// Snapshot as of Fri Oct  7 22:52:04 2022
 
 
 const PREC = {
@@ -249,7 +249,7 @@ module.exports = grammar({
     func_params: $ => choice($.func_param, seq($.func_param, ',', optional($.func_params))),
     param: $ => choice(seq($.name, $.data_type_with_options), seq($.inout, $.name, $.data_type_with_options), $.shape_def, seq($.name, $.shape_def)),
     params: $ => choice($.param, seq($.param, ',', optional($.params))),
-    /* these forms are just storage */declare_simple_var_stmt: $ => choice(seq($.DECLARE, $.name_list, $.data_type_with_options), seq($.DECLARE, $.name, $.CURSOR, $.shape_def), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, '(', $.typed_names, ')')),
+    /* these forms are just storage */declare_simple_var_stmt: $ => choice(seq($.DECLARE, $.name_list, $.data_type_with_options), seq($.VAR, $.name_list, $.data_type_with_options), seq($.DECLARE, $.name, $.CURSOR, $.shape_def), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, '(', $.typed_names, ')')),
     /* the additional forms are just about storage */declare_stmt: $ => choice($.declare_simple_var_stmt, seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.explain_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FETCH, $.FROM, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.expr), seq($.DECLARE, $.name, $.TYPE, $.data_type_with_options)),
     call_stmt: $ => choice(seq($.CALL, $.name, '(', ')'), seq($.CALL, $.name, '(', $.call_expr_list, ')'), seq($.CALL, $.name, '(', '*', ')')),
     while_stmt: $ => seq($.WHILE, $.expr, $.BEGIN, optional($.opt_stmt_list), $.END),
@@ -514,6 +514,7 @@ module.exports = grammar({
     TRANSACTION: $ => CI('transaction'),
     INTERFACE: $ => CI('interface'),
     INOUT: $ => CI('inout'),
+    VAR: $ => CI('var'),
     FETCH: $ => CI('fetch'),
     CALL: $ => CI('call'),
     WHILE: $ => CI('while'),

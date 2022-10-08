@@ -7385,7 +7385,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Fri Oct 7 12:55:31 PDT 2022</p>
+<p>Snapshot as of Fri Oct 7 22:52:04 PDT 2022</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7448,7 +7448,7 @@ TIES&quot; &quot;EXCLUSIVE&quot; &quot;EXISTS&quot; &quot;EXPLAIN&quot; &quot;FA
 &quot;ROWS&quot; &quot;SAVEPOINT&quot; &quot;SELECT&quot; &quot;SET&quot; &quot;SIGN FUNCTION&quot;
 &quot;STATEMENT&quot; &quot;SWITCH&quot; &quot;TABLE&quot; &quot;TEMP&quot; &quot;TEXT&quot; &quot;THEN&quot; &quot;THROW&quot;
 &quot;TO&quot; &quot;TRANSACTION&quot; &quot;TRIGGER&quot; &quot;TRY&quot; &quot;TYPE&quot; &quot;UNBOUNDED&quot;
-&quot;UNIQUE&quot; &quot;UPDATE&quot; &quot;UPSERT&quot; &quot;USING&quot; &quot;VALUES&quot; &quot;VIEW&quot;
+&quot;UNIQUE&quot; &quot;UPDATE&quot; &quot;UPSERT&quot; &quot;USING&quot; &quot;VALUES&quot; &quot;VAR&quot; &quot;VIEW&quot;
 &quot;VIRTUAL&quot; &quot;WHEN&quot; &quot;WHERE&quot; &quot;WHILE&quot; &quot;WINDOW&quot; &quot;WITH&quot; &quot;WITHOUT&quot;</code></pre>
 <h3 id="rules">Rules</h3>
 <p>Note that in many cases the grammar is more generous than the overall language and errors have to be checked on top of this, often this is done on purpose because even when it’s possible it might be very inconvenient to do checks with syntax. For example the grammar cannot enforce non-duplicate ids in id lists, but it could enforce non-duplicate attributes in attribute lists. It chooses to do neither as they are easily done with semantic validation. Thus the grammar is not the final authority on what constitutes a valid program but it’s a good start.</p>
@@ -8721,6 +8721,7 @@ params:
 /* these forms are just storage */
 declare_simple_var_stmt:
   &quot;DECLARE&quot; name_list data_type_with_options
+  | &quot;VAR&quot; name_list data_type_with_options
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; shape_def
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;LIKE&quot; select_stmt
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;LIKE&quot; &#39;(&#39; typed_names &#39;)&#39;
@@ -11389,7 +11390,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Fri Oct 7 12:55:32 PDT 2022</p>
+<p>Snapshot as of Fri Oct 7 22:52:04 PDT 2022</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

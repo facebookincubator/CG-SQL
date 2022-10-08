@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Oct  7 12:55:31 PDT 2022
+Snapshot as of Fri Oct  7 22:52:04 PDT 2022
 
 ### Operators and Literals
 
@@ -85,7 +85,7 @@ TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
 "ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
 "STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
 "TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "UNBOUNDED"
-"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VIEW"
+"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VAR" "VIEW"
 "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
 ```
 ### Rules
@@ -1361,6 +1361,7 @@ params:
 /* these forms are just storage */
 declare_simple_var_stmt:
   "DECLARE" name_list data_type_with_options
+  | "VAR" name_list data_type_with_options
   | "DECLARE" name "CURSOR" shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
   | "DECLARE" name "CURSOR" "LIKE" '(' typed_names ')'
