@@ -3791,6 +3791,15 @@ cql_bool cql_string_dictionary_add(
 
   cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
 
+  cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+  if (entry) {
+    cql_string_retain(val);
+    cql_string_release((cql_string_ref)entry->val);
+    entry->val = (cql_int64)val;
+    return false;
+  }
+
   // retain/release defined above, the key/value will be retained
   return cql_hashtab_add(self, (cql_int64)key, (cql_int64)val);
 }

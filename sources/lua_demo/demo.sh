@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+DIR="$( dirname -- "$0"; )"
+cd "${DIR}" || exit
+
 set -e
 
 O="../out"
@@ -37,4 +40,4 @@ echo ""
 echo "run test (NOTE: some exception spam is normal, the tests throwing exceptions on purpose)"
 echo ""
 
-(cd ..; lua_demo/run_test.sh)
+./run_test.sh

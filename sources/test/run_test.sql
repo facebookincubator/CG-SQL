@@ -5445,10 +5445,15 @@ BEGIN_TEST(string_dictionary)
     let j := 0;
     while j < i
     begin
-      let added := cql_string_dictionary_add(dict, printf("%d", j), printf("%d", j*100));
+      -- set to bogus original value
+      let added := cql_string_dictionary_add(dict, printf("%d", j), "0");
       EXPECT(added);
 
-      set added := cql_string_dictionary_add(dict, printf("%d", j), "0");
+      let bogus_val := cql_string_dictionary_find(dict, printf("%d", j));
+      EXPECT(bogus_val == "0");
+
+      -- replace
+      set added := cql_string_dictionary_add(dict, printf("%d", j), printf("%d", j*100));
       EXPECT(NOT added);
       set j := j + 2;
     end;

@@ -733,7 +733,10 @@ function cql_string_dictionary_create()
 end
 
 function cql_string_dictionary_add(dict, key, val)
-  if dict[key] ~= nil then return false end
+  if dict[key] ~= nil then
+    dict[key] = val
+    return false
+  end
   dict[key] = val
   return true
 end

@@ -158,34 +158,20 @@ static void cg_schema_end_version(
   charbuf *output,
   charbuf *upgrade,
   charbuf *pending,
-  uint32_t vers,
-  bytebuf *version_bits)
+  uint32_t vers)
 {
   if (pending->used > 1) {
-    bprintf(upgrade, "      -- data migration procedures\n");
+    bprintf(upgrade, "    -- data migration procedures\n");
     bprintf(upgrade, "%s", pending->ptr);
     bprintf(upgrade, "\n");
   }
 
   if (upgrade->used > 1) {
-    llint_t upgrade_crc = (llint_t)crc_charbuf(upgrade);
     bprintf(output, "    ---- upgrade to schema version %d ----\n\n", vers);
-    bprintf(output, "    CALL %s_cql_get_version_crc(%d, schema_version);\n", global_proc_name, vers);
-    bprintf(output, "    IF schema_version != %lld THEN\n", (llint_t)upgrade_crc);
-    bprintf(output, "%s", upgrade->ptr);
-    bprintf(output, "      CALL %s_cql_set_version_crc(%d, %lld);\n", global_proc_name, vers, upgrade_crc);
-    bprintf(output, "    END IF;\n\n");
+  }
 
-    // ensure our bit vector has enough space and then set the relevant bit
-    uint32_t byteIndex = vers / 8;
-    uint32_t bitMask = 1 << (vers % 8);
-    if (version_bits->used < byteIndex + 1) {
-      // will realloc if needed
-      uint32_t needed = byteIndex + 1 - version_bits->used;
-      bytebuf_alloc(version_bits, needed);
-      memset(version_bits->ptr + byteIndex, 0, needed);
-    }
-    version_bits->ptr[byteIndex] |= bitMask;
+  if (upgrade->used > 1) {
+    bprintf(output, "%s", upgrade->ptr);
   }
 
   bclear(pending);
@@ -322,10 +308,13 @@ static void cg_schema_emit_one_time_drop(charbuf *decls) {
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  LET facet := printf('1_time_drop_%%s', name);\n");
   bprintf(decls, "  IF cql_facet_find(%s_facets, facet) != version THEN\n", global_proc_name);
-  bprintf(decls, "    call cql_exec_internal(printf('DROP TABLE IF EXISTS %%s;', name));\n");
-  bprintf(decls, "    call %s_cql_set_facet_version(facet, version);\n", global_proc_name);
+  bprintf(decls, "    CALL cql_exec_internal(printf('DROP TABLE IF EXISTS %%s;', name));\n");
+  bprintf(decls, "    CALL %s_cql_set_facet_version(facet, version);\n", global_proc_name);
+  bprintf(decls, "    -- remove the table from our dictionary marking it dropped\n");
+  bprintf(decls, "    IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
+  bprintf(decls, "    LET added := cql_string_dictionary_add(%s_tables_dict_, name, '');\n", global_proc_name);
   bprintf(decls, "  END IF;\n");
-  bprintf(decls, "END;\n\n");
+  bprintf(decls, "END;\n");
 }
 
 // Emit the delcaration of the sqlite_master table so we can read from it.
@@ -388,7 +377,7 @@ static bool_t cg_schema_emit_temp_schema_proc(charbuf *output) {
   return has_temp_schema;
 }
 
-// This handles any schema that has no verison number associated with it.  That is
+// This handles any schema that has no version number associated with it.  That is
 // all the things that were in the original schema before @create/@delete annotations
 // started being used.  Once we're done with  the original items for the baseline,
 // the normal processing of deltas for will take care of the rest.
@@ -429,7 +418,19 @@ static void cg_generate_baseline_tables(charbuf *output) {
     // the cases we might have to skip a table are pulled out to get better code coverage detail
     // the order was selected to give the best (i.e. most painful) test-detection
 
-    if (ast->sem->create_version != -1) {
+    if (ast->sem->create_version > 0) {
+      continue;
+    }
+
+    if (ast->sem->delete_version > 0 ) {
+      continue;
+    }
+
+    if (ast->sem->resub_version > 0) {
+      continue;
+    }
+
+    if (ast->sem->unsub_version > 0) {
       continue;
     }
 
@@ -1410,9 +1411,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     &max_schema_version,
     &schema_crc_no_virtual);
 
-  bytebuf version_bits;
-  bytebuf_open(&version_bits);
-
   CHARBUF_OPEN(preamble);
   CHARBUF_OPEN(main);
   CHARBUF_OPEN(decls);
@@ -1482,6 +1480,14 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "  SET exists_ := _cql_contains_column_def(table_str, col_info);\n");
   bprintf(&preamble, "END;\n\n");
 
+  bprintf(&preamble, "@attribute(cql:private)\n");
+  bprintf(&preamble, "CREATE PROC %s_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)\n", global_proc_name);
+  bprintf(&preamble, "BEGIN\n");
+  bprintf(&preamble, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
+  bprintf(&preamble, "  LET result := cql_string_dictionary_find(%s_tables_dict_, table_);\n", global_proc_name);
+  bprintf(&preamble, "  SET exists_ := result IS NOT NULL and result IS NOT '';\n");
+  bprintf(&preamble, "END;\n\n");
+
   // the main upgrade worker
 
   bprintf(&main, "\n@attribute(cql:private)\n");
@@ -1538,7 +1544,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     }
 
     if (prev_version != vers) {
-      cg_schema_end_version(&main, &upgrade, &pending, prev_version, &version_bits);
+      cg_schema_end_version(&main, &upgrade, &pending, prev_version);
       prev_version = (uint32_t)vers;
     }
 
@@ -1566,10 +1572,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     switch (type) {
       case SCHEMA_ANNOTATION_CREATE_COLUMN: {
 
-        if (note->target_ast->sem->sem_type & SCHEMA_FLAG_UNSUB) {
-          // do not emit the alter table add column if we are
-          // currently unsubscribed, not that resub happens AFTER
-          // CREATE COLUMN and UNSUB happens before, this is important!
+        // This covers deleted or unsubscribed
+        bool_t table_deleted = is_deleted(note->target_ast);
+
+        if (table_deleted) {
+          // do not emit the alter table add column if we are currently unsubscribed, or deleted
+          continue;
+        }
+
+        // resub is coming later if ever, this add is moot
+        if (note->target_ast->sem->unsub_version >= vers || note->target_ast->sem->resub_version >= vers) {
           continue;
         }
 
@@ -1589,19 +1601,19 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         // no-op callbacks still suppress @create/@delete which is not legal in alter table
         gen_col_def_with_callbacks(def, &callbacks);
 
-        bprintf(&upgrade, "      -- altering table %s to add column %s %s;\n\n",
+        bprintf(&upgrade, "    -- altering table %s to add column %s %s;\n\n",
           target_name,
           col_name,
           col_type);
-        bprintf(&upgrade, "      IF NOT %s_column_exists('%s', '%s %s') THEN \n",
+        bprintf(&upgrade, "    IF NOT %s_column_exists(cql_compressed('%s'), cql_compressed('%s %s')) THEN \n",
           global_proc_name,
           target_name,
           col_name,
           col_type);
-        bprintf(&upgrade, "        ALTER TABLE %s ADD COLUMN %s;\n",
+        bprintf(&upgrade, "      ALTER TABLE %s ADD COLUMN %s;\n",
           target_name,
           sql_out.ptr);
-        bprintf(&upgrade, "      END IF;\n\n");
+        bprintf(&upgrade, "    END IF;\n\n");
 
         CHARBUF_CLOSE(sql_out);
         break;
@@ -1614,7 +1626,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
         EXTRACT_STRING(col_name, col_def_name_type->left);
 
-        bprintf(&upgrade, "      -- logical delete of column %s from %s; -- no ddl\n\n", col_name, target_name);
+        bprintf(&upgrade, "    -- logical delete of column %s from %s; -- no ddl\n\n", col_name, target_name);
         break;
       }
 
@@ -1627,12 +1639,13 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           EXTRACT_STRING(rhs, dot->right);
 
           if (!Strcasecmp(lhs, "cql") && !Strcasecmp(rhs, "from_recreate")) {
-            bprintf(&upgrade, "      -- one time drop %s\n\n", target_name);
-            bprintf(&upgrade, "      CALL %s_cql_one_time_drop('%s', %d);\n\n", global_proc_name, target_name, vers);
+            bprintf(&upgrade, "    -- one time drop %s\n\n", target_name);
+            bprintf(&upgrade, "    CALL %s_cql_one_time_drop(cql_compressed('%s'), %d);\n\n", global_proc_name, target_name, vers);
             one_time_drop_needed = true;
           }
         }
 
+        bprintf(&upgrade, "    IF NOT %s_table_exists(cql_compressed('%s')) THEN\n", global_proc_name, target_name);
         bprintf(&upgrade, "      -- creating table %s\n\n", target_name);
 
         gen_sql_callbacks callbacks;
@@ -1646,7 +1659,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         gen_statement_with_callbacks(note->target_ast, &callbacks);  // only the original columns
 
         bindent(&upgrade, &sql_out, 6);
-        bprintf(&upgrade, ";\n\n");
+        bprintf(&upgrade, ";\n");
+        bprintf(&upgrade, "    END IF;\n\n");
 
         CHARBUF_CLOSE(sql_out);
         break;
@@ -1680,12 +1694,31 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         // annotation not generated for such cases as it would be a no-op anyway
         Invariant(!note->target_ast->sem->recreate);
 
+        // current status: subscribed
+        note->target_ast->sem->sem_type &= sem_not(SCHEMA_FLAG_UNSUB);
+
+        // This covers deleted or unsubscribed
+        bool_t table_deleted = is_deleted(note->target_ast);
+
+        if (table_deleted || note->target_ast->sem->resub_version != vers) {
+          // do not emit the drop and create if the table is deleted
+          // do not emit the drop and create if we are not at the final resub
+          continue;
+        }
+
         // emit a create if not exists at this version
         // note that we do not (!) emit a drop here because it's possible that
         // something else will be later added to this schema rev causing it
         // to re-run and we want it to be idempotent
 
-        bprintf(&upgrade, "      -- resubscribe to %s\n\n", target_name);
+        bprintf(&upgrade, "    -- resubscribe to %s\n\n", target_name);
+        bprintf(&upgrade, "    CALL %s_resub_prep_%s();\n\n", global_proc_name, target_name);
+
+        bprintf(&decls, "\n");
+        bprintf(&decls, "CREATE PROC %s_resub_prep_%s()\n", global_proc_name, target_name);
+        bprintf(&decls, "BEGIN\n");
+        bprintf(&decls, "  LET facet := '1_time_resub_v%d_%s';\n", vers, target_name);
+        bprintf(&decls, "  IF cql_facet_find(%s_facets, facet) == -1 THEN\n", global_proc_name);
 
         list_item *index_list = note->target_ast->sem->index_list;
 
@@ -1697,14 +1730,29 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
           EXTRACT_STRING(index_name, index_name_ast);
 
-          bprintf(&upgrade, "      CALL %s_cql_set_facet_version('%s_index_crc', -1);\n", global_proc_name, index_name);
+          bprintf(&decls, "    CALL %s_cql_set_facet_version('%s_index_crc', -1);\n", global_proc_name, index_name);
         }
 
-        bprintf(&upgrade, "\n");
+        bprintf(&decls, "\n");
 
-        // if a stale version exists we have to wipe it because we are about to
-        // emit a clean version.
-        bprintf(&upgrade, "      DROP TABLE IF EXISTS %s;\n", target_name);
+        // If a stale version of this talbe exists we have to wipe it because we are about to
+        // emit a clean version.  Note that this only has to handle the case that we found
+        // an old database and it has a stale subscription that's got fewer columns because
+        // that db was never upgraded while the unsub was active.  e.g. a user has v8, unsub happens
+        // in v9, but they don't take the v9 upgrade, then resub happens in v10.  They have to go
+        // from 8 to 10.  To do that we have to drop the v8 version of the table before we create
+        // the v10 version.  Importantly, this code is still wrong, it's only ever worked if the
+        // resub was a leaf.
+       
+        // Todo: generalize this to drop the entire chain of dependencies starting from target_name
+        // following fks.
+        bprintf(&decls, "    DROP TABLE IF EXISTS %s;\n", target_name);
+        bprintf(&decls, "    CALL %s_cql_set_facet_version(facet, %d);\n", global_proc_name, vers);
+        bprintf(&decls, "    -- remove the table from our dictionary marking it dropped\n");
+        bprintf(&decls, "    IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
+        bprintf(&decls, "    LET added := cql_string_dictionary_add(%s_tables_dict_, '%s', '');\n", global_proc_name, target_name);
+        bprintf(&decls, "  END IF;\n");
+        bprintf(&decls, "END;\n\n");
 
         gen_sql_callbacks callbacks;
         init_gen_sql_callbacks(&callbacks);
@@ -1718,18 +1766,19 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           // only the columns as of the current version
           gen_statement_with_callbacks(note->target_ast, &callbacks);
 
+          bprintf(&upgrade, "    IF NOT %s_table_exists(cql_compressed('%s')) THEN\n", global_proc_name, target_name);
+          bprintf(&upgrade, "      -- creating table %s\n\n", target_name);
           bindent(&upgrade, &sql_out, 6);
           bprintf(&upgrade, ";\n\n");
+          bprintf(&upgrade, "    END IF;\n");
         CHARBUF_CLOSE(sql_out);
 
-        // current status: subscribed
-        note->target_ast->sem->sem_type &= sem_not(SCHEMA_FLAG_UNSUB);
         break;
 
       case SCHEMA_ANNOTATION_AD_HOC:
         // no annotation based actions other than migration proc (handled below)
         Contract(version_annotation->right);
-        bprintf(&upgrade, "      -- ad hoc migration proc %s will run\n\n", target_name);
+        bprintf(&upgrade, "    -- ad hoc migration proc %s will run\n\n", target_name);
         break;
     }
 
@@ -1738,16 +1787,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
       // call any non-builtin migrations the generic way, builtins get whatever special handling they need
       if (!is_ast_dot(version_annotation->right)) {
         EXTRACT_STRING(proc, version_annotation->right);
-        bprintf(&pending, "      IF cql_facet_find(%s_facets, '%s') = -1 THEN\n", global_proc_name, proc);
-        bprintf(&pending, "        CALL %s();\n", proc);
-        bprintf(&pending, "        CALL %s_cql_set_facet_version('%s', %d);\n", global_proc_name, proc, vers);
-        bprintf(&pending, "      END IF;\n");
+        bprintf(&pending, "    IF cql_facet_find(%s_facets, '%s') = -1 THEN\n", global_proc_name, proc);
+        bprintf(&pending, "      CALL %s();\n", proc);
+        bprintf(&pending, "      CALL %s_cql_set_facet_version('%s', %d);\n", global_proc_name, proc, vers);
+        bprintf(&pending, "    END IF;\n");
         bprintf(&decls, "DECLARE PROC %s() USING TRANSACTION;\n", proc);
       }
     }
   }
 
-  cg_schema_end_version(&main, &upgrade, &pending, prev_version, &version_bits);
+  cg_schema_end_version(&main, &upgrade, &pending, prev_version);
 
 
   // compute additional drops due to net unsubscription
@@ -1801,35 +1850,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     bprintf(&main, "    CALL %s_cql_create_all_triggers();\n", global_proc_name);
   }
 
-  CHARBUF_OPEN(missing_versions);
-  for (uint32_t v = 1; v <= prev_version; v++) {
-    uint32_t byteIndex = v / 8;
-    uint32_t bitMask = 1 << (v % 8);
-    if (version_bits.used > byteIndex && ((uint32_t)(version_bits.ptr[byteIndex]) & bitMask)) {
-      continue;
-    }
-
-    if (missing_versions.used > 1) {
-      bprintf(&missing_versions, ",");
-    }
-    bprintf(&missing_versions, "(%u)", v);
-  }
-
-  if (missing_versions.used > 1) {
-    bprintf(&main, "    CALL %s_cleanup_unused_versions();\n", global_proc_name);
-
-    bprintf(&preamble, "\n@attribute(cql:private)\n");
-    bprintf(&preamble, "CREATE PROC %s_cleanup_unused_versions()\n", global_proc_name);
-    bprintf(&preamble, "BEGIN\n");
-    bprintf(&preamble, "  WITH\n");
-    bprintf(&preamble, "    V(v) AS (VALUES %s),\n", missing_versions.ptr);
-    bprintf(&preamble, "    F(f) AS (SELECT 'cql_schema_v'||v from V)\n");
-    bprintf(&preamble, "  DELETE FROM %s_cql_schema_facets WHERE facet IN (SELECT f from F);\n", global_proc_name);
-    bprintf(&preamble, "END;\n");
-  }
-
-  CHARBUF_CLOSE(missing_versions);
-
   bprintf(&main, "\n    CALL %s_cql_set_facet_version('cql_schema_version', %d);\n", global_proc_name, prev_version);
   bprintf(&main, "    CALL %s_cql_set_facet_version('cql_schema_crc_no_virtual', %lld);\n", global_proc_name, schema_crc_no_virtual);
   bprintf(&main, "  END IF;\n");
@@ -1849,7 +1869,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "BEGIN\n");
   bprintf(&main, "    SET current := %s_cql_get_facet_version('cql_schema_version');\n", global_proc_name);
   bprintf(&main, "    SET proposed := %d;\n", max_schema_version);
-  bprintf(&main, "END;\n");
+  bprintf(&main, "END;\n\n");
 
   bprintf(&main, "@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
@@ -1918,6 +1938,15 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   }
 
   CHARBUF_OPEN(output_file);
+
+  // Enable these lines to force error tracing in the generated upgrader, useful for debugging
+  //
+  // bprintf(&output_file, "@echo c,\"#undef cql_error_trace\\n\";\n");
+  // bprintf(&output_file, "@echo c,\"#define cql_error_trace() ");
+  // bprintf(&output_file, "fprintf(stderr, \\\"Error at %%s:%%d in %%s: %%d %%s\\\\n\\\",");
+  // bprintf(&output_file, " __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))\";\n");
+  // bprintf(&output_file, "@echo c,\"\\n\\n\";\n\n");
+
   bprintf(&output_file, "%s\n", decls.ptr);
   bprintf(&output_file, "%s", preamble.ptr);
   bprintf(&output_file, "%s", main.ptr);
@@ -1933,8 +1962,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   CHARBUF_CLOSE(decls);
   CHARBUF_CLOSE(main);
   CHARBUF_CLOSE(preamble);
-
-  bytebuf_close(&version_bits);
 }
 
 #endif

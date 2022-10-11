@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+DIR="$( dirname -- "$0"; )"
+cd "${DIR}/.."
+
 lua_demo/prepare_run_test.sh
 lua out/run_test.lua
 

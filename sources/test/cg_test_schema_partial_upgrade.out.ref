@@ -354,15 +354,14 @@ BEGIN
   SET exists_ := _cql_contains_column_def(table_str, col_info);
 END;
 
-
 @attribute(cql:private)
-CREATE PROC test_cleanup_unused_versions()
+CREATE PROC test_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
 BEGIN
-  WITH
-    V(v) AS (VALUES (1),(3),(4),(5),(6),(7)),
-    F(f) AS (SELECT 'cql_schema_v'||v from V)
-  DELETE FROM test_cql_schema_facets WHERE facet IN (SELECT f from F);
+  IF test_tables_dict_ IS NULL THROW;
+  LET result := cql_string_dictionary_find(test_tables_dict_, table_);
+  SET exists_ := result IS NOT NULL and result IS NOT '';
 END;
+
 
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
@@ -390,50 +389,44 @@ BEGIN
 
     ---- upgrade to schema version 2 ----
 
-    CALL test_cql_get_version_crc(2, schema_version);
-    IF schema_version != 9119572461114434390 THEN
-      -- altering table table2 to add column name1 TEXT;
+    -- altering table table2 to add column name1 TEXT;
 
-      IF NOT test_column_exists('table2', 'name1 TEXT') THEN 
-        ALTER TABLE table2 ADD COLUMN name1 TEXT;
-      END IF;
+    IF NOT test_column_exists(cql_compressed('table2'), cql_compressed('name1 TEXT')) THEN 
+      ALTER TABLE table2 ADD COLUMN name1 TEXT;
+    END IF;
 
-      -- altering table table2 to add column name2 TEXT;
+    -- altering table table2 to add column name2 TEXT;
 
-      IF NOT test_column_exists('table2', 'name2 TEXT') THEN 
-        ALTER TABLE table2 ADD COLUMN name2 TEXT;
-      END IF;
+    IF NOT test_column_exists(cql_compressed('table2'), cql_compressed('name2 TEXT')) THEN 
+      ALTER TABLE table2 ADD COLUMN name2 TEXT;
+    END IF;
 
-      -- altering table table2 to add column name3 TEXT;
+    -- altering table table2 to add column name3 TEXT;
 
-      IF NOT test_column_exists('table2', 'name3 TEXT') THEN 
-        ALTER TABLE table2 ADD COLUMN name3 TEXT;
-      END IF;
+    IF NOT test_column_exists(cql_compressed('table2'), cql_compressed('name3 TEXT')) THEN 
+      ALTER TABLE table2 ADD COLUMN name3 TEXT;
+    END IF;
 
-      -- altering table table2 to add column name4 TEXT;
+    -- altering table table2 to add column name4 TEXT;
 
-      IF NOT test_column_exists('table2', 'name4 TEXT') THEN 
-        ALTER TABLE table2 ADD COLUMN name4 TEXT;
-      END IF;
+    IF NOT test_column_exists(cql_compressed('table2'), cql_compressed('name4 TEXT')) THEN 
+      ALTER TABLE table2 ADD COLUMN name4 TEXT;
+    END IF;
 
-      -- data migration procedures
-      IF cql_facet_find(test_facets, 'CreateName1Proc') = -1 THEN
-        CALL CreateName1Proc();
-        CALL test_cql_set_facet_version('CreateName1Proc', 2);
-      END IF;
-      IF cql_facet_find(test_facets, 'CreateName2Proc') = -1 THEN
-        CALL CreateName2Proc();
-        CALL test_cql_set_facet_version('CreateName2Proc', 2);
-      END IF;
-
-      CALL test_cql_set_version_crc(2, 9119572461114434390);
+    -- data migration procedures
+    IF cql_facet_find(test_facets, 'CreateName1Proc') = -1 THEN
+      CALL CreateName1Proc();
+      CALL test_cql_set_facet_version('CreateName1Proc', 2);
+    END IF;
+    IF cql_facet_find(test_facets, 'CreateName2Proc') = -1 THEN
+      CALL CreateName2Proc();
+      CALL test_cql_set_facet_version('CreateName2Proc', 2);
     END IF;
 
     CALL test_cql_recreate_non_virtual_tables();
     CALL test_cql_create_all_views();
     CALL test_cql_create_all_indices();
     CALL test_cql_create_all_triggers();
-    CALL test_cleanup_unused_versions();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
     CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 4537885047772706106);
@@ -452,6 +445,7 @@ BEGIN
     SET current := test_cql_get_facet_version('cql_schema_version');
     SET proposed := 7;
 END;
+
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
 BEGIN

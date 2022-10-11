@@ -12,6 +12,10 @@ TEST_PREFIX="test"
 CQL="./${OUT_DIR}/cql"
 ERROR_TRACE=0
 
+DIR="$( dirname -- "$0"; )"
+
+cd "${DIR}/.." || exit
+
 # shellcheck disable=SC1091
 source common/test_helpers.sh || exit 1
 
