@@ -79,7 +79,12 @@ CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (
   t TEXT);
 
 CREATE TABLE migrated_from_recreate(
-  id INTEGER,
+  id INTEGER PRIMARY KEY,
+  t TEXT
+);
+
+CREATE TABLE migrated_from_recreate2(
+  id INTEGER PRIMARY KEY REFERENCES migrated_from_recreate (id),
   t TEXT
 );
 
@@ -139,6 +144,16 @@ CREATE TABLE unsub_voyage(
   v7 TEXT
 );
 
+CREATE TABLE unsub_inner(
+  id INTEGER PRIMARY KEY,
+  name_inner TEXT
+);
+
+CREATE TABLE unsub_outer(
+  id INTEGER PRIMARY KEY REFERENCES unsub_inner (id),
+  name_outer TEXT
+);
+
 CREATE TABLE some_table(
   id INTEGER
 );
@@ -179,9 +194,19 @@ CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 
 CREATE INDEX index_going_away ON table2 (name3);
 
+CREATE INDEX recreate_index_needs_deleting ON migrated_from_recreate (t);
+
+CREATE INDEX recreate_index_needs_deleting2 ON migrated_from_recreate (t);
+
+CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
+
 CREATE INDEX unsub_recreated_index ON unsub_recreated (anything);
 
 CREATE INDEX unsub_voyage_index ON unsub_voyage (v1);
+
+CREATE INDEX us1 ON unsub_inner (name_inner);
+
+CREATE INDEX us2 ON unsub_outer (name_outer);
 
 CREATE TRIGGER shared_trigger
   BEFORE INSERT ON foo

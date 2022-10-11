@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc -500604338629658506
+-- schema crc 1549075402569075443
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -133,7 +133,12 @@ CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) 
 ) @DELETE(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 CREATE TABLE migrated_from_recreate(
-  id INTEGER,
+  id INTEGER PRIMARY KEY,
+  t TEXT
+) @CREATE(4, cql:from_recreate);
+
+CREATE TABLE migrated_from_recreate2(
+  id INTEGER PRIMARY KEY REFERENCES migrated_from_recreate (id),
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
@@ -216,6 +221,20 @@ CREATE TABLE unsub_voyage(
 @end_schema_region;
 
 @begin_schema_region other;
+CREATE TABLE unsub_inner(
+  id INTEGER PRIMARY KEY,
+  name_inner TEXT
+);
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE TABLE unsub_outer(
+  id INTEGER PRIMARY KEY REFERENCES unsub_inner (id),
+  name_outer TEXT
+);
+@end_schema_region;
+
+@begin_schema_region other;
 CREATE TABLE some_table(
   id INTEGER
 );
@@ -281,10 +300,24 @@ CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 CREATE INDEX index_going_away ON table2 (name3) @DELETE(3);
 @end_schema_region;
 
+CREATE INDEX recreate_index_needs_deleting ON migrated_from_recreate (t);
+
+CREATE INDEX recreate_index_needs_deleting2 ON migrated_from_recreate (t);
+
+CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
+
 CREATE INDEX unsub_recreated_index ON unsub_recreated (anything);
 
 @begin_schema_region other;
 CREATE INDEX unsub_voyage_index ON unsub_voyage (v1);
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE INDEX us1 ON unsub_inner (name_inner);
+@end_schema_region;
+
+@begin_schema_region other;
+CREATE INDEX us2 ON unsub_outer (name_outer);
 @end_schema_region;
 
 @begin_schema_region shared;
@@ -353,7 +386,23 @@ END;
 @end_schema_region;
 
 @begin_schema_region other;
+@UNSUB(1, unsub_outer);
+@end_schema_region;
+
+@begin_schema_region other;
+@UNSUB(1, unsub_inner);
+@end_schema_region;
+
+@begin_schema_region other;
 @RESUB(5, unsub_voyage);
+@end_schema_region;
+
+@begin_schema_region other;
+@RESUB(5, unsub_inner);
+@end_schema_region;
+
+@begin_schema_region other;
+@RESUB(5, unsub_outer);
 @end_schema_region;
 
 @begin_schema_region other;
@@ -444,38 +493,43 @@ END;
 -- helper proc to reset any triggers that are on the old plan --
 DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
 
+CREATE PROCEDURE test_drop_table_helper(table_name TEXT NOT NULL)
+BEGIN
+  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS %s', table_name));
+  -- remove the table from our dictionary marking it dropped
+  IF test_tables_dict_ IS NULL THROW;
+  LET added := cql_string_dictionary_add(test_tables_dict_, table_name, '');
+END;
+
 -- declared upgrade procedures if any
 DECLARE PROC RecreateGroup1Migration() USING TRANSACTION;
+@attribute(cql:private)
+
+CREATE PROC test_migrated_from_recreate2_full_drop()
+BEGIN
+  -- mark indices as having been deleted
+  CALL test_cql_set_facet_version(cql_compressed('recreate_index_needs_deleting3_index_crc'), -1);
+
+  -- drop the target table and mark it dropped
+  CALL test_drop_table_helper(cql_compressed('migrated_from_recreate2'));
+END;
+@attribute(cql:private)
+
+CREATE PROC test_migrated_from_recreate_full_drop()
+BEGIN
+  -- drop all dependent tables
+  CALL test_migrated_from_recreate2_full_drop();
+
+  -- mark indices as having been deleted
+  CALL test_cql_set_facet_version(cql_compressed('recreate_index_needs_deleting_index_crc'), -1);
+  CALL test_cql_set_facet_version(cql_compressed('recreate_index_needs_deleting2_index_crc'), -1);
+
+  -- drop the target table and mark it dropped
+  CALL test_drop_table_helper(cql_compressed('migrated_from_recreate'));
+END;
 DECLARE PROC CreateId2Proc() USING TRANSACTION;
 DECLARE PROC DeleteRate2Proc() USING TRANSACTION;
 DECLARE PROC MyAdHocMigrationScript() USING TRANSACTION;
-
-CREATE PROC test_resub_prep_unsub_voyage()
-BEGIN
-  LET facet := '1_time_resub_v5_unsub_voyage';
-  IF cql_facet_find(test_facets, facet) == -1 THEN
-    CALL test_cql_set_facet_version('unsub_voyage_index_index_crc', -1);
-
-    DROP TABLE IF EXISTS unsub_voyage;
-    CALL test_cql_set_facet_version(facet, 5);
-    -- remove the table from our dictionary marking it dropped
-    IF test_tables_dict_ IS NULL THROW;
-    LET added := cql_string_dictionary_add(test_tables_dict_, 'unsub_voyage', '');
-  END IF;
-END;
-
-@attribute(cql:private)
-CREATE PROCEDURE test_cql_one_time_drop(name TEXT NOT NULL, version INTEGER NOT NULL)
-BEGIN
-  LET facet := printf('1_time_drop_%s', name);
-  IF cql_facet_find(test_facets, facet) != version THEN
-    CALL cql_exec_internal(printf('DROP TABLE IF EXISTS %s;', name));
-    CALL test_cql_set_facet_version(facet, version);
-    -- remove the table from our dictionary marking it dropped
-    IF test_tables_dict_ IS NULL THROW;
-    LET added := cql_string_dictionary_add(test_tables_dict_, name, '');
-  END IF;
-END;
 
 -- drop all the views we know
 @attribute(cql:private)
@@ -522,10 +576,25 @@ BEGIN
   END IF;
   DROP INDEX IF EXISTS index_going_away;
   CALL test_cql_set_facet_version('index_going_away_index_crc', -1);
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting_index_crc') != -5814116180550350562 THEN
+    DROP INDEX IF EXISTS recreate_index_needs_deleting;
+  END IF;
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting2_index_crc') != 3261027906397844075 THEN
+    DROP INDEX IF EXISTS recreate_index_needs_deleting2;
+  END IF;
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting3_index_crc') != 6591796666912246967 THEN
+    DROP INDEX IF EXISTS recreate_index_needs_deleting3;
+  END IF;
   DROP INDEX IF EXISTS unsub_recreated_index;
   CALL test_cql_set_facet_version('unsub_recreated_index_index_crc', -1);
   IF cql_facet_find(test_facets, 'unsub_voyage_index_index_crc') != -8899721617915492817 THEN
     DROP INDEX IF EXISTS unsub_voyage_index;
+  END IF;
+  IF cql_facet_find(test_facets, 'us1_index_crc') != 9020201814219197762 THEN
+    DROP INDEX IF EXISTS us1;
+  END IF;
+  IF cql_facet_find(test_facets, 'us2_index_crc') != -4340849304463212055 THEN
+    DROP INDEX IF EXISTS us2;
   END IF;
 END;
 
@@ -541,9 +610,29 @@ BEGIN
     CREATE INDEX not_shared_present_index ON table2 (name1, name2);
     CALL test_cql_set_facet_version('not_shared_present_index_index_crc', -4019575091142856767);
   END IF;
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting_index_crc') != -5814116180550350562 THEN
+    CREATE INDEX recreate_index_needs_deleting ON migrated_from_recreate (t);
+    CALL test_cql_set_facet_version('recreate_index_needs_deleting_index_crc', -5814116180550350562);
+  END IF;
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting2_index_crc') != 3261027906397844075 THEN
+    CREATE INDEX recreate_index_needs_deleting2 ON migrated_from_recreate (t);
+    CALL test_cql_set_facet_version('recreate_index_needs_deleting2_index_crc', 3261027906397844075);
+  END IF;
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting3_index_crc') != 6591796666912246967 THEN
+    CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
+    CALL test_cql_set_facet_version('recreate_index_needs_deleting3_index_crc', 6591796666912246967);
+  END IF;
   IF cql_facet_find(test_facets, 'unsub_voyage_index_index_crc') != -8899721617915492817 THEN
     CREATE INDEX unsub_voyage_index ON unsub_voyage (v1);
     CALL test_cql_set_facet_version('unsub_voyage_index_index_crc', -8899721617915492817);
+  END IF;
+  IF cql_facet_find(test_facets, 'us1_index_crc') != 9020201814219197762 THEN
+    CREATE INDEX us1 ON unsub_inner (name_inner);
+    CALL test_cql_set_facet_version('us1_index_crc', 9020201814219197762);
+  END IF;
+  IF cql_facet_find(test_facets, 'us2_index_crc') != -4340849304463212055 THEN
+    CREATE INDEX us2 ON unsub_outer (name_outer);
+    CALL test_cql_set_facet_version('us2_index_crc', -4340849304463212055);
   END IF;
 END;
 
@@ -706,7 +795,8 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
-  IF cql_facet_find(test_facets, 'cql_schema_crc_no_virtual') <> -3727851963893061967 THEN
+  LET facet := cql_compressed('cql_schema_crc_no_virtual');
+  IF cql_facet_find(test_facets, facet) <> 4082241841995917668 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -730,17 +820,44 @@ BEGIN
       );
     END IF;
 
+    -- altering table unsub_voyage to add column v3 TEXT;
+
+    IF NOT test_column_exists(cql_compressed('unsub_voyage'), cql_compressed('v3 TEXT')) THEN 
+      ALTER TABLE unsub_voyage ADD COLUMN v3 TEXT;
+    END IF;
+
     ---- upgrade to schema version 4 ----
 
-    -- one time drop migrated_from_recreate
+    -- one time drop moving to create from recreate migrated_from_recreate
 
-    CALL test_cql_one_time_drop(cql_compressed('migrated_from_recreate'), 4);
+    SET facet := cql_compressed('1_time_drop_migrated_from_recreate');
+    IF cql_facet_find(test_facets, facet) != 4 THEN
+      CALL test_migrated_from_recreate_full_drop();
+      CALL test_cql_set_facet_version(facet, 4);
+    END IF;
 
     IF NOT test_table_exists(cql_compressed('migrated_from_recreate')) THEN
       -- creating table migrated_from_recreate
 
       CREATE TABLE IF NOT EXISTS migrated_from_recreate(
-        id INTEGER,
+        id INTEGER PRIMARY KEY,
+        t TEXT
+      );
+    END IF;
+
+    -- one time drop moving to create from recreate migrated_from_recreate2
+
+    SET facet := cql_compressed('1_time_drop_migrated_from_recreate2');
+    IF cql_facet_find(test_facets, facet) != 4 THEN
+      CALL test_migrated_from_recreate2_full_drop();
+      CALL test_cql_set_facet_version(facet, 4);
+    END IF;
+
+    IF NOT test_table_exists(cql_compressed('migrated_from_recreate2')) THEN
+      -- creating table migrated_from_recreate2
+
+      CREATE TABLE IF NOT EXISTS migrated_from_recreate2(
+        id INTEGER PRIMARY KEY REFERENCES migrated_from_recreate (id),
         t TEXT
       );
     END IF;
@@ -771,24 +888,16 @@ BEGIN
       ALTER TABLE foo ADD COLUMN name TEXT;
     END IF;
 
+    -- altering table unsub_voyage to add column v5 TEXT;
+
+    IF NOT test_column_exists(cql_compressed('unsub_voyage'), cql_compressed('v5 TEXT')) THEN 
+      ALTER TABLE unsub_voyage ADD COLUMN v5 TEXT;
+    END IF;
+
     -- logical delete of column rate from foo; -- no ddl
 
     -- ad hoc migration proc MyAdHocMigrationScript will run
 
-    -- resubscribe to unsub_voyage
-
-    CALL test_resub_prep_unsub_voyage();
-
-    IF NOT test_table_exists(cql_compressed('unsub_voyage')) THEN
-      -- creating table unsub_voyage
-
-      CREATE TABLE IF NOT EXISTS unsub_voyage(
-        v1 INTEGER,
-        v3 TEXT,
-        v5 TEXT
-      );
-
-    END IF;
     -- data migration procedures
     IF cql_facet_find(test_facets, 'MyAdHocMigrationScript') = -1 THEN
       CALL MyAdHocMigrationScript();
@@ -834,11 +943,11 @@ BEGIN
     CALL test_cql_create_all_triggers();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -3727851963893061967);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 4082241841995917668);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', -500604338629658506);
+    CALL test_cql_set_facet_version('cql_schema_crc', 1549075402569075443);
   END IF;
 END;
 
@@ -882,7 +991,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> -500604338629658506 THEN
+  IF schema_crc <> 1549075402569075443 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

@@ -246,6 +246,14 @@ END;
 -- helper proc to reset any triggers that are on the old plan --
 DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
 
+CREATE PROCEDURE test_drop_table_helper(table_name TEXT NOT NULL)
+BEGIN
+  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS %s', table_name));
+  -- remove the table from our dictionary marking it dropped
+  IF test_tables_dict_ IS NULL THROW;
+  LET added := cql_string_dictionary_add(test_tables_dict_, table_name, '');
+END;
+
 -- declared upgrade procedures if any
 DECLARE PROC CreateName1Proc() USING TRANSACTION;
 DECLARE PROC CreateName2Proc() USING TRANSACTION;
@@ -366,7 +374,8 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
-  IF cql_facet_find(test_facets, 'cql_schema_crc_no_virtual') <> 4537885047772706106 THEN
+  LET facet := cql_compressed('cql_schema_crc_no_virtual');
+  IF cql_facet_find(test_facets, facet) <> 4537885047772706106 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();

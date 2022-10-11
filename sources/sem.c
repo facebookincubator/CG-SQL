@@ -544,8 +544,6 @@ static symtab *base_fragments;
 static symtab *extension_fragments;
 static symtab *assembly_fragments;
 static symtab *extensions_by_basename;
-static symtab *ref_sources_for_target_table;
-static symtab *ref_targets_for_source_table;
 static symtab *builtin_aggregated_funcs;
 static symtab *arg_bundles;
 static symtab *global_types;
@@ -3752,7 +3750,7 @@ static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node
 }
 
 // Get the name string of the object, for a variety of objects (tables and views for now)
-static CSTR sem_get_name(ast_node *ast) {
+cql_noexport CSTR sem_get_name(ast_node *ast) {
   CSTR name = NULL;
 
   if (is_ast_create_view_stmt(ast)) {
@@ -25480,6 +25478,8 @@ cql_data_defn( bool_t use_encode );
 cql_data_defn( CSTR _Nullable encode_context_column );
 cql_data_defn( symtab *encode_columns );
 cql_data_defn( cte_state *cte_cur );
+cql_data_defn( symtab *ref_sources_for_target_table );
+cql_data_defn( symtab *ref_targets_for_source_table );
 
 // If creating debug/test output, we will hold errors for a given statement in this buffer.
 cql_data_defn( charbuf *error_capture );

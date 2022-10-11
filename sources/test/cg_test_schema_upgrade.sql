@@ -200,9 +200,19 @@ as (
 ) @delete(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 create table migrated_from_recreate(
-  id integer,
+  id integer primary key,
   t text
 ) @create(4, cql:from_recreate);
+
+create index recreate_index_needs_deleting on migrated_from_recreate(t);
+create index recreate_index_needs_deleting2 on migrated_from_recreate(t);
+
+create table migrated_from_recreate2(
+  id integer primary key references migrated_from_recreate(id),
+  t text
+) @create(4, cql:from_recreate);
+
+create index recreate_index_needs_deleting3 on migrated_from_recreate2(t);
 
 create table conflict_clause_t(id int not null on conflict fail);
 
@@ -315,8 +325,27 @@ begin
   select 1;
 end;
 
+create table unsub_inner(
+ id integer primary key,
+ name_inner text
+);
+
+create index us1 on unsub_inner(name_inner);
+
+create table unsub_outer(
+ id integer primary key references unsub_inner(id),
+ name_outer text
+);
+
+create index us2 on unsub_outer(name_outer);
+
+
 @unsub(1, unsub_voyage);
+@unsub(1, unsub_outer);
+@unsub(1, unsub_inner);
 @resub(5, unsub_voyage);
+@resub(5, unsub_inner);
+@resub(5, unsub_outer);
 
 create table some_table(id integer);
 

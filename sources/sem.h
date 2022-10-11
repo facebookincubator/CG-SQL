@@ -253,6 +253,7 @@ cql_noexport bool_t is_autotest_dummy_select(CSTR name);
 cql_noexport bool_t is_autotest_dummy_result_set(CSTR name);
 cql_noexport bool_t is_autotest_dummy_test(CSTR name);
 cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table, CSTR column_name);
+cql_noexport CSTR sem_get_name(ast_node *ast);
 
 // Exit if schema validation directive was seen
 cql_noexport void exit_on_validating_schema(void);
@@ -339,6 +340,9 @@ cql_data_decl( symtab *schema_regions );
 cql_data_decl( ast_node *current_proc );
 cql_data_decl( charbuf *error_capture );
 cql_data_decl( cte_state *cte_cur );
+cql_data_decl( symtab *ref_sources_for_target_table );
+cql_data_decl( symtab *ref_targets_for_source_table );
+
 
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc
