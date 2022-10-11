@@ -2503,6 +2503,36 @@ static void gen_select_core_list(ast_node *ast) {
   gen_select_core_list(select_core_list);
 }
 
+
+// This form is expanded late like select *
+// since it only appears in shared fragments (actually only
+// in conditional fragments) it will never be seen
+// in the course of normal codegen, only in SQL expansion
+// hence none of the code generators need to even know
+// this is happening (again, just like select *).
+// This approach gives us optimal sql for very little cost.
+static void gen_select_nothing_stmt(ast_node *ast) {
+  Contract(is_ast_select_nothing_stmt(ast));
+
+  if (!for_sqlite() || !ast->sem || !ast->sem->sptr) {
+    gen_printf("SELECT NOTHING");
+    return;
+  }
+
+  // we just generate the right number of dummy columns for Sqlite
+  // type doesn't matter because it's going to be "WHERE 0"
+
+  gen_printf("SELECT ");
+  sem_struct *sptr = ast->sem->sptr;
+  for (int32_t i = 0; i < sptr->count; i++) {
+    if (i) {
+      gen_printf(",");
+    }
+    gen_printf("0");
+  }
+  gen_printf(" WHERE 0");
+}
+
 static void gen_select_stmt(ast_node *ast) {
   if (is_ast_with_select_stmt(ast)) {
     gen_with_select_stmt(ast);
@@ -4622,6 +4652,7 @@ cql_noexport void gen_init() {
   STMT_INIT(create_index_stmt);
   STMT_INIT(create_view_stmt);
   STMT_INIT(select_stmt);
+  STMT_INIT(select_nothing_stmt);
   STMT_INIT(with_select_stmt);
   STMT_INIT(delete_stmt);
   STMT_INIT(with_delete_stmt);

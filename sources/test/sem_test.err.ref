@@ -468,6 +468,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadow
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0440: fragments may not have an empty body 'empty_fragment'
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provided to procedure 'a_shared_frag'
 test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0442: shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
+test/sem_test.sql:XXXX:1: error: in select_nothing_stmt : CQL0496: SELECT NOTHING may only appear in the ELSE clause of a shared fragment
 test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0057: bogus_cte, all must have the same column count
 test/sem_test.sql:XXXX:1: error: in cte_decl : additional difference diagnostic info:
 

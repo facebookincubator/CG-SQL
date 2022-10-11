@@ -496,6 +496,7 @@ extern CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, 
 extern CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 // static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern cql_blob_ref _Nullable make_blob(void);
 
 // The statement ending at line XXXX
@@ -15586,6 +15587,122 @@ static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlit
   ") SELECT * FROM _ns_",
   ")"
   );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC shared_frag_else_nothing (id_ INTEGER)
+BEGIN
+  IF id_ > 0 THEN
+    SELECT id_ AS id1, 'x' AS text1;
+  ELSE
+    SELECT NOTHING;
+  END IF;
+END;
+*/
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC shared_frag_else_nothing_test ()
+BEGIN
+  WITH
+  shared_frag_else_nothing (id1, text1) AS (CALL shared_frag_else_nothing(5))
+  SELECT *
+    FROM foo;
+END;
+*/
+
+#define _PROC_ "shared_frag_else_nothing_test"
+static int32_t shared_frag_else_nothing_test_perf_index;
+
+cql_string_proc_name(shared_frag_else_nothing_test_stored_procedure_name, "shared_frag_else_nothing_test");
+
+typedef struct shared_frag_else_nothing_test_row {
+  cql_int32 id;
+} shared_frag_else_nothing_test_row;
+
+cql_int32 shared_frag_else_nothing_test_get_id(shared_frag_else_nothing_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_frag_else_nothing_test_row *data = (shared_frag_else_nothing_test_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id;
+}
+
+uint8_t shared_frag_else_nothing_test_data_types[shared_frag_else_nothing_test_data_types_count] = {
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
+};
+
+static cql_uint16 shared_frag_else_nothing_test_col_offsets[] = { 1,
+  cql_offsetof(shared_frag_else_nothing_test_row, id)
+};
+
+cql_int32 shared_frag_else_nothing_test_result_count(shared_frag_else_nothing_test_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test_fetch_results(sqlite3 *_Nonnull _db_, shared_frag_else_nothing_test_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_shared_frag_else_nothing_test, &shared_frag_else_nothing_test_perf_index);
+  cql_code rc = shared_frag_else_nothing_test(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = shared_frag_else_nothing_test_data_types,
+    .col_offsets = shared_frag_else_nothing_test_col_offsets,
+    .encode_context_index = -1,
+    .rowsize = sizeof(shared_frag_else_nothing_test_row),
+    .crc = CRC_shared_frag_else_nothing_test,
+    .perf_index = &shared_frag_else_nothing_test_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC shared_frag_else_nothing_test () (id INTEGER NOT NULL);
+*/
+CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
+  cql_nullable_int32 _p1_id__ = { .is_null = 1 };
+  char _preds_1[4];
+  char _vpreds_1[1];
+
+  memset(&_preds_1[0], 0, sizeof(_preds_1));
+  memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
+  cql_set_notnull(_p1_id__, 5);
+  _preds_1[0] = 1;
+  cql_set_nullable(_tmp_n_bool_0, _p1_id__.is_null, _p1_id__.value > 0);
+  if (cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) {
+    _preds_1[1] = 1;
+    _vpreds_1[0] = 1; // pred 1 known to be 1
+  }
+  else {
+    _preds_1[2] = 1;
+  }
+  _preds_1[3] = 1;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    4, _preds_1,
+  "WITH "
+    "shared_frag_else_nothing (id1, text1) AS (",
+  "SELECT ?, 'x'",
+  "SELECT 0,0 WHERE 0",
+  ") "
+    "SELECT id "
+      "FROM foo"
+  );
+  cql_multibind_var(&_rc_, _db_, _result_stmt, 1, _vpreds_1,
+                CQL_DATA_TYPE_INT32, &_p1_id__);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 

@@ -103,6 +103,7 @@ cql_noexport bool_t is_region(ast_node *ast) {
 cql_noexport bool_t is_select_stmt(ast_node *ast) {
   return is_ast_select_stmt(ast) ||
          is_ast_explain_stmt(ast) ||
+         is_ast_select_nothing_stmt(ast) ||
          is_ast_with_select_stmt(ast);
 }
 

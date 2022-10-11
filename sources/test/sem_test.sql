@@ -5216,6 +5216,29 @@ begin
   end if;
 end;
 
+-- TEST: try to use select nothing in an illegal context
+-- + {create_proc_stmt}: err
+-- + {select_nothing_stmt}: err
+-- + error: % SELECT NOTHING may only appear in the ELSE clause of a shared fragment
+-- +1 error:
+create proc not_valid_proc_for_select_nothing()
+begin
+  select nothing;
+end;
+
+-- TEST: select nothing expands to whatever is needed to give no rows
+-- + {select_nothing_stmt}: select: { x: integer notnull }
+-- - error
+@attribute(cql:shared_fragment)
+create proc conditional_else_nothing()
+begin
+  if 1 then
+    select 1 x;
+  else
+    select nothing;
+  end if;
+end;
+
 -- TEST: create a conditional fragment with matching like clauses in both branches
 -- + {create_proc_stmt}: ok_conditional_duplicate_cte_names: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:

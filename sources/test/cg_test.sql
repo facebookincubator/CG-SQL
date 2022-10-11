@@ -5031,6 +5031,26 @@ begin
   select * from (call shared_frag());
 end;
 
+
+-- used in the next test
+@attribute(cql:shared_fragment)
+create proc shared_frag_else_nothing(id_ integer)
+begin
+  if id_ > 0 then
+    select id_ as id1, 'x' as text1;
+  else
+    select nothing;
+  end if;
+end;
+
+-- TEST: select nothing expands into the right number of columns
+-- + "SELECT 0,0 WHERE 0",
+create proc shared_frag_else_nothing_test()
+begin
+  with (call shared_frag_else_nothing(5))
+  select * from foo;
+end;
+
 declare const group some_constants (
   const_u = false,
   const_w = 3.5,

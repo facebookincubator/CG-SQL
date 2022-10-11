@@ -4206,6 +4206,44 @@ static inline BOOL CGBUseNestedSelectSharedFragFormRowEqual(CGBUseNestedSelectSh
   return CGCUseNestedSelectSharedFragFormRowEqual(CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet1), row1, CGCUseNestedSelectSharedFragFormFromCGBUseNestedSelectSharedFragForm(resultSet2), row2);
 }
 
+@class CGBSharedFragElseNothingTest;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSharedFragElseNothingTest
+@end
+#endif
+
+static inline CGBSharedFragElseNothingTest *CGBSharedFragElseNothingTestFromCGCSharedFragElseNothingTest(CGCSharedFragElseNothingTestResultSetRef resultSet)
+{
+  return (__bridge CGBSharedFragElseNothingTest *)resultSet;
+}
+
+static inline CGCSharedFragElseNothingTestResultSetRef CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(CGBSharedFragElseNothingTest *resultSet)
+{
+  return (__bridge CGCSharedFragElseNothingTestResultSetRef)resultSet;
+}
+
+static inline int32_t CGBSharedFragElseNothingTestGetId(CGBSharedFragElseNothingTest *resultSet, int32_t row)
+{
+  CGCSharedFragElseNothingTestResultSetRef cResultSet = CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(resultSet);
+  return CGCSharedFragElseNothingTestGetId(cResultSet, row);
+}
+
+static inline int32_t CGBSharedFragElseNothingTestResultCount(CGBSharedFragElseNothingTest *resultSet)
+{
+  return CGCSharedFragElseNothingTestResultCount(CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(resultSet));
+}
+
+static inline NSUInteger CGBSharedFragElseNothingTestRowHash(CGBSharedFragElseNothingTest *resultSet, int32_t row)
+{
+  return CGCSharedFragElseNothingTestRowHash(CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(resultSet), row);
+}
+
+static inline BOOL CGBSharedFragElseNothingTestRowEqual(CGBSharedFragElseNothingTest *resultSet1, int32_t row1, CGBSharedFragElseNothingTest *resultSet2, int32_t row2)
+{
+  return CGCSharedFragElseNothingTestRowEqual(CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(resultSet1), row1, CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(resultSet2), row2);
+}
+
 @class CGBSomeRedeclaredOutProc;
 
 #ifdef CQL_EMIT_OBJC_INTERFACES

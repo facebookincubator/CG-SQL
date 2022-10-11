@@ -1574,14 +1574,21 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     bprintf(&main, "    CALL %s_cql_drop_all_triggers();\n\n", global_proc_name);
   }
 
-  if (baseline.used > 1 && options.min_schema_version == 0) {
-    llint_t baseline_crc = (llint_t)crc_charbuf(&baseline);
-    bprintf(&main, "    ---- install baseline schema if needed ----\n\n");
-    bprintf(&main, "    CALL %s_cql_get_version_crc(0, schema_version);\n", global_proc_name);
-    bprintf(&main, "    IF schema_version != %lld THEN\n", baseline_crc);
-    bprintf(&main, "      CALL %s_cql_install_baseline_schema();\n", global_proc_name);
-    bprintf(&main, "      CALL %s_cql_set_version_crc(0, %lld);\n", global_proc_name, baseline_crc);
-    bprintf(&main, "    END IF;\n\n");
+  if (options.min_schema_version == 0) {
+    if (baseline.used > 1) {
+      llint_t baseline_crc = (llint_t)crc_charbuf(&baseline);
+      bprintf(&main, "    ---- install baseline schema if needed ----\n\n");
+      bprintf(&main, "    CALL %s_cql_get_version_crc(0, schema_version);\n", global_proc_name);
+      bprintf(&main, "    IF schema_version != %lld THEN\n", baseline_crc);
+      bprintf(&main, "      CALL %s_cql_install_baseline_schema();\n", global_proc_name);
+      bprintf(&main, "      CALL %s_cql_set_version_crc(0, %lld);\n", global_proc_name, baseline_crc);
+      bprintf(&main, "    END IF;\n\n");
+    }
+    else {
+      // set the baseline schema CRC to -1;  We do this in case full unsub causes baseline
+      // to go to nothing and subsequent resub needs to see that it changed.
+      bprintf(&main, "      CALL %s_cql_set_version_crc(0, -1);\n", global_proc_name);
+    }
   }
 
   bprintf(&main, "    CALL %s_get_table_defs();\n\n", global_proc_name);

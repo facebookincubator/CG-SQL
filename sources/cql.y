@@ -244,7 +244,7 @@ static void cql_reset_globals(void);
 %type <aval> drop_index_stmt drop_table_stmt drop_view_stmt drop_trigger_stmt
 %type <ival> create_table_prefix_opt_temp
 
-%type <aval> trigger_update_stmt trigger_delete_stmt trigger_insert_stmt trigger_select_stmt
+%type <aval> trigger_update_stmt trigger_delete_stmt trigger_insert_stmt trigger_select_stmt select_nothing_stmt
 %type <aval> trigger_stmt trigger_stmts opt_when_expr trigger_action opt_of
 %type <aval> trigger_def trigger_operation create_trigger_stmt raise_expr
 %type <ival> trigger_condition opt_foreachrow
@@ -442,6 +442,7 @@ any_stmt:
   | enforce_reset_stmt
   | enforce_strict_stmt
   | explain_stmt
+  | select_nothing_stmt
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
@@ -1186,6 +1187,10 @@ with_prefix:
 
 with_select_stmt:
   with_prefix select_stmt_no_with  { $with_select_stmt = new_ast_with_select_stmt($with_prefix, $select_stmt_no_with); }
+  ;
+
+select_nothing_stmt:
+  SELECT NOTHING { $select_nothing_stmt = new_ast_select_nothing_stmt(); }
   ;
 
 select_stmt:

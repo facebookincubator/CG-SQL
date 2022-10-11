@@ -19791,6 +19791,68 @@ test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0442: shared fragments with con
 
 The statement ending at line XXXX
 
+CREATE PROC not_valid_proc_for_select_nothing ()
+BEGIN
+  SELECT NOTHING;
+END;
+
+test/sem_test.sql:XXXX:1: error: in select_nothing_stmt : CQL0496: SELECT NOTHING may only appear in the ELSE clause of a shared fragment
+
+  {create_proc_stmt}: err
+  | {name not_valid_proc_for_select_nothing}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_nothing_stmt}: err
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC conditional_else_nothing ()
+BEGIN
+  IF 1 THEN
+    SELECT 1 AS x;
+  ELSE
+    SELECT NOTHING;
+  END IF;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: conditional_else_nothing: { x: integer notnull } dml_proc
+    | {name conditional_else_nothing}: conditional_else_nothing: { x: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {if_stmt}: integer notnull
+          | {cond_action}: integer notnull
+          | | {int 1}: integer notnull
+          | | {stmt_list}: ok
+          |   | {select_stmt}: select: { x: integer notnull }
+          |     | {select_core_list}: select: { x: integer notnull }
+          |     | | {select_core}: select: { x: integer notnull }
+          |     |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     |     | {select_expr_list}: select: { x: integer notnull }
+          |     |     | | {select_expr}: x: integer notnull
+          |     |     |   | {int 1}: integer notnull
+          |     |     |   | {opt_as_alias}
+          |     |     |     | {name x}
+          |     |     | {select_from_etc}: ok
+          |     |       | {select_where}
+          |     |         | {select_groupby}
+          |     |           | {select_having}
+          |     | {select_orderby}
+          |       | {select_limit}
+          |         | {select_offset}
+          | {if_alt}: ok
+            | {else}: ok
+              | {stmt_list}: ok
+                | {select_nothing_stmt}: select: { x: integer notnull }
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:shared_fragment)
 CREATE PROC ok_conditional_duplicate_cte_names ()
 BEGIN

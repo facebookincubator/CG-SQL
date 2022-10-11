@@ -4006,6 +4006,28 @@ BEGIN_TEST(shared_fragments)
 END_TEST(shared_fragments)
 
 @attribute(cql:shared_fragment)
+create proc select_nothing_user(flag bool not null)
+begin
+  if flag then
+    select flag as xyzzy;
+  else
+    select nothing;
+  end if;
+end;
+
+BEGIN_TEST(select_nothing)
+  declare X cursor for select * from (call select_nothing_user(true));
+  fetch X;
+  EXPECT(X);
+  fetch X;
+  EXPECT(NOT X);
+
+  declare Y cursor for select * from (call select_nothing_user(false));
+  fetch Y;
+  EXPECT(NOT Y);
+END_TEST(select_nothing)
+
+@attribute(cql:shared_fragment)
 create proc get_values()
 begin
   select 1 id, 'x' t

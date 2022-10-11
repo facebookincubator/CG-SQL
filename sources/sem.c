@@ -11289,6 +11289,42 @@ static void sem_select_rewrite_backing(ast_node *ast) {
   END_BACKING_REWRITE();
 }
 
+// This can only be used in the ELSE clause of a conditional fragment
+// it will expand into "select 0, 0, 0, 0 where 0" when we generate SQL.
+// But since it is known to generate zero rows the data types are
+// irrelevant.  We just make it go along for the ride so that it doesn't
+// cause errors in the fragment but creates errors elsewhere.
+static void sem_select_nothing_stmt(ast_node *ast) {
+  Contract(is_ast_select_nothing_stmt(ast));
+
+  if (!current_proc) goto error;
+
+  EXTRACT_MISC_ATTRS(current_proc, misc_attrs);
+
+  if (!misc_attrs) goto error;
+
+  if (!find_shared_fragment_attr(misc_attrs)) goto error;
+
+  if (!ast->parent) goto error;
+
+  if (!is_ast_stmt_list(ast->parent)) goto error;
+
+  if (!ast->parent->parent) goto error;
+
+  if (!is_ast_else(ast->parent->parent)) goto error;
+
+  // this might still be an error if the proc has errors
+  // that's ok, we return an error code in that case.
+
+  ast->sem = new_sem(current_proc->sem->sem_type);
+  ast->sem->sptr = current_proc->sem->sptr;
+  return;
+
+error:
+  report_error(ast, "CQL0496: SELECT NOTHING may only appear in the ELSE clause of a shared fragment", NULL);
+  record_error(ast);
+}
+
 // Top level statement list processing for select, not that a select statement
 // can't appear in other places (such as a nested expression).  This is only for
 // select in the context of a statement list.  Others use just 'sem_select'
@@ -25117,6 +25153,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(create_view_stmt);
   STMT_INIT(explain_stmt);
   STMT_INIT(select_stmt);
+  STMT_INIT(select_nothing_stmt);
   STMT_INIT(with_select_stmt);
   STMT_INIT(delete_stmt);
   STMT_INIT(with_delete_stmt);
