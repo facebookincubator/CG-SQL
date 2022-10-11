@@ -32,6 +32,7 @@ cql_noexport void gen_declare_proc_from_create_or_decl(ast_node *_Nonnull ast);
 cql_noexport void gen_declare_proc_closure(ast_node *_Nonnull ast, symtab *_Nullable already_done);
 cql_noexport void gen_declare_interface_stmt(ast_node *_Nonnull ast);
 cql_noexport void gen_one_stmt(ast_node *_Nonnull stmt);
+cql_noexport void gen_one_stmt_and_misc_attrs(ast_node *_Nonnull stmt);
 cql_noexport void gen_misc_attrs(ast_node *_Nonnull ast);
 cql_noexport void gen_misc_attr_value(ast_node *_Nonnull ast);
 cql_noexport void gen_misc_attr_value_list(ast_node *_Nonnull ast);
@@ -178,6 +179,7 @@ cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *_Nullable callbacks)
 cql_noexport void gen_with_callbacks(ast_node *_Nonnull ast, gen_func fn, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_col_def_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_statement_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
+cql_noexport void gen_statement_and_attributes_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 
 cql_noexport bool_t eval_star_callback(ast_node *_Nonnull ast);
 cql_noexport bool_t eval_variables_callback(ast_node *_Nonnull ast);

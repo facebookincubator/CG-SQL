@@ -1012,7 +1012,6 @@ create table backed(
 -- + @attribute(cql:backing_table)
 -- + CREATE TABLE IF NOT EXISTS backing(
 -- + @attribute(cql:backed_by=backing)
-@attribute(cql:backed_by=backing)
 @attribute(cql:autotest=(dummy_test))
 create proc uses_backed_table()
 begin

@@ -25,6 +25,9 @@ CREATE TABLE sqlite_master (
 );
 
 -- declare full schema of tables and views to be upgraded and their dependencies -- 
+@ATTRIBUTE(cql:deterministic)
+DECLARE SELECT FUNC my_func (x TEXT) TEXT;
+
 DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
 
 @DECLARE_SCHEMA_REGION shared;
@@ -113,7 +116,7 @@ CREATE INDEX gr1_index2 ON g1 (name, id);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index3 ON g1 (name, id) @DELETE(5);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), id) @DELETE(5);
 @end_schema_region;
 
 @begin_schema_region extra;

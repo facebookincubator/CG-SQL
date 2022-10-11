@@ -460,7 +460,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
   bool_t schema_declare = !!(mode & SCHEMA_TO_DECLARE);
   bool_t schema_upgrade = !!(mode & SCHEMA_TO_UPGRADE);
   bool_t schema_sqlite = !!(mode & SCHEMA_FOR_SQLITE);
-  bool_t supress_virtual_tables = !!(mode & SCHEMA_SUPRESS_VIRTUAL_TABLES);
+  bool_t suppress_virtual_tables = !!(mode & SCHEMA_SUPRESS_VIRTUAL_TABLES);
 
   gen_sql_callbacks *use_callbacks = NULL;
 
@@ -486,7 +486,7 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       ast_node *ast = item->ast;
       Contract(is_ast_declare_select_func_stmt(ast));
       gen_set_output_buffer(output);
-      gen_statement_with_callbacks(ast, use_callbacks);
+      gen_statement_and_attributes_with_callbacks(ast, use_callbacks);
       bprintf(output, ";\n\n");
     }
 
@@ -534,12 +534,12 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
       continue;
     }
 
-    if ( !(is_virtual_ast(ast) && supress_virtual_tables)) {
+    if ( !(is_virtual_ast(ast) && suppress_virtual_tables)) {
       if (region && schema_declare) {
         bprintf(output, "@begin_schema_region %s;\n", region);
       }
       gen_set_output_buffer(output);
-      gen_statement_with_callbacks(ast_output, use_callbacks);
+      gen_statement_and_attributes_with_callbacks(ast_output, use_callbacks);
       bprintf(output, ";\n");
       if (region && schema_declare) {
         bprintf(output, "@end_schema_region;\n");

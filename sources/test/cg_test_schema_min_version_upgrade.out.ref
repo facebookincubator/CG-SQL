@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 1549075402569075443
+-- schema crc 362553165413457340
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -25,6 +25,9 @@ CREATE TABLE sqlite_master (
 );
 
 -- declare full schema of tables and views to be upgraded and their dependencies -- 
+@ATTRIBUTE(cql:deterministic)
+DECLARE SELECT FUNC my_func (x TEXT) TEXT;
+
 DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
 
 @DECLARE_SCHEMA_REGION shared;
@@ -177,11 +180,13 @@ CREATE TABLE create__second(
   id INTEGER REFERENCES create_first (id)
 ) @CREATE(7);
 
+@ATTRIBUTE(cql:blob_storage)
 CREATE TABLE blob_storage_at_create_table(
   x INTEGER,
   y TEXT
 ) @CREATE(5);
 
+@ATTRIBUTE(cql:blob_storage)
 CREATE TABLE blob_storage_baseline_table(
   x INTEGER,
   y TEXT
@@ -191,21 +196,25 @@ CREATE TABLE unsub_recreated(
   anything TEXT
 ) @RECREATE;
 
+@ATTRIBUTE(cql:backing_table)
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
   v BLOB NOT NULL
 );
 
+@ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE backed(
   x INTEGER PRIMARY KEY,
   y INTEGER
 );
 
+@ATTRIBUTE(cql:backing_table)
 CREATE TABLE recreate_backing(
   k BLOB PRIMARY KEY,
   v BLOB NOT NULL
 ) @RECREATE(foo);
 
+@ATTRIBUTE(cql:backed_by=recreate_backing)
 CREATE TABLE recreate_backed(
   x INTEGER PRIMARY KEY,
   y INTEGER
@@ -289,7 +298,7 @@ CREATE INDEX gr1_index2 ON g1 (name, id);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index3 ON g1 (name, id) @DELETE(5);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), id) @DELETE(5);
 @end_schema_region;
 
 @begin_schema_region extra;
@@ -796,7 +805,7 @@ END;
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
-  IF cql_facet_find(test_facets, facet) <> 4082241841995917668 THEN
+  IF cql_facet_find(test_facets, facet) <> -2187515412040559515 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -943,11 +952,11 @@ BEGIN
     CALL test_cql_create_all_triggers();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 4082241841995917668);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -2187515412040559515);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', 1549075402569075443);
+    CALL test_cql_set_facet_version('cql_schema_crc', 362553165413457340);
   END IF;
 END;
 
@@ -991,7 +1000,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 1549075402569075443 THEN
+  IF schema_crc <> 362553165413457340 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

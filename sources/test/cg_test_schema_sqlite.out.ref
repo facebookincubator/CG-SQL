@@ -188,7 +188,7 @@ CREATE INDEX gr1_index ON g1 (name);
 
 CREATE INDEX gr1_index2 ON g1 (name, id);
 
-CREATE INDEX gr1_index3 ON g1 (name, id);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), id);
 
 CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 

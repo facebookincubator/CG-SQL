@@ -58,9 +58,12 @@ create table use_g1(
   name2 text
 ) @recreate(gr1);
 
+@attribute(cql:deterministic)
+declare select function my_func(x text) text;
+
 create index gr1_index on g1(name);
 create index gr1_index2 on g1(name, id);
-create index gr1_index3 on g1(name, id) @delete(5);
+create index gr1_index3 on g1(my_func(name), id) @delete(5);
 
 @end_schema_region;
 

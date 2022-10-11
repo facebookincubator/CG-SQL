@@ -130,6 +130,11 @@ cql_noexport void gen_statement_with_callbacks(ast_node *ast, gen_sql_callbacks 
   }
 }
 
+cql_noexport void gen_statement_and_attributes_with_callbacks(ast_node *ast, gen_sql_callbacks *_callbacks) {
+  gen_stmt_level = 0;  // nested statement lists will indent
+  gen_with_callbacks(ast, gen_one_stmt_and_misc_attrs, _callbacks);
+}
+
 cql_noexport void gen_set_output_buffer(struct charbuf *buffer) {
   output = buffer;
 }
@@ -4563,6 +4568,14 @@ cql_noexport void gen_one_stmt(ast_node *stmt)  {
   // or else someone added a new statement and it isn't supported yet.
   Invariant(entry);
   ((void (*)(ast_node*))entry->val)(stmt);
+}
+
+cql_noexport void gen_one_stmt_and_misc_attrs(ast_node *stmt)  {
+  EXTRACT_MISC_ATTRS(stmt, misc_attrs);
+  if (misc_attrs) {
+    gen_misc_attrs(misc_attrs);
+  }
+  gen_one_stmt(stmt);
 }
 
 // so the name doesn't otherwise conflict in the amalgam

@@ -1,4 +1,7 @@
 
+@ATTRIBUTE(cql:deterministic)
+DECLARE SELECT FUNC my_func (x TEXT) TEXT;
+
 DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
 
 @DECLARE_SCHEMA_REGION shared;
@@ -151,11 +154,13 @@ CREATE TABLE create__second(
   id INTEGER REFERENCES create_first (id)
 ) @CREATE(7);
 
+@ATTRIBUTE(cql:blob_storage)
 CREATE TABLE blob_storage_at_create_table(
   x INTEGER,
   y TEXT
 ) @CREATE(5);
 
+@ATTRIBUTE(cql:blob_storage)
 CREATE TABLE blob_storage_baseline_table(
   x INTEGER,
   y TEXT
@@ -165,21 +170,25 @@ CREATE TABLE unsub_recreated(
   anything TEXT
 ) @RECREATE;
 
+@ATTRIBUTE(cql:backing_table)
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
   v BLOB NOT NULL
 );
 
+@ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE backed(
   x INTEGER PRIMARY KEY,
   y INTEGER
 );
 
+@ATTRIBUTE(cql:backing_table)
 CREATE TABLE recreate_backing(
   k BLOB PRIMARY KEY,
   v BLOB NOT NULL
 ) @RECREATE(foo);
 
+@ATTRIBUTE(cql:backed_by=recreate_backing)
 CREATE TABLE recreate_backed(
   x INTEGER PRIMARY KEY,
   y INTEGER
@@ -263,7 +272,7 @@ CREATE INDEX gr1_index2 ON g1 (name, id);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index3 ON g1 (name, id) @DELETE(5);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), id) @DELETE(5);
 @end_schema_region;
 
 @begin_schema_region extra;
