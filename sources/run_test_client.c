@@ -935,6 +935,11 @@ cql_code test_all_column_encoded_with_context_fetchers(sqlite3 *db) {
   return SQLITE_OK;
 }
 
+static int32_t cql_result_set_set_custom_teardown_callback_count = 0;
+static void cql_result_set_set_custom_teardown_callback(cql_result_set_ref _Nonnull result_set) {
+  cql_result_set_set_custom_teardown_callback_count = 1;
+}
+
 cql_code test_all_column_encoded_cursor(sqlite3 *db) {
   printf("Running column encoded cursor fetchers test\n");
   tests++;
@@ -1019,7 +1024,10 @@ cql_code test_all_column_encoded_cursor(sqlite3 *db) {
   cql_blob_release(bl1_decode);
   cql_blob_release(bl1_exp);
 
+  cql_result_set_set_custom_teardown_callback_count = 0;
+  cql_result_set_set_custom_teardown((cql_result_set_ref) result_set, &cql_result_set_set_custom_teardown_callback);
   cql_result_set_release(result_set);
+  E(cql_result_set_set_custom_teardown_callback_count == 1, "expected cql_result_set_set_custom_teardown_callback(...) to be called");
   cql_object_release(encoder);
 
   tests_passed++;

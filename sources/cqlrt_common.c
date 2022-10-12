@@ -1402,6 +1402,14 @@ void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set) {
   free(data);
 }
 
+// Record the desired user-teardown function
+void cql_result_set_set_custom_teardown(
+  cql_result_set_ref _Nonnull result_set,
+  void(*_Nonnull custom_teardown)(cql_result_set_ref _Nonnull result_set)) {
+  cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
+  meta->custom_teardown = custom_teardown;
+}
+
 // Hash a cursor or row as described by the buffer size and refs offset
 static cql_hash_code cql_hash_buffer(
   const char *_Nonnull data,

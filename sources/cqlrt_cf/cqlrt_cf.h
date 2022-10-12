@@ -182,6 +182,10 @@ typedef struct cql_result_set_meta {
 
   // index of the encode context column
   int16_t encodeContextIndex;
+
+  // release custom internal memory for the rowset that ARE NOT released
+  // by teardown
+  void(*_Nullable custom_teardown)(cql_result_set_ref _Nonnull result_set);
 } cql_result_set_meta;
 
 typedef struct cql_result_set {

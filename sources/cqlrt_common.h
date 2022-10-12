@@ -235,6 +235,24 @@ CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnul
 // teardown all the internal data for the given result_set
 CQL_EXPORT void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set);
 
+// The normal cql_result_set_teardown() function only frees the directly
+// allocated columns and rows of the result set.  This is no suprise because
+// they're the only one heap allocated in the CQL runtime.
+//
+// This function allows you to set a callback for your result sets
+// when they are finally destroyed so that you can free any extra memory
+// you might have allocated.  This can be particularly useful if the
+// result set has been proxied into some other language and there are
+// wrappers and so forth that need to be taken down.  The code that
+// owns memory for those wrappers can be informed by this callback
+// that the result set is condemned.
+//
+// Of course the particular action will be determined by whatever is
+// wrapping or otherwise holding on to the result set.
+CQL_EXPORT void cql_result_set_set_custom_teardown(
+  cql_result_set_ref _Nonnull result_set,
+  void(*_Nonnull custom_teardown)(cql_result_set_ref _Nonnull result_set));
+
 // retain/release references in a row using the given offset array
 CQL_EXPORT void cql_retain_offsets(void *_Nonnull pv, cql_uint16 refs_count, cql_uint16 refs_offset);
 CQL_EXPORT void cql_release_offsets(void *_Nonnull pv, cql_uint16 refs_count, cql_uint16 refs_offset);

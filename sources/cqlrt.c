@@ -146,6 +146,9 @@ int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2) {
 
 static void cql_result_set_finalize(cql_type_ref _Nonnull ref) {
   cql_result_set_ref result_set = (cql_result_set_ref)ref;
+  if (result_set->meta.custom_teardown) {
+     result_set->meta.custom_teardown(result_set);
+  }
   if (result_set->meta.teardown) {
     result_set->meta.teardown(result_set);
   }
