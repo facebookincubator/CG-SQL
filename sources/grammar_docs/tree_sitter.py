@@ -95,6 +95,12 @@ DEFAULT_RULES = [
     "preproc_params: $ => seq(token.immediate('('), commaSep(choice($.ID, '...')), ')')",
 ]
 
+# These are problematic rules to the cql tree-sitter grammar. We're just going to replace them wherever they're used with their values.
+SUPPRESS_RULES = {
+    # The presence of this node break tree-sitter. It was added to 'create_table_stmt' for the sole perpuse of grabing documentation
+    "create_table_prefix_opt_temp"
+}
+
 cql_grammar = "cql_grammar.txt"
 ts_grammar = {}
 ts_rule_names = []
@@ -193,6 +199,19 @@ with open(cql_grammar) as fp:
 # tree_sitter.py generator is base on cql_grammar.txt which does not contains the rules for
 # comment, line_directive and macro. Therefore I need to add them manually into stmt_list rule.
 rule_defs["stmt_list"] = [["stmt", "';'"], ["comment"], ["line_directive"], ["macro"]]
+
+# Suppress un-neccessary rules
+for _, rule in rule_defs.items():
+    cpy_rule = []
+    for i, seq in enumerate(rule):
+        for j, item in enumerate(seq):
+            if type(item) is str and item in SUPPRESS_RULES:
+                rule[i] = seq[0 : max(j - 1, 0)] + rule_defs[item][0] + seq[j + 1 :]
+
+# delete the supressed rules
+for name in SUPPRESS_RULES:
+    del rule_defs[name]
+    rules_name_visited.add(name)
 
 for name in sorted_rule_names:
     if name in rules_name_visited:

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Oct  7 22:52:04 2022
+// Snapshot as of Tue Oct 11 21:53:04 2022
 
 
 const PREC = {
@@ -27,7 +27,7 @@ module.exports = grammar({
     opt_stmt_list: $ => $.stmt_list,
     stmt_list: $ => repeat1(choice(seq($.stmt, ';'), $.comment, $.line_directive, $.macro)),
     stmt: $ => seq(optional($.misc_attrs), $.any_stmt),
-    any_stmt: $ => choice($.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.blob_get_key_type_stmt, $.blob_get_val_type_stmt, $.blob_get_key_stmt, $.blob_get_val_stmt, $.blob_create_key_stmt, $.blob_create_val_stmt, $.blob_update_key_stmt, $.blob_update_val_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_const_stmt, $.declare_group_stmt, $.declare_select_func_no_check_stmt, $.declare_func_stmt, $.declare_out_call_stmt, $.declare_proc_no_check_stmt, $.declare_proc_stmt, $.declare_interface_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.emit_group_stmt, $.emit_constants_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.fetch_cursor_from_blob_stmt, $.guard_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.out_stmt, $.out_union_stmt, $.out_union_parent_child_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.select_stmt, $.schema_ad_hoc_migration_stmt, $.schema_resub_stmt, $.schema_unsub_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
+    any_stmt: $ => choice($.alter_table_add_column_stmt, $.begin_schema_region_stmt, $.begin_trans_stmt, $.blob_get_key_type_stmt, $.blob_get_val_type_stmt, $.blob_get_key_stmt, $.blob_get_val_stmt, $.blob_create_key_stmt, $.blob_create_val_stmt, $.blob_update_key_stmt, $.blob_update_val_stmt, $.call_stmt, $.close_stmt, $.commit_return_stmt, $.commit_trans_stmt, $.continue_stmt, $.create_index_stmt, $.create_proc_stmt, $.create_table_stmt, $.create_trigger_stmt, $.create_view_stmt, $.create_virtual_table_stmt, $.declare_deployable_region_stmt, $.declare_enum_stmt, $.declare_const_stmt, $.declare_group_stmt, $.declare_select_func_no_check_stmt, $.declare_func_stmt, $.declare_out_call_stmt, $.declare_proc_no_check_stmt, $.declare_proc_stmt, $.declare_interface_stmt, $.declare_schema_region_stmt, $.declare_stmt, $.delete_stmt, $.drop_index_stmt, $.drop_table_stmt, $.drop_trigger_stmt, $.drop_view_stmt, $.echo_stmt, $.emit_enums_stmt, $.emit_group_stmt, $.emit_constants_stmt, $.end_schema_region_stmt, $.enforce_normal_stmt, $.enforce_pop_stmt, $.enforce_push_stmt, $.enforce_reset_stmt, $.enforce_strict_stmt, $.explain_stmt, $.select_nothing_stmt, $.fetch_call_stmt, $.fetch_stmt, $.fetch_values_stmt, $.fetch_cursor_from_blob_stmt, $.guard_stmt, $.if_stmt, $.insert_stmt, $.leave_stmt, $.let_stmt, $.loop_stmt, $.out_stmt, $.out_union_stmt, $.out_union_parent_child_stmt, $.previous_schema_stmt, $.proc_savepoint_stmt, $.release_savepoint_stmt, $.return_stmt, $.rollback_return_stmt, $.rollback_trans_stmt, $.savepoint_stmt, $.select_stmt, $.schema_ad_hoc_migration_stmt, $.schema_resub_stmt, $.schema_unsub_stmt, $.schema_upgrade_script_stmt, $.schema_upgrade_version_stmt, $.set_stmt, $.switch_stmt, $.throw_stmt, $.trycatch_stmt, $.update_cursor_stmt, $.update_stmt, $.upsert_stmt, $.while_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt),
     explain_stmt: $ => seq($.EXPLAIN, optional($.opt_query_plan), $.explain_target),
     QUERY_PLAN: $ => prec.left(1, seq(CI('query'), CI('plan'))),
     opt_query_plan: $ => $.QUERY_PLAN,
@@ -48,8 +48,7 @@ module.exports = grammar({
     drop_trigger_stmt: $ => choice(seq($.DROP, $.TRIGGER, $.IF, $.EXISTS, $.name), seq($.DROP, $.TRIGGER, $.name)),
     create_virtual_table_stmt: $ => seq($.CREATE, $.VIRTUAL, $.TABLE, optional($.opt_vtab_flags), $.name, $.USING, $.name, optional($.opt_module_args), $.AS, '(', $.col_key_list, ')', optional($.opt_delete_version_attr)),
     opt_module_args: $ => choice(seq('(', $.misc_attr_value_list, ')'), seq('(', $.ARGUMENTS, $.FOLLOWING, ')')),
-    create_table_prefix_opt_temp: $ => seq($.CREATE, optional($.opt_temp), $.TABLE),
-    create_table_stmt: $ => seq($.create_table_prefix_opt_temp, optional($.opt_if_not_exists), $.name, '(', $.col_key_list, ')', optional($.opt_no_rowid), optional($.version_attrs_opt_recreate)),
+    create_table_stmt: $ => seq($.CREATE, optional($.opt_temp), $.TABLE, optional($.opt_if_not_exists), $.name, '(', $.col_key_list, ')', optional($.opt_no_rowid), optional($.version_attrs_opt_recreate)),
     opt_temp: $ => $.TEMP,
     opt_if_not_exists: $ => seq($.IF, $.NOT, $.EXISTS),
     opt_no_rowid: $ => seq($.WITHOUT, $.ROWID),
@@ -136,6 +135,7 @@ module.exports = grammar({
     cte_table: $ => choice(seq($.cte_decl, $.AS, '(', $.select_stmt, ')'), seq($.cte_decl, $.AS, '(', $.shared_cte, ')'), seq('(', $.call_stmt, ')'), seq('(', $.call_stmt, $.USING, $.cte_binding_list, ')'), seq($.cte_decl, $.LIKE, '(', $.select_stmt, ')'), seq($.cte_decl, $.LIKE, $.name)),
     with_prefix: $ => choice(seq($.WITH, $.cte_tables), seq($.WITH, $.RECURSIVE, $.cte_tables)),
     with_select_stmt: $ => seq($.with_prefix, $.select_stmt_no_with),
+    select_nothing_stmt: $ => seq($.SELECT, $.NOTHING),
     select_stmt: $ => choice($.with_select_stmt, $.select_stmt_no_with),
     select_stmt_no_with: $ => seq($.select_core_list, optional($.opt_orderby), optional($.opt_limit), optional($.opt_offset)),
     select_core_list: $ => choice($.select_core, seq($.select_core, $.compound_operator, $.select_core_list)),
@@ -325,8 +325,8 @@ module.exports = grammar({
     blob_get_val_type_stmt: $ => seq($.AT_BLOB_GET_VAL_TYPE, $.name),
     blob_get_key_stmt: $ => seq($.AT_BLOB_GET_KEY, $.name, optional($.opt_use_offset)),
     blob_get_val_stmt: $ => seq($.AT_BLOB_GET_VAL, $.name, optional($.opt_use_offset)),
-    blob_create_key_stmt: $ => seq($.AT_BLOB_GET_VAL, $.name, optional($.opt_use_offset)),
-    blob_create_val_stmt: $ => seq($.AT_BLOB_GET_VAL, $.name, optional($.opt_use_offset)),
+    blob_create_key_stmt: $ => seq($.AT_BLOB_CREATE_KEY, $.name, optional($.opt_use_offset)),
+    blob_create_val_stmt: $ => seq($.AT_BLOB_CREATE_VAL, $.name, optional($.opt_use_offset)),
     blob_update_key_stmt: $ => seq($.AT_BLOB_UPDATE_KEY, $.name, optional($.opt_use_offset)),
     blob_update_val_stmt: $ => seq($.AT_BLOB_UPDATE_VAL, $.name, optional($.opt_use_offset)),
     comment: $ => token(choice(seq('--', /(\\(.|\r?\n)|[^\\\n])*/), seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/'))),
@@ -551,6 +551,8 @@ module.exports = grammar({
     AT_BLOB_GET_VAL_TYPE: $ => CI('@blob_get_val_type'),
     AT_BLOB_GET_KEY: $ => CI('@blob_get_key'),
     AT_BLOB_GET_VAL: $ => CI('@blob_get_val'),
+    AT_BLOB_CREATE_KEY: $ => CI('@blob_create_key'),
+    AT_BLOB_CREATE_VAL: $ => CI('@blob_create_val'),
     AT_BLOB_UPDATE_KEY: $ => CI('@blob_update_key'),
     AT_BLOB_UPDATE_VAL: $ => CI('@blob_update_val'),
     INT_LIT: $ => choice(/[0-9]+/, /0x[0-9a-fA-F]+/),
