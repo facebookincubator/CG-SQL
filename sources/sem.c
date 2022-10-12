@@ -12848,9 +12848,11 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
   }
 
   if (prev->recreate) {
-    // if we used to be on the @recreate plan then we don't have to check the current create version
-    // but we do have to make sure the recreate transition special action is being used
-    if (cur->create_version > 0 && cur->create_code == SCHEMA_ANNOTATION_CREATE_TABLE) {
+    // If we used to be on the @recreate plan then we don't have to check the current create version
+    // but we do have to make sure the recreate transition special action is being used.
+    // Note: if recreate is dropped and delete is added we give a better error later so that case
+    // is excluded here.
+    if (!cur->recreate && cur->delete_version < 0 && cur->create_code == SCHEMA_ANNOTATION_CREATE_TABLE) {
        if (!cur->create_proc || Strcasecmp(CQL_FROM_RECREATE, cur->create_proc)) {
          report_error(name_ast, "CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate)", name);
          return false;

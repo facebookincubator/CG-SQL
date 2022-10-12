@@ -2516,6 +2516,31 @@ CREATE TABLE new_backed_table(
 
 The statement ending at line XXXX
 
+CREATE TABLE transitioning_to_baseline(
+  x INTEGER,
+  y INTEGER
+);
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name transitioning_to_baseline}
+  | {col_key_list}
+    | {col_def}: x: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name x}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: y: integer
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name y}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
 @PREVIOUS_SCHEMA;
 
   {previous_schema_stmt}: ok
@@ -4931,4 +4956,33 @@ CREATE TABLE backed(
             | {col_def_name_type}
               | {name gal}
               | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE transitioning_to_baseline(
+  x INTEGER,
+  y INTEGER
+) @RECREATE(foo);
+
+test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'transitioning_to_baseline'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name foo}
+  | | {name transitioning_to_baseline}
+  | {col_key_list}
+    | {col_def}: x: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name x}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: y: integer
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name y}
+            | {type_int}: integer
 

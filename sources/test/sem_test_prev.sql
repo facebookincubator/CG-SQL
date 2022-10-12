@@ -543,6 +543,13 @@ create table new_backed_table (
   val text not null
 );
 
+-- TEST: you cannot go from recreate to baseline
+-- + {create_table_stmt}: err
+create table transitioning_to_baseline(
+ x integer,
+ y integer
+);
+
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
 ------------------------------------------------------------------------------------------------------------
@@ -1177,3 +1184,12 @@ create table backed (
   guid int not null primary key,
   gal text 
 );
+
+-- TEST: previous table was recreate, it tries to go to baseline in this test
+-- + {create_table_stmt}: err
+-- + error: % table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'transitioning_to_baseline'
+-- +1 error:
+create table transitioning_to_baseline(
+ x integer,
+ y integer
+) @recreate(foo);
