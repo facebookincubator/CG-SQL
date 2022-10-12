@@ -2388,22 +2388,10 @@ static void report_sem_type_mismatch(
 // This is the basic constructor for the semantic info node.
 cql_noexport sem_node * new_sem(sem_t sem_type) {
   sem_node *sem = _ast_pool_new(sem_node);
+  memset(sem, 0, sizeof(*sem));
   sem->sem_type = sem_type;
-  sem->name = NULL;
-  sem->error = NULL;
-  sem->kind = NULL;
-  sem->sptr = NULL;
-  sem->jptr = NULL;
   sem->create_version = -1;
   sem->delete_version = -1;
-  sem->unsub_version = 0;
-  sem->resub_version = 0;
-  sem->recreate = false;
-  sem->recreate_group_name = NULL;
-  sem->used_symbols = NULL;
-  sem->index_list = NULL;
-  sem->region = NULL;
-  sem->value = NULL;
   return sem;
 }
 
@@ -3201,6 +3189,7 @@ static void sem_validate_previous_index(ast_node *prev_index) {
 
 // We often need to find the index of a particular column
 cql_noexport int32_t find_col_in_sptr(sem_struct *sptr, CSTR name) {
+  Contract(name);
   for (int32_t i = 0; i < sptr->count; i++) {
     if (!Strcasecmp(sptr->names[i], name)) {
       return i;

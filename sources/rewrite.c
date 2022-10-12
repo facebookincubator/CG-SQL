@@ -2703,6 +2703,8 @@ static void rewrite_blob_column_references(update_rewrite_info *info, ast_node *
        // pk info doesn't flow through the normal exression tree. No problem, we'll just look
        // up the name in the backed table and get the type from there.
        sem_struct *sptr_backed = info->backed_table->sem->sptr;
+       Invariant(ast->sem);
+       Invariant(ast->sem->name);
        int32_t i = find_col_in_sptr(sptr_backed, ast->sem->name);
        Invariant(i >= 0);  // the column for sure exists, it's already been checked
        sem_t sem_type = sptr_backed->semtypes[i];
