@@ -22189,12 +22189,63 @@ begin
   let z := (select cql_blob_update(b, x, simple_backing_table.k));
 end;
 
---  TEST: insert into backing table in upsert form not supported yet
--- + {upsert_stmt}: err
--- + error: % backed tables are not supported in the upsert form (yet)
--- +1 error:
+--  TEST: insert into backing table in upsert form
+-- verify rewrite
+-- + {with_upsert_stmt}: ok
+-- + WITH
+-- + _vals (id, name) AS (VALUES(1, 'foo'))
+-- + INSERT INTO simple_backing_table(k, v)
+-- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
+-- + FROM _vals AS V
+-- + ON CONFLICT (k) DO NOTHING;
+-- - error:
 INSERT INTO basic_table(id, name) values (1, 'foo')
-  ON CONFLICT(word) DO NOTHING;
+  ON CONFLICT(id) DO NOTHING;
+
+-- TEST: upsert form, with update
+-- verify the rewrite
+-- + {shared_cte}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+-- + {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+-- + INSERT INTO simple_backing_table(k, v)
+-- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
+-- +  FROM _vals AS V
+-- + ON CONFLICT (k) DO UPDATE
+-- + SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
+-- - error:
+INSERT INTO basic_table
+  SELECT id + 3, name FROM basic_table WHERE id < 100
+  on conflict(id)
+  do UPDATE SET id = id + 1 WHERE id < 100;
+
+-- TEST: upsert form, bogus table
+-- + {upsert_stmt}: err
+-- + error: % table in insert statement does not exist 'bogus_table_not_present'
+-- +1 error:
+INSERT INTO bogus_table_not_present VALUES(1,2) on conflict(id) do nothing;
+
+-- TEST: upsert form, update and with clause
+-- verify the rewrite
+-- + {shared_cte}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+-- + {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+-- + WITH
+-- + basic_table (rowid, id, name) AS (CALL _basic_table()),
+-- + a_useless_cte (x, y) AS (SELECT 1, 2),
+-- + _vals (id, name) AS (SELECT id + 3, name
+-- + FROM basic_table
+-- + WHERE id < 100)
+-- + INSERT INTO simple_backing_table(k, v)
+-- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
+-- + FROM _vals AS V
+-- + ON CONFLICT (k) DO UPDATE
+-- + SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
+-- + WHERE rowid IN (SELECT rowid
+-- + FROM basic_table
+-- + WHERE id < 100);
+-- - error:
+with a_useless_cte(x, y) as (select 1 ,2)
+insert into basic_table select id + 3, name from basic_table where id < 100
+on conflict(id)
+do update set id = id + 1 where id < 100;
 
 -- TEST: correct call to cql_blob_create
 -- + {name cql_blob_create}: blob notnull

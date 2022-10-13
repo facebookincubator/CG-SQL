@@ -313,6 +313,7 @@ cql_noexport void sem_any_shape(ast_node *ast);
 cql_noexport sem_node *new_sem(sem_t sem_type);
 cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);
 cql_noexport void sem_select(ast_node *node);
+cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast);
 
 #endif
 
@@ -360,3 +361,10 @@ cql_data_decl( sem_t global_proc_flags );
 // This is the table for all the migration procs for any recreate procs or groups
 // that might need them, these are the second form of ad hoc schema migration
 cql_data_decl( symtab *ad_hoc_recreate_actions );
+
+// If the current context is a upsert statement
+cql_data_decl( bool_t in_upsert );
+cql_data_decl( bool_t in_upsert_rewrite );
+
+// hold the table ast query in the current upsert statement.
+cql_data_decl ( ast_node *current_upsert_table_ast );

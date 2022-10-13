@@ -88393,22 +88393,295 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated t
 
 The statement ending at line XXXX
 
-INSERT INTO basic_table(id, name) VALUES(1, 'foo')
-ON CONFLICT (word) DO NOTHING;
+WITH
+_vals (id, name) AS (VALUES(1, 'foo'))
+INSERT INTO simple_backing_table(k, v) SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
+  FROM _vals AS V
+ON CONFLICT (k) DO NOTHING;
 
-test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0492: backed tables are not supported in the upsert form (yet)
+  {with_upsert_stmt}: ok
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: _vals: { id: integer notnull, name: text notnull }
+  |     | {cte_decl}: _vals: { id: integer notnull, name: text notnull }
+  |     | | {name _vals}
+  |     | | {name_list}
+  |     |   | {name id}: id: integer notnull
+  |     |   | {name_list}
+  |     |     | {name name}: name: text<cool_text>
+  |     | {select_stmt}: values: { column1: integer notnull, column2: text notnull }
+  |       | {select_core_list}: values: { column1: integer notnull, column2: text notnull }
+  |       | | {select_core}: values: { column1: integer notnull, column2: text notnull }
+  |       |   | {select_values}
+  |       |   | {values}: values: { column1: integer notnull, column2: text notnull }
+  |       |     | {insert_list}: ok
+  |       |       | {int 1}: integer notnull
+  |       |       | {insert_list}
+  |       |         | {strlit 'foo'}: text notnull
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {upsert_stmt}: ok
+    | {insert_stmt}: ok
+    | | {insert_normal}
+    | | {name_columns_values}
+    |   | {name simple_backing_table}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+    |   | {columns_values}: ok
+    |     | {column_spec}
+    |     | | {name_list}
+    |     |   | {name k}: k: blob notnull
+    |     |   | {name_list}
+    |     |     | {name v}: v: blob notnull
+    |     | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |     | | {select_expr}: blob notnull
+    |       |     | | | {call}: blob notnull
+    |       |     | |   | {name cql_blob_create}: blob notnull
+    |       |     | |   | {call_arg_list}
+    |       |     | |     | {call_filter_clause}
+    |       |     | |     | {arg_list}: ok
+    |       |     | |       | {name basic_table}
+    |       |     | |       | {arg_list}
+    |       |     | |         | {dot}: id: integer notnull
+    |       |     | |         | | {name V}
+    |       |     | |         | | {name id}
+    |       |     | |         | {arg_list}
+    |       |     | |           | {dot}: integer notnull primary_key
+    |       |     | |             | {name basic_table}
+    |       |     | |             | {name id}
+    |       |     | | {select_expr_list}
+    |       |     |   | {select_expr}: blob notnull
+    |       |     |     | {call}: blob notnull
+    |       |     |       | {name cql_blob_create}: blob notnull
+    |       |     |       | {call_arg_list}
+    |       |     |         | {call_filter_clause}
+    |       |     |         | {arg_list}: ok
+    |       |     |           | {name basic_table}
+    |       |     |           | {arg_list}
+    |       |     |             | {dot}: name: text notnull
+    |       |     |             | | {name V}
+    |       |     |             | | {name name}
+    |       |     |             | {arg_list}
+    |       |     |               | {dot}: text
+    |       |     |                 | {name basic_table}
+    |       |     |                 | {name name}
+    |       |     | {select_from_etc}: TABLE { V: _vals }
+    |       |       | {table_or_subquery_list}: TABLE { V: _vals }
+    |       |       | | {table_or_subquery}: TABLE { V: _vals }
+    |       |       |   | {name _vals}: TABLE { V: _vals }
+    |       |       |   | {opt_as_alias}
+    |       |       |     | {name V}
+    |       |       | {select_where}
+    |       |         | {select_groupby}
+    |       |           | {select_having}
+    |       | {select_orderby}
+    |         | {select_limit}
+    |           | {select_offset}
+    | {upsert_update}: ok
+      | {conflict_target}: excluded: { k: blob notnull, v: blob notnull }
+        | {indexed_columns}
+          | {indexed_column}
+            | {name k}: k: blob notnull
+
+The statement ending at line XXXX
+
+WITH
+basic_table (rowid, id, name) AS (CALL _basic_table()),
+_vals (id, name) AS (SELECT id + 3, name
+  FROM basic_table
+  WHERE id < 100)
+INSERT INTO simple_backing_table(k, v) SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
+  FROM _vals AS V
+ON CONFLICT (k) DO UPDATE
+SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
+  WHERE rowid IN (SELECT rowid
+  FROM basic_table
+  WHERE id < 100);
+
+  {with_upsert_stmt}: ok
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
+  |   | | {cte_decl}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
+  |   | | | {name basic_table}
+  |   | | | {name_list}
+  |   | |   | {name rowid}
+  |   | |   | {name_list}
+  |   | |     | {name id}
+  |   | |     | {name_list}
+  |   | |       | {name name}
+  |   | | {shared_cte}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+  |   |   | {call_stmt}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+  |   |     | {name _basic_table}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+  |   | {cte_tables}
+  |     | {cte_table}: _vals: { id: integer notnull, name: text<cool_text> }
+  |       | {cte_decl}: _vals: { id: integer notnull, name: text<cool_text> }
+  |       | | {name _vals}
+  |       | | {name_list}
+  |       |   | {name id}: id: integer notnull
+  |       |   | {name_list}
+  |       |     | {name name}: name: text<cool_text>
+  |       | {select_stmt}: select: { _anon: integer notnull, name: text<cool_text> }
+  |         | {select_core_list}: select: { _anon: integer notnull, name: text<cool_text> }
+  |         | | {select_core}: select: { _anon: integer notnull, name: text<cool_text> }
+  |         |   | {select_expr_list_con}: select: { _anon: integer notnull, name: text<cool_text> }
+  |         |     | {select_expr_list}: select: { _anon: integer notnull, name: text<cool_text> }
+  |         |     | | {select_expr}: integer notnull
+  |         |     | | | {add}: integer notnull
+  |         |     | |   | {name id}: id: integer notnull
+  |         |     | |   | {int 3}: integer notnull
+  |         |     | | {select_expr_list}
+  |         |     |   | {select_expr}: name: text<cool_text>
+  |         |     |     | {name name}: name: text<cool_text>
+  |         |     | {select_from_etc}: TABLE { basic_table: basic_table }
+  |         |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
+  |         |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
+  |         |       |   | {name basic_table}: TABLE { basic_table: basic_table }
+  |         |       | {select_where}
+  |         |         | {opt_where}: bool notnull
+  |         |         | | {lt}: bool notnull
+  |         |         |   | {name id}: id: integer notnull
+  |         |         |   | {int 100}: integer notnull
+  |         |         | {select_groupby}
+  |         |           | {select_having}
+  |         | {select_orderby}
+  |           | {select_limit}
+  |             | {select_offset}
+  | {upsert_stmt}: ok
+    | {insert_stmt}: ok
+    | | {insert_normal}
+    | | {name_columns_values}
+    |   | {name simple_backing_table}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+    |   | {columns_values}: ok
+    |     | {column_spec}
+    |     | | {name_list}
+    |     |   | {name k}: k: blob notnull
+    |     |   | {name_list}
+    |     |     | {name v}: v: blob notnull
+    |     | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |     | | {select_expr}: blob notnull
+    |       |     | | | {call}: blob notnull
+    |       |     | |   | {name cql_blob_create}: blob notnull
+    |       |     | |   | {call_arg_list}
+    |       |     | |     | {call_filter_clause}
+    |       |     | |     | {arg_list}: ok
+    |       |     | |       | {name basic_table}
+    |       |     | |       | {arg_list}
+    |       |     | |         | {dot}: id: integer notnull
+    |       |     | |         | | {name V}
+    |       |     | |         | | {name id}
+    |       |     | |         | {arg_list}
+    |       |     | |           | {dot}: integer notnull primary_key
+    |       |     | |             | {name basic_table}
+    |       |     | |             | {name id}
+    |       |     | | {select_expr_list}
+    |       |     |   | {select_expr}: blob notnull
+    |       |     |     | {call}: blob notnull
+    |       |     |       | {name cql_blob_create}: blob notnull
+    |       |     |       | {call_arg_list}
+    |       |     |         | {call_filter_clause}
+    |       |     |         | {arg_list}: ok
+    |       |     |           | {name basic_table}
+    |       |     |           | {arg_list}
+    |       |     |             | {dot}: name: text<cool_text>
+    |       |     |             | | {name V}
+    |       |     |             | | {name name}
+    |       |     |             | {arg_list}
+    |       |     |               | {dot}: text
+    |       |     |                 | {name basic_table}
+    |       |     |                 | {name name}
+    |       |     | {select_from_etc}: TABLE { V: _vals }
+    |       |       | {table_or_subquery_list}: TABLE { V: _vals }
+    |       |       | | {table_or_subquery}: TABLE { V: _vals }
+    |       |       |   | {name _vals}: TABLE { V: _vals }
+    |       |       |   | {opt_as_alias}
+    |       |       |     | {name V}
+    |       |       | {select_where}
+    |       |         | {select_groupby}
+    |       |           | {select_having}
+    |       | {select_orderby}
+    |         | {select_limit}
+    |           | {select_offset}
+    | {upsert_update}: ok
+      | {conflict_target}: excluded: { k: blob notnull, v: blob notnull }
+      | | {indexed_columns}
+      |   | {indexed_column}
+      |     | {name k}: k: blob notnull
+      | {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: k: blob notnull
+          |   | {name k}: k: blob notnull
+          |   | {call}: blob notnull
+          |     | {name cql_blob_update}: blob notnull
+          |     | {call_arg_list}
+          |       | {call_filter_clause}
+          |       | {arg_list}: ok
+          |         | {name k}: k: blob notnull
+          |         | {arg_list}
+          |           | {add}: integer notnull
+          |           | | {call}: integer notnull primary_key
+          |           | | | {name cql_blob_get}: integer notnull primary_key
+          |           | | | {call_arg_list}
+          |           | |   | {call_filter_clause}
+          |           | |   | {arg_list}: ok
+          |           | |     | {name k}: k: blob notnull
+          |           | |     | {arg_list}
+          |           | |       | {dot}: integer notnull primary_key
+          |           | |         | {name basic_table}
+          |           | |         | {name id}
+          |           | | {int 1}: integer notnull
+          |           | {arg_list}
+          |             | {dot}: integer notnull primary_key
+          |               | {name basic_table}
+          |               | {name id}
+          | {update_where}
+            | {opt_where}: bool notnull
+            | | {in_pred}: bool notnull
+            |   | {name rowid}: rowid: longint notnull
+            |   | {select_stmt}: rowid: longint
+            |     | {select_core_list}: select: { rowid: longint notnull }
+            |     | | {select_core}: select: { rowid: longint notnull }
+            |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
+            |     |     | {select_expr_list}: select: { rowid: longint notnull }
+            |     |     | | {select_expr}: rowid: longint notnull
+            |     |     |   | {name rowid}: rowid: longint notnull
+            |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
+            |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
+            |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
+            |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
+            |     |       | {select_where}
+            |     |         | {opt_where}: bool notnull
+            |     |         | | {lt}: bool notnull
+            |     |         |   | {name id}: id: integer notnull
+            |     |         |   | {int 100}: integer notnull
+            |     |         | {select_groupby}
+            |     |           | {select_having}
+            |     | {select_orderby}
+            |       | {select_limit}
+            |         | {select_offset}
+            | {update_orderby}
+
+The statement ending at line XXXX
+
+INSERT INTO bogus_table_not_present VALUES(1, 2)
+ON CONFLICT (id) DO NOTHING;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement does not exist 'bogus_table_not_present'
 
   {upsert_stmt}: err
-  | {insert_stmt}: err
+  | {insert_stmt}
   | | {insert_normal}
   | | {name_columns_values}
-  |   | {name basic_table}: basic_table: { id: integer notnull primary_key, name: text<cool_text> } backed
+  |   | {name bogus_table_not_present}
   |   | {columns_values}
-  |     | {column_spec}
-  |     | | {name_list}
-  |     |   | {name id}
-  |     |   | {name_list}
-  |     |     | {name name}
   |     | {select_stmt}
   |       | {select_core_list}
   |       | | {select_core}
@@ -88417,7 +88690,7 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0492: backed tables are not
   |       |     | {insert_list}
   |       |       | {int 1}
   |       |       | {insert_list}
-  |       |         | {strlit 'foo'}
+  |       |         | {int 2}
   |       | {select_orderby}
   |         | {select_limit}
   |           | {select_offset}
@@ -88425,7 +88698,216 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0492: backed tables are not
     | {conflict_target}
       | {indexed_columns}
         | {indexed_column}
-          | {name word}
+          | {name id}
+
+The statement ending at line XXXX
+
+WITH
+basic_table (rowid, id, name) AS (CALL _basic_table()),
+a_useless_cte (x, y) AS (SELECT 1, 2),
+_vals (id, name) AS (SELECT id + 3, name
+  FROM basic_table
+  WHERE id < 100)
+INSERT INTO simple_backing_table(k, v) SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
+  FROM _vals AS V
+ON CONFLICT (k) DO UPDATE
+SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
+  WHERE rowid IN (SELECT rowid
+  FROM basic_table
+  WHERE id < 100);
+
+  {with_upsert_stmt}: ok
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
+  |   | | {cte_decl}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
+  |   | | | {name basic_table}
+  |   | | | {name_list}
+  |   | |   | {name rowid}
+  |   | |   | {name_list}
+  |   | |     | {name id}
+  |   | |     | {name_list}
+  |   | |       | {name name}
+  |   | | {shared_cte}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+  |   |   | {call_stmt}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+  |   |     | {name _basic_table}: _basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> } dml_proc
+  |   | {cte_tables}: ok
+  |     | {cte_table}: a_useless_cte: { x: integer notnull, y: integer notnull }
+  |     | | {cte_decl}: a_useless_cte: { x: integer notnull, y: integer notnull }
+  |     | | | {name a_useless_cte}
+  |     | | | {name_list}
+  |     | |   | {name x}
+  |     | |   | {name_list}
+  |     | |     | {name y}
+  |     | | {select_stmt}: select: { _anon: integer notnull, _anon: integer notnull }
+  |     |   | {select_core_list}: select: { _anon: integer notnull, _anon: integer notnull }
+  |     |   | | {select_core}: select: { _anon: integer notnull, _anon: integer notnull }
+  |     |   |   | {select_expr_list_con}: select: { _anon: integer notnull, _anon: integer notnull }
+  |     |   |     | {select_expr_list}: select: { _anon: integer notnull, _anon: integer notnull }
+  |     |   |     | | {select_expr}: integer notnull
+  |     |   |     | | | {int 1}: integer notnull
+  |     |   |     | | {select_expr_list}
+  |     |   |     |   | {select_expr}: integer notnull
+  |     |   |     |     | {int 2}: integer notnull
+  |     |   |     | {select_from_etc}: ok
+  |     |   |       | {select_where}
+  |     |   |         | {select_groupby}
+  |     |   |           | {select_having}
+  |     |   | {select_orderby}
+  |     |     | {select_limit}
+  |     |       | {select_offset}
+  |     | {cte_tables}
+  |       | {cte_table}: _vals: { id: integer notnull, name: text<cool_text> }
+  |         | {cte_decl}: _vals: { id: integer notnull, name: text<cool_text> }
+  |         | | {name _vals}
+  |         | | {name_list}
+  |         |   | {name id}: id: integer notnull
+  |         |   | {name_list}
+  |         |     | {name name}: name: text<cool_text>
+  |         | {select_stmt}: select: { _anon: integer notnull, name: text<cool_text> }
+  |           | {select_core_list}: select: { _anon: integer notnull, name: text<cool_text> }
+  |           | | {select_core}: select: { _anon: integer notnull, name: text<cool_text> }
+  |           |   | {select_expr_list_con}: select: { _anon: integer notnull, name: text<cool_text> }
+  |           |     | {select_expr_list}: select: { _anon: integer notnull, name: text<cool_text> }
+  |           |     | | {select_expr}: integer notnull
+  |           |     | | | {add}: integer notnull
+  |           |     | |   | {name id}: id: integer notnull
+  |           |     | |   | {int 3}: integer notnull
+  |           |     | | {select_expr_list}
+  |           |     |   | {select_expr}: name: text<cool_text>
+  |           |     |     | {name name}: name: text<cool_text>
+  |           |     | {select_from_etc}: TABLE { basic_table: basic_table }
+  |           |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
+  |           |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
+  |           |       |   | {name basic_table}: TABLE { basic_table: basic_table }
+  |           |       | {select_where}
+  |           |         | {opt_where}: bool notnull
+  |           |         | | {lt}: bool notnull
+  |           |         |   | {name id}: id: integer notnull
+  |           |         |   | {int 100}: integer notnull
+  |           |         | {select_groupby}
+  |           |           | {select_having}
+  |           | {select_orderby}
+  |             | {select_limit}
+  |               | {select_offset}
+  | {upsert_stmt}: ok
+    | {insert_stmt}: ok
+    | | {insert_normal}
+    | | {name_columns_values}
+    |   | {name simple_backing_table}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+    |   | {columns_values}: ok
+    |     | {column_spec}
+    |     | | {name_list}
+    |     |   | {name k}: k: blob notnull
+    |     |   | {name_list}
+    |     |     | {name v}: v: blob notnull
+    |     | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+    |       |     | | {select_expr}: blob notnull
+    |       |     | | | {call}: blob notnull
+    |       |     | |   | {name cql_blob_create}: blob notnull
+    |       |     | |   | {call_arg_list}
+    |       |     | |     | {call_filter_clause}
+    |       |     | |     | {arg_list}: ok
+    |       |     | |       | {name basic_table}
+    |       |     | |       | {arg_list}
+    |       |     | |         | {dot}: id: integer notnull
+    |       |     | |         | | {name V}
+    |       |     | |         | | {name id}
+    |       |     | |         | {arg_list}
+    |       |     | |           | {dot}: integer notnull primary_key
+    |       |     | |             | {name basic_table}
+    |       |     | |             | {name id}
+    |       |     | | {select_expr_list}
+    |       |     |   | {select_expr}: blob notnull
+    |       |     |     | {call}: blob notnull
+    |       |     |       | {name cql_blob_create}: blob notnull
+    |       |     |       | {call_arg_list}
+    |       |     |         | {call_filter_clause}
+    |       |     |         | {arg_list}: ok
+    |       |     |           | {name basic_table}
+    |       |     |           | {arg_list}
+    |       |     |             | {dot}: name: text<cool_text>
+    |       |     |             | | {name V}
+    |       |     |             | | {name name}
+    |       |     |             | {arg_list}
+    |       |     |               | {dot}: text
+    |       |     |                 | {name basic_table}
+    |       |     |                 | {name name}
+    |       |     | {select_from_etc}: TABLE { V: _vals }
+    |       |       | {table_or_subquery_list}: TABLE { V: _vals }
+    |       |       | | {table_or_subquery}: TABLE { V: _vals }
+    |       |       |   | {name _vals}: TABLE { V: _vals }
+    |       |       |   | {opt_as_alias}
+    |       |       |     | {name V}
+    |       |       | {select_where}
+    |       |         | {select_groupby}
+    |       |           | {select_having}
+    |       | {select_orderby}
+    |         | {select_limit}
+    |           | {select_offset}
+    | {upsert_update}: ok
+      | {conflict_target}: excluded: { k: blob notnull, v: blob notnull }
+      | | {indexed_columns}
+      |   | {indexed_column}
+      |     | {name k}: k: blob notnull
+      | {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: k: blob notnull
+          |   | {name k}: k: blob notnull
+          |   | {call}: blob notnull
+          |     | {name cql_blob_update}: blob notnull
+          |     | {call_arg_list}
+          |       | {call_filter_clause}
+          |       | {arg_list}: ok
+          |         | {name k}: k: blob notnull
+          |         | {arg_list}
+          |           | {add}: integer notnull
+          |           | | {call}: integer notnull primary_key
+          |           | | | {name cql_blob_get}: integer notnull primary_key
+          |           | | | {call_arg_list}
+          |           | |   | {call_filter_clause}
+          |           | |   | {arg_list}: ok
+          |           | |     | {name k}: k: blob notnull
+          |           | |     | {arg_list}
+          |           | |       | {dot}: integer notnull primary_key
+          |           | |         | {name basic_table}
+          |           | |         | {name id}
+          |           | | {int 1}: integer notnull
+          |           | {arg_list}
+          |             | {dot}: integer notnull primary_key
+          |               | {name basic_table}
+          |               | {name id}
+          | {update_where}
+            | {opt_where}: bool notnull
+            | | {in_pred}: bool notnull
+            |   | {name rowid}: rowid: longint notnull
+            |   | {select_stmt}: rowid: longint
+            |     | {select_core_list}: select: { rowid: longint notnull }
+            |     | | {select_core}: select: { rowid: longint notnull }
+            |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
+            |     |     | {select_expr_list}: select: { rowid: longint notnull }
+            |     |     | | {select_expr}: rowid: longint notnull
+            |     |     |   | {name rowid}: rowid: longint notnull
+            |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
+            |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
+            |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
+            |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
+            |     |       | {select_where}
+            |     |         | {opt_where}: bool notnull
+            |     |         | | {lt}: bool notnull
+            |     |         |   | {name id}: id: integer notnull
+            |     |         |   | {int 100}: integer notnull
+            |     |         | {select_groupby}
+            |     |           | {select_having}
+            |     | {select_orderby}
+            |       | {select_limit}
+            |         | {select_offset}
+            | {update_orderby}
 
 The statement ending at line XXXX
 

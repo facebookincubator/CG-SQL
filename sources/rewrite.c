@@ -980,7 +980,6 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
   ast_set_right(head, new_call->right);
   ast_set_left(head, new_call->left);
   head->type = new_call->type;
-
 }
 
 // Walk the param list looking for any of the "like T" forms
@@ -2498,6 +2497,9 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
 // Here we find all of the backed tables that have been mentioned in this statement
 // from the backed tables list and produce a chain of CTEs that define them.  This
 // can then be linked into some other statement (see below)
+//
+// Note that walking the list in this way effectively reverses the order the items
+// will appear in the  CTE list.
 static void rewrite_backed_table_ctes(
   list_item *backed_tables_list,
   ast_node **pcte_tables,
@@ -2509,32 +2511,42 @@ static void rewrite_backed_table_ctes(
   ast_node *cte_tail = NULL;
 
   for (list_item *item = backed_tables_list; item; item = item->next) {
-    EXTRACT_NOTNULL(table_or_subquery, item->ast);
-    EXTRACT_STRING(backed_table_name, table_or_subquery->left);
-    CSTR backed_proc_name = dup_printf("_%s", backed_table_name);
+    // already formed table on the list to add
+    bool_t added = false;
 
-    if (symtab_add(backed, backed_table_name, NULL)) {
-      // need a new backed table CTE for this one
-      backed_cte_tables = new_ast_cte_tables(
-        new_ast_cte_table(
-          new_ast_cte_decl(
-            new_ast_str(backed_table_name),
-            new_ast_star()
-          ),
-          new_ast_shared_cte(
-            new_ast_call_stmt(
-              new_ast_str(backed_proc_name),
-              NULL
+    if (is_ast_cte_table(item->ast)) {
+      backed_cte_tables = new_ast_cte_tables(item->ast, backed_cte_tables);
+      added = true;
+    }
+    else {
+      EXTRACT_NOTNULL(table_or_subquery, item->ast);
+      EXTRACT_STRING(backed_table_name, table_or_subquery->left);
+      CSTR backed_proc_name = dup_printf("_%s", backed_table_name);
+
+      if (symtab_add(backed, backed_table_name, NULL)) {
+        added = true;
+        // need a new backed table CTE for this one
+        backed_cte_tables = new_ast_cte_tables(
+          new_ast_cte_table(
+            new_ast_cte_decl(
+              new_ast_str(backed_table_name),
+              new_ast_star()
             ),
-            NULL
-          )
-        ),
-        backed_cte_tables
-      );
-
-      if (cte_tail == NULL) {
-        cte_tail = backed_cte_tables;
+            new_ast_shared_cte(
+              new_ast_call_stmt(
+                new_ast_str(backed_proc_name),
+                NULL
+              ),
+              NULL
+            )
+          ),
+          backed_cte_tables
+        );
       }
+    }
+
+    if (added && cte_tail == NULL) {
+      cte_tail = backed_cte_tables;
     }
   }
 
@@ -2558,7 +2570,7 @@ cql_noexport void rewrite_statement_backed_table_ctes(
   ast_node *cte_tail = NULL;
 
   rewrite_backed_table_ctes(backed_tables_list, &backed_cte_tables, &cte_tail);
-  
+
   Invariant(cte_tail);
   Invariant(backed_cte_tables);
 
@@ -2578,13 +2590,16 @@ cql_noexport void rewrite_statement_backed_table_ctes(
     if (stmt->type == k_ast_select_stmt) {
       stmt->type = k_ast_with_select_stmt;
     }
+    else if (stmt->type == k_ast_upsert_stmt) {
+      stmt->type = k_ast_with_upsert_stmt;
+    }
     else if (stmt->type == k_ast_update_stmt) {
       stmt->type = k_ast_with_update_stmt;
     }
     else if (stmt->type == k_ast_delete_stmt) {
       stmt->type = k_ast_with_delete_stmt;
     }
-    else { 
+    else {
       // this is all that's left
       Invariant(stmt->type == k_ast_insert_stmt);
       stmt->type = k_ast_with_insert_stmt;
@@ -2660,7 +2675,6 @@ static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast
     )
   );
 }
-
 
 static ast_node *cql_blob_get_call (
   CSTR key_val,
@@ -2863,14 +2877,12 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
 {
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
-  ast_node *with_node = NULL;
   ast_node *stmt = NULL;
 
   if (is_ast_with_insert_stmt(ast)) {
     EXTRACT_NOTNULL(with, ast->left)
     EXTRACT_NOTNULL(insert_stmt, ast->right);
     stmt = insert_stmt;
-    with_node = with;
   }
   else {
     Contract(is_ast_insert_stmt(ast));
@@ -3034,9 +3046,29 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   // for debugging dump the generated insert statement
   // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
 
+
+  ast_node *with_node = NULL;
+  ast_node *main_node = NULL;
+
+  // recover the main statement, we need to add our CTE there
+  if (in_upsert) {
+    main_node = sem_recover_with_stmt(ast->parent);
+    Invariant(is_ast_upsert_stmt(main_node) || is_ast_with_upsert_stmt(main_node));
+  }
+  else {
+    main_node = ast;
+    Invariant(is_ast_insert_stmt(main_node) || is_ast_with_insert_stmt(main_node));
+  }
+
+  if (is_ast_with(main_node->left)) {
+    with_node = main_node->left;
+  }
+
+  // the _vals node has to go after everything else
   if (with_node) {
     EXTRACT_NOTNULL(cte_tables, with_node->left);
 
+    // find the end and append
     while (cte_tables->right) {
       Contract(is_ast_cte_tables(cte_tables));
       cte_tables = cte_tables->right;
@@ -3046,24 +3078,18 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
     ast_set_right(cte_tables, new_ast_cte_tables(cte_table_vals, NULL));
   }
   else {
-    ast_node *with_insert_stmt = new_ast_with_insert_stmt(
-      with_node = new_ast_with(
-        new_ast_cte_tables(cte_table_vals, NULL)
-      ),
-      new_ast_insert_stmt(
-        stmt->left,
-        stmt->right
-      )
-    );
-    ast->type = with_insert_stmt->type;
-    ast_set_left(ast, with_insert_stmt->left);
-    ast_set_right(ast, with_insert_stmt->right);
+    // there is nothing else, so we can go first, leverage our other converter
+    list_item *vals_cte_list = NULL;
+    add_item_to_list(&vals_cte_list, cte_table_vals);
+    rewrite_statement_backed_table_ctes(main_node, vals_cte_list);
   }
 
 replace_backed_tables_only:
 
   if (backed_tables_list) {
-    rewrite_statement_backed_table_ctes(stmt, backed_tables_list);
+    if (!in_upsert) {
+      rewrite_statement_backed_table_ctes(ast, backed_tables_list);
+    }
   }
 
   // for debugging, dump the generated ast without trying to validate it at all
@@ -3074,11 +3100,14 @@ replace_backed_tables_only:
 
   AST_REWRITE_INFO_RESET();
 
-  // the insert statement is top level, when it re-enters it expects the cte state to be nil
-  cte_state *saved = cte_cur;
-  cte_cur = NULL;
-    sem_one_stmt(ast);
-  cte_cur = saved;
+  // if in upsert the overall statement will be analyzed, don't do it yet
+  if (!in_upsert) {
+    // the insert statement is top level, when it re-enters it expects the cte state to be nil
+    cte_state *saved = cte_cur;
+    cte_cur = NULL;
+      sem_one_stmt(ast);
+    cte_cur = saved;
+  }
 }
 
 static ast_node *rewrite_select_rowid(
@@ -3250,7 +3279,20 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   EXTRACT(opt_orderby, update_orderby->left);
   EXTRACT(opt_limit, update_orderby->right);
 
-  EXTRACT_STRING(backed_table_name, stmt->left);
+  CSTR backed_table_name = NULL;
+
+  if (stmt->left) {
+    EXTRACT_STRING(t_name, stmt->left);
+    backed_table_name = t_name;
+  }
+  else {
+    // upsert case, get name from context
+    Contract(is_ast_create_table_stmt(current_upsert_table_ast));
+    EXTRACT_NOTNULL(create_table_name_flags, current_upsert_table_ast->left);
+    EXTRACT_STRING(t_name, create_table_name_flags->right);
+    backed_table_name = t_name;
+  }
+
 
   // table has already been checked, it exists, it's legal
   // but it might not be backed, in which case we have less work to do
@@ -3334,7 +3376,7 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   // replace the target table and where clause of the backed table
   // with the backing table and adjusted where clause
 
-  ast_set_left(stmt, new_ast_str(backing_table_name));
+  ast_set_left(stmt, in_upsert ? NULL : new_ast_str(backing_table_name));
   ast_set_left(update_set, new_update_list->right);
   ast_set_left(update_where, new_opt_where);
   ast_set_left(update_orderby, NULL); // opt orderby handled in the select
@@ -3342,15 +3384,99 @@ cql_noexport void rewrite_update_statement_for_backed_table(
 
 replace_backed_tables_only:
 
-  // now add the backed tables and convert the node to a with delete if necessary
-  rewrite_statement_backed_table_ctes(ast, backed_tables_list);
+  if (!in_upsert) {
+    // now add the backed tables and convert the node to a with update if necessary
+    rewrite_statement_backed_table_ctes(ast, backed_tables_list);
+  }
 
   AST_REWRITE_INFO_RESET();
 
-  // the update statement is top level, when it re-enters it expects the cte state to be nil
+  // if in upsert the overall statement will be analyzed
+  if (!in_upsert) {
+    // the update statement is top level, when it re-enters it expects the cte state to be nil
+    cte_state *saved = cte_cur;
+    cte_cur = NULL;
+      sem_one_stmt(ast);
+    cte_cur = saved;
+  }
+}
+
+cql_noexport void rewrite_upsert_statement_for_backed_table(
+  ast_node *ast,
+  list_item *backed_tables_list)
+{
+  Contract(is_ast_upsert_stmt(ast) || is_ast_with_upsert_stmt(ast));
+
+  ast_node *stmt = NULL;
+
+  if (is_ast_with_upsert_stmt(ast)) {
+    EXTRACT_NOTNULL(upsert_stmt, ast->right);
+    stmt = upsert_stmt;
+  }
+  else {
+    Contract(is_ast_upsert_stmt(ast));
+    stmt = ast;
+  }
+
+  EXTRACT_NOTNULL(insert_stmt, stmt->left);
+  EXTRACT_NOTNULL(upsert_update, stmt->right);
+  EXTRACT(conflict_target, upsert_update->left);
+  EXTRACT(update_stmt, upsert_update->right);
+  EXTRACT(indexed_columns, conflict_target->left);
+
+  rewrite_insert_statement_for_backed_table(insert_stmt, backed_tables_list);
+
+  if (update_stmt) {
+    rewrite_update_statement_for_backed_table(update_stmt, backed_tables_list);
+  }
+
+  AST_REWRITE_INFO_SET(stmt->lineno, stmt->filename);
+
+  if (backed_tables_list) {
+    rewrite_statement_backed_table_ctes(ast, backed_tables_list);
+  }
+
+  Invariant(current_upsert_table_ast);
+
+  ast_node *table_ast = current_upsert_table_ast;
+
+  if (is_backed(table_ast->sem->sem_type)) {
+    EXTRACT_NOTNULL(create_table_name_flags, table_ast->left);
+    EXTRACT_STRING(backed_table_name, create_table_name_flags->right);
+    EXTRACT_MISC_ATTRS(table_ast, misc_attrs);
+    CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+    Invariant(backing_table_name);  // already validated
+    ast_node *backing_table = find_table_or_view_even_deleted(backing_table_name);
+    Invariant(backing_table);  // already validated
+    sem_struct *sptr_backing = backing_table->sem->sptr;
+    Invariant(sptr_backing);  // table must have a sem_struct
+
+    // figure out the column order of the key and value columns in the backing store
+    // the options are "key, value" or "value, key"
+    sem_t sem_type = sptr_backing->semtypes[0];
+    bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+    CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
+
+    ast_node *new_indexed_columns =
+      new_ast_indexed_columns(
+        new_ast_indexed_column(new_ast_str(backing_key), NULL),
+        NULL
+      );
+
+    ast_set_left(conflict_target, new_indexed_columns);
+  }
+
+  AST_REWRITE_INFO_RESET();
+
+  // the insert statement is top level, when it re-enters it expects the cte state to be nil
   cte_state *saved = cte_cur;
   cte_cur = NULL;
+  in_upsert = false;
+  in_upsert_rewrite = true;
+  current_upsert_table_ast = NULL;
     sem_one_stmt(ast);
+  in_upsert_rewrite = false;
   cte_cur = saved;
 }
 

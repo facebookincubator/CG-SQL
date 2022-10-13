@@ -59,9 +59,7 @@ static bool_t in_backing_rewrite;
 
 #define BEGIN_BACKING_REWRITE() \
   bool_t began_backing_rewrite = false; \
-  list_item *backed_tables_list_saved = NULL; \
   if (!in_backing_rewrite) { \
-    backed_tables_list_saved = backed_tables_list; \
     backed_tables_list = NULL; \
     in_backing_rewrite = true; \
     began_backing_rewrite = true; \
@@ -69,7 +67,7 @@ static bool_t in_backing_rewrite;
 
 #define END_BACKING_REWRITE() \
   if (began_backing_rewrite) { \
-    backed_tables_list = backed_tables_list_saved; \
+    backed_tables_list = NULL; \
     in_backing_rewrite = false; \
   }
 
@@ -563,12 +561,6 @@ typedef struct sem_expr_dispatch {
   void (*func)(ast_node *ast, CSTR str);
   CSTR str;
 } sem_expr_dispatch;
-
-// If the current context is a upsert statement
-static bool_t in_upsert;
-
-// hold the table ast query in the current upsert statement.
-static ast_node *current_upsert_table_ast;
 
 // If we encounter an FK that refers to the table it is in then we have to defer processing
 // of that FK until the table's columns and types are all known.  This just gives us an
@@ -15150,7 +15142,7 @@ static void sem_guard_stmt(ast_node *ast) {
 }
 
 // if the statement has a with clause, get the with version
-static ast_node *sem_recover_with_stmt(ast_node *ast) {
+cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast) {
   if (ast->parent && ast->parent->left && is_ast_with(ast->parent->left)) {
     return ast->parent;
   }
@@ -15401,8 +15393,8 @@ static void sem_update_stmt(ast_node *ast) {
       report_error(ast, "CQL0282: update statement require table name", NULL);
       goto cleanup;
     }
-    Contract(current_upsert_table_ast);
     table_ast = current_upsert_table_ast;
+    Invariant(table_ast);
   }
 
   ast->sem = table_ast->sem;
@@ -15917,12 +15909,6 @@ static void sem_insert_stmt(ast_node *ast) {
     goto cleanup;
   }
 
-  if (in_upsert && is_backed(table_ast->sem->sem_type)) {
-    report_error(ast, "CQL0492: backed tables are not supported in the upsert form (yet)", NULL);
-    record_error(ast);
-    goto cleanup;
-  }
-
   // expr_names node is a sugar syntax we need to rewrite it to a SQL syntax
   if (is_ast_expr_names(columns_values)) {
     rewrite_expr_names_to_columns_values(columns_values);
@@ -15965,9 +15951,6 @@ static void sem_insert_stmt(ast_node *ast) {
       record_error(ast);
       goto cleanup;
     }
-
-    Contract(!current_upsert_table_ast);
-    current_upsert_table_ast = table_ast;
   }
 
   if (is_ast_columns_values(columns_values)) {
@@ -16093,26 +16076,37 @@ static void sem_upsert_stmt(ast_node *stmt) {
     return;
   }
 
+  BEGIN_BACKING_REWRITE();
+
   EXTRACT_NOTNULL(insert_stmt, stmt->left);
   EXTRACT_NOTNULL(upsert_update, stmt->right);
   EXTRACT(conflict_target, upsert_update->left);
   EXTRACT(update_stmt, upsert_update->right);
   EXTRACT(indexed_columns, conflict_target->left);
   EXTRACT(opt_where, conflict_target->right);
-  in_upsert = 1;
+  in_upsert = true;
 
   // insert_stmt ON CONFLICT ([indexed_columns]) [WHERE ...] DO [UPDATE ...]
+  EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
+  EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left)
+  EXTRACT_STRING(name, name_ast);
+
+  ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
+    name,
+    name_ast,
+    "CQL0160: table in insert statement does not exist");
+  if (!table_ast) {
+    goto error;
+  }
+
+  current_upsert_table_ast = table_ast;
 
   sem_insert_stmt(insert_stmt);
   if (is_error(insert_stmt)) {
     goto error;
   }
 
-  // Make sure this attribute was populated by sem_insert_stmt(...)
-  Contract(is_ast_create_table_stmt(current_upsert_table_ast));
-
   // grab the columns portion from the insert statement ast
-  EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
   EXTRACT_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT(column_spec, columns_values->left);
   EXTRACT(name_list, column_spec->left);
@@ -16143,7 +16137,7 @@ static void sem_upsert_stmt(ast_node *stmt) {
 
   int32_t select_count = 1;
   bool_t found_where_stmt = is_root_select_stmt_has_opt_where_node(insert_stmt, &select_count);
-  if (select_count == 0 && !found_where_stmt) {
+  if (select_count == 0 && !found_where_stmt && !in_upsert_rewrite) {
     report_error(insert_stmt, "CQL0280: upsert statement requires a where clause if the insert clause uses select", NULL);
     record_error(insert_stmt);
     goto error;
@@ -16210,9 +16204,15 @@ static void sem_upsert_stmt(ast_node *stmt) {
   stmt->sem = insert_stmt->sem;
   record_ok(upsert_update);
 
+  if (BACKING_REWRITE_NEEDED(stmt, current_upsert_table_ast)) {
+    rewrite_upsert_statement_for_backed_table(sem_recover_with_stmt(stmt), backed_tables_list);
+  }
+
 cleanup:
-  in_upsert = 0;
+  in_upsert = false;
   current_upsert_table_ast = NULL;
+
+  END_BACKING_REWRITE();
 
   return;
 
@@ -25459,6 +25459,7 @@ cql_noexport void sem_cleanup() {
   in_trigger = false;
   in_switch = false;
   in_upsert = false;
+  in_upsert_rewrite = false;
   loop_depth = 0;
   last_sub_version = 1;
   in_proc_savepoint = false;
@@ -25483,7 +25484,6 @@ cql_noexport void sem_cleanup() {
   current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
   current_proc_contains_try_is_proc_body = false;
   in_backing_rewrite = false;
-  backed_tables_list = NULL;
 }
 
 #endif
@@ -25530,3 +25530,12 @@ cql_data_defn( bytebuf *recreate_annotations );
 
 // any table or group can have an action
 cql_data_defn( symtab *ad_hoc_recreate_actions );
+
+// If the current context is a upsert statement
+cql_data_defn( bool_t in_upsert );
+
+// We can suppress CQL0280 in a rewrite because we know the form we create is good
+cql_data_defn( bool_t in_upsert_rewrite );
+
+// hold the table ast query in the current upsert statement.
+cql_data_defn ( ast_node *current_upsert_table_ast );
