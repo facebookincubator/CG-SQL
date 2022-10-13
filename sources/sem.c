@@ -14085,9 +14085,7 @@ static void sem_backed_col_def(ast_node *table_ast, ast_node *def, CSTR table_na
       return;
     }
     else if (is_ast_col_attrs_default(ast)) {
-      // In principle we could support this, but we don't for now.
-      report_invalid_backed_column(table_ast, "has a default value", col_name, table_name);
-      return;
+      // this is valid, we can fill it in when we do an insert
     }
     else if (is_ast_col_attrs_check(ast)) {
       report_invalid_backed_column(table_ast, "has a check expression", col_name, table_name);
@@ -14261,6 +14259,7 @@ static void sem_create_table_stmt(ast_node *ast) {
   // the self-referencing table case needs to use these to detect the self-reference.
   current_table_name = name;
   current_table_ast = ast;
+  symtab *def_values = symtab_new();
 
   int32_t temp = flags & TABLE_IS_TEMP;
   int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
@@ -14318,6 +14317,10 @@ static void sem_create_table_stmt(ast_node *ast) {
       if (is_error(def)) {
         record_error(ast);
         goto cleanup;
+      }
+
+      if (col_info.default_value) {
+        symtab_add(def_values, col_info.col_name, col_info.default_value);
       }
 
       if (temp && (col_info.create_version > 0 || col_info.delete_version > 0)) {
@@ -14454,7 +14457,6 @@ static void sem_create_table_stmt(ast_node *ast) {
 
   if (!is_error(ast)) {
     if (existing_defn) {
-
       // Use the virtual table definition for comparison if there is one -- it's the parent node.
       // If only one of the tables is virtual then the text can't possibly match so we don't
       // need any special case logic for mix and match of virtual/non-virtual. And the error
@@ -14504,6 +14506,9 @@ static void sem_create_table_stmt(ast_node *ast) {
       // to not see deleted views (e.g. select) others don't (e.g. drop)
       add_table_or_view(ast);
 
+      symtab_add_symtab(table_default_values, name, def_values);
+      def_values = NULL;
+
       sem_record_annotation_from_vers_info(&table_vers_info);
 
       if (is_backed(ast->sem->sem_type)) {
@@ -14515,6 +14520,10 @@ static void sem_create_table_stmt(ast_node *ast) {
 cleanup:
   current_table_name = NULL;
   current_table_ast = NULL;
+  if (def_values) {
+    // if it's been stored in tables_default_values the local will be null
+    symtab_delete(def_values);
+  }
 }
 
 // Semantic analysis for virtual tables is odd. The "virtual" part of the
@@ -15147,8 +15156,17 @@ cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast) {
     return ast->parent;
   }
   return ast;
+
 }
 
+// If this is the "with" form of a statement get ito the inner statement, 
+// skipping the with prefix.  The inverse of the above
+cql_noexport ast_node *sem_skip_with(ast_node *ast) {
+  if (ast->left && is_ast_with(ast->left)) {
+    return ast->right;
+  }
+  return ast;
+}
 
 // This is the delete analyzer, it sets up a joinscope for the table being
 // deleted and the validates the WHERE if present against that joinscope.
@@ -25055,6 +25073,7 @@ cql_noexport void sem_main(ast_node *ast) {
   upgrade_procs = symtab_new();
   ad_hoc_migrates = symtab_new();
   tables = symtab_new();
+  table_default_values = symtab_new();
   indices = symtab_new();
   globals = symtab_new();
   constant_groups = symtab_new();
@@ -25431,6 +25450,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(global_types);
   SYMTAB_CLEANUP(misc_attributes);
   SYMTAB_CLEANUP(ad_hoc_recreate_actions);
+  SYMTAB_CLEANUP(table_default_values);
 
   // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
 
@@ -25484,6 +25504,7 @@ cql_noexport void sem_cleanup() {
   current_loop_analysis_state = LOOP_ANALYSIS_STATE_NONE;
   current_proc_contains_try_is_proc_body = false;
   in_backing_rewrite = false;
+  backed_tables_list = NULL;
 }
 
 #endif
@@ -25539,3 +25560,8 @@ cql_data_defn( bool_t in_upsert_rewrite );
 
 // hold the table ast query in the current upsert statement.
 cql_data_defn ( ast_node *current_upsert_table_ast );
+
+// When processing the schema, record default values for each table
+// so that we can find them quickly.  This is a symbol table of symbol tables.
+// We store them here rather than on the sem_node because they are sparse
+cql_data_defn( symtab *table_default_values );

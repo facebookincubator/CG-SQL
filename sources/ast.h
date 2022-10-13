@@ -209,6 +209,16 @@ extern minipool *_Nullable ast_pool;
   Contract(current_file && yylineno > 0); \
   ast_reset_rewrite_info()
 
+// any new nodes will be charged to this location
+#define AST_REWRITE_INFO_SAVE() \
+  int32_t lineno_saved = yylineno; \
+  CSTR current_file_saved = current_file;
+
+// reset the location to make sure it's not used by the next new nodes
+#define AST_REWRITE_INFO_RESTORE() \
+  ast_set_rewrite_info(lineno_saved, current_file_saved);
+
+
 cql_noexport void ast_set_rewrite_info(int32_t lineno, CSTR _Nonnull filename);
 cql_noexport void ast_reset_rewrite_info(void);
 

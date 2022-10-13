@@ -38,6 +38,7 @@ cql_noexport symtab_entry *_Nullable symtab_find(symtab *_Nullable syms, const c
 cql_noexport bytebuf *_Nonnull symtab_ensure_bytebuf(symtab *_Nonnull syms, const char *_Nonnull sym_new);
 cql_noexport void symtab_append_bytes(symtab *_Nonnull syms, const char *_Nonnull sym_new, const void *_Nullable bytes, size_t count);
 cql_noexport symtab *_Nonnull symtab_ensure_symtab(symtab *_Nonnull syms, const char *_Nonnull name);
+cql_noexport bool_t symtab_add_symtab(symtab *_Nonnull syms, CSTR _Nonnull name, symtab *_Nonnull data);
 cql_noexport charbuf *_Nonnull symtab_ensure_charbuf(symtab *_Nonnull syms, const char *_Nonnull sym_new);
 
 // patternlint-disable-next-line prefer-sized-ints-in-msys

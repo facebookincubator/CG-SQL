@@ -21827,12 +21827,12 @@ create table collate_col_backed(
 );
 
 -- TEST: table with default value on column cannot be backed store
--- + {create_table_stmt}: err
--- + error: % table is not suitable for use as backed storage: column 'id' has a default value in 'default_value_col_backed'
--- +1 error:
+-- + {create_table_stmt}: default_value_col_backed: { id: integer notnull primary_key, x: integer notnull has_default, t: text } backed
+-- - error:
 @attribute(cql:backed_by=simple_backing_table)
 create table default_value_col_backed(
-  id integer default 5,
+  id integer primary key,
+  x integer not null default 7,
   t text
 );
 
@@ -22188,6 +22188,30 @@ begin
   declare b blob;
   let z := (select cql_blob_update(b, x, simple_backing_table.k));
 end;
+
+
+-- test table with llots of default values
+-- - error
+@attribute(cql:backed_by=simple_backing_table)
+create table bt_default(
+  pk1 integer default 2222,
+  pk2 integer default 99,
+  x int default 1111,
+  y int default 42,
+  constraint pk primary key (pk1, pk2)
+);
+
+-- TEST: generate defaults for pk2 and y but pk1 and x
+-- + WITH
+-- + _vals (pk1, x) AS (VALUES(1, 2))
+-- + INSERT INTO simple_backing_table(k, v)
+-- + cql_blob_create(bt_default, V.pk1, bt_default.pk1, 99, bt_default.pk2),
+-- + cql_blob_create(bt_default, V.x, bt_default.x, 42, bt_default.y)
+-- default values for specified columns should be absent
+-- - 1111
+-- - 2222
+-- + FROM _vals AS V;
+insert into bt_default(pk1,x) values (1, 2);
 
 --  TEST: insert into backing table in upsert form
 -- verify rewrite

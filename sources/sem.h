@@ -314,6 +314,7 @@ cql_noexport sem_node *new_sem(sem_t sem_type);
 cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);
 cql_noexport void sem_select(ast_node *node);
 cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast);
+cql_noexport ast_node *sem_skip_with(ast_node *ast);
 
 #endif
 
@@ -344,7 +345,6 @@ cql_data_decl( cte_state *cte_cur );
 cql_data_decl( symtab *ref_sources_for_target_table );
 cql_data_decl( symtab *ref_targets_for_source_table );
 
-
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc
 cql_data_decl( bool_t use_encode );
@@ -368,3 +368,8 @@ cql_data_decl( bool_t in_upsert_rewrite );
 
 // hold the table ast query in the current upsert statement.
 cql_data_decl ( ast_node *current_upsert_table_ast );
+
+// When processing the schema, record default values for each table
+// so that we can find them quickly.  This is a symbol table of symbol tables.
+// We store them here rather than on the sem_node because they are sparse
+cql_data_decl( symtab *table_default_values );

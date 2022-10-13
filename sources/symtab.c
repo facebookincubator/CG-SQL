@@ -196,6 +196,11 @@ cql_noexport symtab *_Nonnull symtab_ensure_symtab(symtab *syms, const char *nam
   return value;
 }
 
+cql_noexport bool_t symtab_add_symtab(symtab *syms, CSTR name, symtab *data) {
+  syms->teardown = symtab_teardown;
+  return symtab_add(syms, name, (void*)data);
+}
+
 static void bytebuf_teardown(void *val) {
   bytebuf_close((bytebuf*)val);
   free(val);
