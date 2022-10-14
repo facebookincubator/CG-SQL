@@ -33,6 +33,7 @@ static charbuf *backed_tables;
 static charbuf *query_plans;
 static CSTR current_procedure_name;
 static charbuf *current_ok_table_scan;
+static symtab *virtual_tables;
 
 // Count sql statement found in ast
 static uint32_t sql_stmt_count = 0;
@@ -53,6 +54,11 @@ static bool_t table_function_callback(
   Contract(is_ast_table_function(ast));
   EXTRACT_STRING(name, ast->left);
   bprintf(output, "%s", name);
+
+  if (!symtab_add(virtual_tables, name, NULL)) {
+    // This virtual table is already created
+    return true;
+  }
 
   bprintf(schema_stmts, "CREATE TABLE %s (\n", name);
 
@@ -415,8 +421,8 @@ static void cg_qp_emit_declare_func(charbuf *output) {
   gen_set_output_buffer(output);
   for (list_item *item = all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
-    bool_t is_select_func = 
-      is_ast_declare_select_func_stmt(any_func) || 
+    bool_t is_select_func =
+      is_ast_declare_select_func_stmt(any_func) ||
       is_ast_declare_select_func_no_check_stmt(any_func);
     Contract(is_select_func  || is_ast_declare_func_stmt(any_func));
 
@@ -681,6 +687,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   exit_on_validating_schema();
 
   cg_stmts = symtab_new();
+  virtual_tables = symtab_new();
 
   STMT_INIT(create_proc_stmt);
 
@@ -811,6 +818,8 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   CHARBUF_CLOSE(backed_tables_buf);
   CHARBUF_CLOSE(schema_stmts_buf);
   CHARBUF_CLOSE(query_plans_buf);
+  SYMTAB_CLEANUP(cg_stmts);
+  SYMTAB_CLEANUP(virtual_tables);
 
   // Force the globals to null state so that they do not look like roots to LeakSanitizer
   // all of these should have been freed already.  This is the final safety net to prevent
