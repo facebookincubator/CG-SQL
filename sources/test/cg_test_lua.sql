@@ -5111,7 +5111,7 @@ create table backed(
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 @attribute(cql:private)
 create proc explain_equery_plan_backed(out x bool not null)
 begin

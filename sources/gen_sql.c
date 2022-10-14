@@ -1144,31 +1144,86 @@ static void gen_field_hash(ast_node *ast) {
   CHARBUF_CLOSE(tmp);
 }
 
+
+// patternlint-disable-next-line prefer-sized-ints-in-msys
+// get CSTR out of the array and compare case insensitively
+static int case_cmp(void *p1, void *p2) {
+  CSTR c1 = *(CSTR*)p1;
+  CSTR c2 = *(CSTR*)p2;
+  // case sensitive compare for the hash canonicalization
+  return strcmp(c1, c2);
+}
+
 // The type hash considers all of the not null fields plus the type name
 // as the core identity of the type.
 cql_noexport CSTR gen_type_hash(ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
   Contract(ast->sem->sptr);
+  int64_t hash = 0;
+
+  if (ast->sem->type_hash != 0) {
+    // if we are so unlucky that the hash is zero, nothing bad happens
+    // we just compute it every time
+    hash = ast->sem->type_hash;
+    goto cache_hit;
+  }
 
   sem_struct *sptr = ast->sem->sptr;
 
   CHARBUF_OPEN(tmp);
   // Canonicalize to pascal
   cg_sym_name(cg_symbol_case_pascal, &tmp, "", sptr->struct_name, NULL); // no prefix pascal
-  bool_t first = true;
 
+  // we need an array of the field descriptions, first we need the count
+  // we're going to sort them hence the array
+  uint32_t count = 0;
+  for (int32_t i = 0; i < sptr->count; i++) {
+     sem_t sem_type = sptr->semtypes[i];
+     if (!is_nullable(sem_type)) {
+       count++;
+     }
+  }
+
+  // there must be a pk and it is not null so count is > 0
+  Invariant(count > 0);
+
+  // make our temporary array
+  CSTR *ptrs = calloc(count, sizeof(CSTR));
+
+  // now compute the fields we need
+  int32_t next = 0;
   for (int32_t i = 0; i < sptr->count; i++) {
      CSTR cname = sptr->names[i];
      sem_t sem_type = sptr->semtypes[i];
      if (!is_nullable(sem_type)) {
-       bputc(&tmp, first ? ':' : ',');
-       gen_append_field_desc(&tmp, cname, sem_type);
-       first = false;
+       CHARBUF_OPEN(field);
+       gen_append_field_desc(&field, cname, sem_type);
+       ptrs[next++] = Strdup(field.ptr);
+       CHARBUF_CLOSE(field);
      }
   }
-  int64_t hash = sha256_charbuf(&tmp);
+  Invariant(next == count);
+
+  qsort(ptrs, count, sizeof(CSTR), (void*)case_cmp);
+
+  // assemble the fields into one big string to hash
+  bool_t first = true;
+  for (int32_t i = 0; i < count; i++) {
+     bputc(&tmp, first ? ':' : ',');
+     bprintf(&tmp, ptrs[i]);
+     first = false;
+  }
+
+  free(ptrs);
+
+  // printf("hashing: %s\n", tmp.ptr); -- for debugging
+  hash = sha256_charbuf(&tmp);
   CHARBUF_CLOSE(tmp);
+
+  ast->sem->type_hash = hash;
+
+cache_hit:
 
   return dup_printf("%lld", (llint_t)hash);
 }

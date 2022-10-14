@@ -5426,7 +5426,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM _backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 create proc use_generated_fragment()
 begin
   with (call _backed())
@@ -5444,7 +5444,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 create proc use_backed_table_directly()
 begin
   select * from backed;
@@ -5461,7 +5461,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is a NOT result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_with_cursor()
@@ -5482,7 +5482,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is a result set proc
 -- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_directly_in_with_select()
@@ -5504,7 +5504,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_with_select_and_cursor()
@@ -5525,7 +5525,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT flag
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_select_expr(out x bool not null)
@@ -5545,7 +5545,7 @@ end;
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = 7437534416349388823
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is a result set proc
 -- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 @attribute(cql:private)
