@@ -717,7 +717,7 @@ static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
 
   CHARBUF_OPEN(out);
 
-  bprintf(&out, "@attribute(cql:private)\n");
+  bprintf(&out, "\n@attribute(cql:private)");
   bprintf(&out, "\nCREATE PROC %s_%s_full_drop()\n", global_proc_name, target_name);
   bprintf(&out, "BEGIN\n");
 

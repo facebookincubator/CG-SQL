@@ -512,8 +512,8 @@ END;
 
 -- declared upgrade procedures if any
 DECLARE PROC RecreateGroup1Migration() USING TRANSACTION;
-@attribute(cql:private)
 
+@attribute(cql:private)
 CREATE PROC test_migrated_from_recreate2_full_drop()
 BEGIN
   -- mark indices as having been deleted
@@ -522,8 +522,8 @@ BEGIN
   -- drop the target table and mark it dropped
   CALL test_drop_table_helper(cql_compressed('migrated_from_recreate2'));
 END;
-@attribute(cql:private)
 
+@attribute(cql:private)
 CREATE PROC test_migrated_from_recreate_full_drop()
 BEGIN
   -- drop all dependent tables
