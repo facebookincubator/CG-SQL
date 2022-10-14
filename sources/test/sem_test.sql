@@ -19715,8 +19715,8 @@ end;
 -- +  LET z := "abc\n123\r\n\x02lmnop''";
 create proc string_chain()
 begin
-  let z := "abc\n" 
-     "123\r\n\x02" 
+  let z := "abc\n"
+     "123\r\n\x02"
      "lmnop''";
 end;
 
