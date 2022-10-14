@@ -3545,8 +3545,15 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t for
   // if you're doing out_union then the row fetcher is all there is
   CSTR suffix = out_union_proc ? "_fetch_results" : "";
 
-  CG_CHARBUF_OPEN_SYM(proc_name_base, name);
-  CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
+  // use alternative prefix if there is one.
+  CSTR prefix = rt->symbol_prefix;
+  if (misc_attrs){
+    CSTR alt_prefix = get_named_string_attribute_value(misc_attrs, "alt_prefix");
+    if (alt_prefix) {
+      prefix = alt_prefix;
+    }
+  }
+  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(proc_sym, prefix, name, suffix);
 
   if (private_proc) {
     bprintf(proc_decl, "static ");
@@ -3601,7 +3608,6 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t for
   }
 
   CHARBUF_CLOSE(proc_sym);
-  CHARBUF_CLOSE(proc_name_base);
 }
 
 // Emitting a stored proc is mostly setup.  We have a bunch of housekeeping to do:

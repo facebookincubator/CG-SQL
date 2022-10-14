@@ -182,6 +182,7 @@ DECLARE PROC out_arg_cursor (x INTEGER NOT NULL, OUT y INTEGER NOT NULL);
 DECLARE PROC make_virt_table () USING TRANSACTION;
 DECLARE PROC virtual1 () (vx INTEGER NOT NULL, vy INTEGER);
 DECLARE PROC virtual2 () (vx INTEGER NOT NULL, vy INTEGER);
+DECLARE PROC proc_with_alt_prefix (OUT x INTEGER);
 DECLARE PROC use_private_out_union () USING TRANSACTION;
 DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
 DECLARE PROC use_no_getters_out_union () USING TRANSACTION;

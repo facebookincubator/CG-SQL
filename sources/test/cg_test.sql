@@ -3914,6 +3914,15 @@ begin
   out union C;
 end;
 
+-- TEST: verify that when alt_prefix is set, alt_prefix is the prefix of emitted function name.
+-- + void c_proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x)
+-- - void proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x)
+@attribute(cql:alt_prefix=c_)
+create proc proc_with_alt_prefix(out x integer)
+begin
+  set x := 1;
+end;
+
 -- TEST: use the private out union function in the same translation unit, it should have everything we need to call it
 -- note that compiling this code in C correctly is part of the test which verifies lots of linkage in addition
 -- to just these strings.

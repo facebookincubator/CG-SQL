@@ -12776,6 +12776,30 @@ static void private_out_union_fetch_results(private_out_union_result_set_ref _Nu
 // The statement ending at line XXXX
 
 /*
+@ATTRIBUTE(cql:alt_prefix=c_)
+CREATE PROC proc_with_alt_prefix (OUT x INTEGER)
+BEGIN
+  SET x := 1;
+END;
+*/
+
+#define _PROC_ "proc_with_alt_prefix"
+/*
+export:
+DECLARE PROC proc_with_alt_prefix (OUT x INTEGER);
+*/
+void c_proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x) {
+  cql_contract_argument_notnull((void *)x, 1);
+
+  cql_set_null(*x); // set out arg to non-garbage
+  cql_set_notnull(*x, 1);
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
 CREATE PROC use_private_out_union ()
 BEGIN
   DECLARE C CURSOR FOR CALL private_out_union();
