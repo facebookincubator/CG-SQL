@@ -1571,7 +1571,6 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not su
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' specifies auto increment in 'autoinc_col_backed'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' has a check expression in 'check_col_backed'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 't' specifies collation order in 'collate_col_backed'
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' has a default value in 'default_value_col_backed'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 't' has delete attribute in 'deleted_col_backed'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 't' has create attribute in 'created_col_backed'
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: @recreate attribute doesn't match the backing table 'recreate_backed'

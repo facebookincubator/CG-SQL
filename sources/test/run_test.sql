@@ -5614,7 +5614,9 @@ BEGIN_TEST(blob_funcs)
   set b := (select bupdatekey(b, 0, 2345));
   EXPECT(2345 == (select bgetval(b,0)));
   EXPECT(3456 == (select bgetval(b,1)));
+END_TEST(blob_funcs)
 
+BEGIN_TEST(backed_tables)
   -- seed some data
   insert into backed values (1, 100, 101), (2, 200, 201);
 
@@ -5665,6 +5667,41 @@ BEGIN_TEST(blob_funcs)
   insert into backed2(id) values(1);
   EXPECT(1 == (select id from backed2));
 END_TEST(blob_funcs)
+
+@attribute(cql:backed_by=backing)
+create table backed_table_with_defaults(
+  pk1 integer default 1000,
+  pk2 integer default 2000,
+  x int default 3000,
+  y int default 4000,
+  constraint pk primary key (pk1, pk2)
+);
+
+BEGIN_TEST(backed_tables_default_values)
+  insert into backed_table_with_defaults(pk1, x) values (1, 100), (2, 200);
+
+  declare C cursor for select * from backed_table_with_defaults;
+
+  -- verify default values inserted
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.pk1 = 1);
+  EXPECT(C.pk2 = 2000);
+  EXPECT(C.x = 100);
+  EXPECT(C.y = 4000);
+
+  -- and second row
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.pk1 = 2);
+  EXPECT(C.pk2 = 2000);
+  EXPECT(C.x = 200);
+  EXPECT(C.y = 4000);
+
+  -- and no third row
+  fetch C;
+  EXPECT(NOT C);
+END_TEST(backed_tables_default_values)
 
 #endif
 

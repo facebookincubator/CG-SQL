@@ -2631,62 +2631,142 @@ cql_noexport void rewrite_select_for_backed_tables(
   sem_select(stmt);
 }
 
+// As we do our recursion creating the fields for blob creation we flow this state
+typedef struct create_blob_args_info {
+  // inputs to recursion (same at every level)
+  ast_node *backed_table;
+  bool_t for_key;
+
+  // output after recursion complete
+  symtab *seen_names;
+} create_blob_args_info;
+
+// Once we have added all of the user specified columns we need to check
+// for any known default values that did not get added by the user.  The
+// "seen_names" symbol table has all the names these user mentioned,
+// we can cross check the table columns against what was seen and add
+// any defaults using the known default values.
+static ast_node *rewrite_missing_default_values(create_blob_args_info *info) {
+  sem_struct *sptr = info->backed_table->sem->sptr;
+  CSTR backed_table_name = sptr->struct_name;
+  symtab *def_values = find_default_values(sptr->struct_name);
+  Invariant(def_values);  // table name known to be good
+
+  ast_node *arg_list = NULL;
+  
+  for (int32_t i = 0; i < sptr->count; i++) {
+    sem_t sem_type = sptr->semtypes[i];
+    bool_t is_key = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+    // if we're looking for keys and this isn't a key name or vice verse, skip it
+    if (is_key != info->for_key) {
+      continue;
+    }
+
+    CSTR c_name = sptr->names[i];
+
+    // if we already have this name, we can proceed to the next column
+    if (symtab_find(info->seen_names, c_name)) {
+      continue;
+    }
+
+    // if no default value, proceed to the next column
+    symtab_entry *entry = symtab_find(def_values, c_name);
+    if (!entry) {
+      continue;
+    }
+
+    // when we copy the tree we will use the file and line numbers from the original
+    // so we temporarily discard whatever file and line number we are using right now
+    AST_REWRITE_INFO_SAVE();
+    ast_reset_rewrite_info();
+    ast_node *def_value = copy_ast_tree(entry->val);
+    AST_REWRITE_INFO_RESTORE();
+
+    arg_list = new_ast_arg_list(
+      def_value,
+      new_ast_arg_list(
+        new_ast_dot(new_ast_str(backed_table_name), new_ast_str(c_name)),
+        arg_list
+      )
+    );
+  }
+
+  symtab_delete(info->seen_names);
+  info->seen_names = NULL;
+  return arg_list;
+}
+
 // This walks the name list and generates either the args for the key or the args for the value
-// both are just going to be V.col_name from the _vals alias and the backed table.column
-static ast_node *rewrite_create_blob_args(bool_t for_key, ast_node *backed_table, ast_node *name_list)
-{
+// both are just going to be V.col_name from the _vals alias and the backed table.column.
+// The info we need to do the recursion flows in the info variable, this helps to keep
+// the stack cost low and lets us easily add new state if we need it.
+static ast_node *rewrite_create_blob_args(create_blob_args_info *info, ast_node *name_list) {
   if (!name_list) {
-    return NULL;
+    // There are no more names to add manually, we return any default values that
+    // need to be added at this point.
+    return rewrite_missing_default_values(info);
   }
 
   EXTRACT_STRING(name, name_list->left);
-  sem_struct *sptr = backed_table->sem->sptr;
+  sem_struct *sptr = info->backed_table->sem->sptr;
   int32_t icol = sem_column_index(sptr, name);
   Invariant(icol >= 0);  // must be valid name, already checked!
   sem_t sem_type = sptr->semtypes[icol];
   bool_t is_key = is_primary_key(sem_type) || is_partial_pk(sem_type);
   CSTR backed_table_name = sptr->struct_name;
 
-  if (is_key == for_key) {
+  if (is_key == info->for_key) {
+    // note that this name was user-specified so we don't add a default value for it later
+    symtab_add(info->seen_names, name, NULL);
+
+    // make a new arg list entry, recurse for the remainder (and finally defaults)
     return new_ast_arg_list(
       new_ast_dot(new_ast_str("V"), new_ast_str(name)),
       new_ast_arg_list(
         new_ast_dot(new_ast_str(backed_table_name), new_ast_str(name)),
-        rewrite_create_blob_args(for_key, backed_table, name_list->right)
+        rewrite_create_blob_args(info, name_list->right)
       )
     );
   }
   else {
-    return rewrite_create_blob_args(for_key, backed_table, name_list->right);
+    // this column is not relevant, skip it (tail recursion)
+    return rewrite_create_blob_args(info, name_list->right);
   }
 }
 
 // This walks the name list and generates either the key create call or the value create call
 // This is the fixed part of the call.
 static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast_node *name_list) {
+
+  // set up state for the recursion, (note it will clean the symbol table)
+  create_blob_args_info info = {
+    .for_key = for_key,
+    .backed_table = backed_table,
+    .seen_names = symtab_new()
+  };
+ 
   return new_ast_call(
     new_ast_str("cql_blob_create"),
     new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL),
       new_ast_arg_list(
         new_ast_str(backed_table->sem->sptr->struct_name),
-        rewrite_create_blob_args(for_key, backed_table, name_list)
+        rewrite_create_blob_args(&info, name_list)
       )
     )
   );
 }
 
-static ast_node *cql_blob_get_call (
-  CSTR key_val,
-  CSTR backed_table,
-  CSTR col)
-{
+// create the wrapper for a cql_blob_get call for the given blob, backed table name and column name
+static ast_node *cql_blob_get_call (CSTR blob_field, CSTR backed_table, CSTR col) {
+  // this is just cql_blob_get(blob_field, backed_table.col)
   return new_ast_call(
     new_ast_str("cql_blob_get"),
     new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL),
       new_ast_arg_list(
-        new_ast_str(key_val),
+        new_ast_str(blob_field),
         new_ast_arg_list(
           new_ast_dot(
             new_ast_str(backed_table),
@@ -2699,7 +2779,7 @@ static ast_node *cql_blob_get_call (
   );
 }
 
-// several args need to flow during the recursion so we bundle them into a struct
+// Several args need to flow during the recursion so we bundle them into a struct
 // so that we can flow the pointer instead of all these arguments
 typedef struct update_rewrite_info {
   CSTR backing_key;
@@ -2877,18 +2957,8 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
 {
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
-  ast_node *stmt = NULL;
-
-  if (is_ast_with_insert_stmt(ast)) {
-    EXTRACT_NOTNULL(with, ast->left)
-    EXTRACT_NOTNULL(insert_stmt, ast->right);
-    stmt = insert_stmt;
-  }
-  else {
-    Contract(is_ast_insert_stmt(ast));
-    stmt = ast;
-  }
-
+  // skip the outer WITH if there is one
+  ast_node *stmt = sem_skip_with(ast);
   Invariant(is_ast_insert_stmt(stmt));
   EXTRACT_NOTNULL(name_columns_values, stmt->right);
   EXTRACT_STRING(backed_table_name, name_columns_values->left);
@@ -3046,7 +3116,6 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   // for debugging dump the generated insert statement
   // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
 
-
   ast_node *with_node = NULL;
   ast_node *main_node = NULL;
 
@@ -3175,19 +3244,10 @@ cql_noexport void rewrite_delete_statement_for_backed_table(
 {
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
-  ast_node *stmt = NULL;
-
-  if (is_ast_with_delete_stmt(ast)) {
-    EXTRACT_NOTNULL(with, ast->left)
-    EXTRACT_NOTNULL(delete_stmt, ast->right);
-    stmt = delete_stmt;
-  }
-  else {
-    Contract(is_ast_delete_stmt(ast));
-    stmt = ast;
-  }
-
+  // get the inner delete, skipping the "with" part for now
+  ast_node *stmt = sem_skip_with(ast);
   Invariant(is_ast_delete_stmt(stmt));
+
   EXTRACT_STRING(backed_table_name, stmt->left);
   EXTRACT(opt_where, stmt->right);
 
@@ -3258,17 +3318,8 @@ cql_noexport void rewrite_update_statement_for_backed_table(
 {
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
-  ast_node *stmt = NULL;
-
-  if (is_ast_with_update_stmt(ast)) {
-    EXTRACT_NOTNULL(with, ast->left)
-    EXTRACT_NOTNULL(update_stmt, ast->right);
-    stmt = update_stmt;
-  }
-  else {
-    Contract(is_ast_update_stmt(ast));
-    stmt = ast;
-  }
+  // skip the outer WITH on the update statement if there is one
+  ast_node *stmt = sem_skip_with(ast);
 
   Invariant(is_ast_update_stmt(stmt));
   EXTRACT_NOTNULL(update_set, stmt->right);
@@ -3407,17 +3458,9 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
 {
   Contract(is_ast_upsert_stmt(ast) || is_ast_with_upsert_stmt(ast));
 
-  ast_node *stmt = NULL;
+  ast_node *stmt = sem_skip_with(ast);
 
-  if (is_ast_with_upsert_stmt(ast)) {
-    EXTRACT_NOTNULL(upsert_stmt, ast->right);
-    stmt = upsert_stmt;
-  }
-  else {
-    Contract(is_ast_upsert_stmt(ast));
-    stmt = ast;
-  }
-
+  Invariant(is_ast_upsert_stmt(stmt));
   EXTRACT_NOTNULL(insert_stmt, stmt->left);
   EXTRACT_NOTNULL(upsert_update, stmt->right);
   EXTRACT(conflict_target, upsert_update->left);

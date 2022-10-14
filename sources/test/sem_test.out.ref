@@ -86871,38 +86871,46 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE default_value_col_backed(
-  id INTEGER DEFAULT 5,
+  id INTEGER PRIMARY KEY,
+  x INTEGER NOT NULL DEFAULT 7,
   t TEXT
 );
 
-test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: column 'id' has a default value in 'default_value_col_backed'
-
-  {stmt_and_attr}: err
+  {stmt_and_attr}: ok
   | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
   |   | | {name cql}
   |   | | {name backed_by}
   |   | {name simple_backing_table}: ok
-  | {create_table_stmt}: err
+  | {create_table_stmt}: default_value_col_backed: { id: integer notnull primary_key, x: integer notnull has_default, t: text } backed
     | {create_table_name_flags}
     | | {table_flags_attrs}
     | | | {int 0}
     | | {name default_value_col_backed}
     | {col_key_list}
-      | {col_def}: id: integer has_default
+      | {col_def}: id: integer notnull primary_key
       | | {col_def_type_attrs}: ok
       |   | {col_def_name_type}
       |   | | {name id}
       |   | | {type_int}: integer
-      |   | {col_attrs_default}: ok
-      |     | {int 5}: integer notnull
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
       | {col_key_list}
-        | {col_def}: t: text
-          | {col_def_type_attrs}: ok
-            | {col_def_name_type}
-              | {name t}
-              | {type_text}: text
+        | {col_def}: x: integer notnull has_default
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |   | | {name x}
+        |   | | {type_int}: integer
+        |   | {col_attrs_not_null}: ok
+        |     | {col_attrs_default}
+        |       | {int 7}: integer notnull
+        | {col_key_list}
+          | {col_def}: t: text
+            | {col_def_type_attrs}: ok
+              | {col_def_name_type}
+                | {name t}
+                | {type_text}: text
 
 The statement ending at line XXXX
 
@@ -88384,6 +88392,172 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0488: the indicated t
           |     |               | {name simple_backing_table}
           |     |               | {name k}
           |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE bt_default(
+  pk1 INTEGER DEFAULT 2222,
+  pk2 INTEGER DEFAULT 99,
+  x INTEGER DEFAULT 1111,
+  y INTEGER DEFAULT 42,
+  CONSTRAINT pk PRIMARY KEY (pk1, pk2)
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: bt_default: { pk1: integer notnull has_default partial_pk, pk2: integer notnull has_default partial_pk, x: integer has_default, y: integer has_default } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name bt_default}
+    | {col_key_list}
+      | {col_def}: pk1: integer notnull has_default partial_pk
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name pk1}
+      |   | | {type_int}: integer
+      |   | {col_attrs_default}: ok
+      |     | {int 2222}: integer notnull
+      | {col_key_list}
+        | {col_def}: pk2: integer notnull has_default partial_pk
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |   | | {name pk2}
+        |   | | {type_int}: integer
+        |   | {col_attrs_default}: ok
+        |     | {int 99}: integer notnull
+        | {col_key_list}
+          | {col_def}: x: integer has_default
+          | | {col_def_type_attrs}: ok
+          |   | {col_def_name_type}
+          |   | | {name x}
+          |   | | {type_int}: integer
+          |   | {col_attrs_default}: ok
+          |     | {int 1111}: integer notnull
+          | {col_key_list}
+            | {col_def}: y: integer has_default
+            | | {col_def_type_attrs}: ok
+            |   | {col_def_name_type}
+            |   | | {name y}
+            |   | | {type_int}: integer
+            |   | {col_attrs_default}: ok
+            |     | {int 42}: integer notnull
+            | {col_key_list}
+              | {pk_def}
+                | {name pk}
+                | {indexed_columns_conflict_clause}
+                  | {indexed_columns}
+                    | {indexed_column}
+                    | | {name pk1}: pk1: integer
+                    | {indexed_columns}
+                      | {indexed_column}
+                        | {name pk2}: pk2: integer
+
+The statement ending at line XXXX
+
+WITH
+_vals (pk1, x) AS (VALUES(1, 2))
+INSERT INTO simple_backing_table(k, v) SELECT cql_blob_create(bt_default, V.pk1, bt_default.pk1, 99, bt_default.pk2), cql_blob_create(bt_default, V.x, bt_default.x, 42, bt_default.y)
+  FROM _vals AS V;
+
+  {with_insert_stmt}: ok
+  | {with}
+  | | {cte_tables}: ok
+  |   | {cte_table}: _vals: { pk1: integer notnull, x: integer notnull }
+  |     | {cte_decl}: _vals: { pk1: integer notnull, x: integer notnull }
+  |     | | {name _vals}
+  |     | | {name_list}
+  |     |   | {name pk1}: pk1: integer notnull partial_pk
+  |     |   | {name_list}
+  |     |     | {name x}: x: integer
+  |     | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
+  |       | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
+  |       | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
+  |       |   | {select_values}
+  |       |   | {values}: values: { column1: integer notnull, column2: integer notnull }
+  |       |     | {insert_list}: ok
+  |       |       | {int 1}: integer notnull
+  |       |       | {insert_list}
+  |       |         | {int 2}: integer notnull
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {insert_stmt}: ok
+    | {insert_normal}
+    | {name_columns_values}
+      | {name simple_backing_table}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
+      | {columns_values}: ok
+        | {column_spec}
+        | | {name_list}
+        |   | {name k}: k: blob notnull
+        |   | {name_list}
+        |     | {name v}: v: blob notnull
+        | {select_stmt}: select: { _anon: blob notnull, _anon: blob notnull }
+          | {select_core_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          | | {select_core}: select: { _anon: blob notnull, _anon: blob notnull }
+          |   | {select_expr_list_con}: select: { _anon: blob notnull, _anon: blob notnull }
+          |     | {select_expr_list}: select: { _anon: blob notnull, _anon: blob notnull }
+          |     | | {select_expr}: blob notnull
+          |     | | | {call}: blob notnull
+          |     | |   | {name cql_blob_create}: blob notnull
+          |     | |   | {call_arg_list}
+          |     | |     | {call_filter_clause}
+          |     | |     | {arg_list}: ok
+          |     | |       | {name bt_default}
+          |     | |       | {arg_list}
+          |     | |         | {dot}: pk1: integer notnull
+          |     | |         | | {name V}
+          |     | |         | | {name pk1}
+          |     | |         | {arg_list}
+          |     | |           | {dot}: integer notnull has_default partial_pk
+          |     | |           | | {name bt_default}
+          |     | |           | | {name pk1}
+          |     | |           | {arg_list}
+          |     | |             | {int 99}: integer notnull
+          |     | |             | {arg_list}
+          |     | |               | {dot}: integer notnull has_default partial_pk
+          |     | |                 | {name bt_default}
+          |     | |                 | {name pk2}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: blob notnull
+          |     |     | {call}: blob notnull
+          |     |       | {name cql_blob_create}: blob notnull
+          |     |       | {call_arg_list}
+          |     |         | {call_filter_clause}
+          |     |         | {arg_list}: ok
+          |     |           | {name bt_default}
+          |     |           | {arg_list}
+          |     |             | {dot}: x: integer notnull
+          |     |             | | {name V}
+          |     |             | | {name x}
+          |     |             | {arg_list}
+          |     |               | {dot}: integer has_default
+          |     |               | | {name bt_default}
+          |     |               | | {name x}
+          |     |               | {arg_list}
+          |     |                 | {int 42}: integer notnull
+          |     |                 | {arg_list}
+          |     |                   | {dot}: integer has_default
+          |     |                     | {name bt_default}
+          |     |                     | {name y}
+          |     | {select_from_etc}: TABLE { V: _vals }
+          |       | {table_or_subquery_list}: TABLE { V: _vals }
+          |       | | {table_or_subquery}: TABLE { V: _vals }
+          |       |   | {name _vals}: TABLE { V: _vals }
+          |       |   | {opt_as_alias}
+          |       |     | {name V}
           |       | {select_where}
           |         | {select_groupby}
           |           | {select_having}

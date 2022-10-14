@@ -184,6 +184,9 @@ static void symtab_teardown(void *val) {
   symtab_delete(val);
 }
 
+// This helper is just for making a symbol table that holds symbol tables.
+// It sets the cleanup function to be one that deletes symbol tables in the payload.
+// This flavor create the table at the named slot for you to use.
 cql_noexport symtab *_Nonnull symtab_ensure_symtab(symtab *syms, const char *name) {
   syms->teardown = symtab_teardown;
   symtab_entry *entry = symtab_find(syms, name);
@@ -194,6 +197,14 @@ cql_noexport symtab *_Nonnull symtab_ensure_symtab(symtab *syms, const char *nam
     symtab_add(syms, name, value);
   }
   return value;
+}
+
+// This helper is just for making a symbol table that holds symbol tables
+// we don't have to do anything special except set the cleanup function
+// to one that deletes symbol tables in the payload.
+cql_noexport bool_t symtab_add_symtab(symtab *syms, CSTR name, symtab *data) {
+  syms->teardown = symtab_teardown;
+  return symtab_add(syms, name, (void*)data);
 }
 
 static void bytebuf_teardown(void *val) {

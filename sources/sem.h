@@ -270,6 +270,8 @@ cql_noexport ast_node *find_region(CSTR name);
 cql_noexport ast_node *find_func(CSTR name);
 cql_noexport ast_node *find_table_or_view_even_deleted(CSTR name);
 cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_node *err_target, CSTR msg);
+cql_noexport symtab *find_default_values(CSTR name);
+cql_noexport bool_t add_default_values(symtab *def_values, CSTR name);
 cql_noexport void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope);
 cql_noexport ast_node *find_enum(CSTR name);
 cql_noexport ast_node *find_base_fragment(CSTR name);
@@ -314,6 +316,7 @@ cql_noexport sem_node *new_sem(sem_t sem_type);
 cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);
 cql_noexport void sem_select(ast_node *node);
 cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast);
+cql_noexport ast_node *sem_skip_with(ast_node *ast);
 
 #endif
 
@@ -343,7 +346,6 @@ cql_data_decl( charbuf *error_capture );
 cql_data_decl( cte_state *cte_cur );
 cql_data_decl( symtab *ref_sources_for_target_table );
 cql_data_decl( symtab *ref_targets_for_source_table );
-
 
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc
