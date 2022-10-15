@@ -56,6 +56,29 @@ CREATE TABLE use_g1(
   name2 TEXT
 ) @recreate(gr1);
 
+CREATE TABLE g2(
+  id INTEGER PRIMARY KEY REFERENCES g1(id),
+  name TEXT
+) @recreate(gr2);
+
+CREATE TABLE g3(
+  id INTEGER PRIMARY KEY REFERENCES g2(id),
+  name TEXT
+) @recreate(gr3);
+
+CREATE TABLE use_g3(
+  id INTEGER,
+  name TEXT
+) @recreate(gr3);
+
+CREATE TABLE g4(
+  id INTEGER
+) @recreate;
+
+CREATE TABLE g6(
+  id INTEGER PRIMARY KEY REFERENCES g2(id)
+) @recreate(gr6);
+
 -- deleted in version 3
 CREATE TABLE test_this_table_will_become_create(
   id integer primary key

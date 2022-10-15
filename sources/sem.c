@@ -2067,7 +2067,7 @@ static ast_node *find_assembly_fragment(CSTR name) {
 }
 
 // Helper function to create unique ID to store recreate group dependencies in symbol table
-static CSTR create_group_id(CSTR group_name, CSTR table_name) {
+CSTR create_group_id(CSTR group_name, CSTR table_name) {
    Contract(table_name);
    if (group_name && group_name[0]) {
      return dup_printf("g_%s", group_name);

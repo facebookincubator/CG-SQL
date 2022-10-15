@@ -8,6 +8,13 @@ CREATE TABLE g1(
   id INTEGER PRIMARY KEY,
   name TEXT)
 
+----- g4 -----
+
+type: table
+tbl_name: g4
+CREATE TABLE g4(
+  id INTEGER)
+
 ----- recreate_test_for_unsub -----
 
 type: table

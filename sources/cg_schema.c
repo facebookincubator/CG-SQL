@@ -1166,6 +1166,63 @@ static void cg_schema_add_recreate_table(charbuf *buf, crc_t table_crc, charbuf 
 
 }
 
+// Helper function to emit all table drops from a given recreate group name
+static void emit_recreate_group_drops(charbuf *drops_buf, CSTR gname, symtab* recreate_group_drops) {
+  bytebuf *buf = symtab_ensure_bytebuf(recreate_group_drops, gname);
+  size_t count = buf->used / sizeof(CSTR);
+  CSTR *table_names_array = (CSTR *) (buf->ptr);
+
+  for (size_t i = 0; i < count; i++) {
+    bprintf(drops_buf, "  DROP TABLE IF EXISTS %s;\n", table_names_array[i]);
+  }
+}
+
+// Set to keep track of which functions we have emitted group_drops functions for
+static symtab *group_drop_funcs;
+
+static void emit_group_drop(CSTR target_name, charbuf *decls, symtab *recreate_group_drops) {
+  if (symtab_find(group_drop_funcs, target_name)) {
+    return;
+  }
+
+  symtab_add(group_drop_funcs, target_name, NULL);
+
+  CHARBUF_OPEN(out);
+
+  bprintf(&out, "\n@attribute(cql:private)");
+  bprintf(&out, "\nCREATE PROC %s_%s_group_drop()\n", global_proc_name, target_name);
+  bprintf(&out, "BEGIN\n");
+
+  bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, target_name);
+  size_t ref_count = buf->used / sizeof(CSTR);
+  CSTR *sources = (CSTR *)buf->ptr;
+
+  if (ref_count) {
+    bprintf(&out, "  -- drop all dependent tables\n");
+  }
+
+  for (uint32_t iref = 0; iref < ref_count; iref++) {
+    CSTR src_name = sources[iref];
+    // recurse to get the new delete function, output does not interleave
+    // as we are writing into a temp buffer "out"
+    emit_group_drop(src_name, decls, recreate_group_drops);
+
+    // call it...
+    bprintf(&out, "  CALL %s_%s_group_drop();\n", global_proc_name, src_name);
+  }
+
+  if (ref_count) {
+    bprintf(&out, "\n");
+  }
+
+  emit_recreate_group_drops(&out, target_name, recreate_group_drops);
+  bprintf(&out, "END;\n");
+
+  bprintf(decls, "%s", out.ptr);
+
+  CHARBUF_CLOSE(out);
+}
+
 static void cg_schema_manage_recreate_tables(
   charbuf *output,
   charbuf *decls,
@@ -1174,6 +1231,19 @@ static void cg_schema_manage_recreate_tables(
 {
   Contract(notes);
   Contract(count);
+  // Precompute all recreate group drop table names into a symbol table
+  symtab* recreate_group_drops = symtab_new();
+  for (size_t i = 0; i < count; i++) {
+    recreate_annotation *note = &notes[i];
+    ast_node *ast = note->target_ast;
+    // no schema maintenance for non-physical tables, they aren't actually created
+    if (is_ast_create_table_stmt(ast) && is_table_not_physical(ast)) {
+      continue;
+    }
+    CSTR table_name = sem_get_name(ast);
+    CSTR gname = create_group_id(note->group_name, table_name);
+    symtab_append_bytes(recreate_group_drops, gname, &table_name, sizeof(CSTR));
+  }
 
   CHARBUF_OPEN(recreate_without_virtual_tables);
   CHARBUF_OPEN(recreate_only_virtual_tables);
@@ -1346,6 +1416,31 @@ static void cg_schema_manage_recreate_tables(
     bprintf(&update_proc, "), cql_compressed(");
     cg_pretty_quote_plaintext(delete_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
     bprintf(&update_proc, "));\n");
+
+    // Case on result to see whether this group recreated or rebuilt.
+    // If recreated, then we emit drop statements for all recursive child
+    // recreate groups (using recreate_group_deps symtab).
+    CSTR group_name = create_group_id(gname, table_name);
+    emit_group_drop(group_name, decls, recreate_group_drops);
+
+    CHARBUF_OPEN(child_group_drops);
+
+    bytebuf *drop_buf = symtab_ensure_bytebuf(recreate_group_deps, group_name);
+    size_t drop_count = drop_buf->used / sizeof(CSTR);
+    CSTR *neighbors = (CSTR *) (drop_buf->ptr);
+    for (size_t j = 0; j < drop_count; j++) {
+      bprintf(&child_group_drops, "        CALL %s_%s_group_drop();\n", global_proc_name, neighbors[j]);
+    }
+
+    if (strlen(child_group_drops.ptr) != 0) {
+      bprintf(&update_proc, "    IF NOT %s_result THEN \n", migrate_key);
+      bprintf(&update_proc, child_group_drops.ptr);
+      bprintf(&update_proc, "    END IF; \n");
+      // Updating the CRC for any child group tables we dropped
+      table_crc ^= crc_charbuf(&child_group_drops);
+    }
+    CHARBUF_CLOSE(child_group_drops);
+
     bprintf(&update_proc, migrate_table.ptr);
     CHARBUF_CLOSE(migrate_table);
     if (is_virtual_ast(ast)) {
@@ -1397,6 +1492,7 @@ static void cg_schema_manage_recreate_tables(
   CHARBUF_CLOSE(update_tables);
   CHARBUF_CLOSE(recreate_only_virtual_tables);
   CHARBUF_CLOSE(recreate_without_virtual_tables);
+  symtab_delete(recreate_group_drops);
 }
 
 static llint_t cg_schema_compute_crc(
@@ -1478,6 +1574,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     &schema_crc_no_virtual);
 
   full_drop_funcs = symtab_new();
+
+  group_drop_funcs = symtab_new();
 
   CHARBUF_OPEN(preamble);
   CHARBUF_OPEN(main);
@@ -1958,6 +2056,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   CHARBUF_CLOSE(preamble);
 
   SYMTAB_CLEANUP(full_drop_funcs);
+  SYMTAB_CLEANUP(group_drop_funcs);
 }
 
 #endif
