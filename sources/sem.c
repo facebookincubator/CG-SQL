@@ -4142,6 +4142,10 @@ static void record_schema_annotation(int32_t vers, ast_node *target_ast, CSTR ta
 
 static int32_t recreates;
 
+// Create temporary symbol table to hold all recreate groups and their ordinal assignments
+static symtab *recreate_group_ordinals;
+static int32_t max_group_ordinal = 0;
+
 // Recreate annotations get stored in a different stream, they are processed in order as well but
 // they don't merge in with the others.  So we're building up two buffers.
 static void record_recreate_annotation(ast_node *target_ast, CSTR target_name, CSTR group_name, ast_node *annotation) {
@@ -4152,6 +4156,21 @@ static void record_recreate_annotation(ast_node *target_ast, CSTR target_name, C
   note->annotation_ast = annotation;
   note->group_name = group_name;
   note->ordinal = recreates++;
+
+  // number recreate groups based on group create order
+  // "Outermost" recreate groups (source nodes in recreate_group_deps DAG) will have
+  // the smallest values with this ordering, so they will be recreated first as desired
+  // because these tables do not FK to any other tables.
+
+  // We find using g_group_name (or if singleton group, t_table_name)
+  CSTR gname = create_group_id(group_name, sem_get_name(target_ast));
+  symtab_entry *entry = symtab_find(recreate_group_ordinals, gname);
+  if (entry == NULL) {
+    note->group_ordinal = max_group_ordinal;
+    symtab_add(recreate_group_ordinals, gname, (void*)(int64_t)max_group_ordinal++);
+  } else {
+    note->group_ordinal = (int32_t)(int64_t)entry->val;
+  }
 }
 
 // This applies the validation for a FK in the context of a column, so that
@@ -25161,6 +25180,7 @@ cql_noexport void sem_main(ast_node *ast) {
   misc_attributes = symtab_new();
   ad_hoc_recreate_actions = symtab_new();
   recreate_group_deps = symtab_new();
+  recreate_group_ordinals = symtab_new();
 
   schema_annotations = _ast_pool_new(bytebuf);
   recreate_annotations = _ast_pool_new(bytebuf);
@@ -25519,6 +25539,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(ad_hoc_recreate_actions);
   SYMTAB_CLEANUP(table_default_values);
   SYMTAB_CLEANUP(recreate_group_deps);
+  SYMTAB_CLEANUP(recreate_group_ordinals);
 
   // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
 

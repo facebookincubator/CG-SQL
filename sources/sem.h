@@ -94,6 +94,7 @@ typedef struct recreate_annotation {
   ast_node *target_ast;           // top level target (table, view, or index)
   ast_node *annotation_ast;       // the actual annotation
   int32_t ordinal;                // when sorting we want to use the original order (reversed actually) within a group
+  int32_t group_ordinal;          // when sorting we want to use the group ordinal that we will obtain from a topological sort on recreate group dependency tree
 } recreate_annotation;
 
 typedef struct schema_annotation {
