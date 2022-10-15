@@ -2066,6 +2066,51 @@ static ast_node *find_assembly_fragment(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
+// Helper function to create unique ID to store recreate group dependencies in symbol table
+static CSTR create_group_id(CSTR group_name, CSTR table_name) {
+   Contract(table_name);
+   if (group_name && group_name[0]) {
+     return dup_printf("g_%s", group_name);
+   }
+   else {
+     return dup_printf("t_%s", table_name);
+   }
+}
+
+// Helper function to walk the graph stored in recreate_group_deps from = a starting group name to an ending group name.
+// We perform a simple depth first search.
+static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
+  if (!Strcasecmp(start, end)) {
+    return true;
+  }
+  bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, start);
+  size_t count = buf->used / sizeof(CSTR);
+  CSTR *neighbors = (CSTR *) (buf->ptr);
+
+  for (size_t i = 0; i < count; i++) {
+    if (walk_recreate_group_deps(neighbors[i], end)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool_t add_group_dependency_to_recreate_group(CSTR group_name, CSTR new_dependent_group_name) {
+  // We don't want to create self-cycles in our symbol table
+  if (!Strcasecmp(group_name, new_dependent_group_name)) return true;
+
+  // We want to make sure adding a new dependency does not introduce a cycle in recreate_group_deps.
+  // We know that recreate_group_deps before this function is a DAG without a cycle, so we just need to check whether
+  // add a new edge (u,v) introduces a cycle. We can do this by checking whether there is a path from v to u using a
+  // DFS.
+  if (walk_recreate_group_deps(new_dependent_group_name, group_name)) {
+    // Adding the edge introduces a cycle because we found a path from v to u
+    return false;
+  }
+  symtab_append_bytes(recreate_group_deps, group_name, &new_dependent_group_name, sizeof(CSTR));
+  return true;
+}
+
 // For debug/test output, pretty print a sem_type_core
 static void get_sem_core(sem_t sem_type, charbuf *out) {
   switch (core_type_of(sem_type)) {
@@ -3546,18 +3591,25 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
     }
   }
 
-  // If the referenced table is @recreate then only @recreate tables in the same group can use it as an FK.
-  // this is important because the @recreate table might change arbitrarily and anything not in its @recreate
-  // group won't be updated at the same time.  This means @create tables can never reference @recreate tables
-  // because those tables aren't as "stable".
+  // If the referenced table is @recreate then only either @recreate tables in the same group or @recreate
+  // groups that don't introduce a cyclic FK dependency among recreate group dependencies can use it as an FK.
+
   if (ref_table_ast->sem->recreate) {
-    if (!ref_table_ast->sem->recreate_group_name ||
-        !table_info->recreate ||
-        !table_info->recreate_group_name ||
-        Strcasecmp(table_info->recreate_group_name, ref_table_ast->sem->recreate_group_name)) {
-    report_error(err_target, "CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key", table_name);
-    record_error(err_target);
-    return NULL;
+    if (table_info->recreate) {
+      CSTR ref_recreate_gname = create_group_id(ref_table_ast->sem->recreate_group_name, table_name);
+      CSTR curr_recreate_gname = create_group_id(table_info->recreate_group_name, current_table_name);
+      bool_t success = add_group_dependency_to_recreate_group(ref_recreate_gname, curr_recreate_gname);
+      if (!success) {
+        report_error(err_target, "CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key", table_name);
+        record_error(err_target);
+        return NULL;
+      }
+    }
+    // if the current table is not a recreate table
+    else {
+      report_error(err_target, "CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key", table_name);
+      record_error(err_target);
+      return NULL;
     }
   }
 
@@ -15173,7 +15225,7 @@ cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast) {
   return ast;
 }
 
-// If this is the "with" form of a statement get ito the inner statement, 
+// If this is the "with" form of a statement get ito the inner statement,
 // skipping the with prefix.  The inverse of the above
 cql_noexport ast_node *sem_skip_with(ast_node *ast) {
   if (ast->left && is_ast_with(ast->left)) {
@@ -25108,6 +25160,7 @@ cql_noexport void sem_main(ast_node *ast) {
   global_types = symtab_new();
   misc_attributes = symtab_new();
   ad_hoc_recreate_actions = symtab_new();
+  recreate_group_deps = symtab_new();
 
   schema_annotations = _ast_pool_new(bytebuf);
   recreate_annotations = _ast_pool_new(bytebuf);
@@ -25465,6 +25518,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(misc_attributes);
   SYMTAB_CLEANUP(ad_hoc_recreate_actions);
   SYMTAB_CLEANUP(table_default_values);
+  SYMTAB_CLEANUP(recreate_group_deps);
 
   // these are getting zeroed so that leaksanitizer will not count those objects as reachable from a global root.
 
@@ -25574,3 +25628,5 @@ cql_data_defn( bool_t in_upsert_rewrite );
 
 // hold the table ast query in the current upsert statement.
 cql_data_defn ( ast_node *current_upsert_table_ast );
+// This is the symbol table with recreate group dependencies
+cql_data_defn( symtab *recreate_group_deps );

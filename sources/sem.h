@@ -371,3 +371,5 @@ cql_data_decl( bool_t in_upsert_rewrite );
 
 // hold the table ast query in the current upsert statement.
 cql_data_decl ( ast_node *current_upsert_table_ast );
+// This is the symbol table with the recreate group dependencies where an edge B -> A means A FKs to B
+cql_data_decl( symtab *recreate_group_deps );

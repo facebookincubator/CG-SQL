@@ -47812,39 +47812,37 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be i
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_2(
-  id INTEGER PRIMARY KEY REFERENCES recreatable (id),
+  id INTEGER PRIMARY KEY REFERENCES recreatable (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE;
 
-test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
-
-  {create_table_stmt}: err
+  {create_table_stmt}: recreatable_reference_2: { id: integer notnull primary_key foreign_key, name: text } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | | {recreate_attr}
   | | {name recreatable_reference_2}
   | {col_key_list}
-    | {col_def}: err
+    | {col_def}: id: integer notnull primary_key foreign_key
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
-    |   | {col_attrs_pk}: err
+    |   | {col_attrs_pk}: ok
     |     | {autoinc_and_conflict_clause}
-    |     | {col_attrs_fk}: err
+    |     | {col_attrs_fk}: ok
     |       | {fk_target_options}
     |         | {fk_target}
     |         | | {name recreatable}
     |         | | {name_list}
-    |         |   | {name id}
-    |         | {int 0}
+    |         |   | {name id}: id: integer notnull
+    |         | {int 51}
     | {col_key_list}
-      | {col_def}
-        | {col_def_type_attrs}
+      | {col_def}: name: text
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name name}
-            | {type_text}
+            | {type_text}: text
 
 The statement ending at line XXXX
 
@@ -47878,50 +47876,47 @@ CREATE TABLE in_group_test(
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_3(
-  id INTEGER PRIMARY KEY REFERENCES in_group_test (id),
+  id INTEGER PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE;
 
-test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
-
-  {create_table_stmt}: err
+  {create_table_stmt}: recreatable_reference_3: { id: integer notnull primary_key foreign_key, name: text } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
   | | | {recreate_attr}
   | | {name recreatable_reference_3}
   | {col_key_list}
-    | {col_def}: err
+    | {col_def}: id: integer notnull primary_key foreign_key
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
-    |   | {col_attrs_pk}: err
+    |   | {col_attrs_pk}: ok
     |     | {autoinc_and_conflict_clause}
-    |     | {col_attrs_fk}: err
+    |     | {col_attrs_fk}: ok
     |       | {fk_target_options}
     |         | {fk_target}
     |         | | {name in_group_test}
     |         | | {name_list}
-    |         |   | {name id}
-    |         | {int 0}
+    |         |   | {name id}: id: integer notnull
+    |         | {int 51}
     | {col_key_list}
-      | {col_def}
-        | {col_def_type_attrs}
+      | {col_def}: name: text
+        | {col_def_type_attrs}: ok
           | {col_def_name_type}
             | {name name}
-            | {type_text}
+            | {type_text}: text
 
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_4(
-  id INTEGER PRIMARY KEY REFERENCES in_group_test (id),
+  id INTEGER PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  id2 INTEGER REFERENCES recreatable_reference_3 (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE(rtest_other_group);
 
-test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
-
-  {create_table_stmt}: err
+  {create_table_stmt}: recreatable_reference_4: { id: integer notnull primary_key foreign_key, id2: integer foreign_key, name: text } @recreate(rtest_other_group)
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -47929,26 +47924,39 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be i
   | |   | {name rtest_other_group}
   | | {name recreatable_reference_4}
   | {col_key_list}
-    | {col_def}: err
+    | {col_def}: id: integer notnull primary_key foreign_key
     | | {col_def_type_attrs}: ok
     |   | {col_def_name_type}
     |   | | {name id}
     |   | | {type_int}: integer
-    |   | {col_attrs_pk}: err
+    |   | {col_attrs_pk}: ok
     |     | {autoinc_and_conflict_clause}
-    |     | {col_attrs_fk}: err
+    |     | {col_attrs_fk}: ok
     |       | {fk_target_options}
     |         | {fk_target}
     |         | | {name in_group_test}
     |         | | {name_list}
-    |         |   | {name id}
-    |         | {int 0}
+    |         |   | {name id}: id: integer notnull
+    |         | {int 51}
     | {col_key_list}
-      | {col_def}
-        | {col_def_type_attrs}
-          | {col_def_name_type}
-            | {name name}
-            | {type_text}
+      | {col_def}: id2: integer foreign_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name id2}
+      |   | | {type_int}: integer
+      |   | {col_attrs_fk}: ok
+      |     | {fk_target_options}
+      |       | {fk_target}
+      |       | | {name recreatable_reference_3}
+      |       | | {name_list}
+      |       |   | {name id}: id: integer notnull
+      |       | {int 51}
+      | {col_key_list}
+        | {col_def}: name: text
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name name}
+              | {type_text}: text
 
 The statement ending at line XXXX
 
@@ -47985,6 +47993,44 @@ CREATE TABLE recreatable_reference_5(
           | {col_def_name_type}
             | {name name}
             | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE recreatable_reference_6(
+  id INTEGER PRIMARY KEY REFERENCES recreatable_reference_4 (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  name TEXT
+) @RECREATE(rtest);
+
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable_reference_4'
+
+  {create_table_stmt}: err
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | | {recreate_attr}
+  | |   | {name rtest}
+  | | {name recreatable_reference_6}
+  | {col_key_list}
+    | {col_def}: err
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: err
+    |     | {autoinc_and_conflict_clause}
+    |     | {col_attrs_fk}: err
+    |       | {fk_target_options}
+    |         | {fk_target}
+    |         | | {name recreatable_reference_4}
+    |         | | {name_list}
+    |         |   | {name id}
+    |         | {int 51}
+    | {col_key_list}
+      | {col_def}
+        | {col_def_type_attrs}
+          | {col_def_name_type}
+            | {name name}
+            | {type_text}
 
 The statement ending at line XXXX
 

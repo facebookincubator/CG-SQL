@@ -11379,12 +11379,10 @@ create table recreatable_reference_1(
 );
 
 -- TEST: create a recreate table that references a recreated table
--- + create_table_stmt}: err
--- + col_attrs_fk}: err
--- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable'
--- +1 error:
+-- + {create_table_stmt}: recreatable_reference_2: { id: integer notnull primary_key foreign_key, name: text } @recreate
+-- - error:
 create table recreatable_reference_2(
-  id integer primary key references recreatable(id),
+  id integer primary key references recreatable(id) on update cascade on delete cascade,
   name text
 ) @recreate;
 
@@ -11399,26 +11397,25 @@ create table in_group_test(
 ) @recreate(rtest);
 
 -- TEST: create a recreate table that references a recreated table, it's in a group, but I'm not
--- + create_table_stmt}: err
--- + col_attrs_fk}: err
--- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
--- +1 error:
+-- + {create_table_stmt}: recreatable_reference_3: { id: integer notnull primary_key foreign_key, name: text } @recreate
+-- - error:
 create table recreatable_reference_3(
-  id integer primary key references in_group_test(id),
+  id integer primary key references in_group_test(id) on update cascade on delete cascade,
   name text
 ) @recreate;
 
--- TEST: create a recreate table that references a recreated table, it's in a group, but I'm in a different group
--- + create_table_stmt}: err
--- + col_attrs_fk}: err
--- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'in_group_test'
--- +1 error:
+-- TEST: create a recreate table that references two recreated tables in different groups than me
+-- + {create_table_stmt}: recreatable_reference_4: { id: integer notnull primary_key foreign_key, id2: integer foreign_key, name: text } @recreate(rtest_other_group)
+-- + {recreate_attr}
+-- + {name rtest_other_group}
+-- - error:
 create table recreatable_reference_4(
-  id integer primary key references in_group_test(id),
+  id integer primary key references in_group_test(id) on update cascade on delete cascade,
+  id2 integer references recreatable_reference_3(id) on update cascade on delete cascade,
   name text
 ) @recreate(rtest_other_group);
 
--- TEST: create a recreate table that references a recreated table, it's in the same group so this one is ok (finally)
+-- TEST: create a recreate table that references a recreated table, it's in the same group so this one is ok
 -- + {create_table_stmt}: recreatable_reference_5: { id: integer notnull primary_key foreign_key, name: text } @recreate(rtest)
 -- + {recreate_attr}
 -- + {name rtest}
@@ -11427,6 +11424,16 @@ create table recreatable_reference_4(
 -- - error:
 create table recreatable_reference_5(
   id integer primary key references in_group_test(id) on delete cascade on update cascade,
+  name text
+) @recreate(rtest);
+
+-- TEST: create a recreate table that introduces a cyclic dependency between recreate groups
+-- + create_table_stmt}: err
+-- + col_attrs_fk}: err
+-- +1 error: % referenced table can be independently recreated so it cannot be used in a foreign key 'recreatable_reference_4'
+-- +1 error:
+create table recreatable_reference_6(
+  id integer primary key references recreatable_reference_4(id) on update cascade on delete cascade,
   name text
 ) @recreate(rtest);
 
