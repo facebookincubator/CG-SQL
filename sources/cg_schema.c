@@ -323,7 +323,7 @@ static void cg_schema_emit_facet_functions(charbuf *decls) {
 
 static void cg_schema_emit_recreate_update_functions(charbuf *decls) {
   bprintf(decls, "-- declare recreate update helpers-- \n");
-  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL) USING TRANSACTION;\n");
+  bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL, out result BOOL NOT NULL) USING TRANSACTION;\n");
 }
 
 // Emit all tables versioned as they before modifications, just the original items
@@ -1337,7 +1337,9 @@ static void cg_schema_manage_recreate_tables(
       table_crc ^= crc_charbuf(&migrate_table);
     }
     // Construct call to cql_rebuild_recreate_group with CQL compressed strings (with --compress compiler flag)
-    bprintf(&update_proc, "    CALL cql_rebuild_recreate_group(cql_compressed(");
+    // After the call to cql_rebuild_recreate_group() result will hold 1 if we rebuilt and 0 if we recreated the group.
+    bprintf(&update_proc, "    LET %s_result := ", migrate_key);
+    bprintf(&update_proc, "cql_rebuild_recreate_group(cql_compressed(");
     cg_pretty_quote_plaintext(update_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
     bprintf(&update_proc, "), cql_compressed(");
     cg_pretty_quote_plaintext(update_indices.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);

@@ -386,6 +386,6 @@ CQL_EXPORT cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
 CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
 CQL_EXPORT cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_Nonnull frags);
 
-cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnull tables, cql_string_ref _Nonnull indices, cql_string_ref _Nonnull deletes);
+cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnull tables, cql_string_ref _Nonnull indices, cql_string_ref _Nonnull deletes, cql_bool *_Nonnull result);
 
 CQL_EXTERN_C_END

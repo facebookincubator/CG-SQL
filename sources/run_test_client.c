@@ -1792,11 +1792,12 @@ cql_code test_cql_rebuild_recreate_group(sqlite3 *db) {
   cql_string_ref indices = cql_string_ref_new("CREATE INDEX extra_index ON g1 (id); ");
   cql_string_ref deletes = cql_string_ref_new("DROP TABLE IF EXISTS g2; ");
   cql_code rc;
+  cql_bool result = false;
   rc = cql_exec_internal(db, tables);
   E(rc == SQLITE_OK, "expected succesful table creates\n");
   rc = cql_exec_internal(db, indices);
   E(rc == SQLITE_OK, "expected succesful index create\n");
-  rc = cql_rebuild_recreate_group(db, tables, indices, deletes);
+  rc = cql_rebuild_recreate_group(db, tables, indices, deletes, &result);
   E(rc == SQLITE_OK, "expected succesful recreate group upgrade\n");
   cql_string_release(tables);
   cql_string_release(indices);

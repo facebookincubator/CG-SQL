@@ -14,7 +14,7 @@ DECLARE FUNCTION cql_facet_upsert(facets facet_data, facet TEXT NOT NULL, crc LO
 DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
 
 -- declare recreate update helpers-- 
-DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL) USING TRANSACTION;
+DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL, out result BOOL NOT NULL) USING TRANSACTION;
 -- declare sqlite_master -- 
 CREATE TABLE sqlite_master (
   type TEXT NOT NULL,
