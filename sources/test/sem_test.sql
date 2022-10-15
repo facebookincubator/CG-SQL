@@ -22209,8 +22209,8 @@ create table bt_default(
 -- + cql_blob_create(bt_default, V.pk1, bt_default.pk1, 99, bt_default.pk2),
 -- + cql_blob_create(bt_default, V.x, bt_default.x, 42, bt_default.y)
 -- default values for specified columns should be absent
--- - 1111
--- - 2222
+-- - 1111,
+-- - 2222,
 -- + FROM _vals AS V;
 insert into bt_default(pk1,x) values (1, 2);
 
