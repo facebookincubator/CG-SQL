@@ -282,7 +282,18 @@ END;
 -- proc call a virtual table
 CREATE PROC call_virtual_table()
 BEGIN
-  select id, t, b, r from select_virtual_table("abc");
+  select
+    one.id,
+    one.t,
+    one.b,
+    one.r,
+    two.id as id_,
+    two.t as t_,
+    two.b as b_,
+    two.r as r_
+  from
+    select_virtual_table("abc") one,
+    select_virtual_table("dec") two;
 END;
 
 @attribute(cql:backing_table)
@@ -331,5 +342,3 @@ create proc read_from_backed_table()
 begin
   select * from backed where name = 'x';
 end;
-
-

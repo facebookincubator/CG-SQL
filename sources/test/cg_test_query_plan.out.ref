@@ -472,11 +472,12 @@ END;
 CREATE PROC populate_query_plan_20()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT id, t, b, r\\n  FROM select_virtual_table";
+  SET stmt := "SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table AS two";
   INSERT INTO sql_temp(id, sql) VALUES(20, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT id, t, b, r
-    FROM select_virtual_table;
+  SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_
+    FROM select_virtual_table AS one,
+  select_virtual_table AS two;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(20, C.iselectid, C.iorder, C.ifrom, C.zdetail);
