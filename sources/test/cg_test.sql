@@ -5400,7 +5400,7 @@ create table backed2(
 );
 
 -- TEST: cql_blob_get should expand to the correct calls and hash codes
--- + "SELECT bgetkey(k, 0), bgetval(v, 1055660242183705531), bgetval(v, -7635294210585028660), bgetval(v, -9155171551243524439), bgetval(v, -6946718245010482247), bgetval(v, -1118059189291406095) "
+-- + "SELECT bgetkey(k, 0), bgetval(v, 1055660242183705531), bgetval(v, -7635294210585028660), bgetval(v, -9155171551243524439), bgetval(v, -6946718245010482247), bgetval(v, -3683705396192132539) "
 create proc use_cql_blob_get_backed()
 begin
   declare C cursor for select
@@ -5430,7 +5430,7 @@ end;
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
@@ -5448,7 +5448,7 @@ end;
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
@@ -5465,7 +5465,7 @@ end;
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
@@ -5486,7 +5486,7 @@ end;
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
@@ -5508,7 +5508,7 @@ end;
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
@@ -5529,7 +5529,7 @@ end;
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT flag
@@ -5549,7 +5549,7 @@ end;
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage
@@ -5587,7 +5587,7 @@ create table small_backed(
 -- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7))
 -- + INSERT INTO backing(k, v) SELECT
 -- + bcreatekey(-4190907309554122430, V.pk, 1),
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values()
 begin
@@ -5601,7 +5601,7 @@ end;
 -- + FROM V)
 -- + INSERT INTO backing(k, v) SELECT
 -- + bcreatekey(-4190907309554122430, V.pk, 1)
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
 -- + FROM _vals AS V
 create proc insert_backed_values_using_with()
 begin
@@ -5615,7 +5615,7 @@ end;
 -- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14))
 -- + INSERT INTO backing(k, v) SELECT
 -- + bcreatekey(-4190907309554122430, V.pk, 1)
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values_using_form()
 begin
@@ -5624,14 +5624,14 @@ end;
 
 -- TEST: insert from a select
 -- + small_backed (rowid, pk, x, y) AS (
--- + SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 7953209610392031882) AS x, bgetval(T.v, 4501343740738089802) AS y
+-- + SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 7953209610392031882) AS x, bgetval(T.v, 3032304244189539277) AS y
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -4190907309554122430
 -- + _vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50
 -- + FROM small_backed AS B)
--- + INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3)
+-- + INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + bcreatekey(-4190907309554122430, V.pk, 1)
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 4501343740738089802, V.y, 3) "
+-- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
 -- + FROM _vals AS V
 create proc inserted_backed_from_select()
 begin
@@ -5661,7 +5661,7 @@ end;
 
 -- TEST: use cql_blob_update and validate hash codes etc.
 -- + SELECT bupdatekey(?, 0, 1)
--- + SELECT bupdateval(?, -1118059189291406095, 21, 3, -6946718245010482247, 'dave', 4)
+-- + SELECT bupdateval(?, -3683705396192132539, 21, 3, -6946718245010482247, 'dave', 4)
 create proc test_blob_update_expand()
 begin
   declare b blob;
@@ -5708,7 +5708,7 @@ end;
 -- TEST: update key and value, add other clauses
 -- + UPDATE backing
 -- + SET k = bupdatekey(k, 0, 100)
--- + v = bupdateval(v, -1118059189291406095, 77, 3)
+-- + v = bupdateval(v, -3683705396192132539, 77, 3)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM backed
 -- + WHERE name = 'three'

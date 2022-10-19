@@ -5106,7 +5106,7 @@ create table backed(
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -1118059189291406095),
+-- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
 -- + SELECT rowid, pk, flag, id, name, age, storage

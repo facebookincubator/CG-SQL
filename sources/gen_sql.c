@@ -1106,7 +1106,7 @@ static void gen_append_field_desc(charbuf *tmp, CSTR cname, sem_t sem_type) {
       bprintf(tmp, "String");
       break;
     case SEM_TYPE_REAL:
-      bprintf(tmp, "Float");
+      bprintf(tmp, "Float64");
       break;
     case SEM_TYPE_BLOB:
       bprintf(tmp, "Blob");
