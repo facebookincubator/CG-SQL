@@ -85467,6 +85467,110 @@ CREATE TABLE simple_backed_table(
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE backed(
+  status_id INTEGER PRIMARY KEY,
+  global_connection_state LONG_INT
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: backed: { status_id: integer notnull primary_key, global_connection_state: longint } backed
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name backed}
+    | {col_key_list}
+      | {col_def}: status_id: integer notnull primary_key
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |   | | {name status_id}
+      |   | | {type_int}: integer
+      |   | {col_attrs_pk}: ok
+      |     | {autoinc_and_conflict_clause}
+      | {col_key_list}
+        | {col_def}: global_connection_state: longint
+          | {col_def_type_attrs}: ok
+            | {col_def_name_type}
+              | {name global_connection_state}
+              | {type_long}: longint
+
+The statement ending at line XXXX
+
+DECLARE ENUM an_enum INTEGER (
+  ONE = 1,
+  TWO = 2
+);
+
+  {declare_enum_stmt}: an_enum: integer<an_enum> notnull
+  | {typed_name}: an_enum: integer<an_enum> notnull
+  | | {name an_enum}
+  | | {type_int}: an_enum: integer<an_enum> notnull
+  | {enum_values}
+    | {enum_value}
+    | | {name ONE}: integer = 1 notnull
+    | | {int 1}: integer notnull
+    | {enum_values}
+      | {enum_value}
+        | {name TWO}: integer = 2 notnull
+        | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC use_enum_and_backing ()
+BEGIN
+  WITH
+  backed (rowid, status_id, global_connection_state) AS (CALL _backed())
+  SELECT 1 AS x
+    FROM backed;
+END;
+
+  {create_proc_stmt}: use_enum_and_backing: { x: integer<an_enum> notnull } dml_proc
+  | {name use_enum_and_backing}: use_enum_and_backing: { x: integer<an_enum> notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {with_select_stmt}: select: { x: integer<an_enum> notnull }
+        | {with}
+        | | {cte_tables}: ok
+        |   | {cte_table}: backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint }
+        |     | {cte_decl}: backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint }
+        |     | | {name backed}
+        |     | | {name_list}
+        |     |   | {name rowid}
+        |     |   | {name_list}
+        |     |     | {name status_id}
+        |     |     | {name_list}
+        |     |       | {name global_connection_state}
+        |     | {shared_cte}: _backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint } dml_proc
+        |       | {call_stmt}: _backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint } dml_proc
+        |         | {name _backed}: _backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint } dml_proc
+        | {select_stmt}: select: { x: integer<an_enum> notnull }
+          | {select_core_list}: select: { x: integer<an_enum> notnull }
+          | | {select_core}: select: { x: integer<an_enum> notnull }
+          |   | {select_expr_list_con}: select: { x: integer<an_enum> notnull }
+          |     | {select_expr_list}: select: { x: integer<an_enum> notnull }
+          |     | | {select_expr}: x: integer<an_enum> notnull
+          |     |   | {int 1}: integer<an_enum> notnull
+          |     |   | {opt_as_alias}
+          |     |     | {name x}
+          |     | {select_from_etc}: TABLE { backed: backed }
+          |       | {table_or_subquery_list}: TABLE { backed: backed }
+          |       | | {table_or_subquery}: TABLE { backed: backed }
+          |       |   | {name backed}: TABLE { backed: backed }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
 CREATE TRIGGER bogus_backed_trigger
   BEFORE DELETE ON simple_backed_table
 BEGIN

@@ -23357,6 +23357,13 @@ static void sem_expr_at_rc(ast_node *ast) {
 // Expression type for numeric primitives
 static void sem_expr_num(ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
+
+  // we've processed this node before, we want to save the type kind
+  // if there is one from previous constant folding
+  if (ast->sem) {
+    return;
+  }
+
   EXTRACT_NUM_TYPE(num_type, ast);
   switch (num_type) {
   case NUM_BOOL:
