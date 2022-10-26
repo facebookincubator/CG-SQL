@@ -1359,11 +1359,6 @@ static void cg_schema_manage_recreate_tables(
     table_crc ^= crc_charbuf(&delete_tables);
     table_crc ^= crc_charbuf(&update_indices);
 
-    // this way we know we get exactly the right tables.  It does mean some buffer
-    // shuffling.
-
-    // This only matters for recreate groups, with none-groups this is a big no-op
-    // Note also that CQL0060 prevents anyone from taking an FK on a table that is
     bprintf(&pending_table_creates, "%s", make_table.ptr);
     CHARBUF_CLOSE(make_table);
 
