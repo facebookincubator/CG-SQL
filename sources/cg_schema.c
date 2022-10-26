@@ -131,7 +131,7 @@ static int annotation_comparator(const void *v1, const void *v2) {
 
 // Sort the @recreate annotations in place: the order is:
 //  * group ordinal
-//  * ordinal reversed
+//  * ordinal
 //
 //  We use create order for groups so that we do the CRC check for the
 //  strongest tables first - wherein we recursively drop children in
@@ -140,9 +140,10 @@ static int annotation_comparator(const void *v1, const void *v2) {
 //  any children we end up dropping, so we want the children (weak tables) to
 //  follow after the parent (strong table) so that we recreate them.
 //
-//  We use this order so that when we drop tables we will likely drop
-//  tables that are weak first and strong last.  That is the later tables
-//  may have FK to the earlier tables but not the reverse.   We don't want
+//  We sort with create order for table ordinal and pass in create order
+//  table creation statements to cql_rebuild_recreate_groups. Inside this
+//  function, we iterate the list in reverse to drop tables that are weak first and strong last.
+//  That is the later tables may have FK to the earlier tables but not the reverse. We don't want
 //  to cause FK action for no reason since the whole group is being dropped anyway.
 
 // patternlint-disable-next-line prefer-sized-ints-in-msys
@@ -159,8 +160,7 @@ static int recreate_comparator(const void *v1, const void *v2) {
   // It can't be a tie! ordinal is unique!
   Invariant(a1->ordinal != a2->ordinal);
 
-  // reverse ordinal
-  return (a1->ordinal < a2->ordinal) ? 1 : -1;
+  return (a1->ordinal < a2->ordinal) ? -1 : 1;
 }
 
 // Emit the template for ending the upgrade to a particular schema version.
@@ -1183,8 +1183,8 @@ static void emit_recreate_group_drops(charbuf *drops_buf, CSTR gname, symtab* re
   bytebuf *buf = symtab_ensure_bytebuf(recreate_group_drops, gname);
   size_t count = buf->used / sizeof(CSTR);
   CSTR *table_names_array = (CSTR *) (buf->ptr);
-
-  for (size_t i = 0; i < count; i++) {
+  // accumulate drops in reverse order because we want drop order and the symtab stored create order
+  for (int32_t i = (int32_t)count-1; i >= 0; i--) {
     bprintf(drops_buf, "  DROP TABLE IF EXISTS %s;\n", table_names_array[i]);
   }
 }
@@ -1359,27 +1359,12 @@ static void cg_schema_manage_recreate_tables(
     table_crc ^= crc_charbuf(&delete_tables);
     table_crc ^= crc_charbuf(&update_indices);
 
-    // Now we have to remember that the tables in the recreate annotations have been
-    // sorted by reverse ordinal, meaning they are in the correct order to DROP
-    // we emit the DROP statements first as normal but the creates have to be
-    // stashed in a pending buffer that accumulates in the reverse order.  When we're
-    // done with the group, then we emit the whole batch of creates in the natural order.
-    // This is done in one pass because there could be filtering and whatnot and so
     // this way we know we get exactly the right tables.  It does mean some buffer
     // shuffling.
 
     // This only matters for recreate groups, with none-groups this is a big no-op
     // Note also that CQL0060 prevents anyone from taking an FK on a table that is
-    // recreate and either not in a group at all or in a different group.  So only
-    // the tables in the processed group could have FKs and those are handled correctly here.
-
-    CHARBUF_OPEN(temp);
-    bprintf(&temp, "%s", make_table.ptr);
-    bprintf(&temp, "%s", pending_table_creates.ptr);
-    bclear(&pending_table_creates);
-    bprintf(&pending_table_creates, "%s", temp.ptr);
-    CHARBUF_CLOSE(temp);
-
+    bprintf(&pending_table_creates, "%s", make_table.ptr);
     CHARBUF_CLOSE(make_table);
 
     CSTR gname = note->group_name;
