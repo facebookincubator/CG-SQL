@@ -1387,7 +1387,10 @@ static void cg_schema_manage_recreate_tables(
     // if there is a group and and this node can be merged with the next
     // then hold the update and accumulate the CRC
     if (i + 1 < count && gname[0] && !Strcasecmp(gname, (note+1)->group_name)) {
-      continue;
+      // no schema maintenance for non-physical tables, so cannot wait for them
+      if (!is_ast_create_table_stmt((note+1)->target_ast) || !is_table_not_physical((note+1)->target_ast)) {
+        continue;
+      }
     }
 
     bprintf(&update_tables, "%s", pending_table_creates.ptr);
