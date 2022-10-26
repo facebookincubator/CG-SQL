@@ -813,9 +813,12 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
 BEGIN
-  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == -6421426530981474171 RETURN; 
+  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 1057409537067930078 RETURN; 
   IF cql_facet_find(test_facets, 'gr1_group_crc') != -5103843476505738426 THEN
-    LET gr1_result := cql_rebuild_recreate_group(cql_compressed("CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT ); CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT ); "), cql_compressed("CREATE INDEX gr1_index ON g1 (name); CREATE INDEX gr1_index2 ON g1 (name, id); "), cql_compressed(""));
+    LET gr1_result := cql_rebuild_recreate_group(
+      cql_compressed("CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT ); CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT ); "),
+      cql_compressed("CREATE INDEX gr1_index ON g1 (name); CREATE INDEX gr1_index2 ON g1 (name, id); "),
+      cql_compressed(""));
 
     -- recreate migration procedure required
     CALL RecreateGroup1Migration();
@@ -823,38 +826,56 @@ BEGIN
     CALL test_cql_set_facet_version('gr1_group_crc', -5103843476505738426);
   END IF;
   IF cql_facet_find(test_facets, 'table_to_recreate_table_crc') != -3246234300517746946 THEN
-    LET table_to_recreate_result := cql_rebuild_recreate_group(cql_compressed("CREATE TABLE table_to_recreate( id INTEGER NOT NULL, name TEXT ); "), cql_compressed(""), cql_compressed(""));
+    LET table_to_recreate_result := cql_rebuild_recreate_group(
+      cql_compressed("CREATE TABLE table_to_recreate( id INTEGER NOT NULL, name TEXT ); "),
+      cql_compressed(""),
+      cql_compressed(""));
     CALL test_cql_set_facet_version('table_to_recreate_table_crc', -3246234300517746946);
   END IF;
   IF cql_facet_find(test_facets, 'my_group_group_crc') != -5749224930715671870 THEN
-    LET my_group_result := cql_rebuild_recreate_group(cql_compressed("CREATE TABLE grouped_table_1( id INTEGER NOT NULL, name TEXT ); CREATE TABLE grouped_table_2( id INTEGER NOT NULL, name TEXT ); CREATE TABLE grouped_table_3( id INTEGER NOT NULL, name TEXT ); "), cql_compressed(""), cql_compressed(""));
+    LET my_group_result := cql_rebuild_recreate_group(
+      cql_compressed("CREATE TABLE grouped_table_1( id INTEGER NOT NULL, name TEXT ); CREATE TABLE grouped_table_2( id INTEGER NOT NULL, name TEXT ); CREATE TABLE grouped_table_3( id INTEGER NOT NULL, name TEXT ); "),
+      cql_compressed(""),
+      cql_compressed(""));
     CALL test_cql_set_facet_version('my_group_group_crc', -5749224930715671870);
   END IF;
   IF cql_facet_find(test_facets, 'unsub_recreated_table_crc') != 5219629355929215323 THEN
-    LET unsub_recreated_result := cql_rebuild_recreate_group(cql_compressed(""), cql_compressed(""), cql_compressed("DROP TABLE IF EXISTS unsub_recreated; "));
+    LET unsub_recreated_result := cql_rebuild_recreate_group(
+      cql_compressed(""),
+      cql_compressed(""),
+      cql_compressed("DROP TABLE IF EXISTS unsub_recreated; "));
     CALL test_cql_set_facet_version('unsub_recreated_table_crc', 5219629355929215323);
   END IF;
   IF cql_facet_find(test_facets, 'foo_group_crc') != -4964453042684218320 THEN
-    LET foo_result := cql_rebuild_recreate_group(cql_compressed("CREATE TABLE recreate_backing( k BLOB PRIMARY KEY, v BLOB NOT NULL ); "), cql_compressed(""), cql_compressed(""));
+    LET foo_result := cql_rebuild_recreate_group(
+      cql_compressed("CREATE TABLE recreate_backing( k BLOB PRIMARY KEY, v BLOB NOT NULL ); "),
+      cql_compressed(""),
+      cql_compressed(""));
     CALL test_cql_set_facet_version('foo_group_crc', -4964453042684218320);
   END IF;
-  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', -6421426530981474171);
+  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', 1057409537067930078);
 END;
 
 -- recreate all the virtual @recreate tables that might have changed
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_virtual_tables()
 BEGIN
-  IF cql_facet_find(test_facets, 'all_virtual_tables_crc') == -6429291541464756363 RETURN; 
+  IF cql_facet_find(test_facets, 'all_virtual_tables_crc') == -6694347234798097674 RETURN; 
   IF cql_facet_find(test_facets, 'a_virtual_table_table_crc') != 6926381574149521832 THEN
-    LET a_virtual_table_result := cql_rebuild_recreate_group(cql_compressed("CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other); "), cql_compressed(""), cql_compressed(""));
+    LET a_virtual_table_result := cql_rebuild_recreate_group(
+      cql_compressed("CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other); "),
+      cql_compressed(""),
+      cql_compressed(""));
     CALL test_cql_set_facet_version('a_virtual_table_table_crc', 6926381574149521832);
   END IF;
   IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != -3297146967072858107 THEN
-    LET complex_virtual_table_result := cql_rebuild_recreate_group(cql_compressed("CREATE VIRTUAL TABLE complex_virtual_table USING a_module ( id INTEGER, t TEXT); "), cql_compressed(""), cql_compressed(""));
+    LET complex_virtual_table_result := cql_rebuild_recreate_group(
+      cql_compressed("CREATE VIRTUAL TABLE complex_virtual_table USING a_module ( id INTEGER, t TEXT); "),
+      cql_compressed(""),
+      cql_compressed(""));
     CALL test_cql_set_facet_version('complex_virtual_table_table_crc', -3297146967072858107);
   END IF;
-  CALL test_cql_set_facet_version('all_virtual_tables_crc', -6429291541464756363);
+  CALL test_cql_set_facet_version('all_virtual_tables_crc', -6694347234798097674);
 END;
 
 CREATE PROCEDURE test_cql_install_temp_schema()

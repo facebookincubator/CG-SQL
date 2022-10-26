@@ -1409,11 +1409,11 @@ static void cg_schema_manage_recreate_tables(
     // Construct call to cql_rebuild_recreate_group with CQL compressed strings (with --compress compiler flag)
     // After the call to cql_rebuild_recreate_group() result will hold 1 if we rebuilt and 0 if we recreated the group.
     bprintf(&update_proc, "    LET %s_result := ", migrate_key);
-    bprintf(&update_proc, "cql_rebuild_recreate_group(cql_compressed(");
+    bprintf(&update_proc, "cql_rebuild_recreate_group(\n      cql_compressed(");
     cg_pretty_quote_plaintext(update_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
-    bprintf(&update_proc, "), cql_compressed(");
+    bprintf(&update_proc, "),\n      cql_compressed(");
     cg_pretty_quote_plaintext(update_indices.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
-    bprintf(&update_proc, "), cql_compressed(");
+    bprintf(&update_proc, "),\n      cql_compressed(");
     cg_pretty_quote_plaintext(delete_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
     bprintf(&update_proc, "));\n");
 
