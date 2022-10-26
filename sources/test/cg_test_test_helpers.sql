@@ -75,6 +75,7 @@ create index p_id on primary_as_column(id_);
 
 create index p_id_delete on primary_as_column(id_) @delete(1);
 
+@attribute(cql:deterministic)
 declare select function is_declare_func_enabled() bool not null;
 
 create trigger triggerAaa

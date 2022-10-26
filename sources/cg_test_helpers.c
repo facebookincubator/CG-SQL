@@ -811,6 +811,11 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
     Contract(is_ast_declare_func_stmt(any_func) || is_ast_declare_select_func_stmt(any_func));
     if (is_ast_declare_select_func_stmt(any_func)) {
+      EXTRACT_MISC_ATTRS(any_func, misc_attrs);
+      bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
+      if (deterministic) {
+        bprintf(&gen_declare_funcs, "@attribute(cql:deterministic)\n");
+      }
       gen_one_stmt(any_func);
       bprintf(&gen_declare_funcs, ";\n");
     }
