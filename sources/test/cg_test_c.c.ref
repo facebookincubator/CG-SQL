@@ -829,7 +829,7 @@ DECLARE arg2 INTEGER NOT NULL;
 cql_int32 arg2 = 0;
 sqlite3_stmt *exchange_cursor_stmt = NULL;
 cql_bool _exchange_cursor_has_row_ = 0;
-sqlite3_stmt *_temp_stmt = NULL;
+sqlite3_stmt *_temp0_stmt = NULL;
 
 // The statement ending at line XXXX
 
@@ -850,22 +850,22 @@ CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnul
   cql_contract_argument_notnull((void *)foo, 1);
 
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
   *foo = 0; // set out arg to non-garbage
   *foo = 1;
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "DELETE FROM bar WHERE id = ?");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, *foo);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_finalize_stmt(&_temp_stmt);
+  sqlite3_reset(_temp0_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -2764,21 +2764,21 @@ DECLARE PROC insert_values (id_ INTEGER NOT NULL, type_ INTEGER) USING TRANSACTI
 */
 CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "INSERT INTO bar(id, type) VALUES(?, ?)");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 2,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_,
                 CQL_DATA_TYPE_INT32, &type_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_finalize_stmt(&_temp_stmt);
+  sqlite3_reset(_temp0_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -3046,25 +3046,25 @@ DECLARE PROC dummy_user () USING TRANSACTION;
 CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_int32 _seed_ = 0;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
   _seed_ = 123;
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 5,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 5,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_finalize_stmt(&_temp_stmt);
+  sqlite3_reset(_temp0_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -4609,24 +4609,24 @@ CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id
   cql_contract_argument_notnull((void *)out_arg, 9);
 
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
   *out_arg = 0; // set out arg to non-garbage
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 3,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 3,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, blob_id_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, b_notnull_,
                 CQL_DATA_TYPE_BLOB, b_nullable_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_finalize_stmt(&_temp_stmt);
+  sqlite3_reset(_temp0_stmt);
   *out_arg = 1;
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -4900,7 +4900,7 @@ CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  if (!(i.value < 5)) break;
+    if (!(i.value < 5)) break;
     cql_set_notnull(i, i.value + 1);
     cql_finalize_stmt(&C_stmt);
     _rc_ = simple_select(_db_, &C_stmt);
@@ -4957,7 +4957,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_with_nullable_condition(sqlite3 *_Nonnull 
   cql_set_notnull(i, 0);
   for (;;) {
   cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
-  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
+    if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
     cql_set_nullable(i, i.is_null, i.value + 1);
     cql_finalize_stmt(&C_stmt);
     _rc_ = simple_select(_db_, &C_stmt);
@@ -5019,7 +5019,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  if (!(i.value < 5)) break;
+    if (!(i.value < 5)) break;
     cql_set_notnull(i, i.value + 1);
     C_stmt = NULL;
     _rc_ = simple_select(_db_, &C_stmt);
@@ -5233,7 +5233,7 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  if (!(i.value < 5)) break;
+    if (!(i.value < 5)) break;
     cql_set_notnull(i, i.value + 1);
     cql_object_release(C_result_set_);
     out_union_helper_fetch_results(&C_result_set_);
@@ -6594,23 +6594,23 @@ CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 x = { .is_null = 1 };
   cql_int32 _tmp_int_0 = 0;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "WITH "
     "threads2 (count) AS (SELECT 1) "
     "SELECT COUNT(*) "
       "FROM threads2");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    _tmp_int_0 = sqlite3_column_int(_temp_stmt, 0);
-  cql_finalize_stmt(&_temp_stmt);
+    _tmp_int_0 = sqlite3_column_int(_temp0_stmt, 0);
+  cql_finalize_stmt(&_temp0_stmt);
   cql_set_notnull(x, _tmp_int_0);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -6741,21 +6741,21 @@ DECLARE PROC upsert_do_nothing (id_ INTEGER NOT NULL) USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "INSERT INTO foo(id) VALUES(?) "
     "ON CONFLICT DO NOTHING");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, id_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_finalize_stmt(&_temp_stmt);
+  sqlite3_reset(_temp0_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -7500,24 +7500,24 @@ CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_nullable_int32 x = { .is_null = 1 };
   cql_int32 _tmp_int_0 = 0;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT 1 "
       "WHERE 0 "
     "UNION "
     "SELECT 2 "
     "LIMIT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    _tmp_int_0 = sqlite3_column_int(_temp_stmt, 0);
-  cql_finalize_stmt(&_temp_stmt);
+    _tmp_int_0 = sqlite3_column_int(_temp0_stmt, 0);
+  cql_finalize_stmt(&_temp0_stmt);
   cql_set_notnull(x, _tmp_int_0);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -7842,7 +7842,7 @@ CQL_WARN_UNUSED cql_code empty_blocks(sqlite3 *_Nonnull _db_) {
     }
   }
   for (;;) {
-  if (!(1)) break;
+    if (!(1)) break;
   }
   _rc_ = cql_prepare(_db_, &c_stmt,
     "SELECT 1");
@@ -13374,7 +13374,7 @@ void out_decl_loop_test(cql_nullable_int32 x) {
   cql_int32 v = 0;
 
   for (;;) {
-  if (!(1)) break;
+    if (!(1)) break;
     out2_proc(x, &u, &v);
     out2_proc(x, &u, &v);
   }
@@ -17499,10 +17499,10 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cq
   cql_contract_argument_notnull((void *)x, 1);
 
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
   *x = 0; // set out arg to non-garbage
-  _rc_ = cql_prepare_var(_db_, &_temp_stmt,
+  _rc_ = cql_prepare_var(_db_, &_temp0_stmt,
     3, NULL,
   "WITH "
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
@@ -17514,14 +17514,14 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cq
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    *x = sqlite3_column_int(_temp_stmt, 0) != 0;
-  cql_finalize_stmt(&_temp_stmt);
+    *x = sqlite3_column_int(_temp0_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp0_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -17591,10 +17591,10 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
   cql_contract_argument_notnull((void *)x, 1);
 
   cql_code _rc_ = SQLITE_OK;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
 
   *x = 0; // set out arg to non-garbage
-  _rc_ = cql_prepare_var(_db_, &_temp_stmt,
+  _rc_ = cql_prepare_var(_db_, &_temp0_stmt,
     3, NULL,
   "WITH "
     "backed (rowid, pk, flag, id, name, age, storage) AS (",
@@ -17606,14 +17606,14 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    *x = sqlite3_column_int(_temp_stmt, 0) != 0;
-  cql_finalize_stmt(&_temp_stmt);
+    *x = sqlite3_column_int(_temp0_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp0_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   return _rc_;
 }
 #undef _PROC_
@@ -17862,33 +17862,33 @@ CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_blob_ref b = NULL;
   cql_blob_ref x = NULL;
-  sqlite3_stmt *_temp_stmt = NULL;
+  sqlite3_stmt *_temp0_stmt = NULL;
   cql_blob_ref z = NULL;
 
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT bupdatekey(?, 0, 1)");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
                 CQL_DATA_TYPE_BLOB, b);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_blob_ref(_temp_stmt, 0, &x);
-  cql_finalize_stmt(&_temp_stmt);
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    cql_column_blob_ref(_temp0_stmt, 0, &x);
+  cql_finalize_stmt(&_temp0_stmt);
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT bupdateval(?, -3683705396192132539, 21, 3, -6946718245010482247, 'dave', 4)");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
                 CQL_DATA_TYPE_BLOB, b);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_blob_ref(_temp_stmt, 0, &z);
-  cql_finalize_stmt(&_temp_stmt);
+    cql_column_blob_ref(_temp0_stmt, 0, &z);
+  cql_finalize_stmt(&_temp0_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
   cql_blob_release(b);
   cql_blob_release(x);
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   cql_blob_release(z);
   return _rc_;
 }
@@ -18823,30 +18823,30 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := ( SELECT i2 + 1 );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT ? + 1");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i2);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    i2 = sqlite3_column_int(_temp_stmt, 0);
-  cql_finalize_stmt(&_temp_stmt);
+    i2 = sqlite3_column_int(_temp0_stmt, 0);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
   /*
   SET i0_nullable := ( SELECT i0_nullable + 1 );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT ? + 1");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
                 CQL_DATA_TYPE_INT32, &i0_nullable);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_nullable_int32(_temp_stmt, 0, &i0_nullable);
-  cql_finalize_stmt(&_temp_stmt);
+    cql_column_nullable_int32(_temp0_stmt, 0, &i0_nullable);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -19157,13 +19157,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET s := ( SELECT printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, nullable(5), TRUE, NULL, FALSE, NULL, 6L, 7, 0.0, NULL, NULL, 8) );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, 5, 1, NULL, 0, NULL, 6, 7, 0.0, NULL, NULL, 8)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_string_ref(_temp_stmt, 0, &s);
-  cql_finalize_stmt(&_temp_stmt);
+    cql_column_string_ref(_temp0_stmt, 0, &s);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -19437,14 +19437,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET b2 := ( SELECT EXISTS (SELECT *
     FROM bar) );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT EXISTS (SELECT * "
       "FROM bar)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    b2 = sqlite3_column_int(_temp_stmt, 0) != 0;
-  cql_finalize_stmt(&_temp_stmt);
+    b2 = sqlite3_column_int(_temp0_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -19672,15 +19672,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     FROM blob_table
     WHERE blob_id = 1 );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT b_nullable "
       "FROM blob_table "
       "WHERE blob_id = 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_nullable_blob_ref(_temp_stmt, 0, &blob_var);
-  cql_finalize_stmt(&_temp_stmt);
+    cql_column_nullable_blob_ref(_temp0_stmt, 0, &blob_var);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -19689,15 +19689,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     FROM blob_table
     WHERE blob_id = 1 );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT b_notnull "
       "FROM blob_table "
       "WHERE blob_id = 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_blob_ref(_temp_stmt, 0, &_tmp_blob_0);
-  cql_finalize_stmt(&_temp_stmt);
+    cql_column_blob_ref(_temp0_stmt, 0, &_tmp_blob_0);
+  cql_finalize_stmt(&_temp0_stmt);
   cql_set_blob_ref(&blob_var, _tmp_blob_0);
 
   // The statement ending at line XXXX
@@ -19712,15 +19712,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 2,
                 CQL_DATA_TYPE_BLOB, blob_var,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, blob_var_notnull);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  cql_finalize_stmt(&_temp_stmt);
+  sqlite3_reset(_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -19781,13 +19781,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET r2 := ( SELECT SqlUserFunc(123) );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT SqlUserFunc(123)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    r2 = sqlite3_column_double(_temp_stmt, 0);
-  cql_finalize_stmt(&_temp_stmt);
+    r2 = sqlite3_column_double(_temp0_stmt, 0);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -19829,13 +19829,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := ( SELECT 'x' LIKE 'y' );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT 'x' LIKE 'y'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
-  cql_finalize_stmt(&_temp_stmt);
+    _tmp_bool_0 = sqlite3_column_int(_temp0_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp0_stmt);
   i2 = _tmp_bool_0;
 
   // The statement ending at line XXXX
@@ -19843,13 +19843,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := ( SELECT 'x' NOT LIKE 'y' );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT 'x' NOT LIKE 'y'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
-  cql_finalize_stmt(&_temp_stmt);
+    _tmp_bool_0 = sqlite3_column_int(_temp0_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp0_stmt);
   i2 = _tmp_bool_0;
 
   // The statement ending at line XXXX
@@ -19857,13 +19857,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := ( SELECT 'x' MATCH 'y' );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT 'x' MATCH 'y'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
-  cql_finalize_stmt(&_temp_stmt);
+    _tmp_bool_0 = sqlite3_column_int(_temp0_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp0_stmt);
   i2 = _tmp_bool_0;
 
   // The statement ending at line XXXX
@@ -19871,13 +19871,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := ( SELECT 'x' GLOB 'y' );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT 'x' GLOB 'y'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    _tmp_bool_0 = sqlite3_column_int(_temp_stmt, 0) != 0;
-  cql_finalize_stmt(&_temp_stmt);
+    _tmp_bool_0 = sqlite3_column_int(_temp0_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp0_stmt);
   i2 = _tmp_bool_0;
 
   // The statement ending at line XXXX
@@ -19943,15 +19943,15 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET l0_nullable := cql_get_blob_size(( SELECT blob_var ));
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT ?");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+  cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
                 CQL_DATA_TYPE_BLOB, blob_var);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_nullable_blob_ref(_temp_stmt, 0, &_tmp_n_blob_0);
-  cql_finalize_stmt(&_temp_stmt);
+    cql_column_nullable_blob_ref(_temp0_stmt, 0, &_tmp_n_blob_0);
+  cql_finalize_stmt(&_temp0_stmt);
   cql_set_notnull(l0_nullable, cql_get_blob_size(_tmp_n_blob_0));
 
   // The statement ending at line XXXX
@@ -20216,20 +20216,20 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET i0_nullable := ( SELECT type
     FROM bar IF NOTHING -1 );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT type "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
   if (_rc_ == SQLITE_ROW) {
-    cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_1);
+    cql_column_nullable_int32(_temp0_stmt, 0, &_tmp_n_int_1);
     cql_set_nullable(i0_nullable, _tmp_n_int_1.is_null, _tmp_n_int_1.value);
   }
   else {
     cql_set_notnull(i0_nullable, - 1);
   }
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -20237,14 +20237,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET i0_nullable := ( SELECT type
     FROM bar IF NOTHING THROW );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT type "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_0);
-  cql_finalize_stmt(&_temp_stmt);
+    cql_column_nullable_int32(_temp0_stmt, 0, &_tmp_n_int_0);
+  cql_finalize_stmt(&_temp0_stmt);
   cql_set_nullable(i0_nullable, _tmp_n_int_0.is_null, _tmp_n_int_0.value);
 
   // The statement ending at line XXXX
@@ -20253,14 +20253,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET i2 := ( SELECT type
     FROM bar IF NOTHING OR NULL -1 );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT type "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
   if (_rc_ == SQLITE_ROW) {
-    cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_1);
+    cql_column_nullable_int32(_temp0_stmt, 0, &_tmp_n_int_1);
   }
   if (_rc_ == SQLITE_DONE || _tmp_n_int_1.is_null) {
     i2 = - 1;
@@ -20268,7 +20268,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     i2 = _tmp_n_int_1.value;
   }
   _rc_ = SQLITE_OK;
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -20276,20 +20276,20 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET t0_nullable := ( SELECT name
     FROM bar IF NOTHING "" );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT name "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
   if (_rc_ == SQLITE_ROW) {
-    cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
+    cql_column_nullable_string_ref(_temp0_stmt, 0, &_tmp_n_text_1);
     cql_set_string_ref(&t0_nullable, _tmp_n_text_1);
   }
   else {
     cql_set_string_ref(&t0_nullable, _literal_12_);
   }
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -20297,14 +20297,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   SET t2 := ( SELECT name
     FROM bar IF NOTHING OR NULL "garbonzo" );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT name "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
   if (_rc_ == SQLITE_ROW) {
-    cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
+    cql_column_nullable_string_ref(_temp0_stmt, 0, &_tmp_n_text_1);
   }
   if (_rc_ == SQLITE_DONE || !_tmp_n_text_1) {
     cql_set_string_ref(&t2, _literal_13_garbonzo_);
@@ -20312,7 +20312,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     cql_set_string_ref(&t2, _tmp_n_text_1);
   }
   _rc_ = SQLITE_OK;
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
 
   // The statement ending at line XXXX
 
@@ -20559,13 +20559,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET b2 := ( SELECT likely(1) );
   */
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
+  _rc_ = cql_prepare(_db_, &_temp0_stmt,
     "SELECT likely(1)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
+  _rc_ = sqlite3_step(_temp0_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    _tmp_int_0 = sqlite3_column_int(_temp_stmt, 0);
-  cql_finalize_stmt(&_temp_stmt);
+    _tmp_int_0 = sqlite3_column_int(_temp0_stmt, 0);
+  cql_finalize_stmt(&_temp0_stmt);
   b2 = !!(_tmp_int_0);
 
   // The statement ending at line XXXX
@@ -20581,7 +20581,7 @@ cql_cleanup:
   cql_finalize_stmt(&foo_cursor_stmt);
   cql_finalize_stmt(&basic_cursor_stmt);
   cql_finalize_stmt(&exchange_cursor_stmt);
-  cql_finalize_stmt(&_temp_stmt);
+  cql_finalize_stmt(&_temp0_stmt);
   cql_string_release(_between_6_);
   cql_string_release(_between_7_);
   cql_string_release(_between_8_);

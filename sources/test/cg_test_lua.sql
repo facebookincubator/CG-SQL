@@ -438,18 +438,18 @@ fetch exchange_cursor into arg1, arg2;
 close exchange_cursor;
 
 -- TEST: simple nested select
--- +  _rc_, _temp_stmt = cql_prepare(_db_,
+-- +  _rc_, _temp0_stmt = cql_prepare(_db_,
 -- +    "SELECT ? + 1")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {i2})
--- +  cql_finalize_stmt(_temp_stmt)
+-- +  _rc_ = cql_multibind(_db_, _temp0_stmt, "I", {i2})
+-- +  cql_finalize_stmt(_temp0_stmt)
 set i2 := (select i2+1);
 
 -- TEST: nested select with nullable
 -- in LUA these bind the same
--- +  _rc_, _temp_stmt = cql_prepare(_db_,
+-- +  _rc_, _temp0_stmt = cql_prepare(_db_,
 -- +    "SELECT ? + 1")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, "i", {i0_nullable})
--- +  cql_finalize_stmt(_temp_stmt)
+-- +  _rc_ = cql_multibind(_db_, _temp0_stmt, "i", {i0_nullable})
+-- +  cql_finalize_stmt(_temp0_stmt)
 set i0_nullable := (select i0_nullable+1);
 
 -- TEST: tricky quoted text
@@ -462,7 +462,7 @@ delete from bar where name like '\\ " \n';
 -- +  local foo
 -- +  foo = 1
 -- +  "DELETE FROM bar WHERE id = ?")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {foo})
+-- +  _rc_ = cql_multibind(_db_, _temp0_stmt, "I", {foo})
 -- +  return _rc_, foo
 create procedure outparm_test(out foo integer not null)
 begin
@@ -1145,7 +1145,7 @@ insert into foo default values;
 -- + function insert_values(_db_, id_, type_)
 -- +   "INSERT INTO bar(id, type) VALUES(?, ?)"
 -- + ::cql_cleanup::
--- +   cql_finalize_stmt(_temp_stmt)
+-- +   cql_finalize_stmt(_temp0_stmt)
 -- +   return _rc_
 -- + end
 create proc insert_values(id_ integer not null, type_ integer)
@@ -1231,7 +1231,7 @@ end;
 -- + @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123
 -- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
--- + _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
+-- + _rc_ = cql_multibind(_db_, _temp0_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
 create proc dummy_user()
 begin
   insert into bar () values () @dummy_seed(123) @dummy_nullables @dummy_defaults;
@@ -1372,12 +1372,12 @@ create table blob_table (
 
 -- TEST: fetch a nullable blob
 -- + "SELECT b_nullable FROM blob_table WHERE blob_id = 1")
--- + blob_var = cql_get_value(_temp_stmt, 0)
+-- + blob_var = cql_get_value(_temp0_stmt, 0)
 set blob_var := (select b_nullable from blob_table where blob_id = 1);
 
 -- TEST: fetch a not null blob
 -- + "SELECT b_notnull FROM blob_table WHERE blob_id = 1")
--- + _tmp_blob_% = cql_get_value(_temp_stmt, 0)
+-- + _tmp_blob_% = cql_get_value(_temp0_stmt, 0)
 -- + blob_var = _tmp_blob_%
 set blob_var := (select b_notnull from blob_table where blob_id = 1);
 
@@ -1391,7 +1391,7 @@ set blob_var_notnull := blob_notnull_func();
 -- TEST: bind a nullable blob and a not null blob
 -- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
 -- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)"
--- + _rc_ = cql_multibind(_db_, _temp_stmt, "bB", {blob_var, blob_var_notnull})
+-- + _rc_ = cql_multibind(_db_, _temp0_stmt, "bB", {blob_var, blob_var_notnull})
 insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_var_notnull);
 
 -- TEST: a result set that includes blobs
@@ -1759,7 +1759,7 @@ set r2 := (select SqlUserFunc(123));
 -- + cql_contract_argument_notnull(b_notnull_, 2)
 -- + cql_contract_argument_notnull(id_, 4)
 -- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
--- + _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
+-- + _rc_ = cql_multibind(_db_, _temp0_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
 -- + out_arg = 1
 -- + return _rc_, out_arg
 create proc multi_rewrite(like blob_table, like bar, out out_arg integer not null)
@@ -2342,7 +2342,7 @@ END;
 
 -- TEST: try to use a WITH_SELECT form in a select expression
 -- + "WITH threads2 (count) AS (SELECT 1) SELECT COUNT(*) FROM threads2"
--- + _tmp_int_0 = cql_get_value(_temp_stmt, 0)
+-- + _tmp_int_0 = cql_get_value(_temp0_stmt, 0)
 -- + x = _tmp_int_0
 create proc use_with_select()
 begin
@@ -3198,7 +3198,7 @@ end;
 
 -- TEST: test cql_get_blob_size codegen
 -- + "SELECT ?"
--- + rc_ = cql_multibind(_db_, _temp_stmt, "b", {blob_var})
+-- + rc_ = cql_multibind(_db_, _temp0_stmt, "b", {blob_var})
 -- + l0_nullable = cql_get_blob_size(_tmp_n_blob_%)
 set l0_nullable := cql_get_blob_size((select blob_var));
 
@@ -3701,10 +3701,10 @@ insert into virtual_with_hidden values(1);
 insert into virtual_with_hidden(vx, vy) values(1,2);
 
 -- TEST: get row from the bar table or else -1
--- +  _rc_ = cql_step(_temp_stmt)
+-- +  _rc_ = cql_step(_temp0_stmt)
 -- +  if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- +  if _rc_ == CQL_ROW then
--- +    _tmp_n_int_1 = cql_get_value(_temp_stmt, 0)
+-- +    _tmp_n_int_1 = cql_get_value(_temp0_stmt, 0)
 -- +    i0_nullable = _tmp_n_int_1
 -- +  else
 -- +    i0_nullable = - 1
@@ -3713,15 +3713,15 @@ set i0_nullable := (select type from bar if nothing -1);
 
 -- TEST: normal code gen for if nothing throw
 -- +  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
--- +  _rc_ = cql_step(_temp_stmt)
+-- +  _rc_ = cql_step(_temp0_stmt)
 -- +  if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
--- +  _tmp_n_int_0 = cql_get_value(_temp_stmt, 0)
+-- +  _tmp_n_int_0 = cql_get_value(_temp0_stmt, 0)
 -- +  i0_nullable = _tmp_n_int_0
 set i0_nullable := (select type from bar if nothing throw);
 
 -- TEST: get row from bar if no row or null -1
 -- + if _rc_ == CQL_ROW then
--- +   _tmp_n_int_1 = cql_get_value(_temp_stmt, 0)
+-- +   _tmp_n_int_1 = cql_get_value(_temp0_stmt, 0)
 -- + end
 -- + if _rc_ == CQL_DONE or _tmp_n_int_1 == nil then
 -- +   i2 = - 1
@@ -3732,7 +3732,7 @@ set i2 := (select type from bar if nothing or null -1);
 
 -- TEST: get row from the bar table or else ""
 -- + if _rc_ == CQL_ROW then
--- +   _tmp_n_text_1 = cql_get_value(_temp_stmt, 0)
+-- +   _tmp_n_text_1 = cql_get_value(_temp0_stmt, 0)
 -- +   t0_nullable = _tmp_n_text_1
 -- + else
 -- +   t0_nullable = ""
@@ -3740,10 +3740,10 @@ set i2 := (select type from bar if nothing or null -1);
 set t0_nullable := (select name from bar if nothing "");
 
 -- TEST: get row from the bar table or else "garbonzo"
--- + _rc_ = cql_step(_temp_stmt)
+-- + _rc_ = cql_step(_temp0_stmt)
 -- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- + if _rc_ == CQL_ROW then
--- +   _tmp_n_text_1 = cql_get_value(_temp_stmt, 0)
+-- +   _tmp_n_text_1 = cql_get_value(_temp0_stmt, 0)
 -- + end
 -- + if _rc_ == CQL_DONE or _tmp_n_text_1 == nil then
 -- +   t2 = "garbonzo"
@@ -5100,7 +5100,7 @@ create table backed(
 );
 
 -- TEST: explain query plan with replacement
--- + EXPLAIN QUERY PLAN 
+-- + EXPLAIN QUERY PLAN
 -- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
 -- + SELECT rowid, bgetkey(T.k, 0),
 -- + bgetval(T.v, 1055660242183705531),

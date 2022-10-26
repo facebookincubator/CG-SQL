@@ -71,10 +71,18 @@ charbuf *tag##_main_saved = cg_main_output; \
 int32_t tag##_indent = indent; \
 cg_main_output = &tag##_buf; \
 
+#define CG_PUSH_MAIN_INDENT2(tag) \
+CG_PUSH_MAIN_INDENT(tag, 2)
+
 #define CG_POP_MAIN_INDENT(tag) \
 cg_main_output = tag##_main_saved; \
 bindent(cg_main_output, &tag##_buf, tag##_indent); \
 CHARBUF_CLOSE(tag##_buf);
+
+#define MK_TMP_STMT_STR(idx) \
+  char tmp_stmt_name_idx[64]; \
+  snprintf(tmp_stmt_name_idx, sizeof(tmp_stmt_name_idx), "_temp%d_stmt", idx)
+
 
 // Make a temporary buffer for the evaluation results using the canonical
 // naming convention.  This might exit having burned some stack slots

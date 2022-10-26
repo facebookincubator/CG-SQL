@@ -154,6 +154,13 @@ static bool_t lua_has_conditional_fragments;
 static bool_t lua_has_shared_fragments;
 static bool_t lua_has_variables;
 
+// Mark to not emit duplicated initialization/deinitialization code
+static int32_t lua_last_temp_statement_idx;
+static int32_t lua_first_temp_statement_idx;
+
+// Each prepared statement in a proc gets a unique index
+static int32_t lua_prepared_statement_idx;
+
 // Each bound statement in a proc gets a unique index
 static int32_t lua_cur_bound_statement;
 
@@ -1055,7 +1062,7 @@ static void cg_lua_expr_in_pred_or_not_in(
 
   bprintf(cg_main_output, "repeat\n");
 
-  CG_PUSH_MAIN_INDENT(do, 2);
+  CG_PUSH_MAIN_INDENT2(do);
 
   // Evaluate the expression and stow it in a temporary.
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
@@ -1123,7 +1130,7 @@ static void cg_lua_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_t
     // The comparison above clause fully used any temporaries associated with expr
     lua_stack_level = lua_stack_level_saved;
 
-    CG_PUSH_MAIN_INDENT(then, 2);
+    CG_PUSH_MAIN_INDENT2(then);
     CG_LUA_PUSH_EVAL(then_expr, LUA_EXPR_PRI_ROOT);
 
     cg_lua_store(cg_main_output, result, sem_type_result, sem_type_then_expr, then_expr_value.ptr);
@@ -1191,7 +1198,7 @@ static void cg_lua_expr_case(ast_node *case_expr, CSTR str, charbuf *value, int3
 
   bprintf(cg_main_output, "repeat\n");
 
-  CG_PUSH_MAIN_INDENT(do, 2);
+  CG_PUSH_MAIN_INDENT2(do);
 
   // if the form is case expr when ... then save the expr in a temporary
   if (expr) {
@@ -1437,7 +1444,7 @@ static void cg_lua_func_coalesce(ast_node *call_ast, charbuf *value) {
   CG_LUA_SETUP_RESULT_VAR(call_ast, sem_type_result);
 
   bprintf(cg_main_output, "repeat\n");
-  CG_PUSH_MAIN_INDENT(do, 2);
+  CG_PUSH_MAIN_INDENT2(do);
   for (ast_node *ast = arg_list; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -1728,12 +1735,14 @@ static void cg_lua_expr_select(ast_node *ast, CSTR op, charbuf *value, int32_t p
 
   cg_lua_bound_sql_statement(NULL, ast, CG_PREPARE | CG_MINIFY_ALIASES);
 
+  MK_TMP_STMT_STR(lua_prepared_statement_idx);
+
   // exactly one column is allowed, already checked in semantic analysis, fetch it
-  bprintf(cg_main_output, "_rc_ = cql_step(_temp_stmt)\n");
+  bprintf(cg_main_output, "_rc_ = cql_step(%s)\n", tmp_stmt_name_idx);
   cg_lua_error_on_rc_notequal("CQL_ROW");
-  cg_lua_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
-  bprintf(cg_main_output, "cql_finalize_stmt(_temp_stmt)\n");
-  bprintf(cg_main_output, "_temp_stmt = nil\n");
+  cg_lua_get_column(sem_type_result, tmp_stmt_name_idx, 0, result_var.ptr, cg_main_output);
+  bprintf(cg_main_output, "cql_finalize_stmt(%s)\n", tmp_stmt_name_idx);
+  bprintf(cg_main_output, "%s = nil\n", tmp_stmt_name_idx);
 
   CG_LUA_CLEANUP_RESULT_VAR();
 }
@@ -1761,11 +1770,13 @@ static void cg_lua_expr_select_frag(ast_node *ast, charbuf *value) {
 
   cg_lua_bound_sql_statement(NULL, ast, CG_PREPARE | CG_MINIFY_ALIASES);
 
+  MK_TMP_STMT_STR(lua_prepared_statement_idx);
+
   // exactly one column is allowed, already checked in semantic analysis, fetch it
-  bprintf(cg_main_output, "_rc_ = cql_step(_temp_stmt)\n");
+  bprintf(cg_main_output, "_rc_ = cql_step(%s)\n", tmp_stmt_name_idx);
   cg_lua_error_on_expr("_rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE");
   bprintf(cg_main_output, "if _rc_ == CQL_ROW then\n");
-  cg_lua_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
+  cg_lua_get_column(sem_type_result, tmp_stmt_name_idx, 0, result_var.ptr, cg_main_output);
 
   CG_LUA_CLEANUP_RESULT_VAR();
 
@@ -1817,8 +1828,9 @@ static void cg_lua_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *value
   CG_LUA_POP_EVAL(expr);
 
   bprintf(cg_main_output, "end\n");
-  bprintf(cg_main_output, "cql_finalize_stmt(_temp_stmt)\n");
-  bprintf(cg_main_output, "_temp_stmt = nil\n");
+  MK_TMP_STMT_STR(lua_prepared_statement_idx);
+  bprintf(cg_main_output, "cql_finalize_stmt(%s)\n", tmp_stmt_name_idx);
+  bprintf(cg_main_output, "%s = nil\n", tmp_stmt_name_idx);
 
   CHARBUF_CLOSE(select_value);
 
@@ -1869,8 +1881,9 @@ static void cg_lua_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbu
   cg_lua_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_select, select_value.ptr);
   bprintf(cg_main_output, "end\n");
   bprintf(cg_main_output, "_rc_ = CQL_OK\n");
-  bprintf(cg_main_output, "cql_finalize_stmt(_temp_stmt)\n");
-  bprintf(cg_main_output, "_temp_stmt = nil\n");
+  MK_TMP_STMT_STR(lua_prepared_statement_idx);
+  bprintf(cg_main_output, "cql_finalize_stmt(%s)\n", tmp_stmt_name_idx);
+  bprintf(cg_main_output, "%s = nil\n", tmp_stmt_name_idx);
 
   CHARBUF_CLOSE(select_value);
 
@@ -1921,7 +1934,7 @@ static void cg_lua_elseif_list(ast_node *ast, ast_node *elsenode) {
 
     // ELSE IF [cond_action]
     bprintf(cg_main_output, "else\n");
-      CG_PUSH_MAIN_INDENT(else, 2);
+      CG_PUSH_MAIN_INDENT2(else);
       cg_lua_cond_action(cond_action);
       cg_lua_elseif_list(ast->right, elsenode);
       CG_POP_MAIN_INDENT(else);
@@ -2229,6 +2242,10 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   bool_t calls_out_union = has_out_union_call(ast);
   proc_cte_index = 0;
   lua_cur_bound_statement = 0;
+  int32_t lua_prepared_statement_idx_saved = lua_prepared_statement_idx;
+  lua_prepared_statement_idx = 0;
+  int32_t lua_last_temp_statement_idx_saved = lua_last_temp_statement_idx;
+  lua_last_temp_statement_idx = lua_first_temp_statement_idx = 0;
 
   // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
@@ -2444,6 +2461,8 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   lua_rcthrown_used = saved_lua_rcthrown_used;
   Invariant(!strcmp(lua_error_target, CQL_CLEANUP_DEFAULT_LABEL));
   Invariant(!strcmp(lua_rcthrown_current, CQL_LUA_RCTHROWN_DEFAULT));
+  lua_prepared_statement_idx = lua_prepared_statement_idx_saved;
+  lua_last_temp_statement_idx = lua_last_temp_statement_idx_saved;
 }
 
 static void cg_lua_declare_simple_var(sem_t sem_type, CSTR name) {
@@ -2552,13 +2571,22 @@ static void cg_lua_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR v
 
 // Emit a declaration for the temporary statement _temp_stmt_ if we haven't
 // already done so.  Also emit the cleanup once.
-static void lua_ensure_temp_statement() {
-  if (!lua_temp_statement_emitted) {
-    bprintf(cg_declarations_output, "local _temp_stmt = nil\n");
-    bprintf(cg_cleanup_output, "  cql_finalize_stmt(_temp_stmt)\n");
-    bprintf(cg_cleanup_output, "  _temp_stmt = nil\n");
-    lua_temp_statement_emitted = true;
+static void lua_ensure_temp_statement(int32_t idx) {
+  if (lua_temp_statement_emitted && idx <= lua_last_temp_statement_idx) {
+    if (idx == 0 && idx != lua_first_temp_statement_idx) {
+        lua_first_temp_statement_idx = idx;
+    }
+    else return;
   }
+  MK_TMP_STMT_STR(idx);
+  bprintf(cg_declarations_output, "local %s = nil\n", tmp_stmt_name_idx);
+  bprintf(cg_cleanup_output, "  cql_finalize_stmt(%s)\n", tmp_stmt_name_idx);
+  bprintf(cg_cleanup_output, "  %s = nil\n", tmp_stmt_name_idx);
+  if (!lua_temp_statement_emitted) {
+    lua_first_temp_statement_idx = idx;
+  }
+  lua_temp_statement_emitted = true;
+  lua_last_temp_statement_idx = idx;
 }
 
 // This tells us how many fragments we emitted using some size math
@@ -2678,7 +2706,7 @@ static void cg_lua_fragment_cond_action(ast_node *ast, charbuf *buffer) {
 
   int32_t cur_fragment_predicate_saved = lua_cur_fragment_predicate;
 
-  CG_PUSH_MAIN_INDENT(ifbody, 2);
+  CG_PUSH_MAIN_INDENT2(ifbody);
   cg_lua_fragment_setpred();
 
   // and we emit the next statement string fragment
@@ -2700,7 +2728,7 @@ static void cg_lua_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charb
 
     // ELSE IF [cond_action]
     bprintf(cg_main_output, "else\n");
-      CG_PUSH_MAIN_INDENT(else, 2);
+      CG_PUSH_MAIN_INDENT2(else);
       cg_lua_fragment_cond_action(cond_action, buffer);
       cg_lua_fragment_elseif_list(ast->right, elsenode, buffer);
       CG_POP_MAIN_INDENT(else);
@@ -2712,7 +2740,7 @@ static void cg_lua_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charb
     EXTRACT(stmt_list, elsenode->left);
 
     bprintf(cg_main_output, "else\n");
-      CG_PUSH_MAIN_INDENT(else, 2);
+      CG_PUSH_MAIN_INDENT2(else);
 
       int32_t cur_fragment_predicate_saved = lua_cur_fragment_predicate;
       cg_lua_fragment_setpred();
@@ -3141,9 +3169,14 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
   uint32_t count = 0;
   for (list_item *item = vars; item; item = item->next, count++) ;
 
+  char stmt_name_idx[64];
   if (stmt_name == NULL && has_prepare_stmt) {
-    lua_ensure_temp_statement();
-    stmt_name = "_temp";
+    if (lua_in_loop) {
+      ++lua_prepared_statement_idx;
+    }
+    lua_ensure_temp_statement(lua_prepared_statement_idx);
+    stmt_name = stmt_name_idx;
+    snprintf(stmt_name_idx, sizeof(stmt_name_idx), "_temp%d", lua_prepared_statement_idx);
   }
 
   // take care of what's left in the buffer after the other fragments have been emitted
@@ -3158,6 +3191,9 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
       bprintf(cg_main_output, "_rc_ = cql_exec%s(_db_,\n  ", suffix);
     }
     else {
+      if (lua_in_loop && stmt_name == stmt_name_idx) {
+        bprintf(cg_main_output, "if %s_stmt == nil then\n  ", stmt_name);
+      }
       bprintf(cg_main_output, "_rc_, %s_stmt = cql_prepare%s(_db_, \n  ", stmt_name, suffix);
     }
 
@@ -3196,6 +3232,9 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
     bprintf(cg_main_output, ")\n");
   }
   cg_lua_error_on_not_sqlite_ok();
+  if (lua_in_loop && stmt_name == stmt_name_idx) {
+    bprintf(cg_main_output, "end\n  ");
+  }
 
   CHARBUF_CLOSE(temp);
 
@@ -3241,8 +3280,7 @@ static void cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t c
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = cql_step(%s_stmt)\n", stmt_name);
     cg_lua_error_on_rc_notequal("CQL_DONE");
-    bprintf(cg_main_output, "cql_finalize_stmt(%s_stmt)\n", stmt_name);
-    bprintf(cg_main_output, "%s_stmt = nil\n", stmt_name);
+    bprintf(cg_main_output, "cql_reset_stmt(%s_stmt)\n", stmt_name);
   }
 
   // vars is pool allocated, so we don't need to free it
@@ -3681,7 +3719,7 @@ static void cg_lua_update_cursor_stmt(ast_node *ast) {
 
   bprintf(cg_main_output, "if %s._has_row_ then\n", name);
 
-  CG_PUSH_MAIN_INDENT(stores, 2);
+  CG_PUSH_MAIN_INDENT2(stores);
 
   ast_node *col = name_list;
   ast_node *val = insert_list;
@@ -3760,7 +3798,7 @@ static void cg_lua_switch_stmt(ast_node *ast) {
 
   bprintf(cg_main_output, "repeat\n");
 
-  CG_PUSH_MAIN_INDENT(cases, 2);
+  CG_PUSH_MAIN_INDENT2(cases);
 
   bool_t first_case = true;
 
@@ -3851,7 +3889,9 @@ static void cg_lua_while_stmt(ast_node *ast) {
   // note that not(nil) is true in lua because nil is falsey
   // so we correctly break out of the while if the expression's value is nil
   cg_lua_to_bool(sem_type, &expr_value);
+  CG_PUSH_MAIN_INDENT2(loop);
   bprintf(cg_main_output, "if not(%s) then break end\n", expr_value.ptr);
+  CG_POP_MAIN_INDENT(loop);
 
   bool_t loop_saved = lua_in_loop;
   lua_in_loop = true;
@@ -3892,7 +3932,7 @@ static void cg_lua_loop_stmt(ast_node *ast) {
   // LOOP [fetch_stmt] BEGIN [stmt_list] END
 
   bprintf(cg_main_output, "while true\ndo\n");
-  CG_PUSH_MAIN_INDENT(loop, 2);
+  CG_PUSH_MAIN_INDENT2(loop);
 
   cg_lua_fetch_stmt(fetch_stmt);
 

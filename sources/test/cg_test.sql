@@ -496,20 +496,20 @@ fetch exchange_cursor into arg1, arg2;
 close exchange_cursor;
 
 -- TEST: simple nested select
--- + _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- + _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +  "SELECT ? + 1"
--- + cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+-- + cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i2);
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
--- + _rc_ = sqlite3_step(_temp_stmt);
+-- + _rc_ = sqlite3_step(_temp0_stmt);
 -- + if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
--- + i2 = sqlite3_column_int(_temp_stmt, 0);
--- + cql_finalize_stmt(&_temp_stmt);
+-- + i2 = sqlite3_column_int(_temp0_stmt, 0);
+-- + cql_finalize_stmt(&_temp0_stmt);
 set i2 := (select i2+1);
 
 -- TEST: nested select with nullable
 -- validate just the different bit
--- + cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+-- + cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
 -- +               CQL_DATA_TYPE_INT32, &i0_nullable);
 set i0_nullable := (select i0_nullable+1);
 
@@ -519,7 +519,7 @@ set i0_nullable := (select i0_nullable+1);
 delete from bar where name like '\\ " \n';
 
 -- TEST: binding an out parameter
--- + cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+-- + cql_multibind(&_rc_, _db_, &_temp0_stmt, 1,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, *foo);
 create procedure outparm_test(out foo integer not null)
 begin
@@ -1321,7 +1321,7 @@ end;
 -- + @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123;
 -- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
--- + cql_multibind(&_rc_, _db_, &_temp_stmt, 5,
+-- + cql_multibind(&_rc_, _db_, &_temp0_stmt, 5,
 -- +4              CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, _seed_);
 create proc dummy_user()
@@ -1470,11 +1470,11 @@ create table blob_table (
 );
 
 -- TEST: fetch a nullable blob
--- + cql_column_nullable_blob_ref(_temp_stmt, 0, &blob_var);
+-- + cql_column_nullable_blob_ref(_temp0_stmt, 0, &blob_var);
 set blob_var := (select b_nullable from blob_table where blob_id = 1);
 
 -- TEST: fetch a not null blob
--- + cql_column_blob_ref(_temp_stmt, 0, &_tmp_blob_0);
+-- + cql_column_blob_ref(_temp0_stmt, 0, &_tmp_blob_0);
 set blob_var := (select b_notnull from blob_table where blob_id = 1);
 
 -- some not null blob object we can use
@@ -1486,7 +1486,7 @@ set blob_var_notnull := blob_notnull_func();
 -- TEST: bind a nullable blob and a not null blob
 -- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
 -- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)"
--- + cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
+-- + cql_multibind(&_rc_, _db_, &_temp0_stmt, 2,
 -- +               CQL_DATA_TYPE_BLOB, blob_var,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, blob_var_notnull);
 insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_var_notnull);
@@ -1869,7 +1869,7 @@ end;
 declare select func SqlUserFunc(id integer) real not null;
 
 -- TEST: invoke a declared user function
--- + _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- + _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +  "SELECT SqlUserFunc(123)"
 set r2 := (select SqlUserFunc(123));
 
@@ -1885,7 +1885,7 @@ set r2 := (select SqlUserFunc(123));
 -- + cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_,
 -- + cql_nullable_double size_, cql_int32 *_Nonnull out_arg)
 -- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)"
--- + cql_multibind(&_rc_, _db_, &_temp_stmt, 3,
+-- + cql_multibind(&_rc_, _db_, &_temp0_stmt, 3,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, blob_id_,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, b_notnull_,
 -- +               CQL_DATA_TYPE_BLOB, b_nullable_);
@@ -2097,22 +2097,22 @@ set i2 := 'x' LIKE 'y';
 set i2 := 'x' NOT LIKE 'y';
 
 -- TEST: use like in a SQL statement
--- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +  _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +  "SELECT 'x' LIKE 'y'"
 set i2 := (select 'x' LIKE 'y');
 
 -- TEST: use not like in a SQL statement
--- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +  _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +  "SELECT 'x' NOT LIKE 'y'"
 set i2 := (select 'x' NOT LIKE 'y');
 
 -- TEST: use match in a SQL statement
--- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +  _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +  "SELECT 'x' MATCH 'y'"
 set i2 := (select 'x' MATCH 'y');
 
 -- TEST: use glob in a SQL statement
--- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +  _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +  "SELECT 'x' GLOB 'y'"
 set i2 := (select 'x' GLOB 'y');
 
@@ -2448,7 +2448,7 @@ BEGIN
 END;
 
 -- TEST: try to use a WITH_SELECT form in a select expression
--- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +  _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +   "WITH "
 -- +   "threads2 (count) AS (SELECT 1) "
 -- +   "SELECT COUNT(*) "
@@ -2702,7 +2702,7 @@ begin
 end;
 
 -- TEST: generate a compound select statement in an expression (this is a legal form)
--- + _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- + _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- + "SELECT 1 "
 -- + "WHERE 0 "
 -- + "UNION "
@@ -3834,7 +3834,7 @@ insert into virtual_with_hidden(vx, vy) values(1,2);
 -- TEST: get row from the bar table or else -1
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (_rc_ == SQLITE_ROW) {
--- +   cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_1);
+-- +   cql_column_nullable_int32(_temp0_stmt, 0, &_tmp_n_int_1);
 -- +   cql_set_nullable(i0_nullable, _tmp_n_int_1.is_null, _tmp_n_int_1.value);
 -- + }
 -- + else {
@@ -3845,18 +3845,18 @@ set i0_nullable := (select type from bar if nothing -1);
 -- TEST: normal code gen for if nothing throw
 -- + SET i0_nullable := ( SELECT type
 -- + FROM bar IF NOTHING THROW );
--- + _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- + _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- +   "SELECT type "
 -- +     "FROM bar");
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
--- + _rc_ = sqlite3_step(_temp_stmt);
+-- + _rc_ = sqlite3_step(_temp0_stmt);
 -- + if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
 set i0_nullable := (select type from bar if nothing throw);
 
 -- TEST: get row from bar if no row or null -1
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (_rc_ == SQLITE_ROW) {
--- +   cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_1);
+-- +   cql_column_nullable_int32(_temp0_stmt, 0, &_tmp_n_int_1);
 -- + }
 -- + if (_rc_ == SQLITE_DONE || _tmp_n_int_1.is_null) {
 -- +   i2 = - 1;
@@ -3868,7 +3868,7 @@ set i2 := (select type from bar if nothing or null -1);
 -- TEST: get row from the bar table or else ""
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (_rc_ == SQLITE_ROW) {
--- +   cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
+-- +   cql_column_nullable_string_ref(_temp0_stmt, 0, &_tmp_n_text_1);
 -- +   cql_set_string_ref(&t0_nullable, _tmp_n_text_1);
 -- + }
 -- + else {
@@ -3879,7 +3879,7 @@ set t0_nullable := (select name from bar if nothing "");
 -- TEST: get row from the bar table or else "garbonzo"
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + if (_rc_ == SQLITE_ROW) {
--- +   cql_column_nullable_string_ref(_temp_stmt, 0, &_tmp_n_text_1);
+-- +   cql_column_nullable_string_ref(_temp0_stmt, 0, &_tmp_n_text_1);
 -- + }
 -- + if (_rc_ == SQLITE_DONE || !_tmp_n_text_1) {
 -- +   cql_set_string_ref(&t2, _literal_%_garbonzo_);
@@ -5207,7 +5207,7 @@ begin
 end;
 
 -- TEST: likely() is correctly emitted
--- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- +  _rc_ = cql_prepare(_db_, &_temp0_stmt,
 -- + "SELECT likely(1)");
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 set b2 := ( select likely(1) );

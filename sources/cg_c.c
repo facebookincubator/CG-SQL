@@ -172,6 +172,13 @@ static bool_t has_conditional_fragments;
 static bool_t has_shared_fragments;
 static bool_t has_variables;
 
+// Mark to not emit duplicated initialization/deinitialization code
+static int32_t c_last_temp_statement_idx;
+static int32_t c_first_temp_statement_idx;
+
+// Each prepared statement in a proc gets a unique index
+static int32_t c_prepared_statement_idx;
+
 // Each bound statement in a proc gets a unique index
 static int32_t cur_bound_statement;
 
@@ -1502,7 +1509,7 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
       bprintf(cg_main_output, "else {\n");
       // Left is not true, it's null or false.  We need the right.
       // We already stored the statements right needs (if any).  Spit those out now.
-      CG_PUSH_MAIN_INDENT(r, 2);
+      CG_PUSH_MAIN_INDENT2(r);
       bprintf(cg_main_output, "%s", right_eval.ptr);
 
       if (!is_nullable(sem_type_result)) {
@@ -1614,7 +1621,7 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
       bprintf(cg_main_output, "else {\n");
       // Left is not false, it's null or true.  We need the right.
       // We already stored the statements right needs (if any).  Spit those out now.
-      CG_PUSH_MAIN_INDENT(r, 2);
+      CG_PUSH_MAIN_INDENT2(r);
       bprintf(cg_main_output, "%s", right_eval.ptr);
 
       if (!is_nullable(sem_type_result)) {
@@ -1908,7 +1915,7 @@ static void cg_expr_in_pred_or_not_in(
 
   bprintf(cg_main_output, "do {\n");
 
-  CG_PUSH_MAIN_INDENT(do, 2);
+  CG_PUSH_MAIN_INDENT2(do);
 
   cg_line_directive_min(expr, cg_main_output);
 
@@ -2002,7 +2009,7 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
     // The comparison above clause fully used any temporaries associated with expr
     stack_level = stack_level_saved;
 
-    CG_PUSH_MAIN_INDENT(then, 2);
+    CG_PUSH_MAIN_INDENT2(then);
     CG_PUSH_EVAL(then_expr, C_EXPR_PRI_ROOT);
 
     cg_store(cg_main_output, result, sem_type_result, sem_type_then_expr, then_expr_is_null.ptr, then_expr_value.ptr);
@@ -2070,7 +2077,7 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
   cg_line_directive_min(case_expr, cg_main_output);
   bprintf(cg_main_output, "do {\n");
 
-  CG_PUSH_MAIN_INDENT(do, 2);
+  CG_PUSH_MAIN_INDENT2(do);
 
   // if the form is case expr when ... then save the expr in a temporary
   if (expr) {
@@ -2420,7 +2427,7 @@ static void cg_func_coalesce(ast_node *call_ast, charbuf *is_null, charbuf *valu
 
   cg_line_directive_min(call_ast, cg_main_output);
   bprintf(cg_main_output, "do {\n");
-  CG_PUSH_MAIN_INDENT(do, 2);
+  CG_PUSH_MAIN_INDENT2(do);
   for (ast_node *ast = arg_list; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -2745,11 +2752,13 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
 
   cg_bound_sql_statement(NULL, ast, CG_PREPARE | CG_MINIFY_ALIASES);
 
+  MK_TMP_STMT_STR(c_prepared_statement_idx);
+
   // exactly one column is allowed, already checked in semantic analysis, fetch it
-  bprintf(cg_main_output, "_rc_ = sqlite3_step(_temp_stmt);\n");
+  bprintf(cg_main_output, "_rc_ = sqlite3_step(%s);\n", tmp_stmt_name_idx);
   cg_error_on_rc_notequal("SQLITE_ROW");
-  cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
-  bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
+  cg_get_column(sem_type_result, tmp_stmt_name_idx, 0, result_var.ptr, cg_main_output);
+  bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", tmp_stmt_name_idx);
 
   CG_CLEANUP_RESULT_VAR();
 }
@@ -2777,11 +2786,13 @@ static void cg_expr_select_frag(ast_node *ast, charbuf *is_null, charbuf *value)
 
   cg_bound_sql_statement(NULL, ast, CG_PREPARE | CG_MINIFY_ALIASES);
 
+  MK_TMP_STMT_STR(c_prepared_statement_idx);
+
   // exactly one column is allowed, already checked in semantic analysis, fetch it
-  bprintf(cg_main_output, "_rc_ = sqlite3_step(_temp_stmt);\n");
+  bprintf(cg_main_output, "_rc_ = sqlite3_step(%s);\n", tmp_stmt_name_idx);
   cg_error_on_expr("_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE");
   bprintf(cg_main_output, "if (_rc_ == SQLITE_ROW) {\n");
-  cg_get_column(sem_type_result, "_temp_stmt", 0, result_var.ptr, cg_main_output);
+  cg_get_column(sem_type_result, tmp_stmt_name_idx, 0, result_var.ptr, cg_main_output);
 
   CG_CLEANUP_RESULT_VAR();
 
@@ -2835,7 +2846,8 @@ static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, 
   CG_POP_EVAL(expr);
 
   bprintf(cg_main_output, "}\n");
-  bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
+  MK_TMP_STMT_STR(c_prepared_statement_idx);
+  bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", tmp_stmt_name_idx);
 
   CHARBUF_CLOSE(select_value);
   CHARBUF_CLOSE(select_is_null);
@@ -2888,7 +2900,8 @@ static void cg_expr_select_if_nothing_or_null(ast_node *ast, CSTR op, charbuf *i
   cg_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_select, select_is_null.ptr, select_value.ptr);
   bprintf(cg_main_output, "}\n");
   bprintf(cg_main_output, "_rc_ = SQLITE_OK;\n");
-  bprintf(cg_main_output, "cql_finalize_stmt(&_temp_stmt);\n");
+  MK_TMP_STMT_STR(c_prepared_statement_idx);
+  bprintf(cg_main_output, "cql_finalize_stmt(&%s);\n", tmp_stmt_name_idx);
 
   CHARBUF_CLOSE(select_value);
   CHARBUF_CLOSE(select_is_null);
@@ -2939,7 +2952,7 @@ static void cg_elseif_list(ast_node *ast, ast_node *elsenode) {
 
     // ELSE IF [cond_action]
     bprintf(cg_main_output, "else {\n");
-      CG_PUSH_MAIN_INDENT(else, 2);
+      CG_PUSH_MAIN_INDENT2(else);
       cg_cond_action(cond_action);
       cg_elseif_list(ast->right, elsenode);
       CG_POP_MAIN_INDENT(else);
@@ -3640,6 +3653,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bool_t calls_out_union = has_out_union_call(ast);
   proc_cte_index = 0;
   cur_bound_statement = 0;
+  int32_t c_prepared_statement_idx_saved = c_prepared_statement_idx;
+  c_prepared_statement_idx = 0;
+  int32_t c_last_temp_statement_idx_saved = c_last_temp_statement_idx;
+  c_last_temp_statement_idx = c_first_temp_statement_idx = 0;
 
   // sets base_fragment_name as well for the current fragment
   uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
@@ -3930,6 +3947,8 @@ static void cg_create_proc_stmt(ast_node *ast) {
   rcthrown_used = saved_rcthrown_used;
   Invariant(!strcmp(error_target, CQL_CLEANUP_DEFAULT_LABEL));
   Invariant(!strcmp(rcthrown_current, CQL_RCTHROWN_DEFAULT));
+  c_prepared_statement_idx = c_prepared_statement_idx_saved;
+  c_last_temp_statement_idx = c_last_temp_statement_idx_saved;
 }
 
 // Here we have to emit the prototype for the declared function as a C prototype
@@ -4271,12 +4290,21 @@ static void cg_bind_column(sem_t sem_type, CSTR var) {
 
 // Emit a declaration for the temporary statement _temp_stmt_ if we haven't
 // already done so.  Also emit the cleanup once.
-static void ensure_temp_statement() {
-  if (!temp_statement_emitted) {
-    bprintf(cg_declarations_output, "sqlite3_stmt *_temp_stmt = NULL;\n");
-    bprintf(cg_cleanup_output, "  cql_finalize_stmt(&_temp_stmt);\n");
-    temp_statement_emitted = true;
+static void ensure_temp_statement(int32_t idx) {
+  if (temp_statement_emitted && idx <= c_last_temp_statement_idx) {
+    if (idx == 0 && idx != c_first_temp_statement_idx) {
+        c_first_temp_statement_idx = idx;
+    }
+    else return;
   }
+  MK_TMP_STMT_STR(idx);
+  bprintf(cg_declarations_output, "sqlite3_stmt *%s = NULL;\n", tmp_stmt_name_idx);
+  bprintf(cg_cleanup_output, "  cql_finalize_stmt(&%s);\n", tmp_stmt_name_idx);
+  if (!temp_statement_emitted) {
+    c_first_temp_statement_idx = idx;
+  }
+  temp_statement_emitted = true;
+  c_last_temp_statement_idx = idx;
 }
 
 // Now we either find the piece already and get its number or else
@@ -4542,7 +4570,7 @@ static void cg_fragment_cond_action(ast_node *ast, charbuf *buffer) {
 
   int32_t cur_fragment_predicate_saved = cur_fragment_predicate;
 
-  CG_PUSH_MAIN_INDENT(ifbody, 2);
+  CG_PUSH_MAIN_INDENT2(ifbody);
   cg_fragment_setpred();
 
   // and we emit the next statement string fragment
@@ -4565,7 +4593,7 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
 
     // ELSE IF [cond_action]
     bprintf(cg_main_output, "else {\n");
-      CG_PUSH_MAIN_INDENT(else, 2);
+      CG_PUSH_MAIN_INDENT2(else);
       cg_fragment_cond_action(cond_action, buffer);
       cg_fragment_elseif_list(ast->right, elsenode, buffer);
       CG_POP_MAIN_INDENT(else);
@@ -4578,7 +4606,7 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
     EXTRACT(stmt_list, elsenode->left);
 
     bprintf(cg_main_output, "else {\n");
-      CG_PUSH_MAIN_INDENT(else, 2);
+      CG_PUSH_MAIN_INDENT2(else);
 
       int32_t cur_fragment_predicate_saved = cur_fragment_predicate;
       cg_fragment_setpred();
@@ -5016,9 +5044,14 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   uint32_t count = 0;
   for (list_item *item = vars; item; item = item->next, count++) ;
 
+  char stmt_name_idx[64];
   if (stmt_name == NULL && has_prepare_stmt) {
-    ensure_temp_statement();
-    stmt_name = "_temp";
+    if (cg_in_loop) {
+      ++c_prepared_statement_idx;
+    }
+    ensure_temp_statement(c_prepared_statement_idx);
+    stmt_name = stmt_name_idx;
+    snprintf(stmt_name_idx, sizeof(stmt_name_idx), "_temp%d", c_prepared_statement_idx);
   }
 
   // take care of what's left in the buffer after the other fragments have been emitted
@@ -5039,6 +5072,9 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
       bprintf(cg_main_output, "_rc_ = cql_exec_frags(_db_,\n");
     }
     else {
+      if (cg_in_loop && stmt_name == stmt_name_idx) {
+        bprintf(cg_main_output, "if ( %s_stmt == %s ) {\n  ", stmt_name, rt->cql_target_null);
+      }
       bprintf(cg_main_output, "_rc_ = cql_prepare_frags(_db_, %s%s_stmt,\n  ", amp, stmt_name);
     }
 
@@ -5053,6 +5089,9 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
       bprintf(cg_main_output, "_rc_ = cql_exec%s(_db_,\n  ", suffix);
     }
     else {
+      if (cg_in_loop && stmt_name == stmt_name_idx) {
+        bprintf(cg_main_output, "if ( %s_stmt == %s ) {\n  ", stmt_name, rt->cql_target_null);
+      }
       bprintf(cg_main_output, "_rc_ = cql_prepare%s(_db_, %s%s_stmt,\n  ", suffix, amp, stmt_name);
     }
 
@@ -5087,6 +5126,9 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
     }
     bprintf(cg_main_output, ");\n");
   }
+  if (cg_in_loop && stmt_name == stmt_name_idx) {
+    bprintf(cg_main_output, "} else _rc_ = SQLITE_OK;\n  ");
+  }
 
   CHARBUF_CLOSE(temp);
 
@@ -5115,7 +5157,7 @@ static void cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_fl
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = sqlite3_step(%s_stmt);\n", stmt_name);
     cg_error_on_rc_notequal("SQLITE_DONE");
-    bprintf(cg_main_output, "cql_finalize_stmt(&%s_stmt);\n", stmt_name);
+    bprintf(cg_main_output, "sqlite3_reset(%s_stmt);\n", stmt_name);
   }
 
   // vars is pool allocated, so we don't need to free it
@@ -5872,7 +5914,7 @@ static void cg_update_cursor_stmt(ast_node *ast) {
 
   bprintf(cg_main_output, "if (%s._has_row_) {\n", name);
 
-  CG_PUSH_MAIN_INDENT(stores, 2);
+  CG_PUSH_MAIN_INDENT2(stores);
 
   ast_node *col = name_list;
   ast_node *val = insert_list;
@@ -5940,7 +5982,7 @@ static void cg_switch_stmt(ast_node *ast) {
   bprintf(cg_main_output, "switch (%s) {\n", expr_value.ptr);
   CG_POP_EVAL(expr);
 
-  CG_PUSH_MAIN_INDENT(cases, 2);
+  CG_PUSH_MAIN_INDENT2(cases);
 
   bool_t first_case = true;
 
@@ -6013,12 +6055,14 @@ static void cg_while_stmt(ast_node *ast) {
 
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
+  CG_PUSH_MAIN_INDENT2(loop);
   if (is_nullable(sem_type)) {
     bprintf(cg_main_output, "if (!cql_is_nullable_true(%s, %s)) break;\n", expr_is_null.ptr, expr_value.ptr);
   }
   else {
     bprintf(cg_main_output, "if (!(%s)) break;\n", expr_value.ptr);
   }
+  CG_POP_MAIN_INDENT(loop);
 
   bool_t loop_saved = cg_in_loop;
   cg_in_loop = true;
@@ -6052,7 +6096,7 @@ static void cg_loop_stmt(ast_node *ast) {
   // LOOP [fetch_stmt] BEGIN [stmt_list] END
 
   bprintf(cg_main_output, "for (;;) {\n");
-  CG_PUSH_MAIN_INDENT(loop, 2);
+  CG_PUSH_MAIN_INDENT2(loop);
 
   cg_fetch_stmt(fetch_stmt);
 

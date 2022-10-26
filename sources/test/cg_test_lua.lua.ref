@@ -201,7 +201,7 @@ local exchange_cursor_stmt = nil
 local exchange_cursor = { _has_row_ = false }
 local exchange_cursor_fields_ = { "arg2", "arg1" }
 local exchange_cursor_types_ = "II"
-local _temp_stmt = nil
+local _temp0_stmt = nil
 
 -- The statement ending at line XXXX
 
@@ -216,23 +216,22 @@ END;
 function outparm_test(_db_)
   local _rc_ = CQL_OK
   local foo = 0
-  local _temp_stmt = nil
+  local _temp0_stmt = nil
 
   foo = 1
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "DELETE FROM bar WHERE id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {foo})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "I", {foo})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_reset_stmt(_temp0_stmt)
   _rc_ = CQL_OK
 
 ::cql_cleanup::
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   return _rc_, foo
 end
 
@@ -1245,22 +1244,21 @@ function insert_values(_db_, id_, type_)
   cql_contract_argument_notnull(id_, 1)
 
   local _rc_ = CQL_OK
-  local _temp_stmt = nil
+  local _temp0_stmt = nil
 
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "INSERT INTO bar(id, type) VALUES(?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "Ii", {id_, type_})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "Ii", {id_, type_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_reset_stmt(_temp0_stmt)
   _rc_ = CQL_OK
 
 ::cql_cleanup::
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   return _rc_
 end
 
@@ -1415,23 +1413,22 @@ END;
 function dummy_user(_db_)
   local _rc_ = CQL_OK
   local _seed_ = 0
-  local _temp_stmt = nil
+  local _temp0_stmt = nil
 
   _seed_ = 123
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_reset_stmt(_temp0_stmt)
   _rc_ = CQL_OK
 
 ::cql_cleanup::
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   return _rc_
 end
 
@@ -2234,23 +2231,22 @@ function multi_rewrite(_db_, blob_id_, b_notnull_, b_nullable_, id_, name_, rate
 
   local _rc_ = CQL_OK
   local out_arg = 0
-  local _temp_stmt = nil
+  local _temp0_stmt = nil
 
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_reset_stmt(_temp0_stmt)
   out_arg = 1
   _rc_ = CQL_OK
 
 ::cql_cleanup::
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   return _rc_, out_arg
 end
 
@@ -2428,7 +2424,7 @@ function call_in_loop(_db_)
   i = 0
   while true
   do
-  if not(i < 5) then break end
+    if not(i < 5) then break end
     i = i + 1
     cql_finalize_stmt(C_stmt)
     _rc_, C_stmt = simple_select(_db_)
@@ -2472,7 +2468,7 @@ function call_in_loop_with_nullable_condition(_db_)
   i = 0
   while true
   do
-  if not(cql_lt(i, 5)) then break end
+    if not(cql_lt(i, 5)) then break end
     i = cql_add(i, 1)
     cql_finalize_stmt(C_stmt)
     _rc_, C_stmt = simple_select(_db_)
@@ -2524,7 +2520,7 @@ function call_in_loop_boxed(_db_)
   i = 0
   while true
   do
-  if not(i < 5) then break end
+    if not(i < 5) then break end
     i = i + 1
     C_stmt = nil
     _rc_, C_stmt = simple_select(_db_)
@@ -2632,7 +2628,7 @@ function call_out_union_in_loop(_db_)
   i = 0
   while true
   do
-  if not(i < 5) then break end
+    if not(i < 5) then break end
     i = i + 1
     C_result_set_ = out_union_helper_fetch_results()
     C_row_num_ = 0
@@ -3345,22 +3341,22 @@ function use_with_select(_db_)
   local _rc_ = CQL_OK
   local x
   local _tmp_int_0 = 0
-  local _temp_stmt = nil
+  local _temp0_stmt = nil
 
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "WITH threads2 (count) AS (SELECT 1) SELECT COUNT(*) FROM threads2")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_int_0 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_int_0 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   x = _tmp_int_0
   _rc_ = CQL_OK
 
 ::cql_cleanup::
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   return _rc_
 end
 
@@ -3460,22 +3456,21 @@ function upsert_do_nothing(_db_, id_)
   cql_contract_argument_notnull(id_, 1)
 
   local _rc_ = CQL_OK
-  local _temp_stmt = nil
+  local _temp0_stmt = nil
 
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "INSERT INTO foo(id) VALUES(?) ON CONFLICT DO NOTHING")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {id_})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "I", {id_})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_reset_stmt(_temp0_stmt)
   _rc_ = CQL_OK
 
 ::cql_cleanup::
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   return _rc_
 end
 local _seed_ = 0
@@ -3876,22 +3871,22 @@ function compound_select_expr(_db_)
   local _rc_ = CQL_OK
   local x
   local _tmp_int_0 = 0
-  local _temp_stmt = nil
+  local _temp0_stmt = nil
 
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT 1 WHERE 0 UNION SELECT 2 LIMIT 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_int_0 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_int_0 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   x = _tmp_int_0
   _rc_ = CQL_OK
 
 ::cql_cleanup::
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   return _rc_
 end
 
@@ -4100,7 +4095,7 @@ function empty_blocks(_db_)
   end
   while true
   do
-  if not(true) then break end
+    if not(true) then break end
   end
   _rc_, c_stmt = cql_prepare(_db_, 
     "SELECT 1")
@@ -6781,7 +6776,7 @@ function out_decl_loop_test(x)
 
   while true
   do
-  if not(true) then break end
+    if not(true) then break end
     u, v = out2_proc(x)
     u, v = out2_proc(x)
   end
@@ -8962,32 +8957,32 @@ function cql_startup(_db_)
   --[[
   SET i2 := ( SELECT i2 + 1 );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT ? + 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {i2})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "I", {i2})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    i2 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    i2 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
   --[[
   SET i0_nullable := ( SELECT i0_nullable + 1 );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT ? + 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "i", {i0_nullable})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "i", {i0_nullable})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    i0_nullable = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    i0_nullable = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -9209,14 +9204,14 @@ function cql_startup(_db_)
   --[[
   SET s := ( SELECT printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, nullable(5), TRUE, NULL, FALSE, NULL, 6L, 7, 0.0, NULL, NULL, 8) );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, 5, 1, NULL, 0, NULL, 6, 7, 0.0, NULL, NULL, 8)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    s = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    s = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -9475,14 +9470,14 @@ function cql_startup(_db_)
   SET b2 := ( SELECT EXISTS (SELECT *
     FROM bar) );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT EXISTS (SELECT * FROM bar)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    b2 = cql_to_bool(cql_get_value(_temp_stmt, 0))
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    b2 = cql_to_bool(cql_get_value(_temp0_stmt, 0))
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -9707,14 +9702,14 @@ function cql_startup(_db_)
     FROM blob_table
     WHERE blob_id = 1 );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT b_nullable FROM blob_table WHERE blob_id = 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    blob_var = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    blob_var = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -9723,14 +9718,14 @@ function cql_startup(_db_)
     FROM blob_table
     WHERE blob_id = 1 );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT b_notnull FROM blob_table WHERE blob_id = 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_blob_0 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_blob_0 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   blob_var = _tmp_blob_0
 
   -- The statement ending at line XXXX
@@ -9745,15 +9740,14 @@ function cql_startup(_db_)
   --[[
   INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "bB", {blob_var, blob_var_notnull})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "bB", {blob_var, blob_var_notnull})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_reset_stmt(_temp0_stmt)
 
   -- The statement ending at line XXXX
 
@@ -9811,14 +9805,14 @@ function cql_startup(_db_)
   --[[
   SET r2 := ( SELECT SqlUserFunc(123) );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT SqlUserFunc(123)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    r2 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    r2 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -9857,14 +9851,14 @@ function cql_startup(_db_)
   --[[
   SET i2 := ( SELECT 'x' LIKE 'y' );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT 'x' LIKE 'y'")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp_stmt, 0))
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp0_stmt, 0))
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   i2 = cql_to_num(_tmp_bool_0)
 
   -- The statement ending at line XXXX
@@ -9872,14 +9866,14 @@ function cql_startup(_db_)
   --[[
   SET i2 := ( SELECT 'x' NOT LIKE 'y' );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT 'x' NOT LIKE 'y'")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp_stmt, 0))
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp0_stmt, 0))
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   i2 = cql_to_num(_tmp_bool_0)
 
   -- The statement ending at line XXXX
@@ -9887,14 +9881,14 @@ function cql_startup(_db_)
   --[[
   SET i2 := ( SELECT 'x' MATCH 'y' );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT 'x' MATCH 'y'")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp_stmt, 0))
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp0_stmt, 0))
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   i2 = cql_to_num(_tmp_bool_0)
 
   -- The statement ending at line XXXX
@@ -9902,14 +9896,14 @@ function cql_startup(_db_)
   --[[
   SET i2 := ( SELECT 'x' GLOB 'y' );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT 'x' GLOB 'y'")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp_stmt, 0))
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_bool_0 = cql_to_bool(cql_get_value(_temp0_stmt, 0))
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   i2 = cql_to_num(_tmp_bool_0)
 
   -- The statement ending at line XXXX
@@ -9970,16 +9964,16 @@ function cql_startup(_db_)
   --[[
   SET l0_nullable := cql_get_blob_size(( SELECT blob_var ));
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "b", {blob_var})
+  _rc_ = cql_multibind(_db_, _temp0_stmt, "b", {blob_var})
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_n_blob_0 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_n_blob_0 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   l0_nullable = cql_get_blob_size(_tmp_n_blob_0)
 
   -- The statement ending at line XXXX
@@ -10244,19 +10238,19 @@ function cql_startup(_db_)
   SET i0_nullable := ( SELECT type
     FROM bar IF NOTHING -1 );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT type FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if _rc_ == CQL_ROW then
-    _tmp_n_int_1 = cql_get_value(_temp_stmt, 0)
+    _tmp_n_int_1 = cql_get_value(_temp0_stmt, 0)
     i0_nullable = _tmp_n_int_1
   else
     i0_nullable = - 1
   end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -10264,14 +10258,14 @@ function cql_startup(_db_)
   SET i0_nullable := ( SELECT type
     FROM bar IF NOTHING THROW );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT type FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_n_int_0 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_n_int_0 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   i0_nullable = _tmp_n_int_0
 
   -- The statement ending at line XXXX
@@ -10280,13 +10274,13 @@ function cql_startup(_db_)
   SET i2 := ( SELECT type
     FROM bar IF NOTHING OR NULL -1 );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT type FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if _rc_ == CQL_ROW then
-    _tmp_n_int_1 = cql_get_value(_temp_stmt, 0)
+    _tmp_n_int_1 = cql_get_value(_temp0_stmt, 0)
   end
   if _rc_ == CQL_DONE or _tmp_n_int_1 == nil then
     i2 = - 1
@@ -10294,8 +10288,8 @@ function cql_startup(_db_)
     i2 = _tmp_n_int_1
   end
   _rc_ = CQL_OK
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -10303,19 +10297,19 @@ function cql_startup(_db_)
   SET t0_nullable := ( SELECT name
     FROM bar IF NOTHING "" );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT name FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if _rc_ == CQL_ROW then
-    _tmp_n_text_1 = cql_get_value(_temp_stmt, 0)
+    _tmp_n_text_1 = cql_get_value(_temp0_stmt, 0)
     t0_nullable = _tmp_n_text_1
   else
     t0_nullable = ""
   end
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -10323,13 +10317,13 @@ function cql_startup(_db_)
   SET t2 := ( SELECT name
     FROM bar IF NOTHING OR NULL "garbonzo" );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT name FROM bar")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   if _rc_ == CQL_ROW then
-    _tmp_n_text_1 = cql_get_value(_temp_stmt, 0)
+    _tmp_n_text_1 = cql_get_value(_temp0_stmt, 0)
   end
   if _rc_ == CQL_DONE or _tmp_n_text_1 == nil then
     t2 = "garbonzo"
@@ -10337,8 +10331,8 @@ function cql_startup(_db_)
     t2 = _tmp_n_text_1
   end
   _rc_ = CQL_OK
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
 
   -- The statement ending at line XXXX
 
@@ -10584,14 +10578,14 @@ function cql_startup(_db_)
   --[[
   SET b2 := ( SELECT likely(1) );
   --]]
-  _rc_, _temp_stmt = cql_prepare(_db_, 
+  _rc_, _temp0_stmt = cql_prepare(_db_, 
     "SELECT likely(1)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_step(_temp_stmt)
+  _rc_ = cql_step(_temp0_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _tmp_int_0 = cql_get_value(_temp_stmt, 0)
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+    _tmp_int_0 = cql_get_value(_temp0_stmt, 0)
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   b2 = cql_to_bool(_tmp_int_0)
 
   -- The statement ending at line XXXX
@@ -10608,8 +10602,8 @@ function cql_startup(_db_)
   basic_cursor_stmt = nil
   cql_finalize_stmt(exchange_cursor_stmt)
   exchange_cursor_stmt = nil
-  cql_finalize_stmt(_temp_stmt)
-  _temp_stmt = nil
+  cql_finalize_stmt(_temp0_stmt)
+  _temp0_stmt = nil
   cql_finalize_stmt(expanded_select_stmt)
   expanded_select_stmt = nil
   cql_finalize_stmt(table_expanded_select_stmt)
