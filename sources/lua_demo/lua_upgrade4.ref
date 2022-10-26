@@ -157,3 +157,4 @@ tbl_name: use_g3
 CREATE TABLE use_g3(
   id INTEGER,
   name TEXT)
+
