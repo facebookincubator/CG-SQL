@@ -639,7 +639,7 @@ function cql_make_str_key(key_table)
   for k,v in pairs(key_table)
   do
      if k ~= "_has_row_" then
-       key = key .. tostring(v)
+       key = key .. ":" .. tostring(v)
      end
   end
   return key
