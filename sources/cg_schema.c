@@ -130,29 +130,36 @@ static int annotation_comparator(const void *v1, const void *v2) {
 }
 
 // Sort the @recreate annotations in place: the order is:
-//  * group name
+//  * group ordinal
 //  * ordinal reversed
+//
+//  We use create order for groups so that we do the CRC check for the
+//  strongest tables first - wherein we recursively drop children in
+//  drop order and also drop any tables in the correct drop order via
+//  the call to cql_rebuild_recreate_group. We also dirty the CRC for
+//  any children we end up dropping, so we want the children (weak tables) to
+//  follow after the parent (strong table) so that we recreate them.
 //
 //  We use this order so that when we drop tables we will likely drop
 //  tables that are weak first and strong last.  That is the later tables
 //  may have FK to the earlier tables but not the reverse.   We don't want
 //  to cause FK action for no reason since the whole group is being dropped anyway.
 
-//  We have also added capability for recreate groups to FK to other recreate groups.
-//  So we update the order to be the topological order of the recreate group dependency DAG.
 // patternlint-disable-next-line prefer-sized-ints-in-msys
 static int recreate_comparator(const void *v1, const void *v2) {
   const recreate_annotation *a1 = (const recreate_annotation *)v1;
   const recreate_annotation *a2 = (const recreate_annotation *)v2;
 
-  // reverse ordinal order
+  // We need group ordinal to be in create order so that we blow away
+  // strongest groups (groups that other groups depend on) first
   if (a1->group_ordinal != a2->group_ordinal) {
-    return (a1->group_ordinal < a2->group_ordinal) ? 1 : -1;
+    return (a1->group_ordinal < a2->group_ordinal) ? -1 : 1;
   }
 
   // It can't be a tie! ordinal is unique!
   Invariant(a1->ordinal != a2->ordinal);
 
+  // reverse ordinal
   return (a1->ordinal < a2->ordinal) ? 1 : -1;
 }
 
