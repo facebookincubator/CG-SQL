@@ -1551,3 +1551,96 @@ create proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
 begin
   select id_ id, name_ name;
 end;
+
+-- TEST: checking type hashes
+-- + "typeHash" : -3904228771888844557,
+@attribute(cql:backed_by=backing)
+CREATE TABLE name (
+  first TEXT NOT NULL,
+  middle TEXT,
+  last TEXT NOT NULL,
+  PRIMARY KEY (first, last)
+);
+
+-- TEST: checking type hashes
+-- + "typeHash" : 2569358707010711297,
+@attribute(cql:backed_by=backing)
+CREATE TABLE every_type (
+  bool_column BOOL NOT NULL,
+  int32_column INT NOT NULL,
+  int64_column LONG INT NOT NULL,
+  float_column REAL NOT NULL,
+  string_column TEXT NOT NULL,
+  blob_column BLOB NOT NULL,
+  PRIMARY KEY (bool_column)
+);
+
+-- TEST: checking type hashes
+-- + "typeHash" : 2065415439301712821,
+@attribute(cql:backed_by=backing)
+CREATE TABLE continents (
+  country TEXT NOT NULL,
+  africa TEXT NOT NULL,
+  antarctica TEXT NOT NULL,
+  asia TEXT NOT NULL,
+  europe TEXT NOT NULL,
+  north_america TEXT NOT NULL,
+  oceania TEXT NOT NULL,
+  south_america TEXT NOT NULL,
+  PRIMARY KEY (country)
+);
+
+-- TEST: checking type hashes
+-- + "typeHash" : 286092548604229473,
+@attribute(cql:backed_by=backing)
+CREATE TABLE pks_not_first_columns (
+  a BOOL NOT NULL,
+  b INT NOT NULL,
+  c LONG INT NOT NULL,
+  d REAL NOT NULL,
+  e TEXT NOT NULL,
+  f BLOB NOT NULL,
+  PRIMARY KEY (b, d, f)
+);
+
+-- TEST: checking type hashes
+-- + "typeHash" : 1318301014930005084,
+@attribute(cql:backed_by=backing)
+CREATE TABLE only_pks_nonnull (
+  a BOOL NOT NULL,
+  b INT NOT NULL,
+  c LONG INT NOT NULL,
+  d REAL,
+  e TEXT,
+  f BLOB,
+  PRIMARY KEY (a, b, c)
+);
+
+-- TEST: checking type hashes
+-- + "typeHash" : 4076753061676181061,
+@attribute(cql:backed_by=backing)
+CREATE TABLE some_non_pk_nonnull (
+  a BOOL NOT NULL,
+  b INT NOT NULL,
+  c LONG INT NOT NULL,
+  d REAL,
+  e TEXT NOT NULL,
+  f BLOB,
+  PRIMARY KEY (a, b, c)
+);
+
+-- TEST: checking type hashes
+-- + "typeHash" : 8853590320677483837,
+@attribute(cql:backed_by=backing)
+CREATE TABLE _starts_with_underscore (
+  foo INT NOT NULL PRIMARY KEY,
+  bar TEXT
+);
+
+-- TEST: checking type hashes
+-- + "typeHash" : -4787200482362537033,
+@attribute(cql:backed_by=backing)
+CREATE TABLE ends_with_underscore_ (
+  foo TEXT PRIMARY KEY,
+  bar INT
+);

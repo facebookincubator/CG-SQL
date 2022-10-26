@@ -1645,6 +1645,760 @@
       ],
       "checkExpressions" : [
       ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE name(
+      first TEXT NOT NULL,
+      middle TEXT,
+      last TEXT NOT NULL,
+      PRIMARY KEY (first, last)
+    )
+
+    {
+      "name" : "name",
+      "CRC" : "-8609840776327253249",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : -3904228771888844557,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "first",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 4617449399684398850,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "middle",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 4528017236352052234,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "last",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 5290556233374333969,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "first", "last" ],
+      "primaryKeySortOrders" : [ "", "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE every_type(
+      bool_column BOOL NOT NULL,
+      int32_column INTEGER NOT NULL,
+      int64_column LONG_INT NOT NULL,
+      float_column REAL NOT NULL,
+      string_column TEXT NOT NULL,
+      blob_column BLOB NOT NULL,
+      PRIMARY KEY (bool_column)
+    )
+
+    {
+      "name" : "every_type",
+      "CRC" : "2390264747603517131",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : 2569358707010711297,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "bool_column",
+          "type" : "bool",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 1443186251863196780,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "int32_column",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 8296329742438056134,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "int64_column",
+          "type" : "long",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 505733556069586822,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "float_column",
+          "type" : "real",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -4468635629380271825,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "string_column",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 891190055386635961,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "blob_column",
+          "type" : "blob",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 3794774713840919904,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "bool_column" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE continents(
+      country TEXT NOT NULL,
+      africa TEXT NOT NULL,
+      antarctica TEXT NOT NULL,
+      asia TEXT NOT NULL,
+      europe TEXT NOT NULL,
+      north_america TEXT NOT NULL,
+      oceania TEXT NOT NULL,
+      south_america TEXT NOT NULL,
+      PRIMARY KEY (country)
+    )
+
+    {
+      "name" : "continents",
+      "CRC" : "-6994876952747779156",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : 2065415439301712821,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "country",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -2102374144744990836,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "africa",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 394486272270879122,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "antarctica",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -484571078120801565,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "asia",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 5070167738990530560,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "europe",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -2563820107089790621,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "north_america",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -1488744293359706050,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "oceania",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 3577246004614816537,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "south_america",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 2819807441763825719,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "country" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE pks_not_first_columns(
+      a BOOL NOT NULL,
+      b INTEGER NOT NULL,
+      c LONG_INT NOT NULL,
+      d REAL NOT NULL,
+      e TEXT NOT NULL,
+      f BLOB NOT NULL,
+      PRIMARY KEY (b, d, f)
+    )
+
+    {
+      "name" : "pks_not_first_columns",
+      "CRC" : "-784828766026158565",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : 286092548604229473,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "a",
+          "type" : "bool",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 7622422352349572871,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -3377685759483933034,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "c",
+          "type" : "long",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -7733614587723617460,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "d",
+          "type" : "real",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -4894074374016912438,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "e",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 4955917742259176339,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "f",
+          "type" : "blob",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 4727874118774403790,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "b", "d", "f" ],
+      "primaryKeySortOrders" : [ "", "", "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE only_pks_nonnull(
+      a BOOL NOT NULL,
+      b INTEGER NOT NULL,
+      c LONG_INT NOT NULL,
+      d REAL,
+      e TEXT,
+      f BLOB,
+      PRIMARY KEY (a, b, c)
+    )
+
+    {
+      "name" : "only_pks_nonnull",
+      "CRC" : "1556579366916686542",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : 1318301014930005084,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "a",
+          "type" : "bool",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 7622422352349572871,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -3377685759483933034,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "c",
+          "type" : "long",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -7733614587723617460,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "d",
+          "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 7022457654081399383,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "e",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -8419237314434305493,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "f",
+          "type" : "blob",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 7349565770631330089,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "a", "b", "c" ],
+      "primaryKeySortOrders" : [ "", "", "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE some_non_pk_nonnull(
+      a BOOL NOT NULL,
+      b INTEGER NOT NULL,
+      c LONG_INT NOT NULL,
+      d REAL,
+      e TEXT NOT NULL,
+      f BLOB,
+      PRIMARY KEY (a, b, c)
+    )
+
+    {
+      "name" : "some_non_pk_nonnull",
+      "CRC" : "-5133815292676357233",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : 4076753061676181061,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "a",
+          "type" : "bool",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 7622422352349572871,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -3377685759483933034,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "c",
+          "type" : "long",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -7733614587723617460,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "d",
+          "type" : "real",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 7022457654081399383,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "e",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 4955917742259176339,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "f",
+          "type" : "blob",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 7349565770631330089,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "a", "b", "c" ],
+      "primaryKeySortOrders" : [ "", "", "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE _starts_with_underscore(
+      foo INTEGER NOT NULL PRIMARY KEY,
+      bar TEXT
+    )
+
+    {
+      "name" : "_starts_with_underscore",
+      "CRC" : "8638244384366221103",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : 8853590320677483837,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "foo",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 6455263664374132408,
+          "isPrimaryKey" : 1,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "bar",
+          "type" : "text",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -6920796709643815868,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "foo" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:backed_by=backing)
+    CREATE TABLE ends_with_underscore_(
+      foo TEXT PRIMARY KEY,
+      bar INTEGER
+    )
+
+    {
+      "name" : "ends_with_underscore_",
+      "CRC" : "-633676795809399280",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "isBacked" : 1,
+      "typeHash" : -4787200482362537033,
+      "attributes" : [
+        {
+          "name" : "cql:backed_by",
+          "value" : "backing"
+        }
+      ],
+      "columns" : [
+        {
+          "name" : "foo",
+          "type" : "text",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : 2421886823615442535,
+          "isPrimaryKey" : 1,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        },
+        {
+          "name" : "bar",
+          "type" : "integer",
+          "isNotNull" : 0,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "typeHash" : -8090552460257941517,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [ "foo" ],
+      "primaryKeySortOrders" : [ "" ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
     }
   ],
   "virtualTables" : [
