@@ -5396,7 +5396,7 @@ create table backed2(
   id long,
   name text,
   extra int,
-  primary key(pk1, pk2)
+  primary key(pk2, pk1) -- offsets reversed
 );
 
 -- TEST: cql_blob_get should expand to the correct calls and hash codes
@@ -5413,15 +5413,32 @@ begin
 end;
 
 -- TEST: cql_blob_get should expand to the correct calls and hash codes
--- + "SELECT bgetkey(k, 0), bgetkey(k, 1), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
+-- + "SELECT bgetkey(k, 1), bgetkey(k, 0), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
 create proc use_cql_blob_get_backed2()
 begin
   declare C cursor for select
-    cql_blob_get(k, backed2.pk1),
+    cql_blob_get(k, backed2.pk1), -- offsets reversed
     cql_blob_get(k, backed2.pk2),
     cql_blob_get(v, backed2.id),
     cql_blob_get(v, backed2.extra),
     cql_blob_get(v, backed2.name) from backing;
+end;
+
+-- TEST insert into backed2 -- keys should be the correct offsets
+-- + INSERT INTO backing(k, v)
+-- + SELECT bcreatekey(3942979045122214775, V.pk2, 1, V.pk1, 1),
+-- + bcreateval(3942979045122214775, 1055660242183705531, V.flag, 0, -9155171551243524439, V.id, 2, -6946718245010482247, V.name, 4, 4605090824299507084, V.extra, 1)
+create proc insert_into_backed2()
+begin
+  insert into backed2 values(1, 2, true, 1000, 'hi', 5);
+end;
+
+-- TEST update backed2 -- keys should be the correct offsets
+-- note offsets not in the normal order (1, 0)
+-- + "SET k = bupdatekey(k, 1, 5, 0, 7) "
+create proc update_backed2()
+begin
+  update backed2 set pk1 = 5, pk2 = 7 where pk1 = 3 and pk2 = 11;
 end;
 
 -- TEST: we should have created a shared fragment called _backed

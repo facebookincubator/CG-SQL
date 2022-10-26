@@ -716,7 +716,7 @@ static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
 
   symtab_add(full_drop_funcs, target_name, NULL);
 
-  list_item *index_list = target_ast->sem->index_list;
+  list_item *index_list = target_ast->sem->table_info->index_list;
 
   CHARBUF_OPEN(out);
 
@@ -735,16 +735,21 @@ static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
   for (uint32_t iref = 0; iref < ref_count; iref++) {
     ast_node *src_ast = sources[iref];
 
-    CSTR src_name = sem_get_name(src_ast);
+    if (is_ast_create_table_stmt(src_ast)) {
+      // we're only looking for FK references here, view references do not affect drop order
+      // hence we ignore any non-table dependencies we find in the list
 
-    // if self linking fk, do not emit
-    if (Strcasecmp(target_name, src_name)) {
-      // recurse to get the new delete function, output does not interleave
-      // as we are writing into a temp buffer "out"
-      emit_full_drop(src_ast, decls);
+      CSTR src_name = sem_get_name(src_ast);
 
-      // call it...
-      bprintf(&out, "  CALL %s_%s_full_drop();\n", global_proc_name, src_name);
+      // if self linking fk, do not emit
+      if (Strcasecmp(target_name, src_name)) {
+        // recurse to get the new delete function, output does not interleave
+        // as we are writing into a temp buffer "out"
+        emit_full_drop(src_ast, decls);
+
+        // call it...
+        bprintf(&out, "  CALL %s_%s_full_drop();\n", global_proc_name, src_name);
+      }
     }
   }
 
@@ -1324,7 +1329,7 @@ static void cg_schema_manage_recreate_tables(
 
     // if the table is deleted or unsubscribed don't restore its indices
     if (!deleted) {
-      list_item *index_list = ast->sem->index_list;
+      list_item *index_list = ast->sem->table_info->index_list;
 
       // now create the various indices but not the deleted ones
       for (list_item *item = index_list; item; item = item->next) {

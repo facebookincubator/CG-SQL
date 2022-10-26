@@ -93,7 +93,7 @@ $O/cqlrt.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 
 $O/rt.o: rt.c rt.h rt_common.c
 
-$O/gen_sql.o: gen_sql.c ast.h gen_sql.h charbuf.h cql.h encoders.h
+$O/gen_sql.o: gen_sql.c ast.h gen_sql.h charbuf.h cql.h encoders.h sem.h
 
 $O/cg_schema.o: cg_schema.h cql.h sem.h ast.h list.h symtab.h cg_common.h crc64xz.h
 

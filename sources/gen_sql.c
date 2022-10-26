@@ -1160,30 +1160,28 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
   Contract(ast->sem->sptr);
+  Contract(ast->sem->table_info);
+
+  table_node *table_info = ast->sem->table_info;
+
   int64_t hash = 0;
 
-  if (ast->sem->type_hash != 0) {
+  if (table_info->type_hash != 0) {
     // if we are so unlucky that the hash is zero, nothing bad happens
     // we just compute it every time
-    hash = ast->sem->type_hash;
+    hash = table_info->type_hash;
     goto cache_hit;
   }
 
   sem_struct *sptr = ast->sem->sptr;
 
   CHARBUF_OPEN(tmp);
+
   // Canonicalize to pascal
   cg_sym_name(cg_symbol_case_pascal, &tmp, "", sptr->struct_name, NULL); // no prefix pascal
 
-  // we need an array of the field descriptions, first we need the count
-  // we're going to sort them hence the array
-  uint32_t count = 0;
-  for (int32_t i = 0; i < sptr->count; i++) {
-     sem_t sem_type = sptr->semtypes[i];
-     if (!is_nullable(sem_type)) {
-       count++;
-     }
-  }
+  // we need an array of the field descriptions, first we need the count of mandatory fields
+  uint32_t count = (uint32_t)table_info->notnull_count;
 
   // there must be a pk and it is not null so count is > 0
   Invariant(count > 0);
@@ -1192,18 +1190,16 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   CSTR *ptrs = calloc(count, sizeof(CSTR));
 
   // now compute the fields we need
-  int32_t next = 0;
-  for (int32_t i = 0; i < sptr->count; i++) {
-     CSTR cname = sptr->names[i];
-     sem_t sem_type = sptr->semtypes[i];
-     if (!is_nullable(sem_type)) {
-       CHARBUF_OPEN(field);
-       gen_append_field_desc(&field, cname, sem_type);
-       ptrs[next++] = Strdup(field.ptr);
-       CHARBUF_CLOSE(field);
-     }
+  for (int32_t i = 0; i < count; i++) {
+    int16_t icol = table_info->notnull_cols[i];
+    CSTR cname = sptr->names[icol];
+    sem_t sem_type = sptr->semtypes[icol];
+
+    CHARBUF_OPEN(field);
+      gen_append_field_desc(&field, cname, sem_type);
+      ptrs[i] = Strdup(field.ptr);
+    CHARBUF_CLOSE(field);
   }
-  Invariant(next == count);
 
   qsort(ptrs, count, sizeof(CSTR), (void*)case_cmp);
 
@@ -1221,7 +1217,7 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   hash = sha256_charbuf(&tmp);
   CHARBUF_CLOSE(tmp);
 
-  ast->sem->type_hash = hash;
+  ast->sem->table_info->type_hash = hash;
 
 cache_hit:
 
@@ -1249,34 +1245,34 @@ static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool
   Contract(is_ast_create_table_stmt(create_table_stmt));
   Contract(create_table_stmt->sem);
   Contract(create_table_stmt->sem->sptr);
+  Contract(create_table_stmt->sem->table_info);
 
+  table_node *table_info = create_table_stmt->sem->table_info;
   sem_struct *sptr = create_table_stmt->sem->sptr;
-  int32_t result = 0;
 
-  for (int32_t i = 0; i < sptr->count; i++) {
-    sem_t sem_type = sptr->semtypes[i];
-    bool_t is_pk = is_primary_key(sem_type) || is_partial_pk(sem_type);
-    bool_t is_correct_type = search_for_keys == is_pk;
+  int16_t count;
+  int16_t *columns;
 
-    // Note that we ALWAYS exit on this path because by this point names are known to be valid.
-    // Semantic errors would have stopped codegen well before we get here on any other path.
-    if (!Strcasecmp(name, sptr->names[i])) {
-      // Found the name either use the computed result so far or -1
-      if (!is_correct_type) {
-        result = -1;
-      }
-      break;
-    }
+  if (search_for_keys) {
+    count = table_info->key_count;
+    columns = table_info->key_cols;
+  }
+  else {
+    count = table_info->value_count;
+    columns = table_info->value_cols;
+  }
 
-    if (is_correct_type) {
-      // We're looking for the offset in the keys or the values so we only advance the returned
-      // offset when we find the column type that matches.  e.g. when looking for value columns
-      // we skip over pk columns entirely, they just don't count.
-      result++;
+  Invariant(count > 0);
+  Invariant(columns);
+
+  for (int16_t i = 0; i < count; i++) {
+    int16_t icol = columns[i];
+    if (!Strcasecmp(name, sptr->names[icol])) {
+      return i;
     }
   }
 
-  return result;
+  return -1;
 }
 
 static void gen_cql_blob_get(ast_node *ast) {

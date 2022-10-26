@@ -47,6 +47,17 @@ cql_noexport void print_sem_type(struct sem_node *sem);
 
 #define sem_not(x) u64_not(x)
 
+typedef struct table_node {
+  int64_t type_hash;                // if the type has hash code, this will be it
+  list_item *index_list;            // the list of indices that use this table (so we can recreate them together if needed)
+  int16_t key_count;                // number of key columns
+  int16_t *key_cols;                // the key column indices (ast allocated)
+  int16_t notnull_count;            // number of notnull columns
+  int16_t *notnull_cols;            // the notnull column indices (ast allocated)
+  int16_t value_count  ;            // number of value (non-key) columns
+  int16_t *value_cols;              // the non-key column indices (ast allocated)
+} table_node;
+
 typedef struct sem_node {
   sem_t sem_type;                   // core type plus flags
   CSTR name;                        // for named expressions in select columns etc.
@@ -63,9 +74,8 @@ typedef struct sem_node {
   CSTR recreate_group_name;         // for tables only, the name of the recreate group if they are in one
   CSTR region;                      // the schema region, if applicable; null means unscoped (default)
   symtab *used_symbols;             // for select statements, we need to know which of the ids in the select list was used, if any
-  list_item *index_list;            // for tables we need the list of indices that use this table (so we can recreate them together if needed)
   struct eval_node *value;          // for enum values we have to store the evaluated constant value of each member of the enum
-  int64_t type_hash;                // if the type has hash code, this will be it
+  table_node *table_info;           // extra info unique to tables (above)
 } sem_node;
 
 // for tables and views and the result of a select

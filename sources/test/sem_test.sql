@@ -21427,6 +21427,17 @@ create table simple_backing_table_only_pk(
   primary key (k,v)
 );
 
+-- TEST: simple backing table loose pk with expression (error)
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backing storage: it has an expression in its primary key 'length(k)'
+-- +1 error:
+@attribute(cql:backing_table)
+create table simple_backing_table_expr_key(
+  k blob,
+  v blob,
+  constraint pk1 primary key (length(k))
+);
+
 -- TEST: simple backing table with versions and pk external
 -- + {create_table_stmt}: simple_backing_table_with_versions: { k: blob notnull partial_pk, v: blob notnull } deleted backing @create(1) @delete(22)
 -- - error:
@@ -21514,6 +21525,17 @@ create table simple_backed_table_2(
   id integer,
   name text not null,
   constraint pk1 primary key (id)
+);
+
+-- TEST: simple backed table loose pk with expression (error)
+-- + {create_table_stmt}: err
+-- + error: % table is not suitable for use as backed storage: it has an expression in its primary key 'id / 2'
+-- +1 error:
+@attribute(cql:backed_by=simple_backing_table)
+create table simple_backed_table_expr_key(
+  id integer,
+  name text not null,
+  constraint pk1 primary key (id/2)
 );
 
 -- TEST: simple backed table with versions

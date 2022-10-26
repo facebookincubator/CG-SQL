@@ -85383,6 +85383,53 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not su
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
+CREATE TABLE simple_backing_table_expr_key(
+  k BLOB,
+  v BLOB,
+  CONSTRAINT pk1 PRIMARY KEY (length(k))
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: it has an expression in its primary key 'length(k)'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name backing_table}
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name simple_backing_table_expr_key}
+    | {col_key_list}
+      | {col_def}: k: blob
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name k}
+      |     | {type_blob}: blob
+      | {col_key_list}
+        | {col_def}: v: blob
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name v}
+        |     | {type_blob}: blob
+        | {col_key_list}
+          | {pk_def}
+            | {name pk1}
+            | {indexed_columns_conflict_clause}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {call}: integer
+                    | {name length}: integer
+                    | {call_arg_list}
+                      | {call_filter_clause}
+                      | {arg_list}: ok
+                        | {name k}: k: blob
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backing_table)
 CREATE TABLE simple_backing_table_with_versions(
   k BLOB NOT NULL,
   v BLOB NOT NULL,
@@ -85736,6 +85783,52 @@ CREATE TABLE simple_backed_table_2(
               | {indexed_columns}
                 | {indexed_column}
                   | {name id}: id: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:backed_by=simple_backing_table)
+CREATE TABLE simple_backed_table_expr_key(
+  id INTEGER,
+  name TEXT NOT NULL,
+  CONSTRAINT pk1 PRIMARY KEY (id / 2)
+);
+
+test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it has an expression in its primary key 'id / 2'
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name backed_by}
+  |   | {name simple_backing_table}: ok
+  | {create_table_stmt}: err
+    | {create_table_name_flags}
+    | | {table_flags_attrs}
+    | | | {int 0}
+    | | {name simple_backed_table_expr_key}
+    | {col_key_list}
+      | {col_def}: id: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name id}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: name: text notnull
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |   | | {name name}
+        |   | | {type_text}: text
+        |   | {col_attrs_not_null}: ok
+        | {col_key_list}
+          | {pk_def}
+            | {name pk1}
+            | {indexed_columns_conflict_clause}
+              | {indexed_columns}
+                | {indexed_column}
+                  | {div}: integer
+                    | {name id}: id: integer
+                    | {int 2}: integer notnull
 
 The statement ending at line XXXX
 

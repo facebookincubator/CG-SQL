@@ -1644,9 +1644,9 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
 
   CONTINUE_LIST;
 
-  if (ast->sem->index_list) {
+  if (ast->sem->table_info->index_list) {
     COMMA;
-    cg_json_table_indices(ast->sem->index_list, output);
+    cg_json_table_indices(ast->sem->table_info->index_list, output);
   }
 
   if (misc_attrs) {

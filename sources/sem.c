@@ -702,7 +702,6 @@ static void sem_validate_index_expr_for_jptr(sem_join *jptr, ast_node *expr) {
   // expr is already marked with an error by the above, no further record_error needed
 }
 
-
 // data needed for processing a column definition
 typedef struct coldef_info {
   version_attrs_info *table_info;    // the various table version info items from the containing table
@@ -3262,6 +3261,8 @@ static void sem_update_column_type(ast_node *table_ast, ast_node *columns, sem_t
       name_ast = name_ast->left;
     }
 
+    // note that an indexed column could be an expression
+    // if that's the case update nothing...
     if (is_ast_str(name_ast)) {
       EXTRACT_STRING(name, name_ast);
 
@@ -3447,7 +3448,7 @@ static void sem_create_index_stmt(ast_node *ast) {
     sem_record_annotation_from_vers_info(&vers_info);
 
     // add the index to the table it is on
-    add_item_to_list(&table_ast->sem->index_list, ast);
+    add_item_to_list(&table_ast->sem->table_info->index_list, ast);
   }
 }
 
@@ -7946,13 +7947,13 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // one or two args
+  // one arg
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
   }
 
   ast_node *arg = first_arg(arg_list);
-  if (!is_text(arg->sem->sem_type)) {
+  if (!is_text(arg->sem->sem_type) && !is_blob(arg->sem->sem_type)) {
     report_error(ast, "CQL0085: all arguments must be strings", name);
     record_error(ast);
     return;
@@ -14085,6 +14086,16 @@ static void sem_validate_table_for_backing(ast_node *ast) {
 
     // PK is allowed
     if (is_ast_pk_def(def)) {
+      EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
+      EXTRACT(indexed_columns, indexed_columns_conflict_clause->left);
+
+      for (ast_node *pk_item = indexed_columns; pk_item; pk_item = pk_item->right) {
+        if (!is_ast_str(pk_item->left->left)) {
+          report_invalid_backing(ast, "it has an expression in its primary key", string_from_name_list_item(pk_item));
+          return;
+        }
+      }
+
       continue;
     }
 
@@ -14241,6 +14252,9 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   int32_t no_rowid = flags & TABLE_IS_NO_ROWID;
   bool_t has_key = false;
   bool_t has_value = false;
+  ast_node *pk_def = NULL;
+  int16_t icol_pk = -1;
+  int16_t icol = 0;
 
   if (temp) {
     report_invalid_backed(ast, "it is redundantly marked TEMP", name);
@@ -14259,6 +14273,18 @@ static void sem_validate_table_for_backed(ast_node *ast) {
 
     // PK is allowed
     if (is_ast_pk_def(def)) {
+      pk_def = def;
+
+      EXTRACT_NOTNULL(indexed_columns_conflict_clause, pk_def->right);
+      EXTRACT(indexed_columns, indexed_columns_conflict_clause->left);
+
+      for (ast_node *pk_item = indexed_columns; pk_item; pk_item = pk_item->right) {
+        if (!is_ast_str(pk_item->left->left)) {
+          report_invalid_backed(ast, "it has an expression in its primary key", string_from_name_list_item(pk_item));
+          return;
+        }
+      }
+
       continue;
     }
 
@@ -14271,6 +14297,10 @@ static void sem_validate_table_for_backed(ast_node *ast) {
     bool_t is_pk = is_primary_key(sem_type) || is_partial_pk(sem_type);
     has_key |= is_pk;
     has_value |= !is_pk;
+
+    if (is_primary_key(sem_type)) {
+      icol_pk = icol;
+    }
 
     sem_backed_col_def(ast, def, name);
     if (is_error(ast)) {
@@ -14315,6 +14345,85 @@ static void sem_validate_table_for_backed(ast_node *ast) {
     report_invalid_backed(ast, "@recreate group doesn't match the backing table", name);
     return;
   }
+
+  sem_struct *sptr = ast->sem->sptr;
+  Invariant(sptr);
+  table_node *table_info = ast->sem->table_info;
+  Invariant(table_info);
+
+  // Can't have both PK constraint and PK column (enforced below)
+
+  if (icol_pk >= 0) {
+    Invariant(pk_def == NULL);
+    table_info->key_count = 1;
+    table_info->key_cols = _ast_pool_new_array(int16_t, 1);
+  }
+  else {
+    Invariant(icol_pk == -1);
+    is_ast_pk_def(pk_def);
+    table_info->key_count = 1;
+
+    EXTRACT_NOTNULL(indexed_columns_conflict_clause, pk_def->right);
+    EXTRACT(indexed_columns, indexed_columns_conflict_clause->left);
+
+    int16_t key_count = 0;
+    for (ast_node *item = indexed_columns; item; item = item->right) {
+      key_count++;
+    }
+
+    Invariant(key_count > 0);
+
+    table_info->key_count = key_count;
+    table_info->key_cols = _ast_pool_new_array(int16_t, (uint32_t)key_count);
+
+    key_count = 0;
+    for (ast_node *item = indexed_columns; item; item = item->right) {
+      CSTR c_name = string_from_name_list_item(item);
+
+      // always a valid column name, it MUST match
+      icol = (int16_t)find_col_in_sptr(sptr, c_name);
+      Invariant(icol >= 0);
+
+      table_info->key_cols[key_count++] = icol;
+    }
+
+    Invariant(key_count == table_info->key_count);
+  }
+
+  int16_t notnull_count = 0;
+  for (icol = 0; icol < sptr->count; icol++) {
+    if (is_nullable(sptr->semtypes[icol])) {
+      continue;
+    }
+    notnull_count++;
+  }
+
+  // not null columns (i.e. the mandatory ones)
+  Invariant(notnull_count > 0);
+  table_info->notnull_count = notnull_count;
+  table_info->notnull_cols = _ast_pool_new_array(int16_t, (uint32_t)notnull_count);
+
+  // value columns are everything but the key columns
+  int16_t value_count = ((int16_t)(sptr->count)) - table_info->key_count;
+  Invariant(value_count > 0);
+  table_info->value_count = value_count;
+  table_info->value_cols = _ast_pool_new_array(int16_t, (uint32_t)value_count);
+
+  notnull_count = 0;
+  value_count = 0;
+  for (icol = 0; icol < sptr->count; icol++) {
+    sem_t sem_type = sptr->semtypes[icol];
+    if (!is_nullable(sem_type)) {
+      table_info->notnull_cols[notnull_count++] = icol;
+    }
+
+    if (!is_primary_key(sem_type) && !is_partial_pk(sem_type)) {
+      table_info->value_cols[value_count++] = icol;
+    }
+  }
+
+  Invariant(notnull_count == table_info->notnull_count);
+  Invariant(value_count == table_info->value_count);
 }
 
 // Unlike the other parts of DDL we actually deeply care about the tables.
@@ -14489,6 +14598,8 @@ static void sem_create_table_stmt(ast_node *ast) {
   ast->sem->sptr = sptr;
   ast->sem->jptr = sem_join_from_sem_struct(sptr);
   ast->sem->region = current_region;
+  ast->sem->table_info = _ast_pool_new(table_node);
+  memset(ast->sem->table_info, 0, sizeof(table_node));
 
   sem_constraints(ast, col_key_list, &col_info);
 
@@ -25460,8 +25571,8 @@ cql_noexport void sem_main(ast_node *ast) {
     ast_node *table = item->ast;
     Invariant(ast);
 
-    if (table->sem && table->sem->index_list) {
-      reverse_list(&table->sem->index_list);
+    if (table->sem && table->sem->table_info && table->sem->table_info->index_list) {
+      reverse_list(&table->sem->table_info->index_list);
     }
   }
 

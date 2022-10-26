@@ -3811,6 +3811,12 @@ extern CQL_WARN_UNUSED cql_code use_cql_blob_get_backed(sqlite3 *_Nonnull _db_);
 extern CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code insert_into_backed2(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code update_backed2(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 #define CRC_use_generated_fragment -1281088151319120140L
 
 extern cql_string_ref _Nonnull use_generated_fragment_stored_procedure_name;

@@ -16866,13 +16866,89 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT bgetkey(k, 0), bgetkey(k, 1), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
+    "SELECT bgetkey(k, 1), bgetkey(k, 0), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
       "FROM backing");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
   cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC insert_into_backed2 ()
+BEGIN
+  WITH
+  _vals (pk1, pk2, flag, id, name, extra) AS (VALUES(1, 2, TRUE, 1000, 'hi', 5))
+  INSERT INTO backing(k, v) SELECT cql_blob_create(backed2, V.pk2, backed2.pk2, V.pk1, backed2.pk1), cql_blob_create(backed2, V.flag, backed2.flag, V.id, backed2.id, V.name, backed2.name, V.extra, backed2.extra)
+    FROM _vals AS V;
+END;
+*/
+
+#define _PROC_ "insert_into_backed2"
+/*
+export:
+DECLARE PROC insert_into_backed2 () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code insert_into_backed2(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec(_db_,
+    "WITH "
+    "_vals (pk1, pk2, flag, id, name, extra) AS (VALUES(1, 2, 1, 1000, 'hi', 5)) "
+    "INSERT INTO backing(k, v) SELECT bcreatekey(3942979045122214775, V.pk2, 1, V.pk1, 1), bcreateval(3942979045122214775, 1055660242183705531, V.flag, 0, -9155171551243524439, V.id, 2, -6946718245010482247, V.name, 4, 4605090824299507084, V.extra, 1) "
+      "FROM _vals AS V");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC update_backed2 ()
+BEGIN
+  WITH
+  backed2 (rowid, pk1, pk2, flag, id, name, extra) AS (CALL _backed2())
+  UPDATE backing
+  SET k = cql_blob_update(k, 5, backed2.pk1, 7, backed2.pk2)
+    WHERE rowid IN (SELECT rowid
+    FROM backed2
+    WHERE pk1 = 3 AND pk2 = 11);
+END;
+*/
+
+#define _PROC_ "update_backed2"
+/*
+export:
+DECLARE PROC update_backed2 () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code update_backed2(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  _rc_ = cql_exec_var(_db_,
+    3, NULL,
+  "WITH "
+    "backed2 (rowid, pk1, pk2, flag, id, name, extra) AS (",
+  "SELECT rowid, bgetkey(T.k, 1), bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, 4605090824299507084) "
+      "FROM backing AS T "
+      "WHERE bgetkey_type(T.k) = 3942979045122214775",
+  ") "
+    "UPDATE backing "
+    "SET k = bupdatekey(k, 1, 5, 0, 7) "
+      "WHERE rowid IN (SELECT rowid "
+      "FROM backed2 "
+      "WHERE pk1 = 3 AND pk2 = 11)"
+  );
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
