@@ -891,7 +891,7 @@ function _cql_create_table_name_from_index_creation_statement(index_create)
 end
 
 
-function cql_rebuild_recreate_group(db, tables, indices, deletes, result)
+function cql_rebuild_recreate_group(db, tables, indices, deletes)
   local tableList = _cql_create_upgrader_input_statement_list(tables, "CREATE ");
   local indexList = _cql_create_upgrader_input_statement_list(indices, "CREATE ");
   local deleteList = _cql_create_upgrader_input_statement_list(deletes, "DROP ");
@@ -920,5 +920,6 @@ function cql_rebuild_recreate_group(db, tables, indices, deletes, result)
       end
     end
   end
-  return rc
+  -- returning result = false (because we went with recreate plan)
+  return rc, false
 end

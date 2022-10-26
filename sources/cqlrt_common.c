@@ -4199,6 +4199,7 @@ static char* _Nonnull _cql_create_table_name_from_index_creation_statement(cql_s
 // tables and any indices that might have been dropped.
 cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnull tables, cql_string_ref _Nonnull indices, cql_string_ref _Nonnull deletes, cql_bool *_Nonnull result)
 {
+  *result = false; // result holds false because we default to recreate (no rebuild)
   // process parseWord separated strings into lists
   cql_object_ref tableList = _cql_create_upgrader_input_statement_list(tables, "CREATE ");
   cql_object_ref indexList = _cql_create_upgrader_input_statement_list(indices, "CREATE ");
