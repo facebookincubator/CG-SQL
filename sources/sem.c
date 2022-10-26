@@ -13309,25 +13309,6 @@ static void sem_validate_previous_table(ast_node *prev_table) {
     }
   }
 
-  if (prev_info.recreate && cur_info.recreate) {
-     bool_t error = false;
-     if (prev_info.recreate_group_name == NULL || cur_info.recreate_group_name == NULL) {
-        // error only if we lost the group name
-        error =  prev_info.recreate_group_name && !cur_info.recreate_group_name;
-     }
-     else {
-        // error if the name changed
-        error = !!Strcasecmp(prev_info.recreate_group_name, cur_info.recreate_group_name);
-     }
-
-     if (error) {
-       report_error(ast, "CQL0449: recreate group annotation changed in table", name);
-       record_error(prev_table);
-       record_error(ast);
-       return;
-     }
-  }
-
   // If we're on the @recreate plan then we can make any changes we like to the table
   // We don't need to check the rest... drop/create works on everything.
   if (cur_info.recreate || prev_info.recreate) {

@@ -1609,55 +1609,6 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE TABLE Recreated1(
-  id INTEGER PRIMARY KEY
-) @RECREATE(bar);
-
-  {create_table_stmt}: err
-  | {create_table_name_flags}
-  | | {table_flags_attrs}
-  | | | {int 0}
-  | | | {recreate_attr}
-  | |   | {name bar}
-  | | {name Recreated1}
-  | {col_key_list}
-    | {col_def}: id: integer notnull primary_key
-      | {col_def_type_attrs}: ok
-        | {col_def_name_type}
-        | | {name id}
-        | | {type_int}: integer
-        | {col_attrs_pk}: ok
-          | {autoinc_and_conflict_clause}
-
-The statement ending at line XXXX
-
-CREATE TABLE Recreated2(
-  id INTEGER REFERENCES Recreated1 (id)
-) @RECREATE(bar);
-
-  {create_table_stmt}: err
-  | {create_table_name_flags}
-  | | {table_flags_attrs}
-  | | | {int 0}
-  | | | {recreate_attr}
-  | |   | {name bar}
-  | | {name Recreated2}
-  | {col_key_list}
-    | {col_def}: id: integer foreign_key
-      | {col_def_type_attrs}: ok
-        | {col_def_name_type}
-        | | {name id}
-        | | {type_int}: integer
-        | {col_attrs_fk}: ok
-          | {fk_target_options}
-            | {fk_target}
-            | | {name Recreated1}
-            | | {name_list}
-            |   | {name id}: id: integer notnull
-            | {int 0}
-
-The statement ending at line XXXX
-
 CREATE TABLE TChanging(
   id INTEGER
 );
@@ -2319,7 +2270,7 @@ CREATE TABLE losing_group(
   id INTEGER
 ) @RECREATE;
 
-  {create_table_stmt}: err
+  {create_table_stmt}: losing_group: { id: integer } @recreate
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -3946,57 +3897,6 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE TABLE Recreated1(
-  id INTEGER
-) @RECREATE(foo);
-
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'Recreated1'
-
-  {create_table_stmt}: err
-  | {create_table_name_flags}
-  | | {table_flags_attrs}
-  | | | {int 0}
-  | | | {recreate_attr}
-  | |   | {name foo}
-  | | {name Recreated1}
-  | {col_key_list}
-    | {col_def}: id: integer
-      | {col_def_type_attrs}: ok
-        | {col_def_name_type}
-          | {name id}
-          | {type_int}: integer
-
-The statement ending at line XXXX
-
-CREATE TABLE Recreated2(
-  id INTEGER REFERENCES Recreated1 (id)
-) @RECREATE(foo);
-
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'Recreated2'
-
-  {create_table_stmt}: err
-  | {create_table_name_flags}
-  | | {table_flags_attrs}
-  | | | {int 0}
-  | | | {recreate_attr}
-  | |   | {name foo}
-  | | {name Recreated2}
-  | {col_key_list}
-    | {col_def}: id: integer foreign_key
-      | {col_def_type_attrs}: ok
-        | {col_def_name_type}
-        | | {name id}
-        | | {type_int}: integer
-        | {col_attrs_fk}: ok
-          | {fk_target_options}
-            | {fk_target}
-            | | {name Recreated1}
-            | | {name_list}
-            |   | {name id}
-            | {int 0}
-
-The statement ending at line XXXX
-
 @END_SCHEMA_REGION;
 
   {end_schema_region_stmt}: ok
@@ -4781,28 +4681,6 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0448: table was 
           | {col_def_name_type}
             | {name f2}
             | {type_text}: text
-
-The statement ending at line XXXX
-
-CREATE TABLE losing_group(
-  id INTEGER
-) @RECREATE(foo);
-
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'losing_group'
-
-  {create_table_stmt}: err
-  | {create_table_name_flags}
-  | | {table_flags_attrs}
-  | | | {int 0}
-  | | | {recreate_attr}
-  | |   | {name foo}
-  | | {name losing_group}
-  | {col_key_list}
-    | {col_def}: id: integer
-      | {col_def_type_attrs}: ok
-        | {col_def_name_type}
-          | {name id}
-          | {type_int}: integer
 
 The statement ending at line XXXX
 

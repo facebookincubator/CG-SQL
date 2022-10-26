@@ -306,21 +306,6 @@ create table t_several_columns_added_interleaved(
 -- + {name MigrateNewCurrent}
 @schema_ad_hoc_migration(26, MigrateNewCurrent);
 
--- These two tables are changing from recreate group foo to create group bar
--- this now generates errors as motion cannot be allowed due to possible FK
--- issues.  The issue is that the version of the table in the DB could have
--- different FK references than the current version of the table.  The
--- delete order when the table moves is not clear.  See the docs for CQL0449
--- for more details.
-
--- TEST: simple recreate in a new group, no issues until previous schema validation
--- - error:
-create table Recreated1 ( id integer primary key) @recreate(bar);
-
--- TEST: simple recreate in a new group, with FK, no issues until previous schema validation
--- - error:
-create table Recreated2 ( id integer references Recreated1(id) ) @recreate(bar);
-
 -- TEST: creating a table that will move to a different deployment region
 -- + {create_table_stmt}: err
 -- + error: % object's deployment region changed from 'different_region' to 'base' 'TChanging'
@@ -920,20 +905,6 @@ create table t_several_columns_added_interleaved(
 -- - error:
 @schema_ad_hoc_migration(3, MigrateGoodToGo);
 
--- These two tables are changing from recreate group foo to create group bar
--- this must not cause any error in current or previous schema
-
--- TEST: simple recreate in a new group -- this cannot be allowed (see error docs)
--- + error: % recreate group annotation changed in table 'Recreated1'
-create table Recreated1 ( id integer) @recreate(foo);
-
--- TEST: recreate in a new group is not allowed because it can cause FK violations
--- table delete order is required to be within the group and also globally correct and
--- these two are not miscible.  Therefore we cannot allow tables to move groups
--- + error: % recreate group annotation changed in table 'Recreated2'
-create table Recreated2 ( id integer references Recreated1(id) ) @recreate(foo);
-
-
 -- TEST: this table is moving into the base region that will generate an error
 
 @end_schema_region;
@@ -1125,14 +1096,6 @@ create table dropping_this
   f2 text
 ) @recreate(foo);
 
--- TEST: this table had a group and losses it
--- + {create_table_stmt}: err
--- + error: % recreate group annotation changed in table 'losing_group'
--- +1 error:
-create table losing_group
-(
-  id integer
-) @recreate(foo);
 
 -- TEST: this table gains a group, that's ok
 -- {create_table_stmt}: gaining_group: { id: integer } @recreate
@@ -1182,7 +1145,7 @@ create table backing (
 @attribute(cql:backed_by=backing)
 create table backed (
   guid int not null primary key,
-  gal text 
+  gal text
 );
 
 -- TEST: previous table was recreate, it tries to go to baseline in this test

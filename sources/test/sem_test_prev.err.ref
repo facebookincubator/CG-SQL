@@ -50,8 +50,6 @@ The above must be identical.
 test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column that is different in the previous and current schema 'id'
 test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0286: ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
 test/sem_test_prev.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0285: ad hoc schema migration directive version number changed 'WhoopsItChanged'
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'Recreated1'
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'Recreated2'
 Incompatible declarations found
 test/sem_test_prev.sql:XXXX:1: error: in col_def : x INTEGER CHECK(x = 1) 
 test/sem_test_prev.sql:XXXX:1: error: in col_def : x INTEGER CHECK(x = 10) 
@@ -60,7 +58,6 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column t
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go back to @recreate semantics for 'undead_virtual'
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version not equal to previous delete version for 'delete_change_virtual'
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0448: table was marked @delete but it needs to be marked @recreate @delete 'dropping_this'
-test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0449: recreate group annotation changed in table 'losing_group'
 test/sem_test_prev.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table or view name
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'transitioning_to_baseline'
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(26) or later 't_new_table_no_annotation'
