@@ -4766,19 +4766,25 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
     // just because there was a comment so this is suppressed for "no code" things
     if (!skip_comment) {
       if (options.test) {
-        bprintf(out, "\n-- The statement ending at line %d\n", stmt->lineno);
+        if (!options.compress) {
+          bprintf(out, "\n-- The statement ending at line %d\n", stmt->lineno);
+        }
       } else {
-        bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", stmt->filename, stmt->lineno);
+        if (!options.compress) {
+          bprintf(cg_declarations_output, "\n-- Generated from %s:%d\n", stmt->filename, stmt->lineno);
+        }
       }
-      // emit source comment
-      bprintf(out, "\n--[[\n");
-      gen_stmt_level = 1;
-      gen_set_output_buffer(out);
-      if (misc_attrs) {
-        gen_misc_attrs(misc_attrs);
+      if (!options.compress) {
+        // emit source comment
+        bprintf(out, "\n--[[\n");
+        gen_stmt_level = 1;
+        gen_set_output_buffer(out);
+        if (misc_attrs) {
+          gen_misc_attrs(misc_attrs);
+        }
+        gen_one_stmt(stmt);
+        bprintf(out, ";\n--]]\n");
       }
-      gen_one_stmt(stmt);
-      bprintf(out, ";\n--]]\n");
     }
   }
 
