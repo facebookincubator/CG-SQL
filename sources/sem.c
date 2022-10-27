@@ -14253,7 +14253,7 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   }
 
   // check the column defs, error out if we find any constraints
-  for (ast_node *item = col_key_list; item; item = item->right) {
+  for (ast_node *item = col_key_list; item; item = item->right, icol++) {
     Contract(is_ast_col_key_list(item));
     EXTRACT_ANY_NOTNULL(def, item->left);
 
@@ -14362,6 +14362,10 @@ static void sem_validate_table_for_backed(ast_node *ast) {
 
     table_info->key_count = key_count;
     table_info->key_cols = _ast_pool_new_array(int16_t, (uint32_t)key_count);
+
+    // clobber the array with known junk so that assertions will fail
+    // for sure if we do not fill it out correctly
+    memset(table_info->key_cols, 0xff, (uint32_t)key_count * sizeof(int16_t));
 
     key_count = 0;
     for (ast_node *item = indexed_columns; item; item = item->right) {

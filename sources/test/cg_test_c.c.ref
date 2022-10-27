@@ -16959,7 +16959,7 @@ cql_cleanup:
 CREATE PROC use_generated_fragment ()
 BEGIN
   WITH
-  _backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  _backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   SELECT *
     FROM _backed;
 END;
@@ -16972,10 +16972,10 @@ cql_string_proc_name(use_generated_fragment_stored_procedure_name, "use_generate
 
 typedef struct use_generated_fragment_row {
   cql_int64 rowid;
-  cql_int32 pk;
   cql_bool flag;
   cql_nullable_int64 id;
   cql_nullable_double age;
+  cql_int32 pk;
   cql_string_ref _Nullable name;
   cql_blob_ref _Nullable storage;
 } use_generated_fragment_row;
@@ -16983,11 +16983,6 @@ typedef struct use_generated_fragment_row {
 cql_int64 use_generated_fragment_get_rowid(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
   use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data[row].rowid;
-}
-
-cql_int32 use_generated_fragment_get_pk(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
-  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].pk;
 }
 
 cql_bool use_generated_fragment_get_flag(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -17025,26 +17020,31 @@ cql_blob_ref _Nullable use_generated_fragment_get_storage(use_generated_fragment
   return data[row].storage;
 }
 
+cql_int32 use_generated_fragment_get_pk(use_generated_fragment_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_generated_fragment_row *data = (use_generated_fragment_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].pk;
+}
+
 uint8_t use_generated_fragment_data_types[use_generated_fragment_data_types_count] = {
   CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // rowid
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // pk
   CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // flag
   CQL_DATA_TYPE_INT64, // id
   CQL_DATA_TYPE_STRING, // name
   CQL_DATA_TYPE_DOUBLE, // age
   CQL_DATA_TYPE_BLOB, // storage
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // pk
 };
 
 #define use_generated_fragment_refs_offset cql_offsetof(use_generated_fragment_row, name) // count = 2
 
 static cql_uint16 use_generated_fragment_col_offsets[] = { 7,
   cql_offsetof(use_generated_fragment_row, rowid),
-  cql_offsetof(use_generated_fragment_row, pk),
   cql_offsetof(use_generated_fragment_row, flag),
   cql_offsetof(use_generated_fragment_row, id),
   cql_offsetof(use_generated_fragment_row, name),
   cql_offsetof(use_generated_fragment_row, age),
-  cql_offsetof(use_generated_fragment_row, storage)
+  cql_offsetof(use_generated_fragment_row, storage),
+  cql_offsetof(use_generated_fragment_row, pk)
 };
 
 cql_int32 use_generated_fragment_result_count(use_generated_fragment_result_set_ref _Nonnull result_set) {
@@ -17073,7 +17073,7 @@ CQL_WARN_UNUSED cql_code use_generated_fragment_fetch_results(sqlite3 *_Nonnull 
 
 /*
 export:
-DECLARE PROC use_generated_fragment () (rowid LONG_INT NOT NULL, pk INTEGER NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB);
+DECLARE PROC use_generated_fragment () (rowid LONG_INT NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB, pk INTEGER NOT NULL);
 */
 CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -17081,12 +17081,12 @@ CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_
   _rc_ = cql_prepare_var(_db_, _result_stmt,
     3, NULL,
   "WITH "
-    "_backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "_backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, pk, flag, id, name, age, storage "
+    "SELECT rowid, flag, id, name, age, storage, pk "
       "FROM _backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17104,7 +17104,7 @@ cql_cleanup:
 CREATE PROC use_backed_table_directly ()
 BEGIN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   SELECT *
     FROM backed;
 END;
@@ -17117,10 +17117,10 @@ cql_string_proc_name(use_backed_table_directly_stored_procedure_name, "use_backe
 
 typedef struct use_backed_table_directly_row {
   cql_int64 rowid;
-  cql_int32 pk;
   cql_bool flag;
   cql_nullable_int64 id;
   cql_nullable_double age;
+  cql_int32 pk;
   cql_string_ref _Nullable name;
   cql_blob_ref _Nullable storage;
 } use_backed_table_directly_row;
@@ -17128,11 +17128,6 @@ typedef struct use_backed_table_directly_row {
 cql_int64 use_backed_table_directly_get_rowid(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
   use_backed_table_directly_row *data = (use_backed_table_directly_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data[row].rowid;
-}
-
-cql_int32 use_backed_table_directly_get_pk(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
-  use_backed_table_directly_row *data = (use_backed_table_directly_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].pk;
 }
 
 cql_bool use_backed_table_directly_get_flag(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -17170,26 +17165,31 @@ cql_blob_ref _Nullable use_backed_table_directly_get_storage(use_backed_table_di
   return data[row].storage;
 }
 
+cql_int32 use_backed_table_directly_get_pk(use_backed_table_directly_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_backed_table_directly_row *data = (use_backed_table_directly_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].pk;
+}
+
 uint8_t use_backed_table_directly_data_types[use_backed_table_directly_data_types_count] = {
   CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // rowid
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // pk
   CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // flag
   CQL_DATA_TYPE_INT64, // id
   CQL_DATA_TYPE_STRING, // name
   CQL_DATA_TYPE_DOUBLE, // age
   CQL_DATA_TYPE_BLOB, // storage
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // pk
 };
 
 #define use_backed_table_directly_refs_offset cql_offsetof(use_backed_table_directly_row, name) // count = 2
 
 static cql_uint16 use_backed_table_directly_col_offsets[] = { 7,
   cql_offsetof(use_backed_table_directly_row, rowid),
-  cql_offsetof(use_backed_table_directly_row, pk),
   cql_offsetof(use_backed_table_directly_row, flag),
   cql_offsetof(use_backed_table_directly_row, id),
   cql_offsetof(use_backed_table_directly_row, name),
   cql_offsetof(use_backed_table_directly_row, age),
-  cql_offsetof(use_backed_table_directly_row, storage)
+  cql_offsetof(use_backed_table_directly_row, storage),
+  cql_offsetof(use_backed_table_directly_row, pk)
 };
 
 cql_int32 use_backed_table_directly_result_count(use_backed_table_directly_result_set_ref _Nonnull result_set) {
@@ -17218,7 +17218,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_fetch_results(sqlite3 *_Nonnu
 
 /*
 export:
-DECLARE PROC use_backed_table_directly () (rowid LONG_INT NOT NULL, pk INTEGER NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB);
+DECLARE PROC use_backed_table_directly () (rowid LONG_INT NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB, pk INTEGER NOT NULL);
 */
 CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -17226,12 +17226,12 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlit
   _rc_ = cql_prepare_var(_db_, _result_stmt,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, pk, flag, id, name, age, storage "
+    "SELECT rowid, flag, id, name, age, storage, pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17249,7 +17249,7 @@ cql_cleanup:
 CREATE PROC use_backed_table_with_cursor ()
 BEGIN
   DECLARE C CURSOR FOR WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   SELECT *
     FROM backed;
 END;
@@ -17267,12 +17267,12 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_cursor(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_prepare_var(_db_, &C_stmt,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, pk, flag, id, name, age, storage "
+    "SELECT rowid, flag, id, name, age, storage, pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17290,7 +17290,7 @@ cql_cleanup:
 CREATE PROC use_backed_table_directly_in_with_select ()
 BEGIN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed()),
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed()),
   one (x) AS (SELECT 1 AS x),
   two (x) AS (SELECT 2 AS x)
   SELECT *
@@ -17305,10 +17305,10 @@ cql_string_proc_name(use_backed_table_directly_in_with_select_stored_procedure_n
 
 typedef struct use_backed_table_directly_in_with_select_row {
   cql_int64 rowid;
-  cql_int32 pk;
   cql_bool flag;
   cql_nullable_int64 id;
   cql_nullable_double age;
+  cql_int32 pk;
   cql_string_ref _Nullable name;
   cql_blob_ref _Nullable storage;
 } use_backed_table_directly_in_with_select_row;
@@ -17316,11 +17316,6 @@ typedef struct use_backed_table_directly_in_with_select_row {
 cql_int64 use_backed_table_directly_in_with_select_get_rowid(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
   use_backed_table_directly_in_with_select_row *data = (use_backed_table_directly_in_with_select_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
   return data[row].rowid;
-}
-
-cql_int32 use_backed_table_directly_in_with_select_get_pk(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
-  use_backed_table_directly_in_with_select_row *data = (use_backed_table_directly_in_with_select_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
-  return data[row].pk;
 }
 
 cql_bool use_backed_table_directly_in_with_select_get_flag(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -17358,26 +17353,31 @@ cql_blob_ref _Nullable use_backed_table_directly_in_with_select_get_storage(use_
   return data[row].storage;
 }
 
+cql_int32 use_backed_table_directly_in_with_select_get_pk(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set, cql_int32 row) {
+  use_backed_table_directly_in_with_select_row *data = (use_backed_table_directly_in_with_select_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].pk;
+}
+
 uint8_t use_backed_table_directly_in_with_select_data_types[use_backed_table_directly_in_with_select_data_types_count] = {
   CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // rowid
-  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // pk
   CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL, // flag
   CQL_DATA_TYPE_INT64, // id
   CQL_DATA_TYPE_STRING, // name
   CQL_DATA_TYPE_DOUBLE, // age
   CQL_DATA_TYPE_BLOB, // storage
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // pk
 };
 
 #define use_backed_table_directly_in_with_select_refs_offset cql_offsetof(use_backed_table_directly_in_with_select_row, name) // count = 2
 
 static cql_uint16 use_backed_table_directly_in_with_select_col_offsets[] = { 7,
   cql_offsetof(use_backed_table_directly_in_with_select_row, rowid),
-  cql_offsetof(use_backed_table_directly_in_with_select_row, pk),
   cql_offsetof(use_backed_table_directly_in_with_select_row, flag),
   cql_offsetof(use_backed_table_directly_in_with_select_row, id),
   cql_offsetof(use_backed_table_directly_in_with_select_row, name),
   cql_offsetof(use_backed_table_directly_in_with_select_row, age),
-  cql_offsetof(use_backed_table_directly_in_with_select_row, storage)
+  cql_offsetof(use_backed_table_directly_in_with_select_row, storage),
+  cql_offsetof(use_backed_table_directly_in_with_select_row, pk)
 };
 
 cql_int32 use_backed_table_directly_in_with_select_result_count(use_backed_table_directly_in_with_select_result_set_ref _Nonnull result_set) {
@@ -17406,7 +17406,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select_fetch_results(
 
 /*
 export:
-DECLARE PROC use_backed_table_directly_in_with_select () (rowid LONG_INT NOT NULL, pk INTEGER NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB);
+DECLARE PROC use_backed_table_directly_in_with_select () (rowid LONG_INT NOT NULL, flag BOOL NOT NULL, id LONG_INT, name TEXT, age REAL, storage BLOB, pk INTEGER NOT NULL);
 */
 CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -17414,14 +17414,14 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonn
   _rc_ = cql_prepare_var(_db_, _result_stmt,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   "), "
     "one (x) AS (SELECT 1), "
     "two (x) AS (SELECT 2) "
-    "SELECT rowid, pk, flag, id, name, age, storage "
+    "SELECT rowid, flag, id, name, age, storage, pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17439,7 +17439,7 @@ cql_cleanup:
 CREATE PROC use_backed_table_with_select_and_cursor ()
 BEGIN
   DECLARE C CURSOR FOR WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed()),
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed()),
   one (x) AS (SELECT 1 AS x),
   two (x) AS (SELECT 2 AS x)
   SELECT *
@@ -17459,14 +17459,14 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnu
   _rc_ = cql_prepare_var(_db_, &C_stmt,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   "), "
     "one (x) AS (SELECT 1), "
     "two (x) AS (SELECT 2) "
-    "SELECT rowid, pk, flag, id, name, age, storage "
+    "SELECT rowid, flag, id, name, age, storage, pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17484,7 +17484,7 @@ cql_cleanup:
 CREATE PROC use_backed_table_select_expr (OUT x BOOL NOT NULL)
 BEGIN
   SET x := ( WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   SELECT flag
     FROM backed );
 END;
@@ -17505,8 +17505,8 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cq
   _rc_ = cql_prepare_var(_db_, &_temp_stmt,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
@@ -17534,7 +17534,7 @@ CREATE PROC explain_query_plan_backed (OUT x BOOL NOT NULL)
 BEGIN
   EXPLAIN QUERY PLAN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   SELECT *
     FROM backed;
 END;
@@ -17553,12 +17553,12 @@ static CQL_WARN_UNUSED cql_code explain_query_plan_backed(sqlite3 *_Nonnull _db_
     3, NULL,
   "EXPLAIN QUERY PLAN "
     "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
-    "SELECT rowid, pk, flag, id, name, age, storage "
+    "SELECT rowid, flag, id, name, age, storage, pk "
       "FROM backed"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -17576,7 +17576,7 @@ cql_cleanup:
 CREATE PROC use_backed_table_select_expr_value_offsets (OUT x BOOL NOT NULL)
 BEGIN
   SET x := ( WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   SELECT flag
     FROM backed );
 END;
@@ -17597,8 +17597,8 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
   _rc_ = cql_prepare_var(_db_, &_temp_stmt,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
@@ -17900,7 +17900,7 @@ cql_cleanup:
 CREATE PROC update_backed_set_value ()
 BEGIN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   UPDATE backing
   SET v = cql_blob_update(v, 'foo', backed.name)
     WHERE rowid IN (SELECT rowid
@@ -17919,8 +17919,8 @@ CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
@@ -17944,7 +17944,7 @@ cql_cleanup:
 CREATE PROC update_backed_with_clause ()
 BEGIN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed()),
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed()),
   V (x) AS (VALUES(1))
   UPDATE backing
   SET v = cql_blob_update(v, 'goo', backed.name)
@@ -17964,8 +17964,8 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   "), "
@@ -17990,7 +17990,7 @@ cql_cleanup:
 CREATE PROC update_backed_set_key ()
 BEGIN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   UPDATE backing
   SET k = cql_blob_update(k, 100, backed.pk)
     WHERE rowid IN (SELECT rowid
@@ -18009,8 +18009,8 @@ CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "
@@ -18034,7 +18034,7 @@ cql_cleanup:
 CREATE PROC update_backed_set_both ()
 BEGIN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+  backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   UPDATE backing
   SET k = cql_blob_update(k, 100, backed.pk),
   v = cql_blob_update(v, 77, backed.age)
@@ -18056,8 +18056,8 @@ CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
-    "backed (rowid, pk, flag, id, name, age, storage) AS (",
-  "SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660) "
+    "backed (rowid, flag, id, name, age, storage, pk) AS (",
+  "SELECT rowid, bgetval(T.v, 1055660242183705531), bgetval(T.v, -9155171551243524439), bgetval(T.v, -6946718245010482247), bgetval(T.v, -3683705396192132539), bgetval(T.v, -7635294210585028660), bgetkey(T.k, 0) "
       "FROM backing AS T "
       "WHERE bgetkey_type(T.k) = -5417664364642960231",
   ") "

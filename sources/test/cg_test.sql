@@ -5380,12 +5380,14 @@ create table backing(
 
 @attribute(cql:backed_by=backing)
 create table backed(
-  pk int primary key,
   flag bool not null,
   id long,
   name text,
   age real,
-  storage blob
+  storage blob,
+
+  -- pk not at position 0 tests column index array computation
+  pk int primary key
 );
 
 @attribute(cql:backed_by=backing)
@@ -5442,15 +5444,16 @@ begin
 end;
 
 -- TEST: we should have created a shared fragment called _backed
--- + _backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
+-- + _backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+-- + SELECT rowid,
+-- + bgetkey(T.k, 0)
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT rowid, pk, flag, id, name, age, storage
+-- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM _backed
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
 create proc use_generated_fragment()
@@ -5460,15 +5463,16 @@ begin
 end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
--- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+-- + SELECT rowid,
+-- + bgetkey(T.k, 0)
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT rowid, pk, flag, id, name, age, storage
+-- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
 create proc use_backed_table_directly()
@@ -5477,15 +5481,16 @@ begin
 end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
--- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+-- + SELECT rowid,
+-- + bgetkey(T.k, 0)
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT rowid, pk, flag, id, name, age, storage
+-- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is a NOT result set proc
@@ -5498,15 +5503,16 @@ end;
 -- TEST: we swap in the shared fragment and get the columns from it
 -- + one (x) AS (SELECT 1),
 -- + two (x) AS (SELECT 2)
--- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+-- + SELECT rowid,
+-- + bgetkey(T.k, 0)
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT rowid, pk, flag, id, name, age, storage
+-- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is a result set proc
@@ -5520,15 +5526,16 @@ end;
 -- TEST: we swap in the shared fragment and get the columns from it
 -- + one (x) AS (SELECT 1),
 -- + two (x) AS (SELECT 2)
--- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+-- + SELECT rowid
+-- + bgetkey(T.k, 0)
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT rowid, pk, flag, id, name, age, storage
+-- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is NOT a result set proc
@@ -5541,8 +5548,9 @@ begin
 end;
 
 -- TEST: select expression with backed table
--- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+-- + SELECT rowid
+-- + bgetkey(T.k, 0)
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
@@ -5561,15 +5569,15 @@ end;
 
 -- TEST: explain query plan with replacement
 -- + EXPLAIN QUERY PLAN
--- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
+-- + SELECT rowid
+-- + bgetkey(T.k, 0)
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
 -- + FROM backing AS T
--- + SELECT rowid, pk, flag, id, name, age, storage
 -- + FROM backed
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is a result set proc
@@ -5584,7 +5592,7 @@ end;
 @blob_get_val bgetval offset;
 
 -- TEST: we should get value indexes 0, 1, 2, 3, 4 not hashes
--- + SELECT rowid, bgetkey(T.k, 0), bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4)
+-- + SELECT rowid, bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4), bgetkey(T.k, 0)
 create proc use_backed_table_select_expr_value_offsets(out x bool not null)
 begin
   set x := (select flag from backed);

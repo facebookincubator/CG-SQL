@@ -1267,6 +1267,9 @@ static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool
 
   for (int16_t i = 0; i < count; i++) {
     int16_t icol = columns[i];
+    Invariant(icol >= 0);
+    Invariant(icol < sptr->count);
+
     if (!Strcasecmp(name, sptr->names[icol])) {
       return i;
     }
@@ -1309,6 +1312,10 @@ static void gen_cql_blob_get(ast_node *ast) {
       // we know it's a valid column so it's either a key or it isn't
       // since it isn't a key it must be a value
       Invariant(offset >= 0);
+      Invariant(offset < table_ast->sem->table_info->value_count);
+    }
+    else {
+      Invariant(offset < table_ast->sem->table_info->key_count);
     }
     gen_printf(", %d)", offset);
   }
