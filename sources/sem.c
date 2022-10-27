@@ -1059,6 +1059,11 @@ cql_noexport bool_t is_error(ast_node *ast) {
   return !ast || is_sem_error(ast->sem);
 }
 
+// These tables do not get deployed, they are logical constructs only
+cql_noexport bool_t is_table_not_physical(ast_node *table_ast) {
+  return is_table_blob_storage(table_ast) || is_table_backed(table_ast);
+}
+
 // Note: this returns the flag not a bool.
 static sem_t not_nullable_flag(sem_t sem_type) {
   return sem_type & SEM_TYPE_NOTNULL;
@@ -24812,6 +24817,12 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
   CSTR name = info.name;
   Contract(target);
 
+  if (is_ast_create_table_stmt(target) && is_table_not_physical(target)) {
+    report_error(ast, "CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables", name);
+    record_error(ast);
+    return;
+  }
+
   if (target->sem->unsub_version > target->sem->resub_version) {
     report_error(ast, "CQL0472: table/view is already unsubscribed", name);
     record_error(ast);
@@ -24877,6 +24888,12 @@ static void sem_schema_resub_stmt(ast_node *ast) {
   ast_node *target = info.target_ast;
   CSTR name = info.name;
   Contract(target);
+
+  if (is_ast_create_table_stmt(target) && is_table_not_physical(target)) {
+    report_error(ast, "CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables", name);
+    record_error(ast);
+    return;
+  }
 
   if (target->sem->resub_version > target->sem->unsub_version) {
     report_error(ast, "CQL0472: table/view is already resubscribed", name);

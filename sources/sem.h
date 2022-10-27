@@ -330,6 +330,7 @@ cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, 
 cql_noexport void sem_select(ast_node *node);
 cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast);
 cql_noexport ast_node *sem_skip_with(ast_node *ast);
+cql_noexport bool_t is_table_not_physical(ast_node *table_ast);
 
 #endif
 

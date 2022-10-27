@@ -23021,6 +23021,18 @@ create table unsub_test_table_late_create(id integer) @create(7);
 -- +1 error:
 @unsub (0, unsub_test_table);
 
+-- TEST: unsub on non physical tables makes no sense
+-- + {schema_unsub_stmt}: err
+-- + error: % unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
+-- +1 error:
+@unsub (1, structured_storage);
+
+-- TEST: resub on non physical tables makes no sense
+-- + {schema_resub_stmt}: err
+-- + error: % unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
+-- +1 error:
+@resub (1, structured_storage);
+
 -- TEST: unsub directive missing table
 -- standard version grammar means a specific error check and hence a better error
 -- this version format is valid in other contexts

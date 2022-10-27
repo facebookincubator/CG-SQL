@@ -1664,6 +1664,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0462: group declared variables must
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'var_group_var_dup'
 test/sem_test.sql:XXXX:1: error: in str : CQL0464: group not found 'not_a_var_group'
 test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0025: version number in annotation must be positive
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
 test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table or view name
 test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0466: the table/view named in an @unsub/@resub directive does not exist 'not_a_table'
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined (hidden by @unsub) 'unsub_test_table'

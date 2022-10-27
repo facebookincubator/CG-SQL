@@ -91,11 +91,6 @@ static bool_t include_from_region(CSTR region, int32_t mode) {
   return true;
 }
 
-// These tables do not get deployed, they are logical constructs only
-static bool_t is_table_not_physical(ast_node *table_ast) {
-  return is_table_blob_storage(table_ast) || is_table_backed(table_ast);
-}
-
 // Sort the annotations in place: the order is:
 //  * schema version
 //  * annotation types (all creates before deletes)

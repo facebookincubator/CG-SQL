@@ -91714,6 +91714,28 @@ test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0025: version number 
 
 The statement ending at line XXXX
 
+@UNSUB(1, structured_storage);
+
+test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
+
+  {schema_unsub_stmt}: err
+  | {version_annotation}
+    | {int 1}
+    | {name structured_storage}
+
+The statement ending at line XXXX
+
+@RESUB(1, structured_storage);
+
+test/sem_test.sql:XXXX:1: error: in schema_resub_stmt : CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
+
+  {schema_resub_stmt}: err
+  | {version_annotation}
+    | {int 1}
+    | {name structured_storage}
+
+The statement ending at line XXXX
+
 @UNSUB(5);
 
 test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table or view name
