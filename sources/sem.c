@@ -14343,6 +14343,7 @@ static void sem_validate_table_for_backed(ast_node *ast) {
     Invariant(pk_def == NULL);
     table_info->key_count = 1;
     table_info->key_cols = _ast_pool_new_array(int16_t, 1);
+    table_info->key_cols[0] =  icol_pk;
   }
   else {
     Invariant(icol_pk == -1);

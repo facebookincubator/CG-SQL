@@ -2689,6 +2689,8 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
   for (int16_t i = 0; i < col_count; i++) {
     // we're looking for the columns in the order we need them now
     int16_t icol = cols[i];
+    Invariant(icol >= 0);
+    Invariant(icol < sptr->count);
     CSTR name = sptr->names[icol];
 
     ast_node *new_item = NULL;
