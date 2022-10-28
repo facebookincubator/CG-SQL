@@ -1543,6 +1543,7 @@ static void cg_lua_func_attest_notnull(ast_node *call_ast, charbuf *value, lua_a
     case LUA_ATTEST_NOTNULL_VARIANT_THROW:
       bprintf(cg_main_output, "if %s == nil then\n", expr_value.ptr);
       bprintf(cg_main_output, "  _rc_ = CQL_ERROR\n");
+      bprintf(cg_main_output, "  cql_error_trace(_rc_, _db_)\n");
       bprintf(cg_main_output, "  goto %s\n", lua_error_target);
       bprintf(cg_main_output, "end\n");
       lua_error_target_used = true;

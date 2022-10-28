@@ -2530,6 +2530,7 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
       case ATTEST_NOTNULL_VARIANT_THROW:
         bprintf(cg_main_output, "if (%s) {\n", expr_is_null.ptr);
         bprintf(cg_main_output, "  _rc_ = SQLITE_ERROR;\n");
+        bprintf(cg_main_output, "  cql_error_trace();\n");
         bprintf(cg_main_output, "  goto %s;\n", error_target);
         bprintf(cg_main_output, "}\n");
         error_target_used = true;

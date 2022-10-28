@@ -6925,6 +6925,7 @@ function uses_ifnull_throw(_db_, x)
 
   if x == nil then
     _rc_ = CQL_ERROR
+    cql_error_trace(_rc_, _db_)
     goto cql_cleanup
   end
   y = x
@@ -9419,6 +9420,7 @@ function cql_startup(_db_)
   _tmp_n_object_0 = obj_func()
   if _tmp_n_object_0 == nil then
     _rc_ = CQL_ERROR
+    cql_error_trace(_rc_, _db_)
     goto cql_cleanup
   end
   obj_var2 = _tmp_n_object_0
@@ -9447,6 +9449,7 @@ function cql_startup(_db_)
   --]]
   if i0_nullable == nil then
     _rc_ = CQL_ERROR
+    cql_error_trace(_rc_, _db_)
     goto cql_cleanup
   end
   i2 = i0_nullable

@@ -13900,6 +13900,7 @@ CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_
 
   if (x.is_null) {
     _rc_ = SQLITE_ERROR;
+    cql_error_trace();
     goto cql_cleanup;
   }
   y = x.value;
@@ -19850,6 +19851,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_set_object_ref(&_tmp_n_object_0, obj_func());
   if (!_tmp_n_object_0) {
     _rc_ = SQLITE_ERROR;
+    cql_error_trace();
     goto cql_cleanup;
   }
   cql_set_object_ref(&obj_var2, _tmp_n_object_0);
@@ -19879,6 +19881,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   */
   if (i0_nullable.is_null) {
     _rc_ = SQLITE_ERROR;
+    cql_error_trace();
     goto cql_cleanup;
   }
   i2 = i0_nullable.value;

@@ -1166,6 +1166,7 @@ set obj_var2 := ifnull_crash(obj_func());
 -- TEST: assign nullable to object with helper or throw
 -- + cql_set_object_ref(&_tmp_n_object_0, obj_func());
 -- + if (!_tmp_n_object_0) {
+-- +   cql_error_trace();
 -- +   _rc_ = SQLITE_ERROR;
 -- +   goto cql_cleanup;
 -- + }

@@ -1077,6 +1077,7 @@ set obj_var2 := ifnull_crash(obj_func());
 -- + _tmp_n_object_% = obj_func()
 -- + if _tmp_n_object_% == nil then
 -- +   _rc_ = CQL_ERROR
+-- +   cql_error_trace(_rc_, _db_)
 -- +   goto cql_cleanup
 -- + end
 -- + obj_var2 = _tmp_n_object_%
