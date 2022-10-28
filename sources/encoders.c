@@ -322,7 +322,7 @@ cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
 
 // Helper to case on string arguments to cql_compressed() and output
 // readable multi-line strings when necessary.
-cql_noexport void cg_pretty_quote_compressed_text(CSTR str, charbuf *output) {
+cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_Nonnull output) {
   // In the case of an empty compressed string - cql_compressed("") we do not want
   // extra newlines
   if (strlen(str) == 0) {
