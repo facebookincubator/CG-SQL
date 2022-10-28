@@ -25,7 +25,6 @@
 #define cql_invariant assert
 #define cql_tripwire assert
 #define cql_log_database_error(...)
-#define cql_error_trace()
 
 // value types
 typedef unsigned char cql_bool;

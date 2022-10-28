@@ -3802,6 +3802,14 @@ static void cg_create_proc_stmt(ast_node *ast) {
     }
   }
 
+  if (dml_proc) {
+    // Your cqlrt can define cql_error_prepare to be whatever it wants. Maybe something 
+    // that declares some local variables that your tracing will use.  Or something
+    // that pushes an error context onto a stack.  Any kind of tracing can be constructed
+    // like this -- entirely up to your cqlrt.  The default version expands to nothing.
+    bprintf(&proc_locals, "cql_error_prepare();\n");
+  }
+
   if (out_stmt_proc) {
     bprintf(&proc_locals, "memset(_result_, 0, sizeof(*_result_));\n");
   }
@@ -3880,6 +3888,16 @@ static void cg_create_proc_stmt(ast_node *ast) {
   }
 
   bprintf(cg_declarations_output, "\n");
+
+  if (dml_proc) {
+    // Your cqlrt can define cql_error_report to be whatever it wants. Maybe something 
+    // that calls a logging function if _rc_ is not zero.  Maybe it reports if it's
+    // the last thing on the error stack otherwise it just appends a new thing.  Any kind
+    // of tracing can be constructed like this -- entirely up to your cqlrt.
+    //  The default version expands to nothing.
+    bprintf(cg_declarations_output, "  cql_error_report();\n");
+    empty_statement_needed = false;
+  }
 
   if (proc_cleanup.used > 1) {
     bprintf(cg_declarations_output, proc_cleanup.ptr);

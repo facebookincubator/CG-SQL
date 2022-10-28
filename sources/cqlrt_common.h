@@ -30,6 +30,21 @@
 #define _64(x) x##LL
 #endif
 
+#ifndef cql_error_prepare
+// called at the start of every procedure that uses _rc_ (no-op by default)
+#define cql_error_prepare()
+#endif
+
+#ifndef cql_error_trace
+// called each time an "not OK" _rc_ is encountered (no-op by default)
+#define cql_error_trace()
+#endif
+
+#ifndef cql_error_report
+// called at the end of every procedure that uses _rc_ (no-op by default)
+#define cql_error_report()
+#endif
+
 #ifndef __has_attribute         // Optional of course.
   #define __has_attribute(x) 0  // Compatibility with non-clang compilers.
 #endif

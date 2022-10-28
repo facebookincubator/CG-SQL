@@ -147,6 +147,8 @@ DECLARE PROC selector () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NUL
 CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
+  cql_error_prepare();
+
   _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT f1, f2, f3, f4, f5, f6, g1, g2, g3, g4, g5, g6 "
       "FROM foo");
@@ -154,6 +156,7 @@ CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullabl
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
@@ -372,6 +375,8 @@ DECLARE PROC sproc_copy_func () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL 
 CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
+  cql_error_prepare();
+
   _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT f1, f2, f3, f4, f5, f6, g1, g2, g3, g4, g5, g6 "
       "FROM foo");
@@ -379,6 +384,7 @@ CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
@@ -522,12 +528,15 @@ DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
 CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
+  cql_error_prepare();
+
   _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT 1, 2");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }
@@ -600,6 +609,7 @@ CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_Nonnull _
   cql_code _rc_ = SQLITE_OK;
   cql_bytebuf _rows_;
   cql_bytebuf_open(&_rows_);
+  cql_error_prepare();
   *_result_set_ = NULL;
   simple_container_proc_C_row C = { ._refs_count_ = 1, ._refs_offset_ = simple_container_proc_C_refs_offset };
   cql_object_ref _tmp_object_0 = NULL;
@@ -618,6 +628,7 @@ CQL_WARN_UNUSED cql_code simple_container_proc_fetch_results(sqlite3 *_Nonnull _
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   simple_container_proc_info.db = _db_;
   cql_results_from_data(_rc_, &_rows_, &simple_container_proc_info, (cql_result_set_ref *)_result_set_);
   simple_container_proc_info.db = NULL;
