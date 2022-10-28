@@ -319,3 +319,23 @@ cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
     }
   }
 }
+
+// Helper to case on string arguments to cql_compressed() and output
+// readable multi-line strings when necessary.
+cql_noexport void cg_pretty_quote_compressed_text(CSTR str, charbuf *output) {
+  // In the case of an empty compressed string - cql_compressed("") we do not want
+  // extra newlines
+  if (strlen(str) == 0) {
+    cg_pretty_quote_plaintext(str, output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+    return;
+  }
+  // Otherwise, we want the SQL string to be new-line separated and indented for readability
+  CHARBUF_OPEN(temp_output);
+  bprintf(&temp_output, "\n  ");
+  cg_pretty_quote_plaintext(str, &temp_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+  bindent(output, &temp_output, 6);
+  bclear(&temp_output);
+  bprintf(&temp_output, "\n      ");
+  bprintf(output, temp_output.ptr);
+  CHARBUF_CLOSE(temp_output);
+}

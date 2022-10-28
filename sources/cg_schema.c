@@ -1326,7 +1326,8 @@ static void cg_schema_manage_recreate_tables(
     } else {
       // explicitly drop only tables that are unsubscribed or deleted
       // others dropped inside cql_rebuild_recreate_group
-      bprintf(&delete_tables, "DROP TABLE IF EXISTS %s; ", table_name);
+      if (strlen(delete_tables.ptr) != 0) bprintf(&delete_tables, "\n");
+      bprintf(&delete_tables, "DROP TABLE IF EXISTS %s;", table_name);
     }
 
     // if the table is deleted or unsubscribed don't restore its indices
@@ -1343,9 +1344,10 @@ static void cg_schema_manage_recreate_tables(
         callbacks.mode = gen_mode_sql;
         callbacks.long_to_int_conv = true;
         callbacks.star_callback = cg_expand_star;
+        if (strlen(update_indices.ptr) != 0) bprintf(&update_indices, "\n");
         gen_set_output_buffer(&update_indices);
         gen_statement_with_callbacks(index, &callbacks);
-        bprintf(&update_indices, "; ");
+        bprintf(&update_indices, ";");
         init_gen_sql_callbacks(&callbacks);
         callbacks.mode = gen_mode_no_annotations;
       }
@@ -1399,12 +1401,12 @@ static void cg_schema_manage_recreate_tables(
     // Construct call to cql_rebuild_recreate_group with CQL compressed strings (with --compress compiler flag)
     // After the call to cql_rebuild_recreate_group() result will hold 1 if we rebuilt and 0 if we recreated the group.
     bprintf(&update_proc, "    LET %s_result := ", migrate_key);
-    bprintf(&update_proc, "cql_rebuild_recreate_group(\n      cql_compressed(");
-    cg_pretty_quote_plaintext(update_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+    bprintf(&update_proc, "cql_rebuild_recreate_group(cql_compressed(");
+    cg_pretty_quote_compressed_text(update_tables.ptr, &update_proc);
     bprintf(&update_proc, "),\n      cql_compressed(");
-    cg_pretty_quote_plaintext(update_indices.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+    cg_pretty_quote_compressed_text(update_indices.ptr, &update_proc);
     bprintf(&update_proc, "),\n      cql_compressed(");
-    cg_pretty_quote_plaintext(delete_tables.ptr, &update_proc, PRETTY_QUOTE_C | PRETTY_QUOTE_SINGLE_LINE);
+    cg_pretty_quote_compressed_text(delete_tables.ptr, &update_proc);
     bprintf(&update_proc, "));\n");
 
     // Case on result to see whether this group recreated or rebuilt.
