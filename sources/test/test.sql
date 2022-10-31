@@ -349,6 +349,9 @@ var var_a, var_b, var_c int;
 -- simple cursor declare
 declare a cursor for select b from c;
 
+-- simple cursor declare, short form
+cursor a for select b from c;
+
 -- loop over cursor
 loop fetch a into b
 begin
@@ -613,6 +616,9 @@ rollback to @proc;
 -- new cursor construct
 declare test cursor for call foo(1,2);
 
+-- new cursor construct, short form
+cursor test for call foo(1,2);
+
 -- select with exists
 select * from foo where exists (select * from bar);
 
@@ -833,6 +839,9 @@ out my_cursor;
 
 --  parse fetch from a call
 declare C cursor fetch from call x();
+
+--  parse fetch from a call, short form
+cursor C fetch from call x();
 
 -- like above, but for a cursor declared elsewhere
 fetch C from call x();
@@ -1111,6 +1120,9 @@ explain query plan select * from foo;
 
 explain select 1;
 
+-- declare explain expr, short form
+cursor E for EXPLAIN select 1;
+
 @schema_ad_hoc_migration(11, YourProcHere);
 
 @schema_ad_hoc_migration for @recreate(some_group, some_proc);
@@ -1118,6 +1130,15 @@ explain select 1;
 create proc emit_several_rows()
 begin
    declare C cursor like select 1 x, "2" y;
+   fetch C from values(1, "2");
+   out union C;
+   out union C;
+end;
+
+create proc emit_several_rows()
+begin
+   -- declare cursor, short form
+   cursor C like select 1 x, "2" y;
    fetch C from values(1, "2");
    out union C;
    out union C;
@@ -1192,11 +1213,20 @@ declare obj object<foo cursor>;
 
 declare C cursor for obj;
 
+-- declare cursor for expr, short form
+cursor C for obj;
+
 declare C cursor for some_func(obj);
+
+-- declare cursor for expr, short form
+cursor C for some_func(obj);
 
 set X from cursor C;
 
 declare C cursor like P2 arguments;
+
+-- declare cursor, short form
+cursor C like P2 arguments;
 
 -- check column constraint
 create table foo
@@ -1658,4 +1688,3 @@ let z := "abc\n" "123\r\n\x02" "lmnop''";
 set file := @FILE('path/');  -- take starting at path
 set file := @FILE('');  -- keep the whole string
 set file := @FILE('xxxx');  -- pattern not found, keep it all
-

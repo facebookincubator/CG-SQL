@@ -1864,6 +1864,9 @@ declare_simple_var_stmt:
   | DECLARE name CURSOR shape_def  { $declare_simple_var_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
   | DECLARE name CURSOR LIKE select_stmt  { $declare_simple_var_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
   | DECLARE name CURSOR LIKE '(' typed_names ')' { $declare_simple_var_stmt = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
+  | CURSOR name shape_def  { $declare_simple_var_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
+  | CURSOR name LIKE select_stmt  { $declare_simple_var_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  | CURSOR name LIKE '(' typed_names ')' { $declare_simple_var_stmt = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
 /* the additional forms are just about storage */
@@ -1875,6 +1878,11 @@ declare_stmt:
   | DECLARE name CURSOR FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
   | DECLARE name[id] CURSOR FOR expr { $declare_stmt = new_ast_declare_cursor($id, $expr); }
   | DECLARE name TYPE data_type_with_options { $declare_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
+  | CURSOR name FOR select_stmt  { $declare_stmt = new_ast_declare_cursor($name, $select_stmt); }
+  | CURSOR name FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
+  | CURSOR name FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
+  | CURSOR name FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
+  | CURSOR name[id] FOR expr { $declare_stmt = new_ast_declare_cursor($id, $expr); }
   ;
 
 call_stmt:
