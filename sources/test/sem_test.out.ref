@@ -8618,12 +8618,13 @@ SET id = 1
     | | {update_entry}: id: integer notnull
     |   | {name id}: id: integer notnull
     |   | {int 1}: integer notnull
-    | {update_where}
-      | {opt_where}: bool notnull
-      | | {eq}: bool notnull
-      |   | {name id}: id: integer notnull
-      |   | {int 2}: integer notnull
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {opt_where}: bool notnull
+        | | {eq}: bool notnull
+        |   | {name id}: id: integer notnull
+        |   | {int 2}: integer notnull
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8637,8 +8638,9 @@ SET cost = price_d;
     | | {update_entry}: cost: real<dollars>
     |   | {name cost}: cost: real<dollars>
     |   | {name price_d}: price_d: real<dollars> variable
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8654,8 +8656,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
     | | {update_entry}: err
     |   | {name cost}: cost: real<dollars>
     |   | {name price_e}: err
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8671,8 +8674,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0155: cannot update a view 'myView'
     | | {update_entry}
     |   | {name id}
     |   | {int 1}
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8689,11 +8693,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     | | {update_entry}: id: integer notnull
     |   | {name id}: id: integer notnull
     |   | {int 1}: integer notnull
-    | {update_where}
-      | {opt_where}: err
-      | | {not}: err
-      |   | {strlit 'x'}: text notnull
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {opt_where}: err
+        | | {not}: err
+        |   | {strlit 'x'}: text notnull
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8710,10 +8715,11 @@ test/sem_test.sql:XXXX:1: error: in opt_limit : CQL0015: expected numeric expres
     | | {update_entry}: id: integer notnull
     |   | {name id}: id: integer notnull
     |   | {int 1}: integer notnull
-    | {update_where}
-      | {update_orderby}
-        | {opt_limit}: err
-          | {strlit 'x'}: err
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
+          | {opt_limit}: err
+            | {strlit 'x'}: err
 
 The statement ending at line XXXX
 
@@ -8731,15 +8737,16 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     | | {update_entry}: id: integer notnull
     |   | {name id}: id: integer notnull
     |   | {int 1}: integer notnull
-    | {update_where}
-      | {update_orderby}
-        | {opt_orderby}: err
-        | | {orderby_list}: err
-        |   | {orderby_item}
-        |     | {not}: err
-        |       | {strlit 'x'}: text notnull
-        | {opt_limit}
-          | {int 2}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
+          | {opt_orderby}: err
+          | | {orderby_list}: err
+          |   | {orderby_item}
+          |     | {not}: err
+          |       | {strlit 'x'}: text notnull
+          | {opt_limit}
+            | {int 2}
 
 The statement ending at line XXXX
 
@@ -8755,8 +8762,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'non_existent_
     | | {update_entry}: err
     |   | {name non_existent_column}: err
     |   | {int 1}
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8772,8 +8780,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
     | | {update_entry}: err
     |   | {name id}: id: integer notnull
     |   | {strlit 'x'}: err
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8790,12 +8799,13 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'L
     | | {update_entry}: err
     |   | {name id}: id: integer notnull
     |   | {longint 1}: longint notnull
-    | {update_where}
-      | {opt_where}
-      | | {eq}
-      |   | {name id}
-      |   | {int 2}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {opt_where}
+        | | {eq}
+        |   | {name id}
+        |   | {int 2}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8811,8 +8821,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
     | | {update_entry}: err
     |   | {name name}: name: text
     |   | {int 2}: err
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8828,8 +8839,9 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly 
     | | {update_entry}: err
     |   | {name id}: id: integer notnull
     |   | {null}: null
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8845,8 +8857,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'X'
     | | {update_entry}: err
     |   | {name X}: err
     |   | {int 1}
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8860,8 +8873,9 @@ SET rate = NULL;
     | | {update_entry}: rate: longint
     |   | {name rate}: rate: longint
     |   | {null}: null
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -8878,8 +8892,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     |   | {name id}: id: integer notnull
     |   | {not}: err
     |     | {strlit 'x'}: text notnull
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -13399,12 +13414,13 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0153: duplicate target column name 
     |   | {update_entry}: err
     |     | {name id}: err
     |     | {int 3}
-    | {update_where}
-      | {opt_where}
-      | | {eq}
-      |   | {name id}
-      |   | {int 2}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {opt_where}
+        | | {eq}
+        |   | {name id}
+        |   | {int 2}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -29088,8 +29104,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0154: table in update statement doe
     | | {update_entry}
     |   | {name x}
     |   | {int 1}
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -32284,20 +32301,21 @@ END;
                   |   | | {update_entry}: id: integer notnull
                   |   |   | {name id}: id: integer notnull
                   |   |   | {int 7}: integer notnull
-                  |   | {update_where}
-                  |     | {opt_where}: bool
-                  |     | | {and}: bool
-                  |     |   | {gt}: bool
-                  |     |   | | {name rate}: rate: longint
-                  |     |   | | {dot}: b: real notnull
-                  |     |   |   | {name old}
-                  |     |   |   | {name b}
-                  |     |   | {lt}: bool
-                  |     |     | {name rate}: rate: longint
-                  |     |     | {dot}: b: real notnull
-                  |     |       | {name new}
-                  |     |       | {name b}
-                  |     | {update_orderby}
+                  |   | {update_from}
+                  |     | {update_where}
+                  |       | {opt_where}: bool
+                  |       | | {and}: bool
+                  |       |   | {gt}: bool
+                  |       |   | | {name rate}: rate: longint
+                  |       |   | | {dot}: b: real notnull
+                  |       |   |   | {name old}
+                  |       |   |   | {name b}
+                  |       |   | {lt}: bool
+                  |       |     | {name rate}: rate: longint
+                  |       |     | {dot}: b: real notnull
+                  |       |       | {name new}
+                  |       |       | {name b}
+                  |       | {update_orderby}
                   | {insert_stmt}: ok
                     | {insert_normal}
                     | {name_columns_values}
@@ -32371,20 +32389,21 @@ END;
                   |   | | {update_entry}: id: integer notnull
                   |   |   | {name id}: id: integer notnull
                   |   |   | {int 7}: integer notnull
-                  |   | {update_where}
-                  |     | {opt_where}: bool
-                  |     | | {and}: bool
-                  |     |   | {gt}: bool
-                  |     |   | | {name rate}: rate: longint
-                  |     |   | | {dot}: b: real notnull
-                  |     |   |   | {name old}
-                  |     |   |   | {name b}
-                  |     |   | {lt}: bool
-                  |     |     | {name rate}: rate: longint
-                  |     |     | {dot}: b: real notnull
-                  |     |       | {name new}
-                  |     |       | {name b}
-                  |     | {update_orderby}
+                  |   | {update_from}
+                  |     | {update_where}
+                  |       | {opt_where}: bool
+                  |       | | {and}: bool
+                  |       |   | {gt}: bool
+                  |       |   | | {name rate}: rate: longint
+                  |       |   | | {dot}: b: real notnull
+                  |       |   |   | {name old}
+                  |       |   |   | {name b}
+                  |       |   | {lt}: bool
+                  |       |     | {name rate}: rate: longint
+                  |       |     | {dot}: b: real notnull
+                  |       |       | {name new}
+                  |       |       | {name b}
+                  |       | {update_orderby}
                   | {insert_stmt}: ok
                     | {insert_normal}
                     | {name_columns_values}
@@ -35226,12 +35245,13 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive
     |         | {name _sens}: _sens: integer variable sensitive was_set
     |         | {arg_list}
     |           | {int 0}: integer notnull
-    | {update_where}
-      | {opt_where}
-      | | {eq}
-      |   | {name name}
-      |   | {strlit 'x'}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {opt_where}
+        | | {eq}
+        |   | {name name}
+        |   | {strlit 'x'}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -35336,8 +35356,9 @@ SET id = CAST('1' AS INTEGER);
     |   | {cast_expr}: integer notnull
     |     | {strlit '1'}: text notnull
     |     | {type_int}: integer
-    | {update_where}
-      | {update_orderby}
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -35618,27 +35639,28 @@ END;
             | | {update_entry}: name: text
             |   | {name name}: name: text
             |   | {strlit 'xyzzy'}: text notnull
-            | {update_where}
-              | {opt_where}: bool notnull
-              | | {in_pred}: bool notnull
-              |   | {name id}: id: integer notnull
-              |   | {select_stmt}: id: integer
-              |     | {select_core_list}: select: { id: integer notnull }
-              |     | | {select_core}: select: { id: integer notnull }
-              |     |   | {select_expr_list_con}: select: { id: integer notnull }
-              |     |     | {select_expr_list}: select: { id: integer notnull }
-              |     |     | | {star}: select: { id: integer notnull }
-              |     |     | {select_from_etc}: TABLE { x: x }
-              |     |       | {table_or_subquery_list}: TABLE { x: x }
-              |     |       | | {table_or_subquery}: TABLE { x: x }
-              |     |       |   | {name x}: TABLE { x: x }
-              |     |       | {select_where}
-              |     |         | {select_groupby}
-              |     |           | {select_having}
-              |     | {select_orderby}
-              |       | {select_limit}
-              |         | {select_offset}
-              | {update_orderby}
+            | {update_from}
+              | {update_where}
+                | {opt_where}: bool notnull
+                | | {in_pred}: bool notnull
+                |   | {name id}: id: integer notnull
+                |   | {select_stmt}: id: integer
+                |     | {select_core_list}: select: { id: integer notnull }
+                |     | | {select_core}: select: { id: integer notnull }
+                |     |   | {select_expr_list_con}: select: { id: integer notnull }
+                |     |     | {select_expr_list}: select: { id: integer notnull }
+                |     |     | | {star}: select: { id: integer notnull }
+                |     |     | {select_from_etc}: TABLE { x: x }
+                |     |       | {table_or_subquery_list}: TABLE { x: x }
+                |     |       | | {table_or_subquery}: TABLE { x: x }
+                |     |       |   | {name x}: TABLE { x: x }
+                |     |       | {select_where}
+                |     |         | {select_groupby}
+                |     |           | {select_having}
+                |     | {select_orderby}
+                |       | {select_limit}
+                |         | {select_offset}
+                | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -35701,27 +35723,28 @@ test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in
             | | {update_entry}
             |   | {name name}
             |   | {strlit 'xyzzy'}
-            | {update_where}
-              | {opt_where}
-              | | {in_pred}
-              |   | {name id}
-              |   | {select_stmt}
-              |     | {select_core_list}
-              |     | | {select_core}
-              |     |   | {select_expr_list_con}
-              |     |     | {select_expr_list}
-              |     |     | | {star}
-              |     |     | {select_from_etc}
-              |     |       | {table_or_subquery_list}
-              |     |       | | {table_or_subquery}
-              |     |       |   | {name x}
-              |     |       | {select_where}
-              |     |         | {select_groupby}
-              |     |           | {select_having}
-              |     | {select_orderby}
-              |       | {select_limit}
-              |         | {select_offset}
-              | {update_orderby}
+            | {update_from}
+              | {update_where}
+                | {opt_where}
+                | | {in_pred}
+                |   | {name id}
+                |   | {select_stmt}
+                |     | {select_core_list}
+                |     | | {select_core}
+                |     |   | {select_expr_list_con}
+                |     |     | {select_expr_list}
+                |     |     | | {star}
+                |     |     | {select_from_etc}
+                |     |       | {table_or_subquery_list}
+                |     |       | | {table_or_subquery}
+                |     |       |   | {name x}
+                |     |       | {select_where}
+                |     |         | {select_groupby}
+                |     |           | {select_having}
+                |     | {select_orderby}
+                |       | {select_limit}
+                |         | {select_offset}
+                | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -35784,27 +35807,28 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0154: table in update statement doe
             | | {update_entry}
             |   | {name name}
             |   | {strlit 'xyzzy'}
-            | {update_where}
-              | {opt_where}
-              | | {in_pred}
-              |   | {name id}
-              |   | {select_stmt}
-              |     | {select_core_list}
-              |     | | {select_core}
-              |     |   | {select_expr_list_con}
-              |     |     | {select_expr_list}
-              |     |     | | {star}
-              |     |     | {select_from_etc}
-              |     |       | {table_or_subquery_list}
-              |     |       | | {table_or_subquery}
-              |     |       |   | {name x}
-              |     |       | {select_where}
-              |     |         | {select_groupby}
-              |     |           | {select_having}
-              |     | {select_orderby}
-              |       | {select_limit}
-              |         | {select_offset}
-              | {update_orderby}
+            | {update_from}
+              | {update_where}
+                | {opt_where}
+                | | {in_pred}
+                |   | {name id}
+                |   | {select_stmt}
+                |     | {select_core_list}
+                |     | | {select_core}
+                |     |   | {select_expr_list_con}
+                |     |     | {select_expr_list}
+                |     |     | | {star}
+                |     |     | {select_from_etc}
+                |     |       | {table_or_subquery_list}
+                |     |       | | {table_or_subquery}
+                |     |       |   | {name x}
+                |     |       | {select_where}
+                |     |         | {select_groupby}
+                |     |           | {select_having}
+                |     | {select_orderby}
+                |       | {select_limit}
+                |         | {select_offset}
+                | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -48708,12 +48732,13 @@ END;
               |   | {add}: integer notnull
               |     | {name id}: id: integer notnull
               |     | {int 1}: integer notnull
-              | {update_where}
-                | {opt_where}: bool notnull
-                | | {eq}: bool notnull
-                |   | {name id}: id: integer notnull
-                |   | {int 20}: integer notnull
-                | {update_orderby}
+              | {update_from}
+                | {update_where}
+                  | {opt_where}: bool notnull
+                  | | {eq}: bool notnull
+                  |   | {name id}: id: integer notnull
+                  |   | {int 20}: integer notnull
+                  | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -48803,8 +48828,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0281: upsert statement does not inc
               | | {update_entry}
               |   | {name id}
               |   | {int 0}
-              | {update_where}
-                | {update_orderby}
+              | {update_from}
+                | {update_where}
+                  | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -49001,12 +49027,13 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement requ
                             | | {update_entry}
                             |   | {name id}
                             |   | {int 1}
-                            | {update_where}
-                              | {opt_where}
-                              | | {eq}
-                              |   | {name id}
-                              |   | {int 9}
-                              | {update_orderby}
+                            | {update_from}
+                              | {update_where}
+                                | {opt_where}
+                                | | {eq}
+                                |   | {name id}
+                                |   | {int 9}
+                                | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -50521,8 +50548,9 @@ rate = id + 1;
         |     | {add}: integer notnull
         |       | {name id}: id: integer notnull
         |       | {int 1}: integer notnull
-        | {update_where}
-          | {update_orderby}
+        | {update_from}
+          | {update_where}
+            | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -51036,12 +51064,13 @@ SET id = 1
       | | {update_entry}: id: integer notnull
       |   | {name id}: id: integer notnull
       |   | {int 1}: integer notnull
-      | {update_where}
-        | {opt_where}: bool
-        | | {eq}: bool
-        |   | {name name}: name: text
-        |   | {strlit 'Stella'}: text notnull
-        | {update_orderby}
+      | {update_from}
+        | {update_where}
+          | {opt_where}: bool
+          | | {eq}: bool
+          |   | {name name}: name: text
+          |   | {strlit 'Stella'}: text notnull
+          | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -89059,32 +89088,33 @@ SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
           |             | {dot}: integer notnull primary_key
           |               | {name basic_table}
           |               | {name id}
-          | {update_where}
-            | {opt_where}: bool notnull
-            | | {in_pred}: bool notnull
-            |   | {name rowid}: rowid: longint notnull
-            |   | {select_stmt}: rowid: longint
-            |     | {select_core_list}: select: { rowid: longint notnull }
-            |     | | {select_core}: select: { rowid: longint notnull }
-            |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
-            |     |     | {select_expr_list}: select: { rowid: longint notnull }
-            |     |     | | {select_expr}: rowid: longint notnull
-            |     |     |   | {name rowid}: rowid: longint notnull
-            |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
-            |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
-            |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
-            |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
-            |     |       | {select_where}
-            |     |         | {opt_where}: bool notnull
-            |     |         | | {lt}: bool notnull
-            |     |         |   | {name id}: id: integer notnull
-            |     |         |   | {int 100}: integer notnull
-            |     |         | {select_groupby}
-            |     |           | {select_having}
-            |     | {select_orderby}
-            |       | {select_limit}
-            |         | {select_offset}
-            | {update_orderby}
+          | {update_from}
+            | {update_where}
+              | {opt_where}: bool notnull
+              | | {in_pred}: bool notnull
+              |   | {name rowid}: rowid: longint notnull
+              |   | {select_stmt}: rowid: longint
+              |     | {select_core_list}: select: { rowid: longint notnull }
+              |     | | {select_core}: select: { rowid: longint notnull }
+              |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
+              |     |     | {select_expr_list}: select: { rowid: longint notnull }
+              |     |     | | {select_expr}: rowid: longint notnull
+              |     |     |   | {name rowid}: rowid: longint notnull
+              |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
+              |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
+              |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
+              |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
+              |     |       | {select_where}
+              |     |         | {opt_where}: bool notnull
+              |     |         | | {lt}: bool notnull
+              |     |         |   | {name id}: id: integer notnull
+              |     |         |   | {int 100}: integer notnull
+              |     |         | {select_groupby}
+              |     |           | {select_having}
+              |     | {select_orderby}
+              |       | {select_limit}
+              |         | {select_offset}
+              | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -89299,32 +89329,33 @@ SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
           |             | {dot}: integer notnull primary_key
           |               | {name basic_table}
           |               | {name id}
-          | {update_where}
-            | {opt_where}: bool notnull
-            | | {in_pred}: bool notnull
-            |   | {name rowid}: rowid: longint notnull
-            |   | {select_stmt}: rowid: longint
-            |     | {select_core_list}: select: { rowid: longint notnull }
-            |     | | {select_core}: select: { rowid: longint notnull }
-            |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
-            |     |     | {select_expr_list}: select: { rowid: longint notnull }
-            |     |     | | {select_expr}: rowid: longint notnull
-            |     |     |   | {name rowid}: rowid: longint notnull
-            |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
-            |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
-            |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
-            |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
-            |     |       | {select_where}
-            |     |         | {opt_where}: bool notnull
-            |     |         | | {lt}: bool notnull
-            |     |         |   | {name id}: id: integer notnull
-            |     |         |   | {int 100}: integer notnull
-            |     |         | {select_groupby}
-            |     |           | {select_having}
-            |     | {select_orderby}
-            |       | {select_limit}
-            |         | {select_offset}
-            | {update_orderby}
+          | {update_from}
+            | {update_where}
+              | {opt_where}: bool notnull
+              | | {in_pred}: bool notnull
+              |   | {name rowid}: rowid: longint notnull
+              |   | {select_stmt}: rowid: longint
+              |     | {select_core_list}: select: { rowid: longint notnull }
+              |     | | {select_core}: select: { rowid: longint notnull }
+              |     |   | {select_expr_list_con}: select: { rowid: longint notnull }
+              |     |     | {select_expr_list}: select: { rowid: longint notnull }
+              |     |     | | {select_expr}: rowid: longint notnull
+              |     |     |   | {name rowid}: rowid: longint notnull
+              |     |     | {select_from_etc}: TABLE { basic_table: basic_table }
+              |     |       | {table_or_subquery_list}: TABLE { basic_table: basic_table }
+              |     |       | | {table_or_subquery}: TABLE { basic_table: basic_table }
+              |     |       |   | {name basic_table}: TABLE { basic_table: basic_table }
+              |     |       | {select_where}
+              |     |         | {opt_where}: bool notnull
+              |     |         | | {lt}: bool notnull
+              |     |         |   | {name id}: id: integer notnull
+              |     |         |   | {int 100}: integer notnull
+              |     |         | {select_groupby}
+              |     |           | {select_having}
+              |     | {select_orderby}
+              |       | {select_limit}
+              |         | {select_offset}
+              | {update_orderby}
 
 The statement ending at line XXXX
 
@@ -94591,26 +94622,234 @@ SET id = id + 1
       |   | {add}: integer
       |     | {name id}: id: integer
       |     | {int 1}: integer notnull
+      | {update_from}
+        | {update_where}
+          | {opt_where}: bool
+          | | {in_pred}: bool
+          |   | {name id}: id: integer
+          |   | {select_stmt}: id: integer
+          |     | {select_core_list}: select: { id: integer notnull }
+          |     | | {select_core}: select: { id: integer notnull }
+          |     |   | {select_expr_list_con}: select: { id: integer notnull }
+          |     |     | {select_expr_list}: select: { id: integer notnull }
+          |     |     | | {select_expr}: id: integer notnull
+          |     |     |   | {name id}: id: integer notnull
+          |     |     | {select_from_etc}: TABLE { simple_backed_table: simple_backed_table }
+          |     |       | {table_or_subquery_list}: TABLE { simple_backed_table: simple_backed_table }
+          |     |       | | {table_or_subquery}: TABLE { simple_backed_table: simple_backed_table }
+          |     |       |   | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
+          |     |       | {select_where}
+          |     |         | {select_groupby}
+          |     |           | {select_having}
+          |     | {select_orderby}
+          |       | {select_limit}
+          |         | {select_offset}
+          | {update_orderby}
+
+The statement ending at line XXXX
+
+CREATE TABLE update_from_target(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+);
+
+  {create_table_stmt}: update_from_target: { id: integer notnull primary_key, name: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name update_from_target}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: name: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name name}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE update_test_1(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+);
+
+  {create_table_stmt}: update_test_1: { id: integer notnull primary_key, name: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name update_test_1}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: name: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name name}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE TABLE update_test_2(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+);
+
+  {create_table_stmt}: update_test_2: { id: integer notnull primary_key, name: text }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name update_test_2}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: name: text
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name name}
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+UPDATE update_from_target
+SET name = update_test_2.name FROM update_test_1
+  INNER JOIN update_test_2 ON update_test_1.id = update_test_2.id
+  WHERE update_test_1.name = 'x' AND update_from_target.id = update_test_1.id;
+
+  {update_stmt}: update_from_target: { id: integer notnull primary_key, name: text }
+  | {name update_from_target}: update_from_target: { id: integer notnull primary_key, name: text }
+  | {update_set}
+    | {update_list}: ok
+    | | {update_entry}: name: text
+    |   | {name name}: name: text
+    |   | {dot}: name: text
+    |     | {name update_test_2}
+    |     | {name name}
+    | {update_from}
+      | {join_clause}: JOIN { update_test_1: update_test_1, update_test_2: update_test_2 }
+      | | {table_or_subquery}: TABLE { update_test_1: update_test_1 }
+      | | | {name update_test_1}: TABLE { update_test_1: update_test_1 }
+      | | {join_target_list}
+      |   | {join_target}: JOIN { update_test_1: update_test_1, update_test_2: update_test_2 }
+      |     | {int 1} {join_inner}
+      |     | {table_join}
+      |       | {table_or_subquery}: TABLE { update_test_2: update_test_2 }
+      |       | | {name update_test_2}: TABLE { update_test_2: update_test_2 }
+      |       | {join_cond}: JOIN { update_test_1: update_test_1, update_test_2: update_test_2 }
+      |         | {on}: bool notnull
+      |         | {eq}: bool notnull
+      |           | {dot}: id: integer notnull
+      |           | | {name update_test_1}
+      |           | | {name id}
+      |           | {dot}: id: integer notnull
+      |             | {name update_test_2}
+      |             | {name id}
       | {update_where}
         | {opt_where}: bool
-        | | {in_pred}: bool
-        |   | {name id}: id: integer
-        |   | {select_stmt}: id: integer
-        |     | {select_core_list}: select: { id: integer notnull }
-        |     | | {select_core}: select: { id: integer notnull }
-        |     |   | {select_expr_list_con}: select: { id: integer notnull }
-        |     |     | {select_expr_list}: select: { id: integer notnull }
-        |     |     | | {select_expr}: id: integer notnull
-        |     |     |   | {name id}: id: integer notnull
-        |     |     | {select_from_etc}: TABLE { simple_backed_table: simple_backed_table }
-        |     |       | {table_or_subquery_list}: TABLE { simple_backed_table: simple_backed_table }
-        |     |       | | {table_or_subquery}: TABLE { simple_backed_table: simple_backed_table }
-        |     |       |   | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
-        |     |       | {select_where}
-        |     |         | {select_groupby}
-        |     |           | {select_having}
-        |     | {select_orderby}
-        |       | {select_limit}
-        |         | {select_offset}
+        | | {and}: bool
+        |   | {eq}: bool
+        |   | | {dot}: name: text
+        |   | | | {name update_test_1}
+        |   | | | {name name}
+        |   | | {strlit 'x'}: text notnull
+        |   | {eq}: bool notnull
+        |     | {dot}: id: integer notnull
+        |     | | {name update_from_target}
+        |     | | {name id}
+        |     | {dot}: id: integer notnull
+        |       | {name update_test_1}
+        |       | {name id}
+        | {update_orderby}
+
+The statement ending at line XXXX
+
+UPDATE update_from_target
+SET name = update_test_2.name FROM table_does_not_exist;
+
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'table_does_not_exist'
+
+  {update_stmt}: err
+  | {name update_from_target}: update_from_target: { id: integer notnull primary_key, name: text }
+  | {update_set}
+    | {update_list}
+    | | {update_entry}
+    |   | {name name}
+    |   | {dot}
+    |     | {name update_test_2}
+    |     | {name name}
+    | {update_from}
+      | {table_or_subquery_list}: err
+      | | {table_or_subquery}: err
+      |   | {name table_does_not_exist}
+      | {update_where}
+        | {update_orderby}
+
+The statement ending at line XXXX
+
+UPDATE simple_backed_table
+SET id = 5 FROM update_test_1;
+
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0497: FROM clause not supported when updating backed table 'simple_backed_table'
+
+  {update_stmt}: err
+  | {name simple_backed_table}: simple_backed_table: { id: integer notnull primary_key, name: text<cool_text> notnull } backed
+  | {update_set}
+    | {update_list}: ok
+    | | {update_entry}: id: integer notnull
+    |   | {name id}: id: integer notnull
+    |   | {int 5}: integer notnull
+    | {update_from}
+      | {table_or_subquery_list}: TABLE { update_test_1: update_test_1 }
+      | | {table_or_subquery}: TABLE { update_test_1: update_test_1 }
+      |   | {name update_test_1}: TABLE { update_test_1: update_test_1 }
+      | {update_where}
+        | {update_orderby}
+
+The statement ending at line XXXX
+
+@ENFORCE_STRICT UPDATE FROM;
+
+  {enforce_strict_stmt}: ok
+  | {int 22}
+
+The statement ending at line XXXX
+
+UPDATE update_from_target
+SET name = update_test_2.name FROM update_test_1;
+
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
+
+  {update_stmt}: err
+  | {name update_from_target}
+  | {update_set}
+    | {update_list}
+    | | {update_entry}
+    |   | {name name}
+    |   | {dot}
+    |     | {name update_test_2}
+    |     | {name name}
+    | {update_from}
+      | {table_or_subquery_list}
+      | | {table_or_subquery}
+      |   | {name update_test_1}
+      | {update_where}
         | {update_orderby}
 

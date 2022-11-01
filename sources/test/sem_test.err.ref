@@ -1716,4 +1716,7 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0090: object<T SET> has a T
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'cql_compressed'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_compressed'
 test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a string literal 'cql_compressed'
+test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'table_does_not_exist'
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0497: FROM clause not supported when updating backed table 'simple_backed_table'
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 semantic errors present; no code gen.

@@ -352,6 +352,9 @@ declare a cursor for select b from c;
 -- simple cursor declare, short form
 cursor a for select b from c;
 
+-- cursor shape short form
+cursor a like (id integer);
+
 -- loop over cursor
 loop fetch a into b
 begin
@@ -1688,3 +1691,12 @@ let z := "abc\n" "123\r\n\x02" "lmnop''";
 set file := @FILE('path/');  -- take starting at path
 set file := @FILE('');  -- keep the whole string
 set file := @FILE('xxxx');  -- pattern not found, keep it all
+@attribute(cql:backing_table)
+create table backing(
+  k blob not null primary key,
+  v blob
+);
+
+@enforce_strict UPDATE FROM;
+
+update foo set name = baz.name from bar join baz on bar.id = baz.id where bar.name = 'x' and foo.id = bar.id;

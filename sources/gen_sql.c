@@ -3047,7 +3047,9 @@ static void gen_update_stmt(ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
   EXTRACT_NOTNULL(update_set, ast->right);
   EXTRACT_NOTNULL(update_list, update_set->left);
-  EXTRACT_NOTNULL(update_where, update_set->right);
+  EXTRACT_NOTNULL(update_from, update_set->right);
+  EXTRACT_NOTNULL(update_where, update_from->right);
+  EXTRACT_ANY(query_parts, update_from->left);
   EXTRACT(opt_where, update_where->left);
   EXTRACT_NOTNULL(update_orderby, update_where->right);
   EXTRACT(opt_orderby, update_orderby->left);
@@ -3060,6 +3062,10 @@ static void gen_update_stmt(ast_node *ast) {
   }
   gen_printf("\nSET ");
   gen_update_list(update_list);
+  if (query_parts) {
+    gen_printf(" FROM ");
+    gen_query_parts(query_parts);
+  }
   if (opt_where) {
     gen_opt_where(opt_where);
   }
@@ -4320,6 +4326,10 @@ static void gen_enforcement_options(ast_node *ast) {
 
     case ENFORCE_CURSOR_HAS_ROW:
       gen_printf("CURSOR HAS ROW");
+      break;
+
+    case ENFORCE_UPDATE_FROM:
+      gen_printf("UPDATE FROM");
       break;
 
     default:

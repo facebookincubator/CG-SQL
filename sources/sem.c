@@ -263,6 +263,7 @@ struct enforcement_options {
   bool_t strict_cast;                 // NO-OP casts result in errors
   bool_t strict_sign_function;        // the SQLite sign function may not be used (as it is absent in <3.35.0)
   bool_t strict_cursor_has_row;       // auto cursors require a has-row check before certain fields are accessed
+  bool_t strict_update_from;          // the UPDATE statement may not include a FROM clause (available only on 3.33 and later)
 };
 
 static struct enforcement_options enforcement;
@@ -15457,7 +15458,7 @@ cleanup:
 // To do this we temporarily hide the variables head.  We verify that the types
 // are compatible and we also handle the special case of trying to set a
 // not-nullable type to null.
-static void sem_update_entry(ast_node *ast, symtab *update_columns) {
+static void sem_update_entry(ast_node *ast, symtab *update_columns, sem_join *from_jptr) {
   Contract(is_ast_update_entry(ast));
   Contract(current_joinscope);
 
@@ -15473,6 +15474,8 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns) {
     // hide variables for this expression, no variables on left of :=
     locals = globals = NULL;
 
+    // the FROM clause (if any) is not in scope at this point, this is deliberate
+    // in SET x = y  the 'x' cannot come from the FROM clause but 'y' can
     sem_expr(left);
 
     locals = saved_locals;
@@ -15491,7 +15494,18 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns) {
     return;
   }
 
+  // the from clause contributes to scopes on the right of the assignment
+  // but not on the left
+  if (from_jptr) {
+    PUSH_JOIN(from_scope, from_jptr);
+  }
+
   sem_root_expr(right, SEM_EXPR_CONTEXT_SELECT_LIST);
+
+  if (from_jptr) {
+    POP_JOIN();
+  }
+
   if (is_error(right)) {
     record_error(ast);
     return;
@@ -15521,7 +15535,7 @@ static void sem_update_entry(ast_node *ast, symtab *update_columns) {
 
 // This is the list of updates we need to perform, we walk the list here and handle
 // each one, reporting errors as we go.
-static void sem_update_list(ast_node *head) {
+static void sem_update_list(ast_node *head, sem_join *from_jptr) {
   Contract(is_ast_update_list(head));
 
   symtab *update_columns = symtab_new();
@@ -15530,7 +15544,7 @@ static void sem_update_list(ast_node *head) {
     Contract(is_ast_update_list(ast));
     EXTRACT_NOTNULL(update_entry, ast->left);
 
-    sem_update_entry(update_entry, update_columns);
+    sem_update_entry(update_entry, update_columns, from_jptr);
     if (is_error(update_entry)) {
       record_error(head);
       symtab_delete(update_columns);
@@ -15552,16 +15566,23 @@ static void sem_update_stmt(ast_node *ast) {
   EXTRACT_ANY(name_ast, ast->left);
   EXTRACT_NOTNULL(update_set, ast->right);
   EXTRACT_NOTNULL(update_list, update_set->left);
-  EXTRACT_NOTNULL(update_where, update_set->right);
-  EXTRACT(opt_where, update_where->left);
+  EXTRACT_NOTNULL(update_from, update_set->right);
+  EXTRACT_NOTNULL(update_where, update_from->right);
   EXTRACT_NOTNULL(update_orderby, update_where->right);
+  EXTRACT_ANY(query_parts, update_from->left);
+  EXTRACT(opt_where, update_where->left);
   EXTRACT(opt_orderby, update_orderby->left);
   EXTRACT(opt_limit, update_orderby->right);
   ast_node *table_ast = NULL;
 
   // Any early out is an error, cleanup is needed to get the POP_JOIN
   bool_t error = true;
-  bool_t join_pushed = false;
+  int32_t join_pushed = 0;
+
+  if (enforcement.strict_update_from && query_parts) {
+    report_error(ast, "CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause", NULL);
+    goto cleanup;
+  }
 
   BEGIN_BACKING_REWRITE();
 
@@ -15604,6 +15625,9 @@ static void sem_update_stmt(ast_node *ast) {
 
   ast->sem = table_ast->sem;
 
+  EXTRACT_NOTNULL(create_table_name_flags, table_ast->left);
+  EXTRACT_STRING(table_name, create_table_name_flags->right);
+
   sem_join join = *table_ast->sem->jptr;
 
   // we record this so we can find it on the join when we do a name lookup
@@ -15618,11 +15642,32 @@ static void sem_update_stmt(ast_node *ast) {
   }
 
   PUSH_JOIN(update_scope, &join);
-  join_pushed = true;
+  join_pushed = 1;
 
-  sem_update_list(update_list);
+  sem_join *from_jptr = NULL;
+
+  if (query_parts) {
+    sem_query_parts(query_parts);
+    if (is_error(query_parts)) {
+      goto cleanup;
+    }
+
+    from_jptr = query_parts->sem->jptr;
+  }
+
+  // we can't push the from jptr yet because
+  // in 'SET x = name' the 'x' is only in the scope of original table
+  // and not in the joins.  So set name = 'x'  is never ambiguous even
+  // if the from clause has joins with tables with a name column.  But
+  // set name = name || 'x' *can* be ambiguous
+  sem_update_list(update_list, from_jptr);
   if (is_error(update_list)) {
     goto cleanup;
+  }
+
+  if (from_jptr) {
+    join_pushed = 2;
+    PUSH_JOIN(from_scope, from_jptr);
   }
 
   if (opt_where) {
@@ -15649,12 +15694,23 @@ static void sem_update_stmt(ast_node *ast) {
     }
   }
 
+  // no support for backed tables in the update statement with a from clause yet
+  // this will require different codegen than the normal "no from" case
+  if (query_parts && table_ast && is_backed(table_ast->sem->sem_type)) {
+    report_error(ast, "CQL0497: FROM clause not supported when updating backed table", table_name);
+    goto cleanup;
+  }
+
   error = false;
 
 cleanup:
 
   if (error) {
     record_error(ast);
+  }
+
+  if (join_pushed == 2) {
+    POP_JOIN();
   }
 
   if (join_pushed) {
@@ -24129,6 +24185,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_CURSOR_HAS_ROW:
       enforcement.strict_cursor_has_row = strict;
+      break;
+
+    case ENFORCE_UPDATE_FROM:
+      enforcement.strict_update_from = strict;
       break;
 
     default:
