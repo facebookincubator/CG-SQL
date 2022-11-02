@@ -18548,6 +18548,116 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC stmt_in_loop ()
+BEGIN
+  LET i := 0;
+  WHILE i < 10
+  BEGIN
+    DELETE FROM foo WHERE id = i;
+    SET i := i + 1;
+  END;
+END;
+*/
+
+#define _PROC_ "stmt_in_loop"
+/*
+export:
+DECLARE PROC stmt_in_loop () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code stmt_in_loop(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_int32 i = 0;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  i = 0;
+  for (;;) {
+  if (!(i < 10)) break;
+    _rc_ = cql_prepare(_db_, &_temp_stmt,
+      "DELETE FROM foo WHERE id = ?");
+    cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(_temp_stmt);
+    if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    cql_finalize_stmt(&_temp_stmt);
+    i = i + 1;
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC cursor_in_loop ()
+BEGIN
+  LET i := 0;
+  WHILE i < 10
+  BEGIN
+    DECLARE C CURSOR FOR SELECT *
+      FROM foo
+      WHERE id = i;
+    FETCH C;
+    SET i := i + 1;
+  END;
+END;
+*/
+
+#define _PROC_ "cursor_in_loop"
+/*
+export:
+DECLARE PROC cursor_in_loop () USING TRANSACTION;
+*/
+
+typedef struct cursor_in_loop_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 id;
+} cursor_in_loop_C_row;
+CQL_WARN_UNUSED cql_code cursor_in_loop(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_int32 i = 0;
+  sqlite3_stmt *C_stmt = NULL;
+  cursor_in_loop_C_row C = { 0 };
+
+  i = 0;
+  for (;;) {
+  if (!(i < 10)) break;
+    cql_finalize_stmt(&C_stmt);
+    _rc_ = cql_prepare(_db_, &C_stmt,
+      "SELECT id "
+        "FROM foo "
+        "WHERE id = ?");
+    cql_multibind(&_rc_, _db_, &C_stmt, 1,
+                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 1,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    i = i + 1;
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

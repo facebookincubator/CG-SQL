@@ -3958,6 +3958,12 @@ extern CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_);
 extern CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code stmt_in_loop(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code cursor_in_loop(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

@@ -266,4 +266,6 @@ DECLARE PROC update_backed_set_value () USING TRANSACTION;
 DECLARE PROC update_backed_with_clause () USING TRANSACTION;
 DECLARE PROC update_backed_set_key () USING TRANSACTION;
 DECLARE PROC update_backed_set_both () USING TRANSACTION;
+DECLARE PROC stmt_in_loop () USING TRANSACTION;
+DECLARE PROC cursor_in_loop () USING TRANSACTION;
 DECLARE PROC end_proc ();

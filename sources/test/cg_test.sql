@@ -5745,6 +5745,33 @@ begin
   update backed set pk = 100, age = 77 where name = 'three' order by age limit 7;
 end;
 
+-- TEST: in_loop variation of statement prep with DML
+-- temp statement is always finalized even in a loop
+-- +2 cql_finalize_stmt(&_temp_stmt);
+create proc stmt_in_loop()
+begin
+   let i := 0;
+   while i < 10
+   begin
+      delete from foo where id = i;
+      set i := i + 1;
+   end;
+end;
+
+-- TEST: in_loop variation of statement prep with cursor
+-- finalize on entry causes another finalize
+-- +2 cql_finalize_stmt(&C_stmt);
+create proc cursor_in_loop()
+begin
+   let i := 0;
+   while i < 10
+   begin
+      cursor C for select * from foo where id = i;
+      fetch C;
+      set i := i + 1;
+   end;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
