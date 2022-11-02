@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue Oct 11 21:53:04 2022
+// Snapshot as of Mon Oct 31 17:51:17 2022
 
 
 const PREC = {
@@ -105,7 +105,7 @@ module.exports = grammar({
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
     call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.basic_expr, ':', $.name, '(', optional($.arg_list), ')')),
-    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')')),
+    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'), seq($.TYPE_CHECK, '(', $.expr, $.AS, $.data_type_with_options, ')')),
     IS_NOT_TRUE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('true'))),
     IS_NOT_FALSE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('false'))),
     IS_TRUE: $ => prec.left(1, seq(CI('is'), CI('true'))),
@@ -440,6 +440,7 @@ module.exports = grammar({
     END: $ => CI('end'),
     ELSE: $ => CI('else'),
     CAST: $ => CI('cast'),
+    TYPE_CHECK: $ => CI('type_check'),
     ISNULL: $ => CI('isnull'),
     NOTNULL: $ => CI('notnull'),
     IN: $ => CI('in'),

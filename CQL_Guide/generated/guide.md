@@ -818,7 +818,7 @@ LET b := x IS y; -- bool not null
 LET b := x = y;  -- bool (maybe not null depending on x/y)
 ```
 
-The psuedo function "nullable" removes `not null` from the type of its argument but otherwise does no computation.
+The pseudo function "nullable" removes `not null` from the type of its argument but otherwise does no computation.
 This can be useful to initialize nullable types.
 
 ```sql
@@ -826,7 +826,7 @@ LET n_i := nullable(1);  -- nullable integer variable initialized to 1
 LET n_l := nullable(1L);  -- nullable long variable initialized to 1
 ```
 
-The psuedo function "sensitive" adds `@sensitive` to the type of its argument but otherwise does no computation.
+The pseudo function "sensitive" adds `@sensitive` to the type of its argument but otherwise does no computation.
 This also can be useful to initialize nullable types.
 
 ```sql
@@ -858,7 +858,7 @@ There are a number of literal objects that may be expressed in CQL.  These are a
   * embedded nulls in string literals (\0 or \0x00) are not supported (you must use blobs in such cases)
 * A single quoted string is a SQL style string literal
   * No escape sequences are supported other than `''` to indicate a single quote character (this is just like normal SQLite)
-* A sequence of single or double quoted strings separated by whitespce such as "xx" 'yy' "zz" which are concatenated to make one literal
+* A sequence of single or double quoted strings separated by whitespace such as "xx" 'yy' "zz" which are concatenated to make one literal
 * The sequence @FILE("some_string") is a special string literal
   * the value of this literal is the path of the current compiland starting at the letters in `some_string`, or
   * the entire path of the current compiland if `some_string` does not occur in the path
@@ -1007,7 +1007,7 @@ language which can appear anywhere a literal could appear.  This allows you do t
 
 ```sql
 create table something(
-  x integer default const((1<<16)|0xf) /*  again the math is just for illustration */
+  x integer default const((1<<16)|0xf) /* again the math is just for illustration */
 );
 ```
 
@@ -1016,7 +1016,7 @@ The `const` form is also very useful in macros:
 ```c
 #define SOMETHING const(12+3)
 ```
-This form ensures that the constant will be evaluated at compile time. The `const` psuedo-function can also nest
+This form ensures that the constant will be evaluated at compile time. The `const` pseudo-function can also nest
 so you can build these kinds of macros from other macros or you can build enum values this way.
 Anywhere you might need literals, you can use `const`.
 
@@ -1083,7 +1083,7 @@ end;
 
 In this situation you couldn't accidentally switch the columns in `do_something` even though both
 are `real`, and indeed SQLite will only see the type `real` for both.  If you have your own variables
-typed `real<size>` and `read<duration>` you can't accidentally do:
+typed `real<size>` and `real<duration>` you can't accidentally do:
 
 ```sql
   call do_something(duration, size);
@@ -1740,7 +1740,7 @@ This is an easy mistake to make, so to avoid it, CQL also supports these more to
 set x_ := (select x from somewhere where id = 1 if nothing -1);
 ```
 
-And even more generally if the schema allows for null vales and those are not desired:
+And even more generally if the schema allows for null values and those are not desired:
 
 ```sql
 set x_ := (select x from somewhere where id = 1 if nothing or null -1);
@@ -2456,8 +2456,8 @@ begin
     set result := 1;
   else
     declare t integer not null;
-    call fib(arg - 1,  result);
-    call fib(arg - 2,  t);
+    call fib(arg - 1, result);
+    call fib(arg - 2, t);
     set result := t + result;
   end if;
 end;
@@ -3442,7 +3442,7 @@ This allows you to choose some of the columns of one table of the FROM clause.
 -- the columns of A that match the shape Foo
 select columns(A like Foo) from ...;
 
--- get the Foo shape from A and the Far shape from B
+-- get the Foo shape from A and the Bar shape from B
 select columns(A like Foo, B like Bar) from ...;
 ```
 
@@ -6764,23 +6764,23 @@ The table `foo` is the same!  It doesn't get any easier than that.
 
 #### Case 2 : table create version changed
 ```sql
-create table t_create_verison_changed(id integer) @create(1);
+create table t_create_version_changed(id integer) @create(1);
 -------
-create table t_create_verison_changed(id integer) @create(2);
+create table t_create_version_changed(id integer) @create(2);
 
 Error at sem_test_prev.sql:15 : in str : current create version not equal to
-previous create version for 't_create_verison_changed'
+previous create version for 't_create_version_changed'
 ```
 You can't change the version a table was created in.  Here the new schema says it appeared in version 1.  The old schema says 2.
 
 #### Case 3 : table delete version changed
 ```sql
-create table t_delete_verison_changed(id integer) @delete(1);
+create table t_delete_version_changed(id integer) @delete(1);
 -------
-create table t_delete_verison_changed(id integer) @delete(2);
+create table t_delete_version_changed(id integer) @delete(2);
 
 Error at sem_test_prev.sql:18 : in str : current delete version not equal to
-previous delete version for 't_delete_verison_changed'
+previous delete version for 't_delete_version_changed'
 ```
 You can't change the version a table was deleted in.  Here the new schema says it was gone in version 1.  The old schema says 2.
 
@@ -9743,7 +9743,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Oct  7 22:52:04 PDT 2022
+Snapshot as of Mon Oct 31 17:51:16 PDT 2022
 
 ### Operators and Literals
 
@@ -9779,44 +9779,45 @@ REALLIT /* floating point literal */
 ```
 ### Statement/Type Keywords
 ```
-"@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@BLOB_GET_KEY"
-"@BLOB_GET_KEY_TYPE" "@BLOB_GET_VAL" "@BLOB_GET_VAL_TYPE"
-"@BLOB_UPDATE_KEY" "@BLOB_UPDATE_VAL" "@CREATE"
-"@DECLARE_DEPLOYABLE_REGION" "@DECLARE_SCHEMA_REGION"
-"@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
-"@EMIT_ENUMS" "@EMIT_GROUP" "@END_SCHEMA_REGION"
-"@ENFORCE_NORMAL" "@ENFORCE_POP" "@ENFORCE_PUSH"
-"@ENFORCE_RESET" "@ENFORCE_STRICT" "@EPONYMOUS" "@FILE"
-"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE" "@RESUB"
-"@SCHEMA_AD_HOC_MIGRATION" "@SCHEMA_UPGRADE_SCRIPT"
-"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "@UNSUB" "ABORT"
-"ACTION" "ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
-"AUTOINCREMENT" "BEFORE" "BEGIN" "BLOB" "BY" "CALL"
-"CASCADE" "CASE" "CAST" "CATCH" "CHECK" "CLOSE" "COLUMN"
-"COLUMNS" "COMMIT" "CONST" "CONSTRAINT" "CONTEXT COLUMN"
-"CONTEXT TYPE" "CONTINUE" "CREATE" "CROSS" "CURRENT ROW"
-"CURSOR HAS ROW" "CURSOR" "DECLARE" "DEFAULT" "DEFERRABLE"
-"DEFERRED" "DELETE" "DESC" "DISTINCT" "DISTINCTROW" "DO"
-"DROP" "ELSE IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE
-CURRENT ROW" "EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE
-TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH"
-"FILTER" "FIRST" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN"
-"FROM BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS"
-"HAVING" "HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX"
-"INITIALLY" "INNER" "INOUT" "INSERT" "INSTEAD" "INT"
-"INTEGER" "INTERFACE" "INTO" "JOIN" "KEY" "LAST" "LEAVE"
-"LEFT" "LET" "LIMIT" "LONG" "LONG_INT" "LONG_INTEGER"
-"LOOP" "NO" "NOT DEFERRABLE" "NOTHING" "NULL" "NULLS"
-"OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON" "OPEN" "ORDER"
-"OUT" "OUTER" "OVER" "PARTITION" "PRECEDING" "PRIMARY"
-"PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE" "RANGE"
-"REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
+"@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@BLOB_CREATE_KEY"
+"@BLOB_CREATE_VAL" "@BLOB_GET_KEY" "@BLOB_GET_KEY_TYPE"
+"@BLOB_GET_VAL" "@BLOB_GET_VAL_TYPE" "@BLOB_UPDATE_KEY"
+"@BLOB_UPDATE_VAL" "@CREATE" "@DECLARE_DEPLOYABLE_REGION"
+"@DECLARE_SCHEMA_REGION" "@DELETE" "@DUMMY_SEED" "@ECHO"
+"@EMIT_CONSTANTS" "@EMIT_ENUMS" "@EMIT_GROUP"
+"@END_SCHEMA_REGION" "@ENFORCE_NORMAL" "@ENFORCE_POP"
+"@ENFORCE_PUSH" "@ENFORCE_RESET" "@ENFORCE_STRICT"
+"@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
+"@RECREATE" "@RESUB" "@SCHEMA_AD_HOC_MIGRATION"
+"@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
+"@SENSITIVE" "@UNSUB" "ABORT" "ACTION" "ADD" "AFTER" "ALL"
+"ALTER" "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE"
+"BEGIN" "BLOB" "BY" "CALL" "CASCADE" "CASE" "CAST" "CATCH"
+"CHECK" "CLOSE" "COLUMN" "COLUMNS" "COMMIT" "CONST"
+"CONSTRAINT" "CONTEXT COLUMN" "CONTEXT TYPE" "CONTINUE"
+"CREATE" "CROSS" "CURRENT ROW" "CURSOR HAS ROW" "CURSOR"
+"DECLARE" "DEFAULT" "DEFERRABLE" "DEFERRED" "DELETE" "DESC"
+"DISTINCT" "DISTINCTROW" "DO" "DROP" "ELSE IF" "ELSE"
+"ENCODE" "END" "ENUM" "EXCLUDE CURRENT ROW" "EXCLUDE GROUP"
+"EXCLUDE NO OTHERS" "EXCLUDE TIES" "EXCLUSIVE" "EXISTS"
+"EXPLAIN" "FAIL" "FETCH" "FILTER" "FIRST" "FOLLOWING" "FOR
+EACH ROW" "FOR" "FOREIGN" "FROM BLOB" "FROM" "FUNC"
+"FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF" "IGNORE"
+"IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT" "INSERT"
+"INSTEAD" "INT" "INTEGER" "INTERFACE" "INTO" "JOIN" "KEY"
+"LAST" "LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
+"LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
+"NULL" "NULLS" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON"
+"OPEN" "ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
+"PRIMARY" "PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE"
+"RANGE" "REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
 "REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
 "ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
 "STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
-"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "UNBOUNDED"
-"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VAR" "VIEW"
-"VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
+"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "TYPE_CHECK"
+"UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES"
+"VAR" "VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW"
+"WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -9893,6 +9894,7 @@ any_stmt:
   | enforce_reset_stmt
   | enforce_strict_stmt
   | explain_stmt
+  | select_nothing_stmt
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
@@ -10395,7 +10397,7 @@ basic_expr:
   | "CASE" case_list "END"
   | "CASE" case_list "ELSE" expr "END"
   | "CAST" '(' expr "AS" data_type_any ')'
-  ;
+  | "TYPE_CHECK" '(' expr "AS" data_type_with_options ')'
 
 math_expr:
   basic_expr
@@ -10538,6 +10540,10 @@ with_prefix:
 
 with_select_stmt:
   with_prefix select_stmt_no_with
+  ;
+
+select_nothing_stmt:
+  "SELECT" "NOTHING"
   ;
 
 select_stmt:
@@ -11439,11 +11445,11 @@ blob_get_val_stmt:
   ;
 
 blob_create_key_stmt:
-  "@BLOB_GET_VAL" name opt_use_offset
+  "@BLOB_CREATE_KEY" name opt_use_offset
   ;
 
 blob_create_val_stmt:
-  "@BLOB_GET_VAL" name opt_use_offset
+  "@BLOB_CREATE_VAL" name opt_use_offset
   ;
 
 blob_update_key_stmt:
@@ -11972,16 +11978,15 @@ To correct this, rename the local/global.  Or else pick a more distinctive colum
 ### CQL0060: referenced table can be independently recreated so it cannot be used in a foreign key, 'referenced_table'
 
 The referenced table is marked recreate so it must be in the same recreate
-group as the current table because the referenced table might be recreated away leaving all the
+group as the current table or in a recreate group that does not introduce a cyclic foreign key
+dependency among recreate groups. Otherwise, the referenced table might be recreated away leaving all the
 foreign key references in current table as orphans.
 
 So we check the following:
 If the referenced table is marked recreate then any of the following result in CQL0060
 
- * the referenced table is in no group, OR
  * the containing table is not recreate at all (non-recreate table can't reference recreate tables at all), OR
- * the containing table is in no recreate group (it's recreate but not in any group so they might not rev together), OR
- * the recreate groups of the two tables are different (it's in a recreate group but not same one so they my not rev together)
+ * the new foreign key dependency between the referenced table and the current table introduces a cycle
 
 The referenced table is a recreate table and one of the 4 above conditions was not met.  Either don't reference it or
 else put the current table and the referenced table into the same recreate group.
@@ -15639,26 +15644,11 @@ This error indicates that the `@recreate(optional_group)` annotation was removed
 put it back.
 
 
-### CQL0449: recreate group annotation changed in table 'table_name'
+### CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables 'table_name'
 
-The table in question either went to a different group or else it lost a group name.
-
-This is not allowed because of the possible FK violations such motion can have.  Tables in
-a recreate group can refer each other via FK but this isn't allowed across groups.  The
-problem here is that if a group is allowed to move then it will be updated as part of its
-new group.   However, when the upgrade runs there could be a stale copy of the old table,
-likely there is in fact.  That copy could refer to keys in tables that are going away.
-This would cause the upgrade to fail because of FK violations.
-
-To do this correctly in general we would have to allow the notion of deleting the table
-in its old group and then creating it in its new group but this is quite a bizarre situation.
-
-The net of this is that moving groups can cause very complex and strange failures and
-so we don't allow it.
-
-It's ok for a recreate table that had no group to move into some group. Tables with
-no group are already known to have no FKs other than possibly to themselves.
-
+The indicated table was marked for blob storage or is a backed table.  In both cases there
+is no physical schema associated with it so unsubscribe and resubscribe options do not
+make any sense there.  If it's a backed table perhaps the intent was to remove the backing table?
 
 ### CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause
 
@@ -16142,9 +16132,8 @@ is not found or the table is not backed.  Note that normally this error doesn't 
 typically called by CQL itself as part of the rewriting process for backed tables.  However it is possible
 to `cql_blob_create` manually, hence it is error checked.
 
-### CQL0492: backed tables are not supported in the upsert form (yet)
+### CQL0492 available for use
 
-The upsert form does not yet support backed tables.  This work is planned and should appear soon.
 
 ### CQL0493: backed storage tables may not be used in indexes/triggers/drop 'table_name'
 
@@ -16193,6 +16182,37 @@ LIKE some_shape(-name1, -name2)
 
 ended up removing all the columns from `some_shape`.
 
+### CQL0496: SELECT NOTHING may only appear in the else clause of a shared fragment
+
+A common case for conditional shared fragments is that there are rows that should be optionally
+included.  The normal way this is handled is to have a condition like this
+
+```sql
+IF something THEN
+  SELECT your_data;
+ELSE
+  SELECT dummy data WHERE 0;
+END IF;
+```
+
+The problem here is that dummy_data could be complex and involve a lot of typing to get nothing.
+To make this less tedious CQL allows:
+
+```sql
+IF something THEN
+  SELECT your_data;
+ELSE
+  SELECT NOTHING;
+END IF;
+```
+
+However this is the only place SELECT NOTHING is allowed.  It must be:
+* in a procedure
+* which is a conditional shared fragment
+* in the else clause
+
+Any violation results in the present error.
+
 
 
 ## Appendix 5: JSON Schema Grammar
@@ -16205,7 +16225,7 @@ ended up removing all the columns from `some_shape`.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Oct  7 22:52:04 PDT 2022
+Snapshot as of Mon Oct 31 17:51:17 PDT 2022
 
 ### Rules
 

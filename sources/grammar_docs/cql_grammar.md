@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Oct 11 21:53:03 PDT 2022
+Snapshot as of Mon Oct 31 17:51:16 PDT 2022
 
 ### Operators and Literals
 
@@ -84,9 +84,10 @@ EACH ROW" "FOR" "FOREIGN" "FROM BLOB" "FROM" "FUNC"
 "REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
 "ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
 "STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
-"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "UNBOUNDED"
-"UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES" "VAR" "VIEW"
-"VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
+"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "TYPE_CHECK"
+"UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES"
+"VAR" "VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW"
+"WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -666,7 +667,7 @@ basic_expr:
   | "CASE" case_list "END"
   | "CASE" case_list "ELSE" expr "END"
   | "CAST" '(' expr "AS" data_type_any ')'
-  ;
+  | "TYPE_CHECK" '(' expr "AS" data_type_with_options ')'
 
 math_expr:
   basic_expr
