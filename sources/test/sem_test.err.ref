@@ -352,6 +352,13 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'julianday'
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'julianday'
 test/sem_test.sql:XXXX:1: error: in cast_expr : CQL0073: CAST may only appear in the context of SQL statement
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'goo'
+test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: 'bar' vs. 'foo'
+test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: '[none]' vs. 'foo'
+test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: 'bar' vs. '[none]'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression (expected integer; found integer notnull) '1'
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression (expected integer notnull sensitive; found integer notnull) '1'
 test/sem_test.sql:XXXX:1: error: in num : CQL0170: cast is redundant, remove to reduce code size 'CAST(1 AS INTEGER)'
 test/sem_test.sql:XXXX:1: error: in str : CQL0170: cast is redundant, remove to reduce code size 'CAST(idy AS INTEGER<y>)'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'

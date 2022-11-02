@@ -1848,6 +1848,20 @@ static void gen_expr_select_if_nothing(ast_node *ast, CSTR op, int32_t pri, int3
   gen_printf(" )");
 }
 
+static void gen_expr_type_check(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_type_check_expr(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT_ANY_NOTNULL(type, ast->right);
+
+  // note that this will be rewritten to nothing during semantic analysis, it only exists
+  // to force an manual compile time type check (useful in macros and such)
+  gen_printf("TYPE_CHECK(");
+  gen_expr(expr, EXPR_PRI_ROOT);
+  gen_printf(" AS ");
+  gen_data_type(type);
+  gen_printf(")");
+}
+
 static void gen_expr_cast(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_cast_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -4841,6 +4855,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(case_expr, gen_expr_case, "CASE", EXPR_PRI_ROOT);
   EXPR_INIT(exists_expr, gen_expr_exists, "EXISTS", EXPR_PRI_ROOT);
   EXPR_INIT(cast_expr, gen_expr_cast, "CAST", EXPR_PRI_ROOT);
+  EXPR_INIT(type_check_expr, gen_expr_type_check, "TYPE_CHECK", EXPR_PRI_ROOT);
   EXPR_INIT(concat, gen_concat, "||", EXPR_PRI_CONCAT);
   EXPR_INIT(reverse_apply, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
 }

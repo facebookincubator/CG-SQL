@@ -173,6 +173,7 @@ s/[[:<:]]TRIGGER[[:>:]]/"TRIGGER"/g
 s/[[:<:]]TRUE_[[:>:]]/"TRUE"/g
 s/[[:<:]]TRY[[:>:]]/"TRY"/g
 s/[[:<:]]TYPE[[:>:]]/"TYPE"/g
+s/[[:<:]]TYPE_CHECK[[:>:]]/"TYPE_CHECK"/g
 s/[[:<:]]UMINUS[[:>:]]/"UMINUS"/g
 s/[[:<:]]UNBOUNDED[[:>:]]/"UNBOUNDED"/g
 s/[[:<:]]UNION[[:>:]]/"UNION"/g

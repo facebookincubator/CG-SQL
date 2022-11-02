@@ -4057,6 +4057,53 @@ select cast(1 as text);
 -- + {cast_expr}: err
 set X := cast(5.0 as text);
 
+-- TEST: correct check_type (types match)
+-- + {let_stmt}: int_foo: integer<foo> notnull variable
+-- - error:
+let int_foo := type_check(cast(1 as integer<foo>) as integer<foo> not null);
+
+-- TEST: invalid type check expression
+-- + {type_check_expr}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error:
+set int_foo := type_check(not "x" as goo);
+
+-- TEST: invalid type name
+-- + {type_check_expr}: err
+-- + error: % unknown type 'goo'
+-- +1 error:
+set int_foo := type_check(1 as goo);
+
+-- TEST: correct check_type kind must exact match (different name)
+-- + {type_check_expr}: err
+-- + error: % expressions of different kinds can't be mixed: 'bar' vs. 'foo'
+-- +1 error:
+set int_foo := type_check(cast(1 as integer<bar>) as integer<foo> not null);
+
+-- TEST: correct check_type kind must exact match (nil left)
+-- + {type_check_expr}: err
+-- + error: % expressions of different kinds can't be mixed: '[none]' vs. 'foo'
+-- +1 error:
+set int_foo := type_check(1 as integer<foo> not null);
+
+-- TEST: correct check_type kind must exact match (nil right)
+-- + {type_check_expr}: err
+-- + error: % expressions of different kinds can't be mixed: 'bar' vs. '[none]'
+-- +1 error:
+set int_foo := type_check(cast(1 as integer<bar>) as integer not null);
+
+-- TEST: correct check_type (not null mismatch)
+-- + {type_check_expr}: err
+-- + error: % incompatible types in expression (expected integer; found integer notnull) '1'
+-- +1 error:
+set int_foo := type_check(1 as integer);
+
+-- TEST: correct check_type (sensitive mismatch)
+-- + {type_check_expr}: err
+-- + error: % incompatible types in expression (expected integer notnull sensitive; found integer notnull) '1'
+-- +1 error:
+set int_foo := type_check(1 as integer<foo> not null @sensitive);
+
 -- enforce strict cast and verify
 @enforce_strict cast;
 

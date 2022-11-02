@@ -262,6 +262,7 @@ BLOB                         { return BLOB; }
 UPSERT                       { return UPSERT; }
 STATEMENT                    { return STATEMENT; }
 TYPE                         { return TYPE; }
+TYPE_CHECK                   { return TYPE_CHECK; }
 @ATTRIBUTE                   { return AT_ATTRIBUTE; }
 @BEGIN_SCHEMA_REGION         { return AT_BEGIN_SCHEMA_REGION; }
 @BLOB_GET_KEY_TYPE           { return AT_BLOB_GET_KEY_TYPE ; }

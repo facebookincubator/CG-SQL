@@ -1116,6 +1116,10 @@ cql_noexport bool_t is_nullable(sem_t sem_type) {
   return !(sem_type & SEM_TYPE_NOTNULL);
 }
 
+cql_noexport bool_t is_sensitive(sem_t sem_type) {
+  return !!(sem_type & SEM_TYPE_SENSITIVE);
+}
+
 static bool_t is_unique_key(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_UK);
 }
@@ -3106,7 +3110,7 @@ static void sem_data_type_column(ast_node *ast) {
 }
 
 // Create the semantic type, it might be wrapped
-// in a not_null node, extract that.
+// in a not_null node, or @sensitive node, extract that and add to flags.
 static void sem_data_type_var(ast_node *ast) {
   // The data_type could be a declare named type, therefore
   // we should rewrite the node to the real type
@@ -6990,6 +6994,63 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(data_type->sem->sem_type | combined_flags);
   ast->sem->kind = data_type->sem->kind;
 }
+
+static void sem_expr_type_check(ast_node *ast, CSTR cstr) {
+  Contract(is_ast_type_check_expr(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT_ANY_NOTNULL(type, ast->right);
+
+  sem_expr(expr);
+  if (is_error(expr)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_data_type_var(type);
+  if (is_error(type)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type_1 = expr->sem->sem_type;
+  sem_t sem_type_2 = type->sem->sem_type;
+
+  if (core_type_of(sem_type_1) != core_type_of(sem_type_2)
+     || is_nullable(sem_type_1) != is_nullable(sem_type_2)
+     || is_sensitive(sem_type_1) != is_sensitive(sem_type_2)) {
+
+    CSTR err_expr = dup_expr_text(expr);
+    CSTR error_message = "CQL0009: incompatible types in expression";
+    report_sem_type_mismatch(sem_type_2, sem_type_1, expr, error_message, err_expr);
+    record_error(expr);
+    record_error(ast);
+    return;
+  }
+
+  CSTR kleft = expr->sem->kind;
+  CSTR kright = type->sem->kind;
+
+  if (!kleft && !kright) {
+  }
+  else if (kleft && kright && !Strcasecmp(kleft, kright)) {
+  }
+  else {
+    kleft = kleft ? kleft : "[none]";
+    kright = kright ? kright : "[none]";
+
+    CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kleft, kright);
+    report_error(ast, errmsg, NULL);
+    record_error(ast);
+    return;
+  }
+
+  // rewrite, only the expression remains
+  ast_set_left(ast, expr->left);
+  ast_set_right(ast, expr->right);
+  ast->type = expr->type;
+  ast->sem = expr->sem;
+}
+
 
 // Coalesce requires type compatability between all of its arguments.  The result
 // is a not null type if we find a not null item in the list.  There should be
@@ -25537,6 +25598,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(in_pred, sem_expr_in_pred_or_not_in, "IN");
   EXPR_INIT(not_in, sem_expr_in_pred_or_not_in, "NOT IN");
   EXPR_INIT(cast_expr, sem_expr_cast, "CAST");
+  EXPR_INIT(type_check_expr, sem_expr_type_check, "TYPE_CHECK");
   EXPR_INIT(case_expr, sem_expr_case, "CASE");
   EXPR_INIT(concat, sem_concat, "||");
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");

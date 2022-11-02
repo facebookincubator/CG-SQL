@@ -14804,6 +14804,116 @@ test/sem_test.sql:XXXX:1: error: in cast_expr : CQL0073: CAST may only appear in
 
 The statement ending at line XXXX
 
+LET int_foo := CAST(1 AS INTEGER<foo>);
+
+  {let_stmt}: int_foo: integer<foo> notnull variable
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {cast_expr}: integer<foo> notnull
+    | {int 1}: integer notnull
+    | {type_int}: integer<foo>
+      | {name foo}
+
+The statement ending at line XXXX
+
+SET int_foo := TYPE_CHECK(NOT "x" AS goo);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {assign}: err
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {type_check_expr}: err
+    | {not}: err
+    | | {strlit 'x'}: text notnull
+    | {name goo}
+
+The statement ending at line XXXX
+
+SET int_foo := TYPE_CHECK(1 AS goo);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'goo'
+
+  {assign}: err
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {type_check_expr}: err
+    | {int 1}: integer notnull
+    | {name goo}: err
+
+The statement ending at line XXXX
+
+SET int_foo := TYPE_CHECK(CAST(1 AS INTEGER<bar>) AS INTEGER<foo> NOT NULL);
+
+test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: 'bar' vs. 'foo'
+
+  {assign}: err
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {type_check_expr}: err
+    | {cast_expr}: integer<bar> notnull
+    | | {int 1}: integer notnull
+    | | {type_int}: integer<bar>
+    |   | {name bar}
+    | {notnull}: integer<foo> notnull
+      | {type_int}: integer<foo>
+        | {name foo}
+
+The statement ending at line XXXX
+
+SET int_foo := TYPE_CHECK(1 AS INTEGER<foo> NOT NULL);
+
+test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: '[none]' vs. 'foo'
+
+  {assign}: err
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {type_check_expr}: err
+    | {int 1}: integer notnull
+    | {notnull}: integer<foo> notnull
+      | {type_int}: integer<foo>
+        | {name foo}
+
+The statement ending at line XXXX
+
+SET int_foo := TYPE_CHECK(CAST(1 AS INTEGER<bar>) AS INTEGER NOT NULL);
+
+test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: 'bar' vs. '[none]'
+
+  {assign}: err
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {type_check_expr}: err
+    | {cast_expr}: integer<bar> notnull
+    | | {int 1}: integer notnull
+    | | {type_int}: integer<bar>
+    |   | {name bar}
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+SET int_foo := TYPE_CHECK(1 AS INTEGER);
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression (expected integer; found integer notnull) '1'
+
+  {assign}: err
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {type_check_expr}: err
+    | {int 1}: err
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+SET int_foo := TYPE_CHECK(1 AS INTEGER<foo> NOT NULL @SENSITIVE);
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression (expected integer notnull sensitive; found integer notnull) '1'
+
+  {assign}: err
+  | {name int_foo}: int_foo: integer<foo> notnull variable
+  | {type_check_expr}: err
+    | {int 1}: err
+    | {sensitive_attr}: integer<foo> notnull sensitive
+      | {notnull}: integer<foo> notnull
+        | {type_int}: integer<foo>
+          | {name foo}
+
+The statement ending at line XXXX
+
 @ENFORCE_STRICT CAST;
 
   {enforce_strict_stmt}: ok

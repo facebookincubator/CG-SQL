@@ -217,7 +217,7 @@ static void cql_reset_globals(void);
 %token FUNC FUNCTION PROC PROCEDURE INTERFACE BEGIN_ "BEGIN" OUT INOUT CURSOR DECLARE VAR TYPE FETCH LOOP LEAVE CONTINUE FOR ENCODE CONTEXT_COLUMN CONTEXT_TYPE
 %token OPEN CLOSE ELSE_IF WHILE CALL TRY CATCH THROW RETURN
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
-%token CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN COLUMNS RENAME ALTER
+%token TYPE_CHECK CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN COLUMNS RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
 %token AT_RC AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
@@ -1032,7 +1032,7 @@ basic_expr:
   | CASE case_list END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, NULL));}
   | CASE case_list ELSE expr[cond] END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
   | CAST '(' expr[sexp] AS data_type_any ')'  { $basic_expr = new_ast_cast_expr($sexp, $data_type_any); }
-  ;
+  | TYPE_CHECK '(' expr[sexp] AS data_type_with_options[type] ')' { $basic_expr = new_ast_type_check_expr($sexp, $type); }
 
 math_expr[result]:
   basic_expr  { $result = $basic_expr; }
