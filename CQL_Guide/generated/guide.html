@@ -7386,7 +7386,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon Oct 31 17:51:16 PDT 2022</p>
+<p>Snapshot as of Wed Nov 2 16:11:17 PDT 2022</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -7508,7 +7508,10 @@ any_stmt:
   | declare_proc_stmt
   | declare_interface_stmt
   | declare_schema_region_stmt
-  | declare_stmt
+  | declare_vars_stmt
+  | declare_forward_read_cursor_stmt
+  | declare_fetched_value_cursor_stmt
+  | declare_type_stmt
   | delete_stmt
   | drop_index_stmt
   | drop_table_stmt
@@ -8636,8 +8639,8 @@ declare_group_stmt:
   ;
 
 simple_variable_decls:
-  declare_simple_var_stmt &#39;;&#39;
-  | declare_simple_var_stmt &#39;;&#39; simple_variable_decls
+  declare_vars_stmt &#39;;&#39;
+  | declare_vars_stmt &#39;;&#39; simple_variable_decls
   ;
 
 const_values:
@@ -8725,24 +8728,39 @@ params:
   |  param &#39;,&#39; params
   ;
 
-/* these forms are just storage */
-declare_simple_var_stmt:
-  &quot;DECLARE&quot; name_list data_type_with_options
-  | &quot;VAR&quot; name_list data_type_with_options
-  | &quot;DECLARE&quot; name &quot;CURSOR&quot; shape_def
+declare_value_cursor:
+  &quot;DECLARE&quot; name &quot;CURSOR&quot; shape_def
+  | &quot;CURSOR&quot; name shape_def
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;LIKE&quot; select_stmt
+  | &quot;CURSOR&quot; name &quot;LIKE&quot; select_stmt
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;LIKE&quot; &#39;(&#39; typed_names &#39;)&#39;
+  | &quot;CURSOR&quot; name &quot;LIKE&quot; &#39;(&#39; typed_names &#39;)&#39;
   ;
 
-/* the additional forms are just about storage */
-declare_stmt:
-  declare_simple_var_stmt
-  | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FOR&quot; select_stmt
+declare_forward_read_cursor_stmt:
+  &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FOR&quot; select_stmt
+  | &quot;CURSOR&quot; name &quot;FOR&quot; select_stmt
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FOR&quot; explain_stmt
+  | &quot;CURSOR&quot; name &quot;FOR&quot; explain_stmt
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FOR&quot; call_stmt
-  | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FETCH&quot; &quot;FROM&quot; call_stmt
+  | &quot;CURSOR&quot; name &quot;FOR&quot; call_stmt
   | &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FOR&quot; expr
-  | &quot;DECLARE&quot; name &quot;TYPE&quot; data_type_with_options
+  | &quot;CURSOR&quot; name &quot;FOR&quot; expr
+  ;
+
+declare_fetched_value_cursor_stmt:
+  &quot;DECLARE&quot; name &quot;CURSOR&quot; &quot;FETCH&quot; &quot;FROM&quot; call_stmt
+  | &quot;CURSOR&quot; name &quot;FETCH&quot; &quot;FROM&quot; call_stmt
+  ;
+
+declare_type_stmt:
+  &quot;DECLARE&quot; name &quot;TYPE&quot; data_type_with_options
+  ;
+
+declare_vars_stmt:
+  &quot;DECLARE&quot; name_list data_type_with_options
+  | &quot;VAR&quot; name_list data_type_with_options
+  | declare_value_cursor
   ;
 
 call_stmt:
@@ -11405,7 +11423,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon Oct 31 17:51:17 PDT 2022</p>
+<p>Snapshot as of Wed Nov 2 16:11:18 PDT 2022</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

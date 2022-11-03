@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Oct 31 17:51:16 PDT 2022
+Snapshot as of Wed Nov  2 16:11:17 PDT 2022
 
 ### Operators and Literals
 
@@ -147,7 +147,10 @@ any_stmt:
   | declare_proc_stmt
   | declare_interface_stmt
   | declare_schema_region_stmt
-  | declare_stmt
+  | declare_vars_stmt
+  | declare_forward_read_cursor_stmt
+  | declare_fetched_value_cursor_stmt
+  | declare_type_stmt
   | delete_stmt
   | drop_index_stmt
   | drop_table_stmt
@@ -1275,8 +1278,8 @@ declare_group_stmt:
   ;
 
 simple_variable_decls:
-  declare_simple_var_stmt ';'
-  | declare_simple_var_stmt ';' simple_variable_decls
+  declare_vars_stmt ';'
+  | declare_vars_stmt ';' simple_variable_decls
   ;
 
 const_values:
@@ -1364,24 +1367,39 @@ params:
   |  param ',' params
   ;
 
-/* these forms are just storage */
-declare_simple_var_stmt:
-  "DECLARE" name_list data_type_with_options
-  | "VAR" name_list data_type_with_options
-  | "DECLARE" name "CURSOR" shape_def
+declare_value_cursor:
+  "DECLARE" name "CURSOR" shape_def
+  | "CURSOR" name shape_def
   | "DECLARE" name "CURSOR" "LIKE" select_stmt
+  | "CURSOR" name "LIKE" select_stmt
   | "DECLARE" name "CURSOR" "LIKE" '(' typed_names ')'
+  | "CURSOR" name "LIKE" '(' typed_names ')'
   ;
 
-/* the additional forms are just about storage */
-declare_stmt:
-  declare_simple_var_stmt
-  | "DECLARE" name "CURSOR" "FOR" select_stmt
+declare_forward_read_cursor_stmt:
+  "DECLARE" name "CURSOR" "FOR" select_stmt
+  | "CURSOR" name "FOR" select_stmt
   | "DECLARE" name "CURSOR" "FOR" explain_stmt
+  | "CURSOR" name "FOR" explain_stmt
   | "DECLARE" name "CURSOR" "FOR" call_stmt
-  | "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
+  | "CURSOR" name "FOR" call_stmt
   | "DECLARE" name "CURSOR" "FOR" expr
-  | "DECLARE" name "TYPE" data_type_with_options
+  | "CURSOR" name "FOR" expr
+  ;
+
+declare_fetched_value_cursor_stmt:
+  "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt
+  | "CURSOR" name "FETCH" "FROM" call_stmt
+  ;
+
+declare_type_stmt:
+  "DECLARE" name "TYPE" data_type_with_options
+  ;
+
+declare_vars_stmt:
+  "DECLARE" name_list data_type_with_options
+  | "VAR" name_list data_type_with_options
+  | declare_value_cursor
   ;
 
 call_stmt:

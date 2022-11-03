@@ -285,7 +285,7 @@ static void cql_reset_globals(void);
 %type <aval> commit_trans_stmt commit_return_stmt
 %type <aval> continue_stmt
 %type <aval> control_stmt
-%type <aval> declare_stmt declare_simple_var_stmt
+%type <aval> declare_vars_stmt declare_value_cursor declare_forward_read_cursor_stmt declare_type_stmt declare_fetched_value_cursor_stmt
 %type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt emit_group_stmt
 %type <aval> declare_const_stmt const_values const_value emit_constants_stmt declare_group_stmt simple_variable_decls
 %type <aval> echo_stmt
@@ -425,7 +425,10 @@ any_stmt:
   | declare_proc_stmt
   | declare_interface_stmt
   | declare_schema_region_stmt
-  | declare_stmt
+  | declare_vars_stmt
+  | declare_forward_read_cursor_stmt
+  | declare_fetched_value_cursor_stmt
+  | declare_type_stmt
   | delete_stmt
   | drop_index_stmt
   | drop_table_stmt
@@ -1745,8 +1748,8 @@ declare_group_stmt:
   ;
 
 simple_variable_decls[result]:
-  declare_simple_var_stmt[cur] ';' { $result = new_ast_stmt_list($cur, NULL); }
-  | declare_simple_var_stmt[cur] ';' simple_variable_decls[next] { $result = new_ast_stmt_list($cur, $next); }
+  declare_vars_stmt[cur] ';' { $result = new_ast_stmt_list($cur, NULL); }
+  | declare_vars_stmt[cur] ';' simple_variable_decls[next] { $result = new_ast_stmt_list($cur, $next); }
   ;
 
 const_values[result]:
@@ -1857,32 +1860,39 @@ params[result]:
   |  param ',' params[par]  { $result = new_ast_params($param, $par); }
   ;
 
-/* these forms are just storage */
-declare_simple_var_stmt:
-  DECLARE name_list data_type_with_options  { $declare_simple_var_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
-  | VAR name_list data_type_with_options  { $declare_simple_var_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
-  | DECLARE name CURSOR shape_def  { $declare_simple_var_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
-  | DECLARE name CURSOR LIKE select_stmt  { $declare_simple_var_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
-  | DECLARE name CURSOR LIKE '(' typed_names ')' { $declare_simple_var_stmt = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
-  | CURSOR name shape_def  { $declare_simple_var_stmt = new_ast_declare_cursor_like_name($name, $shape_def); }
-  | CURSOR name LIKE select_stmt  { $declare_simple_var_stmt = new_ast_declare_cursor_like_select($name, $select_stmt); }
-  | CURSOR name LIKE '(' typed_names ')' { $declare_simple_var_stmt = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
+declare_value_cursor[result]:
+  DECLARE name CURSOR shape_def  { $result = new_ast_declare_cursor_like_name($name, $shape_def); }
+  | CURSOR name shape_def  { $result = new_ast_declare_cursor_like_name($name, $shape_def); }
+  | DECLARE name CURSOR LIKE select_stmt  { $result = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  | CURSOR name LIKE select_stmt  { $result = new_ast_declare_cursor_like_select($name, $select_stmt); }
+  | DECLARE name CURSOR LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
+  | CURSOR name LIKE '(' typed_names ')' { $result = new_ast_declare_cursor_like_typed_names($name, $typed_names); }
   ;
 
-/* the additional forms are just about storage */
-declare_stmt:
-  declare_simple_var_stmt { $declare_stmt = $declare_simple_var_stmt; }
-  | DECLARE name CURSOR FOR select_stmt  { $declare_stmt = new_ast_declare_cursor($name, $select_stmt); }
-  | DECLARE name CURSOR FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
-  | DECLARE name CURSOR FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
-  | DECLARE name CURSOR FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
-  | DECLARE name[id] CURSOR FOR expr { $declare_stmt = new_ast_declare_cursor($id, $expr); }
-  | DECLARE name TYPE data_type_with_options { $declare_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
-  | CURSOR name FOR select_stmt  { $declare_stmt = new_ast_declare_cursor($name, $select_stmt); }
-  | CURSOR name FOR explain_stmt  { $declare_stmt = new_ast_declare_cursor($name, $explain_stmt); }
-  | CURSOR name FOR call_stmt  { $declare_stmt = new_ast_declare_cursor($name, $call_stmt); }
-  | CURSOR name FETCH FROM call_stmt  { $declare_stmt = new_ast_declare_value_cursor($name, $call_stmt); }
-  | CURSOR name[id] FOR expr { $declare_stmt = new_ast_declare_cursor($id, $expr); }
+declare_forward_read_cursor_stmt[result]:
+  DECLARE name CURSOR FOR select_stmt  { $result = new_ast_declare_cursor($name, $select_stmt); }
+  | CURSOR name FOR select_stmt  { $result = new_ast_declare_cursor($name, $select_stmt); }
+  | DECLARE name CURSOR FOR explain_stmt  { $result = new_ast_declare_cursor($name, $explain_stmt); }
+  | CURSOR name FOR explain_stmt  { $result = new_ast_declare_cursor($name, $explain_stmt); }
+  | DECLARE name CURSOR FOR call_stmt  { $result = new_ast_declare_cursor($name, $call_stmt); }
+  | CURSOR name FOR call_stmt  { $result = new_ast_declare_cursor($name, $call_stmt); }
+  | DECLARE name[id] CURSOR FOR expr { $result = new_ast_declare_cursor($id, $expr); }
+  | CURSOR name[id] FOR expr { $result = new_ast_declare_cursor($id, $expr); }
+  ;
+
+declare_fetched_value_cursor_stmt[result]:
+  DECLARE name CURSOR FETCH FROM call_stmt  { $result = new_ast_declare_value_cursor($name, $call_stmt); }
+  | CURSOR name FETCH FROM call_stmt  { $result = new_ast_declare_value_cursor($name, $call_stmt); }
+  ;
+
+declare_type_stmt:
+  DECLARE name TYPE data_type_with_options { $declare_type_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
+  ;
+
+declare_vars_stmt:
+  DECLARE name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  | VAR name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  | declare_value_cursor { $declare_vars_stmt = $declare_value_cursor; }
   ;
 
 call_stmt:
@@ -2810,6 +2820,9 @@ static void cql_usage() {
     "--rt c\n"
     "  this is the standard C compilation of the sql file\n"
     "  requires two output files (foo.h and foo.c)\n"
+    "--rt c\n"
+    "  this is the lua compilation of the sql file\n"
+    "  requires one output files (foo.lua)\n"
     "--rt objc\n"
     "  Objective-C wrappers for result sets produced by the stored procedures in the input\n"
     "  requires one output file (foo.h)\n"
