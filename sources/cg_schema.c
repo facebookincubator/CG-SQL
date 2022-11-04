@@ -1243,10 +1243,6 @@ static void cg_schema_manage_recreate_tables(
   for (size_t i = 0; i < count; i++) {
     recreate_annotation *note = &notes[i];
     ast_node *ast = note->target_ast;
-    // no schema maintenance for non-physical tables, they aren't actually created
-    if (is_ast_create_table_stmt(ast) && is_table_not_physical(ast)) {
-      continue;
-    }
     CSTR table_name = sem_get_name(ast);
     CSTR gname = create_group_id(note->group_name, table_name);
     symtab_append_bytes(recreate_group_drops, gname, &table_name, sizeof(CSTR));
@@ -1274,11 +1270,6 @@ static void cg_schema_manage_recreate_tables(
 
     ast_node *ast = note->target_ast;
     ast_node *ast_output = ast;
-
-    // no schema maintenance for non-physical tables, they aren't actually created
-    if (is_ast_create_table_stmt(ast) && is_table_not_physical(ast)) {
-      continue;
-    }
 
     // this covers either deleted or unsubscribed
     bool_t deleted = is_deleted(ast);
@@ -1364,10 +1355,7 @@ static void cg_schema_manage_recreate_tables(
     // if there is a group and and this node can be merged with the next
     // then hold the update and accumulate the CRC
     if (i + 1 < count && gname[0] && !Strcasecmp(gname, (note+1)->group_name)) {
-      // no schema maintenance for non-physical tables, so cannot wait for them
-      if (!is_ast_create_table_stmt((note+1)->target_ast) || !is_table_not_physical((note+1)->target_ast)) {
-        continue;
-      }
+      continue;
     }
 
     bprintf(&update_tables, "%s", pending_table_creates.ptr);
@@ -1726,11 +1714,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     directive_not_in_scope |= subscription_management && !include_from_region(version_annotation->parent->sem->region, SCHEMA_TO_UPGRADE);
 
     if (directive_not_in_scope) {
-      continue;
-    }
-
-    // no schema maintenance for non-physical tables, they aren't actually created
-    if (is_ast_create_table_stmt(note->target_ast) && is_table_not_physical(note->target_ast)) {
       continue;
     }
 

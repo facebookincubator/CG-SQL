@@ -137,6 +137,10 @@ CREATE TABLE recreate_backing(
   v BLOB NOT NULL
 );
 
+CREATE TABLE after_backed_table(
+  x INTEGER PRIMARY KEY
+);
+
 CREATE TABLE unsub_voyage(
   v1 INTEGER,
   v3 TEXT,

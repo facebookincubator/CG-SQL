@@ -13541,6 +13541,10 @@ static void sem_validate_previous_table(ast_node *prev_table) {
 static void sem_record_annotation_from_vers_info(version_attrs_info *vers_info) {
   ast_node *target_ast = vers_info->target_ast;
 
+  if (is_ast_create_table_stmt(target_ast) && is_table_not_physical(target_ast)) {
+    return;
+  }
+
   if (vers_info->recreate) {
     ast_node *recreate_ast = vers_info->recreate_version_ast;
     CSTR group_name = vers_info->recreate_group_name ? vers_info->recreate_group_name : "";

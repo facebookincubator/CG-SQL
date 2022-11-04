@@ -194,6 +194,10 @@ CREATE TABLE recreate_backed(
   y INTEGER
 ) @RECREATE(foo);
 
+CREATE TABLE after_backed_table(
+  x INTEGER PRIMARY KEY
+) @RECREATE(foo);
+
 @begin_schema_region other;
 CREATE TABLE unsub_voyage(
   v1 INTEGER,

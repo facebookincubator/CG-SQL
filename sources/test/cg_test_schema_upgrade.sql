@@ -309,6 +309,10 @@ create table recreate_backed(
   y integer
 ) @recreate(foo);
 
+create table after_backed_table(
+  x integer primary key
+) @recreate(foo);
+
 @unsub(1, unsub_recreated);
 
 @begin_schema_region other;

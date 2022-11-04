@@ -29,6 +29,9 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --rt c
   this is the standard C compilation of the sql file
   requires two output files (foo.h and foo.c)
+--rt c
+  this is the lua compilation of the sql file
+  requires one output files (foo.lua)
 --rt objc
   Objective-C wrappers for result sets produced by the stored procedures in the input
   requires one output file (foo.h)
