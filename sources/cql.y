@@ -2823,7 +2823,7 @@ static void cql_usage() {
     "--rt c\n"
     "  this is the standard C compilation of the sql file\n"
     "  requires two output files (foo.h and foo.c)\n"
-    "--rt c\n"
+    "--rt lua\n"
     "  this is the lua compilation of the sql file\n"
     "  requires one output files (foo.lua)\n"
     "--rt objc\n"
