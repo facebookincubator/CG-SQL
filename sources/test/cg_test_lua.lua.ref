@@ -2428,7 +2428,7 @@ function call_in_loop(_db_)
   i = 0
   while true
   do
-  if not(i < 5) then break end
+    if not(i < 5) then break end
     i = i + 1
     cql_finalize_stmt(C_stmt)
     _rc_, C_stmt = simple_select(_db_)
@@ -2472,7 +2472,7 @@ function call_in_loop_with_nullable_condition(_db_)
   i = 0
   while true
   do
-  if not(cql_lt(i, 5)) then break end
+    if not(cql_lt(i, 5)) then break end
     i = cql_add(i, 1)
     cql_finalize_stmt(C_stmt)
     _rc_, C_stmt = simple_select(_db_)
@@ -2524,7 +2524,7 @@ function call_in_loop_boxed(_db_)
   i = 0
   while true
   do
-  if not(i < 5) then break end
+    if not(i < 5) then break end
     i = i + 1
     C_stmt = nil
     _rc_, C_stmt = simple_select(_db_)
@@ -2632,7 +2632,7 @@ function call_out_union_in_loop(_db_)
   i = 0
   while true
   do
-  if not(i < 5) then break end
+    if not(i < 5) then break end
     i = i + 1
     C_result_set_ = out_union_helper_fetch_results()
     C_row_num_ = 0
@@ -4100,7 +4100,7 @@ function empty_blocks(_db_)
   end
   while true
   do
-  if not(true) then break end
+    if not(true) then break end
   end
   _rc_, c_stmt = cql_prepare(_db_, 
     "SELECT 1")
@@ -6781,7 +6781,7 @@ function out_decl_loop_test(x)
 
   while true
   do
-  if not(true) then break end
+    if not(true) then break end
     u, v = out2_proc(x)
     u, v = out2_proc(x)
   end
@@ -8385,6 +8385,254 @@ function explain_equery_plan_backed(_db_)
 ::cql_cleanup::
   if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
   return _rc_, _result_stmt, x
+end
+
+-- The statement ending at line XXXX
+
+--[[
+CREATE PROC stmt_in_loop ()
+BEGIN
+  LET i := 0;
+  WHILE i < 10
+  BEGIN
+    DELETE FROM foo WHERE id = i;
+    SET i := i + 1;
+  END;
+  LET x := ( SELECT EXISTS (SELECT 1
+    FROM foo) );
+END;
+--]]
+
+function stmt_in_loop(_db_)
+  local _rc_ = CQL_OK
+  local i = 0
+  local _temp1_stmt = nil
+  local x = false
+  local _temp_stmt = nil
+
+  i = 0
+  while true
+  do
+    if not(i < 10) then break end
+    if _temp1_stmt == nil then
+      _rc_, _temp1_stmt = cql_prepare(_db_, 
+      "DELETE FROM foo WHERE id = ?")
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    end
+      _rc_ = cql_multibind(_db_, _temp1_stmt, "I", {i})
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    _rc_ = cql_step(_temp1_stmt)
+    if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    cql_reset_stmt(_temp1_stmt)
+    i = i + 1
+  end
+  _rc_, _temp_stmt = cql_prepare(_db_, 
+    "SELECT EXISTS (SELECT 1 FROM foo)")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_step(_temp_stmt)
+  if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    x = cql_to_bool(cql_get_value(_temp_stmt, 0))
+  cql_finalize_stmt(_temp_stmt)
+  _temp_stmt = nil
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(_temp1_stmt)
+  _temp1_stmt = nil
+  cql_finalize_stmt(_temp_stmt)
+  _temp_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+CREATE PROC cursor_in_loop ()
+BEGIN
+  LET i := 0;
+  WHILE i < 10
+  BEGIN
+    DECLARE C CURSOR FOR SELECT *
+      FROM foo
+      WHERE id = i;
+    FETCH C;
+    SET i := i + 1;
+  END;
+  LET x := ( SELECT EXISTS (SELECT 1
+    FROM foo) );
+END;
+--]]
+
+function cursor_in_loop(_db_)
+  local _rc_ = CQL_OK
+  local i = 0
+  local C_stmt = nil
+  local C = { _has_row_ = false }
+  local C_fields_ = { "id" }
+  local C_types_ = "I"
+  local x = false
+  local _temp_stmt = nil
+
+  i = 0
+  while true
+  do
+    if not(i < 10) then break end
+    cql_finalize_stmt(C_stmt)
+    _rc_, C_stmt = cql_prepare(_db_, 
+      "SELECT id FROM foo WHERE id = ?")
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    _rc_ = cql_multibind(_db_, C_stmt, "I", {i})
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    -- step and fetch
+    _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
+    if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    i = i + 1
+  end
+  _rc_, _temp_stmt = cql_prepare(_db_, 
+    "SELECT EXISTS (SELECT 1 FROM foo)")
+  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+  _rc_ = cql_step(_temp_stmt)
+  if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    x = cql_to_bool(cql_get_value(_temp_stmt, 0))
+  cql_finalize_stmt(_temp_stmt)
+  _temp_stmt = nil
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(C_stmt)
+  C_stmt = nil
+  cql_finalize_stmt(_temp_stmt)
+  _temp_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+CREATE PROC select_in_loop ()
+BEGIN
+  WHILE 1
+  BEGIN
+    LET z := ( SELECT 1 AS z );
+  END;
+END;
+--]]
+
+function select_in_loop(_db_)
+  local _rc_ = CQL_OK
+  local z = 0
+  local _temp1_stmt = nil
+
+  while true
+  do
+    if not(true) then break end
+    if _temp1_stmt == nil then
+      _rc_, _temp1_stmt = cql_prepare(_db_, 
+      "SELECT 1")
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    end
+      _rc_ = cql_step(_temp1_stmt)
+    if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+      z = cql_get_value(_temp1_stmt, 0)
+    cql_reset_stmt(_temp1_stmt)
+  end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(_temp1_stmt)
+  _temp1_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+CREATE PROC select_if_nothing_in_loop ()
+BEGIN
+  WHILE 1
+  BEGIN
+    LET z := ( SELECT 1 AS z IF NOTHING 1 );
+  END;
+END;
+--]]
+
+function select_if_nothing_in_loop(_db_)
+  local _rc_ = CQL_OK
+  local _tmp_int_1 = 0
+  local z = 0
+  local _temp1_stmt = nil
+
+  while true
+  do
+    if not(true) then break end
+    if _temp1_stmt == nil then
+      _rc_, _temp1_stmt = cql_prepare(_db_, 
+      "SELECT 1")
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    end
+      _rc_ = cql_step(_temp1_stmt)
+    if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    if _rc_ == CQL_ROW then
+      _tmp_int_1 = cql_get_value(_temp1_stmt, 0)
+      z = _tmp_int_1
+    else
+      z = 1
+    end
+    cql_reset_stmt(_temp1_stmt)
+  end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(_temp1_stmt)
+  _temp1_stmt = nil
+  return _rc_
+end
+
+-- The statement ending at line XXXX
+
+--[[
+CREATE PROC select_if_nothing_or_null_in_loop ()
+BEGIN
+  WHILE 1
+  BEGIN
+    LET z := ( SELECT 1 AS z IF NOTHING OR NULL 1 );
+  END;
+END;
+--]]
+
+function select_if_nothing_or_null_in_loop(_db_)
+  local _rc_ = CQL_OK
+  local _tmp_int_1 = 0
+  local z = 0
+  local _temp1_stmt = nil
+
+  while true
+  do
+    if not(true) then break end
+    if _temp1_stmt == nil then
+      _rc_, _temp1_stmt = cql_prepare(_db_, 
+      "SELECT 1")
+    if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    end
+      _rc_ = cql_step(_temp1_stmt)
+    if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
+    if _rc_ == CQL_ROW then
+      _tmp_int_1 = cql_get_value(_temp1_stmt, 0)
+    end
+    if _rc_ == CQL_DONE or _tmp_int_1 == nil then
+      z = 1
+    else
+      z = _tmp_int_1
+    end
+    _rc_ = CQL_OK
+    cql_reset_stmt(_temp1_stmt)
+  end
+  _rc_ = CQL_OK
+
+::cql_cleanup::
+  cql_finalize_stmt(_temp1_stmt)
+  _temp1_stmt = nil
+  return _rc_
 end
 local this_is_the_end = 0
 

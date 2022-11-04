@@ -21,7 +21,7 @@ CREATE TABLE sqlite_master (
   name TEXT NOT NULL,
   tbl_name TEXT NOT NULL,
   rootpage INTEGER NOT NULL,
-  sql TEXT NOT NULL
+  sql TEXT
 );
 
 -- declare full schema of tables and views to be upgraded and their dependencies -- 
@@ -456,7 +456,9 @@ BEGIN
   SET test_tables_dict_ := cql_string_dictionary_create();
   LOOP FETCH C
   BEGIN
-    LET added := cql_string_dictionary_add(test_tables_dict_, C.name, C.sql);
+    IF C.sql IS NOT NULL THEN
+      LET added := cql_string_dictionary_add(test_tables_dict_, C.name, C.sql);
+    END IF;
   END;
 END;
 

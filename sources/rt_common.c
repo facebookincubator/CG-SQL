@@ -103,6 +103,7 @@ static rtdata rt_c = {
   .cql_result_set_set_string = "cql_result_set_set_string_col",
   .cql_result_set_set_object = "cql_result_set_set_object_col",
   .cql_result_set_set_blob = "cql_result_set_set_blob_col",
+  .cql_target_null = "NULL",
 };
 
 static rtdata rt_lua = {
@@ -243,6 +244,7 @@ static rtdata rt_java = {
     "  }\n"
     "  return new %s(resultSet);\n"
     "}\n\n",
+  .cql_target_null = "null",
 };
 
 static rtdata rt_schema_upgrade = {

@@ -268,4 +268,7 @@ DECLARE PROC update_backed_set_key () USING TRANSACTION;
 DECLARE PROC update_backed_set_both () USING TRANSACTION;
 DECLARE PROC stmt_in_loop () USING TRANSACTION;
 DECLARE PROC cursor_in_loop () USING TRANSACTION;
+DECLARE PROC select_in_loop () USING TRANSACTION;
+DECLARE PROC select_if_nothing_in_loop () USING TRANSACTION;
+DECLARE PROC select_if_nothing_or_null_in_loop () USING TRANSACTION;
 DECLARE PROC end_proc ();

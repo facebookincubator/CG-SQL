@@ -461,6 +461,10 @@ function cql_step(stmt)
   return stmt:step()
 end
 
+function cql_reset_stmt(stmt)
+  return stmt:reset()
+end
+
 function cql_exec(db, sql)
   return db:exec(sql)
 end

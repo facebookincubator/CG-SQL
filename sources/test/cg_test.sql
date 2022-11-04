@@ -5746,8 +5746,13 @@ begin
 end;
 
 -- TEST: in_loop variation of statement prep with DML
--- temp statement is always finalized even in a loop
+-- temp statement is reset in the loop
+-- +1 sqlite3_reset(_temp1_stmt);
+-- +1 cql_finalize_stmt(&_temp1_stmt);
 -- +2 cql_finalize_stmt(&_temp_stmt);
+-- verify that we went back to _temp_stmt after using _temp1_stmt
+-- +1 _rc_ = cql_prepare(_db_, &_temp1_stmt,
+-- +1 _rc_ = cql_prepare(_db_, &_temp_stmt,
 create proc stmt_in_loop()
 begin
    let i := 0;
@@ -5756,11 +5761,17 @@ begin
       delete from foo where id = i;
       set i := i + 1;
    end;
+   -- verify we go back to the normal temp statement
+   let x := (select exists(select 1 from foo));
 end;
 
 -- TEST: in_loop variation of statement prep with cursor
 -- finalize on entry causes another finalize
 -- +2 cql_finalize_stmt(&C_stmt);
+-- +2 cql_finalize_stmt(&_temp_stmt);
+-- verify that we went back to _temp_stmt after using C_stmt
+-- +1 _rc_ = cql_prepare(_db_, &C_stmt,
+-- +1 _rc_ = cql_prepare(_db_, &_temp_stmt,
 create proc cursor_in_loop()
 begin
    let i := 0;
@@ -5769,6 +5780,41 @@ begin
       cursor C for select * from foo where id = i;
       fetch C;
       set i := i + 1;
+   end;
+   -- verify we go back to the normal temp statement
+   let x := (select exists(select 1 from foo));
+end;
+
+-- TEST: in_loop variation of select expression case
+-- +1 sqlite3_reset(_temp1_stmt);
+-- +1 cql_finalize_stmt(&_temp1_stmt);
+create proc select_in_loop()
+begin
+   while 1
+   begin
+     let z := (select 1 z);
+   end;
+end;
+
+-- TEST: in_loop variation of select expression if nothing case
+-- +1 sqlite3_reset(_temp1_stmt);
+-- +1 cql_finalize_stmt(&_temp1_stmt);
+create proc select_if_nothing_in_loop()
+begin
+   while 1
+   begin
+     let z := (select 1 z if nothing 1);
+   end;
+end;
+
+-- TEST: in_loop variation of select expression if nothing or null case
+-- +1 sqlite3_reset(_temp1_stmt);
+-- +1 cql_finalize_stmt(&_temp1_stmt);
+create proc select_if_nothing_or_null_in_loop()
+begin
+   while 1
+   begin
+     let z := (select 1 z if nothing or null 1);
    end;
 end;
 
@@ -5784,3 +5830,4 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
+

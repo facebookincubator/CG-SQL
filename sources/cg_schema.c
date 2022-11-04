@@ -242,7 +242,9 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  SET %s_tables_dict_ := cql_string_dictionary_create();\n", global_proc_name);
   bprintf(decls, "  LOOP FETCH C\n");
   bprintf(decls, "  BEGIN\n");
-  bprintf(decls, "    LET added := cql_string_dictionary_add(%s_tables_dict_, C.name, C.sql);\n", global_proc_name);
+  bprintf(decls, "    IF C.sql IS NOT NULL THEN\n");
+  bprintf(decls, "      LET added := cql_string_dictionary_add(%s_tables_dict_, C.name, C.sql);\n", global_proc_name);
+  bprintf(decls, "    END IF;\n");
   bprintf(decls, "  END;\n");
   bprintf(decls, "END;\n\n");
 
@@ -310,7 +312,7 @@ static void cg_schema_emit_sqlite_master(charbuf *decls) {
   bprintf(decls, "  name TEXT NOT NULL,\n");          // The name of the database object.
   bprintf(decls, "  tbl_name TEXT NOT NULL,\n");      // The table name that the database object is associated with.
   bprintf(decls, "  rootpage INTEGER NOT NULL,\n");   // Root page.
-  bprintf(decls, "  sql TEXT NOT NULL\n);\n\n");      // the DDL to CREATE this object
+  bprintf(decls, "  sql TEXT\n);\n\n");      // the DDL to CREATE this object
 }
 
 static void cg_schema_emit_facet_functions(charbuf *decls) {

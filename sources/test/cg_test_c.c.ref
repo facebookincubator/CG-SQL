@@ -5021,7 +5021,7 @@ CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  if (!(i.value < 5)) break;
+    if (!(i.value < 5)) break;
     cql_set_notnull(i, i.value + 1);
     cql_finalize_stmt(&C_stmt);
     _rc_ = simple_select(_db_, &C_stmt);
@@ -5080,7 +5080,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_with_nullable_condition(sqlite3 *_Nonnull 
   cql_set_notnull(i, 0);
   for (;;) {
   cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
-  if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
+    if (!cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) break;
     cql_set_nullable(i, i.is_null, i.value + 1);
     cql_finalize_stmt(&C_stmt);
     _rc_ = simple_select(_db_, &C_stmt);
@@ -5144,7 +5144,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  if (!(i.value < 5)) break;
+    if (!(i.value < 5)) break;
     cql_set_notnull(i, i.value + 1);
     C_stmt = NULL;
     _rc_ = simple_select(_db_, &C_stmt);
@@ -5362,7 +5362,7 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
 
   cql_set_notnull(i, 0);
   for (;;) {
-  if (!(i.value < 5)) break;
+    if (!(i.value < 5)) break;
     cql_set_notnull(i, i.value + 1);
     cql_object_release(C_result_set_);
     out_union_helper_fetch_results(&C_result_set_);
@@ -8053,7 +8053,7 @@ CQL_WARN_UNUSED cql_code empty_blocks(sqlite3 *_Nonnull _db_) {
     }
   }
   for (;;) {
-  if (!(1)) break;
+    if (!(1)) break;
   }
   _rc_ = cql_prepare(_db_, &c_stmt,
     "SELECT 1");
@@ -13734,7 +13734,7 @@ void out_decl_loop_test(cql_nullable_int32 x) {
   cql_int32 v = 0;
 
   for (;;) {
-  if (!(1)) break;
+    if (!(1)) break;
     out2_proc(x, &u, &v);
     out2_proc(x, &u, &v);
   }
@@ -18560,6 +18560,8 @@ BEGIN
     DELETE FROM foo WHERE id = i;
     SET i := i + 1;
   END;
+  LET x := ( SELECT EXISTS (SELECT 1
+    FROM foo) );
 END;
 */
 
@@ -18572,25 +18574,41 @@ CQL_WARN_UNUSED cql_code stmt_in_loop(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
   cql_int32 i = 0;
+  sqlite3_stmt *_temp1_stmt = NULL;
+  cql_bool x = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
   i = 0;
   for (;;) {
-  if (!(i < 10)) break;
-    _rc_ = cql_prepare(_db_, &_temp_stmt,
+    if (!(i < 10)) break;
+    if (!_temp1_stmt) {
+      _rc_ = cql_prepare(_db_, &_temp1_stmt,
       "DELETE FROM foo WHERE id = ?");
-    cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+    }
+    else {
+      _rc_ = SQLITE_OK;
+    }
+    cql_multibind(&_rc_, _db_, &_temp1_stmt, 1,
                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, i);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-    _rc_ = sqlite3_step(_temp_stmt);
+    _rc_ = sqlite3_step(_temp1_stmt);
     if (_rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-    cql_finalize_stmt(&_temp_stmt);
+    sqlite3_reset(_temp1_stmt);
     i = i + 1;
   }
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT EXISTS (SELECT 1 "
+      "FROM foo)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    x = sqlite3_column_int(_temp_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
   cql_error_report();
+  cql_finalize_stmt(&_temp1_stmt);
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
@@ -18610,6 +18628,8 @@ BEGIN
     FETCH C;
     SET i := i + 1;
   END;
+  LET x := ( SELECT EXISTS (SELECT 1
+    FROM foo) );
 END;
 */
 
@@ -18631,10 +18651,12 @@ CQL_WARN_UNUSED cql_code cursor_in_loop(sqlite3 *_Nonnull _db_) {
   cql_int32 i = 0;
   sqlite3_stmt *C_stmt = NULL;
   cursor_in_loop_C_row C = { 0 };
+  cql_bool x = 0;
+  sqlite3_stmt *_temp_stmt = NULL;
 
   i = 0;
   for (;;) {
-  if (!(i < 10)) break;
+    if (!(i < 10)) break;
     cql_finalize_stmt(&C_stmt);
     _rc_ = cql_prepare(_db_, &C_stmt,
       "SELECT id "
@@ -18650,11 +18672,177 @@ CQL_WARN_UNUSED cql_code cursor_in_loop(sqlite3 *_Nonnull _db_) {
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     i = i + 1;
   }
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT EXISTS (SELECT 1 "
+      "FROM foo)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    x = sqlite3_column_int(_temp_stmt, 0) != 0;
+  cql_finalize_stmt(&_temp_stmt);
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC select_in_loop ()
+BEGIN
+  WHILE 1
+  BEGIN
+    LET z := ( SELECT 1 AS z );
+  END;
+END;
+*/
+
+#define _PROC_ "select_in_loop"
+/*
+export:
+DECLARE PROC select_in_loop () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code select_in_loop(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_int32 z = 0;
+  sqlite3_stmt *_temp1_stmt = NULL;
+
+  for (;;) {
+    if (!(1)) break;
+    if (!_temp1_stmt) {
+      _rc_ = cql_prepare(_db_, &_temp1_stmt,
+      "SELECT 1");
+    }
+    else {
+      _rc_ = SQLITE_OK;
+    }
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(_temp1_stmt);
+    if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+      z = sqlite3_column_int(_temp1_stmt, 0);
+    sqlite3_reset(_temp1_stmt);
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp1_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC select_if_nothing_in_loop ()
+BEGIN
+  WHILE 1
+  BEGIN
+    LET z := ( SELECT 1 AS z IF NOTHING 1 );
+  END;
+END;
+*/
+
+#define _PROC_ "select_if_nothing_in_loop"
+/*
+export:
+DECLARE PROC select_if_nothing_in_loop () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code select_if_nothing_in_loop(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_int32 _tmp_int_1 = 0;
+  cql_int32 z = 0;
+  sqlite3_stmt *_temp1_stmt = NULL;
+
+  for (;;) {
+    if (!(1)) break;
+    if (!_temp1_stmt) {
+      _rc_ = cql_prepare(_db_, &_temp1_stmt,
+      "SELECT 1");
+    }
+    else {
+      _rc_ = SQLITE_OK;
+    }
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(_temp1_stmt);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (_rc_ == SQLITE_ROW) {
+      _tmp_int_1 = sqlite3_column_int(_temp1_stmt, 0);
+      z = _tmp_int_1;
+    }
+    else {
+      z = 1;
+    }
+    sqlite3_reset(_temp1_stmt);
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp1_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC select_if_nothing_or_null_in_loop ()
+BEGIN
+  WHILE 1
+  BEGIN
+    LET z := ( SELECT 1 AS z IF NOTHING OR NULL 1 );
+  END;
+END;
+*/
+
+#define _PROC_ "select_if_nothing_or_null_in_loop"
+/*
+export:
+DECLARE PROC select_if_nothing_or_null_in_loop () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code select_if_nothing_or_null_in_loop(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_int32 _tmp_int_1 = 0;
+  cql_int32 z = 0;
+  sqlite3_stmt *_temp1_stmt = NULL;
+
+  for (;;) {
+    if (!(1)) break;
+    if (!_temp1_stmt) {
+      _rc_ = cql_prepare(_db_, &_temp1_stmt,
+      "SELECT 1");
+    }
+    else {
+      _rc_ = SQLITE_OK;
+    }
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(_temp1_stmt);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (_rc_ == SQLITE_ROW) {
+      _tmp_int_1 = sqlite3_column_int(_temp1_stmt, 0);
+    }
+    if (_rc_ == SQLITE_DONE || 0) {
+      z = 1;
+    } else { 
+      z = _tmp_int_1;
+    }
+    _rc_ = SQLITE_OK;
+    sqlite3_reset(_temp1_stmt);
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp1_stmt);
   return _rc_;
 }
 #undef _PROC_

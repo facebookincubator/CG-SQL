@@ -581,6 +581,9 @@ typedef struct rtdata {
   // Template for the java method copy.
   const char *cql_result_set_copy;
 
+  // The target type for NULL object value.
+  const char *cql_target_null;
+
   void (*cql_post_common_init)(void);
 } rtdata;
 

@@ -352,6 +352,9 @@ declare a cursor for select b from c;
 -- simple cursor declare, short form
 cursor a for select b from c;
 
+-- cursor with typed names
+cursor a like (a integer, b text);
+
 -- loop over cursor
 loop fetch a into b
 begin

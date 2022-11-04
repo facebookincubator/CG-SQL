@@ -29,13 +29,19 @@ begin
     -- normalize.  It's not perfect but it doesn't need to be, it only needs to work for
     -- schema the test will ever see.
 
-    let s := (select replace(C.sql, "\n", " "));
-    set s := (select replace(s, " ,", ","));
-    set s := (select replace(s, " )", ")"));
-    set s := (select replace(s, "( ", "("));
-    set s := (select replace(s, "  ", " "));
-    set s := (select replace(s, ",", ",$"));
-    set s := (select replace(s, "(", "($"));
+    -- this is a workaround for null binding not being correct
+    -- the issue is that  t = {nil} results is #t == 0
+    -- we need a fix for that and then we can remove this workaround
+    let s := "";
+    if C.sql is not null then
+      set s := (select replace(C.sql, "\n", " "));
+      set s := (select replace(s, " ,", ","));
+      set s := (select replace(s, " )", ")"));
+      set s := (select replace(s, "( ", "("));
+      set s := (select replace(s, "  ", " "));
+      set s := (select replace(s, ",", ",$"));
+      set s := (select replace(s, "(", "($"));
+    end if;
 
     -- split the string at the $ marks
     declare lines cursor for
