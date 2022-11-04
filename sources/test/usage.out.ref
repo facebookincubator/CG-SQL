@@ -29,7 +29,7 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --rt c
   this is the standard C compilation of the sql file
   requires two output files (foo.h and foo.c)
---rt c
+--rt lua
   this is the lua compilation of the sql file
   requires one output files (foo.lua)
 --rt objc
