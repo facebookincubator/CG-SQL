@@ -222,7 +222,7 @@ function outparm_test(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "DELETE FROM bar WHERE id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {foo})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "I", foo)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -418,7 +418,7 @@ function get_data(_db_, name_, id_)
   _rc_, _result_stmt = cql_prepare(_db_, 
     "SELECT id, name, rate, type, size FROM bar WHERE id = ? AND name = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _result_stmt, "IS", {id_, name_})
+  _rc_ = cql_multibind(_db_, _result_stmt, "IS", id_, name_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -478,7 +478,7 @@ function easy_fetch(_db_)
   _rc_, C2_stmt = cql_prepare(_db_, 
     "SELECT id, name, rate, type, size FROM bar WHERE ? AND id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, C2_stmt, "FI", {C._has_row_, C.id})
+  _rc_ = cql_multibind(_db_, C2_stmt, "FI", C._has_row_, C.id)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -655,7 +655,7 @@ function hierarchical_query(_db_, rate_, limit_, offset_)
   _rc_, _result_stmt = cql_prepare(_db_, 
     "SELECT id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _result_stmt, "LII", {rate_, limit_, offset_})
+  _rc_ = cql_multibind(_db_, _result_stmt, "LII", rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -705,7 +705,7 @@ function hierarchical_unmatched_query(_db_, rate_, limit_, offset_)
   _rc_, _result_stmt = cql_prepare(_db_, 
     "SELECT id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _result_stmt, "LII", {rate_, limit_, offset_})
+  _rc_ = cql_multibind(_db_, _result_stmt, "LII", rate_, limit_, offset_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -1250,7 +1250,7 @@ function insert_values(_db_, id_, type_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO bar(id, type) VALUES(?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "Ii", {id_, type_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "Ii", id_, type_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -1421,7 +1421,7 @@ function dummy_user(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", _seed_, _seed_, _seed_, _seed_, _seed_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -2239,7 +2239,7 @@ function multi_rewrite(_db_, blob_id_, b_notnull_, b_nullable_, id_, name_, rate
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", blob_id_, b_notnull_, b_nullable_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3384,7 +3384,7 @@ function rowset_object_reader(_db_, rowset)
   _rc_, C_stmt = cql_prepare(_db_, 
     "SELECT id FROM ReadFromRowset(?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, C_stmt, "o", {rowset})
+  _rc_ = cql_multibind(_db_, C_stmt, "o", rowset)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3465,7 +3465,7 @@ function upsert_do_nothing(_db_, id_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO foo(id) VALUES(?) ON CONFLICT DO NOTHING")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {id_})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "I", id_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -7118,7 +7118,7 @@ function nullability_improvements_are_erased_for_sql(_db_)
     _rc_, _result_stmt = cql_prepare(_db_, 
       "SELECT ? + 1")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _rc_ = cql_multibind(_db_, _result_stmt, "i", {a})
+    _rc_ = cql_multibind(_db_, _result_stmt, "i", a)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   end
   _rc_ = CQL_OK
@@ -7610,7 +7610,7 @@ function shared_conditional_user(_db_, x)
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x})
+  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -7696,7 +7696,7 @@ function nested_shared_stuff(_db_)
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {_p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__})
+  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -7784,7 +7784,7 @@ function use_nested_select_shared_frag_form(_db_)
     }
   )
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {_p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__})
+  _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p2_x_, _p1_x__, _p1_x__)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -8419,7 +8419,7 @@ function stmt_in_loop(_db_)
       "DELETE FROM foo WHERE id = ?")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     end
-      _rc_ = cql_multibind(_db_, _temp1_stmt, "I", {i})
+      _rc_ = cql_multibind(_db_, _temp1_stmt, "I", i)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     _rc_ = cql_step(_temp1_stmt)
     if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -8481,7 +8481,7 @@ function cursor_in_loop(_db_)
     _rc_, C_stmt = cql_prepare(_db_, 
       "SELECT id FROM foo WHERE id = ?")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-    _rc_ = cql_multibind(_db_, C_stmt, "I", {i})
+    _rc_ = cql_multibind(_db_, C_stmt, "I", i)
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     -- step and fetch
     _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
@@ -9118,7 +9118,7 @@ function cql_startup(_db_)
   _rc_, foo_cursor_stmt = cql_prepare(_db_, 
     "SELECT id, ? FROM foo WHERE id = ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, foo_cursor_stmt, "Ii", {i2, i0_nullable})
+  _rc_ = cql_multibind(_db_, foo_cursor_stmt, "Ii", i2, i0_nullable)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -9183,7 +9183,7 @@ function cql_startup(_db_)
   _rc_, exchange_cursor_stmt = cql_prepare(_db_, 
     "SELECT ?, ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, exchange_cursor_stmt, "II", {arg2, arg1})
+  _rc_ = cql_multibind(_db_, exchange_cursor_stmt, "II", arg2, arg1)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -9214,7 +9214,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT ? + 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {i2})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "I", i2)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -9230,7 +9230,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT ? + 1")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "i", {i0_nullable})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "i", i0_nullable)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -9999,7 +9999,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "bB", {blob_var, blob_var_notnull})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "bB", blob_var, blob_var_notnull)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -10224,7 +10224,7 @@ function cql_startup(_db_)
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT ?")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_multibind(_db_, _temp_stmt, "b", {blob_var})
+  _rc_ = cql_multibind(_db_, _temp_stmt, "b", blob_var)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end

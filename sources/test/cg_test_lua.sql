@@ -386,7 +386,7 @@ set longint_var := (l0_nullable + l1_nullable) * 5;
 -- +  _rc_, foo_cursor_stmt = cql_prepare(_db_,
 -- +    "SELECT id, ? FROM foo WHERE id = ?")
 -- +2 if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
--- +  _rc_ = cql_multibind(_db_, foo_cursor_stmt, "Ii", {i2, i0_nullable})
+-- +  _rc_ = cql_multibind(_db_, foo_cursor_stmt, "Ii", i2, i0_nullable)
 declare foo_cursor cursor for select id, i2 from foo where id = i0_nullable;
 
 -- TEST: fetch a cursor
@@ -424,7 +424,7 @@ set arg2 := 11;
 -- +   _rc_, exchange_cursor_stmt = cql_prepare(_db_,
 -- +     "SELECT ?, ?")
 -- +2  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
--- +  _rc_ = cql_multibind(_db_, exchange_cursor_stmt, "II", {arg2, arg1})
+-- +  _rc_ = cql_multibind(_db_, exchange_cursor_stmt, "II", arg2, arg1)
 declare exchange_cursor cursor for select arg2, arg1;
 
 -- +  _rc_ = cql_multifetch(exchange_cursor_stmt, exchange_cursor, exchange_cursor_types_, exchange_cursor_fields_)
@@ -440,7 +440,7 @@ close exchange_cursor;
 -- TEST: simple nested select
 -- +  _rc_, _temp_stmt = cql_prepare(_db_,
 -- +    "SELECT ? + 1")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {i2})
+-- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", i2)
 -- +  cql_finalize_stmt(_temp_stmt)
 set i2 := (select i2+1);
 
@@ -448,7 +448,7 @@ set i2 := (select i2+1);
 -- in LUA these bind the same
 -- +  _rc_, _temp_stmt = cql_prepare(_db_,
 -- +    "SELECT ? + 1")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, "i", {i0_nullable})
+-- +  _rc_ = cql_multibind(_db_, _temp_stmt, "i", i0_nullable)
 -- +  cql_finalize_stmt(_temp_stmt)
 set i0_nullable := (select i0_nullable+1);
 
@@ -462,7 +462,7 @@ delete from bar where name like '\\ " \n';
 -- +  local foo
 -- +  foo = 1
 -- +  "DELETE FROM bar WHERE id = ?")
--- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", {foo})
+-- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", foo)
 -- +  return _rc_, foo
 create procedure outparm_test(out foo integer not null)
 begin
@@ -684,7 +684,7 @@ end;
 -- +   printf("%d %s\n", C.id, C.name)
 -- +   _rc_, C2_stmt = cql_prepare(_db_,
 -- +     "SELECT id, name, rate, type, size FROM bar WHERE ? AND id = ?")
--- +   _rc_ = cql_multibind(_db_, C2_stmt, "FI", {C._has_row_, C.id})
+-- +   _rc_ = cql_multibind(_db_, C2_stmt, "FI", C._has_row_, C.id)
 -- +   cql_finalize_stmt(C_stmt)
 -- +   cql_finalize_stmt(C2_stmt)
 -- +   return _rc_
@@ -1232,7 +1232,7 @@ end;
 -- + @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123
 -- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
--- + _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", {_seed_, _seed_, _seed_, _seed_, _seed_})
+-- + _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", _seed_, _seed_, _seed_, _seed_, _seed_)
 create proc dummy_user()
 begin
   insert into bar () values () @dummy_seed(123) @dummy_nullables @dummy_defaults;
@@ -1392,7 +1392,7 @@ set blob_var_notnull := blob_notnull_func();
 -- TEST: bind a nullable blob and a not null blob
 -- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
 -- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)"
--- + _rc_ = cql_multibind(_db_, _temp_stmt, "bB", {blob_var, blob_var_notnull})
+-- + _rc_ = cql_multibind(_db_, _temp_stmt, "bB", blob_var, blob_var_notnull)
 insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_var_notnull);
 
 -- TEST: a result set that includes blobs
@@ -1760,7 +1760,7 @@ set r2 := (select SqlUserFunc(123));
 -- + cql_contract_argument_notnull(b_notnull_, 2)
 -- + cql_contract_argument_notnull(id_, 4)
 -- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)")
--- + _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", {blob_id_, b_notnull_, b_nullable_})
+-- + _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", blob_id_, b_notnull_, b_nullable_)
 -- + out_arg = 1
 -- + return _rc_, out_arg
 create proc multi_rewrite(like blob_table, like bar, out out_arg integer not null)
@@ -2357,7 +2357,7 @@ declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
 -- TEST: use a table valued function that consumes an object
 -- + function rowset_object_reader(_db_, rowset)
 -- + "SELECT id FROM ReadFromRowset(?)")
--- + _rc_ = cql_multibind(_db_, C_stmt, "o", {rowset})
+-- + _rc_ = cql_multibind(_db_, C_stmt, "o", rowset)
 create proc rowset_object_reader(rowset Object<rowset>)
 begin
   declare C cursor for select * from ReadFromRowset(rowset);
@@ -3199,7 +3199,7 @@ end;
 
 -- TEST: test cql_get_blob_size codegen
 -- + "SELECT ?"
--- + rc_ = cql_multibind(_db_, _temp_stmt, "b", {blob_var})
+-- + rc_ = cql_multibind(_db_, _temp_stmt, "b", blob_var)
 -- + l0_nullable = cql_get_blob_size(_tmp_n_blob_%)
 set l0_nullable := cql_get_blob_size((select blob_var));
 
@@ -4651,7 +4651,7 @@ end;
 -- + ") SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar INNER JOIN some_cte ON ? = 5"
 --
 -- 8 variable sites, only some of which are used
--- + _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", {x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x})
+-- + _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x)
 create proc shared_conditional_user(x integer not null)
 begin
   with

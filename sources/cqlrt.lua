@@ -482,12 +482,15 @@ function cql_bind_one(stmt, bind_index, value, code)
   return rc;
 end
 
-function cql_multibind(db, stmt, types, columns)
+function cql_multibind(db, stmt, types, ...)
+  -- values to bind come in as varargs
   local rc = sqlite3.OK
-  for i = 1, #columns
+  local count = select('#', ...)
+  for i = 1, count
   do
     local code = string.byte(types, i, i)
-    rc = cql_bind_one(stmt, i, columns[i], code)
+    local column = select(i,...)
+    rc = cql_bind_one(stmt, i, column, code)
     if rc ~= sqlite3.OK then break end
   end;
 
@@ -517,14 +520,17 @@ function cql_exec_var(db, frag_count, frag_preds, frags)
   return db:exec(sql)
 end
 
-function cql_multibind_var(db, stmt, bind_count, bind_preds, types, columns)
+function cql_multibind_var(db, stmt, bind_count, bind_preds, types, ...)
+  -- values to bind come in as varargs
   local bind_index = 1
   local rc = sqlite3.OK
-  for i = 1, #columns
+  local count = select('#', ...)
+  for i = 1, count
   do
     if bind_preds[i-1] then
       local code = string.byte(types, i, i)
-      rc = cql_bind_one(stmt, bind_index, columns[i], code)
+      local column = select(i,...)
+      rc = cql_bind_one(stmt, bind_index, column, code)
       if rc ~= sqlite3.OK then break end
       bind_index = bind_index + 1
     end

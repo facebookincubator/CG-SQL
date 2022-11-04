@@ -3289,11 +3289,11 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
     bputc(&typestring, '"');
 
     if (lua_has_conditional_fragments) {
-      bprintf(cg_main_output, "_rc_ = cql_multibind_var(_db_, %s_stmt, %d, _vpreds_%d, %s, {",
+      bprintf(cg_main_output, "_rc_ = cql_multibind_var(_db_, %s_stmt, %d, _vpreds_%d, %s, ",
         stmt_name, count, lua_cur_bound_statement, typestring.ptr);
     }
     else {
-      bprintf(cg_main_output, "_rc_ = cql_multibind(_db_, %s_stmt, %s, {",
+      bprintf(cg_main_output, "_rc_ = cql_multibind(_db_, %s_stmt, %s, ",
         stmt_name, typestring.ptr);
     }
 
@@ -3309,7 +3309,7 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
       bprintf(cg_main_output, "%s", item->ast->sem->name);
     }
 
-    bprintf(cg_main_output, "})\n");
+    bprintf(cg_main_output, ")\n");
     cg_lua_error_on_not_sqlite_ok();
   }
 
