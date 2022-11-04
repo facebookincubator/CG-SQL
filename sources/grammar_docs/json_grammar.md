@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Nov  2 16:11:18 PDT 2022
+Snapshot as of Fri Nov  4 10:22:59 PDT 2022
 
 ### Rules
 

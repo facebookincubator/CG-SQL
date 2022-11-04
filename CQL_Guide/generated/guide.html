@@ -888,6 +888,8 @@
 <li><a href="#cql0494-mixing-adding-and-removing-columns-from-a-shape-name">CQL0494: mixing adding and removing columns from a shape ‘name’</a></li>
 <li><a href="#cql0495-no-columns-were-selected-in-the-like-expression">CQL0495: no columns were selected in the LIKE expression</a></li>
 <li><a href="#cql0496-select-nothing-may-only-appear-in-the-else-clause-of-a-shared-fragment">CQL0496: SELECT NOTHING may only appear in the else clause of a shared fragment</a></li>
+<li><a href="#cql0497-from-clause-not-supported-when-updating-backed-table-table_name">CQL0497: FROM clause not supported when updating backed table, ‘table_name’</a></li>
+<li><a href="#cql0498-strict-update-from-validation-requires-that-the-update-statement-not-include-a-from-clause">CQL0498: strict UPDATE … FROM validation requires that the UPDATE statement not include a FROM clause</a></li>
 </ul></li>
 <li><a href="#appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</a>
 <ul>
@@ -7386,7 +7388,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Nov 2 16:11:17 PDT 2022</p>
+<p>Snapshot as of Fri Nov 4 10:22:59 PDT 2022</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8569,7 +8571,7 @@ insert_list:
   ;
 
 basic_update_stmt:
-  &quot;UPDATE&quot; opt_name &quot;SET&quot; update_list opt_where
+  &quot;UPDATE&quot; opt_name &quot;SET&quot; update_list opt_from_query_parts opt_where
   ;
 
 with_update_stmt:
@@ -8577,7 +8579,7 @@ with_update_stmt:
   ;
 
 update_stmt:
-  &quot;UPDATE&quot; name &quot;SET&quot; update_list opt_where opt_orderby opt_limit
+  &quot;UPDATE&quot; name &quot;SET&quot; update_list opt_from_query_parts opt_where opt_orderby opt_limit
   ;
 
 update_entry:
@@ -9050,6 +9052,7 @@ enforcement_options:
   | &quot;CAST&quot;
   | &quot;SIGN FUNCTION&quot;
   | &quot;CURSOR HAS ROW&quot;
+  | &quot;UPDATE&quot; &quot;FROM&quot;
   ;
 
 enforce_strict_stmt:
@@ -11415,6 +11418,10 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 <span id="cb562-5"><a href="#cb562-5" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span> <span class="cf">IF</span>;</span></code></pre></div>
 <p>However this is the only place SELECT NOTHING is allowed. It must be: * in a procedure * which is a conditional shared fragment * in the else clause</p>
 <p>Any violation results in the present error.</p>
+<h3 id="cql0497-from-clause-not-supported-when-updating-backed-table-table_name">CQL0497: FROM clause not supported when updating backed table, ‘table_name’</h3>
+<p>SQLite supports an extended format of the update statement with a FROM clause. At this time backed tables cannot be updated using this form. This is likely to change fairly soon.</p>
+<h3 id="cql0498-strict-update-from-validation-requires-that-the-update-statement-not-include-a-from-clause">CQL0498: strict UPDATE … FROM validation requires that the UPDATE statement not include a FROM clause</h3>
+<p><span class="citation" data-cites="enforce_strict">@enforce_strict</span>` has been use to enable strict update enforcement. When enabled update statements may not include a FROM clause. This is done if the code expects to target SQLite version 3.33 or lower.</p>
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -11423,7 +11430,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Nov 2 16:11:18 PDT 2022</p>
+<p>Snapshot as of Fri Nov 4 10:22:59 PDT 2022</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

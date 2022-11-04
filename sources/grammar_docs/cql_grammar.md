@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Nov  2 16:11:17 PDT 2022
+Snapshot as of Fri Nov  4 10:22:59 PDT 2022
 
 ### Operators and Literals
 
@@ -1208,7 +1208,7 @@ insert_list:
   ;
 
 basic_update_stmt:
-  "UPDATE" opt_name "SET" update_list opt_where
+  "UPDATE" opt_name "SET" update_list opt_from_query_parts opt_where
   ;
 
 with_update_stmt:
@@ -1216,7 +1216,7 @@ with_update_stmt:
   ;
 
 update_stmt:
-  "UPDATE" name "SET" update_list opt_where opt_orderby opt_limit
+  "UPDATE" name "SET" update_list opt_from_query_parts opt_where opt_orderby opt_limit
   ;
 
 update_entry:
@@ -1689,6 +1689,7 @@ enforcement_options:
   | "CAST"
   | "SIGN FUNCTION"
   | "CURSOR HAS ROW"
+  | "UPDATE" "FROM"
   ;
 
 enforce_strict_stmt:

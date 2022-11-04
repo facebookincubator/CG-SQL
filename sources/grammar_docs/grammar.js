@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Nov  2 16:11:17 2022
+// Snapshot as of Fri Nov  4 10:22:59 2022
 
 
 const PREC = {
@@ -216,9 +216,9 @@ module.exports = grammar({
     insert_stmt: $ => choice(seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.select_stmt, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, optional($.opt_column_spec), $.from_shape, optional($.opt_insert_dummy_spec)), seq($.insert_stmt_type, $.name, $.DEFAULT, $.VALUES), seq($.insert_stmt_type, $.name, $.USING, $.select_stmt), seq($.insert_stmt_type, $.name, $.USING, $.expr_names, optional($.opt_insert_dummy_spec))),
     insert_list_item: $ => choice($.expr, $.shape_arguments),
     insert_list: $ => choice($.insert_list_item, seq($.insert_list_item, ',', optional($.insert_list))),
-    basic_update_stmt: $ => seq($.UPDATE, optional($.opt_name), $.SET, $.update_list, optional($.opt_where)),
+    basic_update_stmt: $ => seq($.UPDATE, optional($.opt_name), $.SET, $.update_list, optional($.opt_from_query_parts), optional($.opt_where)),
     with_update_stmt: $ => seq($.with_prefix, $.update_stmt),
-    update_stmt: $ => seq($.UPDATE, $.name, $.SET, $.update_list, optional($.opt_where), optional($.opt_orderby), optional($.opt_limit)),
+    update_stmt: $ => seq($.UPDATE, $.name, $.SET, $.update_list, optional($.opt_from_query_parts), optional($.opt_where), optional($.opt_orderby), optional($.opt_limit)),
     update_entry: $ => seq($.name, '=', $.expr),
     update_list: $ => choice($.update_entry, seq($.update_entry, ',', $.update_list)),
     with_upsert_stmt: $ => seq($.with_prefix, $.upsert_stmt),
@@ -317,7 +317,7 @@ module.exports = grammar({
     CONTEXT_TYPE: $ => prec.left(1, seq(CI('context'), CI('type'))),
     SIGN_FUNCTION: $ => prec.left(1, seq(CI('sign'), CI('function'))),
     CURSOR_HAS_ROW: $ => prec.left(1, seq(CI('cursor'), CI('has'), CI('row'))),
-    enforcement_options: $ => choice(seq($.FOREIGN, $.KEY, $.ON, $.UPDATE), seq($.FOREIGN, $.KEY, $.ON, $.DELETE), $.JOIN, seq($.UPSERT, $.STATEMENT), seq($.WINDOW, $.function), seq($.WITHOUT, $.ROWID), $.TRANSACTION, seq($.SELECT, $.IF, $.NOTHING), seq($.INSERT, $.SELECT), seq($.TABLE, $.FUNCTION), seq($.ENCODE, $.CONTEXT_COLUMN), seq($.ENCODE, $.CONTEXT_TYPE, $.INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.LONG_INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.REAL), seq($.ENCODE, $.CONTEXT_TYPE, $.BOOL), seq($.ENCODE, $.CONTEXT_TYPE, $.TEXT), seq($.ENCODE, $.CONTEXT_TYPE, $.BLOB), $.IS_TRUE, $.CAST, $.SIGN_FUNCTION, $.CURSOR_HAS_ROW),
+    enforcement_options: $ => choice(seq($.FOREIGN, $.KEY, $.ON, $.UPDATE), seq($.FOREIGN, $.KEY, $.ON, $.DELETE), $.JOIN, seq($.UPSERT, $.STATEMENT), seq($.WINDOW, $.function), seq($.WITHOUT, $.ROWID), $.TRANSACTION, seq($.SELECT, $.IF, $.NOTHING), seq($.INSERT, $.SELECT), seq($.TABLE, $.FUNCTION), seq($.ENCODE, $.CONTEXT_COLUMN), seq($.ENCODE, $.CONTEXT_TYPE, $.INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.LONG_INTEGER), seq($.ENCODE, $.CONTEXT_TYPE, $.REAL), seq($.ENCODE, $.CONTEXT_TYPE, $.BOOL), seq($.ENCODE, $.CONTEXT_TYPE, $.TEXT), seq($.ENCODE, $.CONTEXT_TYPE, $.BLOB), $.IS_TRUE, $.CAST, $.SIGN_FUNCTION, $.CURSOR_HAS_ROW, seq($.UPDATE, $.FROM)),
     enforce_strict_stmt: $ => seq($.AT_ENFORCE_STRICT, $.enforcement_options),
     enforce_normal_stmt: $ => seq($.AT_ENFORCE_NORMAL, $.enforcement_options),
     enforce_reset_stmt: $ => $.AT_ENFORCE_RESET,
