@@ -1654,10 +1654,11 @@ insert_list[result]:
   ;
 
 basic_update_stmt:
-  UPDATE opt_name SET update_list opt_where  {
+  UPDATE opt_name SET update_list opt_from_query_parts opt_where  {
     struct ast_node *orderby = new_ast_update_orderby(NULL, NULL);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
-    struct ast_node *list = new_ast_update_set($update_list, where);
+    struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
+    struct ast_node *list = new_ast_update_set($update_list, from);
     $basic_update_stmt = new_ast_update_stmt($opt_name, list); }
   ;
 
@@ -1666,11 +1667,12 @@ with_update_stmt:
   ;
 
 update_stmt:
-  UPDATE name SET update_list opt_where opt_orderby opt_limit  {
+  UPDATE name SET update_list opt_from_query_parts opt_where opt_orderby opt_limit  {
     struct ast_node *limit = $opt_limit;
     struct ast_node *orderby = new_ast_update_orderby($opt_orderby, limit);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
-    struct ast_node *list = new_ast_update_set($update_list, where);
+    struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
+    struct ast_node *list = new_ast_update_set($update_list, from);
     $update_stmt = new_ast_update_stmt($name, list); }
   ;
 
@@ -2246,6 +2248,7 @@ enforcement_options:
   | CAST { $enforcement_options = new_ast_opt(ENFORCE_CAST); }
   | SIGN_FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_SIGN_FUNCTION); }
   | CURSOR_HAS_ROW { $enforcement_options = new_ast_opt(ENFORCE_CURSOR_HAS_ROW); }
+  | UPDATE FROM { $enforcement_options = new_ast_opt(ENFORCE_UPDATE_FROM); }
   ;
 
 enforce_strict_stmt:

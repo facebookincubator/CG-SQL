@@ -617,12 +617,13 @@ END;
           | | {update_entry}: id: integer notnull
           |   | {name id}: id: integer notnull
           |   | {int 1}: integer notnull
-          | {update_where}
-            | {opt_where}: bool notnull
-            | | {eq}: bool notnull
-            |   | {name id}: id: integer notnull
-            |   | {int 2}: integer notnull
-            | {update_orderby}
+          | {update_from}
+            | {update_where}
+              | {opt_where}: bool notnull
+              | | {eq}: bool notnull
+              |   | {name id}: id: integer notnull
+              |   | {int 2}: integer notnull
+              | {update_orderby}
 
 The statement ending at line XXXX
 

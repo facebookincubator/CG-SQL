@@ -3336,7 +3336,8 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   Invariant(is_ast_update_stmt(stmt));
   EXTRACT_NOTNULL(update_set, stmt->right);
   EXTRACT_NOTNULL(update_list, update_set->left);
-  EXTRACT_NOTNULL(update_where, update_set->right);
+  EXTRACT_NOTNULL(update_from, update_set->right);
+  EXTRACT_NOTNULL(update_where, update_from->right);
   EXTRACT(opt_where, update_where->left);
   EXTRACT_NOTNULL(update_orderby, update_where->right);
   EXTRACT(opt_orderby, update_orderby->left);

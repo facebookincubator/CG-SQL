@@ -23840,3 +23840,46 @@ delete from dummy_table_for_backed_test where id in (select id from simple_backe
 -- + simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
 -- - error:
 update dummy_table_for_backed_test set id = id + 1 where id in (select id from simple_backed_table);
+
+create table update_from_target(
+  id integer primary key,
+  name text
+);
+
+create table update_test_1(
+  id integer primary key,
+  name text
+);
+
+create table update_test_2(
+  id integer primary key,
+  name text
+);
+
+-- TEST: update with from clause
+-- + {update_stmt}: update_from_target: { id: integer notnull primary_key, name: text }
+-- - error:
+update update_from_target
+set name = update_test_2.name from update_test_1
+  inner join update_test_2 on update_test_1.id = update_test_2.id
+  where update_test_1.name = 'x' and update_from_target.id = update_test_1.id;
+
+-- TEST: update with from clause
+-- + {update_stmt}: err
+-- + error: % table/view not defined 'table_does_not_exist'
+-- +1 error:
+update update_from_target set name = update_test_2.name from table_does_not_exist;
+
+-- TEST: update backed table with from clause -- not supported
+-- + {update_stmt}: err
+-- + error: % FROM clause not supported when updating backed table 'simple_backed_table'
+-- +1 error:
+update simple_backed_table set id = 5 from update_test_1;
+
+@ENFORCE_STRICT UPDATE FROM;
+
+-- TEST: update with from clause
+-- + {update_stmt}: err
+-- + error: % strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
+-- +1 error:
+UPDATE update_from_target SET name = update_test_2.name FROM update_test_1;

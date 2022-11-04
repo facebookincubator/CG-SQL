@@ -370,6 +370,8 @@ DECLARE a CURSOR FOR SELECT b
 
 DECLARE a CURSOR LIKE (a INTEGER, b TEXT);
 
+DECLARE a CURSOR LIKE (id INTEGER);
+
 LOOP FETCH a INTO b
 BEGIN
   INSERT INTO d VALUES(e, f);
@@ -1841,3 +1843,16 @@ SET file := 'path/I/do/not/like';
 SET file := 'long/path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';
+
+@ATTRIBUTE(cql:backing_table)
+CREATE TABLE backing(
+  k BLOB NOT NULL PRIMARY KEY,
+  v BLOB
+);
+
+@ENFORCE_STRICT UPDATE FROM;
+
+UPDATE foo
+SET name = baz.name FROM bar
+  INNER JOIN baz ON bar.id = baz.id
+  WHERE bar.name = 'x' AND foo.id = bar.id;

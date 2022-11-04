@@ -95,6 +95,7 @@
 #define ENFORCE_ENCODE_CONTEXT_TYPE_BLOB 19
 #define ENFORCE_IS_TRUE 20
 #define ENFORCE_CURSOR_HAS_ROW 21
+#define ENFORCE_UPDATE_FROM 22
 
 #define COMPOUND_OP_UNION 1
 #define COMPOUND_OP_UNION_ALL 2
@@ -808,6 +809,7 @@ AST(with_update_stmt)
 AST(update_stmt)
 AST(update_cursor_stmt)
 AST(update_set)
+AST(update_from)
 AST(update_where)
 AST(update_orderby)
 AST(with_upsert_stmt)
