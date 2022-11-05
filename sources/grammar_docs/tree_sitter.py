@@ -78,7 +78,7 @@ DEFAULT_RULES = [
     "preproc_call: $ => seq(field('directive', $.preproc_directive),field('argument', optional($.preproc_arg)),'\\n')",
     "...preprocIf('', $ => $.stmt)",
     "...preprocIf('_in_field_declaration_list', $ => $.field_declaration_list_item)",
-    "field_declaration_list_item: $ => choice($.declare_stmt,$.preproc_def,$.preproc_function_def,$.preproc_call,alias($.preproc_if_in_field_declaration_list, $.preproc_if),alias($.preproc_ifdef_in_field_declaration_list, $.preproc_ifdef),)",
+    "field_declaration_list_item: $ => choice($.any_stmt,$.preproc_def,$.preproc_function_def,$.preproc_call,alias($.preproc_if_in_field_declaration_list, $.preproc_if),alias($.preproc_ifdef_in_field_declaration_list, $.preproc_ifdef),)",
     "preproc_include: $ => seq(preprocessor('include'),field('path', choice($.string_literal,$.system_lib_string,$.ID,alias($.preproc_call_expression, $.call_expression),)),'\\n')",
     "preproc_function_def: $ => seq(preprocessor('define'),field('name', $.ID),field('parameters', $.preproc_params),field('value', optional($.preproc_arg)),'\\n')",
     "preproc_directive: $ => /#[ \\t]*[a-zA-Z]\\w*/, preproc_arg: $ => token(prec(-1, repeat1(/.|\\\\\\r?\\n/)))",
