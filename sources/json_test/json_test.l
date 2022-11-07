@@ -48,7 +48,6 @@ int fileno(FILE *);
 \"deletedVersion\"[ \t]*:        { return DELETED_VERSION;}
 \"subscriptions\"[ \t]*:         { return SUBSCRIPTIONS; }
 \"unsubscribedVersion\"[ \t]*:   { return UNSUB_VERSION;}
-\"resubscribedVersion\"[ \t]*:   { return RESUB_VERSION;}
 \"deletedMigrationProc\"[ \t]*:  { return DELETED_MIGRATION_PROC; }
 \"isRecreated\"[ \t]*:           { return IS_RECREATED; }
 \"recreateGroupName\"[ \t]*:     { return RECREATE_GROUP_NAME; }

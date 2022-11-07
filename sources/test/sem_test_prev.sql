@@ -490,18 +490,6 @@ create table unsub_resub_trickery(id integer);
 -- - error:
 @unsub (20, unsub_resub_trickery);
 
--- TEST resub valid
--- - error:
-@resub (22, unsub_resub_trickery);
-
--- TEST unsub valid
--- - error:
-@unsub (24, unsub_resub_trickery);
-
--- TEST resub valid
--- - error:
-@resub (26, unsub_resub_trickery);
-
 -- TEST backing table ok
 -- - error:
 @attribute(cql:backing_table)
@@ -534,6 +522,10 @@ create table transitioning_to_baseline(
  x integer,
  y integer
 );
+
+-- TEST: table coming back, unsub removed, this is fine
+-- - error:
+create table resubscribing(id integer);
 
 ------------------------------------------------------------------------------------------------------------
 @previous_schema;
@@ -1096,7 +1088,6 @@ create table dropping_this
   f2 text
 ) @recreate(foo);
 
-
 -- TEST: this table gains a group, that's ok
 -- {create_table_stmt}: gaining_group: { id: integer } @recreate
 -- - error:
@@ -1112,24 +1103,6 @@ create table unsub_resub_trickery(id integer);
 -- TEST: unsub matches
 -- - error:
 @unsub (20, unsub_resub_trickery);
-
--- TEST: resub matches
--- - error:
-@resub (22, unsub_resub_trickery);
-
--- TEST: unsub matches
--- - error:
-@unsub (24, unsub_resub_trickery);
-
--- TEST: resub matches
--- - error:
-@resub (26, unsub_resub_trickery);
-
--- TEST: badly formed directive in previous section
--- + {schema_unsub_stmt}: err
--- + error: % @unsub directive must provide a table
--- +1 error:
-@unsub (28);
 
 -- TEST backing table ok
 -- - error:
@@ -1156,3 +1129,11 @@ create table transitioning_to_baseline(
  x integer,
  y integer
 ) @recreate(foo);
+
+-- TEST: table coming back, unsub removed
+-- - error:
+create table resubscribing(id integer);
+
+-- TEST: ok to come back (not unsub in current schema)
+-- - error:
+@unsub(resubscribing);

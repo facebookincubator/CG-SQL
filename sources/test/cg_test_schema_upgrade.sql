@@ -350,9 +350,6 @@ create index us2 on unsub_outer(name_outer);
 @unsub(1, unsub_voyage);
 @unsub(1, unsub_outer);
 @unsub(1, unsub_inner);
-@resub(5, unsub_voyage);
-@resub(5, unsub_inner);
-@resub(5, unsub_outer);
 
 create table some_table(id integer);
 

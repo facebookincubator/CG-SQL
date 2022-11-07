@@ -264,7 +264,7 @@ static void cql_reset_globals(void);
 %type <aval> basic_update_stmt with_update_stmt update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
 %type <aval> declare_schema_region_stmt declare_deployable_region_stmt call with_upsert_stmt
 %type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec
-%type <aval> schema_unsub_stmt schema_resub_stmt
+%type <aval> schema_unsub_stmt
 
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
@@ -468,7 +468,6 @@ any_stmt:
   | savepoint_stmt
   | select_stmt
   | schema_ad_hoc_migration_stmt
-  | schema_resub_stmt
   | schema_unsub_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
@@ -1382,11 +1381,8 @@ end_schema_region_stmt:
   ;
 
 schema_unsub_stmt:
-  AT_UNSUB version_annotation { $schema_unsub_stmt = new_ast_schema_unsub_stmt($version_annotation); }
-  ;
-
-schema_resub_stmt:
-  AT_RESUB version_annotation { $schema_resub_stmt = new_ast_schema_resub_stmt($version_annotation); }
+  AT_UNSUB '(' INTLIT ',' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_opt(1), $name)); }
+  | AT_UNSUB  '(' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_opt(1), $name)); }
   ;
 
 schema_ad_hoc_migration_stmt:

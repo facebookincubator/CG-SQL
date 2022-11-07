@@ -54,11 +54,10 @@ static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, re
 // Supress virtual table output if this bit is set
 #define SCHEMA_SUPRESS_VIRTUAL_TABLES 16
 
-// rather than burning a new flag bit for tables for this one purpose
+// Rather than burning a new flag bit for tables for this one purpose
 // we can steal a bit that is useless on tables, tables can't be "notnull"
 // we'll use this flag to remember if the table is presently in the unsubscribed
-// state as we move through the upgrade process.  Tables can be resubscribed
-// so the state changes as we go along.
+// state as we move through the upgrade process.  
 #define SCHEMA_FLAG_UNSUB SEM_TYPE_NOTNULL
 
 // If the mode is SCHEMA_TO_DECLARE then we include all the regions we are upgrading
@@ -413,7 +412,7 @@ static void cg_generate_baseline_tables(charbuf *output) {
       continue;
     }
 
-    if (ast->sem->unsub_version > ast->sem->resub_version) {
+    if (ast->sem->unsub_version ) {
       continue;
     }
 
@@ -670,12 +669,12 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
     }
   }
 
-  // there are no "temp" unsub/resub, so don't emit these at all if "temp required" is set
+  // there are no "temp" unsub, so don't emit these at all if "temp required" is set
   // likewise if the output is for sqlite these are not processed by sqlite so they should be ignored
   if (!temp_required && !schema_sqlite) {
     for (list_item *item = all_subscriptions_list; item; item = item->next) {
       ast_node *ast = item->ast;
-      Invariant(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+      Invariant(is_ast_schema_unsub_stmt(ast));
 
       CSTR region = ast->sem->region;
 
@@ -1671,7 +1670,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     }
     else {
       // set the baseline schema CRC to -1;  We do this in case full unsub causes baseline
-      // to go to nothing and subsequent resub needs to see that it changed.
+      // to go to nothing and subsequent removal of some unsubs needs to see that it changed.
       bprintf(&main, "      CALL %s_cql_set_version_crc(0, -1);\n", global_proc_name);
     }
   }
@@ -1710,9 +1709,9 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     // if the target is out of scope we ignore this directive
     bool_t directive_not_in_scope = !include_from_region(note->target_ast->sem->region, SCHEMA_TO_UPGRADE);
 
-    bool_t subscription_management = type == SCHEMA_ANNOTATION_RESUB || type == SCHEMA_ANNOTATION_UNSUB;
+    bool_t subscription_management = type == SCHEMA_ANNOTATION_UNSUB;
 
-    // for unsub/resub the region of the directive must also be in scope
+    // for unsub the region of the directive must also be in scope
     directive_not_in_scope |= subscription_management && !include_from_region(version_annotation->parent->sem->region, SCHEMA_TO_UPGRADE);
 
     if (directive_not_in_scope) {
@@ -1837,15 +1836,6 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
         // current status: unsubscribed this will cause a drop later
         note->target_ast->sem->sem_type |= SCHEMA_FLAG_UNSUB;
-        break;
-
-      case SCHEMA_ANNOTATION_RESUB:
-        // @recreate tables do not need unsub, they will just delete like they usually do
-        // annotation not generated for such cases as it would be a no-op anyway
-        Invariant(!note->target_ast->sem->recreate);
-
-        // current status: subscribed
-        note->target_ast->sem->sem_type &= sem_not(SCHEMA_FLAG_UNSUB);
         break;
 
       case SCHEMA_ANNOTATION_AD_HOC:

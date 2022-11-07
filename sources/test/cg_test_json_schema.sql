@@ -1494,42 +1494,20 @@ create virtual table @eponymous epon_virt_table using epon_virt_table ( this, th
 @begin_schema_region Region0;
 
 -- TEST: unsubscription JSON info should be present
+-- unsubs all happen at v1
 -- + "name" : "t_for_unsub",
 -- + "isDeleted" : 1,
--- + "unsubscribedVersion" : 4,
+-- + "unsubscribedVersion" : 1,
 -- - "resubscribedVersion"
 create table t_for_unsub(
   id integer
 );
 
--- TEST: record unsub
+-- TEST: record unsub -- all unsubs happen at v1 then number is optional and ignored
 -- + "type" : "unsub",
 -- + "table" : "t_for_unsub",
--- + "version" : 4
+-- + "version" : 1
 @unsub(4, t_for_unsub);
-
--- TEST: resubscription JSON info should be present
--- we need a test where the end state is resubscribed
--- + "name" : "t_for_resub",
--- - "unsubscribedVersion"
--- + "resubscribedVersion" : 5,
--- + "isDeleted" : 0,
-create table t_for_resub(
-  id integer
-);
-
--- TEST: record unsub prep for resub
--- + "type" : "unsub",
--- + "table" : "t_for_resub",
--- + "version" : 4
-@unsub(4, t_for_resub);
-
-
--- TEST: record resub
--- + "type" : "resub",
--- + "table" : "t_for_resub",
--- + "version" : 5
-@resub(5, t_for_resub);
 
 @end_schema_region;
 

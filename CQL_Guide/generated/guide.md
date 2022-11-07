@@ -15975,7 +15975,7 @@ than the @unsub/@resub.  It's meaningless to unsubscribe or resubscribe before t
 table is even created.
 
 
-### CQL0471: table/view has another @unsub/@resub at this version number 'name'
+### CQL0471: table/view is already unsubscribed/@resub at this version number 'name'
 
 It doesn't make sense to @unsub in the same version that you @resub (as that
 would be redundant); likewise for @resub.  And it also makes no sense to @unsub or @resub

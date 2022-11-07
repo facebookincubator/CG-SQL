@@ -1644,7 +1644,7 @@ begin
 end;
 
 @unsub (1,foo);
-@resub (2,foo);
+@unsub (foo);
 
 declare function foo(x cursor) integer;
 

@@ -877,63 +877,9 @@ schema_migration_test() {
     failed
   fi
 
-  echo '---------------------------------'
-  echo running semantic analysis for previous schema unsub/resub missing case
-  if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_unsub_missing.sql" >"${OUT_DIR}/sem_test_unsub_missing.out" 2>"${OUT_DIR}/sem_test_unsub_missing.err"
-  then
-     echo "CQL semantic analysis previous unsub/resub returned unexpected error code"
-     cat "${OUT_DIR}/sem_test_unsub_missing.err"
-     failed
-  fi;
-
-  echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_unsub_missing.sql" "${OUT_DIR}/sem_test_unsub_missing.out"
-  then
-    echo failed verification
-    failed
-  fi
-
-  echo '---------------------------------'
-  echo running semantic analysis for previous schema unsub/resub mismatch case
-  if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_unsub_mismatch.sql" >"${OUT_DIR}/sem_test_unsub_mismatch.out" 2>"${OUT_DIR}/sem_test_unsub_mismatch.err"
-  then
-     echo "CQL semantic analysis previous unsub/resub returned unexpected error code"
-     cat "${OUT_DIR}/sem_test_unsub_mismatch.err"
-     failed
-  fi;
-
-  echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_unsub_mismatch.sql" "${OUT_DIR}/sem_test_unsub_mismatch.out"
-  then
-    echo failed verification
-    failed
-  fi
-
-  echo '---------------------------------'
-  echo running semantic analysis for previous schema unsub/resub badorder case
-  if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_unsub_badorder.sql" >"${OUT_DIR}/sem_test_unsub_badorder.out" 2>"${OUT_DIR}/sem_test_unsub_badorder.err"
-  then
-     echo "CQL semantic analysis previous unsub/resub returned unexpected error code"
-     cat "${OUT_DIR}/sem_test_unsub_badorder.err"
-     failed
-  fi;
-
-  echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_unsub_badorder.sql" "${OUT_DIR}/sem_test_unsub_badorder.out"
-  then
-    echo failed verification
-    failed
-  fi
-
   echo "  computing diffs (empty if none)"
   on_diff_exit sem_test_prev.out
   on_diff_exit sem_test_prev.err
-  on_diff_exit sem_test_unsub_missing.out
-  on_diff_exit sem_test_unsub_missing.err
-  on_diff_exit sem_test_unsub_mismatch.out
-  on_diff_exit sem_test_unsub_mismatch.err
-  on_diff_exit sem_test_unsub_badorder.out
-  on_diff_exit sem_test_unsub_badorder.err
 
   echo '---------------------------------'
   echo running code gen for migration test

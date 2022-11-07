@@ -69,7 +69,6 @@ typedef struct sem_node {
   int32_t create_version;           // create version if any (really only for tables and columns)
   int32_t delete_version;           // delete version if any (really only for tables and columns)
   int32_t unsub_version;            // unsub version if any (for tables only)
-  int32_t resub_version;            // resub version if any (for tables only)
   bool_t recreate;                  // for tables only, true if marked @recreate
   CSTR recreate_group_name;         // for tables only, the name of the recreate group if they are in one
   CSTR region;                      // the schema region, if applicable; null means unscoped (default)
@@ -130,8 +129,7 @@ typedef struct schema_annotation {
 #define SCHEMA_ANNOTATION_DELETE_COLUMN 7
 #define SCHEMA_ANNOTATION_DELETE_TABLE 8
 #define SCHEMA_ANNOTATION_AD_HOC 9
-#define SCHEMA_ANNOTATION_RESUB 10
-#define SCHEMA_ANNOTATION_LAST 10
+#define SCHEMA_ANNOTATION_LAST 9
 
 #define SEM_TYPE_NULL 0         // the subtree is a null literal (not just nullable)
 #define SEM_TYPE_BOOL 1         // the subtree is a bool
