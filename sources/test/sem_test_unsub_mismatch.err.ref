@@ -1,4 +1,0 @@
-test/sem_test_unsub_mismatch.sql:XXXX:1: error: in schema_unsub_stmt : CQL0475: @unsub/@resub directives did not match between current and previous schema
-previous schema @unsub(1, foo)
-current schema @unsub(2, foo)
-semantic errors present; no code gen.

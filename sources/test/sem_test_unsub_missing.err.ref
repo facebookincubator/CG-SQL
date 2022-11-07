@@ -1,2 +1,0 @@
-test/sem_test_unsub_missing.sql:XXXX:1: error: in schema_resub_stmt : CQL0476: previous schema had more unsub/resub directives than the current schema
-semantic errors present; no code gen.

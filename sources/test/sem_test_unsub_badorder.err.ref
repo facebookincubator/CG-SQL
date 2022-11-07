@@ -1,2 +1,0 @@
-test/sem_test_unsub_badorder.sql:XXXX:1: error: in schema_unsub_stmt : new @unsub/@resub must be added at version 10 or later
-semantic errors present; no code gen.
