@@ -670,6 +670,9 @@ declare proc decl4(id integer) out ( A integer not null, B bool) using transacti
 -- declare interface
 declare interface decl5 ( A integer not null, B bool);
 
+-- declare interface, short form
+interface decl6 ( A integer not null, B bool);
+
 -- an enumeration
 declare enum things integer (
   foo,

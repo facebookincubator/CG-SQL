@@ -1815,6 +1815,9 @@ declare_proc_stmt:
 declare_interface_stmt:
   DECLARE INTERFACE name '(' typed_names ')'  {
       $declare_interface_stmt = new_ast_declare_interface_stmt($name, new_ast_proc_params_stmts(NULL, $typed_names)); }
+  | INTERFACE name '(' typed_names ')'  {
+      $declare_interface_stmt = new_ast_declare_interface_stmt($name, new_ast_proc_params_stmts(NULL, $typed_names)); }
+  ;
 
 create_proc_stmt:
   CREATE procedure name '(' params ')' BEGIN_ opt_stmt_list END  {
