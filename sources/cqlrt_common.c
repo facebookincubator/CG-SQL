@@ -4220,7 +4220,7 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
     char* table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
     cql_int32 bytes = (cql_int32)(strlen(table_name)) + sizeof("DROP TABLE IF EXISTS ");
     char* drop = malloc(bytes);
-    sprintf(drop, "DROP TABLE IF EXISTS %s", table_name);
+    snprintf(drop, bytes, "DROP TABLE IF EXISTS %s", table_name);
     rc = cql_exec(db, drop);
     free(table_name);
     free(drop);
