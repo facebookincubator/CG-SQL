@@ -47,7 +47,7 @@ void yyset_lineno(int);
 %token TABLES CRC VIRTUAL_TABLES MODULE MODULE_ARGS
 %token NAME ARG_ORIGIN IS_TEMP IS_VIRTUAL IF_NOT_EXISTS WITHOUT_ROWID IS_ADDED IS_DELETED IS_RECREATED REGION DEPLOYED_IN_REGION
 %token ADDED_VERSION DELETED_VERSION ADDED_MIGRATION_PROC DELETED_MIGRATION_PROC RECREATE_GROUP_NAME
-%token COLUMNS UNSUB_VERSION RESUB_VERSION SUBSCRIPTIONS IS_BACKED TYPE_HASH IS_BACKING
+%token COLUMNS UNSUB_VERSION SUBSCRIPTIONS IS_BACKED TYPE_HASH IS_BACKING
 %token TYPE KIND IS_NOT_NULL IS_PRIMARY_KEY IS_UNIQUE_KEY IS_AUTO_INCREMENT IS_SENSITIVE
 %token IS_EPONYMOUS
 %token PRIMARY_KEY PRIMARY_KEY_SORT_ORDERS PRIMARY_KEY_NAME FOREIGN_KEYS UNIQUE_KEYS
@@ -118,7 +118,6 @@ table: '{'
        IS_RECREATED BOOL_LITERAL ','
        opt_recreate_group_name
        opt_unsub_version
-       opt_resub_version
        opt_backing_details
        opt_region_info
        opt_table_indices
@@ -178,9 +177,6 @@ opt_added_migration_proc: | ADDED_MIGRATION_PROC STRING_LITERAL ','
   ;
 
 opt_unsub_version: | UNSUB_VERSION any_integer ','
-  ;
-
-opt_resub_version: | RESUB_VERSION any_integer ','
   ;
 
 opt_deleted_version: | DELETED_VERSION any_integer ',' opt_deleted_migration_proc

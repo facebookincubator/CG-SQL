@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 4631880393995620126
+-- schema crc 9110227700131655447
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -392,34 +392,22 @@ END;
 @SCHEMA_AD_HOC_MIGRATION(5, MyAdHocMigrationScript);
 @end_schema_region;
 
-@UNSUB(1, unsub_recreated);
+@UNSUB(unsub_recreated);
 
 @begin_schema_region other;
-@UNSUB(1, unsub_voyage);
+@UNSUB(unsub_voyage);
 @end_schema_region;
 
 @begin_schema_region other;
-@UNSUB(1, unsub_outer);
+@UNSUB(unsub_outer);
 @end_schema_region;
 
 @begin_schema_region other;
-@UNSUB(1, unsub_inner);
+@UNSUB(unsub_inner);
 @end_schema_region;
 
 @begin_schema_region other;
-@RESUB(5, unsub_voyage);
-@end_schema_region;
-
-@begin_schema_region other;
-@RESUB(5, unsub_inner);
-@end_schema_region;
-
-@begin_schema_region other;
-@RESUB(5, unsub_outer);
-@end_schema_region;
-
-@begin_schema_region other;
-@UNSUB(5, foo_view_unsubscribed);
+@UNSUB(foo_view_unsubscribed);
 @end_schema_region;
 
 -- facets table declaration --
@@ -648,15 +636,12 @@ BEGIN
   END IF;
   DROP INDEX IF EXISTS unsub_recreated_index;
   CALL test_cql_set_facet_version('unsub_recreated_index_index_crc', -1);
-  IF cql_facet_find(test_facets, 'unsub_voyage_index_index_crc') != -8899721617915492817 THEN
-    DROP INDEX IF EXISTS unsub_voyage_index;
-  END IF;
-  IF cql_facet_find(test_facets, 'us1_index_crc') != 9020201814219197762 THEN
-    DROP INDEX IF EXISTS us1;
-  END IF;
-  IF cql_facet_find(test_facets, 'us2_index_crc') != -4340849304463212055 THEN
-    DROP INDEX IF EXISTS us2;
-  END IF;
+  DROP INDEX IF EXISTS unsub_voyage_index;
+  CALL test_cql_set_facet_version('unsub_voyage_index_index_crc', -1);
+  DROP INDEX IF EXISTS us1;
+  CALL test_cql_set_facet_version('us1_index_crc', -1);
+  DROP INDEX IF EXISTS us2;
+  CALL test_cql_set_facet_version('us2_index_crc', -1);
 END;
 
 -- create all the indices we need
@@ -682,18 +667,6 @@ BEGIN
   IF cql_facet_find(test_facets, 'recreate_index_needs_deleting3_index_crc') != 6591796666912246967 THEN
     CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
     CALL test_cql_set_facet_version('recreate_index_needs_deleting3_index_crc', 6591796666912246967);
-  END IF;
-  IF cql_facet_find(test_facets, 'unsub_voyage_index_index_crc') != -8899721617915492817 THEN
-    CREATE INDEX unsub_voyage_index ON unsub_voyage (v1);
-    CALL test_cql_set_facet_version('unsub_voyage_index_index_crc', -8899721617915492817);
-  END IF;
-  IF cql_facet_find(test_facets, 'us1_index_crc') != 9020201814219197762 THEN
-    CREATE INDEX us1 ON unsub_inner (name_inner);
-    CALL test_cql_set_facet_version('us1_index_crc', 9020201814219197762);
-  END IF;
-  IF cql_facet_find(test_facets, 'us2_index_crc') != -4340849304463212055 THEN
-    CREATE INDEX us2 ON unsub_outer (name_outer);
-    CALL test_cql_set_facet_version('us2_index_crc', -4340849304463212055);
   END IF;
 END;
 
@@ -736,11 +709,6 @@ BEGIN
     WHEN filter_(new.id) = 3
   BEGIN
   DELETE FROM foo WHERE id = 77;
-  END;
-  CREATE TRIGGER unsub_voyage_trigger
-    BEFORE INSERT ON unsub_voyage
-  BEGIN
-  SELECT 1;
   END;
 END;
 
@@ -913,7 +881,7 @@ END;
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
-  IF cql_facet_find(test_facets, facet) <> 6371217011003340002 THEN
+  IF cql_facet_find(test_facets, facet) <> 3058097930777242867 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -935,12 +903,6 @@ BEGIN
         id INTEGER NOT NULL,
         name1 TEXT
       );
-    END IF;
-
-    -- altering table unsub_voyage to add column v3 TEXT;
-
-    IF NOT test_column_exists(cql_compressed('unsub_voyage'), cql_compressed('v3 TEXT')) THEN 
-      ALTER TABLE unsub_voyage ADD COLUMN v3 TEXT;
     END IF;
 
     ---- upgrade to schema version 4 ----
@@ -1005,12 +967,6 @@ BEGIN
       ALTER TABLE foo ADD COLUMN name TEXT;
     END IF;
 
-    -- altering table unsub_voyage to add column v5 TEXT;
-
-    IF NOT test_column_exists(cql_compressed('unsub_voyage'), cql_compressed('v5 TEXT')) THEN 
-      ALTER TABLE unsub_voyage ADD COLUMN v5 TEXT;
-    END IF;
-
     -- logical delete of column rate from foo; -- no ddl
 
     -- ad hoc migration proc MyAdHocMigrationScript will run
@@ -1047,12 +1003,6 @@ BEGIN
       );
     END IF;
 
-    -- altering table unsub_voyage to add column v7 TEXT;
-
-    IF NOT test_column_exists(cql_compressed('unsub_voyage'), cql_compressed('v7 TEXT')) THEN 
-      ALTER TABLE unsub_voyage ADD COLUMN v7 TEXT;
-    END IF;
-
     CALL test_cql_drop_tables();
     CALL test_cql_recreate_non_virtual_tables();
     CALL test_cql_create_all_views();
@@ -1060,11 +1010,11 @@ BEGIN
     CALL test_cql_create_all_triggers();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 6371217011003340002);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 3058097930777242867);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', 4631880393995620126);
+    CALL test_cql_set_facet_version('cql_schema_crc', 9110227700131655447);
   END IF;
 END;
 
@@ -1108,7 +1058,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 4631880393995620126 THEN
+  IF schema_crc <> 9110227700131655447 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

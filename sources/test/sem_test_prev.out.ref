@@ -2323,38 +2323,11 @@ CREATE TABLE unsub_resub_trickery(
 
 The statement ending at line XXXX
 
-@UNSUB(20, unsub_resub_trickery);
+@UNSUB(unsub_resub_trickery);
 
   {schema_unsub_stmt}: ok
   | {version_annotation}
-    | {int 20}
-    | {name unsub_resub_trickery}
-
-The statement ending at line XXXX
-
-@RESUB(22, unsub_resub_trickery);
-
-  {schema_resub_stmt}: ok
-  | {version_annotation}
-    | {int 22}
-    | {name unsub_resub_trickery}
-
-The statement ending at line XXXX
-
-@UNSUB(24, unsub_resub_trickery);
-
-  {schema_unsub_stmt}: ok
-  | {version_annotation}
-    | {int 24}
-    | {name unsub_resub_trickery}
-
-The statement ending at line XXXX
-
-@RESUB(26, unsub_resub_trickery);
-
-  {schema_resub_stmt}: ok
-  | {version_annotation}
-    | {int 26}
+    | {int 1}
     | {name unsub_resub_trickery}
 
 The statement ending at line XXXX
@@ -2489,6 +2462,24 @@ CREATE TABLE transitioning_to_baseline(
           | {col_def_name_type}
             | {name y}
             | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE resubscribing(
+  id INTEGER
+);
+
+  {create_table_stmt}: resubscribing: { id: integer } validated
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name resubscribing}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
 
 The statement ending at line XXXX
 
@@ -4721,49 +4712,12 @@ CREATE TABLE unsub_resub_trickery(
 
 The statement ending at line XXXX
 
-@UNSUB(20, unsub_resub_trickery);
+@UNSUB(unsub_resub_trickery);
 
   {schema_unsub_stmt}: ok
   | {version_annotation}
-    | {int 20}
+    | {int 1}
     | {name unsub_resub_trickery}
-
-The statement ending at line XXXX
-
-@RESUB(22, unsub_resub_trickery);
-
-  {schema_resub_stmt}: ok
-  | {version_annotation}
-    | {int 22}
-    | {name unsub_resub_trickery}
-
-The statement ending at line XXXX
-
-@UNSUB(24, unsub_resub_trickery);
-
-  {schema_unsub_stmt}: ok
-  | {version_annotation}
-    | {int 24}
-    | {name unsub_resub_trickery}
-
-The statement ending at line XXXX
-
-@RESUB(26, unsub_resub_trickery);
-
-  {schema_resub_stmt}: ok
-  | {version_annotation}
-    | {int 26}
-    | {name unsub_resub_trickery}
-
-The statement ending at line XXXX
-
-@UNSUB(28);
-
-test/sem_test_prev.sql:XXXX:1: error: in schema_unsub_stmt : CQL0465: @unsub directive must provide a table or view name
-
-  {schema_unsub_stmt}: err
-  | {version_annotation}
-    | {int 28}
 
 The statement ending at line XXXX
 
@@ -4863,4 +4817,31 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from
           | {col_def_name_type}
             | {name y}
             | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE resubscribing(
+  id INTEGER
+);
+
+  {create_table_stmt}: resubscribing: { id: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name resubscribing}
+  | {col_key_list}
+    | {col_def}: id: integer
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+          | {name id}
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+@UNSUB(resubscribing);
+
+  {schema_unsub_stmt}: ok
+  | {version_annotation}
+    | {int 1}
+    | {name resubscribing}
 

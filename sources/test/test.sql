@@ -1647,7 +1647,7 @@ begin
 end;
 
 @unsub (1,foo);
-@resub (2,foo);
+@unsub (foo);
 
 declare function foo(x cursor) integer;
 
@@ -1681,6 +1681,10 @@ create table unary_plus_default_value(
 @blob_create_val bcreateval_offs offset;
 @blob_update_key bupdatekey_offs offset;
 @blob_update_val bupdateval_offs offset;
+
+-- ignored like a comment
+@resub(foo, bar, baz);
+
 
 declare proc foo(like X(-x));
 

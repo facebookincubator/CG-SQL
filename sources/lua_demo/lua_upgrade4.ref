@@ -49,6 +49,13 @@ CREATE TABLE lua_upgrade_cql_schema_facets(
   facet TEXT NOT NULL PRIMARY KEY,
   version LONG_INT NOT NULL)
 
+----- new_in_v4 -----
+
+type: table
+tbl_name: new_in_v4
+CREATE TABLE new_in_v4(
+  id INTEGER)
+
 ----- recreate_test_for_unsub -----
 
 type: table

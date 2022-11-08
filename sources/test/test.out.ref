@@ -1779,9 +1779,9 @@ BEGIN
   DECLARE y CURSOR LIKE SELECT 2 AS x, "foo" AS y;
 END;
 
-@UNSUB(1, foo);
+@UNSUB(foo);
 
-@RESUB(2, foo);
+@UNSUB(foo);
 
 DECLARE FUNC foo (x CURSOR) INTEGER;
 

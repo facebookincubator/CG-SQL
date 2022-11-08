@@ -563,7 +563,7 @@ static void cg_json_constant_groups(charbuf* output) {
   bprintf(output, "]");
 }
 
-// Emits the JSON for all the subscription directives (@unsub/@resub)
+// Emits the JSON for all the unsubscription directives
 static void cg_json_subscriptions(charbuf* output) {
   bprintf(output, "\"subscriptions\" : [\n");
   BEGIN_INDENT(list, 2);
@@ -571,7 +571,7 @@ static void cg_json_subscriptions(charbuf* output) {
 
   for (list_item *item = all_subscriptions_list; item; item = item->next) {
     ast_node *ast = item->ast;
-    Invariant(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
+    Invariant(is_ast_schema_unsub_stmt(ast));
 
     EXTRACT_NOTNULL(version_annotation, ast->left);
     EXTRACT_OPTION(vers, version_annotation->left);
@@ -583,7 +583,7 @@ static void cg_json_subscriptions(charbuf* output) {
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
-    bprintf(output, "\"type\" : \"%s\",\n", is_ast_schema_unsub_stmt(ast) ? "unsub" : "resub");
+    bprintf(output, "\"type\" : \"unsub\",\n");
     bprintf(output, "\"table\" : \"%s\"", name);
     if (region) {
       cg_json_emit_region_info(output, ast);
@@ -1567,7 +1567,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   bool_t is_added = ast->sem->create_version > 0;
 
   bool_t is_deleted = ast->sem->delete_version > 0;
-  bool_t is_unsub = ast->sem->unsub_version > ast->sem->resub_version;
+  bool_t is_unsub = ast->sem->unsubscribed > 0;
 
   bprintf(output, "\"name\" : \"%s\"", name);
   bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
@@ -1591,12 +1591,8 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
     bprintf(output, ",\n\"recreateGroupName\" : \"%s\"", ast->sem->recreate_group_name);
   }
 
-  if (ast->sem->unsub_version > ast->sem->resub_version) {
-     bprintf(output, ",\n\"unsubscribedVersion\" : %d", ast->sem->unsub_version);
-  }
-
-  if (ast->sem->resub_version > ast->sem->unsub_version) {
-     bprintf(output, ",\n\"resubscribedVersion\" : %d", ast->sem->resub_version);
+  if (is_unsub) {
+     bprintf(output, ",\n\"unsubscribedVersion\" : %d", ast->sem->unsubscribed);
   }
 
   if (is_backing(ast->sem->sem_type)) {

@@ -108,6 +108,7 @@ cql_code post_validate(sqlite3* db, cql_int64 old_version) {
   }
 
   if (validate_transition(db)) {
+    fprintf(stderr, "Validate transition failed\n");
     cql_string_release(facet);
     return SQLITE_ERROR;
   }

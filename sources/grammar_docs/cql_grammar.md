@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Nov  4 16:52:48 PDT 2022
+Snapshot as of Mon Nov  7 12:08:16 PST 2022
 
 ### Operators and Literals
 
@@ -58,7 +58,7 @@ REALLIT /* floating point literal */
 "@END_SCHEMA_REGION" "@ENFORCE_NORMAL" "@ENFORCE_POP"
 "@ENFORCE_PUSH" "@ENFORCE_RESET" "@ENFORCE_STRICT"
 "@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
-"@RECREATE" "@RESUB" "@SCHEMA_AD_HOC_MIGRATION"
+"@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
 "@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
 "@SENSITIVE" "@UNSUB" "ABORT" "ACTION" "ADD" "AFTER" "ALL"
 "ALTER" "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE"
@@ -190,7 +190,6 @@ any_stmt:
   | savepoint_stmt
   | select_stmt
   | schema_ad_hoc_migration_stmt
-  | schema_resub_stmt
   | schema_unsub_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
@@ -963,11 +962,8 @@ end_schema_region_stmt:
   ;
 
 schema_unsub_stmt:
-  "@UNSUB" version_annotation
-  ;
-
-schema_resub_stmt:
-  "@RESUB" version_annotation
+  "@UNSUB" '(' "integer-literal" ',' name ')'
+  | "@UNSUB"  '(' name ')'
   ;
 
 schema_ad_hoc_migration_stmt:

@@ -407,10 +407,6 @@ static bool_t validating_previous_schema;
 // The current annonation target in create proc statement
 static CSTR annotation_target;
 
-// @unsub and @resub must happen in version order to make sense
-// here we track the most recent number; these must be non-decreasing
-static int32_t last_sub_version;
-
 // When we're doing previous schema validation we will march through the unsub/resub
 // directives in order, this tells us the next one to consider.
 static list_item *next_subscription;
@@ -1223,7 +1219,7 @@ cql_noexport bool_t is_deleted(ast_node *ast) {
   sem_node *sem = ast->sem;
 
   // if unsubscribed it's logically deleted
-  if (sem->unsub_version > sem->resub_version) {
+  if (sem->unsubscribed) {
     // note only tables ever set this so we just don't go here at all for columns
     return true;
   }
@@ -1621,9 +1617,6 @@ typedef struct subs_info {
   int32_t vers;
 } subs_info;
 
-// This extracts the basic info from a sub/unsub directive and does minimal sanity check.
-static void sem_subs_extract(ast_node *ast, subs_info *info);
-
 // This tells us if we're actually going to try to add the entity we are working on
 // to our tables and so forth.  The idea here is that a view/table/whatever might
 // not "count" in terms of checking for uniqueness and adding to the all_whatevers
@@ -1817,7 +1810,7 @@ cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_
         bprintf(&err_msg, "%s (not visible in schema version %d)", msg, schema_upgrade_version);
       }
       else {
-        if (table_ast->sem->delete_version > table_ast->sem->unsub_version)  {
+        if (table_ast->sem->delete_version > table_ast->sem->unsubscribed)  {
           bprintf(&err_msg, "%s (hidden by @delete)", msg);
         }
         else {
@@ -24294,39 +24287,6 @@ static void sem_validate_all_ad_hoc_not_in_previous(ast_node *root) {
   CHARBUF_CLOSE(err_msg);
 }
 
-// At this point all processing of input is complete.  So now we walk all the ad hoc rules
-// that we ever saw and visit any that have not already been validated.  This is
-// the set of rules not present in the previous schema.  All of these must be
-// marked at the most recent version.
-//
-// Note: this processing does not happen in the context of a statement
-// so we have to do our own error capture logic.
-static void sem_validate_all_subscriptions_not_in_previous(ast_node *root) {
-  Contract(root);
-
-  // since we validate in order, we can start where we left off with validations
-  // anything else was already checked (we don't need a VALIDATED bit for these guys)
-  // also, these are already known to be in ascending order, so we only need to check
-  // the first one.
-  if (next_subscription && !found_subscription_error) {
-    ast_node *ast = next_subscription->ast;
-
-    subs_info info;
-    sem_subs_extract(ast, &info);
-
-    // * if the annotation has other errors we don't need to check its version info right now, that's just spurious
-    // * if the annotation is at or after the max previous schema version it's good
-
-    if (!is_error(ast) && info.vers < max_previous_schema_version) {
-      CSTR err_msg = dup_printf(
-        "new @unsub/@resub must be added at version %d or later",
-        max_previous_schema_version);
-
-      report_and_capture_error(root, ast, err_msg, NULL);
-    }
-  }
-}
-
 // switch to strict mode
 static void sem_enforce_strict_stmt(ast_node * ast) {
   Contract(is_ast_enforce_strict_stmt(ast));
@@ -24787,180 +24747,38 @@ static void sem_validate_previous_ad_hoc(ast_node *prev, CSTR name, int32_t vers
   sem_add_flags(schema_ad_hoc_migration_stmt, SEM_TYPE_VALIDATED);
 }
 
-// This extracts the basic info from a sub/unsub directive and does minimal sanity check.
-static void sem_subs_extract(ast_node *ast, subs_info *info) {
-  Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
-  CSTR directive = is_ast_schema_unsub_stmt(ast) ? "@unsub" : "@resub";
-
+static void sem_schema_unsub_stmt(ast_node *ast) {
+  Contract(is_ast_schema_unsub_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
-  EXTRACT_OPTION(vers, version_annotation->left);
-
-  if (vers < 1) {
-    report_error(ast, "CQL0025: version number in annotation must be positive", NULL);
-    record_error(ast);
-    return;
-  }
-
-  if (!version_annotation->right) {
-    CSTR msg = dup_printf("CQL0465: %s directive must provide a table or view name", directive);
-    report_error(ast, msg, NULL);
-    record_error(ast);
-    return;
-  }
-
   EXTRACT_STRING(name, version_annotation->right);
 
-  info->vers = vers;
-  info->name = name;
-  info->target_ast = NULL;  // not part of basic extraction
-
-  // don't clobber existing semantic info
-  if (!ast->sem) {
+  if (validating_previous_schema) {
     record_ok(ast);
-  }
-}
-
-// These validations are common to both @unsub and @resub and they
-// mainly check generic things like the version numbers are reasonable,
-// the indicated table is a table, and stuff like that.  They need
-// follow-up to ensure that the particular operation makes sense.
-static void sem_subs_validate_common(ast_node *ast, subs_info *info) {
-  Contract(is_ast_schema_unsub_stmt(ast) || is_ast_schema_resub_stmt(ast));
-
-  sem_subs_extract(ast, info);
-  if (is_error(ast)) {
     return;
   }
 
   ast_node *target = find_usable_table_or_view_even_deleted(
-    info->name, ast, "CQL0466: the table/view named in an @unsub/@resub directive does not exist");
+    name, ast, "CQL0466: the table/view named in an @unsub directive does not exist");
 
   if (!target) {
     record_error(ast);
     return;
   }
 
-  if (info->vers < last_sub_version) {
-    report_error(ast, "CQL0467: @unsub/@resub versions must be in non-decreasing order", NULL);
+  if (target->sem->delete_version > 0) {
+    report_error(ast, "CQL0469: table/view is already deleted", name);
     record_error(ast);
     return;
   }
 
-  if (target->sem->delete_version > 0 && target->sem->delete_version <= info->vers) {
-    report_error(ast, "CQL0469: table/view is already deleted", info->name);
+  if (target->sem->unsubscribed) {
+    report_error(ast, "CQL0472: table/view is already unsubscribed", name);
     record_error(ast);
     return;
   }
-
-  if (!target->sem->recreate && target->sem->create_version >= info->vers) {
-    report_error(ast, "CQL0470: table/view not yet created at indicated version", info->name);
-    record_error(ast);
-    return;
-  }
-
-  if (target->sem->unsub_version == info->vers || target->sem->resub_version == info->vers) {
-    report_error(ast, "CQL0471: table/view has another @unsub/@resub at this version number", info->name);
-    record_error(ast);
-    return;
-  }
-
-  info->target_ast = target;
-
-  record_ok(ast);
-}
-
-// find the next unsub/resub annotation that we recorded, it has to match what we just saw
-static void validate_previous_schema_subscription_annotation(ast_node *previous_ast) {
-  Contract(is_ast_schema_unsub_stmt(previous_ast) || is_ast_schema_resub_stmt(previous_ast));
-  subs_info previous_info;
-
-  sem_subs_extract(previous_ast, &previous_info);
-  if (is_error(previous_ast)) {
-    return;
-  }
-
-  // we accumulate the biggest previous schema number we've ever see during prevous schema validation
-  if (previous_info.vers > max_previous_schema_version) {
-    max_previous_schema_version = previous_info.vers;
-  }
-
-  // once we've found one delta against the subscription history we stop reporting errors
-  if (found_subscription_error) {
-    return;
-  }
-
-  if (!next_subscription) {
-    found_subscription_error = true;
-    report_error(previous_ast, "CQL0476: previous schema had more unsub/resub directives than the current schema", NULL);
-    record_error(previous_ast);
-    return;
-  }
-
-  // we advance in any case
-  ast_node *found_ast = next_subscription->ast;
-  next_subscription = next_subscription->next;
-
-  Invariant(is_ast_schema_unsub_stmt(found_ast) || is_ast_schema_resub_stmt(found_ast));
-
-  subs_info found_info;
-
-  sem_subs_extract(found_ast, &found_info);
-  Invariant(!is_error(found_ast)); // already checked
-
-  // normal case, it is all matching
-  if (!Strcasecmp(previous_info.name, found_info.name) &&
-      previous_info.vers == found_info.vers &&
-      previous_ast->type == found_ast->type) {
-    // the previous item doesn't need any marking, it's all good already
-    Invariant(!is_error(previous_ast));
-    return;
-  }
-
-  // no more error checks regardless
-  found_subscription_error = true;
-
-  CSTR prev_directive = is_ast_schema_unsub_stmt(previous_ast) ? "@unsub" : "@resub";
-  CSTR found_directive = is_ast_schema_unsub_stmt(found_ast) ? "@unsub" : "@resub";
-
-  CSTR msg = dup_printf(
-    "CQL0475: @unsub/@resub directives did not match between current and previous schema\n"
-    "previous schema %s(%d, %s)\n"
-    "current schema %s(%d, %s)",
-      prev_directive, previous_info.vers, previous_info.name,
-      found_directive, found_info.vers, found_info.name);
-
-  report_error(previous_ast, msg, NULL);
-  record_error(previous_ast);
-  return;
-}
-
-static void sem_schema_unsub_stmt(ast_node *ast) {
-  Contract(is_ast_schema_unsub_stmt(ast));
-
-  if (validating_previous_schema) {
-    validate_previous_schema_subscription_annotation(ast);
-    return;
-  }
-
-  subs_info info;
-  sem_subs_validate_common(ast, &info);
-  if (is_error(ast)) {
-    return;
-  }
-
-  int32_t vers = info.vers;
-  ast_node *target = info.target_ast;
-  CSTR name = info.name;
-  Contract(target);
 
   if (is_ast_create_table_stmt(target) && is_table_not_physical(target)) {
-    report_error(ast, "CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables", name);
-    record_error(ast);
-    return;
-  }
-
-  if (target->sem->unsub_version > target->sem->resub_version) {
-    report_error(ast, "CQL0472: table/view is already unsubscribed", name);
+    report_error(ast, "CQL0449: unsubscribe does not make sense on non-physical tables", name);
     record_error(ast);
     return;
   }
@@ -24968,6 +24786,9 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
   bytebuf *buf = symtab_ensure_bytebuf(ref_sources_for_target_table, name);
   size_t ref_count = buf->used / sizeof(ast_node *);
   ast_node **sources = (ast_node **)buf->ptr;
+
+  // provisionally ok
+  record_ok(ast);
 
   for (uint32_t i = 0; i < ref_count; i++) {
     ast_node *src_ast = sources[i];
@@ -24989,8 +24810,7 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
     return;
   }
 
-  target->sem->unsub_version = vers;
-  last_sub_version = vers;
+  target->sem->unsubscribed = true;
   ast->sem = new_sem(SEM_TYPE_OK);
   ast->sem->region = current_region;
 
@@ -24999,104 +24819,10 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
   bool_t is_table = is_ast_create_table_stmt(target);
   bool_t is_recreate = target->sem->recreate;
 
-  // recreate tables need no actions for unsubscription/resubscription
+  // recreate tables need no actions for unsubscription
   // views likewise need no actions (they are always recreate)
   if (is_table && !is_recreate) {
-    record_schema_annotation(vers, target, name, SCHEMA_ANNOTATION_UNSUB, NULL, ast->left, 0);
-  }
-}
-
-static void sem_schema_resub_stmt(ast_node *ast) {
-  Contract(is_ast_schema_resub_stmt(ast));
-
-  if (validating_previous_schema) {
-    validate_previous_schema_subscription_annotation(ast);
-    return;
-  }
-
-  subs_info info;
-  sem_subs_validate_common(ast, &info);
-  if (is_error(ast)) {
-    return;
-  }
-
-  int32_t vers = info.vers;
-  ast_node *target = info.target_ast;
-  CSTR name = info.name;
-  Contract(target);
-
-  if (is_ast_create_table_stmt(target) && is_table_not_physical(target)) {
-    report_error(ast, "CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables", name);
-    record_error(ast);
-    return;
-  }
-
-  if (target->sem->resub_version > target->sem->unsub_version) {
-    report_error(ast, "CQL0472: table/view is already resubscribed", name);
-    record_error(ast);
-    return;
-  }
-
-  // This bit is tricky so it's worth a little explaination. The @resub is out of band with the
-  // the table -- we'll see it after the create table regardless of version history.  That means
-  // we could see such a directive on a table that's been marked with @delete.  Now the thing is
-  // this could be ok.  You might create a table in v10, unsubscribe in v20, resubscribe in v30
-  // and then finally delete the table in v40.  There were many versions where the resub made sense
-  // and that resub comes after the create table statement in the input  for sure.  Now, when validating
-  // resub we consider this table to be a "child" and ask the question "do all its parents exist?"
-  // so that if you resub a table you must first resub all its parents.  The exception to this is
-  // if the table becomes deleted where the parents are moot.  At one time the parents needed to exist
-  // but now they could be unsubscribed or deleted and it doesn't matter because this child is
-  // deleted.  So we only check the parent tables on undeleted children.  It's strange because
-  // we're resubscribing to a deleted table here but remember in this example we would still have to
-  // generate the create table at v30 so that the history is consistent even if the resub is effectively
-  // cancelled later by a delete.  The weird thing is we saw the v40 delete before we saw the
-  // v30 unsub because the unsubs are necessarily out of band with the table.  You could imagine
-  // putting @unsub/@resub on the table but if you did that it would not be possible for schema
-  // subscribers to @unsub without modifying the schema and the whole point is that *some*
-  // subscribers might want to unsubscribe so the annotation can't go on the table.  Which means
-  // we have to live with this out-of-order business.
-
-  if (target->sem->delete_version < 0) {
-    bytebuf *buf = symtab_ensure_bytebuf(ref_targets_for_source_table, name);
-    size_t ref_count = buf->used / sizeof(ast_node *);
-    ast_node **targets = (ast_node **)buf->ptr;
-
-    for (uint32_t i = 0; i < ref_count; i++) {
-      ast_node *ref_ast = targets[i];
-
-      // note this checks for both @deleted and @unsub
-      if (is_deleted(ref_ast)) {
-        CSTR ref_name = sem_get_name(ref_ast);
-
-        // carve out an exception for tables that refer to themselves, that FK won't break anything
-        if (Strcasecmp(name, ref_name)) {
-          // we're not going to return; we keep generating as many errors as needed
-          report_error(ast, "CQL0474: @resub is invalid because the table/view references", ref_name);
-          record_error(ast);
-        }
-      }
-    }
-  }
-
-  if (is_error(ast)) {
-    return;
-  }
-
-  target->sem->resub_version = vers;
-  last_sub_version = vers;
-  ast->sem = new_sem(SEM_TYPE_OK);
-  ast->sem->region = current_region;
-
-  bool_t is_table = is_ast_create_table_stmt(target);
-  bool_t is_recreate = target->sem->recreate;
-
-  add_item_to_list(&all_subscriptions_list, ast);
-
-  // recreate tables need no actions for unsubscription/resubscription
-  // views are always recreate so they also need no actions.
-  if (is_table && !is_recreate)  {
-    record_schema_annotation(vers, target, name, SCHEMA_ANNOTATION_RESUB, NULL, ast->left, 0);
+    record_schema_annotation(1, target, name, SCHEMA_ANNOTATION_UNSUB, NULL, version_annotation, 0);
   }
 }
 
@@ -25533,7 +25259,6 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(end_schema_region_stmt);
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(schema_unsub_stmt);
-  STMT_INIT(schema_resub_stmt);
   STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);
@@ -25718,7 +25443,6 @@ cql_noexport void sem_main(ast_node *ast) {
     sem_validate_all_prev_recreate_tables(ast);
     sem_validate_all_ad_hoc_not_in_previous(ast);
     sem_validate_all_deployable_regions(ast);
-    sem_validate_all_subscriptions_not_in_previous(ast);
   }
 
   if (validating_previous_schema) {
@@ -25823,7 +25547,6 @@ cql_noexport void sem_cleanup() {
   in_upsert = false;
   in_upsert_rewrite = false;
   loop_depth = 0;
-  last_sub_version = 1;
   in_proc_savepoint = false;
   max_previous_schema_version = -1;
   reset_enforcements();

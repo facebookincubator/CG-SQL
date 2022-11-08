@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Nov  4 10:22:59 PDT 2022
+Snapshot as of Mon Nov  7 12:08:17 PST 2022
 
 ### Rules
 
@@ -69,7 +69,6 @@ table: '{'
        '"isRecreated"' ':' BOOL_LITERAL ','
        opt_recreate_group_name
        opt_unsub_version
-       opt_resub_version
        opt_backing_details
        opt_region_info
        opt_table_indices
@@ -129,9 +128,6 @@ opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ','
   ;
 
 opt_unsub_version: | '"unsubscribedVersion"' ':' any_integer ','
-  ;
-
-opt_resub_version: | '"resubscribedVersion"' ':' any_integer ','
   ;
 
 opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc

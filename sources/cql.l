@@ -294,7 +294,6 @@ TYPE_CHECK                   { return TYPE_CHECK; }
 @FILE                        { return AT_FILE; }
 @PREVIOUS_SCHEMA             { return AT_PREVIOUS_SCHEMA; }
 @RECREATE                    { return AT_RECREATE; }
-@RESUB                       { return AT_RESUB; }
 @SCHEMA_AD_HOC_MIGRATION     { return AT_SCHEMA_AD_HOC_MIGRATION; }
 @SCHEMA_UPGRADE_SCRIPT       { return AT_SCHEMA_UPGRADE_SCRIPT; }
 @SCHEMA_UPGRADE_VERSION      { return AT_SCHEMA_UPGRADE_VERSION; }
@@ -350,6 +349,8 @@ X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
 
 ^#\ {d}+\ \"[^"]*\".*        { line_directive(yytext); }
 ^\ *#line\ {d}+\ \"[^"]*\".* { line_directive(yytext); }
+
+@RESUB[^)]+\);                { /* ignore legacy unsub */ }
 
 "/*"                         { // sqlite supports C style comments... ignore those
                                CHARBUF_OPEN(tmp);

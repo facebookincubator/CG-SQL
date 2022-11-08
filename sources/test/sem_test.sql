@@ -23062,35 +23062,15 @@ create table unsub_test_table_deleted(id integer) @delete(2);
 
 create table unsub_test_table_late_create(id integer) @create(7);
 
--- TEST: unsub directive invalid version number
--- + {schema_unsub_stmt}: err
--- + error: % version number in annotation must be positive
--- +1 error:
-@unsub (0, unsub_test_table);
-
 -- TEST: unsub on non physical tables makes no sense
 -- + {schema_unsub_stmt}: err
--- + error: % unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
+-- + error: % unsubscribe does not make sense on non-physical tables 'structured_storage'
 -- +1 error:
 @unsub (1, structured_storage);
 
--- TEST: resub on non physical tables makes no sense
--- + {schema_resub_stmt}: err
--- + error: % unsubscribe and resubscribe do not make sense on non-physical tables 'structured_storage'
--- +1 error:
-@resub (1, structured_storage);
-
--- TEST: unsub directive missing table
--- standard version grammar means a specific error check and hence a better error
--- this version format is valid in other contexts
+-- TEST: unsub directive invalid table
 -- + {schema_unsub_stmt}: err
--- + error: % @unsub directive must provide a table
--- +1 error:
-@unsub (5);
-
--- TEST: unsub directive invalid version number
--- + {schema_unsub_stmt}: err
--- + error: % the table/view named in an @unsub/@resub directive does not exist 'not_a_table'
+-- + error: % the table/view named in an @unsub directive does not exist 'not_a_table'
 -- +1 error:
 @unsub (5, not_a_table);
 
@@ -23101,7 +23081,6 @@ select * from unsub_test_table;
 
 -- TEST: successful unsub
 -- + {schema_unsub_stmt}: ok
--- + 5
 -- + unsub_test_table
 -- - error:
 @unsub(5, unsub_test_table);
@@ -23113,20 +23092,13 @@ select * from unsub_test_table;
 
 -- TEST: duplicate unsub
 -- + {schema_unsub_stmt}: err
--- + error: % table/view has another @unsub/@resub at this version number 'unsub_test_table'
+-- + error: % table/view is already unsubscribed 'unsub_test_table'
 -- +1 error:
 @unsub(5, unsub_test_table);
 
--- TEST: unsub directives must be in ascending order
--- + {schema_unsub_stmt}: err
--- + error: % @unsub/@resub versions must be in non-decreasing order
--- +1 error:
-@unsub (4, foo);
-
--- TEST: table not created yet, can't unsub
--- + {schema_unsub_stmt}: err
--- + error: % table/view not yet created at indicated version 'unsub_test_table_late_create'
--- +1 error:
+-- TEST: table order doesn't matter, you can unsub regardless of when it was created
+-- + {schema_unsub_stmt}: ok
+-- +- error:
 @unsub (5,unsub_test_table_late_create);
 
 -- TEST: already deleted table
@@ -23135,71 +23107,33 @@ select * from unsub_test_table;
 -- +1 error:
 @unsub(6, unsub_test_table_deleted);
 
--- TEST: already unsubscribed table
--- + {schema_unsub_stmt}: err
--- + error: % table/view is already unsubscribed 'unsub_test_table'
--- +1 error:
-@unsub(6, unsub_test_table);
-
--- TEST: I want it back!
--- + {schema_resub_stmt}: ok
--- - error:
-@resub(7, unsub_test_table);
-
--- TEST: table is visible again
--- + {select_stmt}: select: { id: integer notnull }
--- - error:
-select * from unsub_test_table;
-
--- TEST: re-resub is not legal
--- + {schema_resub_stmt}: err
--- + error: % table/view is already resubscribed 'unsub_test_table'
--- +1 error:
-@resub(8, unsub_test_table);
-
--- TEST: common sub checks are done for resub too (all shared code)
--- no need to recheck the sub sanity checks, they are the same for both
--- + {schema_resub_stmt}: err
--- + error: % the table/view named in an @unsub/@resub directive does not exist 'not_a_table'
--- +1 error:
-@resub(8, not_a_table);
-
--- now we have a dependency on unsub_test_table
+-- TEST: can't add a dependency on an unsubscribed table
+-- {create_table_stmt} : err
+-- + error: % foreign key refers to non-existent table (hidden by @unsub) 'unsub_test_table'
+-- +1 error
 create table sub_test_dependency(
   id integer references unsub_test_table(id)
 );
 
+-- create a dependency chain
+create table unsub_test_table2(id integer primary key);
+create table sub_test_dependency2(id integer references unsub_test_table2(id));
+
 -- TEST: can't do this, unsub_test_table still refers to this table
 -- + {schema_unsub_stmt}: err
--- + error: % @unsub is invalid because the table/view is still used by 'sub_test_dependency'
+-- + error: % @unsub is invalid because the table/view is still used by 'sub_test_dependency2'
 -- +1 error:
-@unsub (8, unsub_test_table);
+@unsub (unsub_test_table2);
 
 -- TEST: ok to remove the leaf table
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (8, sub_test_dependency);
+@unsub (8, sub_test_dependency2);
 
 -- TEST: now ok to remove the other table
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (8, unsub_test_table);
-
--- TEST: can't add the leaf table back first
--- + {schema_resub_stmt}: err
--- + error: % @resub is invalid because the table/view references 'unsub_test_table'
--- +1 error:
-@resub (9, sub_test_dependency);
-
--- TEST: this table does not depend on anything, can add it back
--- + {schema_resub_stmt}: ok
--- - error:
-@resub (9, unsub_test_table);
-
--- TEST: now ok to add the depedent table back, its dependency is present
--- + {schema_resub_stmt}: ok
--- - error:
-@resub (9, sub_test_dependency);
+@unsub (8, unsub_test_table2);
 
 -- TEST: setup unsub test case for table in use by a view
 -- - error:
@@ -23308,11 +23242,6 @@ end;
 -- +1 error:
 @unsub (10, unsub_with_views_v1);
 
--- TEST: v2 can come back no problem
--- + {schema_resub_stmt}: ok
--- - error:
-@resub (11, unsub_with_views_v2);
-
 -- TEST: can't unsub v3 because of annoying trigger
 -- + {schema_unsub_stmt}: err
 -- + error: % @unsub is invalid because the table/view is still used by 'unsub_with_views_annoying_trigger'
@@ -23328,12 +23257,6 @@ end;
 -- + {schema_unsub_stmt}: ok
 -- - error:
 @unsub (12, unsub_with_views_v4);
-
--- TEST: v5 can't come back until v4 returns
--- + {schema_resub_stmt}: err
--- + @resub is invalid because the table/view references 'unsub_with_views_v4'
--- +1 error:
-@resub (13, unsub_with_views_v5);
 
 declare proc any_args_at_all no check;
 
@@ -23403,31 +23326,7 @@ create table child_subs_table (
   id integer primary key references parent_subs_table(id)
 ) @create(9) @delete(25);
 
--- standard unsub order
--- - error:
-@unsub(20, child_subs_table);
-
--- standard unsub order
--- - error:
-@unsub(20, parent_subs_table);
-
--- standard resub order
--- - error:
-@resub(21, parent_subs_table);
-
--- TEST: this is the actual test case, here we verify that we can do a resub
--- even when parent table is deleted, provided of course that we are also
--- deleted which we are. This covers the case where a resub table is later
--- fully deleted.  Once the delete happens we can't, and don't need to,
--- verify that the parent tables are subscribed, they're for sure deleted
--- or the create table wouldn't have compiled in the first place
--- this just means we loosen the validation so as to not produce
--- "@resub is invalid because the table references 'deleted_parent'"
--- + {schema_resub_stmt}: ok
--- - error:
-@resub(22, child_subs_table);
-
-
+-- for self referencing
 create table self_ref_table(
   id integer primary key,
   id2 integer references self_ref_table(id)
@@ -23437,11 +23336,6 @@ create table self_ref_table(
 -- + {schema_unsub_stmt}: ok
 -- - error:
 @unsub (23, self_ref_table);
-
--- TEST: ok to resub to a table that refers to itself
--- + {schema_resub_stmt}: ok
--- - error:
-@resub (24, self_ref_table);
 
 -- TEST: this generates an error and creates an unresolved arg list
 -- + {declare_proc_stmt}: err

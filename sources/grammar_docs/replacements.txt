@@ -226,7 +226,6 @@ s/[[:<:]]AT_PREVIOUS_SCHEMA[[:>:]]/"@PREVIOUS_SCHEMA"/g
 s/[[:<:]]AT_PROC[[:>:]]/"@PROC"/g
 s/[[:<:]]AT_RC[[:>:]]/"@RC"/g
 s/[[:<:]]AT_RECREATE[[:>:]]/"@RECREATE"/g
-s/[[:<:]]AT_RESUB[[:>:]]/"@RESUB"/g
 s/[[:<:]]AT_SCHEMA_AD_HOC_MIGRATION[[:>:]]/"@SCHEMA_AD_HOC_MIGRATION"/g
 s/[[:<:]]AT_SCHEMA_UPGRADE_SCRIPT[[:>:]]/"@SCHEMA_UPGRADE_SCRIPT"/g
 s/[[:<:]]AT_SCHEMA_UPGRADE_VERSION[[:>:]]/"@SCHEMA_UPGRADE_VERSION"/g

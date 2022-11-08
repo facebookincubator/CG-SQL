@@ -48,7 +48,16 @@ rm -f ${OUT_DIR}/upgrade?
 
 echo "compiling the shared schema validator to C"
 
-if ! ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c; then
+cp upgrade/upgrade_validate.sql "${OUT_DIR}/upgrade_validate.sql"
+
+ # set ERROR_TRACE to get verbose tracing in the upgrader
+if [ "${ERROR_TRACE}" != "0" ]
+then
+   cat upgrade/errortrace.inc "${OUT_DIR}/upgrade_validate.sql" >"${OUT_DIR}/x"
+   mv "${OUT_DIR}/x" "${OUT_DIR}/upgrade_validate.sql"
+fi
+
+if ! ${CQL} --in ${OUT_DIR}/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c; then
   echo failed compiling upgrade validator
   echo ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c
   exit 1;

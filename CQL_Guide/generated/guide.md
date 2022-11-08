@@ -6554,7 +6554,7 @@ Often users of the library don’t want all its features and therefore don’t w
 the library author to divide the schema into regions and then the consumer of the library  may generate a suitable schema deployer
 that deploys only the desired regions.  You simply subscribe to the regions you want.
 
-The `@unsub`/`@resub` constructs  deal with the unfortunate situation of over-subscription.  In the event that a customer has subscribed to regions
+The `@unsub` construct deals with the unfortunate situation of over-subscription.  In the event that a customer has subscribed to regions
 that it turns out they don’t need, or if indeed the regions are not fine-grained enough, they may wish to (possibly much later) unsubscribe
 from particular tables or entire regions that they previously had included.
 
@@ -6565,16 +6565,10 @@ Furthermore, a customer  might decide at some point later that now is the time t
 has to be possible.
 
 #### Unsubscription and Resubscription
-To accomplish this we add the following constructs:
+To accomplish this we add the following construct:
 
 ```sql
-@unsub(version_number, table_name);
-```
-
-And its twin
-
-```sql
-@resub(version_number, table_name);
+@unsub(table_name);
 ```
 
 The effects of a valid `@unsub` are as follows:
@@ -6584,59 +6578,27 @@ The effects of a valid `@unsub` are as follows:
 * If the table is `@recreate` the table is unconditionally dropped as though it had been deleted
 * The JSON includes the unsub details in a new subscriptions section
 
-The effects of a valid `@resub` are as follows:
-* The table is once again accessible by statements
-* If the table is `@create` then `CREATE TABLE table_name ...` is emitted into the upgrade steps for _version_number_
-  * the emitted create is for the table as it would have existed at _version_number_.
-* If the table is `@recreate`, the table is recreated as usual
-* The JSON includes the resub details in a new subscriptions section
-
 The compiler ensures that the directives are valid and stay valid.
 
-#### Validations for @unsub(_version_, _table_):
+#### Validations for @unsub(_table_):
 
-* _version_ must be an integer greater or equal to 1
-* _version_ must be greater or equal to any unsub or resub version previously seen
 * _table_ must be a valid table name
-* _table_ may have no previous unsub/resub at _version_
-* _table_ must be marked with an `@create` version < _version_ or else be marked `@recreate`
-  * recall that unmarked (baseline) tables are the same as `@create(0)`
 * _table_ must not be already unsubscribed
-* If _table_ is marked with `@delete`, its delete version must be > _version_
+* If _table_ must not be marked with `@delete`
   * unsubscribing from a table after it’s been outright deleted is clearly a mistake
-  * deleting a table in the same version that it is unsubscribed makes the `@unsub` redundant
-  * _table_ might be later outright deleted, the `@unsub` at an earlier version stands
 * For every child table -- those that mention this table using `REFERENCES`
   * The child must be already deleted or unsubscribed
   * The deletion or unsubscription must have happened at a version <= _version_
 * _table_ is marked unsubscribed for purposes of further analysis
 
-####  Validations for @resub(_version_, _table_):
+Note: the legacy form `@unsub`(_version_, _table_) is supported but deprecated.  The _version_ is ignored.
+The legacy `@resub` directive is now an error;  Resubscription is accomplished by simply removing the relevant `@unsub`
+directives.
 
-* _version_ must be an integer greater or equal to 1
-* _version_ must be greater or equal to any unsub or resub version previously seen
-* _table_ must be a valid table name
-* _table_ may have no previous unsub/resub at _version_
-* _table_ must be marked with an `@create` version < _version_ or else be marked `@recreate`
-  * recall that unmarked (baseline) tables are the same as `@create(0)`
-* _table_ must currently be unsubscribed
-* If _table_ is marked with `@delete`, its delete version must be > _version_
-  * resubscribing from a table after it’s been outright deleted is clearly a mistake
-  * deleting a table in the same version that it is resubscribed makes the `@resub` redundant
-  * _table_ might be later outright deleted, the `@resub` at an earlier version stands
-* If _table_ is not currently deleted then
-  * For every parent table (i.e. the tables it REFERENCES)
-  * The parent table must not be deleted or unsubscribed
-* _table_ has its unsubscribed status removed for further analysis
+#### Previous Schema validations for @unsub
 
-#### Previous Schema validations for @unsub/@resub
-
-In the presence of `@previous_schema;` the following additional validations must be made:
-
-* Every `@unsub` and `@resub` in the previous schema must exist in the current schema in the exact same order with the exact same parameters
-  * i.e. these operations are never revoked, they undo each other creating a linear history like every other annotation
-* Any `@unsub` or `@resub` not present in the previous schema version happens at a version number that is greater or equal to the largest version number that was present anywhere in the previous schema
-  * i.e. you cannot unsubscribe or subscribe in the past.
+Unsubscriptions may be removed when they are no longer desired in order to resubscribe as long as this results in a valid
+chain of foreign keys.
 
 These validations are sufficient to guarantee a constistent logical history for unsubscriptions.
 
@@ -8730,17 +8692,19 @@ Generates:
 
 ## Subscriptions
 
-This section list all the schema subscriptions in non-decreasing order by version.  Each entry is of the form:
+This section list all the schema subscriptions in order of appearance.  Each entry is of the form:
 
-* **type** : either "unsub" or "resub"
+* **type** : always "unsub" at this time
 * **table** : the target of the subscription directive
-* **version** : the version at which this operation is to happen
+* **version** : the version at which this operation is to happen (always 1 at this time)
+
+This section is a little more complicated than it needs to be becasue of the legacy/deprecated resub directive.  At
+this point only the table name is relevant.
 
 Example:
 
 ```sql
-@unsub(10, foo);
-@resub(15, foo);
+@unsubfoo);
 ```
 
 Generates:
@@ -8749,12 +8713,7 @@ Generates:
     {
       "type" : "unsub",
       "table" : "foo",
-      "version" : 10
-    },
-    {
-      "type" : "resub",
-      "table" : "foo",
-      "version" : 15
+      "version" : 1
     }
 ```
 
@@ -8772,6 +8731,11 @@ while the procedure information illuminates the code that was generated and how 
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+
+:::caution
+CQL base fragments, extension fragments, and assembly fragments are now deprecated and will be removed. Please use [shared fragments](#shared-fragments) instead.
+:::
+
 CQL Query fragments are the most sophisticated rewrite CQL offers for productivity.  The idea is that a very large query
 can be represented in "fragments" that add columns or add rows based on the original "core" query.  The final query
 will be an assembled rewrite of all the fragments chained together.  Specifically, the motivation for this is that you
@@ -9743,7 +9707,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Nov  4 10:22:59 PDT 2022
+Snapshot as of Mon Nov  7 12:08:16 PST 2022
 
 ### Operators and Literals
 
@@ -9788,7 +9752,7 @@ REALLIT /* floating point literal */
 "@END_SCHEMA_REGION" "@ENFORCE_NORMAL" "@ENFORCE_POP"
 "@ENFORCE_PUSH" "@ENFORCE_RESET" "@ENFORCE_STRICT"
 "@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
-"@RECREATE" "@RESUB" "@SCHEMA_AD_HOC_MIGRATION"
+"@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
 "@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
 "@SENSITIVE" "@UNSUB" "ABORT" "ACTION" "ADD" "AFTER" "ALL"
 "ALTER" "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE"
@@ -9920,7 +9884,6 @@ any_stmt:
   | savepoint_stmt
   | select_stmt
   | schema_ad_hoc_migration_stmt
-  | schema_resub_stmt
   | schema_unsub_stmt
   | schema_upgrade_script_stmt
   | schema_upgrade_version_stmt
@@ -10693,11 +10656,8 @@ end_schema_region_stmt:
   ;
 
 schema_unsub_stmt:
-  "@UNSUB" version_annotation
-  ;
-
-schema_resub_stmt:
-  "@RESUB" version_annotation
+  "@UNSUB" '(' "integer-literal" ',' name ')'
+  | "@UNSUB"  '(' name ')'
   ;
 
 schema_ad_hoc_migration_stmt:
@@ -15663,11 +15623,11 @@ This error indicates that the `@recreate(optional_group)` annotation was removed
 put it back.
 
 
-### CQL0449: unsubscribe and resubscribe do not make sense on non-physical tables 'table_name'
+### CQL0449: unsubscribe does not make sense on non-physical tables 'table_name'
 
 The indicated table was marked for blob storage or is a backed table.  In both cases there
-is no physical schema associated with it so unsubscribe and resubscribe options do not
-make any sense there.  If it's a backed table perhaps the intent was to remove the backing table?
+is no physical schema associated with it so unsubscribe does not make any sense there.
+If it's a backed table perhaps the intent was to remove the backing table?
 
 ### CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause
 
@@ -15910,25 +15870,15 @@ The indicated name was used in a context where a variable group name was expecte
 Perhaps the group was not included (missing an #include) or else there is a typo.
 
 
-### CQL0465: @unsub/@resub directive must provide a table or view name
-
-The indicated schema subscription directive did not provide a table.  The
-directive is meaningless without one.
+### CQL0465 avaiable for re-use
 
 
-### CQL0466: the table/view named in an @unsub/@resub directive does not exist 'name'
+### CQL0466: the table/view named in an @unsub directive does not exist 'name'
 
 The indicated name is not a valid table or view.
 
 
-### CQL0467: @unsub/@resub versions must be in non-decreasing order
-
-All of the schema subscription management directions must be in the order in which
-they should be applied. The version numbers can never go backward.
-
-This error might indicate directives that are trying to restate past subscriptions.
-The correct approach is to undo an @unsub with a @resub and vice versa.  Any existing
-directives should remain forever for logically consistent upgrade scripts.
+### CQL0467 available for re-use
 
 
 ### CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'proc_name'
@@ -15964,23 +15914,14 @@ end;
 
 ### CQL0469: table/view is already deleted 'name'
 
-In an @unsub/@resub directive, the indicated table/view has already been deleted. It can no longer
+In an @unsub directive, the indicated table/view has already been deleted. It can no longer
 be managed via subscriptions.
 
 
-### CQL0470: table/view not yet created at indicated version 'name'
-
-In an @unsub/@resub directive, the indicated table/view has an @create directive that comes later
-than the @unsub/@resub.  It's meaningless to unsubscribe or resubscribe before the
-table is even created.
+### CQL0470 available for re-use
 
 
-### CQL0471: table/view has another @unsub/@resub at this version number 'name'
-
-It doesn't make sense to @unsub in the same version that you @resub (as that
-would be redundant); likewise for @resub.  And it also makes no sense to @unsub or @resub
-twice in the same version.  This error indicates there are two subscription operations on the
-same table/view in the same version.
+### CQL0471 available for re-use
 
 
 ### CQL0472: table/view is already unsubscribed 'name'
@@ -15998,47 +15939,14 @@ some of those might, in turn, have the same issue.  In short, a whole subtree ha
 be removed in order to do this operation safely.
 
 
-### CQL0474: @resub is invalid because the table/view references 'name'
-
-This error indicates that you are attempting to @resub a table/view while there are other
-tables/views to which it refers that have not also been resubscribed.  Those items must
-first be resubscribed, thus creating a path to add the present table/view.
+### CQL0474 available for re-use
 
 
-### CQL0475: @unsub/@resub directives did not match between current and previous schema
-
-When validating the previous schema, the compiler enforces that all previous @unsub
-and @resub directives remained in the current schema, in the same order, with
-no changes. Any deviation results in this error indicating the offending directive.
-
-This error message includes extra information to indicate the nature of the mistake.
-An example might be
-
-```
-looking for @unsub (1, foo)
-found @unsub(2, foo)
-```
-
-The reasons for a difference can be complicated: perhaps a directive was removed,
-or one was added in the middle, or one was changed.  Any of these will result
-in a deviation and none are legal.
-
-The only allowable change is to add additional directives at the end, possibly
-undoing the effect of previous directives.
+### CQL0475 available for re-use
 
 
-### CQL0476: previous schema had more unsub/resub directives than the current schema
+### CQL0476 available for re-use
 
-When validating the previous schema, the compiler enforces that all previous @unsub
-and @resub directives remained in the current schema, in the same order, with
-no changes.
-
-This error means that the previous schema matched the current schema until the indicated
-point, however there should be more directives in the current schema to continue
-matching.
-
-The most likely cause of this error is that some directives were deleted in
-the current schema.
 
 ### CQL0477: interface name conflicts with func name 'name'
 
@@ -16253,7 +16161,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Nov  4 10:22:59 PDT 2022
+Snapshot as of Mon Nov  7 12:08:17 PST 2022
 
 ### Rules
 
@@ -16310,7 +16218,6 @@ table: '{'
        '"isRecreated"' ':' BOOL_LITERAL ','
        opt_recreate_group_name
        opt_unsub_version
-       opt_resub_version
        opt_backing_details
        opt_region_info
        opt_table_indices
@@ -16370,9 +16277,6 @@ opt_added_migration_proc: | '"addedMigrationProc"' ':' STRING_LITERAL ','
   ;
 
 opt_unsub_version: | '"unsubscribedVersion"' ':' any_integer ','
-  ;
-
-opt_resub_version: | '"resubscribedVersion"' ':' any_integer ','
   ;
 
 opt_deleted_version: | '"deletedVersion"' ':' any_integer ',' opt_deleted_migration_proc

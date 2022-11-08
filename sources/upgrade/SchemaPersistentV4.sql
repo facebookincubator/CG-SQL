@@ -118,21 +118,15 @@ BEGIN
   DELETE FROM recreate_test_for_unsub WHERE unsub_id = 3;
 END;
 
-@unsub(1, test_for_unsub);
-@unsub(1, recreate_test_for_unsub);
-@resub(2, test_for_unsub);
-@resub(2, recreate_test_for_unsub);
-@unsub(3, test_for_unsub);
-@unsub(3, recreate_test_for_unsub);
-@resub(4, test_for_unsub);
-@resub(4, recreate_test_for_unsub);
-
 -- additional items that will not disappear even in exclusive mode
 CREATE VIEW staying_view AS SELECT * FROM g1;
 
 CREATE INDEX staying_index ON g1(id);
 
 CREATE TRIGGER staying_trigger BEFORE DELETE ON g1 BEGIN SELECT 1; END;
+
+-- forces schema v4 (this used to be done by an resub but nothing else forces it now)
+CREATE TABLE new_in_v4(id integer) @create(4);
 
 -- extra items removed entirely
 -- this file is compiled in exclusive schema mode so that's ok

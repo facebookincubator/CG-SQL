@@ -4436,18 +4436,11 @@ static void gen_end_schema_region_stmt(ast_node *ast) {
 
 static void gen_schema_unsub_stmt(ast_node *ast) {
   Contract(is_ast_schema_unsub_stmt(ast));
-  EXTRACT_ANY_NOTNULL(l, ast->left);
+  EXTRACT_NOTNULL(version_annotation, ast->left);
+  EXTRACT_STRING(name, version_annotation->right);
 
   gen_printf("@UNSUB(");
-  gen_version_and_proc(l);
-  gen_printf(")");
-}
-
-static void gen_schema_resub_stmt(ast_node *ast) {
-  Contract(is_ast_schema_resub_stmt(ast));
-  EXTRACT_ANY_NOTNULL(l, ast->left);
-  gen_printf("@RESUB(");
-  gen_version_and_proc(l);
+  gen_printf("%s", name);
   gen_printf(")");
 }
 
@@ -4793,7 +4786,6 @@ cql_noexport void gen_init() {
   STMT_INIT(end_schema_region_stmt);
   STMT_INIT(schema_ad_hoc_migration_stmt);
   STMT_INIT(schema_unsub_stmt);
-  STMT_INIT(schema_resub_stmt);
   STMT_INIT(explain_stmt);
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);
