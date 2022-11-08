@@ -5027,7 +5027,9 @@ Master Deployment 2
 </ul></li>
 <li><em>table</em> is marked unsubscribed for purposes of further analysis</li>
 </ul>
-<p>Note: the legacy form <code>@unsub</code>(<em>version</em>, <em>table</em>) is supported but deprecated. The <em>version</em> is ignored. The legacy <code>@resub</code> directive is now an error; Resubscription is accomplished by simply removing the relevant <code>@unsub</code> directives.</p>
+<div class="caution">
+<p>The legacy form <code>@unsub</code>(<em>version</em>, <em>table</em>) is supported but deprecated, and will soon be an error. The <em>version</em> is ignored. The legacy <code>@resub</code> directive is now an error; Resubscription is accomplished by simply removing the relevant <code>@unsub</code> directive(s).</p>
+</div>
 <h4 id="previous-schema-validations-for-unsub">Previous Schema validations for <span class="citation" data-cites="unsub">@unsub</span></h4>
 <p>Unsubscriptions may be removed when they are no longer desired in order to resubscribe as long as this results in a valid chain of foreign keys.</p>
 <p>These validations are sufficient to guarantee a constistent logical history for unsubscriptions.</p>
@@ -6573,9 +6575,9 @@ END;</code></pre>
 <li><strong>table</strong> : the target of the subscription directive</li>
 <li><strong>version</strong> : the version at which this operation is to happen (always 1 at this time)</li>
 </ul>
-<p>This section is a little more complicated than it needs to be becasue of the legacy/deprecated resub directive. At this point only the table name is relevant.</p>
+<p>This section is a little more complicated than it needs to be becasue of the legacy/deprecated <code>@resub</code> directive. At this point only the table name is relevant. The version is always 1 and the type is always “unsub”.</p>
 <p>Example:</p>
-<div class="sourceCode" id="cb403"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb403-1"><a href="#cb403-1" aria-hidden="true" tabindex="-1"></a><span class="ot">@unsubfoo);</span></span></code></pre></div>
+<div class="sourceCode" id="cb403"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb403-1"><a href="#cb403-1" aria-hidden="true" tabindex="-1"></a><span class="ot">@unsub(foo);</span></span></code></pre></div>
 <p>Generates:</p>
 <div class="sourceCode" id="cb404"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb404-1"><a href="#cb404-1" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb404-2"><a href="#cb404-2" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span> <span class="fu">:</span> <span class="st">&quot;unsub&quot;</span><span class="fu">,</span></span>
@@ -7341,7 +7343,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon Nov 7 12:08:16 PST 2022</p>
+<p>Snapshot as of Mon Nov 7 19:46:21 PST 2022</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>UNION_ALL UNION INTERSECT EXCEPT
@@ -8633,6 +8635,8 @@ declare_proc_stmt:
 
 declare_interface_stmt:
   &quot;DECLARE&quot; &quot;INTERFACE&quot; name &#39;(&#39; typed_names &#39;)&#39;
+  | &quot;INTERFACE&quot; name &#39;(&#39; typed_names &#39;)&#39;
+  ;
 
 create_proc_stmt:
   &quot;CREATE&quot; procedure name &#39;(&#39; params &#39;)&#39; &quot;BEGIN&quot; opt_stmt_list &quot;END&quot;
@@ -11364,7 +11368,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon Nov 7 12:08:17 PST 2022</p>
+<p>Snapshot as of Mon Nov 7 19:46:22 PST 2022</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

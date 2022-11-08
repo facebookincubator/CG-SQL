@@ -6591,9 +6591,11 @@ The compiler ensures that the directives are valid and stay valid.
   * The deletion or unsubscription must have happened at a version <= _version_
 * _table_ is marked unsubscribed for purposes of further analysis
 
-Note: the legacy form `@unsub`(_version_, _table_) is supported but deprecated.  The _version_ is ignored.
+:::caution
+The legacy form `@unsub`(_version_, _table_) is supported but deprecated, and will soon be an error.  The _version_ is ignored.
 The legacy `@resub` directive is now an error;  Resubscription is accomplished by simply removing the relevant `@unsub`
-directives.
+directive(s).
+:::
 
 #### Previous Schema validations for @unsub
 
@@ -8698,13 +8700,13 @@ This section list all the schema subscriptions in order of appearance.  Each ent
 * **table** : the target of the subscription directive
 * **version** : the version at which this operation is to happen (always 1 at this time)
 
-This section is a little more complicated than it needs to be becasue of the legacy/deprecated resub directive.  At
-this point only the table name is relevant.
+This section is a little more complicated than it needs to be becasue of the legacy/deprecated `@resub` directive.  At
+this point only the table name is relevant.  The version is always 1 and the type is always "unsub".
 
 Example:
 
 ```sql
-@unsubfoo);
+@unsub(foo);
 ```
 
 Generates:
@@ -9707,7 +9709,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Nov  7 12:08:16 PST 2022
+Snapshot as of Mon Nov  7 19:46:21 PST 2022
 
 ### Operators and Literals
 
@@ -11011,6 +11013,8 @@ declare_proc_stmt:
 
 declare_interface_stmt:
   "DECLARE" "INTERFACE" name '(' typed_names ')'
+  | "INTERFACE" name '(' typed_names ')'
+  ;
 
 create_proc_stmt:
   "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
@@ -16161,7 +16165,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Nov  7 12:08:17 PST 2022
+Snapshot as of Mon Nov  7 19:46:22 PST 2022
 
 ### Rules
 

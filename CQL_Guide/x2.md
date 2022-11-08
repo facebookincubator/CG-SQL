@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Nov  7 12:08:16 PST 2022
+Snapshot as of Mon Nov  7 19:46:21 PST 2022
 
 ### Operators and Literals
 
@@ -1317,6 +1317,8 @@ declare_proc_stmt:
 
 declare_interface_stmt:
   "DECLARE" "INTERFACE" name '(' typed_names ')'
+  | "INTERFACE" name '(' typed_names ')'
+  ;
 
 create_proc_stmt:
   "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"

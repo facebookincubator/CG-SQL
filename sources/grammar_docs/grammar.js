@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Mon Nov  7 12:08:16 2022
+// Snapshot as of Mon Nov  7 19:46:21 2022
 
 
 const PREC = {
@@ -239,7 +239,7 @@ module.exports = grammar({
     procedure: $ => choice($.PROC, $.PROCEDURE),
     declare_proc_no_check_stmt: $ => seq($.DECLARE, $.procedure, $.name, $.NO, $.CHECK),
     declare_proc_stmt: $ => choice(seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.USING, $.TRANSACTION), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, '(', $.typed_names, ')', $.USING, $.TRANSACTION), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, $.UNION, '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, $.UNION, '(', $.typed_names, ')', $.USING, $.TRANSACTION)),
-    declare_interface_stmt: $ => seq($.DECLARE, $.INTERFACE, $.name, '(', $.typed_names, ')'),
+    declare_interface_stmt: $ => choice(seq($.DECLARE, $.INTERFACE, $.name, '(', $.typed_names, ')'), seq($.INTERFACE, $.name, '(', $.typed_names, ')')),
     create_proc_stmt: $ => seq($.CREATE, $.procedure, $.name, '(', optional($.params), ')', $.BEGIN, optional($.opt_stmt_list), $.END),
     inout: $ => choice($.IN, $.OUT, $.INOUT),
     typed_name: $ => choice(seq($.name, $.data_type_with_options), $.shape_def, seq($.name, $.shape_def)),
