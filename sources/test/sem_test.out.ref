@@ -64875,6 +64875,15 @@ DECLARE text_nn TYPE TEXT NOT NULL;
 
 The statement ending at line XXXX
 
+DECLARE type_short_form TYPE TEXT NOT NULL;
+
+  {declare_named_type}: text notnull
+  | {name type_short_form}: text notnull
+  | {notnull}: text notnull
+    | {type_text}: text
+
+The statement ending at line XXXX
+
 DECLARE nn_var_redundant TEXT NOT NULL NOT NULL @SENSITIVE;
 
 test/sem_test.sql:XXXX:1: error: in notnull : CQL0367: an attribute was specified twice 'not null'

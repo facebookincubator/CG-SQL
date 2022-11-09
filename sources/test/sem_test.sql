@@ -15895,6 +15895,12 @@ declare function adding_attr_to_func_redundant() create my_type @sensitive;
 -- - error:
 declare text_nn type text not null;
 
+-- TEST: short form to declare a type
+-- + {declare_named_type}: text notnull
+-- + {name type_short_form}: text notnull
+-- - error:
+type type_short_form text not null;
+
 -- TEST: try to add not null more than once, force the error inside of sensitive ast
 -- + {declare_vars_type}: err
 -- + error: % an attribute was specified twice 'not null'

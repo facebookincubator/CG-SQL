@@ -1888,6 +1888,7 @@ declare_fetched_value_cursor_stmt[result]:
 
 declare_type_stmt:
   DECLARE name TYPE data_type_with_options { $declare_type_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
+  | TYPE name data_type_with_options { $declare_type_stmt = new_ast_declare_named_type($name, $data_type_with_options); }
   ;
 
 declare_vars_stmt:
