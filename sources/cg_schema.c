@@ -208,6 +208,11 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  version LONG INTEGER NOT NULL\n");
   bprintf(decls, ");\n\n");
 
+  bprintf(decls, "-- rebuilt_tables table declaration --\n");
+  bprintf(decls, "CREATE TABLE IF NOT EXISTS cql_schema_rebuilt_tables(\n");
+  bprintf(decls, "  rebuild_facet TEXT NOT NULL \n");
+  bprintf(decls, ");\n\n");
+
   // Note this procedure has to handle the case where the table doesn't exist yet for retro-version validation
   // (this happens in test code so it's validated)
   // We still use the IF NOTHING -1 pattern so that it doesn't produce spurious errors when there is no row, that's not an error.
@@ -301,6 +306,11 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  LET added := cql_string_dictionary_add(%s_tables_dict_, table_name, '');\n", global_proc_name);
   bprintf(decls, "END;\n\n");
 
+  bprintf(decls, "-- helper proc to insert facet into cql_rebuilt_tables --\n");
+  bprintf(decls, "CREATE PROCEDURE %s_rebuilt_tables_insert_helper(facet TEXT NOT NULL)\n", global_proc_name);
+  bprintf(decls, "BEGIN\n");
+  bprintf(decls, "  INSERT INTO cql_schema_rebuilt_tables VALUES(facet);\n");
+  bprintf(decls, "END;\n\n");
 }
 
 // Emit the delcaration of the sqlite_master table so we can read from it.
@@ -1163,11 +1173,14 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
   CHARBUF_CLOSE(create);
 }
 
-static void cg_schema_add_recreate_table(charbuf *buf, crc_t table_crc, charbuf facet, charbuf update_tables)
+static void cg_schema_add_recreate_table(charbuf *buf, crc_t table_crc, charbuf facet, charbuf update_tables, CSTR table_key)
 {
   bprintf(buf, "  IF cql_facet_find(%s_facets, '%s') != %lld THEN\n", global_proc_name,
         facet.ptr, (llint_t)table_crc);
   bprintf(buf, "%s", update_tables.ptr);
+  bprintf(buf, "    IF %s_result THEN \n", table_key);
+  bprintf(buf, "      CALL %s_rebuilt_tables_insert_helper(\"%s\");\n", global_proc_name, facet.ptr);
+  bprintf(buf, "    END IF;\n");
   bprintf(buf, "    CALL %s_cql_set_facet_version('%s', %lld);\n", global_proc_name,
     facet.ptr, (llint_t)table_crc);
   bprintf(buf, "  END IF;\n");
@@ -1425,9 +1438,9 @@ static void cg_schema_manage_recreate_tables(
     bprintf(&update_proc, migrate_table.ptr);
     CHARBUF_CLOSE(migrate_table);
     if (is_virtual_ast(ast)) {
-      cg_schema_add_recreate_table(&recreate_only_virtual_tables, table_crc, facet, update_proc);
+      cg_schema_add_recreate_table(&recreate_only_virtual_tables, table_crc, facet, update_proc, migrate_key);
     } else {
-      cg_schema_add_recreate_table(&recreate_without_virtual_tables, table_crc, facet, update_proc);
+      cg_schema_add_recreate_table(&recreate_without_virtual_tables, table_crc, facet, update_proc, migrate_key);
     }
     CHARBUF_CLOSE(update_proc);
     CHARBUF_CLOSE(facet);

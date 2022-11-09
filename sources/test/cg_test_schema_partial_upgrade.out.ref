@@ -171,6 +171,11 @@ CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
   version LONG INTEGER NOT NULL
 );
 
+-- rebuilt_tables table declaration --
+CREATE TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
+  rebuild_facet TEXT NOT NULL 
+);
+
 -- helper proc for getting the schema version of a facet
 CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
 BEGIN
@@ -257,6 +262,12 @@ BEGIN
   -- remove the table from our dictionary marking it dropped
   IF test_tables_dict_ IS NULL THROW;
   LET added := cql_string_dictionary_add(test_tables_dict_, table_name, '');
+END;
+
+-- helper proc to insert facet into cql_rebuilt_tables --
+CREATE PROCEDURE test_rebuilt_tables_insert_helper(facet TEXT NOT NULL)
+BEGIN
+  INSERT INTO cql_schema_rebuilt_tables VALUES(facet);
 END;
 
 -- declared upgrade procedures if any
