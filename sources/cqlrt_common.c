@@ -3904,6 +3904,124 @@ sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref) {
   return (sqlite3_stmt *)_cql_generic_object_get_data(ref);
 }
 
+static void cql_format_one_cursor_column(cql_bytebuf *b, cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint16_t count = offsets[0];  // the first index is the count of fields
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  const char **fields = dyn_cursor->cursor_fields; // field names for printing
+
+  uint16_t offset = offsets[i+1];
+  uint8_t type = types[i];
+  const char *field = fields[i];
+
+  int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
+
+  if (type & CQL_DATA_TYPE_NOT_NULL) {
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_INT32: {
+        cql_int32 int32_data = *(cql_int32 *)(cursor + offset);
+        cql_bprintf(b, "%d", int32_data);
+        break;
+      }
+      case CQL_DATA_TYPE_INT64: {
+        cql_int64 int64_data = *(cql_int64 *)(cursor + offset);
+        cql_bprintf(b, "%lld", (llint_t)int64_data);
+        break;
+      }
+      case CQL_DATA_TYPE_DOUBLE: {
+        cql_double double_data = *(cql_double *)(cursor + offset);
+        cql_bprintf(b, "%g", double_data);
+        break;
+      }
+      case CQL_DATA_TYPE_BOOL: {
+        cql_bool bool_data = *(cql_bool *)(cursor + offset);
+        cql_bprintf(b, "%s", bool_data ? "true": "false");
+        break;
+      }
+      case CQL_DATA_TYPE_STRING: {
+        cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
+        cql_alloc_cstr(temp, str_ref);
+        cql_bprintf(b, "%s", temp);
+        cql_free_cstr(temp, str_ref);
+        break;
+      }
+      case CQL_DATA_TYPE_BLOB: {
+        cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
+        cql_uint32 size = cql_get_blob_size(blob_ref);
+        cql_bprintf(b, "length %d blob", size);
+        break;
+      }
+    }
+  }
+  else {
+    switch (core_data_type) {
+      case CQL_DATA_TYPE_INT32: {
+        cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
+        if (int32_data.is_null) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_bprintf(b, "%d", int32_data.value);
+        }
+        break;
+      }
+      case CQL_DATA_TYPE_INT64: {
+        cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
+        if (int64_data.is_null) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_bprintf(b, "%lld", (llint_t)int64_data.value);
+        }
+        break;
+      }
+      case CQL_DATA_TYPE_DOUBLE: {
+        cql_nullable_double double_data = *(cql_nullable_double *)(cursor + offset);
+        if (double_data.is_null) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_bprintf(b, "%g", double_data.value);
+        }
+        break;
+      }
+      case CQL_DATA_TYPE_BOOL: {
+        cql_nullable_bool bool_data = *(cql_nullable_bool *)(cursor + offset);
+        if (bool_data.is_null) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_bprintf(b, "%s", bool_data.value ? "true" : "false");
+        }
+        break;
+      }
+      case CQL_DATA_TYPE_STRING: {
+        cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
+        if (!str_ref) {
+          cql_bprintf(b, "null");
+        } else {
+          cql_alloc_cstr(temp, str_ref);
+          cql_bprintf(b, "%s", temp);
+          cql_free_cstr(temp, str_ref);
+        }
+        break;
+      }
+      case CQL_DATA_TYPE_BLOB: {
+        cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
+        if (!blob_ref) {
+          cql_bprintf(b, "null");
+        }
+        else {
+          cql_uint32 size = cql_get_blob_size(blob_ref);
+          cql_bprintf(b, "length %d blob", size);
+        }
+        break;
+      }
+    }
+  }
+}
+
 // The cursor formatting logic is really super simple
 // * we use the bprintf growable buffer format
 // * we use the usual dynamic cursor info to find the fields
@@ -3940,111 +4058,7 @@ cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_curso
 
     cql_bprintf(&b, "%s:", field);
 
-    int8_t core_data_type = CQL_CORE_DATA_TYPE_OF(type);
-
-    if (type & CQL_DATA_TYPE_NOT_NULL) {
-      switch (core_data_type) {
-        case CQL_DATA_TYPE_INT32: {
-          cql_int32 int32_data = *(cql_int32 *)(cursor + offset);
-          cql_bprintf(&b, "%d", int32_data);
-          break;
-        }
-        case CQL_DATA_TYPE_INT64: {
-          cql_int64 int64_data = *(cql_int64 *)(cursor + offset);
-          cql_bprintf(&b, "%lld", (llint_t)int64_data);
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE: {
-          cql_double double_data = *(cql_double *)(cursor + offset);
-          cql_bprintf(&b, "%g", double_data);
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL: {
-          cql_bool bool_data = *(cql_bool *)(cursor + offset);
-          cql_bprintf(&b, "%s", bool_data ? "true": "false");
-          break;
-        }
-        case CQL_DATA_TYPE_STRING: {
-          cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
-          cql_alloc_cstr(temp, str_ref);
-          cql_bprintf(&b, "%s", temp);
-          cql_free_cstr(temp, str_ref);
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
-          cql_uint32 size = cql_get_blob_size(blob_ref);
-          cql_bprintf(&b, "length %d blob", size);
-          break;
-        }
-      }
-    }
-    else {
-      switch (core_data_type) {
-        case CQL_DATA_TYPE_INT32: {
-          cql_nullable_int32 int32_data = *(cql_nullable_int32 *)(cursor + offset);
-          if (int32_data.is_null) {
-            cql_bprintf(&b, "null");
-          }
-          else {
-            cql_bprintf(&b, "%d", int32_data.value);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_INT64: {
-          cql_nullable_int64 int64_data = *(cql_nullable_int64 *)(cursor + offset);
-          if (int64_data.is_null) {
-            cql_bprintf(&b, "null");
-          }
-          else {
-            cql_bprintf(&b, "%lld", (llint_t)int64_data.value);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_DOUBLE: {
-          cql_nullable_double double_data = *(cql_nullable_double *)(cursor + offset);
-          if (double_data.is_null) {
-            cql_bprintf(&b, "null");
-          }
-          else {
-            cql_bprintf(&b, "%g", double_data.value);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BOOL: {
-          cql_nullable_bool bool_data = *(cql_nullable_bool *)(cursor + offset);
-          if (bool_data.is_null) {
-            cql_bprintf(&b, "null");
-          }
-          else {
-            cql_bprintf(&b, "%s", bool_data.value ? "true" : "false");
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_STRING: {
-          cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
-          if (!str_ref) {
-            cql_bprintf(&b, "null");
-          } else {
-            cql_alloc_cstr(temp, str_ref);
-            cql_bprintf(&b, "%s", temp);
-            cql_free_cstr(temp, str_ref);
-          }
-          break;
-        }
-        case CQL_DATA_TYPE_BLOB: {
-          cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
-          if (!blob_ref) {
-            cql_bprintf(&b, "null");
-          }
-          else {
-            cql_uint32 size = cql_get_blob_size(blob_ref);
-            cql_bprintf(&b, "length %d blob", size);
-          }
-          break;
-        }
-      }
-    }
+    cql_format_one_cursor_column(&b, dyn_cursor, i);
   }
 
   cql_bytebuf_append_null(&b);
