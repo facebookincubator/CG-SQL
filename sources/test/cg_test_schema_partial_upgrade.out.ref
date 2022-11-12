@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
 );
 
 -- rebuilt_tables table declaration --
-CREATE TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
+CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
   rebuild_facet TEXT NOT NULL 
 );
 
@@ -217,6 +217,15 @@ BEGIN
   CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
     facet TEXT NOT NULL PRIMARY KEY,
     version LONG INTEGER NOT NULL
+  );
+END;
+
+-- helper proc for creating the rebuilt facets table
+@attribute(cql:private)
+CREATE PROCEDURE test_create_cql_schema_rebuilt_tables_if_needed()
+BEGIN
+  CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
+    rebuild_facet TEXT NOT NULL
   );
 END;
 
@@ -498,6 +507,9 @@ BEGIN
 
   -- create schema facets information table --
   CALL test_create_cql_schema_facets_if_needed();
+
+  -- create rebuilt facets table --
+  CALL test_create_cql_schema_rebuilt_tables_if_needed();
 
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);

@@ -209,7 +209,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, ");\n\n");
 
   bprintf(decls, "-- rebuilt_tables table declaration --\n");
-  bprintf(decls, "CREATE TABLE IF NOT EXISTS cql_schema_rebuilt_tables(\n");
+  bprintf(decls, "CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(\n");
   bprintf(decls, "  rebuild_facet TEXT NOT NULL \n");
   bprintf(decls, ");\n\n");
 
@@ -259,6 +259,15 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, "  CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", global_proc_name);
   bprintf(decls, "    facet TEXT NOT NULL PRIMARY KEY,\n");
   bprintf(decls, "    version LONG INTEGER NOT NULL\n");
+  bprintf(decls, "  );\n");
+  bprintf(decls, "END;\n\n");
+
+  bprintf(decls, "-- helper proc for creating the rebuilt facets table\n");
+  bprintf(decls, "@attribute(cql:private)\n");
+  bprintf(decls, "CREATE PROCEDURE %s_create_cql_schema_rebuilt_tables_if_needed()\n", global_proc_name);
+  bprintf(decls, "BEGIN\n");
+  bprintf(decls, "  CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(\n");
+  bprintf(decls, "    rebuild_facet TEXT NOT NULL\n");
   bprintf(decls, "  );\n");
   bprintf(decls, "END;\n\n");
 
@@ -1973,6 +1982,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "\n");
   bprintf(&main, "  -- create schema facets information table --\n");
   bprintf(&main, "  CALL %s_create_cql_schema_facets_if_needed();\n\n", global_proc_name);
+  bprintf(&main, "  -- create rebuilt facets table --\n");
+  bprintf(&main, "  CALL %s_create_cql_schema_rebuilt_tables_if_needed();\n\n", global_proc_name);
   bprintf(&main, "  -- fetch the last known schema crc, if it's different do the upgrade --\n");
   bprintf(&main, "  CALL %s_cql_get_facet_version('cql_schema_crc', schema_crc);\n\n", global_proc_name);
   bprintf(&main, "  IF schema_crc <> %lld THEN\n", (llint_t)schema_crc);
