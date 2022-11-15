@@ -3843,7 +3843,7 @@ static void cql_string_list_finalize(void *_Nonnull data) {
   free(self);
 }
 
-// create the list storage using a byte buffer
+// Creates the string list storage using a byte buffer
 cql_object_ref _Nonnull cql_string_list_create(void) {
 
   cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
@@ -3851,7 +3851,7 @@ cql_object_ref _Nonnull cql_string_list_create(void) {
   return _cql_generic_object_create(self, cql_string_list_finalize);
 }
 
-// add a string to the buffer and retain it
+// Adds a string to the given string list and retains it.
 void cql_string_list_add_string(cql_object_ref _Nullable list, cql_string_ref _Nonnull string) {
   cql_contract(list);
   cql_contract(string);
@@ -3861,7 +3861,7 @@ void cql_string_list_add_string(cql_object_ref _Nullable list, cql_string_ref _N
   cql_bytebuf_append(self, &string, sizeof(string));
 }
 
-// return number of elements
+// Returns the number of elements in the given string list
 int32_t cql_string_list_get_count(cql_object_ref _Nullable list) {
   int32_t result = 0;
 
@@ -3873,7 +3873,7 @@ int32_t cql_string_list_get_count(cql_object_ref _Nullable list) {
   return result;
 }
 
-// return the nth string, with no extra retain (get semantics)
+// Returns the nth string from the string list with no extra retain (get semantics)
 cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable list, int32_t index) {
   cql_string_ref result = NULL;
 
@@ -3889,6 +3889,8 @@ cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable lis
   return result;
 }
 
+// This is called when the reference count of the boxed statement becomes zero
+// It will finalize the actual SQLite statement.  i.e. this is a destructor/finalizer
 static void cql_boxed_stmt_finalize(void *_Nonnull data) {
   // note that we use cql_finalize_stmt because it can be and often is
   // intercepted to allow for cql statement pooling.
@@ -3896,10 +3898,13 @@ static void cql_boxed_stmt_finalize(void *_Nonnull data) {
   cql_finalize_stmt(&stmt);
 }
 
+// Wraps the given SQLite statement in an object with a reference count
 cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt) {
   return _cql_generic_object_create(stmt, cql_boxed_stmt_finalize);
 }
 
+// Extracts the SQL statement from an embedded object for use.
+// Note that this does not affect the reference count!
 sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref) {
   return (sqlite3_stmt *)_cql_generic_object_get_data(ref);
 }
