@@ -17,11 +17,6 @@ void put_quoted(const char *s) {
   printf("\"%s\"", s);
 }
 
-void put_squoted(const char *s) {
-  printf("'%s'", s);
-}
-
-
 %}
 
 %%
@@ -275,15 +270,15 @@ UNION_ALL	{ put_quoted("UNION ALL"); }
 
     /* two character operators */
 
-CONCAT	{ put_squoted("||"); }
-ASSIGN	{ put_squoted(":="); }
-LS	{ put_squoted("<<"); }
-RS	{ put_squoted(">>"); }
-GE	{ put_squoted(">="); }
-LE	{ put_squoted("<="); }
-EQEQ	{ put_squoted("=="); }
-NE_	{ put_squoted("!="); }
-NE	{ put_squoted("<>"); }
+CONCAT	{ put_quoted("||"); }
+ASSIGN	{ put_quoted(":="); }
+LS	{ put_quoted("<<"); }
+RS	{ put_quoted(">>"); }
+GE	{ put_quoted(">="); }
+LE	{ put_quoted("<="); }
+EQEQ	{ put_quoted("=="); }
+NE_	{ put_quoted("!="); }
+NE	{ put_quoted("<>"); }
 
     /*  passthrough normalized grammar rule operator */
 

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue Nov 15 17:08:02 2022
+// Snapshot as of Tue Nov 15 17:41:11 2022
 
 
 const PREC = {
@@ -35,8 +35,8 @@ module.exports = grammar({
     previous_schema_stmt: $ => $.AT_PREVIOUS_SCHEMA,
     schema_upgrade_script_stmt: $ => $.AT_SCHEMA_UPGRADE_SCRIPT,
     schema_upgrade_version_stmt: $ => seq($.AT_SCHEMA_UPGRADE_VERSION, '(', $.INT_LIT, ')'),
-    set_stmt: $ => choice(seq($.SET, $.name, $.expr), seq($.SET, $.name, $.FROM, $.CURSOR, $.name)),
-    let_stmt: $ => seq($.LET, $.name, $.expr),
+    set_stmt: $ => choice(seq($.SET, $.name, ":=", $.expr), seq($.SET, $.name, $.FROM, $.CURSOR, $.name)),
+    let_stmt: $ => seq($.LET, $.name, ":=", $.expr),
     version_attrs_opt_recreate: $ => choice(seq($.AT_RECREATE, optional($.opt_delete_plain_attr)), seq($.AT_RECREATE, '(', $.name, ')', optional($.opt_delete_plain_attr)), $.version_attrs),
     opt_delete_plain_attr: $ => $.AT_DELETE,
     opt_version_attrs: $ => $.version_attrs,
@@ -117,7 +117,7 @@ module.exports = grammar({
     NOT_GLOB: $ => prec.left(1, seq(CI('not'), CI('glob'))),
     NOT_BETWEEN: $ => prec.left(1, seq(CI('not'), CI('between'))),
     IS_NOT: $ => prec.left(1, seq(CI('is'), CI('not'))),
-    math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq($.math_expr, $.IS_NOT_TRUE), seq($.math_expr, $.IS_NOT_FALSE), seq($.math_expr, $.ISNULL), seq($.math_expr, $.NOTNULL), seq($.math_expr, $.IS_TRUE), seq($.math_expr, $.IS_FALSE), seq('-', $.math_expr), seq('+', $.math_expr), seq('~', $.math_expr), seq($.NOT, $.math_expr), seq($.math_expr, '=', $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, '<', $.math_expr), seq($.math_expr, '>', $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, $.NOT_IN, '(', $.expr_list, ')'), seq($.math_expr, $.NOT_IN, '(', $.select_stmt, ')'), seq($.math_expr, $.IN, '(', $.expr_list, ')'), seq($.math_expr, $.IN, '(', $.select_stmt, ')'), seq($.math_expr, $.LIKE, $.math_expr), seq($.math_expr, $.NOT_LIKE, $.math_expr), seq($.math_expr, $.MATCH, $.math_expr), seq($.math_expr, $.NOT_MATCH, $.math_expr), seq($.math_expr, $.REGEXP, $.math_expr), seq($.math_expr, $.NOT_REGEXP, $.math_expr), seq($.math_expr, $.GLOB, $.math_expr), seq($.math_expr, $.NOT_GLOB, $.math_expr), seq($.math_expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.NOT_BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.IS_NOT, $.math_expr), seq($.math_expr, $.IS, $.math_expr), seq($.math_expr, $.math_expr), seq($.math_expr, $.COLLATE, $.name))),
+    math_expr: $ => prec.left(choice($.basic_expr, seq($.math_expr, '&', $.math_expr), seq($.math_expr, '|', $.math_expr), seq($.math_expr, "<<", $.math_expr), seq($.math_expr, ">>", $.math_expr), seq($.math_expr, '+', $.math_expr), seq($.math_expr, '-', $.math_expr), seq($.math_expr, '*', $.math_expr), seq($.math_expr, '/', $.math_expr), seq($.math_expr, '%', $.math_expr), seq($.math_expr, $.IS_NOT_TRUE), seq($.math_expr, $.IS_NOT_FALSE), seq($.math_expr, $.ISNULL), seq($.math_expr, $.NOTNULL), seq($.math_expr, $.IS_TRUE), seq($.math_expr, $.IS_FALSE), seq('-', $.math_expr), seq('+', $.math_expr), seq('~', $.math_expr), seq($.NOT, $.math_expr), seq($.math_expr, '=', $.math_expr), seq($.math_expr, "==", $.math_expr), seq($.math_expr, '<', $.math_expr), seq($.math_expr, '>', $.math_expr), seq($.math_expr, "<>", $.math_expr), seq($.math_expr, "!=", $.math_expr), seq($.math_expr, ">=", $.math_expr), seq($.math_expr, "<=", $.math_expr), seq($.math_expr, $.NOT_IN, '(', $.expr_list, ')'), seq($.math_expr, $.NOT_IN, '(', $.select_stmt, ')'), seq($.math_expr, $.IN, '(', $.expr_list, ')'), seq($.math_expr, $.IN, '(', $.select_stmt, ')'), seq($.math_expr, $.LIKE, $.math_expr), seq($.math_expr, $.NOT_LIKE, $.math_expr), seq($.math_expr, $.MATCH, $.math_expr), seq($.math_expr, $.NOT_MATCH, $.math_expr), seq($.math_expr, $.REGEXP, $.math_expr), seq($.math_expr, $.NOT_REGEXP, $.math_expr), seq($.math_expr, $.GLOB, $.math_expr), seq($.math_expr, $.NOT_GLOB, $.math_expr), seq($.math_expr, $.BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.NOT_BETWEEN, $.math_expr, $.AND, $.math_expr), seq($.math_expr, $.IS_NOT, $.math_expr), seq($.math_expr, $.IS, $.math_expr), seq($.math_expr, "||", $.math_expr), seq($.math_expr, $.COLLATE, $.name))),
     expr: $ => prec.left(choice($.math_expr, seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr))),
     case_list: $ => choice(seq($.WHEN, $.expr, $.THEN, $.expr), seq($.WHEN, $.expr, $.THEN, $.expr, $.case_list)),
     arg_expr: $ => choice('*', $.expr, $.shape_arguments),

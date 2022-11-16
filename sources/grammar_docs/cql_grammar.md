@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Nov 15 17:08:02 PST 2022
+Snapshot as of Tue Nov 15 17:41:11 PST 2022
 
 ### Operators and Literals
 
@@ -21,17 +21,17 @@ These are in order of priority lowest to highest
 
 ```
 "UNION ALL" "UNION" "INTERSECT" "EXCEPT"
-':='
+":="
 "OR"
 "AND"
 "NOT"
-"BETWEEN" "NOT BETWEEN" '<>' '!=' '=' '==' "LIKE" "NOT LIKE" "GLOB" "NOT GLOB" "MATCH" "NOT MATCH" "REGEXP" "NOT REGEXP" "IN" "NOT IN" "IS NOT" "IS" "IS TRUE" "IS FALSE" "IS NOT TRUE" "IS NOT FALSE"
+"BETWEEN" "NOT BETWEEN" "<>" "!=" '=' "==" "LIKE" "NOT LIKE" "GLOB" "NOT GLOB" "MATCH" "NOT MATCH" "REGEXP" "NOT REGEXP" "IN" "NOT IN" "IS NOT" "IS" "IS TRUE" "IS FALSE" "IS NOT TRUE" "IS NOT FALSE"
 "ISNULL" "NOTNULL"
-'<' '>' '>=' '<='
-'<<' '>>' '&' '|'
+'<' '>' ">=" "<="
+"<<" ">>" '&' '|'
 '+' '-'
 '*' '/' '%'
-'||'
+"||"
 "COLLATE"
 "UMINUS" '~'
 ```
@@ -244,12 +244,12 @@ schema_upgrade_version_stmt:
   ;
 
 set_stmt:
-  "SET" name ':=' expr
+  "SET" name ":=" expr
   | "SET" name "FROM" "CURSOR" name
   ;
 
 let_stmt:
-  "LET" name ':=' expr
+  "LET" name ":=" expr
   ;
 
 version_attrs_opt_recreate:
@@ -675,8 +675,8 @@ math_expr:
   basic_expr
   | math_expr '&' math_expr
   | math_expr '|' math_expr
-  | math_expr '<<' math_expr
-  | math_expr '>>'  math_expr
+  | math_expr "<<" math_expr
+  | math_expr ">>"  math_expr
   | math_expr '+' math_expr
   | math_expr '-' math_expr
   | math_expr '*' math_expr
@@ -693,13 +693,13 @@ math_expr:
   | '~' math_expr
   | "NOT" math_expr
   | math_expr '=' math_expr
-  | math_expr '==' math_expr
+  | math_expr "==" math_expr
   | math_expr '<' math_expr
   | math_expr '>' math_expr
-  | math_expr '<>' math_expr
-  | math_expr '!=' math_expr
-  | math_expr '>=' math_expr
-  | math_expr '<=' math_expr
+  | math_expr "<>" math_expr
+  | math_expr "!=" math_expr
+  | math_expr ">=" math_expr
+  | math_expr "<=" math_expr
   | math_expr "NOT IN" '(' expr_list ')'
   | math_expr "NOT IN" '(' select_stmt ')'
   | math_expr "IN" '(' expr_list ')'
@@ -716,7 +716,7 @@ math_expr:
   | math_expr "NOT BETWEEN" math_expr  "AND" math_expr
   | math_expr "IS NOT" math_expr
   | math_expr "IS" math_expr
-  | math_expr '||' math_expr
+  | math_expr "||" math_expr
   | math_expr "COLLATE" name
   ;
 
