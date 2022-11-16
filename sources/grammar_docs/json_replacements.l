@@ -2,14 +2,14 @@
 
 #include <stdio.h>
 
-int yywrap(void)                                {
+int yywrap(void) {
   // no further input
   return 1;
 }
 
 int yylex(void);
 
-int main(int argc, char **argv)                                {
+int main(int argc, char **argv) {
   while (yylex()) ;
 }
 
