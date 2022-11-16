@@ -21,8 +21,8 @@ void put_quoted(const char *s) {
 
 %%
 
-%prec[ ]UMINUS	{}
-%prec[ ]BETWEEN	{}
+%prec[ ]UMINUS[ ]	{}
+%prec[ ]BETWEEN[ ]	{}
 [ ][ ]*$	{ }
 
 ABORT	{ put_quoted("ABORT"); }

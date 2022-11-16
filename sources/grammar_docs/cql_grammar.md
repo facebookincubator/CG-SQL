@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Nov 15 17:41:11 PST 2022
+Snapshot as of Tue Nov 15 17:52:14 PST 2022
 
 ### Operators and Literals
 
@@ -712,8 +712,8 @@ math_expr:
   | math_expr "NOT REGEXP" math_expr
   | math_expr "GLOB" math_expr
   | math_expr "NOT GLOB" math_expr
-  | math_expr "BETWEEN" math_expr  "AND" math_expr
-  | math_expr "NOT BETWEEN" math_expr  "AND" math_expr
+  | math_expr "BETWEEN" math_expr "AND" math_expr
+  | math_expr "NOT BETWEEN" math_expr "AND" math_expr
   | math_expr "IS NOT" math_expr
   | math_expr "IS" math_expr
   | math_expr "||" math_expr
