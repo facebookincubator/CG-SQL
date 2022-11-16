@@ -611,6 +611,13 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
   CHARBUF_CLOSE(name);
 }
 
+// Emits the correct _result_set_ref type based on the sem_type and kind
+// the idea here is that we're generating the return type of a getter function
+// and the getter is returning a result set.  The type kind will have the actual
+// name of the procedure that originally created the result set.  The type will 
+// be something like OBJECT<Foo SET> -- we're going to use the "Foo" in the
+// result set type as this corresponds to the result set that the "Foo" procedure
+// creates.
 static void cg_result_set_type_from_kind(charbuf *output, sem_t sem_type, CSTR kind) {
   CHARBUF_OPEN(temp);
 
@@ -629,6 +636,7 @@ static void cg_result_set_type_from_kind(charbuf *output, sem_t sem_type, CSTR k
   cg_var_nullability_annotation(output, sem_type);
 }
 
+// We're looking for OBJECT<Foo SET>
 static bool_t is_result_set_type(sem_t sem_type, CSTR kind) {
   return core_type_of(sem_type) == SEM_TYPE_OBJECT && kind && ends_in_set(kind);
 }
@@ -1707,6 +1715,11 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   CHARBUF_CLOSE(result);
 }
 
+// The sign function is present in later versions of Sqlite so we want to
+// The strategy is to compute the value of the argument, store it in a temporary
+// and then use the expression (x > 0) - (x < 0) to compute the sign.  The
+// temporary is needed because 'x' appears twice and we do not want to evaluate
+// the expression twice.
 static void cg_func_sign(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -1851,6 +1864,10 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
   cg_store_same_type(cg_main_output, result, sem_type_result, "0", not_found_value);
 }
 
+// Helper to generate a null result.  For consistency with other nullable results
+// we store it in a scratch variable.  Note that this is a "typed" null.  That is
+// we know the kind of null we are making, a null int, null long, etc.  Again
+// this lets the normal nullability path just work.  
 static void cg_null_result(ast_node *ast, charbuf *is_null, charbuf *value) {
   sem_t sem_type_result = ast->sem->sem_type;
   CG_SETUP_RESULT_VAR(ast, sem_type_result);
@@ -2463,6 +2480,8 @@ static void cg_func_ifnull(ast_node *call_ast, charbuf *is_null, charbuf *value)
   cg_func_coalesce(call_ast, is_null, value);
 }
 
+// The sensitive wrapper does nothing at codegen time, we just foward evaluation
+// down into its one and only argument.
 static void cg_func_sensitive(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -2480,6 +2499,8 @@ static void cg_func_sensitive(ast_node *call_ast, charbuf *is_null, charbuf *val
   cg_expr(expr, is_null, value, C_EXPR_PRI_HIGHEST);
 }
 
+// The nullable wrapper does nothing at codegen time, we just foward evaluation
+// down into its one and only argument.
 static void cg_func_nullable(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
@@ -2546,10 +2567,12 @@ static void cg_func_attest_notnull(ast_node *call_ast, charbuf *is_null, charbuf
   CG_POP_EVAL(expr);
 }
 
+// As the name suggests, we yield a not null result but throw if the argument was null
 static void cg_func_ifnull_throw(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_THROW);
 }
 
+// As the name suggests, we yield a not null result but crash/assert if the argument was null
 static void cg_func_ifnull_crash(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   cg_func_attest_notnull(call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_CRASH);
 }
@@ -2685,6 +2708,7 @@ static void cg_expr_num(ast_node *expr, CSTR op, charbuf *is_null, charbuf *valu
   }
 }
 
+// we generate a simple string literal or an identifier here, both use the "str" node
 static void cg_expr_str(ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // String could be an id, or a literal -- literals start with single quote.
   Contract(is_ast_str(expr));
@@ -2731,6 +2755,13 @@ static void cg_expr(ast_node *expr, charbuf *is_null, charbuf *value, int32_t pr
   disp->func(expr, disp->str, is_null, value, pri, disp->pri_new);
 }
 
+// Generates the necessary cleanup call for the given temporary statement
+// Normally we use statement 0 for all our temp statements, but, if we are
+// in a loop, we recognize that the temp statement might be used again
+// in the next iteration.  So instead of eagerly finalizing it, we simply
+// reset it so that we can avoid an expensive prepare in the next iteration.
+// All such "in a loop" statements have an index greater than 0 to ensure
+// they get a unique name.
 static void cg_temp_stmt_cleanup(int32_t stmt_index, charbuf *output) {
   CHARBUF_OPEN(temp_stmt);
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
@@ -3311,6 +3342,14 @@ static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
   bprintf(output, "\n};\n");
 }
 
+// This is the codegen for a dynamic cursor.  When a function has an arg that is of type
+// CURSOR this means that it accepts any kind of cursor.  So, the cursor argument is replaced
+// with a so-called "dynamic cursor".  This is a bunch of metadata about the cursor such as
+// the names of its fields as well as their types and offsets.  The function can use this
+// information to do its job.  Normally such functions are pretty generic, like format
+// the cursor as a string, or hash the cursor.  But in principle it can be anyuthing.
+// This code generates the necessary variables for a dynamic cursor so that when a call happens
+// later &cursor_name_dyn can be passed for the arg and it's ready to go.
 static void cg_dynamic_cursor(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR cols_name, CSTR types_name) {
   CSTR scope = current_proc_name();
   CSTR suffix = (sym_name && scope) ? "_" : "";
@@ -4014,7 +4053,7 @@ static void cg_declare_select_func_stmt(ast_node *ast) {
   Contract(is_ast_declare_select_func_stmt(ast));
 
   // We do not emit the declaration of the sql UDF into the header file
-  // since it is not callable from C (unlike regular declared functions)
+  // since it is not callable from C (unlike regular declared functions) 
 
   // NO-OP
 }
@@ -5301,6 +5340,12 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
   CHARBUF_CLOSE(row_type);
 }
 
+// Declare group is the form to create a group of  global variables with storage.  Note that
+// this only creates the "extern" form of the group.  There is an emit_group statement that
+// causes the definitions to be emitted see below.  The declarations are protected by #ifdef
+// so that they can appear more than once in various header files without problems.
+// The standard variable declaration helpers are all that is needed here.  Semantic analysis
+// already verified that the group contains only viable globals.
 static void cg_declare_group_stmt(ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
   Contract(!in_var_group_decl);
@@ -5332,6 +5377,10 @@ static void cg_declare_group_stmt(ast_node *ast) {
   bprintf(cg_header_output, "#endif\n");
 }
 
+// Emit group tells CQL to emit the variable definitions for the indicated groups into
+// the current translation unit.  This should be done one time to avoid duplicate symbols
+// at link time.  The indicated groups are enumerated and the definition form is emitted
+// using the normal helpers.
 static void cg_emit_group_stmt(ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
@@ -6939,6 +6988,7 @@ static void cg_with_select_stmt(ast_node *ast) {
   cg_select_stmt(ast);
 }
 
+// Declares the shared _seed_ variable if needed and then loads it from the indicated expression.
 static void cg_insert_dummy_spec(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->left); // the seed expr
 
@@ -6957,6 +7007,7 @@ static void cg_insert_dummy_spec(ast_node *ast) {
   CG_POP_EVAL(expr);
 }
 
+// set up the seed variable for dummy data if the relevant node is present
 static void cg_opt_seed_process(ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
