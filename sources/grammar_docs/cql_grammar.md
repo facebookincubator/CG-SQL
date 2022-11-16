@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Nov  7 19:46:21 PST 2022
+Snapshot as of Wed Nov 16 09:29:53 PST 2022
 
 ### Operators and Literals
 
@@ -1392,6 +1392,7 @@ declare_fetched_value_cursor_stmt:
 
 declare_type_stmt:
   "DECLARE" name "TYPE" data_type_with_options
+  | "TYPE" name data_type_with_options
   ;
 
 declare_vars_stmt:

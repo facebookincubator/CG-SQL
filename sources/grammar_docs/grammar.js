@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Mon Nov  7 19:46:21 2022
+// Snapshot as of Wed Nov 16 09:29:53 2022
 
 
 const PREC = {
@@ -251,7 +251,7 @@ module.exports = grammar({
     declare_value_cursor: $ => choice(seq($.DECLARE, $.name, $.CURSOR, $.shape_def), seq($.CURSOR, $.name, $.shape_def), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, $.select_stmt), seq($.CURSOR, $.name, $.LIKE, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.LIKE, '(', $.typed_names, ')'), seq($.CURSOR, $.name, $.LIKE, '(', $.typed_names, ')')),
     declare_forward_read_cursor_stmt: $ => choice(seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.select_stmt), seq($.CURSOR, $.name, $.FOR, $.select_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.explain_stmt), seq($.CURSOR, $.name, $.FOR, $.explain_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.call_stmt), seq($.CURSOR, $.name, $.FOR, $.call_stmt), seq($.DECLARE, $.name, $.CURSOR, $.FOR, $.expr), seq($.CURSOR, $.name, $.FOR, $.expr)),
     declare_fetched_value_cursor_stmt: $ => choice(seq($.DECLARE, $.name, $.CURSOR, $.FETCH, $.FROM, $.call_stmt), seq($.CURSOR, $.name, $.FETCH, $.FROM, $.call_stmt)),
-    declare_type_stmt: $ => seq($.DECLARE, $.name, $.TYPE, $.data_type_with_options),
+    declare_type_stmt: $ => choice(seq($.DECLARE, $.name, $.TYPE, $.data_type_with_options), seq($.TYPE, $.name, $.data_type_with_options)),
     declare_vars_stmt: $ => choice(seq($.DECLARE, $.name_list, $.data_type_with_options), seq($.VAR, $.name_list, $.data_type_with_options), $.declare_value_cursor),
     call_stmt: $ => choice(seq($.CALL, $.name, '(', ')'), seq($.CALL, $.name, '(', $.call_expr_list, ')'), seq($.CALL, $.name, '(', '*', ')')),
     while_stmt: $ => seq($.WHILE, $.expr, $.BEGIN, optional($.opt_stmt_list), $.END),
