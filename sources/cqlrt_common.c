@@ -4224,15 +4224,19 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
   // Intuitively, need to drop the tables with the most dependencies first.
   for (cql_int32 i = cql_string_list_get_count(tableList) - 1; i >= 0; i--){
     cql_string_ref tableCreate = cql_string_list_get_string(tableList, i);
-    char* table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
-    cql_int32 bytes = (cql_int32)(strlen(table_name)) + sizeof("DROP TABLE IF EXISTS ");
-    char* drop = malloc(bytes);
-    snprintf(drop, bytes, "DROP TABLE IF EXISTS %s", table_name);
-    rc = cql_exec(db, drop);
+    char *table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
+
+    cql_bytebuf drop;
+    cql_bytebuf_open(&drop);
+    cql_bprintf(&drop, "DROP TABLE IF EXISTS %s", table_name);
+    cql_bytebuf_append_null(&drop);
+    rc = cql_exec(db, drop.ptr);
+    cql_bytebuf_close(&drop);
     free(table_name);
-    free(drop);
+
     if (rc != SQLITE_OK) goto cleanup;
   }
+
   // Execute all table creates in the order provided
   for (cql_int32 i = 0; i < cql_string_list_get_count(tableList); i++){
     cql_string_ref tableCreate = cql_string_list_get_string(tableList, i);
