@@ -137,6 +137,10 @@ int fileno(FILE *);
 \"checkExpressions\"[ \t]*:      { return CHECK_EXPRESSIONS; }
 \"onRecreateOf\"[ \t]*:          { return ON_RECREATE_OF; }
 \"interfaces\"[ \t]*:            { return INTERFACES; }
+\"declareProcs\"[ \t]*:          { return DECLARE_PROCS; }
+\"declareFuncs\"[ \t]*:          { return DECLARE_FUNCS; }
+\"createsObject\"[ \t]*:         { return CREATES_OBJECT; }
+\"returnType\"[ \t]*:            { return RETURN_TYPE; }
 
 [01]                             { return yytext[0]; }
 [0-9]+L                          { return LONG_LITERAL; }

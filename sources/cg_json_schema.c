@@ -54,6 +54,9 @@ static charbuf *general;
 static charbuf *general_inserts;
 static charbuf *interfaces_json;
 
+// These are the main output buffers for declare statements.
+static charbuf *declare_procs;
+static charbuf *declare_funcs;
 
 // We use this to track every table we've ever seen and we remember what stored procedures use it
 static symtab *tables_to_procs;
@@ -1723,25 +1726,27 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
   }
 
   bprintf(output, "\"name\" : \"%s\",\n", name);
+  
+  if (infos) {
+    CSTR base_name = infos[0];
+    CSTR shape_name = infos[1];
+    CSTR shape_type = infos[2];
 
-  CSTR base_name = infos[0];
-  CSTR shape_name = infos[1];
-  CSTR shape_type = infos[2];
-
-  if (shape_name[0]) {
-    // this is an expansion of the form shape_name LIKE shape_type
-    // the formal arg will have a name like "shape_name_base_name" (underscore between the parts)
-    bprintf(output, "\"argOrigin\" : \"%s %s %s\",\n", shape_name, shape_type, base_name);
-  }
-  else if (shape_type[0]) {
-    // this is an expansion of the form LIKE shape_type
-    // the formal arg will have a name like "base_name_" (trailing underscore)
-    bprintf(output, "\"argOrigin\" : \"%s %s\",\n", shape_type, base_name);
-  }
-  else {
-    // this is a normal arg, it was not auto-expanded from anything
-    // the formal arg will have the name "base_name"
-    bprintf(output, "\"argOrigin\" : \"%s\",\n", base_name);
+    if (shape_name[0]) {
+      // this is an expansion of the form shape_name LIKE shape_type
+      // the formal arg will have a name like "shape_name_base_name" (underscore between the parts)
+      bprintf(output, "\"argOrigin\" : \"%s %s %s\",\n", shape_name, shape_type, base_name);
+    }
+    else if (shape_type[0]) {
+      // this is an expansion of the form LIKE shape_type
+      // the formal arg will have a name like "base_name_" (trailing underscore)
+      bprintf(output, "\"argOrigin\" : \"%s %s\",\n", shape_type, base_name);
+    }
+    else {
+      // this is a normal arg, it was not auto-expanded from anything
+      // the formal arg will have the name "base_name"
+      bprintf(output, "\"argOrigin\" : \"%s\",\n", base_name);
+    }
   }
 
   cg_json_data_type(output, ast->sem->sem_type, ast->sem->kind);
@@ -1770,7 +1775,9 @@ static bool_t cg_json_params(charbuf *output, ast_node *ast, CSTR *infos) {
 
     // There are 3 strings per arg, one each for the shape name, shape type, and base name
     // these desribe how automatically generated arguments were created.
-    infos += 3;
+    if (infos) {
+      infos += 3; 
+    }
   }
   END_LIST;
 
@@ -1964,7 +1971,7 @@ static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
 // Start a new section for a proc, if testing we spew the test info here
 // This lets us attribute the output to a particular line number in the test file.
 static void cg_begin_proc(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
-  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_interface_stmt(ast));
+  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_interface_stmt(ast) || is_ast_declare_func_stmt(ast) || is_ast_declare_proc_stmt(ast));
 
   if (output->used > 1) bprintf(output, ",\n");
   cg_json_test_details(output, ast, misc_attrs);
@@ -2193,6 +2200,114 @@ static void cg_json_declare_interface(ast_node *ast, ast_node *misc_attrs) {
   cg_end_proc(output, ast);
 }
 
+static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
+  Contract(is_ast_declare_func_stmt(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(func_params_return, ast->right);
+  EXTRACT(params, func_params_return->left);
+
+  CHARBUF_OPEN(declare_func_buffer);
+  charbuf *output = &declare_func_buffer;
+
+  bprintf(output, "\"name\" : \"%s\"", name);
+  
+  // emit parameters.
+  bprintf(output, ",\n\"args\" : [\n");
+  BEGIN_INDENT(parms, 2);
+  cg_json_params(output, params, NULL);
+  END_INDENT(parms);
+  bprintf(output, "]");
+  
+  // emit attributes.
+  if (misc_attrs) {
+    bprintf(output, ",\n");
+    cg_json_misc_attrs(output, misc_attrs);
+  }
+  
+  // emit return type.
+  ast_node *data_type_ast = func_params_return->right;
+  if (is_ast_create_data_type(data_type_ast)) {
+    data_type_ast = data_type_ast->left;
+  }
+
+  if (data_type_ast) {
+    EXTRACT_ANY_NOTNULL(data_type, data_type_ast);
+    bprintf(output, ",\n\"returnType\" : {\n");
+    BEGIN_INDENT(type, 2);
+    cg_json_data_type(output, data_type->sem->sem_type, data_type->sem->kind);
+    END_INDENT(type);
+    bprintf(output, "\n}");
+  }
+
+  // emit whether this function is a "create" function or not.
+  if (is_ast_create_data_type(func_params_return->right)) {
+    bprintf(output, ",\n\"createsObject\" : %d", 1);
+  } else {
+    bprintf(output, ",\n\"createsObject\" : %d", 0);
+  }
+  
+  // add this function to the list.
+  output = declare_funcs;
+  cg_begin_proc(output, ast, misc_attrs);
+  BEGIN_INDENT(func, 2);
+  bprintf(output, "%s", declare_func_buffer.ptr);
+  END_INDENT(func);
+  
+  // clean up
+  CHARBUF_CLOSE(declare_func_buffer);
+  cg_end_proc(output, ast);
+}
+
+static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
+  Contract(is_ast_declare_proc_stmt(ast));
+  EXTRACT_NOTNULL(proc_name_type, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);  
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(proc_params_stmts, ast->right);
+  EXTRACT(params, proc_params_stmts->left);
+
+  CHARBUF_OPEN(declare_proc_buffer);
+  charbuf *output = &declare_proc_buffer;
+
+  // emit function name.
+  bprintf(output, "\"name\" : \"%s\"", name);
+
+  // emit parameters. has issue
+  bprintf(output, ",\n\"args\" : [\n");
+  BEGIN_INDENT(parms, 2);
+  cg_json_params(output, params, NULL);
+  END_INDENT(parms);
+  bprintf(output, "]");
+  
+  // emit attributes.
+  if (misc_attrs) {
+    bprintf(output, ",\n");
+    cg_json_misc_attrs(output, misc_attrs);
+  }
+  
+  // emit projections.
+  sem_t sem_type = ast->sem->sem_type;
+  bool_t has_any_result_set = !!ast->sem->sptr;
+  if (has_any_result_set) {
+    cg_json_projection(output, ast);
+  }
+  
+  // emit use db or not.
+  bprintf(output, ",\n\"usesDatabase\" : %d", !!(sem_type & SEM_TYPE_DML_PROC));
+
+  // add this proc to the list.
+  output = declare_procs;
+  cg_begin_proc(output, ast, misc_attrs);
+  BEGIN_INDENT(proc, 2);
+  bprintf(output, "%s", declare_proc_buffer.ptr);
+  END_INDENT(proc);
+  
+  // cleanup
+  CHARBUF_CLOSE(declare_proc_buffer);
+  cg_end_proc(output, ast);
+}
+
 // If we find a procedure definition we crack its arguments and first statement
 // If it matches one of the known types we generate the details for it.  Otherwise
 // it goes into the general bucket.  The output is redirected to the appropriate
@@ -2360,6 +2475,8 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   CHARBUF_OPEN(general_buf);
   CHARBUF_OPEN(general_inserts_buf);
   CHARBUF_OPEN(attributes_buf);
+  CHARBUF_OPEN(declare_procs_buf);
+  CHARBUF_OPEN(declare_funcs_buf);
   CHARBUF_OPEN(interfaces_buf);
 
   queries = &query_buf;
@@ -2368,6 +2485,8 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   deletes = &delete_buf;
   general = &general_buf;
   general_inserts = &general_inserts_buf;
+  declare_procs = &declare_procs_buf;
+  declare_funcs = &declare_funcs_buf;
   interfaces_json = &interfaces_buf;
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -2379,6 +2498,12 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
       cg_json_declare_vars_type(&attributes_buf, stmt, misc_attrs);
     } else if (is_ast_declare_interface_stmt(stmt)) {
       cg_json_declare_interface(stmt, misc_attrs);
+    } 
+    else if (is_ast_declare_proc_stmt(stmt)) {
+      cg_json_declare_proc(stmt, misc_attrs);
+    } 
+    else if (is_ast_declare_func_stmt(stmt)) {
+      cg_json_declare_funcs(stmt, misc_attrs);
     }
   }
 
@@ -2409,12 +2534,22 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   bprintf(output, "\"general\" : [\n");
   bindent(output, general, 2);
   bprintf(output, "\n],\n");
+  
+  bprintf(output, "\"declareProcs\" : [\n");
+  bindent(output, declare_procs, 2);
+  bprintf(output, "\n],\n");
+  
+  bprintf(output, "\"declareFuncs\" : [\n");
+  bindent(output, declare_funcs, 2);
+  bprintf(output, "\n],\n");
 
   bprintf(output, "\"interfaces\" : [\n");
   bindent(output, interfaces_json, 2);
   bprintf(output, "\n]");
 
   CHARBUF_CLOSE(interfaces_buf);
+  CHARBUF_CLOSE(declare_funcs_buf);
+  CHARBUF_CLOSE(declare_procs_buf);
   CHARBUF_CLOSE(attributes_buf);
   CHARBUF_CLOSE(general_inserts_buf);
   CHARBUF_CLOSE(general_buf);
@@ -2422,7 +2557,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   CHARBUF_CLOSE(update_buf);
   CHARBUF_CLOSE(insert_buf);
   CHARBUF_CLOSE(query_buf);
-
+  
   // Ensure the globals do not hold any pointers so that leaksan will find any leaks
   // All of these have already been freed (above)
   queries = NULL;
@@ -2431,6 +2566,8 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   updates = NULL;
   general = NULL;
   general_inserts = NULL;
+  declare_procs = NULL;
+  declare_funcs = NULL;
   interfaces_json = NULL;
 }
 

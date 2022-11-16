@@ -62,7 +62,7 @@ void yyset_lineno(int);
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL INTERFACES
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
 %token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS CHECK_EXPRESSIONS
-%token ENUMS CONSTANT_GROUPS
+%token ENUMS CONSTANT_GROUPS DECLARE_PROCS DECLARE_FUNCS CREATES_OBJECT RETURN_TYPE
 
 %start json_schema
 
@@ -81,6 +81,8 @@ json_schema: '{'
          UPDATES '[' opt_updates ']' ','
          DELETES '[' opt_deletes ']' ','
          GENERAL '[' opt_generals ']' ','
+         DECLARE_PROCS '[' opt_declare_procs']' ','
+         DECLARE_FUNCS '[' opt_declare_funcs']' ','
          INTERFACES '[' opt_interfaces ']' ','
          REGIONS '[' opt_regions ']' ','
          AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']' ','
@@ -649,7 +651,7 @@ complex_args: complex_arg | complex_arg ',' complex_args
 complex_arg: '{'
               binding
               NAME STRING_LITERAL ','
-              ARG_ORIGIN STRING_LITERAL ','
+              opt_arg_origin
               TYPE STRING_LITERAL ','
               opt_kind
               opt_is_sensitive
@@ -658,6 +660,12 @@ complex_arg: '{'
   ;
 
 binding: | BINDING_INOUT ',' | BINDING_OUT ','
+  ;
+  
+opt_arg_origin: | arg_origin
+  ;
+
+arg_origin: ARG_ORIGIN STRING_LITERAL ','
   ;
 
 opt_enums: | enums
@@ -681,6 +689,46 @@ enum_value: '{'
              NAME STRING_LITERAL ','
              VALUE num_literal
             '}'
+  ;
+  
+opt_declare_procs: | declare_procs
+  ;
+
+declare_procs: declare_proc | declare_proc ',' declare_procs
+
+declare_proc: '{'
+          NAME STRING_LITERAL ','
+          ARGS '[' opt_complex_args ']' ','
+          opt_attributes
+          opt_projection
+          USES_DATABASE BOOL_LITERAL
+         '}'
+  ;
+
+opt_declare_funcs:  | declare_funcs
+  ;
+  
+declare_funcs: declare_func | declare_func ',' declare_funcs
+  ;
+  
+declare_func: '{'
+          NAME STRING_LITERAL ','
+          ARGS '[' opt_complex_args ']' ','
+          opt_attributes
+          opt_return_type
+          CREATES_OBJECT BOOL_LITERAL
+         '}'
+  ;
+
+opt_return_type: | RETURN_TYPE return_type ','
+  ;
+
+return_type: '{'
+          TYPE STRING_LITERAL ','
+          opt_kind
+          opt_is_sensitive
+          IS_NOT_NULL BOOL_LITERAL
+         '}'
   ;
 
 opt_interfaces: | interfaces

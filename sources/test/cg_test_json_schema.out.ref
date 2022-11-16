@@ -4816,6 +4816,727 @@
       "usesDatabase" : 0
     }
   ],
+  "declareProcs" : [
+
+    The statement ending at line XXXX
+
+    DECLARE PROC result_proc (id INTEGER, t TEXT) (x INTEGER, y INTEGER)
+
+    {
+      "name" : "result_proc",
+      "args" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "y",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE PROC proc_as_func (OUT x INTEGER NOT NULL)
+
+    {
+      "name" : "proc_as_func",
+      "args" : [
+        {
+          "binding" : "out",
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE PROC other_proc ()
+
+    {
+      "name" : "other_proc",
+      "args" : [
+      ],
+      "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(foo=bar)
+    DECLARE PROC decl_proc_take_all_type_proc (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL NOT NULL, i_nn INTEGER NOT NULL, l_nn LONG_INT NOT NULL, r_nn REAL NOT NULL, bl_nn BLOB NOT NULL, str_nn TEXT NOT NULL, obj_nn OBJECT NOT NULL) USING TRANSACTION
+
+    {
+      "name" : "decl_proc_take_all_type_proc",
+      "args" : [
+        {
+          "name" : "t",
+          "type" : "bool",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "i",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "l",
+          "type" : "long",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "r",
+          "type" : "real",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "bl",
+          "type" : "blob",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "str",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "obj",
+          "type" : "object",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "t_nn",
+          "type" : "bool",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "i_nn",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "l_nn",
+          "type" : "long",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "r_nn",
+          "type" : "real",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "bl_nn",
+          "type" : "blob",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "str_nn",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "obj_nn",
+          "type" : "object",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "foo",
+          "value" : "bar"
+        }
+      ],
+      "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE PROC decl_proc_with_outarg (OUT t BOOL)
+
+    {
+      "name" : "decl_proc_with_outarg",
+      "args" : [
+        {
+          "binding" : "out",
+          "name" : "t",
+          "type" : "bool",
+          "isNotNull" : 0
+        }
+      ],
+      "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE PROC declared_proc (id INTEGER) OUT (t TEXT)
+
+    {
+      "name" : "declared_proc",
+      "args" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "t",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE PROC out_cursor_proc () OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION
+
+    {
+      "name" : "out_cursor_proc",
+      "args" : [
+      ],
+      "projection" : [
+        {
+          "name" : "A",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "B",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE PROC proc_with_like () (id INTEGER, first TEXT NOT NULL, middle TEXT, last TEXT NOT NULL)
+
+    {
+      "name" : "proc_with_like",
+      "args" : [
+      ],
+      "projection" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "first",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "middle",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "last",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "usesDatabase" : 1
+    }
+  ],
+  "declareFuncs" : [
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL
+
+    {
+      "name" : "cql_partition_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "partitioning",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, value CURSOR) BOOL NOT NULL
+
+    {
+      "name" : "cql_partition_cursor",
+      "args" : [
+        {
+          "name" : "p",
+          "type" : "object",
+          "kind" : "partitioning",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "value",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL
+
+    {
+      "name" : "cql_extract_partition",
+      "args" : [
+        {
+          "name" : "p",
+          "type" : "object",
+          "kind" : "partitioning",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary> NOT NULL
+
+    {
+      "name" : "cql_string_dictionary_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "string_dictionary",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary> NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL) BOOL NOT NULL
+
+    {
+      "name" : "cql_string_dictionary_add",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "string_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL, key TEXT) TEXT
+
+    {
+      "name" : "cql_string_dictionary_find",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "string_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT NOT NULL
+
+    {
+      "name" : "cql_cursor_format",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(foo=bar)
+    DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL NOT NULL, i_nn INTEGER NOT NULL, l_nn LONG_INT NOT NULL, r_nn REAL NOT NULL, bl_nn BLOB NOT NULL, str_nn TEXT NOT NULL, obj_nn OBJECT NOT NULL) BOOL
+
+    {
+      "name" : "decl_func_take_all_types_func",
+      "args" : [
+        {
+          "name" : "t",
+          "type" : "bool",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "i",
+          "type" : "integer",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "l",
+          "type" : "long",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "r",
+          "type" : "real",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "bl",
+          "type" : "blob",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "str",
+          "type" : "text",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "obj",
+          "type" : "object",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "t_nn",
+          "type" : "bool",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "i_nn",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "l_nn",
+          "type" : "long",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "r_nn",
+          "type" : "real",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "bl_nn",
+          "type" : "blob",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "str_nn",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "obj_nn",
+          "type" : "object",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "foo",
+          "value" : "bar"
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_bool () BOOL
+
+    {
+      "name" : "func_return_bool",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_integer () INTEGER
+
+    {
+      "name" : "func_return_integer",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_long () LONG_INT
+
+    {
+      "name" : "func_return_long",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "long",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_real () REAL
+
+    {
+      "name" : "func_return_real",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "real",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_blob () BLOB
+
+    {
+      "name" : "func_return_blob",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "blob",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_text () TEXT
+
+    {
+      "name" : "func_return_text",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_object () OBJECT
+
+    {
+      "name" : "func_return_object",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "object",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_return_bool_notnull () BOOL NOT NULL
+
+    {
+      "name" : "func_return_bool_notnull",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_create_blob () CREATE BLOB
+
+    {
+      "name" : "func_create_blob",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "blob",
+        "isNotNull" : 0
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_create_text () CREATE TEXT
+
+    {
+      "name" : "func_create_text",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC func_create_object () CREATE OBJECT
+
+    {
+      "name" : "func_create_object",
+      "args" : [
+      ],
+      "returnType" : {
+        "type" : "object",
+        "isNotNull" : 0
+      },
+      "createsObject" : 1
+    }
+  ],
   "interfaces" : [
 
     The statement ending at line XXXX

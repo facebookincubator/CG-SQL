@@ -1622,3 +1622,208 @@ CREATE TABLE ends_with_underscore_ (
   foo TEXT PRIMARY KEY,
   bar INT
 );
+
+-- TEST: check declare proc that take all possible parameter types
+-- + "args" : [
+-- + "name" : "t"
+-- + "name" : "i"
+-- + "name" : "l"
+-- + "name" : "r"
+-- + "name" : "bl"
+-- + "name" : "str"
+-- + "name" : "obj"
+-- + "name" : "t_nn"
+-- + "name" : "i_nn"
+-- + "name" : "l_nn"
+-- + "name" : "r_nn"
+-- + "name" : "bl_nn"
+-- + "name" : "str_nn"
+-- + "name" : "obj_nn"
+-- +2 "type" : "bool"
+-- +2 "type" : "integer"
+-- +2 "type" : "long"
+-- +2 "type" : "real"
+-- +2 "type" : "text"
+-- +2 "type" : "object"
+-- +7 "isNotNull" : 1
+-- + "usesDatabase" : 1
+-- + "attributes" : [
+-- + "name" : "foo"
+-- + "value" : "bar"
+@attribute(foo=bar)
+DECLARE PROC decl_proc_take_all_type_proc (
+  t BOOL,
+  i INTEGER,
+  l LONG,
+  r REAL,
+  bl BLOB,
+  str TEXT,
+  obj OBJECT,
+  t_nn BOOL NOT NULL,
+  i_nn INTEGER NOT NULL,
+  l_nn LONG NOT NULL,
+  r_nn REAL NOT NULL,
+  bl_nn BLOB NOT NULL,
+  str_nn TEXT NOT NULL,
+  obj_nn OBJECT NOT NULL
+) USING TRANSACTION;
+
+-- TEST: check declare proc that has out arg
+-- + "binding" : "out"
+DECLARE PROC decl_proc_with_outarg (
+  OUT t BOOL
+);
+
+-- TEST: check declare proc with OUT cursor
+-- + "args" : [
+-- + "name" : "id"
+-- + "type" : "integer"
+-- + "isNotNull" : 0
+-- + "usesDatabase" : 0
+-- - "hasOutResult"
+DECLARE PROC declared_proc(id INTEGER) OUT (t TEXT);
+
+-- TEST: check declare proc with OUT cursor and use db
+-- + "args" : [
+-- + "name" : "A"
+-- +2 "type" : "integer"
+-- +2 "isNotNull" : 1
+-- + "usesDatabase" : 1
+DECLARE PROC out_cursor_proc() OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION;
+
+-- TEST: check declare select functions are not included in declareFuncs
+-- + "declareFuncs" : [
+-- - "name" : "tvf"
+DECLARE SELECT FUNCTION tvf(id INTEGER) (foo TEXT);
+
+-- TEST: check proc with like as an argument
+-- + "args" : [
+-- + "name" : "id"
+-- + "name" : "first"
+-- + "name" : "middle"
+-- + "name" : "last"
+-- + "type" : "integer"
+-- +3 "type" : "text"
+DECLARE PROC proc_with_like() (id INTEGER, LIKE name);
+
+-- TEST: check procs with no check are not included in declareProcs
+-- - "name" : "printf"
+DECLARE PROC printf NO CHECK;
+
+-- TEST: check declare function that take all possible parameter types
+-- + "args" : [
+-- + "name" : "t"
+-- + "name" : "i"
+-- + "name" : "l"
+-- + "name" : "r"
+-- + "name" : "bl"
+-- + "name" : "str"
+-- + "name" : "obj"
+-- + "name" : "t_nn"
+-- + "name" : "i_nn"
+-- + "name" : "l_nn"
+-- + "name" : "r_nn"
+-- + "name" : "bl_nn"
+-- + "name" : "str_nn"
+-- + "name" : "obj_nn"
+-- +3 "type" : "bool"
+-- +2 "type" : "integer"
+-- +2 "type" : "long"
+-- +2 "type" : "real"
+-- +2 "type" : "text"
+-- +2 "type" : "object"
+-- +7 "isNotNull" : 1
+-- + "attributes" : [
+-- + "name" : "foo"
+-- + "value" : "bar"
+@attribute(foo=bar)
+DECLARE FUNCTION decl_func_take_all_types_func(
+  t BOOL,
+  i INTEGER,
+  l LONG,
+  r REAL,
+  bl BLOB,
+  str TEXT,
+  obj OBJECT,
+  t_nn BOOL NOT NULL,
+  i_nn INTEGER NOT NULL,
+  l_nn LONG NOT NULL,
+  r_nn REAL NOT NULL,
+  bl_nn BLOB NOT NULL,
+  str_nn TEXT NOT NULL,
+  obj_nn OBJECT NOT NULL
+)  BOOL;
+
+-- TEST: check declare function that returns a bool
+-- + "returnType" : {
+-- + "type" : "bool"
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_bool() BOOL;
+
+-- TEST: check declare function that returns a integer
+-- + "returnType" : {
+-- + "type" : "integer"
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_integer() INTEGER;
+
+-- TEST: check declare function that returns a long
+-- + "returnType" : {
+-- + "type" : "long"
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_long() LONG;
+
+-- TEST: check declare function that returns a real
+-- + "returnType" : {
+-- + "type" : "real"
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_real() REAL;
+
+-- TEST: check declare function that returns a blob
+-- + "returnType" : {
+-- + "type" : "blob"
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_blob() BLOB;
+
+-- TEST: check declare function that returns a text
+-- + "returnType" : {
+-- + "type" : "text"
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_text() TEXT;
+
+-- TEST: check declare function that returns an object
+-- + "returnType" : {
+-- + "type" : "object"
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_object() OBJECT;
+
+-- TEST: check declare function that returns notnull type
+-- + "returnType" : {
+-- + "type" : "bool"
+-- + "isNotNull" : 1
+-- + "createsObject" : 0
+DECLARE FUNCTION func_return_bool_notnull() BOOL not null;
+
+-- TEST: check declare function that returns a create blob.
+-- + "returnType" : {
+-- + "createsObject" : 1
+-- + "type" : "blob"
+DECLARE FUNCTION func_create_blob() CREATE BLOB;
+
+-- TEST: check declare function that returns a create text.
+-- + "returnType" : {
+-- + "createsObject" : 1
+-- + "type" : "text"
+DECLARE FUNCTION func_create_text() CREATE TEXT;
+
+-- TEST: check declare function that returns a create object.
+-- + "returnType" : {
+-- + "createsObject" : 1
+-- + "type" : "object"
+DECLARE FUNCTION func_create_object() CREATE OBJECT;
