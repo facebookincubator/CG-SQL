@@ -39,7 +39,8 @@ void cql_set_encoding(uint8_t *_Nonnull data_types, cql_int32 count, cql_int32 c
   cql_contract(col < count);
   if (encode) {
     data_types[col] |= CQL_DATA_TYPE_ENCODED;
-  } else {
+  }
+  else {
     data_types[col] &= ~CQL_DATA_TYPE_ENCODED;
   }
 }
@@ -556,7 +557,8 @@ void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed) {
   if (needed > avail) {
     if (b->max > BYTEBUF_EXP_GROWTH_CAP) {
       b->max = needed + BYTEBUF_GROWTH_SIZE_AFTER_CAP + b->max;
-    } else {
+    }
+    else {
       b->max = needed + 2 * b->max;
     }
     char *newptr = malloc(b->max);
@@ -1605,7 +1607,8 @@ cql_bool cql_rows_same(
       if (memcmp(data1 + offset, data2 + offset, size)) {
         return false;
       }
-    } else {
+    }
+    else {
       // this is a ref type
       if (!cql_ref_equal(*(cql_type_ref *)(data1 + offset), *(cql_type_ref *)(data2 + offset))) {
         return false;
@@ -1751,7 +1754,8 @@ void cql_result_set_set_int32_col(
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
     *(cql_int32 *)data = new_value;
-  } else {
+  }
+  else {
     ((cql_nullable_int32 *)data)->value = new_value;
     ((cql_nullable_int32 *)data)->is_null = false;
   }
@@ -1788,7 +1792,8 @@ void cql_result_set_set_int64_col(
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
     *(cql_int64 *)data = new_value;
-  } else {
+  }
+  else {
     ((cql_nullable_int64 *)data)->value = new_value;
     ((cql_nullable_int64 *)data)->is_null = false;
   }
@@ -1825,7 +1830,8 @@ void cql_result_set_set_double_col(
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
     *(cql_double *)data = new_value;
-  } else {
+  }
+  else {
     ((cql_nullable_double *)data)->value = new_value;
     ((cql_nullable_double *)data)->is_null = false;
   }
@@ -1861,7 +1867,8 @@ void cql_result_set_set_bool_col(
 
   if (data_type & CQL_DATA_TYPE_NOT_NULL) {
     *(cql_bool *)data = new_value;
-  } else {
+  }
+  else {
     ((cql_nullable_bool *)data)->value = new_value;
     ((cql_nullable_bool *)data)->is_null = false;
   }
@@ -3752,10 +3759,8 @@ cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_, cql_string
   }
 
 cleanup:
-
   cql_free_cstr(needle, needle_);
   cql_free_cstr(haystack, haystack_);
-
   return found;
 }
 
@@ -3997,7 +4002,8 @@ static void cql_format_one_cursor_column(cql_bytebuf *_Nonnull b, cql_dynamic_cu
         cql_string_ref str_ref = *(cql_string_ref *)(cursor + offset);
         if (!str_ref) {
           cql_bprintf(b, "null");
-        } else {
+        }
+        else {
           cql_alloc_cstr(temp, str_ref);
           cql_bprintf(b, "%s", temp);
           cql_free_cstr(temp, str_ref);
@@ -4090,7 +4096,7 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
   if (strlen(c_str) == 0) goto cleanup;
   char* lineStart = (char*)(c_str);
   // skip leading whitespace
-  while (lineStart[0] == ' '){
+  while (lineStart[0] == ' ') {
     lineStart++;
   }
 
@@ -4109,13 +4115,16 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
       if (p[0] == '\'') {
         if (p[1] == '\'') {
           p++;
-        } else {
+        }
+        else {
           in_quote = false;
         }
       }
-    } else if (p[0] == '\'') {
+    }
+    else if (p[0] == '\'') {
       in_quote = true;
-    } else if (!in_quote && !strncmp(p, parse_word, strlen(parse_word))) {
+    }
+    else if (!in_quote && !strncmp(p, parse_word, strlen(parse_word))) {
       // Add the current statement (i.e. create statement, drop statement) to our list
       // when we find the delimiting parseWord for the next statement
       if (lineStart != p) {
@@ -4141,6 +4150,7 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
   free(temp);
   cql_string_list_add_string(list, currLine);
   cql_string_release(currLine);
+
 cleanup:
   cql_free_cstr(c_str, str);
   return list;
@@ -4164,7 +4174,7 @@ static char* _Nonnull _cql_create_table_name_from_table_creation_statement(cql_s
   while (p[-1] == ' ') p--;
   char* lineStart = p;
   // find space preceeding table name
-  while (lineStart[-1] != ' '){
+  while (lineStart[-1] != ' ') {
     lineStart--;
   }
   cql_int32 bytes = (cql_int32)(p - lineStart);
@@ -4186,7 +4196,7 @@ static char* _Nonnull _cql_create_table_name_from_index_creation_statement(cql_s
   cql_free_cstr(c_index_create, index_create);
   char* q = strchr(lineStart, '('); // add space logic
   // backspace spaces between index name and (
-  while (q[-1] == ' '){
+  while (q[-1] == ' ') {
     q--;
   }
   cql_int32 index_bytes = (cql_int32)(q - lineStart);
@@ -4214,7 +4224,7 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
 
   cql_code rc = SQLITE_OK;
   // Execute all delete table drops
-  for (cql_int32 i = 0; i < cql_string_list_get_count(deleteList); i++){
+  for (cql_int32 i = 0; i < cql_string_list_get_count(deleteList); i++) {
     cql_string_ref delete = cql_string_list_get_string(deleteList, i);
     rc = cql_exec_internal(db, delete);
     if (rc != SQLITE_OK) goto cleanup;
@@ -4222,7 +4232,7 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
   // Execute all table drops based on the list of creates given by the CQL
   // upgrader backwards.
   // Intuitively, need to drop the tables with the most dependencies first.
-  for (cql_int32 i = cql_string_list_get_count(tableList) - 1; i >= 0; i--){
+  for (cql_int32 i = cql_string_list_get_count(tableList) ; --i >= 0; ) {
     cql_string_ref tableCreate = cql_string_list_get_string(tableList, i);
     char *table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
 
@@ -4238,29 +4248,31 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
   }
 
   // Execute all table creates in the order provided
-  for (cql_int32 i = 0; i < cql_string_list_get_count(tableList); i++){
+  for (cql_int32 i = 0; i < cql_string_list_get_count(tableList); i++) {
     cql_string_ref tableCreate = cql_string_list_get_string(tableList, i);
     rc = cql_exec_internal(db, tableCreate);
     if (rc != SQLITE_OK) goto cleanup;
     char* table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
     // Indices are already deleted with the table drops
     // We need to recreate indices alongside the tables incase future table creates refer to the index
-    for (cql_int32 j = 0; j < cql_string_list_get_count(indexList); j++){
+    for (cql_int32 j = 0; j < cql_string_list_get_count(indexList); j++) {
       cql_string_ref indexCreate = cql_string_list_get_string(indexList, j);
       char* index_table_name = _cql_create_table_name_from_index_creation_statement(indexCreate);
       if (!strcmp(table_name, index_table_name)) {
         free(index_table_name);
         rc = cql_exec_internal(db, indexCreate);
         if (rc != SQLITE_OK) goto cleanup;
-      } else{
+      }
+      else {
         free(index_table_name);
       }
     }
     free(table_name);
   }
-  cleanup:
-    cql_object_release(tableList);
-    cql_object_release(indexList);
-    cql_object_release(deleteList);
-    return rc;
+
+cleanup:
+  cql_object_release(tableList);
+  cql_object_release(indexList);
+  cql_object_release(deleteList);
+  return rc;
 }
