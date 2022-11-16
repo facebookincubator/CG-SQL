@@ -1507,7 +1507,7 @@ create table t_for_unsub(
 -- + "type" : "unsub",
 -- + "table" : "t_for_unsub",
 -- + "version" : 1
-@unsub(4, t_for_unsub);
+@unsub(t_for_unsub);
 
 @end_schema_region;
 

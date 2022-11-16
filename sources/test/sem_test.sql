@@ -23072,13 +23072,13 @@ create table unsub_test_table_late_create(id integer) @create(7);
 -- + {schema_unsub_stmt}: err
 -- + error: % unsubscribe does not make sense on non-physical tables 'structured_storage'
 -- +1 error:
-@unsub (1, structured_storage);
+@unsub(structured_storage);
 
 -- TEST: unsub directive invalid table
 -- + {schema_unsub_stmt}: err
 -- + error: % the table/view named in an @unsub directive does not exist 'not_a_table'
 -- +1 error:
-@unsub (5, not_a_table);
+@unsub(not_a_table);
 
 -- TEST: table is visible
 -- + {select_stmt}: select: { id: integer notnull }
@@ -23089,7 +23089,7 @@ select * from unsub_test_table;
 -- + {schema_unsub_stmt}: ok
 -- + unsub_test_table
 -- - error:
-@unsub(5, unsub_test_table);
+@unsub(unsub_test_table);
 
 -- TEST: table is not visible
 -- + {select_stmt}: err
@@ -23100,18 +23100,18 @@ select * from unsub_test_table;
 -- + {schema_unsub_stmt}: err
 -- + error: % table/view is already unsubscribed 'unsub_test_table'
 -- +1 error:
-@unsub(5, unsub_test_table);
+@unsub(unsub_test_table);
 
 -- TEST: table order doesn't matter, you can unsub regardless of when it was created
 -- + {schema_unsub_stmt}: ok
 -- +- error:
-@unsub (5,unsub_test_table_late_create);
+@unsub(unsub_test_table_late_create);
 
 -- TEST: already deleted table
 -- + {schema_unsub_stmt}: err
 -- + error: % table/view is already deleted 'unsub_test_table_deleted'
 -- +1 error:
-@unsub(6, unsub_test_table_deleted);
+@unsub(unsub_test_table_deleted);
 
 -- TEST: can't add a dependency on an unsubscribed table
 -- {create_table_stmt} : err
@@ -23134,12 +23134,12 @@ create table sub_test_dependency2(id integer references unsub_test_table2(id));
 -- TEST: ok to remove the leaf table
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (8, sub_test_dependency2);
+@unsub(sub_test_dependency2);
 
 -- TEST: now ok to remove the other table
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (8, unsub_test_table2);
+@unsub(unsub_test_table2);
 
 -- TEST: setup unsub test case for table in use by a view
 -- - error:
@@ -23165,12 +23165,12 @@ create view uses_a_table_but_deleted as select * from used_by_a_deleted_view @de
 -- + {schema_unsub_stmt}: err
 -- + error: % @unsub is invalid because the table/view is still used by 'uses_a_table'
 -- +1 error:
-@unsub (10, used_by_a_view);
+@unsub(used_by_a_view);
 
 -- TEST: ok to delete this table, a view still uses it, but it's deleted
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (10, used_by_a_deleted_view);
+@unsub(used_by_a_deleted_view);
 
 -- TEST: setup unsub test case for table in use by triggers
 create table unrelated(
@@ -23209,12 +23209,12 @@ end @delete(5);
 -- + {schema_unsub_stmt}: err
 -- + error: % @unsub is invalid because the table/view is still used by 'trigger_uses_a_table'
 -- +1 error:
-@unsub (10, used_by_a_trigger);
+@unsub(used_by_a_trigger);
 
 -- TEST: ok to delete this table, a trigger still uses it, but it's deleted
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (10, used_by_a_deleted_trigger);
+@unsub(used_by_a_deleted_trigger);
 
 
 -- TEST: this is just setup stuff
@@ -23241,28 +23241,28 @@ end;
 -- TEST: v2 can be removed, nothing depends on it
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (10, unsub_with_views_v2);
+@unsub(unsub_with_views_v2);
 
 -- TEST: v1 can't be removed because v3 depends on it
 -- + error: % @unsub is invalid because the table/view is still used by 'unsub_with_views_v3'
 -- +1 error:
-@unsub (10, unsub_with_views_v1);
+@unsub(unsub_with_views_v1);
 
 -- TEST: can't unsub v3 because of annoying trigger
 -- + {schema_unsub_stmt}: err
 -- + error: % @unsub is invalid because the table/view is still used by 'unsub_with_views_annoying_trigger'
 -- +1 error:
-@unsub (11, unsub_with_views_v3);
+@unsub(unsub_with_views_v3);
 
 -- TEST: v5 can be removed, nothing depends on it
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (12, unsub_with_views_v5);
+@unsub(unsub_with_views_v5);
 
 -- TEST: v4 can be removed, nothing depends on it but v5 which is gone already
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (12, unsub_with_views_v4);
+@unsub(unsub_with_views_v4);
 
 declare proc any_args_at_all no check;
 
@@ -23341,7 +23341,7 @@ create table self_ref_table(
 -- TEST: ok to unsub to a table that refers to itself
 -- + {schema_unsub_stmt}: ok
 -- - error:
-@unsub (23, self_ref_table);
+@unsub(self_ref_table);
 
 -- TEST: this generates an error and creates an unresolved arg list
 -- + {declare_proc_stmt}: err

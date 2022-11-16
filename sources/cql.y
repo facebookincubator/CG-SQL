@@ -1381,8 +1381,7 @@ end_schema_region_stmt:
   ;
 
 schema_unsub_stmt:
-  AT_UNSUB '(' INTLIT ',' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_opt(1), $name)); }
-  | AT_UNSUB  '(' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_opt(1), $name)); }
+  AT_UNSUB  '(' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_opt(1), $name)); }
   ;
 
 schema_ad_hoc_migration_stmt:

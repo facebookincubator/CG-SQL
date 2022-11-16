@@ -83,8 +83,8 @@ BEGIN
   DELETE FROM recreate_test_for_unsub WHERE unsub_id = 3;
 END;
 
-@unsub(1, test_for_unsub);
-@unsub(1, recreate_test_for_unsub);
+@unsub(test_for_unsub);
+@unsub(recreate_test_for_unsub);
 
 -- extra items that will disappear when we switch to exclusive mode
 CREATE VIEW extra_view AS SELECT * FROM g1;

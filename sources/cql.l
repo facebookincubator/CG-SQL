@@ -350,8 +350,6 @@ X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
 ^#\ {d}+\ \"[^"]*\".*        { line_directive(yytext); }
 ^\ *#line\ {d}+\ \"[^"]*\".* { line_directive(yytext); }
 
-@RESUB[^)]+\);                { /* ignore legacy unsub */ }
-
 "/*"                         { // sqlite supports C style comments... ignore those
                                CHARBUF_OPEN(tmp);
                                int c1 = 0, c2 = input();

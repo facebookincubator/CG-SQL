@@ -313,7 +313,7 @@ create table after_backed_table(
   x integer primary key
 ) @recreate(foo);
 
-@unsub(1, unsub_recreated);
+@unsub(unsub_recreated);
 
 @begin_schema_region other;
 
@@ -347,15 +347,15 @@ create table unsub_outer(
 create index us2 on unsub_outer(name_outer);
 
 
-@unsub(1, unsub_voyage);
-@unsub(1, unsub_outer);
-@unsub(1, unsub_inner);
+@unsub(unsub_voyage);
+@unsub(unsub_outer);
+@unsub(unsub_inner);
 
 create table some_table(id integer);
 
 create view foo_view_unsubscribed as select * from some_table;
 create view foo_view_normal as select * from some_table;
 
-@unsub(5, foo_view_unsubscribed);
+@unsub(foo_view_unsubscribed);
 
 @end_schema_region;

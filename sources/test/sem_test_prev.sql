@@ -488,7 +488,7 @@ create table unsub_resub_trickery(id integer);
 
 -- TEST unsub valid
 -- - error:
-@unsub (20, unsub_resub_trickery);
+@unsub(unsub_resub_trickery);
 
 -- TEST backing table ok
 -- - error:
@@ -1102,7 +1102,7 @@ create table unsub_resub_trickery(id integer);
 
 -- TEST: unsub matches
 -- - error:
-@unsub (20, unsub_resub_trickery);
+@unsub(unsub_resub_trickery);
 
 -- TEST backing table ok
 -- - error:
