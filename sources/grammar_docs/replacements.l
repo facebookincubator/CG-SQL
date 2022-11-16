@@ -273,6 +273,8 @@ QUERY_PLAN	{ put_quoted("QUERY PLAN"); }
 SIGN_FUNCTION	{ put_quoted("SIGN FUNCTION"); }
 UNION_ALL	{ put_quoted("UNION ALL"); }
 
+    /* two character operators */
+
 CONCAT	{ put_squoted("||"); }
 ASSIGN	{ put_squoted(":="); }
 LS	{ put_squoted("<<"); }
@@ -282,6 +284,12 @@ LE	{ put_squoted("<="); }
 EQEQ	{ put_squoted("=="); }
 NE_	{ put_squoted("!="); }
 NE	{ put_squoted("<>"); }
+
+    /*  passthrough normalized grammar rule operator */
+
+::= { printf("::="); }
+
+    /* simple single quote and passthrough */
+
 . { putc(*yytext, stdout); }
 '.' { printf("'%c'", yytext[1]); }
-::= { printf("::="); }

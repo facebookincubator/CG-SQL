@@ -4,17 +4,26 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# exit when any command fails
+set -e
+
 echo compiling yacc stripper
 cc -o ys ys.c
 
+echo compiling replacements
+flex -o replacements.c replacements.l
+cc -o replacements replacements.c
+
 echo stripping C out of the grammar
-./ys <../cql.y >cql.txt
+./ys <../cql.y | sed -e "/^  *$/d" | ./replacements | sed -e "s/  *$//" >cql.txt
 
 echo formatting for railroad tool
-(echo "// @nolint"; \
- awk <cql.txt 'BEGIN {FS="\n"; RS=""} {gsub("\n","",$0); print }' | \
- sed -e 's/:/ ::= /' -e's/;$//' -e 's/  */ /g' -e 's/$/ /' | \
- sed -f replacements.txt ) >cql_grammar.txt
+
+(
+  echo "// @nolint";
+  awk <cql.txt 'BEGIN {FS="\n"; RS=""} {gsub("\n","",$0); print }' |
+  sed -e 's/:/ ::= /' -e's/;$//' -e 's/  */ /g' -e 's/  *$//'
+) >cql_grammar.txt
 
 echo "railroad diagram format in cql_grammar.txt (paste into https://www.bottlecaps.de/rr/ui)"
 
@@ -50,17 +59,7 @@ echo '```' >>cql_grammar.md
 
 # use whole word match on these small replacements LS, RS, GE, LE, NE, EQEQ
 egrep "^%left|^%right|^%nonassoc" <../cql.y | \
-  sed -e 's/%left //' \
-      -e 's/%right //' \
-      -e 's/%nonassoc //' \
-      -e "s/[[:<:]]LS[[:>:]]/'<<'/" \
-      -e "s/[[:<:]]RS[[:>:]]/'>>'/" \
-      -e "s/[[:<:]]GE[[:>:]]/'>='/" \
-      -e "s/[[:<:]]LE[[:>:]]/'<='/" \
-      -e "s/[[:<:]]NE[[:>:]]/'<>'/" \
-      -e "s/[[:<:]]NE_[[:>:]]/'!='/" \
-      -e "s/[[:<:]]EQEQ[[:>:]]/'=='/" \
-      >>cql_grammar.md
+  sed -e 's/%left //' -e 's/%right //' -e 's/%nonassoc //' -e 's/  *$//' | ./replacements >>cql_grammar.md
 
 echo '```' >>cql_grammar.md
 
@@ -85,11 +84,11 @@ echo '```' >>cql_grammar.md
 echo "### Statement/Type Keywords" >>cql_grammar.md
 
 echo '```' >>cql_grammar.md
-cat ../cql.y |
+  (
   grep '%token [^<]' |       # Get only the lines starting with %token
   sed 's/%token //g' |       # Remove '%token ' from the start of each line
   tr ' ' '\n' |              # Put each token on a new line
-  sed -f replacements.txt |  # Apply our usual replacements
+  ./replacements |           # Apply our usual replacements
   sort |                     # Sort the tokens
   uniq |                     # Remove duplicates resulting from explicit string
                              # declarations (e.g., `%token NULL_ "NULL"`)
@@ -98,8 +97,8 @@ cat ../cql.y |
   tr '\n' ' ' |              # Group all tokens into a single line
   grep '' |                  # Restore the trailing newline
   fold -w 60 -s |            # Rewrap to a 60-column width
-  sed 's/ $//' |             # Remove trailing spaces left by fold
-  cat >> cql_grammar.md      # Append to cql_grammar.md
+  sed 's/  *$//'             # Remove trailing spaces left by fold
+  ) <../cql.y >> cql_grammar.md
 echo '```' >>cql_grammar.md
 
 cat <<EOF  >>cql_grammar.md
@@ -108,7 +107,7 @@ cat <<EOF  >>cql_grammar.md
 Note that in many cases the grammar is more generous than the overall language and errors have to be checked on top of this, often this is done on purpose because even when it's possible it might be very inconvenient to do checks with syntax.  For example the grammar cannot enforce non-duplicate ids in id lists, but it could enforce non-duplicate attributes in attribute lists.  It chooses to do neither as they are easily done with semantic validation.  Thus the grammar is not the final authority on what constitutes a valid program but it's a good start.
 EOF
 echo '```' >>cql_grammar.md
-sed <cql.txt "s/$/ /" | sed -f replacements.txt >>cql_grammar.md
+cat <cql.txt >>cql_grammar.md
 echo '```' >>cql_grammar.md
 
 echo wiki format in cql_grammar.md
@@ -119,3 +118,5 @@ echo create grammar.js
 echo cleanup
 rm ys
 rm cql.txt
+rm replacements
+rm replacements.c

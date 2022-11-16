@@ -13,27 +13,27 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Nov  7 19:46:21 PST 2022
+Snapshot as of Tue Nov 15 17:08:02 PST 2022
 
 ### Operators and Literals
 
 These are in order of priority lowest to highest
 
 ```
-UNION_ALL UNION INTERSECT EXCEPT
-ASSIGN
-OR
-AND
-NOT
-BETWEEN NOT_BETWEEN '<>' '!=' '=' '==' LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
-ISNULL NOTNULL
+"UNION ALL" "UNION" "INTERSECT" "EXCEPT"
+':='
+"OR"
+"AND"
+"NOT"
+"BETWEEN" "NOT BETWEEN" '<>' '!=' '=' '==' "LIKE" "NOT LIKE" "GLOB" "NOT GLOB" "MATCH" "NOT MATCH" "REGEXP" "NOT REGEXP" "IN" "NOT IN" "IS NOT" "IS" "IS TRUE" "IS FALSE" "IS NOT TRUE" "IS NOT FALSE"
+"ISNULL" "NOTNULL"
 '<' '>' '>=' '<='
 '<<' '>>' '&' '|'
 '+' '-'
 '*' '/' '%'
-CONCAT
-COLLATE
-UMINUS '~'
+'||'
+"COLLATE"
+"UMINUS" '~'
 ```
 NOTE: The above varies considerably from the C binding order!!!
 
@@ -244,12 +244,12 @@ schema_upgrade_version_stmt:
   ;
 
 set_stmt:
-  "SET" name ":=" expr
+  "SET" name ':=' expr
   | "SET" name "FROM" "CURSOR" name
   ;
 
 let_stmt:
-  "LET" name ":=" expr
+  "LET" name ':=' expr
   ;
 
 version_attrs_opt_recreate:
@@ -675,8 +675,8 @@ math_expr:
   basic_expr
   | math_expr '&' math_expr
   | math_expr '|' math_expr
-  | math_expr "<<" math_expr
-  | math_expr ">>"  math_expr
+  | math_expr '<<' math_expr
+  | math_expr '>>'  math_expr
   | math_expr '+' math_expr
   | math_expr '-' math_expr
   | math_expr '*' math_expr
@@ -693,13 +693,13 @@ math_expr:
   | '~' math_expr
   | "NOT" math_expr
   | math_expr '=' math_expr
-  | math_expr "==" math_expr
+  | math_expr '==' math_expr
   | math_expr '<' math_expr
   | math_expr '>' math_expr
-  | math_expr "<>" math_expr
-  | math_expr "!=" math_expr
-  | math_expr ">=" math_expr
-  | math_expr "<=" math_expr
+  | math_expr '<>' math_expr
+  | math_expr '!=' math_expr
+  | math_expr '>=' math_expr
+  | math_expr '<=' math_expr
   | math_expr "NOT IN" '(' expr_list ')'
   | math_expr "NOT IN" '(' select_stmt ')'
   | math_expr "IN" '(' expr_list ')'
@@ -712,11 +712,11 @@ math_expr:
   | math_expr "NOT REGEXP" math_expr
   | math_expr "GLOB" math_expr
   | math_expr "NOT GLOB" math_expr
-  | math_expr "BETWEEN" math_expr "AND" math_expr
-  | math_expr "NOT BETWEEN" math_expr "AND" math_expr
+  | math_expr "BETWEEN" math_expr  "AND" math_expr
+  | math_expr "NOT BETWEEN" math_expr  "AND" math_expr
   | math_expr "IS NOT" math_expr
   | math_expr "IS" math_expr
-  | math_expr "||" math_expr
+  | math_expr '||' math_expr
   | math_expr "COLLATE" name
   ;
 
@@ -968,9 +968,7 @@ schema_unsub_stmt:
 
 schema_ad_hoc_migration_stmt:
   "@SCHEMA_AD_HOC_MIGRATION" version_annotation
-
   | "@SCHEMA_AD_HOC_MIGRATION" "FOR" "@RECREATE" '(' name ',' name ')'
-
   ;
 
 emit_enums_stmt:
@@ -1392,6 +1390,7 @@ declare_fetched_value_cursor_stmt:
 
 declare_type_stmt:
   "DECLARE" name "TYPE" data_type_with_options
+  | "TYPE" name data_type_with_options
   ;
 
 declare_vars_stmt:

@@ -10,8 +10,8 @@ explain_target ::= select_stmt | update_stmt | delete_stmt | with_delete_stmt | 
 previous_schema_stmt ::= "@PREVIOUS_SCHEMA"
 schema_upgrade_script_stmt ::= "@SCHEMA_UPGRADE_SCRIPT"
 schema_upgrade_version_stmt ::= "@SCHEMA_UPGRADE_VERSION" '(' "integer-literal" ')'
-set_stmt ::= "SET" name ":=" expr | "SET" name "FROM" "CURSOR" name
-let_stmt ::= "LET" name ":=" expr
+set_stmt ::= "SET" name ':=' expr | "SET" name "FROM" "CURSOR" name
+let_stmt ::= "LET" name ':=' expr
 version_attrs_opt_recreate ::= /* nil */ | "@RECREATE" opt_delete_plain_attr | "@RECREATE" '(' name ')' opt_delete_plain_attr | version_attrs
 opt_delete_plain_attr ::= /* nil */ | "@DELETE"
 opt_version_attrs ::= /* nil */ | version_attrs
@@ -80,7 +80,7 @@ any_literal ::= str_literal | num_literal | "NULL" | "@FILE" '(' str_literal ')'
 raise_expr ::= "RAISE" '(' "IGNORE" ')' | "RAISE" '(' "ROLLBACK" ',' expr ')' | "RAISE" '(' "ABORT" ',' expr ')' | "RAISE" '(' "FAIL" ',' expr ')'
 call ::= name '(' arg_list ')' opt_filter_clause | name '(' "DISTINCT" arg_list ')' opt_filter_clause | basic_expr ':' name '(' arg_list ')'
 basic_expr ::= name | "@RC" | name '.' name | any_literal | const_expr | '(' expr ')' | call | window_func_inv | raise_expr | '(' select_stmt ')' | '(' select_stmt "IF" "NOTHING" expr ')' | '(' select_stmt "IF" "NOTHING" "OR" "NULL" expr ')' | '(' select_stmt "IF" "NOTHING" "THROW"')' | "EXISTS" '(' select_stmt ')' | "CASE" expr case_list "END" | "CASE" expr case_list "ELSE" expr "END" | "CASE" case_list "END" | "CASE" case_list "ELSE" expr "END" | "CAST" '(' expr "AS" data_type_any ')' | "TYPE_CHECK" '(' expr "AS" data_type_with_options ')'
-math_expr ::= basic_expr | math_expr '&' math_expr | math_expr '|' math_expr | math_expr "<<" math_expr | math_expr ">>" math_expr | math_expr '+' math_expr | math_expr '-' math_expr | math_expr '*' math_expr | math_expr '/' math_expr | math_expr '%' math_expr | math_expr "IS NOT TRUE" | math_expr "IS NOT FALSE" | math_expr "ISNULL" | math_expr "NOTNULL" | math_expr "IS TRUE" | math_expr "IS FALSE" | '-' math_expr | '+' math_expr | '~' math_expr | "NOT" math_expr | math_expr '=' math_expr | math_expr "==" math_expr | math_expr '<' math_expr | math_expr '>' math_expr | math_expr "<>" math_expr | math_expr "!=" math_expr | math_expr ">=" math_expr | math_expr "<=" math_expr | math_expr "NOT IN" '(' expr_list ')' | math_expr "NOT IN" '(' select_stmt ')' | math_expr "IN" '(' expr_list ')' | math_expr "IN" '(' select_stmt ')' | math_expr "LIKE" math_expr | math_expr "NOT LIKE" math_expr | math_expr "MATCH" math_expr | math_expr "NOT MATCH" math_expr | math_expr "REGEXP" math_expr | math_expr "NOT REGEXP" math_expr | math_expr "GLOB" math_expr | math_expr "NOT GLOB" math_expr | math_expr "BETWEEN" math_expr "AND" math_expr | math_expr "NOT BETWEEN" math_expr "AND" math_expr | math_expr "IS NOT" math_expr | math_expr "IS" math_expr | math_expr "||" math_expr | math_expr "COLLATE" name
+math_expr ::= basic_expr | math_expr '&' math_expr | math_expr '|' math_expr | math_expr '<<' math_expr | math_expr '>>' math_expr | math_expr '+' math_expr | math_expr '-' math_expr | math_expr '*' math_expr | math_expr '/' math_expr | math_expr '%' math_expr | math_expr "IS NOT TRUE" | math_expr "IS NOT FALSE" | math_expr "ISNULL" | math_expr "NOTNULL" | math_expr "IS TRUE" | math_expr "IS FALSE" | '-' math_expr | '+' math_expr | '~' math_expr | "NOT" math_expr | math_expr '=' math_expr | math_expr '==' math_expr | math_expr '<' math_expr | math_expr '>' math_expr | math_expr '<>' math_expr | math_expr '!=' math_expr | math_expr '>=' math_expr | math_expr '<=' math_expr | math_expr "NOT IN" '(' expr_list ')' | math_expr "NOT IN" '(' select_stmt ')' | math_expr "IN" '(' expr_list ')' | math_expr "IN" '(' select_stmt ')' | math_expr "LIKE" math_expr | math_expr "NOT LIKE" math_expr | math_expr "MATCH" math_expr | math_expr "NOT MATCH" math_expr | math_expr "REGEXP" math_expr | math_expr "NOT REGEXP" math_expr | math_expr "GLOB" math_expr | math_expr "NOT GLOB" math_expr | math_expr "BETWEEN" math_expr "AND" math_expr | math_expr "NOT BETWEEN" math_expr "AND" math_expr | math_expr "IS NOT" math_expr | math_expr "IS" math_expr | math_expr '||' math_expr | math_expr "COLLATE" name
 expr ::= math_expr | expr "AND" expr | expr "OR" expr
 case_list ::= "WHEN" expr "THEN" expr | "WHEN" expr "THEN" expr case_list
 arg_expr ::= '*' | expr | shape_arguments
@@ -208,7 +208,7 @@ params ::= /* nil */ | param | param ',' params
 declare_value_cursor ::= "DECLARE" name "CURSOR" shape_def | "CURSOR" name shape_def | "DECLARE" name "CURSOR" "LIKE" select_stmt | "CURSOR" name "LIKE" select_stmt | "DECLARE" name "CURSOR" "LIKE" '(' typed_names ')' | "CURSOR" name "LIKE" '(' typed_names ')'
 declare_forward_read_cursor_stmt ::= "DECLARE" name "CURSOR" "FOR" select_stmt | "CURSOR" name "FOR" select_stmt | "DECLARE" name "CURSOR" "FOR" explain_stmt | "CURSOR" name "FOR" explain_stmt | "DECLARE" name "CURSOR" "FOR" call_stmt | "CURSOR" name "FOR" call_stmt | "DECLARE" name "CURSOR" "FOR" expr | "CURSOR" name "FOR" expr
 declare_fetched_value_cursor_stmt ::= "DECLARE" name "CURSOR" "FETCH" "FROM" call_stmt | "CURSOR" name "FETCH" "FROM" call_stmt
-declare_type_stmt ::= "DECLARE" name "TYPE" data_type_with_options
+declare_type_stmt ::= "DECLARE" name "TYPE" data_type_with_options | "TYPE" name data_type_with_options
 declare_vars_stmt ::= "DECLARE" name_list data_type_with_options | "VAR" name_list data_type_with_options | declare_value_cursor
 call_stmt ::= "CALL" name '(' ')' | "CALL" name '(' call_expr_list ')' | "CALL" name '(' '*' ')'
 while_stmt ::= "WHILE" expr "BEGIN" opt_stmt_list "END"
