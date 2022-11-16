@@ -4,15 +4,24 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# exit when any command fails
+set -e
+
 echo compiling yacc stripper
 cc -o ys ys.c
 
-./ys <../json_test/json_test.y >json.txt
+echo compiling replacements
+flex -o replacements.c json_replacements.l
+cc -o replacements replacements.c
+
+echo stripping JSON grammar
+./ys <../json_test/json_test.y | sed -e "/^  *$/d" | ./replacements | sed -e 's/  *$//' >json.txt
+
+echo formatting for railroad tool
 
 awk <json.txt 'BEGIN {FS="\n"; RS=""} {gsub("\n","",$0); print }' | \
- sed -e 's/:/ ::= /' -e's/;$//' -e 's/  */ /g' -e 's/$/ /' |
- grep -v '^BOOL_LITERAL' | \
- sed -f json_replacements.txt >json_grammar.txt
+ sed -e 's/:/ ::= /' -e's/;$//' -e 's/  */ /g'  -e 's/  *$//' | \
+ grep -v '^BOOL_LITERAL' > json_grammar.txt
 
 echo "railroad diagram format in json_grammar.txt (paste into https://www.bottlecaps.de/rr/ui)"
 
@@ -42,7 +51,7 @@ cat <<EOF  >>json_grammar.md
 EOF
 
 echo '```' >>json_grammar.md
-sed <json.txt "s/$/ /" | sed -f json_replacements.txt >>json_grammar.md
+cat json.txt >>json_grammar.md
 echo '```' >>json_grammar.md
 
 echo wiki format in json_grammar.md
@@ -50,3 +59,5 @@ echo wiki format in json_grammar.md
 echo cleanup
 rm ys
 rm json.txt
+rm replacements.c
+rm replacements
