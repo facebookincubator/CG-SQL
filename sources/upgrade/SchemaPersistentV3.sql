@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-let u := not "x";
-
 CREATE VIRTUAL TABLE test_virtual_table_A using test_module as (
   name text
 );
@@ -96,8 +94,8 @@ BEGIN
   DELETE FROM recreate_test_for_unsub WHERE unsub_id = 3;
 END;
 
-@unsub(1, test_for_unsub);
-@unsub(1, recreate_test_for_unsub);
+@unsub(test_for_unsub);
+@unsub(recreate_test_for_unsub);
 
 -- extra items that will disappear when we switch to exclusive mode
 CREATE VIEW extra_view AS SELECT * FROM g1;
