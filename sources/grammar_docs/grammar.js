@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Nov 16 09:29:53 2022
+// Snapshot as of Wed Nov 16 11:44:25 2022
 
 
 const PREC = {
@@ -170,7 +170,7 @@ module.exports = grammar({
     declare_deployable_region_stmt: $ => choice(seq($.AT_DECLARE_DEPLOYABLE_REGION, $.name), seq($.AT_DECLARE_DEPLOYABLE_REGION, $.name, $.USING, $.region_list)),
     begin_schema_region_stmt: $ => seq($.AT_BEGIN_SCHEMA_REGION, $.name),
     end_schema_region_stmt: $ => $.AT_END_SCHEMA_REGION,
-    schema_unsub_stmt: $ => choice(seq($.AT_UNSUB, '(', $.INT_LIT, ',', $.name, ')'), seq($.AT_UNSUB, '(', $.name, ')')),
+    schema_unsub_stmt: $ => seq($.AT_UNSUB, '(', $.name, ')'),
     schema_ad_hoc_migration_stmt: $ => choice(seq($.AT_SCHEMA_AD_HOC_MIGRATION, $.version_annotation), seq($.AT_SCHEMA_AD_HOC_MIGRATION, $.FOR, $.AT_RECREATE, '(', $.name, ',', $.name, ')')),
     emit_enums_stmt: $ => seq($.AT_EMIT_ENUMS, optional($.opt_name_list)),
     emit_group_stmt: $ => seq($.AT_EMIT_GROUP, optional($.opt_name_list)),
