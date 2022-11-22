@@ -12871,6 +12871,7 @@ cql_string_proc_name(virtual1_stored_procedure_name, "virtual1");
 typedef struct virtual1_row {
   cql_int32 vx;
   cql_nullable_int32 vy;
+  cql_int32 vz;
 } virtual1_row;
 
 cql_int32 virtual1_get_vx(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -12888,14 +12889,21 @@ cql_int32 virtual1_get_vy_value(virtual1_result_set_ref _Nonnull result_set, cql
   return data[row].vy.value;
 }
 
+cql_int32 virtual1_get_vz(virtual1_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual1_row *data = (virtual1_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vz;
+}
+
 uint8_t virtual1_data_types[virtual1_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vx
   CQL_DATA_TYPE_INT32, // vy
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vz
 };
 
-static cql_uint16 virtual1_col_offsets[] = { 2,
+static cql_uint16 virtual1_col_offsets[] = { 3,
   cql_offsetof(virtual1_row, vx),
-  cql_offsetof(virtual1_row, vy)
+  cql_offsetof(virtual1_row, vy),
+  cql_offsetof(virtual1_row, vz)
 };
 
 cql_int32 virtual1_result_count(virtual1_result_set_ref _Nonnull result_set) {
@@ -12922,7 +12930,7 @@ CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1
 
 /*
 export:
-DECLARE PROC virtual1 () (vx INTEGER NOT NULL, vy INTEGER);
+DECLARE PROC virtual1 () (vx INTEGER NOT NULL, vy INTEGER, vz INTEGER NOT NULL);
 */
 CQL_WARN_UNUSED cql_code virtual1(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -12947,7 +12955,7 @@ cql_cleanup:
 /*
 CREATE PROC virtual2 ()
 BEGIN
-  SELECT vx, vy
+  SELECT vx, vy, vz
     FROM virtual_with_hidden
     WHERE vx = 2;
 END;
@@ -12961,6 +12969,7 @@ cql_string_proc_name(virtual2_stored_procedure_name, "virtual2");
 typedef struct virtual2_row {
   cql_int32 vx;
   cql_nullable_int32 vy;
+  cql_int32 vz;
 } virtual2_row;
 
 cql_int32 virtual2_get_vx(virtual2_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -12978,14 +12987,21 @@ cql_int32 virtual2_get_vy_value(virtual2_result_set_ref _Nonnull result_set, cql
   return data[row].vy.value;
 }
 
+cql_int32 virtual2_get_vz(virtual2_result_set_ref _Nonnull result_set, cql_int32 row) {
+  virtual2_row *data = (virtual2_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].vz;
+}
+
 uint8_t virtual2_data_types[virtual2_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vx
   CQL_DATA_TYPE_INT32, // vy
+  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // vz
 };
 
-static cql_uint16 virtual2_col_offsets[] = { 2,
+static cql_uint16 virtual2_col_offsets[] = { 3,
   cql_offsetof(virtual2_row, vx),
-  cql_offsetof(virtual2_row, vy)
+  cql_offsetof(virtual2_row, vy),
+  cql_offsetof(virtual2_row, vz)
 };
 
 cql_int32 virtual2_result_count(virtual2_result_set_ref _Nonnull result_set) {
@@ -13012,7 +13028,7 @@ CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2
 
 /*
 export:
-DECLARE PROC virtual2 () (vx INTEGER NOT NULL, vy INTEGER);
+DECLARE PROC virtual2 () (vx INTEGER NOT NULL, vy INTEGER, vz INTEGER NOT NULL);
 */
 CQL_WARN_UNUSED cql_code virtual2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -13020,7 +13036,7 @@ CQL_WARN_UNUSED cql_code virtual2(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullabl
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT vx, vy "
+    "SELECT vx, vy, vz "
       "FROM virtual_with_hidden "
       "WHERE vx = 2");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }

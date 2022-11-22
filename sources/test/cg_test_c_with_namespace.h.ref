@@ -2986,7 +2986,7 @@ extern CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_);
 
 extern cql_string_ref _Nonnull virtual1_stored_procedure_name;
 
-#define virtual1_data_types_count 2
+#define virtual1_data_types_count 3
 
 #ifndef result_set_type_decl_virtual1_result_set
 #define result_set_type_decl_virtual1_result_set 1
@@ -2995,6 +2995,7 @@ cql_result_set_type_decl(virtual1_result_set, virtual1_result_set_ref);
 extern cql_int32 virtual1_get_vx(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool virtual1_get_vy_is_null(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 virtual1_get_vy_value(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 virtual1_get_vz(virtual1_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 virtual1_result_count(virtual1_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code virtual1_fetch_results(sqlite3 *_Nonnull _db_, virtual1_result_set_ref _Nullable *_Nonnull result_set);
 #define virtual1_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
@@ -3010,7 +3011,7 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
 
 extern cql_string_ref _Nonnull virtual2_stored_procedure_name;
 
-#define virtual2_data_types_count 2
+#define virtual2_data_types_count 3
 
 #ifndef result_set_type_decl_virtual2_result_set
 #define result_set_type_decl_virtual2_result_set 1
@@ -3019,6 +3020,7 @@ cql_result_set_type_decl(virtual2_result_set, virtual2_result_set_ref);
 extern cql_int32 virtual2_get_vx(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_bool virtual2_get_vy_is_null(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 virtual2_get_vy_value(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 virtual2_get_vz(virtual2_result_set_ref _Nonnull result_set, cql_int32 row);
 extern cql_int32 virtual2_result_count(virtual2_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code virtual2_fetch_results(sqlite3 *_Nonnull _db_, virtual2_result_set_ref _Nullable *_Nonnull result_set);
 #define virtual2_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)

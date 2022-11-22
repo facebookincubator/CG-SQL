@@ -3733,6 +3733,12 @@ static inline NSNumber *_Nullable CGBVirtual1GetVy(CGBVirtual1 *resultSet, int32
   return CGCVirtual1GetVyIsNull(cResultSet, row) ? nil : @(CGCVirtual1GetVyValue(cResultSet, row));
 }
 
+static inline int32_t CGBVirtual1GetVz(CGBVirtual1 *resultSet, int32_t row)
+{
+  CGCVirtual1ResultSetRef cResultSet = CGCVirtual1FromCGBVirtual1(resultSet);
+  return CGCVirtual1GetVz(cResultSet, row);
+}
+
 static inline int32_t CGBVirtual1ResultCount(CGBVirtual1 *resultSet)
 {
   return CGCVirtual1ResultCount(CGCVirtual1FromCGBVirtual1(resultSet));
@@ -3775,6 +3781,12 @@ static inline NSNumber *_Nullable CGBVirtual2GetVy(CGBVirtual2 *resultSet, int32
 {
   CGCVirtual2ResultSetRef cResultSet = CGCVirtual2FromCGBVirtual2(resultSet);
   return CGCVirtual2GetVyIsNull(cResultSet, row) ? nil : @(CGCVirtual2GetVyValue(cResultSet, row));
+}
+
+static inline int32_t CGBVirtual2GetVz(CGBVirtual2 *resultSet, int32_t row)
+{
+  CGCVirtual2ResultSetRef cResultSet = CGCVirtual2FromCGBVirtual2(resultSet);
+  return CGCVirtual2GetVz(cResultSet, row);
 }
 
 static inline int32_t CGBVirtual2ResultCount(CGBVirtual2 *resultSet)

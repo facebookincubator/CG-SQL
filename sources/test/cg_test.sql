@@ -3800,7 +3800,8 @@ declare my_name_type type text not null;
 -- make a virtual table with a hidden column for use in the next tests
 create virtual table virtual_with_hidden using module_name as (
   vx integer hidden not null,
-  vy integer
+  vy integer,
+  vz integer hidden not null
 );
 
 -- TEST: hidden applied on virtual tables
@@ -3813,12 +3814,12 @@ end;
 
 -- TEST: hidden columns may be used by name
 -- +  _rc_ = cql_prepare(_db_, _result_stmt,
--- + "SELECT vx, vy "
+-- + "SELECT vx, vy, vz "
 -- + "FROM virtual_with_hidden "
 -- + "WHERE vx = 2");
 create proc virtual2()
 begin
-  select vx, vy from virtual_with_hidden where vx = 2;
+  select vx, vy, vz from virtual_with_hidden where vx = 2;
 end;
 
 -- TEST: insert into the table, verify autoexpand is correct there, too
@@ -5698,7 +5699,7 @@ end;
 
 -- TEST: simple update into backed table value only
 -- + UPDATE backing
--- + SET v = bupdateval(v, -6946718245010482247, 'foo', 4) 
+-- + SET v = bupdateval(v, -6946718245010482247, 'foo', 4)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM backed
 -- + WHERE name = 'one')
