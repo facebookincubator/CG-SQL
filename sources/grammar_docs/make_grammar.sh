@@ -8,14 +8,13 @@
 set -e
 
 echo compiling yacc stripper
-cc -o ys ys.c
+(cd ..; make out/ys)
 
 echo compiling replacements
-flex -o replacements.c replacements.l
-cc -o replacements replacements.c
+(cd ..; make out/replacements)
 
 echo stripping C out of the grammar
-./ys <../cql.y | sed -e "/^  *$/d" | ./replacements | sed -e "s/  *$//" >cql.txt
+../out/ys <../cql.y | sed -e "/^  *$/d" | ../out/replacements | sed -e "s/  *$//" >cql.txt
 
 echo formatting for railroad tool
 
@@ -59,7 +58,7 @@ echo '```' >>cql_grammar.md
 
 # use whole word match on these small replacements LS, RS, GE, LE, NE, EQEQ
 egrep "^%left|^%right|^%nonassoc" <../cql.y | \
-  sed -e 's/%left //' -e 's/%right //' -e 's/%nonassoc //' -e 's/  *$//' | ./replacements >>cql_grammar.md
+  sed -e 's/%left //' -e 's/%right //' -e 's/%nonassoc //' -e 's/  *$//' | ../out/replacements >>cql_grammar.md
 
 echo '```' >>cql_grammar.md
 
@@ -88,7 +87,7 @@ echo '```' >>cql_grammar.md
   grep '%token [^<]' |       # Get only the lines starting with %token
   sed 's/%token //g' |       # Remove '%token ' from the start of each line
   tr ' ' '\n' |              # Put each token on a new line
-  ./replacements |           # Apply our usual replacements
+  ../out/replacements |      # Apply our usual replacements
   sort |                     # Sort the tokens
   uniq |                     # Remove duplicates resulting from explicit string
                              # declarations (e.g., `%token NULL_ "NULL"`)
@@ -116,7 +115,4 @@ echo create grammar.js
 ./tree_sitter.py > grammar.js
 
 echo cleanup
-rm ys
 rm cql.txt
-rm replacements
-rm replacements.c

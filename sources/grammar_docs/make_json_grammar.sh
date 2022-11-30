@@ -8,14 +8,13 @@
 set -e
 
 echo compiling yacc stripper
-cc -o ys ys.c
+(cd ..; make out/ys)
 
 echo compiling replacements
-flex -o replacements.c json_replacements.l
-cc -o replacements replacements.c
+(cd ..; make out/json_replacements)
 
 echo stripping JSON grammar
-./ys <../json_test/json_test.y | sed -e "/^  *$/d" | ./replacements | sed -e 's/  *$//' >json.txt
+../out/ys <../json_test/json_test.y | sed -e "/^  *$/d" | ../out/json_replacements | sed -e 's/  *$//' >json.txt
 
 echo formatting for railroad tool
 
@@ -57,7 +56,4 @@ echo '```' >>json_grammar.md
 echo wiki format in json_grammar.md
 
 echo cleanup
-rm ys
 rm json.txt
-rm replacements.c
-rm replacements
