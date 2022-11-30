@@ -7,6 +7,10 @@
 # exit when any command fails
 set -e
 
+# move to the location of the script for a fixed reference
+DIR="$( dirname -- "$0"; )"
+cd "${DIR}" || exit
+
 echo compiling yacc stripper
 (cd ..; make out/ys)
 
