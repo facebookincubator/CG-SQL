@@ -2070,12 +2070,13 @@ static ast_node *find_assembly_fragment(CSTR name) {
 
 // Helper function to create unique ID to store recreate group dependencies in symbol table
 CSTR create_group_id(CSTR group_name, CSTR table_name) {
+  // These names are used as keys in symbol tables and were selected to match the facet names
    Contract(table_name);
    if (group_name && group_name[0]) {
-     return dup_printf("g_%s", group_name);
+     return dup_printf("%s_group", group_name);
    }
    else {
-     return dup_printf("t_%s", table_name);
+     return dup_printf("%s_table", table_name);
    }
 }
 

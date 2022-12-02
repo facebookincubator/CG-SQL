@@ -528,20 +528,20 @@ END;
 DECLARE PROC RecreateGroup1Migration() USING TRANSACTION;
 
 @attribute(cql:private)
-CREATE PROC test_g_gr1_group_drop()
+CREATE PROC test_gr1_group_group_drop()
 BEGIN
   DROP TABLE IF EXISTS use_g1;
   DROP TABLE IF EXISTS g1;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_t_table_to_recreate_group_drop()
+CREATE PROC test_table_to_recreate_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS table_to_recreate;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_g_my_group_group_drop()
+CREATE PROC test_my_group_group_group_drop()
 BEGIN
   DROP TABLE IF EXISTS grouped_table_3;
   DROP TABLE IF EXISTS grouped_table_2;
@@ -549,25 +549,25 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROC test_t_a_virtual_table_group_drop()
+CREATE PROC test_a_virtual_table_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS a_virtual_table;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_t_complex_virtual_table_group_drop()
+CREATE PROC test_complex_virtual_table_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS complex_virtual_table;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_t_unsub_recreated_group_drop()
+CREATE PROC test_unsub_recreated_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS unsub_recreated;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_g_foo_group_drop()
+CREATE PROC test_foo_group_group_drop()
 BEGIN
   DROP TABLE IF EXISTS after_backed_table;
   DROP TABLE IF EXISTS recreate_backing;
