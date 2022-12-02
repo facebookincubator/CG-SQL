@@ -61,6 +61,16 @@ CREATE TABLE g2(
   name TEXT
 ) @recreate(gr2);
 
+CREATE TABLE g7(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+) @recreate(gr7);
+
+CREATE TABLE use_g7(
+  id INTEGER PRIMARY KEY REFERENCES g7(id),
+  name TEXT
+) @recreate(gr1);
+
 CREATE TABLE g3(
   id INTEGER PRIMARY KEY REFERENCES g2(id),
   name TEXT

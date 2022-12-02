@@ -127,12 +127,10 @@ static int annotation_comparator(const void *v1, const void *v2) {
 //  * group ordinal
 //  * ordinal
 //
-//  We use create order for groups so that we do the CRC check for the
-//  strongest tables first - wherein we recursively drop children in
-//  drop order and also drop any tables in the correct drop order via
-//  the call to cql_rebuild_recreate_group. We also dirty the CRC for
-//  any children we end up dropping, so we want the children (weak tables) to
-//  follow after the parent (strong table) so that we recreate them.
+//  We use topological order for groups. recreate_group_deps holds (parent->child) edges
+//  and has no cycles. If we perform a topological sort where we assign smallest numbers
+//  to the inner-most nodes, we can upgrade groups in the reverse order of these assignments.
+//  That way we always have most parent-like groups running before any of their dependencies.
 //
 //  We sort with create order for table ordinal and pass in create order
 //  table creation statements to cql_rebuild_recreate_groups. Inside this
@@ -148,7 +146,7 @@ static int recreate_comparator(const void *v1, const void *v2) {
   // We need group ordinal to be in create order so that we blow away
   // strongest groups (groups that other groups depend on) first
   if (a1->group_ordinal != a2->group_ordinal) {
-    return (a1->group_ordinal < a2->group_ordinal) ? -1 : 1;
+    return (a1->group_ordinal < a2->group_ordinal) ? 1 : -1;
   }
 
   // It can't be a tie! ordinal is unique!
@@ -1498,6 +1496,74 @@ static void cg_schema_manage_recreate_tables(
   symtab_delete(recreate_group_drops);
 }
 
+static int32_t max_group_ordinal = 0;
+
+static void topological_walk_recreate_group_deps_helper(symtab *recreate_group_ordinals, CSTR curr_gname)
+{
+  symtab_entry *entry = symtab_find(recreate_group_ordinals, curr_gname);
+  bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, curr_gname);
+  size_t count = buf->used / sizeof(CSTR);
+  CSTR *neighbors = (CSTR *) (buf->ptr);
+  for (size_t i = 0; i < count; i++) {
+    symtab_entry *neighbor_entry = symtab_find(recreate_group_ordinals, neighbors[i]);
+    // Note: neighbor_entry != NULL
+    int32_t neighbor_ordinal = neighbor_entry ? (int32_t) (int64_t) (neighbor_entry->val) : -1;
+    // if group has not yet been visited
+    if (neighbor_ordinal == -1) {
+      topological_walk_recreate_group_deps_helper(recreate_group_ordinals, neighbors[i]);
+    }
+  }
+  entry->val = (void*) (int64_t) (max_group_ordinal++);
+}
+
+static void topological_walk_recreate_group_deps(recreate_annotation** recreates, size_t recreate_items_count) {
+  // Create temporary symbol table to hold all recreate groups and their ordinal assignments
+  symtab *recreate_group_ordinals = symtab_new();
+  // Clean out symbol table by initializing all groups to have ordinal = -1
+  for (size_t i = 0; i < recreate_group_deps->capacity; i++) {
+    symtab_entry entry = recreate_group_deps->payload[i];
+    if (entry.sym) {
+      symtab_add(recreate_group_ordinals, entry.sym, (void*)(-1));
+    }
+  }
+
+  // Outer loop: walk all the groups and assign them an ordinal.
+  // If they already have one: use it, else: call the recursive function to compute
+  // ordinals for this subtree
+  for (size_t i = 0; i < recreate_group_ordinals->capacity; i++) {
+    symtab_entry entry = recreate_group_ordinals->payload[i];
+    if (entry.sym) {
+      int32_t ordinal = (int32_t)(int64_t)(entry.val);
+      if (ordinal == -1) {
+        topological_walk_recreate_group_deps_helper(recreate_group_ordinals, entry.sym);
+      }
+    }
+  }
+
+  // We now assign ordinals to recreate tables based on the symbol table we populated.
+  // The value is either already computed, or we compute it now (with max_group_ordinal)
+  for (size_t i = 0; i < recreate_items_count; i++) {
+    CSTR gname = (*recreates)[i].group_name;
+    CSTR table_name = sem_get_name((*recreates)[i].target_ast);
+    gname = create_group_id(gname, table_name);
+    // We find using the group_name (or if singleton group, table_name)
+    symtab_entry *entry = symtab_find(recreate_group_ordinals, gname);
+    // Groups without dependencies would not have entries inside this symbol table
+    // But these can be recreated in any order, so we can just assign them the next available
+    // ordinal value
+    if (entry == NULL) {
+      (*recreates)[i].group_ordinal = max_group_ordinal;
+      symtab_add(recreate_group_ordinals, gname, (void*)(int64_t)max_group_ordinal++);
+    }
+    else {
+      (*recreates)[i].group_ordinal = (int32_t)(int64_t)entry->val;
+    }
+  }
+
+  // Dispose the symbol table
+  symtab_delete(recreate_group_ordinals);
+}
+
 static llint_t cg_schema_compute_crc(
     schema_annotation** notes,
     size_t* schema_items_count,
@@ -1526,14 +1592,21 @@ static llint_t cg_schema_compute_crc(
      *max_schema_version = (*notes)[*schema_items_count - 1].version;
   }
 
-  // likewise, @recreate annotations, in the correct upgrade order (see comparator)
+  // number recreate groups based on topological order of the recreate FK dependency DAG.
+  // "Innermost" recreate groups (leaf nodes in recreate_group_deps) will have the smallest
+  // values with this ordering, so they will be recreated first as desired because these
+  // tables do not FK to any other tables.
+
+
   base = recreate_annotations->ptr;
   size_t recreate_items_size = sizeof(recreate_annotation);
   *recreate_items_count = recreate_annotations->used / recreate_items_size;
+  *recreates = (recreate_annotation *)base;
+  topological_walk_recreate_group_deps(recreates, *recreate_items_count);
+
   if (*recreate_items_count) {
     qsort(base, *recreate_items_count, recreate_items_size, recreate_comparator);
   }
-  *recreates = (recreate_annotation *)base;
 
   CHARBUF_OPEN(all_schema);
   // emit canonicalized schema for everything we will upgrade

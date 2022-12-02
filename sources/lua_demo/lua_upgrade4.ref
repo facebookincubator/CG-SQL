@@ -41,6 +41,14 @@ CREATE TABLE g6(
   id INTEGER PRIMARY KEY REFERENCES g2 (
     id))
 
+----- g7 -----
+
+type: table
+tbl_name: g7
+CREATE TABLE g7(
+  id INTEGER PRIMARY KEY,
+  name TEXT)
+
 ----- lua_upgrade_cql_schema_facets -----
 
 type: table
@@ -163,5 +171,14 @@ type: table
 tbl_name: use_g3
 CREATE TABLE use_g3(
   id INTEGER,
+  name TEXT)
+
+----- use_g7 -----
+
+type: table
+tbl_name: use_g7
+CREATE TABLE use_g7(
+  id INTEGER PRIMARY KEY REFERENCES g7 (
+    id),
   name TEXT)
 
