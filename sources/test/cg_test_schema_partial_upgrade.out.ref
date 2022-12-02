@@ -279,6 +279,12 @@ BEGIN
   INSERT INTO cql_schema_rebuilt_tables VALUES(facet);
 END;
 
+-- helper proc to delete facet from cql_schema_facets_saved table --
+CREATE PROCEDURE test_cql_schema_delete_saved_facet(delete_facet TEXT NOT NULL)
+BEGIN
+  DELETE FROM test_cql_schema_facets_saved WHERE facet = delete_facet;
+END;
+
 -- declared upgrade procedures if any
 DECLARE PROC CreateName1Proc() USING TRANSACTION;
 DECLARE PROC CreateName2Proc() USING TRANSACTION;

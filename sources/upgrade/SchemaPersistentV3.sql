@@ -55,6 +55,14 @@ CREATE TABLE use_g1(
   name2 TEXT
 ) @recreate(gr1);
 
+CREATE TABLE gParent(
+  id INTEGER PRIMARY KEY
+) @recreate(grParent);
+
+CREATE TABLE gChild(
+  id INTEGER PRIMARY KEY REFERENCES gParent(id)
+) @recreate(grChild);
+
 -- deleted in version 3
 CREATE TABLE test_this_table_will_become_create(
   id integer primary key

@@ -49,6 +49,21 @@ CREATE TABLE g7(
   id INTEGER PRIMARY KEY,
   name TEXT)
 
+----- gChild -----
+
+type: table
+tbl_name: gChild
+CREATE TABLE gChild(
+  id INTEGER PRIMARY KEY REFERENCES gParent (
+    id))
+
+----- gParent -----
+
+type: table
+tbl_name: gParent
+CREATE TABLE gParent(
+  id INTEGER PRIMARY KEY)
+
 ----- lua_upgrade_cql_schema_facets -----
 
 type: table

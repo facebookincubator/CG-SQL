@@ -56,6 +56,15 @@ CREATE TABLE use_g1(
   name2 TEXT
 ) @recreate(gr1);
 
+CREATE TABLE gParent(
+  id INTEGER PRIMARY KEY,
+  name TEXT
+) @recreate(grParent);
+
+CREATE TABLE gChild(
+  id INTEGER PRIMARY KEY REFERENCES gParent(id)
+) @recreate(grChild);
+
 CREATE TABLE g2(
   id INTEGER PRIMARY KEY REFERENCES g1(id),
   name TEXT
