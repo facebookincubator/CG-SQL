@@ -77,7 +77,7 @@ typedef struct test_blob {
 
 // Returns the indicated integer
 static void bgetval_type(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
-  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]);
   if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
     sqlite3_result_null(context);
     return;
@@ -87,7 +87,7 @@ static void bgetval_type(sqlite3_context *context, int32_t argc, sqlite3_value *
 
 // Returns the indicated integer
 static void bgetval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
-  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]);
   if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
     sqlite3_result_null(context);
     return;
@@ -118,7 +118,7 @@ static void bupdateval(sqlite3_context *context, int32_t argc, sqlite3_value **a
     return;
   }
 
-  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]);
   if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
     sqlite3_result_null(context);
     return;
@@ -151,7 +151,7 @@ static void bupdatekey(sqlite3_context *context, int32_t argc, sqlite3_value **a
     return;
   }
 
-  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]); 
+  test_blob *b = (test_blob *)sqlite3_value_blob(argv[0]);
   if (sizeof(*b) != sqlite3_value_bytes(argv[0])) {
     sqlite3_result_null(context);
     return;
@@ -197,7 +197,7 @@ static void bcreatekey(sqlite3_context *context, int32_t argc, sqlite3_value **a
   }
   sqlite3_result_blob(context, &b, sizeof(b), SQLITE_TRANSIENT);
 }
-	
+
 // Create a value store, note that some offsets be missing
 static void bcreateval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
   if (argc < 1) {
