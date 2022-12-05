@@ -265,6 +265,7 @@ function throwing(_db_)
     local _rc_thrown_1 = _rc_
     printf("error\n")
     _rc_ = cql_best_error(_rc_thrown_1)
+    cql_error_trace(_rc_, _db_)
     goto cql_cleanup
   end
 
@@ -5189,6 +5190,7 @@ function base_proc_savepoint(_db_)
       "RELEASE base_proc_savepoint")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     _rc_ = cql_best_error(_rc_thrown_1)
+    cql_error_trace(_rc_, _db_)
     goto cql_cleanup
   end
 
@@ -5242,6 +5244,7 @@ function base_proc_savepoint_commit_return(_db_)
       "RELEASE base_proc_savepoint_commit_return")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     _rc_ = cql_best_error(_rc_thrown_1)
+    cql_error_trace(_rc_, _db_)
     goto cql_cleanup
   end
 
@@ -5298,6 +5301,7 @@ function base_proc_savepoint_rollback_return(_db_)
       "RELEASE base_proc_savepoint_rollback_return")
     if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
     _rc_ = cql_best_error(_rc_thrown_1)
+    cql_error_trace(_rc_, _db_)
     goto cql_cleanup
   end
 
@@ -6021,6 +6025,7 @@ function rc_test(_db_)
         e3 = _rc_thrown_2
         err = _rc_thrown_2
         _rc_ = cql_best_error(_rc_thrown_2)
+        cql_error_trace(_rc_, _db_)
         goto catch_start_11
       end
 
@@ -6090,6 +6095,7 @@ function rc_test_lazy1(_db_)
     do
       local _rc_thrown_2 = _rc_
       _rc_ = cql_best_error(_rc_thrown_2)
+      cql_error_trace(_rc_, _db_)
       goto cql_cleanup
     end
 
@@ -6903,6 +6909,7 @@ END;
 function uses_throw(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_best_error(CQL_OK)
+  cql_error_trace(_rc_, _db_)
   goto cql_cleanup
   _rc_ = CQL_OK
 

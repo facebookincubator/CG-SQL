@@ -614,7 +614,7 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
 // Emits the correct _result_set_ref type based on the sem_type and kind
 // the idea here is that we're generating the return type of a getter function
 // and the getter is returning a result set.  The type kind will have the actual
-// name of the procedure that originally created the result set.  The type will 
+// name of the procedure that originally created the result set.  The type will
 // be something like OBJECT<Foo SET> -- we're going to use the "Foo" in the
 // result set type as this corresponds to the result set that the "Foo" procedure
 // creates.
@@ -1867,7 +1867,7 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
 // Helper to generate a null result.  For consistency with other nullable results
 // we store it in a scratch variable.  Note that this is a "typed" null.  That is
 // we know the kind of null we are making, a null int, null long, etc.  Again
-// this lets the normal nullability path just work.  
+// this lets the normal nullability path just work.
 static void cg_null_result(ast_node *ast, charbuf *is_null, charbuf *value) {
   sem_t sem_type_result = ast->sem->sem_type;
   CG_SETUP_RESULT_VAR(ast, sem_type_result);
@@ -4053,7 +4053,7 @@ static void cg_declare_select_func_stmt(ast_node *ast) {
   Contract(is_ast_declare_select_func_stmt(ast));
 
   // We do not emit the declaration of the sql UDF into the header file
-  // since it is not callable from C (unlike regular declared functions) 
+  // since it is not callable from C (unlike regular declared functions)
 
   // NO-OP
 }
@@ -7167,6 +7167,7 @@ static void cg_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
   bprintf(cg_main_output, "_rc_ = cql_best_error(%s);\n", rcthrown_current);
+  bprintf(cg_main_output, "cql_error_trace();\n");
   bprintf(cg_main_output, "goto %s;\n", error_target);
   error_target_used = true;
   rcthrown_used = true;

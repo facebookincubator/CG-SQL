@@ -1790,7 +1790,7 @@ static int32_t cg_lua_expr_select_frag(ast_node *ast, charbuf *value) {
 
   // note that callers are expected to check the remaining error codes and clean up
   // the temp statement.
-  
+
   return stmt_index;
 }
 
@@ -4745,6 +4745,7 @@ static void cg_lua_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
   bprintf(cg_main_output, "_rc_ = cql_best_error(%s)\n", lua_rcthrown_current);
+  bprintf(cg_main_output, "cql_error_trace(_rc_, _db_)\n");
   bprintf(cg_main_output, "goto %s\n", lua_error_target);
   lua_error_target_used = true;
   lua_rcthrown_used = true;

@@ -4298,6 +4298,7 @@ end;
 -- + DECLARE PROC uses_throw () USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
 -- + _rc_ = cql_best_error(SQLITE_OK);
+-- + cql_error_trace();
 create proc uses_throw()
 begin
   throw;
@@ -4307,6 +4308,7 @@ end;
 -- + DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_int32 x) {
 -- + _rc_ = SQLITE_ERROR;
+-- + cql_error_trace();
 create proc uses_ifnull_throw(x int)
 begin
    let y := ifnull_throw(x);
@@ -5831,4 +5833,3 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
-

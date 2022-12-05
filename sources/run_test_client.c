@@ -107,8 +107,9 @@ cql_code run_client(sqlite3 *db) {
   E(long_const_2 == min_long_ref - 1, "round trip min_long explicit long");
   E(long_const_3 == min_long_ref - 1, "round trip min_long implicit long");
 
+  E(trace_received == 0, "failure: proc should not trigger trace yet\n");
   E(fails_because_bogus_table(db) != SQLITE_OK, "procedure should have returned an error\n");
-  E(trace_received == 1, "failure proc did not trigger a trace\n");
+  E(trace_received == 2, "failure: proc did not trigger a trace for both the sql error and rethrow\n");
   E(!cql_outstanding_refs, "outstanding refs in fails_because_bogus_table: %d\n", cql_outstanding_refs);
 
   SQL_E(test_c_rowsets(db));

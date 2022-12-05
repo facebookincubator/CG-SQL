@@ -4151,6 +4151,7 @@ end;
 -- Verify that this is a DML proc even though it does nothing but use throw
 -- + function uses_throw(_db_)
 -- + _rc_ = cql_best_error(CQL_OK)
+-- +  cql_error_trace(_rc_, _db_)
 create proc uses_throw()
 begin
   throw;
@@ -4159,6 +4160,7 @@ end;
 -- TEST: verify that this is a DML proc even though it does nothing but ifnull_throw
 -- + function uses_ifnull_throw(_db_, x)
 -- + _rc_ = CQL_ERROR
+-- +  cql_error_trace(_rc_, _db_)
 create proc uses_ifnull_throw(x int)
 begin
    let y := ifnull_throw(x);
