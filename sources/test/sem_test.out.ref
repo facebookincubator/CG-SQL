@@ -14820,14 +14820,45 @@ test/sem_test.sql:XXXX:1: error: in cast_expr : CQL0073: CAST may only appear in
 
 The statement ending at line XXXX
 
-LET int_foo := CAST(1 AS INTEGER<foo>);
+LET int_lit_foo := TYPE_CHECK(1 AS INTEGER NOT NULL);
+
+  {let_stmt}: int_lit_foo: integer notnull variable
+  | {name int_lit_foo}: int_lit_foo: integer notnull variable
+  | {type_check_expr}: integer notnull
+    | {int 1}: integer notnull
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET str_foo := TYPE_CHECK(a_string AS TEXT NOT NULL);
+
+  {let_stmt}: str_foo: text notnull variable
+  | {name str_foo}: str_foo: text notnull variable
+  | {type_check_expr}: a_string: text notnull variable was_set
+    | {call}: a_string: text notnull variable was_set
+    | | {name cql_inferred_notnull}: a_string: text notnull variable was_set
+    | | {call_arg_list}
+    |   | {call_filter_clause}
+    |   | {arg_list}: ok
+    |     | {name a_string}: a_string: text inferred_notnull variable was_set
+    | {notnull}: text notnull
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+LET int_foo := TYPE_CHECK(CAST(1 AS INTEGER<foo>) AS INTEGER<foo> NOT NULL);
 
   {let_stmt}: int_foo: integer<foo> notnull variable
   | {name int_foo}: int_foo: integer<foo> notnull variable
-  | {cast_expr}: integer<foo> notnull
-    | {int 1}: integer notnull
-    | {type_int}: integer<foo>
-      | {name foo}
+  | {type_check_expr}: integer<foo> notnull
+    | {cast_expr}: integer<foo> notnull
+    | | {int 1}: integer notnull
+    | | {type_int}: integer<foo>
+    |   | {name foo}
+    | {notnull}: integer<foo> notnull
+      | {type_int}: integer<foo>
+        | {name foo}
 
 The statement ending at line XXXX
 

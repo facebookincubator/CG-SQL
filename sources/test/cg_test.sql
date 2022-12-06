@@ -5821,6 +5821,22 @@ begin
    end;
 end;
 
+-- TEST: test type_check is trip and the expression is kept in c codegen
+-- +1 cql_int32 int_lit_foo = 0;
+-- +1 cql_string_ref a_string = NULL;
+-- +1 cql_string_ref str_foo = NULL;
+-- +1 cql_int32 int_cast_foo = 0;
+-- +1 int_lit_foo = 1;
+-- +1 cql_set_string_ref(&a_string, _literal_26_abc_my_proc_check_type);
+-- +1 cql_set_string_ref(&str_foo, a_string);
+-- +1 int_cast_foo = 1;
+create proc my_proc_check_type()
+begin
+  let int_lit_foo := type_check(1 as int not null);
+  let a_string := "abc";
+  let str_foo := type_check(a_string as text not null);
+  let int_cast_foo := type_check(cast(1 as integer<foo>) as integer<foo> not null);
+end;
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

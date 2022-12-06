@@ -4057,6 +4057,22 @@ select cast(1 as text);
 -- + {cast_expr}: err
 set X := cast(5.0 as text);
 
+-- TEST: correct check_type (types match) on int litteral
+-- + {let_stmt}: int_lit_foo: integer notnull variable
+-- + {name int_lit_foo}: int_lit_foo: integer notnull variable
+-- + {type_check_expr}: integer notnull
+-- + {int 1}: integer notnull
+-- - error
+let int_lit_foo := type_check(1 as int not null);
+
+-- TEST: correct check_type (types match) on str litteral
+-- + {let_stmt}: str_foo: text notnull variabl
+-- + {name str_foo}: str_foo: text notnull variable
+-- + {call}: a_string: text notnull variable was_set
+-- + {name a_string}: a_string: text inferred_notnull variable was_set
+-- - error
+let str_foo := type_check(a_string as text not null);
+
 -- TEST: correct check_type (types match)
 -- + {let_stmt}: int_foo: integer<foo> notnull variable
 -- - error:

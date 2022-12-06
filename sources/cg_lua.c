@@ -1296,6 +1296,22 @@ static void cg_lua_expr_cast(ast_node *cast_expr, CSTR str, charbuf *value, int3
   CG_LUA_POP_EVAL(expr);
 }
 
+// we have built-in type_check fun which use to check an expr strictly match a type.
+// during semantic analysis otherwise error. At the codegen phase we just emit
+// the expr since the type check already succeeded.
+static void cg_lua_expr_type_check(ast_node *type_check_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_type_check_expr(type_check_expr));
+  EXTRACT_ANY_NOTNULL(expr, type_check_expr->left);
+
+  CG_LUA_PUSH_EVAL(expr, pri_new);
+
+  // type checking of the expression already happened during semantic analysis.
+  // It's safe to just output it
+  bprintf(value, "%s", expr_value.ptr);
+
+  CG_LUA_POP_EVAL(expr);
+}
+
 // This converts from SQL string literal format to C literal format.
 //  * the single quotes around the string become double quotes
 //  * escaped single quote becomes just single quote
@@ -5353,6 +5369,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_EXPR_INIT(not_in, cg_lua_expr_in_pred_or_not_in, "NOT IN", LUA_EXPR_PRI_ROOT);
   LUA_EXPR_INIT(case_expr, cg_lua_expr_case, "CASE", LUA_EXPR_PRI_ROOT);
   LUA_EXPR_INIT(cast_expr, cg_lua_expr_cast, "CAST", LUA_EXPR_PRI_ROOT);
+  LUA_EXPR_INIT(type_check_expr, cg_lua_expr_type_check, "TYPE CHECK", LUA_EXPR_PRI_ROOT);
 }
 
 // To make sure we start at a zero state.  This is really necessary stuff

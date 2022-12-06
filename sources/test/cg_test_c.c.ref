@@ -617,6 +617,7 @@ cql_string_literal(_literal_22_hello_sensitive_function_is_a_no_op, "hello");
 cql_string_literal(_literal_23_slash_star_and_star_slash, "/*  */");
 cql_string_literal(_literal_24_hi_mutated_in_param_ref, "hi");
 cql_string_literal(_literal_25_xyzzy_clobber1, "xyzzy");
+cql_string_literal(_literal_26_abc_my_proc_check_type, "abc");
 
 // The statement ending at line XXXX
 
@@ -18867,6 +18868,39 @@ cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp1_stmt);
   return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC my_proc_check_type ()
+BEGIN
+  LET int_lit_foo := TYPE_CHECK(1 AS INTEGER NOT NULL);
+  LET a_string := "abc";
+  LET str_foo := TYPE_CHECK(a_string AS TEXT NOT NULL);
+  LET int_cast_foo := TYPE_CHECK(CAST(1 AS INTEGER<foo>) AS INTEGER<foo> NOT NULL);
+END;
+*/
+
+#define _PROC_ "my_proc_check_type"
+/*
+export:
+DECLARE PROC my_proc_check_type ();
+*/
+void my_proc_check_type(void) {
+  cql_int32 int_lit_foo = 0;
+  cql_string_ref a_string = NULL;
+  cql_string_ref str_foo = NULL;
+  cql_int32 int_cast_foo = 0;
+
+  int_lit_foo = 1;
+  cql_set_string_ref(&a_string, _literal_26_abc_my_proc_check_type);
+  cql_set_string_ref(&str_foo, a_string);
+  int_cast_foo = 1;
+
+  cql_string_release(a_string);
+  cql_string_release(str_foo);
 }
 #undef _PROC_
 cql_int32 this_is_the_end = 0;

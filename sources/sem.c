@@ -7022,10 +7022,6 @@ static void sem_expr_type_check(ast_node *ast, CSTR cstr) {
     return;
   }
 
-  // rewrite, only the expression remains
-  ast_set_left(ast, expr->left);
-  ast_set_right(ast, expr->right);
-  ast->type = expr->type;
   ast->sem = expr->sem;
 }
 

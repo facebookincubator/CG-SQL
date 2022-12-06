@@ -3975,6 +3975,9 @@ extern CQL_WARN_UNUSED cql_code select_if_nothing_in_loop(sqlite3 *_Nonnull _db_
 extern CQL_WARN_UNUSED cql_code select_if_nothing_or_null_in_loop(sqlite3 *_Nonnull _db_);
 
 // The statement ending at line XXXX
+extern void my_proc_check_type(void);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

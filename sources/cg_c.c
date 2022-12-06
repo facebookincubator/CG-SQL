@@ -2230,6 +2230,23 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
   CG_CLEANUP_RESULT_VAR();
 }
 
+// we have built-in type_check fun which use to check an expr strictly match a type.
+// during semantic analysis otherwise error. At the codegen phase we just emit
+// the expr since the type check already succeeded.
+static void cg_expr_type_check(ast_node *type_check_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_type_check_expr(type_check_expr));
+  EXTRACT_ANY_NOTNULL(expr, type_check_expr->left);
+
+  CG_PUSH_EVAL(expr, pri_new);
+
+  // type checking of the expression already happened during semantic analysis.
+  // It's safe to just output it
+  bprintf(is_null, "0");
+  bprintf(value, "%s", expr_value.ptr);
+
+  CG_POP_EVAL(expr);
+}
+
 // A CQL string literal needs to be stored somewhere so it looks like a string_ref.
 // Here is a helper method for creating the name of the literal.  We use
 // some letters from the text of the literal in the variable name to make it
@@ -8821,6 +8838,7 @@ cql_noexport void cg_c_init(void) {
   EXPR_INIT(not_in, cg_expr_in_pred_or_not_in, "NOT IN", C_EXPR_PRI_ROOT);
   EXPR_INIT(case_expr, cg_expr_case, "CASE", C_EXPR_PRI_ROOT);
   EXPR_INIT(cast_expr, cg_expr_cast, "CAST", C_EXPR_PRI_ROOT);
+  EXPR_INIT(type_check_expr, cg_expr_type_check, "TYPE CHECK", C_EXPR_PRI_ROOT);
 }
 
 // To make sure we start at a zero state.  This is really necessary stuff

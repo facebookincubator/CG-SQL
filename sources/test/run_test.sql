@@ -1360,6 +1360,14 @@ BEGIN_TEST(cast_expr)
   EXPECT((select cast(1.3 as int)) == 1); -- cast expression
 END_TEST(cast_expr)
 
+BEGIN_TEST(type_check)
+  let int_val := type_check(1 as int not null);
+  EXPECT(int_val == 1);
+
+  let int_cast_val := type_check(cast(1 as integer<foo>) as integer<foo> not null);
+  EXPECT(int_cast_val == 1);
+END_TEST(type_check)
+
 BEGIN_TEST(union_all_test)
   declare C cursor for
     select 1 as A, 2 as B
