@@ -74,6 +74,17 @@ $O/cql.y.c $O/cql.y.h: cql.y encoders.h charbuf.h
 $O/cql.c: cql.l
 	${LEX} -o $*.c $<
 
+$O/replacements: grammar_docs/replacements.l
+	${LEX} -o $O/replacements.c $<
+	${CC} -o $@ $O/replacements.c
+
+$O/json_replacements: grammar_docs/json_replacements.l
+	${LEX} -o $O/json_replacements.c $<
+	${CC} -o $@ $O/json_replacements.c
+
+$O/ys: grammar_docs/ys.c
+	$(CC) $< -o $@
+
 $O/cql.y.o: $O/cql.y.c $O/cql.y.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
