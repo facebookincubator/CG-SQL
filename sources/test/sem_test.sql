@@ -4120,6 +4120,15 @@ set int_foo := type_check(1 as integer);
 -- +1 error:
 set int_foo := type_check(1 as integer<foo> not null @sensitive);
 
+-- TEST: correct check_type in sql context
+-- + {let_stmt}: int_sql_val: integer notnull variable
+-- + {select_stmt}: _anon: integer notnull
+-- + {select_expr}: integer notnull
+-- + {type_check_expr}: integer notnull
+-- + {int 1}: integer notnull
+-- - error:
+let int_sql_val := (select type_check(1 as integer not null));
+
 -- enforce strict cast and verify
 @enforce_strict cast;
 

@@ -271,5 +271,5 @@ DECLARE PROC cursor_in_loop () USING TRANSACTION;
 DECLARE PROC select_in_loop () USING TRANSACTION;
 DECLARE PROC select_if_nothing_in_loop () USING TRANSACTION;
 DECLARE PROC select_if_nothing_or_null_in_loop () USING TRANSACTION;
-DECLARE PROC my_proc_check_type ();
+DECLARE PROC my_proc_check_type () USING TRANSACTION;
 DECLARE PROC end_proc ();

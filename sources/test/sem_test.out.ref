@@ -14961,6 +14961,30 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
+LET int_sql_val := ( SELECT TYPE_CHECK(1 AS INTEGER NOT NULL) );
+
+  {let_stmt}: int_sql_val: integer notnull variable
+  | {name int_sql_val}: int_sql_val: integer notnull variable
+  | {select_stmt}: _anon: integer notnull
+    | {select_core_list}: select: { _anon: integer notnull }
+    | | {select_core}: select: { _anon: integer notnull }
+    |   | {select_expr_list_con}: select: { _anon: integer notnull }
+    |     | {select_expr_list}: select: { _anon: integer notnull }
+    |     | | {select_expr}: integer notnull
+    |     |   | {type_check_expr}: integer notnull
+    |     |     | {int 1}: integer notnull
+    |     |     | {notnull}: integer notnull
+    |     |       | {type_int}: integer
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 @ENFORCE_STRICT CAST;
 
   {enforce_strict_stmt}: ok

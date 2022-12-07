@@ -1853,13 +1853,20 @@ static void gen_expr_type_check(ast_node *ast, CSTR op, int32_t pri, int32_t pri
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_ANY_NOTNULL(type, ast->right);
 
-  // note that this will be rewritten to nothing during semantic analysis, it only exists
-  // to force an manual compile time type check (useful in macros and such)
-  gen_printf("TYPE_CHECK(");
-  gen_expr(expr, EXPR_PRI_ROOT);
-  gen_printf(" AS ");
-  gen_data_type(type);
-  gen_printf(")");
+  // In SQLite context we only emit the actual expression since type checking already happened during
+  // semantic analysis step. Here we're emitting the final sql statement that goes to sqlite
+  if (for_sqlite()) {
+    gen_expr(expr, EXPR_PRI_ROOT);
+  }
+  else {
+    // note that this will be rewritten to nothing during semantic analysis, it only exists
+    // to force an manual compile time type check (useful in macros and such)
+    gen_printf("TYPE_CHECK(");
+    gen_expr(expr, EXPR_PRI_ROOT);
+    gen_printf(" AS ");
+    gen_data_type(type);
+    gen_printf(")");
+  }
 }
 
 static void gen_expr_cast(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
