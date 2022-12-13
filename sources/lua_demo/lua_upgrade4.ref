@@ -62,7 +62,8 @@ CREATE TABLE gChild(
 type: table
 tbl_name: gParent
 CREATE TABLE gParent(
-  id INTEGER PRIMARY KEY)
+  id INTEGER PRIMARY KEY,
+  name TEXT)
 
 ----- lua_upgrade_cql_schema_facets -----
 
