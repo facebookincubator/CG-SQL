@@ -5,7 +5,7 @@ sidebar_label: Playground
 ---
 
 ## CQL Playground
-While we do not offer an interactive REPL environment, we have bootstrapped an environment to run simple CQL programs in the [`repl` folder of our repository](https://github.com/facebookincubator/CG-SQL/tree/main/repl). You can run it by doing this from the CQL repository:
+While we do not offer an interactive REPL environment, we have bootstrapped an environment to run simple CQL programs in the [`repl` folder of our repository](https://github.com/facebookincubator/CG-SQL/tree/main/sources/repl). You can run it by doing this from the CQL repository:
 
 ```bash
 $ cd repl
@@ -20,12 +20,12 @@ Hello from CQL.
 Edit as you please
 ```
 
-[`go.sh`](https://github.com/facebookincubator/CG-SQL/tree/main/repl/go.sh) runs the `go()` stored procedure defined in [`go.sql`](https://github.com/facebookincubator/CG-SQL/tree/main/repl/go.sql). You can experiment with the CQL language by editing the `go.sql` file, as you please.
+[`go.sh`](https://github.com/facebookincubator/CG-SQL/tree/main/sources/repl/go.sh) runs the `go()` stored procedure defined in [`go.sql`](https://github.com/facebookincubator/CG-SQL/tree/main/sources/repl/go.sql). You can experiment with the CQL language by editing the `go.sql` file, as you please.
 
 The contents of `go.sh` also offers a basic demonstration of how CQL should be typically used to transpile files into a C executable.
 
 ## Query Plan Playground
-Wihtin the same `repl` directory, we have a script that demonstrates [CQL's query plan generation feature](/cql-guide/ch15) with [go.sql](https://github.com/facebookincubator/CG-SQL/tree/main/repl/go.sql).
+Within the same `repl` directory, we have a script that demonstrates [CQL's query plan generation feature](/cql-guide/ch15) with [go.sql](https://github.com/facebookincubator/CG-SQL/tree/main/sources/repl/go.sql).
 
 Run this script in the `/repl` directory of the CQL repository:
 ```bash
