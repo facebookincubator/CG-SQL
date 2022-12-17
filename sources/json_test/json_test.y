@@ -661,7 +661,7 @@ complex_arg: '{'
 
 binding: | BINDING_INOUT ',' | BINDING_OUT ','
   ;
-  
+
 opt_arg_origin: | arg_origin
   ;
 
@@ -690,7 +690,7 @@ enum_value: '{'
              VALUE num_literal
             '}'
   ;
-  
+
 opt_declare_procs: | declare_procs
   ;
 
@@ -707,10 +707,10 @@ declare_proc: '{'
 
 opt_declare_funcs:  | declare_funcs
   ;
-  
+
 declare_funcs: declare_func | declare_func ',' declare_funcs
   ;
-  
+
 declare_func: '{'
           NAME STRING_LITERAL ','
           ARGS '[' opt_complex_args ']' ','

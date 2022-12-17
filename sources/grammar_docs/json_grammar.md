@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Dec  6 18:49:42 PST 2022
+Snapshot as of Fri Dec 16 21:11:50 PST 2022
 
 ### Rules
 
@@ -612,6 +612,7 @@ complex_arg: '{'
 
 binding: | '"binding"' ':' '"inout"' ',' | '"binding"' ':' '"out"' ','
   ;
+
 opt_arg_origin: | arg_origin
   ;
 
@@ -640,6 +641,7 @@ enum_value: '{'
              '"value"' ':' num_literal
             '}'
   ;
+
 opt_declare_procs: | declare_procs
   ;
 
@@ -656,8 +658,10 @@ declare_proc: '{'
 
 opt_declare_funcs:  | declare_funcs
   ;
+
 declare_funcs: declare_func | declare_func ',' declare_funcs
   ;
+
 declare_func: '{'
           '"name"' ':' STRING_LITERAL ','
           '"args"' ':' '[' opt_complex_args ']' ','
