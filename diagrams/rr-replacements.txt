@@ -1,0 +1,24 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+# This converts the railroads output to standard looking html
+# Some of the xhtml output just doesn't parse in most versions of Chrome
+# when it's embedded on the page like we do.  So we strip out the header
+# and replace it with something more normal looking as well as some
+# internal node names.  This was done by comparing what Chrome has in
+# its dom after a successful load with the raw output of the railroads tool.
+
+1,2d
+s_ xmlns:xhtml="http://www.w3.org/1999/xhtml"__g
+s_ xmlns:svg="http://www.w3.org/2000/svg"__g
+s_ xmlns="http://www.w3.org/2000/svg"__g
+s_ xmlns:xlink="http://www.w3.org/1999/xlink"__g
+s_ xmlns="http://www.w3.org/1999/xhtml"__g
+s_<xhtml:_<_g
+s_</xhtml:_</_g
+s_svg:path_path_g
+s_xlink:__g
+/<\/style><svg>/,/<\/style>/d
+s_.*</defs></svg></head>_</style></head>_
