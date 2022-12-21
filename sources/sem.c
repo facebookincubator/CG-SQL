@@ -2538,6 +2538,7 @@ static sem_struct * new_sem_struct(CSTR name, uint32_t count) {
   sptr->names = _ast_pool_new_array(CSTR, count);
   sptr->kinds = _ast_pool_new_array(CSTR, count);
   sptr->semtypes = _ast_pool_new_array(sem_t, count);
+  sptr->is_backed = false;
 
   for (int32_t i = 0; i < count; i++) {
     sptr->names[i] = NULL;
