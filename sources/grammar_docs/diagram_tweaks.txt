@@ -1,0 +1,29 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+# First we get rid of all of the versions of the operators that do not have NOT
+
+s/math_expr "BETWEEN" math_expr "AND" math_expr \|//
+s/math_expr "IS" math_expr \|//
+s/math_expr "LIKE" math_expr \|//
+s/math_expr "MATCH" math_expr \|//
+s/math_expr "GLOB" math_expr \|//
+s/math_expr "REGEXP" math_expr \|//
+s/math_expr "IN" '(' expr_list ')' \|//
+s/math_expr "IN" '(' select_stmt ')' \|//
+s/math_expr "IS TRUE" \|//
+s/math_expr "IS FALSE" \|//
+
+# then we make all the NOT versions have optional NOT
+
+s/math_expr "IS NOT" /math_expr "IS" "NOT" ? /g
+s/math_expr "IS NOT TRUE"/math_expr "IS" "NOT" ? "TRUE"/g
+s/math_expr "IS NOT FALSE"/math_expr "IS" "NOT" ? "FALSE"/g
+s/math_expr "NOT BETWEEN"/math_expr "NOT" ? "BETWEEN"/
+s/math_expr "NOT LIKE"/math_expr "NOT" ? "LIKE"/
+s/math_expr "NOT MATCH"/math_expr "NOT" ? "MATCH"/
+s/math_expr "NOT GLOB"/math_expr "NOT" ? "GLOB"/
+s/math_expr "NOT REGEXP"/math_expr "NOT" ? "REGEXP"/
+s/math_expr "NOT IN" '(' /math_expr "NOT" ? "IN" '(' /g

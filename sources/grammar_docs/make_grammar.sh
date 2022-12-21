@@ -11,6 +11,8 @@ set -e
 DIR="$( dirname -- "$0"; )"
 cd "${DIR}" || exit
 
+mkdir -p ../out
+
 echo compiling yacc stripper
 (cd ..; make out/ys)
 
