@@ -6630,7 +6630,7 @@ create table details(
    details text
 );
 
-create proc get_detail(integer id_)
+create proc get_detail(id_ integer)
 begin
   select T1.id, T1.details, T2.name from details T1
   inner join main T2 on T1.id = T2.id
@@ -6646,7 +6646,7 @@ create table f1(
    f1_info text
 );
 
-create proc get_detail(integer id_)
+create proc get_detail(id_ integer)
 begin
   select T1.id, T1.details, T2.name, f1_info from details T1
   inner join f T2 on T1.id = T2.id
@@ -10186,7 +10186,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Dec 16 21:11:50 PST 2022
+Snapshot as of Wed Dec 28 17:13:03 PST 2022
 
 ### Operators and Literals
 
@@ -16640,7 +16640,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Dec 16 21:11:50 PST 2022
+Snapshot as of Wed Dec 28 17:13:04 PST 2022
 
 ### Rules
 
