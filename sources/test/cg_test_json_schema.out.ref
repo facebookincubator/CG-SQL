@@ -5768,6 +5768,7 @@
     @UNSUB(t_for_unsub)
 
     {
+      "name" : "t_for_unsub_region0",
       "type" : "unsub",
       "table" : "t_for_unsub",
       "region" : "region0",

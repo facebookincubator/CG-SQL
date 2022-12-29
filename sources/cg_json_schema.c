@@ -586,6 +586,7 @@ static void cg_json_subscriptions(charbuf* output) {
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
+    bprintf(output, "\"name\" : \"%s_%s\",\n", name, ast->sem->region);
     bprintf(output, "\"type\" : \"unsub\",\n");
     bprintf(output, "\"table\" : \"%s\"", name);
     if (region) {
@@ -1726,7 +1727,7 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
   }
 
   bprintf(output, "\"name\" : \"%s\",\n", name);
-  
+
   if (infos) {
     CSTR base_name = infos[0];
     CSTR shape_name = infos[1];
@@ -1776,7 +1777,7 @@ static bool_t cg_json_params(charbuf *output, ast_node *ast, CSTR *infos) {
     // There are 3 strings per arg, one each for the shape name, shape type, and base name
     // these desribe how automatically generated arguments were created.
     if (infos) {
-      infos += 3; 
+      infos += 3;
     }
   }
   END_LIST;
@@ -2211,20 +2212,20 @@ static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
   charbuf *output = &declare_func_buffer;
 
   bprintf(output, "\"name\" : \"%s\"", name);
-  
+
   // emit parameters.
   bprintf(output, ",\n\"args\" : [\n");
   BEGIN_INDENT(parms, 2);
   cg_json_params(output, params, NULL);
   END_INDENT(parms);
   bprintf(output, "]");
-  
+
   // emit attributes.
   if (misc_attrs) {
     bprintf(output, ",\n");
     cg_json_misc_attrs(output, misc_attrs);
   }
-  
+
   // emit return type.
   ast_node *data_type_ast = func_params_return->right;
   if (is_ast_create_data_type(data_type_ast)) {
@@ -2246,14 +2247,14 @@ static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
   } else {
     bprintf(output, ",\n\"createsObject\" : %d", 0);
   }
-  
+
   // add this function to the list.
   output = declare_funcs;
   cg_begin_proc(output, ast, misc_attrs);
   BEGIN_INDENT(func, 2);
   bprintf(output, "%s", declare_func_buffer.ptr);
   END_INDENT(func);
-  
+
   // clean up
   CHARBUF_CLOSE(declare_func_buffer);
   cg_end_proc(output, ast);
@@ -2262,7 +2263,7 @@ static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
 static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
-  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);  
+  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -2279,20 +2280,20 @@ static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
   cg_json_params(output, params, NULL);
   END_INDENT(parms);
   bprintf(output, "]");
-  
+
   // emit attributes.
   if (misc_attrs) {
     bprintf(output, ",\n");
     cg_json_misc_attrs(output, misc_attrs);
   }
-  
+
   // emit projections.
   sem_t sem_type = ast->sem->sem_type;
   bool_t has_any_result_set = !!ast->sem->sptr;
   if (has_any_result_set) {
     cg_json_projection(output, ast);
   }
-  
+
   // emit use db or not.
   bprintf(output, ",\n\"usesDatabase\" : %d", !!(sem_type & SEM_TYPE_DML_PROC));
 
@@ -2302,7 +2303,7 @@ static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
   BEGIN_INDENT(proc, 2);
   bprintf(output, "%s", declare_proc_buffer.ptr);
   END_INDENT(proc);
-  
+
   // cleanup
   CHARBUF_CLOSE(declare_proc_buffer);
   cg_end_proc(output, ast);
@@ -2498,10 +2499,10 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
       cg_json_declare_vars_type(&attributes_buf, stmt, misc_attrs);
     } else if (is_ast_declare_interface_stmt(stmt)) {
       cg_json_declare_interface(stmt, misc_attrs);
-    } 
+    }
     else if (is_ast_declare_proc_stmt(stmt)) {
       cg_json_declare_proc(stmt, misc_attrs);
-    } 
+    }
     else if (is_ast_declare_func_stmt(stmt)) {
       cg_json_declare_funcs(stmt, misc_attrs);
     }
@@ -2534,11 +2535,11 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   bprintf(output, "\"general\" : [\n");
   bindent(output, general, 2);
   bprintf(output, "\n],\n");
-  
+
   bprintf(output, "\"declareProcs\" : [\n");
   bindent(output, declare_procs, 2);
   bprintf(output, "\n],\n");
-  
+
   bprintf(output, "\"declareFuncs\" : [\n");
   bindent(output, declare_funcs, 2);
   bprintf(output, "\n],\n");
@@ -2557,7 +2558,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   CHARBUF_CLOSE(update_buf);
   CHARBUF_CLOSE(insert_buf);
   CHARBUF_CLOSE(query_buf);
-  
+
   // Ensure the globals do not hold any pointers so that leaksan will find any leaks
   // All of these have already been freed (above)
   queries = NULL;
