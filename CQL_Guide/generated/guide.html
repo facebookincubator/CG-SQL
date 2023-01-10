@@ -13420,7 +13420,7 @@ that SQL with UDFs will run in a simple context</li>
 <p>What follows is taken from a grammar snapshot with the tree building
 rules removed. It should give a fair sense of the syntax of CQL (but not
 semantic validation).</p>
-<p>Snapshot as of Thu Dec 29 12:29:28 PST 2022</p>
+<p>Snapshot as of Tue Jan 10 09:29:01 PST 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -20293,7 +20293,7 @@ Grammar</h2>
 -->
 <p>What follows is taken from the JSON validation grammar with the tree
 building rules removed.</p>
-<p>Snapshot as of Thu Dec 29 12:29:28 PST 2022</p>
+<p>Snapshot as of Tue Jan 10 09:29:05 PST 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -20982,7 +20982,6 @@ subscriptions: subscription | subscription &#39;,&#39; subscriptions
   ;
 
 subscription: &#39;{&#39;
-     &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
      &#39;&quot;type&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
      &#39;&quot;table&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
      opt_region_info

@@ -10186,7 +10186,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Dec 29 12:29:28 PST 2022
+Snapshot as of Tue Jan 10 09:29:01 PST 2023
 
 ### Operators and Literals
 
@@ -16640,7 +16640,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Dec 29 12:29:28 PST 2022
+Snapshot as of Tue Jan 10 09:29:05 PST 2023
 
 ### Rules
 
@@ -17332,7 +17332,6 @@ subscriptions: subscription | subscription ',' subscriptions
   ;
 
 subscription: '{'
-     '"name"' ':' STRING_LITERAL ','
      '"type"' ':' STRING_LITERAL ','
      '"table"' ':' STRING_LITERAL ','
      opt_region_info

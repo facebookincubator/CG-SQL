@@ -753,7 +753,6 @@ subscriptions: subscription | subscription ',' subscriptions
   ;
 
 subscription: '{'
-     NAME STRING_LITERAL ','
      TYPE STRING_LITERAL ','
      TABLE STRING_LITERAL ','
      opt_region_info
