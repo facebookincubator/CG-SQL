@@ -486,6 +486,15 @@ BEGIN
     SET proposed := 7;
 END;
 
+CREATE PROCEDURE test_fetch_changed_facets()
+BEGIN
+    SELECT T1.facet FROM
+      test_cql_schema_facets T1
+      LEFT OUTER JOIN test_cql_schema_facets_saved T2
+        ON T1.facet = T2.facet
+      WHERE T1.version is not T2.version;
+END;
+
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
 BEGIN
@@ -498,11 +507,7 @@ BEGIN
     CALL test_perform_upgrade_steps(include_virtual_tables);
 
     -- finally produce the list of differences
-    SELECT T1.facet FROM
-      test_cql_schema_facets T1
-      LEFT OUTER JOIN test_cql_schema_facets_saved T2
-        ON T1.facet = T2.facet
-      WHERE T1.version is not T2.version;
+    CALL test_fetch_changed_facets();
   END IF;
 END;
 

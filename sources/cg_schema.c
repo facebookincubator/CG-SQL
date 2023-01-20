@@ -2040,6 +2040,15 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "    SET proposed := %d;\n", max_schema_version);
   bprintf(&main, "END;\n\n");
 
+  bprintf(&main, "CREATE PROCEDURE %s_fetch_changed_facets()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "    SELECT T1.facet FROM\n");
+  bprintf(&main, "      %s_cql_schema_facets T1\n", global_proc_name);
+  bprintf(&main, "      LEFT OUTER JOIN %s_cql_schema_facets_saved T2\n", global_proc_name);
+  bprintf(&main, "        ON T1.facet = T2.facet\n", global_proc_name);
+  bprintf(&main, "      WHERE T1.version is not T2.version;\n");
+  bprintf(&main, "END;\n\n");
+
   bprintf(&main, "@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
@@ -2051,11 +2060,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "    CALL %s_save_cql_schema_facets();\n", global_proc_name);
   bprintf(&main, "    CALL %s_perform_upgrade_steps(include_virtual_tables);\n\n", global_proc_name);
   bprintf(&main, "    -- finally produce the list of differences\n");
-  bprintf(&main, "    SELECT T1.facet FROM\n");
-  bprintf(&main, "      %s_cql_schema_facets T1\n", global_proc_name);
-  bprintf(&main, "      LEFT OUTER JOIN %s_cql_schema_facets_saved T2\n", global_proc_name);
-  bprintf(&main, "        ON T1.facet = T2.facet\n", global_proc_name);
-  bprintf(&main, "      WHERE T1.version is not T2.version;\n");
+  bprintf(&main, "    CALL %s_fetch_changed_facets();\n", global_proc_name);
   bprintf(&main, "  END IF;\n");
   bprintf(&main, "END;\n\n");
 
