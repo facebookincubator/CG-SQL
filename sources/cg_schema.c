@@ -2049,6 +2049,11 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "      WHERE T1.version is not T2.version;\n");
   bprintf(&main, "END;\n\n");
 
+  bprintf(&main, "CREATE PROCEDURE %s_fetch_rebuilt_facets()\n", global_proc_name);
+  bprintf(&main, "BEGIN\n");
+  bprintf(&main, "    SELECT rebuild_facet FROM cql_schema_rebuilt_tables;\n");
+  bprintf(&main, "END;\n\n");
+
   bprintf(&main, "@attribute(cql:private)\n");
   bprintf(&main, "CREATE PROCEDURE %s_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)\n", global_proc_name);
   bprintf(&main, "BEGIN\n");
