@@ -1194,6 +1194,11 @@ BEGIN
       WHERE T1.version is not T2.version;
 END;
 
+CREATE PROCEDURE test_fetch_rebuilt_facets()
+BEGIN
+    SELECT rebuild_facet FROM cql_schema_rebuilt_tables;
+END;
+
 @attribute(cql:private)
 CREATE PROCEDURE test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
 BEGIN
