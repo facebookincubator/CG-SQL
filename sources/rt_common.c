@@ -8,7 +8,6 @@
 #include "cql.h"
 #include "cg_common.h"
 #include "cg_c.h"
-#include "cg_java.h"
 #include "cg_json_schema.h"
 #include "cg_lua.h"
 #include "cg_objc.h"
@@ -186,67 +185,6 @@ static rtdata rt_objc_mit = {
   .cql_result_set_note_ownership_transferred = "cql_result_set_note_ownership_transferred",
 };
 
-static rtdata rt_java = {
-  .name = "java",
-  .code_generator = &cg_java_main,
-  .required_file_names_count = 1,
-  .source_prefix =
-    RT_IP_NOTICE("//")
-    RT_SIGNSRC("//") "\n",
-  .source_wrapper_begin =
-    "package %s;\n\n"
-    "import " RT_JAVA_RT_PACKAGE ".CQLResultSet;\n"
-    "import " RT_JAVA_RT_PACKAGE ".CQLViewModel;\n"
-    "import javax.annotation.Nullable;"
-    "%s"
-    "\n\n",
-  .symbol_case = cg_symbol_case_camel,
-  .generate_type_getters = 1,
-  .generate_equality_macros = 1,
-  .register_proc_name = RT_REGISTER_PROC_NAME,
-  .proc_should_generate_copy = RT_SHOULD_GENERATE_COPY,
-  .symbol_prefix = "",
-  .impl_symbol_prefix = "",
-  .cql_bool = "boolean",
-  .cql_int32 = "int",
-  .cql_int64 = "long",
-  .cql_double = "double",
-  .cql_code = "int",
-  .cql_blob_ref = "byte[]",
-  .cql_object_ref = "Object",
-  .cql_string_ref = "String",
-  .cql_string_ref_encode = "EncodedString",
-  .cql_string_ref_encode_include =
-    "\nimport " RT_JAVA_RT_PACKAGE ".EncodedString;",
-  .cql_result_set_get_count =
-    "%s {\n"
-    "  return mResultSet.getCount();\n"
-    "}\n\n",
-  .cql_result_set_get_data =
-    "%s {\n"
-    "  return mResultSet.get%s(%s, %s);\n"
-    "}\n\n",
-  .cql_bool_nullable = "Boolean",
-  .cql_int32_nullable = "Integer",
-  .cql_int64_nullable = "Long",
-  .cql_double_nullable = "Double",
-  .cql_result_set_has_identity_columns =
-    "@Override\n"
-    "protected boolean hasIdentityColumns() {\n"
-    "  return %s;\n"
-    "}\n\n",
-  .cql_result_set_copy =
-    "@Nullable\n"
-    "public %s copy(int row, int count) {\n"
-    "  CQLResultSet resultSet = mResultSet.copy(row, count);\n"
-    "  if (resultSet == null) {\n"
-    "    return null;\n"
-    "  }\n"
-    "  return new %s(resultSet);\n"
-    "}\n\n",
-  .cql_target_null = "null",
-};
-
 static rtdata rt_schema_upgrade = {
   .name = "schema_upgrade",
   .code_generator = &cg_schema_upgrade_main,
@@ -328,7 +266,6 @@ static rtdata *(rt_all[]) = {
   &rt_c,
   &rt_objc,
   &rt_objc_mit,
-  &rt_java,
   &rt_lua,
   &rt_schema_upgrade,
   &rt_schema_sqlite,

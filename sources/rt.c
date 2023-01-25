@@ -19,8 +19,6 @@
 #define RT_SHOULD_GENERATE_COPY NULL
 #define RT_REGISTER_PROC_NAME NULL
 
-#define RT_JAVA_RT_PACKAGE "com.facebook.cgsql"
-
 #define RT_EXTRAS
 #define RT_EXTRA_CLEANUP
 

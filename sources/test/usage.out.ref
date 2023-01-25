@@ -35,9 +35,6 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --rt objc
   Objective-C wrappers for result sets produced by the stored procedures in the input
   requires one output file (foo.h)
---rt java
-  java wrappers for result sets produced by the stored procedures in the input
-  requires one output file (foo.java)
 --rt json_schema
   produces JSON output suitable for consumption by downstream codegen tools
   requires one output file (foo.json)
@@ -69,10 +66,6 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --schema_exclusive
   the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things
   used with --rt schema_upgrade
---java_package_name name
-  specifies the name of package a generated java class will be a part of
---java_fragment_interface_mode
-  sets the Java codegen mode to generate interfaces for base and extension fragments
 --c_include_namespace
   for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>
 --c_include_path

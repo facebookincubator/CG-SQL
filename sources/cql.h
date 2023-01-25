@@ -98,9 +98,6 @@ typedef struct cmd_options {
   char *c_include_path;
   char *objc_c_include_path;
   char *c_include_namespace;
-  char *java_class_under_test;
-  char *java_package_name;
-  bool_t java_fragment_interface_mode;
   char *cqlrt;
   bool_t dev;                           // option use to activate features in development or dev features
 } cmd_options;
@@ -567,19 +564,6 @@ typedef struct rtdata {
   // @param new_value the new blob value to be set.
   // void cql_result_set_set_blob(cql_result_set_ref result_set, int32_t row, int32_t col, cql_blob new_value)
   const char *cql_result_set_set_blob;
-
-  // The java type for a nullable boolean value.
-  const char *cql_bool_nullable;
-  // The java type for a nullable int value.
-  const char *cql_int32_nullable;
-  // The java type for a nullable long value.
-  const char *cql_int64_nullable;
-  // The java type for a nullable double value.
-  const char *cql_double_nullable;
-  // Template for the java method hasIdentityColumns.
-  const char *cql_result_set_has_identity_columns;
-  // Template for the java method copy.
-  const char *cql_result_set_copy;
 
   // The target type for NULL object value.
   const char *cql_target_null;

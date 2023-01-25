@@ -265,9 +265,6 @@ cql_noexport void cg_common_init(void);
 // cleanup the global state
 cql_noexport void cg_common_cleanup(void);
 
-// Extract the last portion of a Unix path, without its extension
-cql_noexport void extract_base_path_without_extension(charbuf *_Nonnull output, CSTR _Nonnull file_name);
-
 // Exit if any semantic errors
 cql_noexport void cql_exit_on_semantic_errors(ast_node *_Nullable head);
 

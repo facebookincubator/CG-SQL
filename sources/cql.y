@@ -47,7 +47,6 @@
 #include "ast.h"
 #include "cg_common.h"
 #include "cg_c.h"
-#include "cg_java.h"
 #include "cg_schema.h"
 #include "cg_json_schema.h"
 #include "cg_test_helpers.h"
@@ -2447,7 +2446,7 @@ static void parse_cmd(int argc, char **argv) {
     } else if (strcmp(arg, "--cqlrt") == 0) {
       a = gather_arg_param(a, argc, argv, &options.cqlrt, "for the name of the runtime header");
     } else if (strcmp(arg, "--rt") == 0) {
-      a = gather_arg_param(a, argc, argv, &options.rt, "(e.g., c, objc, java, json_schema)");
+      a = gather_arg_param(a, argc, argv, &options.rt, "(e.g., c, objc, json_schema)");
       rt = find_rtdata(options.rt);
       if (!rt) {
         cql_error("unknown cg runtime '%s'\n", options.rt);
@@ -2488,10 +2487,6 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_param(a, argc, argv, &options.objc_c_include_path, "for the include path of a C header");
     } else if (strcmp(arg, "--c_include_namespace") == 0) {
       a = gather_arg_param(a, argc, argv, &options.c_include_namespace, "for the C include namespace");
-    } else if (strcmp(arg, "--java_package_name") == 0) {
-      a = gather_arg_param(a, argc, argv, &options.java_package_name, "for the Java package name");
-    } else if (strcmp(arg, "--java_fragment_interface_mode") == 0) {
-      options.java_fragment_interface_mode = true;
     } else {
       cql_error("unknown arg '%s'\n", argv[a]);
       cql_cleanup_and_exit(1);
@@ -2570,7 +2565,6 @@ int cql_main(int argc, char **argv) {
   parse_cleanup();
   gen_cleanup();
   rt_cleanup();
-  cg_java_cleanup();
 
 #ifdef CQL_AMALGAM
   // the variables need to be set back to zero so we can
@@ -2828,9 +2822,6 @@ static void cql_usage() {
     "--rt objc\n"
     "  Objective-C wrappers for result sets produced by the stored procedures in the input\n"
     "  requires one output file (foo.h)\n"
-    "--rt java\n"
-    "  java wrappers for result sets produced by the stored procedures in the input\n"
-    "  requires one output file (foo.java)\n"
     "--rt json_schema\n"
     "  produces JSON output suitable for consumption by downstream codegen tools\n"
     "  requires one output file (foo.json)\n"
@@ -2862,10 +2853,6 @@ static void cql_usage() {
     "--schema_exclusive\n"
     "  the schema upgrade script assumes it owns all the schema in the database, it aggressively removes other things\n"
     "  used with --rt schema_upgrade\n"
-    "--java_package_name name\n"
-    "  specifies the name of package a generated java class will be a part of\n"
-    "--java_fragment_interface_mode\n"
-    "  sets the Java codegen mode to generate interfaces for base and extension fragments\n"
     "--c_include_namespace\n"
     "  for the C codegen runtimes, headers will be referenced as #include <namespace/file.h>\n"
     "--c_include_path\n"

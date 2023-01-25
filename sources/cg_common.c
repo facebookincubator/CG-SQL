@@ -132,48 +132,6 @@ cql_noexport void cg_common_init(void)
 cql_noexport void cg_no_op(ast_node * ast) {
 }
 
-cql_noexport void extract_base_path_without_extension(charbuf *_Nonnull output, CSTR _Nonnull file_name) {
-  size_t file_name_length = strlen(file_name);
-
-  Contract(file_name_length > 0);
-
-  CSTR last_slash_ptr = strrchr(file_name, '/');
-
-  // Slash cannot be the last character of the string
-  if (last_slash_ptr == &file_name[file_name_length - 1] ) {
-    cql_error("badly formed file name (trailing '/') '%s'\n", file_name);
-    cql_cleanup_and_exit(1);
-  }
-
-  size_t begin_index = last_slash_ptr ? (size_t)(last_slash_ptr - file_name) + 1 : 0;
-
-  CSTR last_dot_ptr = strrchr(file_name, '.');
-
-  // Dot cannot be the last character of the string
-  if (last_dot_ptr == &file_name[file_name_length - 1] ) {
-    cql_error("badly formed file name (trailing '.') '%s'\n", file_name);
-    cql_cleanup_and_exit(1);
-  }
-
-  size_t end_index = file_name_length;
-  if (last_dot_ptr) {
-    size_t last_dot_index = (size_t)(last_dot_ptr - file_name);
-
-    if (last_dot_index >= begin_index) {
-      end_index = last_dot_index;
-    }
-  }
-
-  if (end_index == begin_index) {
-    cql_error("badly formed file name (empty base name) '%s'\n", file_name);
-    cql_cleanup_and_exit(1);
-  }
-
-  for (size_t i = begin_index; i < end_index; i++) {
-    bputc(output, file_name[i]);
-  }
-}
-
 cql_noexport void cql_exit_on_semantic_errors(ast_node *head) {
   if (head && is_error(head)) {
     cql_error("semantic errors present; no code gen.\n");
