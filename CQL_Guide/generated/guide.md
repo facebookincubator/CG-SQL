@@ -10075,12 +10075,6 @@ NOTE: different result types require a different number of output files with dif
 * some codegen features only make sense during development, this enables dev mode to turn those one
 ** example: [explain query plan](/cql-guide/ch15)
 
-### --java_package_name name
-* used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
-
-### --java_fragment_interface_mode
-* Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.
-
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
 * if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
@@ -10120,11 +10114,6 @@ These are the various outputs the compiler can produce.
 * objective C wrappers for result sets produced by the stored procedures in the input
 * these depend on the output of a standard codegen run so this is additive
 * requires one output file (foo.h)
-
-#### --rt java
-* java wrappers for result sets produced by the stored procedures in the input
-* these depend on the output of a standard codegen run so this is additive
-* requires one output file (foo.java)
 
 #### --rt schema
 * produces the canonical schema for the given input files
@@ -19558,7 +19547,6 @@ The options are:
 * `CQL_AMALGAM_CG_C` : C codegen
 * `CQL_AMALGAM_CG_COMMON` : common code generator pieces
 * `CQL_AMALGAM_GEN_SQL` : the echoing features
-* `CQL_AMALGAM_JAVA` : Java code gen
 * `CQL_AMALGAM_JSON` : JSON schema output
 * `CQL_AMALGAM_OBJC` : Objective-C code gen
 * `CQL_AMALGAM_QUERY_PLAN` : the query plan creator
@@ -19907,6 +19895,3 @@ unique to your runtime.
 
 There are tracing macros to help with debugability.  Providing some
 useful versions of those can be of great help in production environments.
-
-
-
