@@ -6,6 +6,7 @@
 
 rm -f CGSQLMain.class
 rm -f CQLResultSet.java
+rm -f TestResult.h
 rm -f TestResult.class
 rm -f TestResult.o
 rm -f com/facebook/cgsql/CQLResultSet.class
