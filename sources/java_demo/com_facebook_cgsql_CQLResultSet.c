@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+// !!! THIS FILE IS NOT AUTO GENERATED, only the .h file is !!!
+
 #include "com_facebook_cgsql_CQLResultSet.h"
 #include "cqlrt.h"
 
