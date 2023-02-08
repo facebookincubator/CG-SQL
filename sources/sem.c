@@ -19656,6 +19656,36 @@ static void sem_misc_attrs_vault_sensitive(
   }
 }
 
+// Validates cql:alias_of attribute.
+// The attribute can only be used in a declare func statement.
+// It also must have a non-empty string argument.
+static void sem_misc_attrs_alias_of(
+    CSTR misc_attr_prefix,
+    CSTR misc_attr_name,
+    ast_node *ast_misc_attr_values,
+    ast_node *misc_attrs,
+    ast_node *any_stmt) {
+
+  Contract(misc_attr_name);
+  Contract(any_stmt);
+  Contract(misc_attrs);
+
+  if (is_ast_stmt_and_attr(misc_attrs->parent)) {
+    ast_node *stmt = misc_attrs->parent->right;
+    if (!is_ast_declare_func_stmt(stmt) && !is_ast_declare_proc_stmt(stmt)) {
+      report_error(misc_attrs, "CQL0499: alias_of attribute may only be added to a declare function or declare proc statement", NULL);
+      record_error(misc_attrs);
+      return;
+    }
+  }
+
+  if (!is_ast_str(ast_misc_attr_values)) {
+      report_error(misc_attrs, "CQL0500: alias_of attribute must be a non-empty string argument.", NULL);
+      record_error(misc_attrs);
+      return;
+  }
+}
+
 // Semantic anlysis of ok_table_scan and no_table_scan attribution.
 // ok_table_scan: can only be assigned to a create proc statement and
 // the value can only be table names.
@@ -25381,6 +25411,7 @@ cql_noexport void sem_main(ast_node *ast) {
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);
   MISC_ATTR_INIT(vault_sensitive);
+  MISC_ATTR_INIT(alias_of);
 
   if (ast) {
     sem_stmt_list(ast);

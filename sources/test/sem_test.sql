@@ -23808,3 +23808,43 @@ update simple_backed_table set id = 5 from update_test_1;
 -- + error: % strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 -- +1 error:
 UPDATE update_from_target SET name = update_test_2.name FROM update_test_1;
+
+-- TEST: cql:alias_of attribution on declare_func_stmt
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- + {name cql}
+-- + {name alias_of}
+-- + {name some_native_func}: ok
+-- + {declare_func_stmt}: integer notnull
+-- - error:
+@attribute(cql:alias_of=some_native_func)
+declare function an_alias_func(x int not null) int not null;
+
+-- TEST: cql:alias_of attribution on declare proc stmt
+-- + {stmt_and_attr}: ok
+-- + {misc_attrs}: ok
+-- + {name cql}
+-- + {name alias_of}
+-- + {name some_native_func}: ok
+-- + {declare_proc_stmt}: ok
+-- - error:
+@attribute(cql:alias_of=some_native_func)
+declare proc an_alias_proc(x int not null);
+
+-- TEST: cql:alias_of attribution on invalid statement
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {declare_select_func_stmt}: err
+-- error: % alias_of attribute may only be added to a declare function statement
+-- +1 error:
+@attribute(cql:alias_of=barfoo)
+declare select function foobaz(x int not null) int not null;
+
+-- TEST: cql:alias_of attribution invalid value
+-- + {stmt_and_attr}: err
+-- + {misc_attrs}: err
+-- + {declare_func_stmt}: err
+-- error: % alias_of attribute must be a non-empty string argument
+-- +1 error:
+@attribute(cql:alias_of)
+declare function an_alias_func_bad(x int not null) int not null;

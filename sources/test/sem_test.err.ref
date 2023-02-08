@@ -1717,4 +1717,6 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a str
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'table_does_not_exist'
 test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0497: FROM clause not supported when updating backed table 'simple_backed_table'
 test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
+test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may only be added to a declare function or declare proc statement
+test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute must be a non-empty string argument.
 semantic errors present; no code gen.

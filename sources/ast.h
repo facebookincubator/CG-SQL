@@ -482,6 +482,12 @@ cql_noexport uint32_t find_identity_columns(
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable callback_context);
 
+cql_noexport uint32_t find_cql_alias_of(
+  ast_node *_Nonnull misc_attr_list,
+  find_ast_str_node_callback _Nonnull callback,
+  void *_Nullable context
+);
+
 cql_noexport uint32_t find_attribute_str(
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,

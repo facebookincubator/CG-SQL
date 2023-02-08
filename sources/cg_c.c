@@ -4035,6 +4035,22 @@ static void cg_create_proc_stmt(ast_node *ast) {
   c_prepared_statement_index = c_prepared_statement_index_saved;
 }
 
+static void cg_alias_of_callback(
+  CSTR _Nonnull func_name, // underlying name of function this alias is of
+  ast_node* _Nonnull misc_attr_value,
+  void* _Nullable context // func ast
+) {
+  CSTR alias_name = (CSTR) context;
+
+  CG_CHARBUF_OPEN_SYM(alias_sym, alias_name);
+  CG_CHARBUF_OPEN_SYM(func_sym, func_name);
+
+  bprintf(cg_fwd_ref_output, "#define %s %s\n", alias_sym.ptr, func_sym.ptr);
+
+  CHARBUF_CLOSE(func_sym);
+  CHARBUF_CLOSE(alias_sym);
+}
+
 // Here we have to emit the prototype for the declared function as a C prototype
 // this is just like our stored procs but we also have a return type.  See cg_declare_proc_stmt
 // for a comparison.
@@ -4043,6 +4059,7 @@ static void cg_declare_func_stmt(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT(params, func_params_return->left);
+  EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
   sem_t sem_type_return = func_params_return->right->sem->sem_type;
 
@@ -4061,6 +4078,11 @@ static void cg_declare_func_stmt(ast_node *ast) {
   }
 
   bprintf(cg_fwd_ref_output, "%s%s);\n", rt->symbol_visibility, func_decl.ptr);
+
+  // Find existing cql:alias_of attribute and print appropriate #define macro.
+  if (misc_attrs) {
+    find_cql_alias_of(misc_attrs, cg_alias_of_callback, (void *) name);
+  }
 
   CHARBUF_CLOSE(func_sym);
   CHARBUF_CLOSE(func_decl);
@@ -4132,6 +4154,11 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   }
 
   cg_emit_proc_decl_from_invocation(private_proc, proc_decl.ptr);
+
+  // Find existing cql:alias_of attribute and print appropriate #define macro.
+  if (misc_attrs) {
+    find_cql_alias_of(misc_attrs, cg_alias_of_callback, (void *) name);
+  }
 
   current_proc = NULL;
 

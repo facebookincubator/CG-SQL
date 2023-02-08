@@ -94871,3 +94871,102 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FRO
       | {update_where}
         | {update_orderby}
 
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:alias_of=some_native_func)
+DECLARE FUNC an_alias_func (x INTEGER NOT NULL) INTEGER NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name alias_of}
+  |   | {name some_native_func}: ok
+  | {declare_func_stmt}: integer notnull
+    | {name an_alias_func}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: x: integer notnull variable in
+      |   | {param_detail}: x: integer notnull variable in
+      |     | {name x}: x: integer notnull variable in
+      |     | {notnull}: integer notnull
+      |       | {type_int}: integer
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:alias_of=some_native_func)
+DECLARE PROC an_alias_proc (x INTEGER NOT NULL);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name alias_of}
+  |   | {name some_native_func}: ok
+  | {declare_proc_stmt}: ok
+    | {proc_name_type}
+    | | {name an_alias_proc}: ok
+    | | {int 0}
+    | {proc_params_stmts}
+      | {params}: ok
+        | {param}: x: integer notnull variable in
+          | {param_detail}: x: integer notnull variable in
+            | {name x}: x: integer notnull variable in
+            | {notnull}: integer notnull
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:alias_of=barfoo)
+DECLARE SELECT FUNC foobaz (x INTEGER NOT NULL) INTEGER NOT NULL;
+
+test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may only be added to a declare function or declare proc statement
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |   | | {name cql}
+  |   | | {name alias_of}
+  |   | {name barfoo}: ok
+  | {declare_select_func_stmt}: err
+    | {name foobaz}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      |   | {param_detail}
+      |     | {name x}
+      |     | {notnull}
+      |       | {type_int}
+      | {notnull}
+        | {type_int}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:alias_of)
+DECLARE FUNC an_alias_func_bad (x INTEGER NOT NULL) INTEGER NOT NULL;
+
+test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute must be a non-empty string argument.
+
+  {stmt_and_attr}: err
+  | {misc_attrs}: err
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name alias_of}
+  | {declare_func_stmt}: err
+    | {name an_alias_func_bad}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      |   | {param_detail}
+      |     | {name x}
+      |     | {notnull}
+      |       | {type_int}
+      | {notnull}
+        | {type_int}
+

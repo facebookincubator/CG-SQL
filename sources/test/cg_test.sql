@@ -5853,3 +5853,7 @@ create proc end_proc() begin end;
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
 declare end_marker integer;
 --------------------------------------------------------------------
+
+-- TEST: cql:alias_of attribution
+@attribute(cql:alias_of=some_native_func)
+declare function an_alias_func(x int not null) int not null;

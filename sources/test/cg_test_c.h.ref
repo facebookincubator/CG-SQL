@@ -3985,3 +3985,5 @@ extern void end_proc(void);
 
 // The statement ending at line XXXX
 extern cql_nullable_int32 end_marker;
+
+// The statement ending at line XXXX

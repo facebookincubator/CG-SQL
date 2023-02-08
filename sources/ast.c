@@ -613,6 +613,14 @@ cql_noexport uint32_t find_identity_columns(
   return find_attribute_str(misc_attr_list, callback, context, "identity");
 }
 
+cql_noexport uint32_t find_cql_alias_of(
+  ast_node *_Nonnull misc_attr_list,
+  find_ast_str_node_callback _Nonnull callback,
+  void *_Nullable context)
+{
+  return find_attribute_str(misc_attr_list, callback, context, "alias_of");
+}
+
 // Helper function to extract the shared fragment node (if any) from the misc attributes
 cql_noexport uint32_t find_shared_fragment_attr(ast_node *_Nonnull misc_attr_list)
 {
