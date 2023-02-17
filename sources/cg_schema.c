@@ -1439,7 +1439,8 @@ static void cg_schema_manage_recreate_tables(
       bprintf(&child_group_drops, "        CALL %s_%s_group_drop();\n", global_proc_name, neighbors[j]);
     }
 
-    if (strlen(child_group_drops.ptr) != 0) {
+    if (strlen(child_group_drops.ptr) != 0 || strlen(migrate_table.ptr) != 0) {
+      // Code in this if statement will only run for non-rebuilding recreate groups
       bprintf(&update_proc, "    IF NOT %s_result THEN \n", migrate_key);
       bprintf(&update_proc, child_group_drops.ptr);
       // Updating the CRC for any child group tables we dropped
@@ -1449,11 +1450,12 @@ static void cg_schema_manage_recreate_tables(
         // schema upgrade captures that these child group table facets were recreated.
         bprintf(&update_proc, "        CALL %s_cql_schema_delete_saved_facet('%s_crc');\n", global_proc_name, neighbors[j]);
       }
+      // We only want to run recreate group migration procs for non-rebuild cases (i.e. table drop is an assumed prerequisite)
+      bindent(&update_proc, &migrate_table, 2);
       bprintf(&update_proc, "    END IF; \n");
     }
     CHARBUF_CLOSE(child_group_drops);
 
-    bprintf(&update_proc, migrate_table.ptr);
     CHARBUF_CLOSE(migrate_table);
     if (is_virtual_ast(ast)) {
       cg_schema_add_recreate_table(&recreate_only_virtual_tables, table_crc, facet, update_proc, migrate_key);

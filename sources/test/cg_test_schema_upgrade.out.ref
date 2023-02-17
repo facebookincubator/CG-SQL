@@ -800,7 +800,7 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
 BEGIN
-  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 1099477246437788819 RETURN; 
+  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == -7285282401093800357 RETURN; 
   IF cql_facet_find(test_facets, 'foo_group_crc') != -5376428347335479627 THEN
     LET foo_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE TABLE recreate_backing( "
@@ -877,16 +877,18 @@ BEGIN
         "CREATE INDEX gr1_index2 ON g1 (name, id);"
       ),
       cql_compressed(""));
+    IF NOT gr1_result THEN 
 
-    -- recreate migration procedure required
-    CALL RecreateGroup1Migration();
+      -- recreate migration procedure required
+      CALL RecreateGroup1Migration();
 
+    END IF; 
     IF gr1_result THEN 
       CALL test_rebuilt_tables_insert_helper("gr1_group_crc");
     END IF;
     CALL test_cql_set_facet_version('gr1_group_crc', -5103843476505738426);
   END IF;
-  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', 1099477246437788819);
+  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', -7285282401093800357);
 END;
 
 -- recreate all the virtual @recreate tables that might have changed
