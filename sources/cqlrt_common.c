@@ -4229,7 +4229,8 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
 
   cql_code rc = SQLITE_OK;
   // Execute all delete table drops
-  for (cql_int32 i = 0; i < cql_string_list_get_count(deleteList); i++) {
+  // Note deleteList provides table drops in create order, so we must execute them in reverse.
+  for (cql_int32 i = cql_string_list_get_count(deleteList) ; --i >= 0; ) {
     cql_string_ref delete = cql_string_list_get_string(deleteList, i);
     rc = cql_exec_internal(db, delete);
     if (rc != SQLITE_OK) goto cleanup;

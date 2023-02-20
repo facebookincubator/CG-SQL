@@ -907,7 +907,7 @@ function cql_rebuild_recreate_group(db, tables, indices, deletes)
   local deleteList = _cql_create_upgrader_input_statement_list(deletes, "DROP ");
 
   local rc = sqlite3.OK
-  for i = 1, #deleteList do
+  for i = 1, #deleteList, -1 do
     rc = cql_exec(db, deleteList[i])
     if rc ~= sqlite3.OK then return rc end
   end

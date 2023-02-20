@@ -1789,9 +1789,11 @@ void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
 cql_code test_cql_rebuild_recreate_group(sqlite3 *db) {
   cql_string_ref tables = cql_string_ref_new(" CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT ); "
                                             "CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT); "
-                                            "CREATE TABLE foo(y text DEFAULT 'it''s, ('); ");
+                                            "CREATE TABLE foo(y text DEFAULT 'it''s, ('); "
+                                            "CREATE TABLE g2( id INTEGER PRIMARY KEY ); "
+                                            "CREATE TABLE use_g2( id INTEGER PRIMARY KEY REFERENCES g2 (id)); ");
   cql_string_ref indices = cql_string_ref_new("CREATE INDEX extra_index ON g1 (id); ");
-  cql_string_ref deletes = cql_string_ref_new("DROP TABLE IF EXISTS g2; ");
+  cql_string_ref deletes = cql_string_ref_new("DROP TABLE IF EXISTS g2; DROP TABLE IF EXISTS use_g2; ");
   cql_code rc;
   cql_bool result = false;
   rc = cql_exec_internal(db, tables);
