@@ -23848,26 +23848,3 @@ declare select function foobaz(x int not null) int not null;
 -- +1 error:
 @attribute(cql:alias_of)
 declare function an_alias_func_bad(x int not null) int not null;
-
-	
--- TEST: create proc with simple syntax
--- + CREATE PROC f (a TEXT NOT NULL, b LONG_INT, c INTEGER NOT NULL, d REAL, e BLOB NOT NULL @SENSITIVE, f TEXT @SENSITIVE)
--- + BEGIN
--- +   SELECT a, b
--- +   UNION ALL
--- +   SELECT "a" AS a, 1L AS b;
--- + END;
--- + {create_proc_stmt}: f: { a: text notnull, b: longint } dml_proc
--- - error:
-procedure f (
-  a: text,
-  b: long?,
-  c: int,
-  d: real?,
-  e: blob @sensitive,
-  f: my_type?
-) {
-  select a, b
-  union all
-  select "a" a, 1L b;
-}

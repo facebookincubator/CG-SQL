@@ -128,10 +128,10 @@ static void cql_reset_globals(void);
   char *sval;
 }
 
-%token <sval> ID ID_NULLABLE TRUE_ "TRUE" FALSE_ "FALSE"
+%token <sval> ID TRUE_ "TRUE" FALSE_ "FALSE"
 %token <sval> STRLIT CSTRLIT BLOBLIT
 %token <sval> INTLIT
-%token <ival> BOOL_ BOOL_NULLABLE "BOOL"
+%token <ival> BOOL_ "BOOL"
 %token <ival> AT_DUMMY_NULLABLES
 %token <ival> AT_DUMMY_DEFAULTS
 %token <sval> LONGLIT
@@ -205,7 +205,7 @@ static void cql_reset_globals(void);
 %token EXCLUDE_GROUP EXCLUDE_CURRENT_ROW EXCLUDE_TIES EXCLUDE_NO_OTHERS CURRENT_ROW UNBOUNDED PRECEDING FOLLOWING
 %token AT_BLOB_GET_KEY_TYPE AT_BLOB_GET_VAL_TYPE AT_BLOB_GET_KEY AT_BLOB_GET_VAL AT_BLOB_CREATE_KEY AT_BLOB_CREATE_VAL AT_BLOB_UPDATE_KEY AT_BLOB_UPDATE_VAL
 %token CREATE DROP TABLE WITHOUT ROWID PRIMARY KEY NULL_ "NULL" DEFAULT CHECK AT_DUMMY_SEED VIRTUAL AT_EMIT_GROUP AT_EMIT_ENUMS AT_EMIT_CONSTANTS
-%token OBJECT OBJECT_NULLABLE TEXT TEXT_NULLABLE BLOB BLOB_NULLABLE LONG_ LONG_NULLABLE INT_ INT_NULLABLE INTEGER LONG_INT LONG_INTEGER REAL REAL_NULLABLE ON UPDATE CASCADE ON_CONFLICT DO NOTHING
+%token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
 %token AS CASE WHEN FROM FROM_BLOB THEN ELSE END LEFT SWITCH
@@ -268,16 +268,16 @@ static void cql_reset_globals(void);
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
 %type <aval> name name_list opt_name_list opt_name
-%type <aval> data_type_any simple_data_type_any data_type_numeric simple_data_type_numeric data_type_with_options simple_data_type_with_options opt_kind
+%type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
-%type <aval> create_proc_stmt create_simple_proc_stmt declare_func_stmt declare_select_func_no_check_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
-%type <aval> arg_expr arg_list inout param simple_param params simple_params func_params func_param
+%type <aval> create_proc_stmt declare_func_stmt declare_select_func_no_check_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
+%type <aval> arg_expr arg_list inout param params func_params func_param
 
 /* statements */
 %type <aval> stmt
 %type <aval> stmt_list opt_stmt_list
-%type <aval> any_stmt any_simple_stmt
+%type <aval> any_stmt
 %type <aval> begin_trans_stmt
 %type <aval> call_stmt
 %type <aval> close_stmt
@@ -351,7 +351,7 @@ opt_stmt_list:
   ;
 
 stmt_list[result]:
-  stmt {
+  stmt ';'  {
      // We're going to do this cheesy thing with the stmt_list structures so that we can
      // code the stmt_list rules using left recursion.  We're doing this because it's
      // possible that there could be a LOT of statements and this minimizes the use
@@ -372,7 +372,7 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
-  | stmt_list[slist] stmt {
+  | stmt_list[slist] stmt ';'  {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
@@ -387,12 +387,7 @@ stmt_list[result]:
   ;
 
 stmt:
-  misc_attrs any_stmt ';' { $stmt = make_statement_node($misc_attrs, $any_stmt); }
-  | misc_attrs any_simple_stmt { $stmt = make_statement_node($misc_attrs, $any_simple_stmt); }
-  ;
-
-any_simple_stmt:
-  create_simple_proc_stmt
+  misc_attrs any_stmt  { $stmt = make_statement_node($misc_attrs, $any_stmt); }
   ;
 
 any_stmt:
@@ -930,17 +925,6 @@ data_type_numeric:
   | LONG_INTEGER opt_kind { $data_type_numeric = new_ast_type_long($opt_kind); }
   ;
 
-simple_data_type_numeric:
-  INT_ opt_kind { $simple_data_type_numeric = new_ast_notnull(new_ast_type_int($opt_kind)); }
-  | INT_NULLABLE opt_kind { $simple_data_type_numeric = new_ast_type_int($opt_kind); }
-  | LONG_ opt_kind { $simple_data_type_numeric = new_ast_notnull(new_ast_type_long($opt_kind)); }
-  | LONG_NULLABLE opt_kind { $simple_data_type_numeric = new_ast_type_long($opt_kind); }
-  | BOOL_ opt_kind { $simple_data_type_numeric = new_ast_notnull(new_ast_type_bool($opt_kind)); }
-  | BOOL_NULLABLE opt_kind { $simple_data_type_numeric = new_ast_type_bool($opt_kind); }
-  | REAL opt_kind { $simple_data_type_numeric = new_ast_notnull(new_ast_type_real($opt_kind)); }
-  | REAL_NULLABLE opt_kind { $simple_data_type_numeric = new_ast_type_real($opt_kind); }
-  ;
-
 data_type_any:
   data_type_numeric { $data_type_any = $data_type_numeric; }
   | TEXT  opt_kind { $data_type_any = new_ast_type_text($opt_kind);  }
@@ -955,41 +939,12 @@ data_type_any:
   | ID { $data_type_any = new_ast_str($ID); }
   ;
 
-simple_data_type_any:
-  simple_data_type_numeric { $simple_data_type_any = $simple_data_type_numeric; }
-  | TEXT  opt_kind { $simple_data_type_any = new_ast_notnull(new_ast_type_text($opt_kind)); }
-  | TEXT_NULLABLE  opt_kind { $simple_data_type_any = new_ast_type_text($opt_kind); }
-  | BLOB  opt_kind { $simple_data_type_any = new_ast_notnull(new_ast_type_blob($opt_kind)); }
-  | BLOB_NULLABLE  opt_kind { $simple_data_type_any = new_ast_type_blob($opt_kind); }
-  | OBJECT opt_kind { $simple_data_type_any = new_ast_notnull(new_ast_type_object($opt_kind)); }
-  | OBJECT_NULLABLE opt_kind { $simple_data_type_any = new_ast_type_object($opt_kind); }
-  | OBJECT '<' name CURSOR '>' { /* special case for boxed cursor */
-    CSTR type = dup_printf("%s CURSOR", AST_STR($name));
-    $simple_data_type_any = new_ast_notnull(new_ast_type_object(new_ast_str(type))); }
-  | OBJECT_NULLABLE '<' name CURSOR '>' { /* special case for boxed cursor */
-    CSTR type = dup_printf("%s CURSOR", AST_STR($name));
-    $simple_data_type_any = new_ast_type_object(new_ast_str(type)); }
-  | OBJECT '<' name SET '>' { /* special case for result sets */
-    CSTR type = dup_printf("%s SET", AST_STR($name));
-    $simple_data_type_any = new_ast_notnull(new_ast_type_object(new_ast_str(type))); }
-  | OBJECT_NULLABLE '<' name SET '>' { /* special case for result sets */
-    CSTR type = dup_printf("%s SET", AST_STR($name));
-    $simple_data_type_any = new_ast_type_object(new_ast_str(type)); }
-  | ID { $simple_data_type_any = new_ast_notnull(new_ast_str($ID)); }
-  | ID_NULLABLE { $simple_data_type_any = new_ast_str($ID_NULLABLE); }
-  ;
-
 data_type_with_options:
   data_type_any { $data_type_with_options = $data_type_any; }
   | data_type_any NOT NULL_ { $data_type_with_options = new_ast_notnull($data_type_any); }
   | data_type_any AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr($data_type_any, NULL); }
   | data_type_any AT_SENSITIVE NOT NULL_ { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
   | data_type_any NOT NULL_ AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
-  ;
-
-simple_data_type_with_options:
-  simple_data_type_any { $simple_data_type_with_options = $simple_data_type_any; }
-  | simple_data_type_any AT_SENSITIVE { $simple_data_type_with_options = new_ast_sensitive_attr($simple_data_type_any, NULL); }
   ;
 
 str_literal:
@@ -1863,11 +1818,6 @@ create_proc_stmt:
     $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
   ;
 
-create_simple_proc_stmt:
-  procedure name '(' simple_params ')' '{' opt_stmt_list '}' {
-    $create_simple_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($simple_params, $opt_stmt_list)); }
-  ;
-
 inout:
   IN  { $inout = new_ast_in(); }
   | OUT  { $inout = new_ast_out(); }
@@ -1903,23 +1853,10 @@ param:
   | name shape_def  { $param = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
   ;
 
-simple_param:
-  name ':' simple_data_type_with_options  { $simple_param = new_ast_param(NULL, new_ast_param_detail($name, $simple_data_type_with_options)); }
-  | inout name ':' simple_data_type_with_options  { $simple_param = new_ast_param($inout, new_ast_param_detail($name, $simple_data_type_with_options)); }
-  | shape_def  { $simple_param = new_ast_param(NULL, new_ast_param_detail(NULL, $shape_def)); }
-  | name ':' shape_def  { $simple_param = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
-  ;
-
 params[result]:
   /* nil */  { $result = NULL; }
   | param  { $result = new_ast_params($param, NULL); }
   |  param ',' params[par]  { $result = new_ast_params($param, $par); }
-  ;
-
-simple_params[result]:
-  /* nil */  { $result = NULL; }
-  | simple_param  { $result = new_ast_params($simple_param, NULL); }
-  | simple_param ',' simple_params[par]  { $result = new_ast_params($simple_param, $par); }
   ;
 
 declare_value_cursor[result]:
