@@ -130,11 +130,14 @@ DEFAULT                      { return DEFAULT; }
 CHECK                        { return CHECK; }
 LET                          { return LET; }
 LONG                         { return LONG_; }
+LONG\?                       { return LONG_NULLABLE; }
 LONG_INTEGER                 { return LONG_INTEGER; }
 LONG_INT                     { return LONG_INT; }
 INT                          { return INT_; }
+INT\?                        { return INT_NULLABLE; }
 INTEGER                      { return INTEGER; }
 TEXT                         { return TEXT; }
+TEXT\?                       { return TEXT_NULLABLE; }
 VIRTUAL                      { return VIRTUAL; }
 WITH                         { return WITH; }
 RECURSIVE                    { return RECURSIVE; }
@@ -142,9 +145,11 @@ WITHOUT                      { return WITHOUT; }
 ROWID                        { return ROWID; }
 AUTOINCREMENT                { return AUTOINCREMENT; }
 BOOL                         { return BOOL_; }
+BOOL\?                       { return BOOL_NULLABLE; }
 REFERENCES                   { return REFERENCES; }
 FOREIGN                      { return FOREIGN; }
 REAL                         { return REAL; }
+REAL\?                        { return REAL_NULLABLE; }
 CASCADE                      { return CASCADE; }
 ON                           { return ON; }
 ON{sp}CONFLICT/{stop}        { return ON_CONFLICT; }
@@ -258,7 +263,9 @@ RELEASE                      { return RELEASE; }
 REPLACE                      { return REPLACE; }
 IGNORE                       { return IGNORE; }
 OBJECT                       { return OBJECT; }
+OBJECT\?                     { return OBJECT_NULLABLE; }
 BLOB                         { return BLOB; }
+BLOB\?                       { return BLOB_NULLABLE; }
 UPSERT                       { return UPSERT; }
 STATEMENT                    { return STATEMENT; }
 TYPE                         { return TYPE; }
@@ -339,8 +346,9 @@ CURSOR{sp}HAS{sp}ROW/{stop}  { return CURSOR_HAS_ROW; }
 \"(\\.|[^\\"\n])*\"          { yylval.sval = Strdup(yytext); return CSTRLIT; }
 '(''|[^'\n])*'               { yylval.sval = Strdup(yytext); return STRLIT; }
 X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
-[-+&~|^/%*(),.;!<>:=]        { return yytext[0]; }
+[-+&~|^/%*(){},.;!<>:=]      { return yytext[0]; }
 [_A-Z][A-Z0-9_]*             { yylval.sval = Strdup(yytext); return ID; }
+[_A-Z][A-Z0-9_]*\?           { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the ? */ yylval.sval = s; return ID_NULLABLE; }
 
 [ \t\n]                      ;
 \-\-.*                       ;
