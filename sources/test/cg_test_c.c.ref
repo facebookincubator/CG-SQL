@@ -717,15 +717,18 @@ END;
 */
 
 #define _PROC_ "test"
+cql_profile_index_declaration(test_perf_index);
 /*
 export:
 DECLARE PROC test (i INTEGER NOT NULL);
 */
 void test(cql_int32 i) {
+  cql_profile_start(CRC_test, &test_perf_index);
   if (i) {
     puts("true");
   }
 
+  cql_profile_stop(CRC_test, &test_perf_index);
 }
 #undef _PROC_
 
@@ -742,6 +745,7 @@ END;
 */
 
 #define _PROC_ "proc_with_return_guard"
+cql_profile_index_declaration(proc_with_return_guard_perf_index);
 /*
 export:
 DECLARE PROC proc_with_return_guard (a INTEGER);
@@ -749,13 +753,14 @@ DECLARE PROC proc_with_return_guard (a INTEGER);
 void proc_with_return_guard(cql_nullable_int32 a) {
   cql_nullable_int32 x = { .is_null = 1 };
 
+  cql_profile_start(CRC_proc_with_return_guard, &proc_with_return_guard_perf_index);
   if (!a.is_null) {
     goto cql_cleanup; // return
   }
   cql_set_nullable(x, a.is_null, a.value);
 
 cql_cleanup:
-  ; // label requires some statement
+  cql_profile_stop(CRC_proc_with_return_guard, &proc_with_return_guard_perf_index);
 }
 #undef _PROC_
 cql_int32 _between_0_ = 0;
@@ -776,6 +781,7 @@ END;
 */
 
 #define _PROC_ "out_test"
+cql_profile_index_declaration(out_test_perf_index);
 /*
 export:
 DECLARE PROC out_test (OUT i INTEGER NOT NULL, OUT ii INTEGER);
@@ -784,11 +790,13 @@ void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
   cql_contract_argument_notnull((void *)i, 1);
   cql_contract_argument_notnull((void *)ii, 2);
 
+  cql_profile_start(CRC_out_test, &out_test_perf_index);
   *i = 0; // set out arg to non-garbage
   cql_set_null(*ii); // set out arg to non-garbage
   *i = i2;
   cql_set_nullable(*ii, i0_nullable.is_null, i0_nullable.value);
 
+  cql_profile_stop(CRC_out_test, &out_test_perf_index);
 }
 #undef _PROC_
 
@@ -845,6 +853,7 @@ END;
 */
 
 #define _PROC_ "outparm_test"
+cql_profile_index_declaration(outparm_test_perf_index);
 /*
 export:
 DECLARE PROC outparm_test (OUT foo INTEGER NOT NULL) USING TRANSACTION;
@@ -856,6 +865,7 @@ CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnul
   cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_outparm_test, &outparm_test_perf_index);
   *foo = 0; // set out arg to non-garbage
   *foo = 1;
   _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -871,7 +881,42 @@ CQL_WARN_UNUSED cql_code outparm_test(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnul
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_outparm_test, &outparm_test_perf_index);
   return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC profile_on_private_proc (INOUT num INTEGER NOT NULL)
+BEGIN
+  IF num = 1 THEN
+    SET num := 2;
+    RETURN;
+  ELSE
+    SET num := 5;
+  END IF;
+END;
+*/
+
+#define _PROC_ "profile_on_private_proc"
+/*
+private:
+DECLARE PROC profile_on_private_proc (INOUT num INTEGER NOT NULL);
+*/
+static void profile_on_private_proc(cql_int32 *_Nonnull num) {
+  if ((*num) == 1) {
+    *num = 2;
+    goto cql_cleanup; // return
+  }
+  else {
+    *num = 5;
+  }
+
+cql_cleanup:
+  ; // label requires some statement
 }
 #undef _PROC_
 
@@ -891,6 +936,7 @@ END;
 */
 
 #define _PROC_ "throwing"
+cql_profile_index_declaration(throwing_perf_index);
 /*
 export:
 DECLARE PROC throwing () USING TRANSACTION;
@@ -899,6 +945,7 @@ CQL_WARN_UNUSED cql_code throwing(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_throwing, &throwing_perf_index);
   // try
   {
     _rc_ = cql_exec(_db_,
@@ -918,6 +965,7 @@ CQL_WARN_UNUSED cql_code throwing(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_throwing, &throwing_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -1157,6 +1205,7 @@ END;
 */
 
 #define _PROC_ "make_view"
+cql_profile_index_declaration(make_view_perf_index);
 /*
 export:
 DECLARE PROC make_view () USING TRANSACTION;
@@ -1165,6 +1214,7 @@ CQL_WARN_UNUSED cql_code make_view(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_make_view, &make_view_perf_index);
   _rc_ = cql_exec(_db_,
     "CREATE VIEW MyView AS "
     "SELECT 1 AS f1, 2 AS f2, 3 AS f3");
@@ -1173,6 +1223,7 @@ CQL_WARN_UNUSED cql_code make_view(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_make_view, &make_view_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -1187,6 +1238,7 @@ END;
 */
 
 #define _PROC_ "make_index"
+cql_profile_index_declaration(make_index_perf_index);
 /*
 export:
 DECLARE PROC make_index () USING TRANSACTION;
@@ -1195,6 +1247,7 @@ CQL_WARN_UNUSED cql_code make_index(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_make_index, &make_index_perf_index);
   _rc_ = cql_exec(_db_,
     "CREATE INDEX index_1 ON bar (id)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -1202,6 +1255,7 @@ CQL_WARN_UNUSED cql_code make_index(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_make_index, &make_index_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -1357,6 +1411,7 @@ END;
 */
 
 #define _PROC_ "easy_fetch"
+cql_profile_index_declaration(easy_fetch_perf_index);
 /*
 export:
 DECLARE PROC easy_fetch () USING TRANSACTION;
@@ -1381,6 +1436,7 @@ CQL_WARN_UNUSED cql_code easy_fetch(sqlite3 *_Nonnull _db_) {
   easy_fetch_C_row C = { ._refs_count_ = 1, ._refs_offset_ = easy_fetch_C_refs_offset };
   sqlite3_stmt *C2_stmt = NULL;
 
+  cql_profile_start(CRC_easy_fetch, &easy_fetch_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT id, name, rate, type, size "
       "FROM bar");
@@ -1412,6 +1468,7 @@ cql_cleanup:
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
   cql_finalize_stmt(&C2_stmt);
+  cql_profile_stop(CRC_easy_fetch, &easy_fetch_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -1426,6 +1483,7 @@ END;
 */
 
 #define _PROC_ "copy_int"
+cql_profile_index_declaration(copy_int_perf_index);
 /*
 export:
 DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
@@ -1433,9 +1491,11 @@ DECLARE PROC copy_int (a INTEGER, OUT b INTEGER);
 void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 2);
 
+  cql_profile_start(CRC_copy_int, &copy_int_perf_index);
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_nullable(*b, a.is_null, a.value);
 
+  cql_profile_stop(CRC_copy_int, &copy_int_perf_index);
 }
 #undef _PROC_
 
@@ -1450,6 +1510,7 @@ END;
 */
 
 #define _PROC_ "insert_rowid_reader"
+cql_profile_index_declaration(insert_rowid_reader_perf_index);
 /*
 export:
 DECLARE PROC insert_rowid_reader () USING TRANSACTION;
@@ -1459,10 +1520,12 @@ CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   cql_nullable_int64 row = { .is_null = 1 };
 
+  cql_profile_start(CRC_insert_rowid_reader, &insert_rowid_reader_perf_index);
   cql_set_notnull(row, sqlite3_last_insert_rowid(_db_));
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_insert_rowid_reader, &insert_rowid_reader_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -1478,6 +1541,7 @@ END;
 */
 
 #define _PROC_ "changes_reader"
+cql_profile_index_declaration(changes_reader_perf_index);
 /*
 export:
 DECLARE PROC changes_reader () USING TRANSACTION;
@@ -1487,10 +1551,12 @@ CQL_WARN_UNUSED cql_code changes_reader(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   cql_nullable_int32 ct = { .is_null = 1 };
 
+  cql_profile_start(CRC_changes_reader, &changes_reader_perf_index);
   cql_set_notnull(ct, sqlite3_changes(_db_));
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_changes_reader, &changes_reader_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -1518,6 +1584,7 @@ END;
 */
 
 #define _PROC_ "xyzzy_test"
+cql_profile_index_declaration(xyzzy_test_perf_index);
 /*
 export:
 DECLARE PROC xyzzy_test () USING TRANSACTION;
@@ -1528,6 +1595,7 @@ CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_) {
   cql_nullable_int32 _tmp_n_int_0 = { .is_null = 1 };
   sqlite3_stmt *xyzzy_cursor_stmt = NULL;
 
+  cql_profile_start(CRC_xyzzy_test, &xyzzy_test_perf_index);
   cql_set_notnull(_tmp_n_int_0, 1);
   _rc_ = xyzzy(_db_, &xyzzy_cursor_stmt, _tmp_n_int_0);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -1536,6 +1604,7 @@ CQL_WARN_UNUSED cql_code xyzzy_test(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&xyzzy_cursor_stmt);
+  cql_profile_stop(CRC_xyzzy_test, &xyzzy_test_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -2111,6 +2180,7 @@ END;
 */
 
 #define _PROC_ "with_stmt_using_cursor"
+cql_profile_index_declaration(with_stmt_using_cursor_perf_index);
 /*
 export:
 DECLARE PROC with_stmt_using_cursor () USING TRANSACTION;
@@ -2130,6 +2200,7 @@ CQL_WARN_UNUSED cql_code with_stmt_using_cursor(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
   with_stmt_using_cursor_C_row C = { 0 };
 
+  cql_profile_start(CRC_with_stmt_using_cursor, &with_stmt_using_cursor_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "WITH "
     "X (a, b, c) AS (SELECT 1, 2, 3) "
@@ -2148,6 +2219,7 @@ CQL_WARN_UNUSED cql_code with_stmt_using_cursor(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_with_stmt_using_cursor, &with_stmt_using_cursor_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -2540,6 +2612,7 @@ END;
 */
 
 #define _PROC_ "outint_nullable"
+cql_profile_index_declaration(outint_nullable_perf_index);
 /*
 export:
 DECLARE PROC outint_nullable (OUT output INTEGER, OUT result BOOL NOT NULL) USING TRANSACTION;
@@ -2553,6 +2626,7 @@ CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_in
   sqlite3_stmt *C_stmt = NULL;
   cql_bool _C_has_row_ = 0;
 
+  cql_profile_start(CRC_outint_nullable, &outint_nullable_perf_index);
   cql_set_null(*output); // set out arg to non-garbage
   *result = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &C_stmt,
@@ -2569,6 +2643,7 @@ CQL_WARN_UNUSED cql_code outint_nullable(sqlite3 *_Nonnull _db_, cql_nullable_in
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_outint_nullable, &outint_nullable_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -2585,6 +2660,7 @@ END;
 */
 
 #define _PROC_ "outint_notnull"
+cql_profile_index_declaration(outint_notnull_perf_index);
 /*
 export:
 DECLARE PROC outint_notnull (OUT output INTEGER NOT NULL, OUT result BOOL NOT NULL) USING TRANSACTION;
@@ -2598,6 +2674,7 @@ CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonn
   sqlite3_stmt *C_stmt = NULL;
   cql_bool _C_has_row_ = 0;
 
+  cql_profile_start(CRC_outint_notnull, &outint_notnull_perf_index);
   *output = 0; // set out arg to non-garbage
   *result = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &C_stmt,
@@ -2614,6 +2691,7 @@ CQL_WARN_UNUSED cql_code outint_notnull(sqlite3 *_Nonnull _db_, cql_int32 *_Nonn
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_outint_notnull, &outint_notnull_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -2650,6 +2728,7 @@ END;
 */
 
 #define _PROC_ "obj_proc"
+cql_profile_index_declaration(obj_proc_perf_index);
 /*
 export:
 DECLARE PROC obj_proc (OUT an_object OBJECT);
@@ -2657,9 +2736,11 @@ DECLARE PROC obj_proc (OUT an_object OBJECT);
 void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
   cql_contract_argument_notnull((void *)an_object, 1);
 
+  cql_profile_start(CRC_obj_proc, &obj_proc_perf_index);
   *(void **)an_object = NULL; // set out arg to non-garbage
   cql_set_object_ref(an_object, NULL);
 
+  cql_profile_stop(CRC_obj_proc, &obj_proc_perf_index);
 }
 #undef _PROC_
 
@@ -2755,6 +2836,7 @@ END;
 */
 
 #define _PROC_ "unused_temp"
+cql_profile_index_declaration(unused_temp_perf_index);
 /*
 export:
 DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
@@ -2762,6 +2844,7 @@ DECLARE PROC unused_temp (i INTEGER, OUT o INTEGER NOT NULL);
 void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
   cql_contract_argument_notnull((void *)o, 2);
 
+  cql_profile_start(CRC_unused_temp, &unused_temp_perf_index);
   *o = 0; // set out arg to non-garbage
   do {
     if (!i.is_null) {
@@ -2771,6 +2854,7 @@ void unused_temp(cql_nullable_int32 i, cql_int32 *_Nonnull o) {
     *o = - 1;
   } while (0);
 
+  cql_profile_stop(CRC_unused_temp, &unused_temp_perf_index);
 }
 #undef _PROC_
 
@@ -2801,6 +2885,7 @@ END;
 */
 
 #define _PROC_ "echo_test"
+cql_profile_index_declaration(echo_test_perf_index);
 /*
 export:
 DECLARE PROC echo_test ();
@@ -2808,11 +2893,13 @@ DECLARE PROC echo_test ();
 void echo_test(void) {
   cql_string_ref s = NULL;
 
+  cql_profile_start(CRC_echo_test, &echo_test_perf_index);
   cql_set_string_ref(&s, _literal_7_before_echo_echo_test);
   #define ECHO_TEST 1
   cql_set_string_ref(&s, _literal_8_after_echo_echo_test);
 
   cql_string_release(s);
+  cql_profile_stop(CRC_echo_test, &echo_test_perf_index);
 }
 #undef _PROC_
 
@@ -2826,6 +2913,7 @@ END;
 */
 
 #define _PROC_ "insert_values"
+cql_profile_index_declaration(insert_values_perf_index);
 /*
 export:
 DECLARE PROC insert_values (id_ INTEGER NOT NULL, type_ INTEGER) USING TRANSACTION;
@@ -2835,6 +2923,7 @@ CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cq
   cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_insert_values, &insert_values_perf_index);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO bar(id, type) VALUES(?, ?)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
@@ -2849,6 +2938,7 @@ CQL_WARN_UNUSED cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cq
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_insert_values, &insert_values_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -2863,6 +2953,7 @@ END;
 */
 
 #define _PROC_ "alter_table_test"
+cql_profile_index_declaration(alter_table_test_perf_index);
 /*
 export:
 DECLARE PROC alter_table_test () USING TRANSACTION;
@@ -2871,6 +2962,7 @@ CQL_WARN_UNUSED cql_code alter_table_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_alter_table_test, &alter_table_test_perf_index);
   _rc_ = cql_exec(_db_,
     "ALTER TABLE bar ADD COLUMN size REAL");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -2878,6 +2970,7 @@ CQL_WARN_UNUSED cql_code alter_table_test(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_alter_table_test, &alter_table_test_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -2892,6 +2985,7 @@ END;
 */
 
 #define _PROC_ "drop_table_test"
+cql_profile_index_declaration(drop_table_test_perf_index);
 /*
 export:
 DECLARE PROC drop_table_test () USING TRANSACTION;
@@ -2900,6 +2994,7 @@ CQL_WARN_UNUSED cql_code drop_table_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_drop_table_test, &drop_table_test_perf_index);
   _rc_ = cql_exec(_db_,
     "DROP TABLE IF EXISTS bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -2907,6 +3002,7 @@ CQL_WARN_UNUSED cql_code drop_table_test(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_drop_table_test, &drop_table_test_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3050,6 +3146,7 @@ END;
 */
 
 #define _PROC_ "index_dropper"
+cql_profile_index_declaration(index_dropper_perf_index);
 /*
 export:
 DECLARE PROC index_dropper () USING TRANSACTION;
@@ -3058,6 +3155,7 @@ CQL_WARN_UNUSED cql_code index_dropper(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_index_dropper, &index_dropper_perf_index);
   _rc_ = cql_exec(_db_,
     "DROP INDEX index_1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -3065,6 +3163,7 @@ CQL_WARN_UNUSED cql_code index_dropper(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_index_dropper, &index_dropper_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3084,6 +3183,7 @@ END;
 */
 
 #define _PROC_ "misc_dml_proc"
+cql_profile_index_declaration(misc_dml_proc_perf_index);
 /*
 export:
 DECLARE PROC misc_dml_proc () USING TRANSACTION;
@@ -3092,6 +3192,7 @@ CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_misc_dml_proc, &misc_dml_proc_perf_index);
   _rc_ = cql_exec(_db_,
     "INSERT INTO foo(id) VALUES(NULL)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -3110,6 +3211,7 @@ CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_misc_dml_proc, &misc_dml_proc_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3124,6 +3226,7 @@ END;
 */
 
 #define _PROC_ "dummy_user"
+cql_profile_index_declaration(dummy_user_perf_index);
 /*
 export:
 DECLARE PROC dummy_user () USING TRANSACTION;
@@ -3134,6 +3237,7 @@ CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_) {
   cql_int32 _seed_ = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_dummy_user, &dummy_user_perf_index);
   _seed_ = 123;
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)");
@@ -3152,6 +3256,7 @@ CQL_WARN_UNUSED cql_code dummy_user(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_dummy_user, &dummy_user_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3166,6 +3271,7 @@ END;
 */
 
 #define _PROC_ "proc_with_out_arg"
+cql_profile_index_declaration(proc_with_out_arg_perf_index);
 /*
 export:
 DECLARE PROC proc_with_out_arg (OUT foo TEXT);
@@ -3173,9 +3279,11 @@ DECLARE PROC proc_with_out_arg (OUT foo TEXT);
 void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
   cql_contract_argument_notnull((void *)foo, 1);
 
+  cql_profile_start(CRC_proc_with_out_arg, &proc_with_out_arg_perf_index);
   *(void **)foo = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*foo, _literal_6_x_);
 
+  cql_profile_stop(CRC_proc_with_out_arg, &proc_with_out_arg_perf_index);
 }
 #undef _PROC_
 
@@ -3192,6 +3300,7 @@ END;
 */
 
 #define _PROC_ "calls_out_proc"
+cql_profile_index_declaration(calls_out_proc_perf_index);
 /*
 export:
 DECLARE PROC calls_out_proc (OUT foo TEXT);
@@ -3201,6 +3310,7 @@ void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
 
   cql_string_ref bar = NULL;
 
+  cql_profile_start(CRC_calls_out_proc, &calls_out_proc_perf_index);
   *(void **)foo = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*foo, _literal_6_x_);
   cql_set_string_ref(&*foo, NULL);
@@ -3209,6 +3319,7 @@ void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
   proc_with_out_arg(&bar);
 
   cql_string_release(bar);
+  cql_profile_stop(CRC_calls_out_proc, &calls_out_proc_perf_index);
 }
 #undef _PROC_
 
@@ -3236,6 +3347,7 @@ END;
 */
 
 #define _PROC_ "blob_proc"
+cql_profile_index_declaration(blob_proc_perf_index);
 /*
 export:
 DECLARE PROC blob_proc (OUT a_blob BLOB);
@@ -3243,9 +3355,11 @@ DECLARE PROC blob_proc (OUT a_blob BLOB);
 void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob) {
   cql_contract_argument_notnull((void *)a_blob, 1);
 
+  cql_profile_start(CRC_blob_proc, &blob_proc_perf_index);
   *(void **)a_blob = NULL; // set out arg to non-garbage
   cql_set_blob_ref(&*a_blob, NULL);
 
+  cql_profile_stop(CRC_blob_proc, &blob_proc_perf_index);
 }
 #undef _PROC_
 
@@ -3362,6 +3476,7 @@ END;
 */
 
 #define _PROC_ "voidproc"
+cql_profile_index_declaration(voidproc_perf_index);
 /*
 export:
 DECLARE PROC voidproc ();
@@ -3369,7 +3484,9 @@ DECLARE PROC voidproc ();
 void voidproc(void) {
   cql_nullable_int32 unused = { .is_null = 1 };
 
+  cql_profile_start(CRC_voidproc, &voidproc_perf_index);
 
+  cql_profile_stop(CRC_voidproc, &voidproc_perf_index);
 }
 #undef _PROC_
 
@@ -3557,6 +3674,7 @@ END;
 */
 
 #define _PROC_ "read_cursor_proc"
+cql_profile_index_declaration(read_cursor_proc_perf_index);
 /*
 export:
 DECLARE PROC read_cursor_proc () USING TRANSACTION;
@@ -3581,6 +3699,7 @@ CQL_WARN_UNUSED cql_code read_cursor_proc(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   read_cursor_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = read_cursor_proc_C_refs_offset };
 
+  cql_profile_start(CRC_read_cursor_proc, &read_cursor_proc_perf_index);
   cql_teardown_row(C);
   _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&C); // out_cursor_proc_row identical to cursor type
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -3589,6 +3708,7 @@ CQL_WARN_UNUSED cql_code read_cursor_proc(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_teardown_row(C);
+  cql_profile_stop(CRC_read_cursor_proc, &read_cursor_proc_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3604,6 +3724,7 @@ END;
 */
 
 #define _PROC_ "declare_cursor_then_fetch_from_proc"
+cql_profile_index_declaration(declare_cursor_then_fetch_from_proc_perf_index);
 /*
 export:
 DECLARE PROC declare_cursor_then_fetch_from_proc () USING TRANSACTION;
@@ -3628,6 +3749,7 @@ CQL_WARN_UNUSED cql_code declare_cursor_then_fetch_from_proc(sqlite3 *_Nonnull _
   cql_error_prepare();
   declare_cursor_then_fetch_from_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = declare_cursor_then_fetch_from_proc_C_refs_offset };
 
+  cql_profile_start(CRC_declare_cursor_then_fetch_from_proc, &declare_cursor_then_fetch_from_proc_perf_index);
   cql_teardown_row(C);
   _rc_ = out_cursor_proc(_db_, (out_cursor_proc_row *)&C); // out_cursor_proc_row identical to cursor type
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -3636,6 +3758,7 @@ CQL_WARN_UNUSED cql_code declare_cursor_then_fetch_from_proc(sqlite3 *_Nonnull _
 cql_cleanup:
   cql_error_report();
   cql_teardown_row(C);
+  cql_profile_stop(CRC_declare_cursor_then_fetch_from_proc, &declare_cursor_then_fetch_from_proc_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3674,6 +3797,7 @@ END;
 */
 
 #define _PROC_ "dml_user"
+cql_profile_index_declaration(dml_user_perf_index);
 /*
 export:
 DECLARE PROC dml_user (OUT a_ INTEGER NOT NULL) USING TRANSACTION;
@@ -3684,6 +3808,7 @@ CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_dml_user, &dml_user_perf_index);
   *a_ = 0; // set out arg to non-garbage
   _rc_ = dml_compute(_db_, 1, &*a_);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -3691,6 +3816,7 @@ CQL_WARN_UNUSED cql_code dml_user(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull a_
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_dml_user, &dml_user_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3785,6 +3911,7 @@ END;
 */
 
 #define _PROC_ "fetch_values_dummy"
+cql_profile_index_declaration(fetch_values_dummy_perf_index);
 /*
 export:
 DECLARE PROC fetch_values_dummy ();
@@ -3807,6 +3934,7 @@ void fetch_values_dummy(void) {
   cql_string_ref _tmp_text_0 = NULL;
   cql_int32 _seed_ = 0;
 
+  cql_profile_start(CRC_fetch_values_dummy, &fetch_values_dummy_perf_index);
   _seed_ = 123;
   C._has_row_ = 1;
   C.id = _seed_;
@@ -3823,6 +3951,7 @@ void fetch_values_dummy(void) {
 
   cql_teardown_row(C);
   cql_string_release(_tmp_text_0);
+  cql_profile_stop(CRC_fetch_values_dummy, &fetch_values_dummy_perf_index);
 }
 #undef _PROC_
 
@@ -3837,6 +3966,7 @@ END;
 */
 
 #define _PROC_ "fetch_values_extended"
+cql_profile_index_declaration(fetch_values_extended_perf_index);
 /*
 export:
 DECLARE PROC fetch_values_extended ();
@@ -3862,6 +3992,7 @@ void fetch_values_extended(void) {
   cql_string_ref _tmp_text_1 = NULL;
   cql_int32 _seed_ = 0;
 
+  cql_profile_start(CRC_fetch_values_extended, &fetch_values_extended_perf_index);
   _seed_ = 123;
   C._has_row_ = 1;
   C.id = _seed_;
@@ -3887,6 +4018,7 @@ void fetch_values_extended(void) {
   cql_teardown_row(C);
   cql_string_release(_tmp_text_0);
   cql_string_release(_tmp_text_1);
+  cql_profile_stop(CRC_fetch_values_extended, &fetch_values_extended_perf_index);
 }
 #undef _PROC_
 
@@ -3900,6 +4032,7 @@ END;
 */
 
 #define _PROC_ "c_literal"
+cql_profile_index_declaration(c_literal_perf_index);
 /*
 export:
 DECLARE PROC c_literal (OUT x TEXT);
@@ -3907,9 +4040,11 @@ DECLARE PROC c_literal (OUT x TEXT);
 void c_literal(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_c_literal, &c_literal_perf_index);
   *(void **)x = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*x, _literal_9_Testing_c_literal);
 
+  cql_profile_stop(CRC_c_literal, &c_literal_perf_index);
 }
 #undef _PROC_
 
@@ -3929,6 +4064,7 @@ END;
 */
 
 #define _PROC_ "no_cleanup_label_needed_proc"
+cql_profile_index_declaration(no_cleanup_label_needed_proc_perf_index);
 /*
 export:
 DECLARE PROC no_cleanup_label_needed_proc () USING TRANSACTION;
@@ -3947,6 +4083,7 @@ CQL_WARN_UNUSED cql_code no_cleanup_label_needed_proc(sqlite3 *_Nonnull _db_) {
   no_cleanup_label_needed_proc_C_row C = { 0 };
   cql_nullable_int32 x = { .is_null = 1 };
 
+  cql_profile_start(CRC_no_cleanup_label_needed_proc, &no_cleanup_label_needed_proc_perf_index);
   // try
   {
     _rc_ = cql_prepare(_db_, &C_stmt,
@@ -3966,6 +4103,7 @@ CQL_WARN_UNUSED cql_code no_cleanup_label_needed_proc(sqlite3 *_Nonnull _db_) {
 
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_no_cleanup_label_needed_proc, &no_cleanup_label_needed_proc_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -3987,6 +4125,7 @@ END;
 */
 
 #define _PROC_ "no_code_after_catch"
+cql_profile_index_declaration(no_code_after_catch_perf_index);
 /*
 export:
 DECLARE PROC no_code_after_catch () USING TRANSACTION;
@@ -3997,6 +4136,7 @@ CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
   cql_nullable_int32 x = { .is_null = 1 };
   cql_nullable_int32 y = { .is_null = 1 };
 
+  cql_profile_start(CRC_no_code_after_catch, &no_code_after_catch_perf_index);
   // try
   {
     goto catch_end_3;
@@ -4007,6 +4147,7 @@ CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_no_code_after_catch, &no_code_after_catch_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -4511,6 +4652,7 @@ END;
 */
 
 #define _PROC_ "weird_quoting"
+cql_profile_index_declaration(weird_quoting_perf_index);
 /*
 export:
 DECLARE PROC weird_quoting () USING TRANSACTION;
@@ -4519,6 +4661,7 @@ CQL_WARN_UNUSED cql_code weird_quoting(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_weird_quoting, &weird_quoting_perf_index);
   _rc_ = cql_exec(_db_,
     "DELETE FROM bar WHERE name LIKE '\n\n'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -4535,6 +4678,7 @@ CQL_WARN_UNUSED cql_code weird_quoting(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_weird_quoting, &weird_quoting_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -4552,6 +4696,7 @@ END;
 */
 
 #define _PROC_ "long_auto_table_maker"
+cql_profile_index_declaration(long_auto_table_maker_perf_index);
 /*
 export:
 DECLARE PROC long_auto_table_maker () USING TRANSACTION;
@@ -4560,6 +4705,7 @@ CQL_WARN_UNUSED cql_code long_auto_table_maker(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_long_auto_table_maker, &long_auto_table_maker_perf_index);
   _rc_ = cql_exec(_db_,
     "CREATE TABLE long_int_autoinc( "
       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -4570,6 +4716,7 @@ CQL_WARN_UNUSED cql_code long_auto_table_maker(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_long_auto_table_maker, &long_auto_table_maker_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -4591,6 +4738,7 @@ END;
 */
 
 #define _PROC_ "blob_call1"
+cql_profile_index_declaration(blob_call1_perf_index);
 /*
 export:
 DECLARE PROC blob_call1 ();
@@ -4598,10 +4746,12 @@ DECLARE PROC blob_call1 ();
 void blob_call1(void) {
   cql_blob_ref b = NULL;
 
+  cql_profile_start(CRC_blob_call1, &blob_call1_perf_index);
   cql_set_blob_ref(&b, NULL);
   blob_out(&b);
 
   cql_blob_release(b);
+  cql_profile_stop(CRC_blob_call1, &blob_call1_perf_index);
 }
 #undef _PROC_
 
@@ -4616,6 +4766,7 @@ END;
 */
 
 #define _PROC_ "blob_call2"
+cql_profile_index_declaration(blob_call2_perf_index);
 /*
 export:
 DECLARE PROC blob_call2 ();
@@ -4623,10 +4774,12 @@ DECLARE PROC blob_call2 ();
 void blob_call2(void) {
   cql_blob_ref b = NULL;
 
+  cql_profile_start(CRC_blob_call2, &blob_call2_perf_index);
   cql_set_blob_ref(&b, NULL);
   blob_out(&b);
 
   cql_blob_release(b);
+  cql_profile_stop(CRC_blob_call2, &blob_call2_perf_index);
 }
 #undef _PROC_
 
@@ -4643,6 +4796,7 @@ END;
 */
 
 #define _PROC_ "blob_no_else"
+cql_profile_index_declaration(blob_no_else_perf_index);
 /*
 export:
 DECLARE PROC blob_no_else ();
@@ -4652,6 +4806,7 @@ void blob_no_else(void) {
   cql_blob_ref b1 = NULL;
   cql_blob_ref _tmp_n_blob_1 = NULL;
 
+  cql_profile_start(CRC_blob_no_else, &blob_no_else_perf_index);
   do {
       cql_set_blob_ref(&_tmp_n_blob_1, b);
       if (!_tmp_n_blob_1) goto case_else_3;
@@ -4666,6 +4821,7 @@ void blob_no_else(void) {
   cql_blob_release(b);
   cql_blob_release(b1);
   cql_blob_release(_tmp_n_blob_1);
+  cql_profile_stop(CRC_blob_no_else, &blob_no_else_perf_index);
 }
 #undef _PROC_
 
@@ -4682,6 +4838,7 @@ END;
 */
 
 #define _PROC_ "with_inserter"
+cql_profile_index_declaration(with_inserter_perf_index);
 /*
 export:
 DECLARE PROC with_inserter () USING TRANSACTION;
@@ -4690,6 +4847,7 @@ CQL_WARN_UNUSED cql_code with_inserter(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_with_inserter, &with_inserter_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "x (a) AS (SELECT 111) "
@@ -4700,6 +4858,7 @@ CQL_WARN_UNUSED cql_code with_inserter(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_with_inserter, &with_inserter_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -4715,6 +4874,7 @@ END;
 */
 
 #define _PROC_ "multi_rewrite"
+cql_profile_index_declaration(multi_rewrite_perf_index);
 /*
 export:
 DECLARE PROC multi_rewrite (blob_id_ INTEGER NOT NULL, b_notnull_ BLOB NOT NULL, b_nullable_ BLOB, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT, type_ INTEGER, size_ REAL, OUT out_arg INTEGER NOT NULL) USING TRANSACTION;
@@ -4727,6 +4887,7 @@ CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id
   cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_multi_rewrite, &multi_rewrite_perf_index);
   *out_arg = 0; // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)");
@@ -4744,6 +4905,7 @@ CQL_WARN_UNUSED cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_multi_rewrite, &multi_rewrite_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -4871,6 +5033,7 @@ END;
 */
 
 #define _PROC_ "loop_statement_cursor"
+cql_profile_index_declaration(loop_statement_cursor_perf_index);
 /*
 export:
 DECLARE PROC loop_statement_cursor () USING TRANSACTION;
@@ -4888,6 +5051,7 @@ CQL_WARN_UNUSED cql_code loop_statement_cursor(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
   loop_statement_cursor_C_row C = { 0 };
 
+  cql_profile_start(CRC_loop_statement_cursor, &loop_statement_cursor_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -4905,6 +5069,7 @@ CQL_WARN_UNUSED cql_code loop_statement_cursor(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_loop_statement_cursor, &loop_statement_cursor_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -4924,6 +5089,7 @@ END;
 */
 
 #define _PROC_ "loop_statement_not_auto_cursor"
+cql_profile_index_declaration(loop_statement_not_auto_cursor_perf_index);
 /*
 export:
 DECLARE PROC loop_statement_not_auto_cursor () USING TRANSACTION;
@@ -4935,6 +5101,7 @@ CQL_WARN_UNUSED cql_code loop_statement_not_auto_cursor(sqlite3 *_Nonnull _db_) 
   cql_bool _C_has_row_ = 0;
   cql_int32 A_ = 0;
 
+  cql_profile_start(CRC_loop_statement_not_auto_cursor, &loop_statement_not_auto_cursor_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -4952,6 +5119,7 @@ CQL_WARN_UNUSED cql_code loop_statement_not_auto_cursor(sqlite3 *_Nonnull _db_) 
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_loop_statement_not_auto_cursor, &loop_statement_not_auto_cursor_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -5005,6 +5173,7 @@ END;
 */
 
 #define _PROC_ "call_in_loop"
+cql_profile_index_declaration(call_in_loop_perf_index);
 /*
 export:
 DECLARE PROC call_in_loop () USING TRANSACTION;
@@ -5023,6 +5192,7 @@ CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
   call_in_loop_C_row C = { 0 };
 
+  cql_profile_start(CRC_call_in_loop, &call_in_loop_perf_index);
   cql_set_notnull(i, 0);
   for (;;) {
     if (!(i.value < 5)) break;
@@ -5041,6 +5211,7 @@ CQL_WARN_UNUSED cql_code call_in_loop(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_call_in_loop, &call_in_loop_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -5062,6 +5233,7 @@ END;
 */
 
 #define _PROC_ "call_in_loop_with_nullable_condition"
+cql_profile_index_declaration(call_in_loop_with_nullable_condition_perf_index);
 /*
 export:
 DECLARE PROC call_in_loop_with_nullable_condition () USING TRANSACTION;
@@ -5081,6 +5253,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_with_nullable_condition(sqlite3 *_Nonnull 
   sqlite3_stmt *C_stmt = NULL;
   call_in_loop_with_nullable_condition_C_row C = { 0 };
 
+  cql_profile_start(CRC_call_in_loop_with_nullable_condition, &call_in_loop_with_nullable_condition_perf_index);
   cql_set_notnull(i, 0);
   for (;;) {
   cql_set_nullable(_tmp_n_bool_0, i.is_null, i.value < 5);
@@ -5100,6 +5273,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_with_nullable_condition(sqlite3 *_Nonnull 
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_call_in_loop_with_nullable_condition, &call_in_loop_with_nullable_condition_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -5124,6 +5298,7 @@ END;
 */
 
 #define _PROC_ "call_in_loop_boxed"
+cql_profile_index_declaration(call_in_loop_boxed_perf_index);
 /*
 export:
 DECLARE PROC call_in_loop_boxed () USING TRANSACTION;
@@ -5146,6 +5321,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
   cql_object_ref D_object_ = NULL;
   call_in_loop_boxed_D_row D = { 0 };
 
+  cql_profile_start(CRC_call_in_loop_boxed, &call_in_loop_boxed_perf_index);
   cql_set_notnull(i, 0);
   for (;;) {
     if (!(i.value < 5)) break;
@@ -5171,6 +5347,7 @@ cql_cleanup:
   cql_object_release(C_object_);
   cql_object_release(box);
   cql_object_release(D_object_);
+  cql_profile_stop(CRC_call_in_loop_boxed, &call_in_loop_boxed_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -5344,6 +5521,7 @@ END;
 */
 
 #define _PROC_ "call_out_union_in_loop"
+cql_profile_index_declaration(call_out_union_in_loop_perf_index);
 /*
 export:
 DECLARE PROC call_out_union_in_loop () USING TRANSACTION;
@@ -5364,6 +5542,7 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
   cql_int32 C_row_count_ = 0;
   call_out_union_in_loop_C_row C = { 0 };
 
+  cql_profile_start(CRC_call_out_union_in_loop, &call_out_union_in_loop_perf_index);
   cql_set_notnull(i, 0);
   for (;;) {
     if (!(i.value < 5)) break;
@@ -5381,6 +5560,7 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
 
   cql_error_report();
   cql_object_release(C_result_set_);
+  cql_profile_stop(CRC_call_out_union_in_loop, &call_out_union_in_loop_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -5575,6 +5755,7 @@ END;
 */
 
 #define _PROC_ "make_trigger"
+cql_profile_index_declaration(make_trigger_perf_index);
 /*
 export:
 DECLARE PROC make_trigger () USING TRANSACTION;
@@ -5583,6 +5764,7 @@ CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_make_trigger, &make_trigger_perf_index);
   _rc_ = cql_exec(_db_,
     "CREATE TEMP TRIGGER IF NOT EXISTS trigger1 "
       "BEFORE DELETE ON bar "
@@ -5596,6 +5778,7 @@ CQL_WARN_UNUSED cql_code make_trigger(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_make_trigger, &make_trigger_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -5617,6 +5800,7 @@ END;
 */
 
 #define _PROC_ "is_test"
+cql_profile_index_declaration(is_test_perf_index);
 /*
 export:
 DECLARE PROC is_test ();
@@ -5626,6 +5810,7 @@ void is_test(void) {
   cql_nullable_int32 i = { .is_null = 1 };
   cql_nullable_int32 j = { .is_null = 1 };
 
+  cql_profile_start(CRC_is_test, &is_test_perf_index);
   b = 1 == 1;
   b = cql_string_equal(_literal_6_x_, _literal_6_x_);
   b = cql_string_equal(_literal_6_x_, _literal_11_y_);
@@ -5634,6 +5819,7 @@ void is_test(void) {
   cql_set_notnull(j, 2);
   b = ((i.is_null == j.is_null) && (j.is_null || i.value == j.value));
 
+  cql_profile_stop(CRC_is_test, &is_test_perf_index);
 }
 #undef _PROC_
 
@@ -5651,6 +5837,7 @@ END;
 */
 
 #define _PROC_ "is_blob"
+cql_profile_index_declaration(is_blob_perf_index);
 /*
 export:
 DECLARE PROC is_blob ();
@@ -5660,11 +5847,13 @@ void is_blob(void) {
   cql_blob_ref bl2 = NULL;
   cql_bool b = 0;
 
+  cql_profile_start(CRC_is_blob, &is_blob_perf_index);
   b = cql_blob_equal(bl1, bl2);
   b = !cql_blob_equal(bl1, bl2);
 
   cql_blob_release(bl1);
   cql_blob_release(bl2);
+  cql_profile_stop(CRC_is_blob, &is_blob_perf_index);
 }
 #undef _PROC_
 
@@ -5685,6 +5874,7 @@ END;
 */
 
 #define _PROC_ "is_not_test"
+cql_profile_index_declaration(is_not_test_perf_index);
 /*
 export:
 DECLARE PROC is_not_test ();
@@ -5694,6 +5884,7 @@ void is_not_test(void) {
   cql_nullable_int32 i = { .is_null = 1 };
   cql_nullable_int32 j = { .is_null = 1 };
 
+  cql_profile_start(CRC_is_not_test, &is_not_test_perf_index);
   b = 1 != 1;
   b = !cql_string_equal(_literal_6_x_, _literal_6_x_);
   b = !cql_string_equal(_literal_6_x_, _literal_11_y_);
@@ -5702,6 +5893,7 @@ void is_not_test(void) {
   cql_set_notnull(j, 2);
   b = !((i.is_null == j.is_null) && (j.is_null || i.value == j.value));
 
+  cql_profile_stop(CRC_is_not_test, &is_not_test_perf_index);
 }
 #undef _PROC_
 
@@ -5715,6 +5907,7 @@ END;
 */
 
 #define _PROC_ "in_test"
+cql_profile_index_declaration(in_test_perf_index);
 /*
 export:
 DECLARE PROC in_test (x INTEGER, OUT b BOOL);
@@ -5722,9 +5915,11 @@ DECLARE PROC in_test (x INTEGER, OUT b BOOL);
 void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 2);
 
+  cql_profile_start(CRC_in_test, &in_test_perf_index);
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
 
+  cql_profile_stop(CRC_in_test, &in_test_perf_index);
 }
 #undef _PROC_
 
@@ -5738,6 +5933,7 @@ END;
 */
 
 #define _PROC_ "not_in_test"
+cql_profile_index_declaration(not_in_test_perf_index);
 /*
 export:
 DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
@@ -5745,9 +5941,11 @@ DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
 void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 2);
 
+  cql_profile_start(CRC_not_in_test, &not_in_test_perf_index);
   cql_set_null(*b); // set out arg to non-garbage
   cql_set_null(*b);
 
+  cql_profile_stop(CRC_not_in_test, &not_in_test_perf_index);
 }
 #undef _PROC_
 
@@ -5762,6 +5960,7 @@ END;
 */
 
 #define _PROC_ "drop_trigger_test"
+cql_profile_index_declaration(drop_trigger_test_perf_index);
 /*
 export:
 DECLARE PROC drop_trigger_test () USING TRANSACTION;
@@ -5770,6 +5969,7 @@ CQL_WARN_UNUSED cql_code drop_trigger_test(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_drop_trigger_test, &drop_trigger_test_perf_index);
   _rc_ = cql_exec(_db_,
     "DROP TRIGGER IF EXISTS trigger1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -5780,6 +5980,7 @@ CQL_WARN_UNUSED cql_code drop_trigger_test(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_drop_trigger_test, &drop_trigger_test_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6179,6 +6380,7 @@ END;
 */
 
 #define _PROC_ "with_deleter"
+cql_profile_index_declaration(with_deleter_perf_index);
 /*
 export:
 DECLARE PROC with_deleter () USING TRANSACTION;
@@ -6187,6 +6389,7 @@ CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_with_deleter, &with_deleter_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "x (a) AS (SELECT 111) "
@@ -6197,6 +6400,7 @@ CQL_WARN_UNUSED cql_code with_deleter(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_with_deleter, &with_deleter_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6216,6 +6420,7 @@ END;
 */
 
 #define _PROC_ "with_updater"
+cql_profile_index_declaration(with_updater_perf_index);
 /*
 export:
 DECLARE PROC with_updater () USING TRANSACTION;
@@ -6224,6 +6429,7 @@ CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_with_updater, &with_updater_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "x (a) AS (SELECT 111) "
@@ -6236,6 +6442,7 @@ CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_with_updater, &with_updater_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6508,6 +6715,7 @@ END;
 */
 
 #define _PROC_ "view_creator"
+cql_profile_index_declaration(view_creator_perf_index);
 /*
 export:
 DECLARE PROC view_creator () USING TRANSACTION;
@@ -6516,6 +6724,7 @@ CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_view_creator, &view_creator_perf_index);
   _rc_ = cql_exec(_db_,
     "CREATE VIEW alias_preserved AS "
     "SELECT (5) AS plugh, T.xyzzy AS five "
@@ -6525,6 +6734,7 @@ CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_view_creator, &view_creator_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6544,6 +6754,7 @@ END;
 */
 
 #define _PROC_ "settings_info"
+cql_profile_index_declaration(settings_info_perf_index);
 /*
 export:
 DECLARE PROC settings_info () USING TRANSACTION;
@@ -6553,6 +6764,7 @@ CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
 
+  cql_profile_start(CRC_settings_info, &settings_info_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT SUM(A.unread_pending_thread_count), SUM(A.switch_account_badge_count) "
       "FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count "
@@ -6566,6 +6778,7 @@ CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_settings_info, &settings_info_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6762,6 +6975,7 @@ END;
 */
 
 #define _PROC_ "use_with_select"
+cql_profile_index_declaration(use_with_select_perf_index);
 /*
 export:
 DECLARE PROC use_with_select () USING TRANSACTION;
@@ -6773,6 +6987,7 @@ CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_) {
   cql_int32 _tmp_int_0 = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_use_with_select, &use_with_select_perf_index);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "WITH "
     "threads2 (count) AS (SELECT 1) "
@@ -6789,6 +7004,7 @@ CQL_WARN_UNUSED cql_code use_with_select(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_use_with_select, &use_with_select_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6804,6 +7020,7 @@ END;
 */
 
 #define _PROC_ "rowset_object_reader"
+cql_profile_index_declaration(rowset_object_reader_perf_index);
 /*
 export:
 DECLARE PROC rowset_object_reader (rowset OBJECT<rowset>) USING TRANSACTION;
@@ -6813,6 +7030,7 @@ CQL_WARN_UNUSED cql_code rowset_object_reader(sqlite3 *_Nonnull _db_, cql_object
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
 
+  cql_profile_start(CRC_rowset_object_reader, &rowset_object_reader_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT id "
       "FROM ReadFromRowset(?)");
@@ -6824,6 +7042,7 @@ CQL_WARN_UNUSED cql_code rowset_object_reader(sqlite3 *_Nonnull _db_, cql_object
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_rowset_object_reader, &rowset_object_reader_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6843,6 +7062,7 @@ END;
 */
 
 #define _PROC_ "upsert_do_something"
+cql_profile_index_declaration(upsert_do_something_perf_index);
 /*
 export:
 DECLARE PROC upsert_do_something () USING TRANSACTION;
@@ -6851,6 +7071,7 @@ CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_upsert_do_something, &upsert_do_something_perf_index);
   _rc_ = cql_exec(_db_,
     "INSERT INTO foo(id) SELECT id "
       "FROM bar "
@@ -6863,6 +7084,7 @@ CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_upsert_do_something, &upsert_do_something_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6884,6 +7106,7 @@ END;
 */
 
 #define _PROC_ "with_upsert_form"
+cql_profile_index_declaration(with_upsert_form_perf_index);
 /*
 export:
 DECLARE PROC with_upsert_form () USING TRANSACTION;
@@ -6892,6 +7115,7 @@ CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_with_upsert_form, &with_upsert_form_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "names (id) AS (VALUES(1), (5), (3), (12)) "
@@ -6906,6 +7130,7 @@ CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_with_upsert_form, &with_upsert_form_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6921,6 +7146,7 @@ END;
 */
 
 #define _PROC_ "upsert_do_nothing"
+cql_profile_index_declaration(upsert_do_nothing_perf_index);
 /*
 export:
 DECLARE PROC upsert_do_nothing (id_ INTEGER NOT NULL) USING TRANSACTION;
@@ -6930,6 +7156,7 @@ CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_
   cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_upsert_do_nothing, &upsert_do_nothing_perf_index);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "INSERT INTO foo(id) VALUES(?) "
     "ON CONFLICT DO NOTHING");
@@ -6944,6 +7171,7 @@ CQL_WARN_UNUSED cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_upsert_do_nothing, &upsert_do_nothing_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -6972,6 +7200,7 @@ END;
 */
 
 #define _PROC_ "use_many_out_cursors"
+cql_profile_index_declaration(use_many_out_cursors_perf_index);
 /*
 export:
 DECLARE PROC use_many_out_cursors () USING TRANSACTION;
@@ -7002,6 +7231,7 @@ CQL_WARN_UNUSED cql_code use_many_out_cursors(sqlite3 *_Nonnull _db_) {
   use_many_out_cursors_c1_row c1 = { ._refs_count_ = 1, ._refs_offset_ = use_many_out_cursors_c1_refs_offset };
   use_many_out_cursors_c2_row c2 = { ._refs_count_ = 1, ._refs_offset_ = use_many_out_cursors_c2_refs_offset };
 
+  cql_profile_start(CRC_use_many_out_cursors, &use_many_out_cursors_perf_index);
   cql_teardown_row(c1);
   p1((p1_row *)&c1); // p1_row identical to cursor type
   cql_teardown_row(c2);
@@ -7013,6 +7243,7 @@ cql_cleanup:
   cql_error_report();
   cql_teardown_row(c1);
   cql_teardown_row(c2);
+  cql_profile_stop(CRC_use_many_out_cursors, &use_many_out_cursors_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7035,6 +7266,7 @@ END;
 */
 
 #define _PROC_ "fetch_many_times"
+cql_profile_index_declaration(fetch_many_times_perf_index);
 /*
 export:
 DECLARE PROC fetch_many_times (arg BOOL NOT NULL) USING TRANSACTION;
@@ -7054,6 +7286,7 @@ CQL_WARN_UNUSED cql_code fetch_many_times(sqlite3 *_Nonnull _db_, cql_bool arg) 
   cql_error_prepare();
   fetch_many_times_C_row C = { ._refs_count_ = 1, ._refs_offset_ = fetch_many_times_C_refs_offset };
 
+  cql_profile_start(CRC_fetch_many_times, &fetch_many_times_perf_index);
   if (arg == 1) {
     cql_teardown_row(C);
     p1((p1_row *)&C); // p1_row identical to cursor type
@@ -7077,6 +7310,7 @@ CQL_WARN_UNUSED cql_code fetch_many_times(sqlite3 *_Nonnull _db_, cql_bool arg) 
 cql_cleanup:
   cql_error_report();
   cql_teardown_row(C);
+  cql_profile_stop(CRC_fetch_many_times, &fetch_many_times_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7184,6 +7418,7 @@ END;
 */
 
 #define _PROC_ "out_union_reader"
+cql_profile_index_declaration(out_union_reader_perf_index);
 /*
 export:
 DECLARE PROC out_union_reader () USING TRANSACTION;
@@ -7206,6 +7441,7 @@ CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_) {
   cql_int32 c_row_count_ = 0;
   out_union_reader_c_row c = { ._refs_count_ = 1, ._refs_offset_ = out_union_reader_c_refs_offset };
 
+  cql_profile_start(CRC_out_union_reader, &out_union_reader_perf_index);
   out_union_two_fetch_results(&c_result_set_);
   c_row_num_ = c_row_count_ = -1;
   c_row_count_ = cql_result_set_get_count((cql_result_set_ref)c_result_set_);
@@ -7225,6 +7461,7 @@ CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_) {
   cql_error_report();
   cql_object_release(c_result_set_);
   cql_teardown_row(c);
+  cql_profile_stop(CRC_out_union_reader, &out_union_reader_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7348,6 +7585,7 @@ END;
 */
 
 #define _PROC_ "out_union_dml_reader"
+cql_profile_index_declaration(out_union_dml_reader_perf_index);
 /*
 export:
 DECLARE PROC out_union_dml_reader () USING TRANSACTION;
@@ -7370,6 +7608,7 @@ CQL_WARN_UNUSED cql_code out_union_dml_reader(sqlite3 *_Nonnull _db_) {
   cql_int32 c_row_count_ = 0;
   out_union_dml_reader_c_row c = { ._refs_count_ = 1, ._refs_offset_ = out_union_dml_reader_c_refs_offset };
 
+  cql_profile_start(CRC_out_union_dml_reader, &out_union_dml_reader_perf_index);
   _rc_ = out_union_from_select_fetch_results(_db_, &c_result_set_);
   c_row_num_ = c_row_count_ = -1;
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -7391,6 +7630,7 @@ cql_cleanup:
   cql_error_report();
   cql_object_release(c_result_set_);
   cql_teardown_row(c);
+  cql_profile_stop(CRC_out_union_dml_reader, &out_union_dml_reader_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7483,6 +7723,7 @@ END;
 */
 
 #define _PROC_ "read_out_union_values"
+cql_profile_index_declaration(read_out_union_values_perf_index);
 /*
 export:
 DECLARE PROC read_out_union_values (a INTEGER NOT NULL, b INTEGER NOT NULL) USING TRANSACTION;
@@ -7503,6 +7744,7 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
   cql_int32 C_row_count_ = 0;
   read_out_union_values_C_row C = { 0 };
 
+  cql_profile_start(CRC_read_out_union_values, &read_out_union_values_perf_index);
   out_union_values_fetch_results(&C_result_set_, a, b);
   C_row_num_ = C_row_count_ = -1;
   C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
@@ -7515,6 +7757,7 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
 
   cql_error_report();
   cql_object_release(C_result_set_);
+  cql_profile_stop(CRC_read_out_union_values, &read_out_union_values_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7640,6 +7883,7 @@ END;
 */
 
 #define _PROC_ "out_union_dml_for_call"
+cql_profile_index_declaration(out_union_dml_for_call_perf_index);
 /*
 export:
 DECLARE PROC out_union_dml_for_call () USING TRANSACTION;
@@ -7662,6 +7906,7 @@ CQL_WARN_UNUSED cql_code out_union_dml_for_call(sqlite3 *_Nonnull _db_) {
   cql_int32 C_row_count_ = 0;
   out_union_dml_for_call_C_row C = { ._refs_count_ = 1, ._refs_offset_ = out_union_dml_for_call_C_refs_offset };
 
+  cql_profile_start(CRC_out_union_dml_for_call, &out_union_dml_for_call_perf_index);
   _rc_ = out_union_dml_fetch_results(_db_, &C_result_set_);
   C_row_num_ = C_row_count_ = -1;
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -7677,6 +7922,7 @@ cql_cleanup:
   cql_error_report();
   cql_object_release(C_result_set_);
   cql_teardown_row(C);
+  cql_profile_stop(CRC_out_union_dml_for_call, &out_union_dml_for_call_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7696,6 +7942,7 @@ END;
 */
 
 #define _PROC_ "compound_select_expr"
+cql_profile_index_declaration(compound_select_expr_perf_index);
 /*
 export:
 DECLARE PROC compound_select_expr () USING TRANSACTION;
@@ -7707,6 +7954,7 @@ CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_) {
   cql_int32 _tmp_int_0 = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_compound_select_expr, &compound_select_expr_perf_index);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "SELECT 1 "
       "WHERE 0 "
@@ -7724,6 +7972,7 @@ CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_compound_select_expr, &compound_select_expr_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7825,6 +8074,7 @@ END;
 */
 
 #define _PROC_ "update_cursor"
+cql_profile_index_declaration(update_cursor_perf_index);
 /*
 export:
 DECLARE PROC update_cursor () USING TRANSACTION;
@@ -7842,12 +8092,14 @@ CQL_WARN_UNUSED cql_code update_cursor(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   update_cursor_C_row C = { 0 };
 
+  cql_profile_start(CRC_update_cursor, &update_cursor_perf_index);
   if (C._has_row_) {
     C.x = 2;
   }
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_update_cursor, &update_cursor_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -7964,17 +8216,19 @@ END;
 */
 
 #define _PROC_ "use_return_no_error_flow"
+cql_profile_index_declaration(use_return_no_error_flow_perf_index);
 /*
 export:
 DECLARE PROC use_return_no_error_flow ();
 */
 void use_return_no_error_flow(void) {
+  cql_profile_start(CRC_use_return_no_error_flow, &use_return_no_error_flow_perf_index);
   if (1) {
     goto cql_cleanup; // return
   }
 
 cql_cleanup:
-  ; // label requires some statement
+  cql_profile_stop(CRC_use_return_no_error_flow, &use_return_no_error_flow_perf_index);
 }
 #undef _PROC_
 
@@ -7987,12 +8241,15 @@ END;
 */
 
 #define _PROC_ "empty_proc"
+cql_profile_index_declaration(empty_proc_perf_index);
 /*
 export:
 DECLARE PROC empty_proc ();
 */
 void empty_proc(void) {
+  cql_profile_start(CRC_empty_proc, &empty_proc_perf_index);
 
+  cql_profile_stop(CRC_empty_proc, &empty_proc_perf_index);
 }
 #undef _PROC_
 
@@ -8025,6 +8282,7 @@ END;
 */
 
 #define _PROC_ "empty_blocks"
+cql_profile_index_declaration(empty_blocks_perf_index);
 /*
 export:
 DECLARE PROC empty_blocks () USING TRANSACTION;
@@ -8042,6 +8300,7 @@ CQL_WARN_UNUSED cql_code empty_blocks(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *c_stmt = NULL;
   empty_blocks_c_row c = { 0 };
 
+  cql_profile_start(CRC_empty_blocks, &empty_blocks_perf_index);
   if (1) {
   }
   if (2) {
@@ -8082,6 +8341,7 @@ CQL_WARN_UNUSED cql_code empty_blocks(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&c_stmt);
+  cql_profile_stop(CRC_empty_blocks, &empty_blocks_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -8103,6 +8363,7 @@ END;
 */
 
 #define _PROC_ "tail_catch"
+cql_profile_index_declaration(tail_catch_perf_index);
 /*
 export:
 DECLARE PROC tail_catch () USING TRANSACTION;
@@ -8111,6 +8372,7 @@ CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_tail_catch, &tail_catch_perf_index);
   // try
   {
     goto catch_end_6;
@@ -8128,6 +8390,7 @@ CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_tail_catch, &tail_catch_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -8142,6 +8405,7 @@ END;
 */
 
 #define _PROC_ "pretty_print_with_quote"
+cql_profile_index_declaration(pretty_print_with_quote_perf_index);
 /*
 export:
 DECLARE PROC pretty_print_with_quote () USING TRANSACTION;
@@ -8150,6 +8414,7 @@ CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_pretty_print_with_quote, &pretty_print_with_quote_perf_index);
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id, name) VALUES(1, 'it''s high noon\r\n\f\b\t\v')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -8157,6 +8422,7 @@ CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_pretty_print_with_quote, &pretty_print_with_quote_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -8171,6 +8437,7 @@ END;
 */
 
 #define _PROC_ "hex_quote"
+cql_profile_index_declaration(hex_quote_perf_index);
 /*
 export:
 DECLARE PROC hex_quote () USING TRANSACTION;
@@ -8179,6 +8446,7 @@ CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_hex_quote, &hex_quote_perf_index);
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id, name) VALUES(1, '\x01\x02\xa1\x1bg')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -8186,6 +8454,7 @@ CQL_WARN_UNUSED cql_code hex_quote(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_hex_quote, &hex_quote_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -9029,6 +9298,7 @@ END;
 */
 
 #define _PROC_ "early_out_rc_cleared"
+cql_profile_index_declaration(early_out_rc_cleared_perf_index);
 /*
 export:
 DECLARE PROC early_out_rc_cleared (OUT x INTEGER) USING TRANSACTION;
@@ -9048,6 +9318,7 @@ CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullab
   sqlite3_stmt *C_stmt = NULL;
   early_out_rc_cleared_C_row C = { 0 };
 
+  cql_profile_start(CRC_early_out_rc_cleared, &early_out_rc_cleared_perf_index);
   cql_set_null(*x); // set out arg to non-garbage
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1");
@@ -9066,6 +9337,7 @@ CQL_WARN_UNUSED cql_code early_out_rc_cleared(sqlite3 *_Nonnull _db_, cql_nullab
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_early_out_rc_cleared, &early_out_rc_cleared_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -9712,6 +9984,7 @@ END;
 */
 
 #define _PROC_ "vault_cursor_proc"
+cql_profile_index_declaration(vault_cursor_proc_perf_index);
 /*
 export:
 DECLARE PROC vault_cursor_proc () USING TRANSACTION;
@@ -9731,6 +10004,7 @@ CQL_WARN_UNUSED cql_code vault_cursor_proc(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
   vault_cursor_proc_C_row C = { ._refs_count_ = 1, ._refs_offset_ = vault_cursor_proc_C_refs_offset };
 
+  cql_profile_start(CRC_vault_cursor_proc, &vault_cursor_proc_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT name "
       "FROM vault_mixed_sensitive");
@@ -9746,6 +10020,7 @@ cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
+  cql_profile_stop(CRC_vault_cursor_proc, &vault_cursor_proc_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -10150,6 +10425,7 @@ END;
 */
 
 #define _PROC_ "try_boxing"
+cql_profile_index_declaration(try_boxing_perf_index);
 /*
 export:
 DECLARE PROC try_boxing (OUT result OBJECT<bar CURSOR>) USING TRANSACTION;
@@ -10162,6 +10438,7 @@ CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Null
   sqlite3_stmt *C_stmt = NULL;
   cql_object_ref C_object_ = NULL;
 
+  cql_profile_start(CRC_try_boxing, &try_boxing_perf_index);
   *(void **)result = NULL; // set out arg to non-garbage
   C_stmt = NULL;
   _rc_ = cql_prepare(_db_, &C_stmt,
@@ -10176,6 +10453,7 @@ CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Null
 cql_cleanup:
   cql_error_report();
   cql_object_release(C_object_);
+  cql_profile_stop(CRC_try_boxing, &try_boxing_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -10191,6 +10469,7 @@ END;
 */
 
 #define _PROC_ "try_unboxing"
+cql_profile_index_declaration(try_unboxing_perf_index);
 /*
 export:
 DECLARE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>) USING TRANSACTION;
@@ -10215,6 +10494,7 @@ CQL_WARN_UNUSED cql_code try_unboxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nu
   cql_object_ref C_object_ = NULL;
   try_unboxing_C_row C = { ._refs_count_ = 1, ._refs_offset_ = try_unboxing_C_refs_offset };
 
+  cql_profile_start(CRC_try_unboxing, &try_unboxing_perf_index);
   cql_set_object_ref(&C_object_, boxed_cursor);
   C_stmt = cql_unbox_stmt(C_object_);
   _rc_ = sqlite3_step(C_stmt);
@@ -10232,6 +10512,7 @@ cql_cleanup:
   cql_error_report();
   cql_object_release(C_object_);
   cql_teardown_row(C);
+  cql_profile_stop(CRC_try_unboxing, &try_unboxing_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -10247,6 +10528,7 @@ END;
 */
 
 #define _PROC_ "local_cast_int_notnull"
+cql_profile_index_declaration(local_cast_int_notnull_perf_index);
 /*
 export:
 DECLARE PROC local_cast_int_notnull ();
@@ -10254,8 +10536,10 @@ DECLARE PROC local_cast_int_notnull ();
 void local_cast_int_notnull(void) {
   cql_int32 x = 0;
 
+  cql_profile_start(CRC_local_cast_int_notnull, &local_cast_int_notnull_perf_index);
   x = ((cql_int32)(3.2));
 
+  cql_profile_stop(CRC_local_cast_int_notnull, &local_cast_int_notnull_perf_index);
 }
 #undef _PROC_
 
@@ -10272,6 +10556,7 @@ END;
 */
 
 #define _PROC_ "local_cast_int"
+cql_profile_index_declaration(local_cast_int_perf_index);
 /*
 export:
 DECLARE PROC local_cast_int ();
@@ -10280,9 +10565,11 @@ void local_cast_int(void) {
   cql_nullable_int32 x = { .is_null = 1 };
   cql_nullable_double r = { .is_null = 1 };
 
+  cql_profile_start(CRC_local_cast_int, &local_cast_int_perf_index);
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_int32)(r.value)));
 
+  cql_profile_stop(CRC_local_cast_int, &local_cast_int_perf_index);
 }
 #undef _PROC_
 
@@ -10297,6 +10584,7 @@ END;
 */
 
 #define _PROC_ "local_cast_long_notnull"
+cql_profile_index_declaration(local_cast_long_notnull_perf_index);
 /*
 export:
 DECLARE PROC local_cast_long_notnull ();
@@ -10304,8 +10592,10 @@ DECLARE PROC local_cast_long_notnull ();
 void local_cast_long_notnull(void) {
   cql_int64 x = 0;
 
+  cql_profile_start(CRC_local_cast_long_notnull, &local_cast_long_notnull_perf_index);
   x = ((cql_int64)(3.2));
 
+  cql_profile_stop(CRC_local_cast_long_notnull, &local_cast_long_notnull_perf_index);
 }
 #undef _PROC_
 
@@ -10322,6 +10612,7 @@ END;
 */
 
 #define _PROC_ "local_cast_long"
+cql_profile_index_declaration(local_cast_long_perf_index);
 /*
 export:
 DECLARE PROC local_cast_long ();
@@ -10330,9 +10621,11 @@ void local_cast_long(void) {
   cql_nullable_int64 x = { .is_null = 1 };
   cql_nullable_double r = { .is_null = 1 };
 
+  cql_profile_start(CRC_local_cast_long, &local_cast_long_perf_index);
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_int64)(r.value)));
 
+  cql_profile_stop(CRC_local_cast_long, &local_cast_long_perf_index);
 }
 #undef _PROC_
 
@@ -10347,6 +10640,7 @@ END;
 */
 
 #define _PROC_ "local_cast_real_notnull"
+cql_profile_index_declaration(local_cast_real_notnull_perf_index);
 /*
 export:
 DECLARE PROC local_cast_real_notnull ();
@@ -10354,8 +10648,10 @@ DECLARE PROC local_cast_real_notnull ();
 void local_cast_real_notnull(void) {
   cql_double x = 0;
 
+  cql_profile_start(CRC_local_cast_real_notnull, &local_cast_real_notnull_perf_index);
   x = ((cql_double)(3));
 
+  cql_profile_stop(CRC_local_cast_real_notnull, &local_cast_real_notnull_perf_index);
 }
 #undef _PROC_
 
@@ -10372,6 +10668,7 @@ END;
 */
 
 #define _PROC_ "local_cast_real"
+cql_profile_index_declaration(local_cast_real_perf_index);
 /*
 export:
 DECLARE PROC local_cast_real ();
@@ -10380,9 +10677,11 @@ void local_cast_real(void) {
   cql_nullable_double x = { .is_null = 1 };
   cql_nullable_int32 r = { .is_null = 1 };
 
+  cql_profile_start(CRC_local_cast_real, &local_cast_real_perf_index);
   cql_set_notnull(r, 3);
   cql_set_nullable(x, r.is_null, ((cql_double)(r.value)));
 
+  cql_profile_stop(CRC_local_cast_real, &local_cast_real_perf_index);
 }
 #undef _PROC_
 
@@ -10397,6 +10696,7 @@ END;
 */
 
 #define _PROC_ "local_cast_bool_notnull"
+cql_profile_index_declaration(local_cast_bool_notnull_perf_index);
 /*
 export:
 DECLARE PROC local_cast_bool_notnull ();
@@ -10404,8 +10704,10 @@ DECLARE PROC local_cast_bool_notnull ();
 void local_cast_bool_notnull(void) {
   cql_bool x = 0;
 
+  cql_profile_start(CRC_local_cast_bool_notnull, &local_cast_bool_notnull_perf_index);
   x = ((cql_bool)!!(3.2));
 
+  cql_profile_stop(CRC_local_cast_bool_notnull, &local_cast_bool_notnull_perf_index);
 }
 #undef _PROC_
 
@@ -10422,6 +10724,7 @@ END;
 */
 
 #define _PROC_ "local_cast_bool"
+cql_profile_index_declaration(local_cast_bool_perf_index);
 /*
 export:
 DECLARE PROC local_cast_bool ();
@@ -10430,9 +10733,11 @@ void local_cast_bool(void) {
   cql_nullable_bool x = { .is_null = 1 };
   cql_nullable_double r = { .is_null = 1 };
 
+  cql_profile_start(CRC_local_cast_bool, &local_cast_bool_perf_index);
   cql_set_notnull(r, 3.2);
   cql_set_nullable(x, r.is_null, ((cql_bool)!!(r.value)));
 
+  cql_profile_stop(CRC_local_cast_bool, &local_cast_bool_perf_index);
 }
 #undef _PROC_
 
@@ -10449,6 +10754,7 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool_notnull"
+cql_profile_index_declaration(local_cast_from_bool_notnull_perf_index);
 /*
 export:
 DECLARE PROC local_cast_from_bool_notnull ();
@@ -10457,9 +10763,11 @@ void local_cast_from_bool_notnull(void) {
   cql_bool b = 0;
   cql_double x = 0;
 
+  cql_profile_start(CRC_local_cast_from_bool_notnull, &local_cast_from_bool_notnull_perf_index);
   b = 1;
   x = ((cql_double)!!(b));
 
+  cql_profile_stop(CRC_local_cast_from_bool_notnull, &local_cast_from_bool_notnull_perf_index);
 }
 #undef _PROC_
 
@@ -10476,6 +10784,7 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool"
+cql_profile_index_declaration(local_cast_from_bool_perf_index);
 /*
 export:
 DECLARE PROC local_cast_from_bool ();
@@ -10484,9 +10793,11 @@ void local_cast_from_bool(void) {
   cql_nullable_bool b = { .is_null = 1 };
   cql_nullable_double x = { .is_null = 1 };
 
+  cql_profile_start(CRC_local_cast_from_bool, &local_cast_from_bool_perf_index);
   cql_set_notnull(b, 1);
   cql_set_nullable(x, b.is_null, ((cql_double)!!(b.value)));
 
+  cql_profile_stop(CRC_local_cast_from_bool, &local_cast_from_bool_perf_index);
 }
 #undef _PROC_
 
@@ -10503,6 +10814,7 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool_no_op_notnull"
+cql_profile_index_declaration(local_cast_from_bool_no_op_notnull_perf_index);
 /*
 export:
 DECLARE PROC local_cast_from_bool_no_op_notnull ();
@@ -10511,9 +10823,11 @@ void local_cast_from_bool_no_op_notnull(void) {
   cql_bool x = 0;
   cql_bool b = 0;
 
+  cql_profile_start(CRC_local_cast_from_bool_no_op_notnull, &local_cast_from_bool_no_op_notnull_perf_index);
   b = 1;
   x = b;
 
+  cql_profile_stop(CRC_local_cast_from_bool_no_op_notnull, &local_cast_from_bool_no_op_notnull_perf_index);
 }
 #undef _PROC_
 
@@ -10530,6 +10844,7 @@ END;
 */
 
 #define _PROC_ "local_cast_from_bool_no_op"
+cql_profile_index_declaration(local_cast_from_bool_no_op_perf_index);
 /*
 export:
 DECLARE PROC local_cast_from_bool_no_op ();
@@ -10538,9 +10853,11 @@ void local_cast_from_bool_no_op(void) {
   cql_nullable_bool b = { .is_null = 1 };
   cql_nullable_bool x = { .is_null = 1 };
 
+  cql_profile_start(CRC_local_cast_from_bool_no_op, &local_cast_from_bool_no_op_perf_index);
   cql_set_notnull(b, 1);
   cql_set_nullable(x, b.is_null, b.value);
 
+  cql_profile_stop(CRC_local_cast_from_bool_no_op, &local_cast_from_bool_no_op_perf_index);
 }
 #undef _PROC_
 
@@ -10557,6 +10874,7 @@ END;
 */
 
 #define _PROC_ "base_proc_savepoint"
+cql_profile_index_declaration(base_proc_savepoint_perf_index);
 /*
 export:
 DECLARE PROC base_proc_savepoint () USING TRANSACTION;
@@ -10566,6 +10884,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   cql_nullable_int32 X = { .is_null = 1 };
 
+  cql_profile_start(CRC_base_proc_savepoint, &base_proc_savepoint_perf_index);
   _rc_ = cql_exec(_db_,
     "SAVEPOINT base_proc_savepoint");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -10593,6 +10912,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_base_proc_savepoint, &base_proc_savepoint_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -10612,6 +10932,7 @@ END;
 */
 
 #define _PROC_ "base_proc_savepoint_commit_return"
+cql_profile_index_declaration(base_proc_savepoint_commit_return_perf_index);
 /*
 export:
 DECLARE PROC base_proc_savepoint_commit_return () USING TRANSACTION;
@@ -10620,6 +10941,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_base_proc_savepoint_commit_return, &base_proc_savepoint_commit_return_perf_index);
   _rc_ = cql_exec(_db_,
     "SAVEPOINT base_proc_savepoint_commit_return");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -10654,6 +10976,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_commit_return(sqlite3 *_Nonnull _db
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_base_proc_savepoint_commit_return, &base_proc_savepoint_commit_return_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -10673,6 +10996,7 @@ END;
 */
 
 #define _PROC_ "base_proc_savepoint_rollback_return"
+cql_profile_index_declaration(base_proc_savepoint_rollback_return_perf_index);
 /*
 export:
 DECLARE PROC base_proc_savepoint_rollback_return () USING TRANSACTION;
@@ -10681,6 +11005,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_base_proc_savepoint_rollback_return, &base_proc_savepoint_rollback_return_perf_index);
   _rc_ = cql_exec(_db_,
     "SAVEPOINT base_proc_savepoint_rollback_return");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -10718,6 +11043,7 @@ CQL_WARN_UNUSED cql_code base_proc_savepoint_rollback_return(sqlite3 *_Nonnull _
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_base_proc_savepoint_rollback_return, &base_proc_savepoint_rollback_return_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -12483,6 +12809,7 @@ END;
 */
 
 #define _PROC_ "emit_rc"
+cql_profile_index_declaration(emit_rc_perf_index);
 /*
 export:
 DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
@@ -12493,11 +12820,13 @@ CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull res
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_emit_rc, &emit_rc_perf_index);
   *result_code = 0; // set out arg to non-garbage
   *result_code = SQLITE_OK;
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_emit_rc, &emit_rc_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -12541,6 +12870,7 @@ END;
 */
 
 #define _PROC_ "rc_test"
+cql_profile_index_declaration(rc_test_perf_index);
 /*
 export:
 DECLARE PROC rc_test () USING TRANSACTION;
@@ -12557,6 +12887,7 @@ CQL_WARN_UNUSED cql_code rc_test(sqlite3 *_Nonnull _db_) {
   cql_int32 e5 = 0;
   cql_int32 e6 = 0;
 
+  cql_profile_start(CRC_rc_test, &rc_test_perf_index);
   err = SQLITE_OK;
   e0 = SQLITE_OK;
   // try
@@ -12608,6 +12939,7 @@ CQL_WARN_UNUSED cql_code rc_test(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_rc_test, &rc_test_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -12636,6 +12968,7 @@ END;
 */
 
 #define _PROC_ "rc_test_lazy1"
+cql_profile_index_declaration(rc_test_lazy1_perf_index);
 /*
 export:
 DECLARE PROC rc_test_lazy1 () USING TRANSACTION;
@@ -12644,6 +12977,7 @@ CQL_WARN_UNUSED cql_code rc_test_lazy1(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_rc_test_lazy1, &rc_test_lazy1_perf_index);
   // try
   {
     _rc_ = cql_exec(_db_,
@@ -12676,6 +13010,7 @@ CQL_WARN_UNUSED cql_code rc_test_lazy1(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_rc_test_lazy1, &rc_test_lazy1_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -12704,6 +13039,7 @@ END;
 */
 
 #define _PROC_ "rc_test_lazy2"
+cql_profile_index_declaration(rc_test_lazy2_perf_index);
 /*
 export:
 DECLARE PROC rc_test_lazy2 () USING TRANSACTION;
@@ -12713,6 +13049,7 @@ CQL_WARN_UNUSED cql_code rc_test_lazy2(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   cql_int32 err = 0;
 
+  cql_profile_start(CRC_rc_test_lazy2, &rc_test_lazy2_perf_index);
   // try
   {
     _rc_ = cql_exec(_db_,
@@ -12742,6 +13079,7 @@ CQL_WARN_UNUSED cql_code rc_test_lazy2(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_rc_test_lazy2, &rc_test_lazy2_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -12759,6 +13097,7 @@ END;
 */
 
 #define _PROC_ "virtual_table_creator"
+cql_profile_index_declaration(virtual_table_creator_perf_index);
 /*
 export:
 DECLARE PROC virtual_table_creator () USING TRANSACTION;
@@ -12767,6 +13106,7 @@ CQL_WARN_UNUSED cql_code virtual_table_creator(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_virtual_table_creator, &virtual_table_creator_perf_index);
   _rc_ = cql_exec(_db_,
     "CREATE VIRTUAL TABLE virt_table USING virt_module ( "
       "id INTEGER, "
@@ -12776,6 +13116,7 @@ CQL_WARN_UNUSED cql_code virtual_table_creator(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_virtual_table_creator, &virtual_table_creator_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -12792,6 +13133,7 @@ END;
 */
 
 #define _PROC_ "out_arg_cursor"
+cql_profile_index_declaration(out_arg_cursor_perf_index);
 /*
 export:
 DECLARE PROC out_arg_cursor (x INTEGER NOT NULL, OUT y INTEGER NOT NULL);
@@ -12809,12 +13151,14 @@ void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y) {
 
   out_arg_cursor_C_row C = { 0 };
 
+  cql_profile_start(CRC_out_arg_cursor, &out_arg_cursor_perf_index);
   *y = 0; // set out arg to non-garbage
   C._has_row_ = 1;
   C.x = 1;
   C.y = 1;
   out_arg_cursor(C.x, &C.y);
 
+  cql_profile_stop(CRC_out_arg_cursor, &out_arg_cursor_perf_index);
 }
 #undef _PROC_
 
@@ -12836,6 +13180,7 @@ END;
 */
 
 #define _PROC_ "make_virt_table"
+cql_profile_index_declaration(make_virt_table_perf_index);
 /*
 export:
 DECLARE PROC make_virt_table () USING TRANSACTION;
@@ -12844,6 +13189,7 @@ CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_make_virt_table, &make_virt_table_perf_index);
   _rc_ = cql_exec(_db_,
     "CREATE VIRTUAL TABLE v1 USING m1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -12858,6 +13204,7 @@ CQL_WARN_UNUSED cql_code make_virt_table(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_make_virt_table, &make_virt_table_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -13155,6 +13502,7 @@ END;
 */
 
 #define _PROC_ "proc_with_alt_prefix"
+cql_profile_index_declaration(proc_with_alt_prefix_perf_index);
 /*
 export:
 DECLARE PROC proc_with_alt_prefix (OUT x INTEGER);
@@ -13162,9 +13510,11 @@ DECLARE PROC proc_with_alt_prefix (OUT x INTEGER);
 void c_proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_proc_with_alt_prefix, &proc_with_alt_prefix_perf_index);
   cql_set_null(*x); // set out arg to non-garbage
   cql_set_notnull(*x, 1);
 
+  cql_profile_stop(CRC_proc_with_alt_prefix, &proc_with_alt_prefix_perf_index);
 }
 #undef _PROC_
 
@@ -13182,6 +13532,7 @@ END;
 */
 
 #define _PROC_ "use_private_out_union"
+cql_profile_index_declaration(use_private_out_union_perf_index);
 /*
 export:
 DECLARE PROC use_private_out_union () USING TRANSACTION;
@@ -13201,6 +13552,7 @@ CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_) {
   cql_int32 C_row_count_ = 0;
   use_private_out_union_C_row C = { 0 };
 
+  cql_profile_start(CRC_use_private_out_union, &use_private_out_union_perf_index);
   private_out_union_fetch_results(&C_result_set_);
   C_row_num_ = C_row_count_ = -1;
   C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
@@ -13216,6 +13568,7 @@ CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_) {
 
   cql_error_report();
   cql_object_release(C_result_set_);
+  cql_profile_stop(CRC_use_private_out_union, &use_private_out_union_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -13298,6 +13651,7 @@ END;
 */
 
 #define _PROC_ "use_no_getters_out_union"
+cql_profile_index_declaration(use_no_getters_out_union_perf_index);
 /*
 export:
 DECLARE PROC use_no_getters_out_union () USING TRANSACTION;
@@ -13317,6 +13671,7 @@ CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_) {
   cql_int32 C_row_count_ = 0;
   use_no_getters_out_union_C_row C = { 0 };
 
+  cql_profile_start(CRC_use_no_getters_out_union, &use_no_getters_out_union_perf_index);
   no_getters_out_union_fetch_results(&C_result_set_);
   C_row_num_ = C_row_count_ = -1;
   C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
@@ -13332,6 +13687,7 @@ CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_) {
 
   cql_error_report();
   cql_object_release(C_result_set_);
+  cql_profile_stop(CRC_use_no_getters_out_union, &use_no_getters_out_union_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -13414,6 +13770,7 @@ END;
 */
 
 #define _PROC_ "use_suppress_results_out_union"
+cql_profile_index_declaration(use_suppress_results_out_union_perf_index);
 /*
 export:
 DECLARE PROC use_suppress_results_out_union () USING TRANSACTION;
@@ -13433,6 +13790,7 @@ CQL_WARN_UNUSED cql_code use_suppress_results_out_union(sqlite3 *_Nonnull _db_) 
   cql_int32 C_row_count_ = 0;
   use_suppress_results_out_union_C_row C = { 0 };
 
+  cql_profile_start(CRC_use_suppress_results_out_union, &use_suppress_results_out_union_perf_index);
   suppress_results_out_union_fetch_results(&C_result_set_);
   C_row_num_ = C_row_count_ = -1;
   C_row_count_ = cql_result_set_get_count((cql_result_set_ref)C_result_set_);
@@ -13448,6 +13806,7 @@ CQL_WARN_UNUSED cql_code use_suppress_results_out_union(sqlite3 *_Nonnull _db_) 
 
   cql_error_report();
   cql_object_release(C_result_set_);
+  cql_profile_stop(CRC_use_suppress_results_out_union, &use_suppress_results_out_union_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -13503,6 +13862,7 @@ END;
 */
 
 #define _PROC_ "set_out_arg_ref_test"
+cql_profile_index_declaration(set_out_arg_ref_test_perf_index);
 /*
 export:
 DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
@@ -13510,8 +13870,10 @@ DECLARE PROC set_out_arg_ref_test (OUT x TEXT);
 void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_set_out_arg_ref_test, &set_out_arg_ref_test_perf_index);
   *(void **)x = NULL; // set out arg to non-garbage
 
+  cql_profile_stop(CRC_set_out_arg_ref_test, &set_out_arg_ref_test_perf_index);
 }
 #undef _PROC_
 
@@ -13524,6 +13886,7 @@ END;
 */
 
 #define _PROC_ "set_out_arg_null_test"
+cql_profile_index_declaration(set_out_arg_null_test_perf_index);
 /*
 export:
 DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
@@ -13531,8 +13894,10 @@ DECLARE PROC set_out_arg_null_test (OUT x INTEGER);
 void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_set_out_arg_null_test, &set_out_arg_null_test_perf_index);
   cql_set_null(*x); // set out arg to non-garbage
 
+  cql_profile_stop(CRC_set_out_arg_null_test, &set_out_arg_null_test_perf_index);
 }
 #undef _PROC_
 
@@ -13545,6 +13910,7 @@ END;
 */
 
 #define _PROC_ "set_out_arg_notnull_test"
+cql_profile_index_declaration(set_out_arg_notnull_test_perf_index);
 /*
 export:
 DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
@@ -13552,8 +13918,10 @@ DECLARE PROC set_out_arg_notnull_test (OUT x INTEGER NOT NULL);
 void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_set_out_arg_notnull_test, &set_out_arg_notnull_test_perf_index);
   *x = 0; // set out arg to non-garbage
 
+  cql_profile_stop(CRC_set_out_arg_notnull_test, &set_out_arg_notnull_test_perf_index);
 }
 #undef _PROC_
 global_cursor2_row global_cursor2 = { ._refs_count_ = 1, ._refs_offset_ = global_cursor2_refs_offset };
@@ -13569,6 +13937,7 @@ END;
 */
 
 #define _PROC_ "early_close_cursor"
+cql_profile_index_declaration(early_close_cursor_perf_index);
 /*
 export:
 DECLARE PROC early_close_cursor () USING TRANSACTION;
@@ -13577,11 +13946,13 @@ CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_early_close_cursor, &early_close_cursor_perf_index);
   cql_finalize_stmt(&global_cursor_stmt);
   cql_teardown_row(global_cursor2);
   _rc_ = SQLITE_OK;
 
   cql_error_report();
+  cql_profile_stop(CRC_early_close_cursor, &early_close_cursor_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -13607,6 +13978,7 @@ END;
 */
 
 #define _PROC_ "various_lets"
+cql_profile_index_declaration(various_lets_perf_index);
 /*
 export:
 DECLARE PROC various_lets ();
@@ -13625,6 +13997,7 @@ void various_lets(void) {
   cql_double sr = 0;
   cql_string_ref st = NULL;
 
+  cql_profile_start(CRC_various_lets, &various_lets_perf_index);
   r = 1.0;
   i = 1;
   l = _64(1);
@@ -13641,6 +14014,7 @@ void various_lets(void) {
   cql_string_release(t);
   cql_string_release(nt);
   cql_string_release(st);
+  cql_profile_stop(CRC_various_lets, &various_lets_perf_index);
 }
 #undef _PROC_
 
@@ -13660,6 +14034,7 @@ END;
 */
 
 #define _PROC_ "try_catch_rc"
+cql_profile_index_declaration(try_catch_rc_perf_index);
 /*
 export:
 DECLARE PROC try_catch_rc () USING TRANSACTION;
@@ -13679,6 +14054,7 @@ CQL_WARN_UNUSED cql_code try_catch_rc(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
   try_catch_rc_C_row C = { ._refs_count_ = 1, ._refs_offset_ = try_catch_rc_C_refs_offset };
 
+  cql_profile_start(CRC_try_catch_rc, &try_catch_rc_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 'foo' "
       "FROM bar");
@@ -13701,6 +14077,7 @@ cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
+  cql_profile_stop(CRC_try_catch_rc, &try_catch_rc_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -13722,6 +14099,7 @@ END;
 */
 
 #define _PROC_ "out_decl_test"
+cql_profile_index_declaration(out_decl_test_perf_index);
 /*
 export:
 DECLARE PROC out_decl_test (x INTEGER);
@@ -13730,9 +14108,11 @@ void out_decl_test(cql_nullable_int32 x) {
   cql_int32 u = 0;
   cql_int32 v = 0;
 
+  cql_profile_start(CRC_out_decl_test, &out_decl_test_perf_index);
   out2_proc(x, &u, &v);
   out2_proc(x, &u, &v);
 
+  cql_profile_stop(CRC_out_decl_test, &out_decl_test_perf_index);
 }
 #undef _PROC_
 
@@ -13750,6 +14130,7 @@ END;
 */
 
 #define _PROC_ "out_decl_loop_test"
+cql_profile_index_declaration(out_decl_loop_test_perf_index);
 /*
 export:
 DECLARE PROC out_decl_loop_test (x INTEGER);
@@ -13758,12 +14139,14 @@ void out_decl_loop_test(cql_nullable_int32 x) {
   cql_int32 u = 0;
   cql_int32 v = 0;
 
+  cql_profile_start(CRC_out_decl_loop_test, &out_decl_loop_test_perf_index);
   for (;;) {
     if (!(1)) break;
     out2_proc(x, &u, &v);
     out2_proc(x, &u, &v);
   }
 
+  cql_profile_stop(CRC_out_decl_loop_test, &out_decl_loop_test_perf_index);
 }
 #undef _PROC_
 
@@ -13806,6 +14189,7 @@ END;
 */
 
 #define _PROC_ "binary_ops_with_null"
+cql_profile_index_declaration(binary_ops_with_null_perf_index);
 /*
 export:
 DECLARE PROC binary_ops_with_null ();
@@ -13842,6 +14226,7 @@ void binary_ops_with_null(void) {
   cql_nullable_int32 sub0 = { .is_null = 1 };
   cql_nullable_int32 sub1 = { .is_null = 1 };
 
+  cql_profile_start(CRC_binary_ops_with_null, &binary_ops_with_null_perf_index);
   cql_set_null(add0);
   cql_set_null(add1);
   cql_set_null(bin_and0);
@@ -13873,6 +14258,7 @@ void binary_ops_with_null(void) {
   cql_set_null(sub0);
   cql_set_null(sub1);
 
+  cql_profile_stop(CRC_binary_ops_with_null, &binary_ops_with_null_perf_index);
 }
 #undef _PROC_
 
@@ -13886,6 +14272,7 @@ END;
 */
 
 #define _PROC_ "uses_throw"
+cql_profile_index_declaration(uses_throw_perf_index);
 /*
 export:
 DECLARE PROC uses_throw () USING TRANSACTION;
@@ -13894,6 +14281,7 @@ CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_uses_throw, &uses_throw_perf_index);
   _rc_ = cql_best_error(SQLITE_OK);
   cql_error_trace();
   goto cql_cleanup;
@@ -13901,6 +14289,7 @@ CQL_WARN_UNUSED cql_code uses_throw(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_uses_throw, &uses_throw_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -13915,6 +14304,7 @@ END;
 */
 
 #define _PROC_ "uses_ifnull_throw"
+cql_profile_index_declaration(uses_ifnull_throw_perf_index);
 /*
 export:
 DECLARE PROC uses_ifnull_throw (x INTEGER) USING TRANSACTION;
@@ -13924,6 +14314,7 @@ CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_
   cql_error_prepare();
   cql_int32 y = 0;
 
+  cql_profile_start(CRC_uses_ifnull_throw, &uses_ifnull_throw_perf_index);
   if (x.is_null) {
     _rc_ = SQLITE_ERROR;
     cql_error_trace();
@@ -13934,6 +14325,7 @@ CQL_WARN_UNUSED cql_code uses_ifnull_throw(sqlite3 *_Nonnull _db_, cql_nullable_
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_uses_ifnull_throw, &uses_ifnull_throw_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -14032,6 +14424,7 @@ END;
 */
 
 #define _PROC_ "exercise_contracts"
+cql_profile_index_declaration(exercise_contracts_perf_index);
 /*
 export:
 DECLARE PROC exercise_contracts (a INTEGER, b INTEGER NOT NULL, c TEXT, d TEXT NOT NULL, e BLOB, f BLOB NOT NULL, g OBJECT, h OBJECT NOT NULL, OUT i INTEGER, OUT j INTEGER NOT NULL, OUT k TEXT, OUT l TEXT NOT NULL, INOUT m INTEGER, INOUT n INTEGER NOT NULL, INOUT o TEXT, INOUT p TEXT NOT NULL);
@@ -14049,12 +14442,14 @@ void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nulla
   cql_contract_argument_notnull((void *)o, 15);
   cql_contract_argument_notnull_when_dereferenced((void *)p, 16);
 
+  cql_profile_start(CRC_exercise_contracts, &exercise_contracts_perf_index);
   cql_set_null(*i); // set out arg to non-garbage
   *j = 0; // set out arg to non-garbage
   *(void **)k = NULL; // set out arg to non-garbage
   *(void **)l = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*l, _literal_1_text_);
 
+  cql_profile_stop(CRC_exercise_contracts, &exercise_contracts_perf_index);
 }
 #undef _PROC_
 
@@ -14067,6 +14462,7 @@ END;
 */
 
 #define _PROC_ "public_proc_with_a_contract"
+cql_profile_index_declaration(public_proc_with_a_contract_perf_index);
 /*
 export:
 DECLARE PROC public_proc_with_a_contract (t TEXT NOT NULL);
@@ -14074,7 +14470,9 @@ DECLARE PROC public_proc_with_a_contract (t TEXT NOT NULL);
 void public_proc_with_a_contract(cql_string_ref _Nonnull t) {
   cql_contract_argument_notnull((void *)t, 1);
 
+  cql_profile_start(CRC_public_proc_with_a_contract, &public_proc_with_a_contract_perf_index);
 
+  cql_profile_stop(CRC_public_proc_with_a_contract, &public_proc_with_a_contract_perf_index);
 }
 #undef _PROC_
 
@@ -14454,6 +14852,7 @@ END;
 */
 
 #define _PROC_ "nullability_improvements_do_not_change_access"
+cql_profile_index_declaration(nullability_improvements_do_not_change_access_perf_index);
 /*
 export:
 DECLARE PROC nullability_improvements_do_not_change_access ();
@@ -14462,11 +14861,13 @@ void nullability_improvements_do_not_change_access(void) {
   cql_nullable_int32 a = { .is_null = 1 };
   cql_int32 b = 0;
 
+  cql_profile_start(CRC_nullability_improvements_do_not_change_access, &nullability_improvements_do_not_change_access_perf_index);
   if (!a.is_null) {
     b = a.value;
     cql_set_notnull(a, 0);
   }
 
+  cql_profile_stop(CRC_nullability_improvements_do_not_change_access, &nullability_improvements_do_not_change_access_perf_index);
 }
 #undef _PROC_
 cql_bool true_test = 0;
@@ -14487,6 +14888,7 @@ END;
 */
 
 #define _PROC_ "BigFormat"
+cql_profile_index_declaration(BigFormat_perf_index);
 /*
 export:
 DECLARE PROC BigFormat () USING TRANSACTION;
@@ -14820,6 +15222,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
   };
   cql_string_ref s = NULL;
 
+  cql_profile_start(CRC_BigFormat, &BigFormat_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50, f51, f52, f53, f54, f55, f56, f57, f58, f59, f60, f61, f62, f63, f64, f65, f66, f67, f68, f69, f70, f71, f72, f73, f74, f75 "
       "FROM big_data");
@@ -14914,6 +15317,7 @@ cql_cleanup:
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
   cql_string_release(s);
+  cql_profile_stop(CRC_BigFormat, &BigFormat_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -14934,6 +15338,7 @@ END;
 */
 
 #define _PROC_ "ltor_proc_int_not_null"
+cql_profile_index_declaration(ltor_proc_int_not_null_perf_index);
 /*
 export:
 DECLARE PROC ltor_proc_int_not_null (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT c INTEGER NOT NULL);
@@ -14941,8 +15346,10 @@ DECLARE PROC ltor_proc_int_not_null (a INTEGER NOT NULL, b INTEGER NOT NULL, OUT
 void ltor_proc_int_not_null(cql_int32 a, cql_int32 b, cql_int32 *_Nonnull c) {
   cql_contract_argument_notnull((void *)c, 3);
 
+  cql_profile_start(CRC_ltor_proc_int_not_null, &ltor_proc_int_not_null_perf_index);
   *c = 0; // set out arg to non-garbage
 
+  cql_profile_stop(CRC_ltor_proc_int_not_null, &ltor_proc_int_not_null_perf_index);
 }
 #undef _PROC_
 
@@ -14955,6 +15362,7 @@ END;
 */
 
 #define _PROC_ "ltor_proc_int"
+cql_profile_index_declaration(ltor_proc_int_perf_index);
 /*
 export:
 DECLARE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER);
@@ -14962,8 +15370,10 @@ DECLARE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER);
 void ltor_proc_int(cql_nullable_int32 a, cql_nullable_int32 b, cql_nullable_int32 *_Nonnull c) {
   cql_contract_argument_notnull((void *)c, 3);
 
+  cql_profile_start(CRC_ltor_proc_int, &ltor_proc_int_perf_index);
   cql_set_null(*c); // set out arg to non-garbage
 
+  cql_profile_stop(CRC_ltor_proc_int, &ltor_proc_int_perf_index);
 }
 #undef _PROC_
 
@@ -14977,6 +15387,7 @@ END;
 */
 
 #define _PROC_ "ltor_proc_text_not_null"
+cql_profile_index_declaration(ltor_proc_text_not_null_perf_index);
 /*
 export:
 DECLARE PROC ltor_proc_text_not_null (a TEXT NOT NULL, b TEXT NOT NULL, OUT c TEXT NOT NULL);
@@ -14986,9 +15397,11 @@ void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull 
   cql_contract_argument_notnull((void *)b, 2);
   cql_contract_argument_notnull((void *)c, 3);
 
+  cql_profile_start(CRC_ltor_proc_text_not_null, &ltor_proc_text_not_null_perf_index);
   *(void **)c = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*c, _literal_1_text_);
 
+  cql_profile_stop(CRC_ltor_proc_text_not_null, &ltor_proc_text_not_null_perf_index);
 }
 #undef _PROC_
 
@@ -15001,6 +15414,7 @@ END;
 */
 
 #define _PROC_ "ltor_proc_text"
+cql_profile_index_declaration(ltor_proc_text_perf_index);
 /*
 export:
 DECLARE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT);
@@ -15008,8 +15422,10 @@ DECLARE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT);
 void ltor_proc_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b, cql_string_ref _Nullable *_Nonnull c) {
   cql_contract_argument_notnull((void *)c, 3);
 
+  cql_profile_start(CRC_ltor_proc_text, &ltor_proc_text_perf_index);
   *(void **)c = NULL; // set out arg to non-garbage
 
+  cql_profile_stop(CRC_ltor_proc_text, &ltor_proc_text_perf_index);
 }
 #undef _PROC_
 
@@ -15030,6 +15446,7 @@ END;
 */
 
 #define _PROC_ "arguments_are_evaluated_left_to_right"
+cql_profile_index_declaration(arguments_are_evaluated_left_to_right_perf_index);
 /*
 export:
 DECLARE PROC arguments_are_evaluated_left_to_right ();
@@ -15054,6 +15471,7 @@ void arguments_are_evaluated_left_to_right(void) {
   cql_string_ref g = NULL;
   cql_string_ref h = NULL;
 
+  cql_profile_start(CRC_arguments_are_evaluated_left_to_right, &arguments_are_evaluated_left_to_right_perf_index);
   ltor_proc_int_not_null(1, 2, &_tmp_int_1);
   ltor_proc_int_not_null(3, 4, &_tmp_int_2);
   ltor_proc_int_not_null(_tmp_int_1, _tmp_int_2, &a);
@@ -15101,6 +15519,7 @@ void arguments_are_evaluated_left_to_right(void) {
   cql_string_release(_tmp_n_text_2);
   cql_string_release(g);
   cql_string_release(h);
+  cql_profile_stop(CRC_arguments_are_evaluated_left_to_right, &arguments_are_evaluated_left_to_right_perf_index);
 }
 #undef _PROC_
 
@@ -15114,6 +15533,7 @@ END;
 */
 
 #define _PROC_ "f1"
+cql_profile_index_declaration(f1_perf_index);
 /*
 export:
 DECLARE PROC f1 (OUT x INTEGER NOT NULL);
@@ -15121,9 +15541,11 @@ DECLARE PROC f1 (OUT x INTEGER NOT NULL);
 void f1(cql_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_f1, &f1_perf_index);
   *x = 0; // set out arg to non-garbage
   *x = 5;
 
+  cql_profile_stop(CRC_f1, &f1_perf_index);
 }
 #undef _PROC_
 
@@ -15137,6 +15559,7 @@ END;
 */
 
 #define _PROC_ "f2"
+cql_profile_index_declaration(f2_perf_index);
 /*
 export:
 DECLARE PROC f2 (OUT x INTEGER);
@@ -15144,9 +15567,11 @@ DECLARE PROC f2 (OUT x INTEGER);
 void f2(cql_nullable_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_f2, &f2_perf_index);
   cql_set_null(*x); // set out arg to non-garbage
   cql_set_notnull(*x, 5);
 
+  cql_profile_stop(CRC_f2, &f2_perf_index);
 }
 #undef _PROC_
 
@@ -15160,6 +15585,7 @@ END;
 */
 
 #define _PROC_ "f3"
+cql_profile_index_declaration(f3_perf_index);
 /*
 export:
 DECLARE PROC f3 (y INTEGER, OUT x INTEGER);
@@ -15167,9 +15593,11 @@ DECLARE PROC f3 (y INTEGER, OUT x INTEGER);
 void f3(cql_nullable_int32 y, cql_nullable_int32 *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 2);
 
+  cql_profile_start(CRC_f3, &f3_perf_index);
   cql_set_null(*x); // set out arg to non-garbage
   cql_set_nullable(*x, y.is_null, y.value);
 
+  cql_profile_stop(CRC_f3, &f3_perf_index);
 }
 #undef _PROC_
 
@@ -15185,6 +15613,7 @@ END;
 */
 
 #define _PROC_ "multi_call_temp_reuse"
+cql_profile_index_declaration(multi_call_temp_reuse_perf_index);
 /*
 export:
 DECLARE PROC multi_call_temp_reuse ();
@@ -15201,6 +15630,7 @@ void multi_call_temp_reuse(void) {
   cql_nullable_int32 _tmp_n_int_4 = { .is_null = 1 };
   cql_nullable_int32 s = { .is_null = 1 };
 
+  cql_profile_start(CRC_multi_call_temp_reuse, &multi_call_temp_reuse_perf_index);
   f1(&_tmp_int_2);
   f1(&_tmp_int_3);
   f1(&_tmp_int_4);
@@ -15219,6 +15649,7 @@ void multi_call_temp_reuse(void) {
   f3(_tmp_n_int_3, &_tmp_n_int_2);
   cql_combine_nullables(s, _tmp_n_int_1.is_null, _tmp_n_int_2.is_null, _tmp_n_int_1.value + _tmp_n_int_2.value);
 
+  cql_profile_stop(CRC_multi_call_temp_reuse, &multi_call_temp_reuse_perf_index);
 }
 #undef _PROC_
 
@@ -15316,6 +15747,7 @@ END;
 */
 
 #define _PROC_ "and_preserves_temps"
+cql_profile_index_declaration(and_preserves_temps_perf_index);
 /*
 export:
 DECLARE PROC and_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
@@ -15326,6 +15758,7 @@ void and_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullabl
   cql_nullable_bool _tmp_n_bool_2 = { .is_null = 1 };
   cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
 
+  cql_profile_start(CRC_and_preserves_temps, &and_preserves_temps_perf_index);
   cql_combine_nullables(_tmp_n_bool_1, a.is_null, b.is_null, a.value > b.value);
   if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
     cql_set_notnull(_tmp_n_bool_0, 0);
@@ -15354,6 +15787,7 @@ void and_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullabl
     cql_set_nullable(c, a.is_null, a.value);
   }
 
+  cql_profile_stop(CRC_and_preserves_temps, &and_preserves_temps_perf_index);
 }
 #undef _PROC_
 
@@ -15369,6 +15803,7 @@ END;
 */
 
 #define _PROC_ "or_preserves_temps"
+cql_profile_index_declaration(or_preserves_temps_perf_index);
 /*
 export:
 DECLARE PROC or_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT);
@@ -15380,6 +15815,7 @@ void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable
   cql_nullable_bool _tmp_n_bool_2 = { .is_null = 1 };
   cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
 
+  cql_profile_start(CRC_or_preserves_temps, &or_preserves_temps_perf_index);
   cql_set_nullable(_tmp_n_bool_1, c.is_null, c.value < 0);
   if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
     cql_set_notnull(_tmp_n_bool_0, 1);
@@ -15409,6 +15845,7 @@ void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable
     cql_set_nullable(c, a.is_null, a.value);
   }
 
+  cql_profile_stop(CRC_or_preserves_temps, &or_preserves_temps_perf_index);
 }
 #undef _PROC_
 
@@ -16161,6 +16598,7 @@ END;
 */
 
 #define _PROC_ "slash_star_and_star_slash"
+cql_profile_index_declaration(slash_star_and_star_slash_perf_index);
 /*
 export:
 DECLARE PROC slash_star_and_star_slash ();
@@ -16168,9 +16606,11 @@ DECLARE PROC slash_star_and_star_slash ();
 void slash_star_and_star_slash(void) {
   cql_string_ref x = NULL;
 
+  cql_profile_start(CRC_slash_star_and_star_slash, &slash_star_and_star_slash_perf_index);
   cql_set_string_ref(&x, _literal_23_slash_star_and_star_slash);
 
   cql_string_release(x);
+  cql_profile_stop(CRC_slash_star_and_star_slash, &slash_star_and_star_slash_perf_index);
 }
 #undef _PROC_
 
@@ -16189,6 +16629,7 @@ END;
 */
 
 #define _PROC_ "blob_serialization_test"
+cql_profile_index_declaration(blob_serialization_test_perf_index);
 /*
 export:
 DECLARE PROC blob_serialization_test () USING TRANSACTION;
@@ -16269,6 +16710,7 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
     .cursor_refs_offset = blob_serialization_test_D_refs_offset,
   };
 
+  cql_profile_start(CRC_blob_serialization_test, &blob_serialization_test_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 1, 'foo'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16290,6 +16732,7 @@ cql_cleanup:
   cql_teardown_row(C);
   cql_blob_release(B);
   cql_teardown_row(D);
+  cql_profile_stop(CRC_blob_serialization_test, &blob_serialization_test_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -16305,6 +16748,7 @@ END;
 */
 
 #define _PROC_ "deserialize_func"
+cql_profile_index_declaration(deserialize_func_perf_index);
 /*
 export:
 DECLARE PROC deserialize_func () USING TRANSACTION;
@@ -16349,6 +16793,7 @@ CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_) {
   };
   cql_blob_ref _tmp_n_blob_0 = NULL;
 
+  cql_profile_start(CRC_deserialize_func, &deserialize_func_perf_index);
   cql_blob_release(_tmp_n_blob_0);
   _tmp_n_blob_0 = make_blob();
   _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, &C_dyn);
@@ -16359,6 +16804,7 @@ cql_cleanup:
   cql_error_report();
   cql_teardown_row(C);
   cql_blob_release(_tmp_n_blob_0);
+  cql_profile_stop(CRC_deserialize_func, &deserialize_func_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -16378,6 +16824,7 @@ END;
 */
 
 #define _PROC_ "bigstuff"
+cql_profile_index_declaration(bigstuff_perf_index);
 /*
 export:
 DECLARE PROC bigstuff ();
@@ -16390,6 +16837,7 @@ void bigstuff(void) {
   cql_int64 big5 = 0;
   cql_int64 big6 = 0;
 
+  cql_profile_start(CRC_bigstuff, &bigstuff_perf_index);
   big1 = _64(0x7fffffffffffffff);
   big2 = _64(0x8000000000000000);
   big3 = (_64(-9223372036854775807) - 1);
@@ -16397,6 +16845,7 @@ void bigstuff(void) {
   big5 = _64(9223372036854775807);
   big6 = _64(9223372036854775807);
 
+  cql_profile_stop(CRC_bigstuff, &bigstuff_perf_index);
 }
 #undef _PROC_
 
@@ -16441,6 +16890,7 @@ END;
 */
 
 #define _PROC_ "use_gr_cursor_for_serialization"
+cql_profile_index_declaration(use_gr_cursor_for_serialization_perf_index);
 /*
 export:
 DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) USING TRANSACTION;
@@ -16451,6 +16901,7 @@ CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_,
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_use_gr_cursor_for_serialization, &use_gr_cursor_for_serialization_perf_index);
   *(void **)b = NULL; // set out arg to non-garbage
   _rc_ = cql_serialize_to_blob(b, &gr_blob_cursor_dyn);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16458,6 +16909,7 @@ CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_,
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_use_gr_cursor_for_serialization, &use_gr_cursor_for_serialization_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -16472,6 +16924,7 @@ END;
 */
 
 #define _PROC_ "mutated_in_param_ref"
+cql_profile_index_declaration(mutated_in_param_ref_perf_index);
 /*
 export:
 DECLARE PROC mutated_in_param_ref (x TEXT);
@@ -16479,10 +16932,12 @@ DECLARE PROC mutated_in_param_ref (x TEXT);
 void mutated_in_param_ref(cql_string_ref _Nullable _in__x) {
   cql_string_ref x = NULL;
 
+  cql_profile_start(CRC_mutated_in_param_ref, &mutated_in_param_ref_perf_index);
   cql_set_string_ref(&x, _in__x);
   cql_set_string_ref(&x, _literal_24_hi_mutated_in_param_ref);
 
   cql_string_release(x);
+  cql_profile_stop(CRC_mutated_in_param_ref, &mutated_in_param_ref_perf_index);
 }
 #undef _PROC_
 
@@ -16703,6 +17158,7 @@ END;
 */
 
 #define _PROC_ "external_cursor_caller"
+cql_profile_index_declaration(external_cursor_caller_perf_index);
 /*
 export:
 DECLARE PROC external_cursor_caller ();
@@ -16737,8 +17193,10 @@ void external_cursor_caller(void) {
   };
   cql_nullable_int32 result = { .is_null = 1 };
 
+  cql_profile_start(CRC_external_cursor_caller, &external_cursor_caller_perf_index);
   result = external_cursor_func(&shape_storage_dyn);
 
+  cql_profile_stop(CRC_external_cursor_caller, &external_cursor_caller_perf_index);
 }
 #undef _PROC_
 
@@ -16752,6 +17210,7 @@ END;
 */
 
 #define _PROC_ "clobber1"
+cql_profile_index_declaration(clobber1_perf_index);
 /*
 export:
 DECLARE PROC clobber1 (INOUT x TEXT);
@@ -16759,8 +17218,10 @@ DECLARE PROC clobber1 (INOUT x TEXT);
 void clobber1(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_clobber1, &clobber1_perf_index);
   cql_set_string_ref(&*x, _literal_25_xyzzy_clobber1);
 
+  cql_profile_stop(CRC_clobber1, &clobber1_perf_index);
 }
 #undef _PROC_
 
@@ -16774,6 +17235,7 @@ END;
 */
 
 #define _PROC_ "clobber2"
+cql_profile_index_declaration(clobber2_perf_index);
 /*
 export:
 DECLARE PROC clobber2 (OUT x TEXT);
@@ -16781,9 +17243,11 @@ DECLARE PROC clobber2 (OUT x TEXT);
 void clobber2(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
+  cql_profile_start(CRC_clobber2, &clobber2_perf_index);
   *(void **)x = NULL; // set out arg to non-garbage
   cql_set_string_ref(&*x, _literal_25_xyzzy_clobber1);
 
+  cql_profile_stop(CRC_clobber2, &clobber2_perf_index);
 }
 #undef _PROC_
 
@@ -16797,6 +17261,7 @@ END;
 */
 
 #define _PROC_ "mutated_in_arg1"
+cql_profile_index_declaration(mutated_in_arg1_perf_index);
 /*
 export:
 DECLARE PROC mutated_in_arg1 (x TEXT);
@@ -16804,10 +17269,12 @@ DECLARE PROC mutated_in_arg1 (x TEXT);
 void mutated_in_arg1(cql_string_ref _Nullable _in__x) {
   cql_string_ref x = NULL;
 
+  cql_profile_start(CRC_mutated_in_arg1, &mutated_in_arg1_perf_index);
   cql_set_string_ref(&x, _in__x);
   clobber1(&x);
 
   cql_string_release(x);
+  cql_profile_stop(CRC_mutated_in_arg1, &mutated_in_arg1_perf_index);
 }
 #undef _PROC_
 
@@ -16821,6 +17288,7 @@ END;
 */
 
 #define _PROC_ "mutated_in_arg2"
+cql_profile_index_declaration(mutated_in_arg2_perf_index);
 /*
 export:
 DECLARE PROC mutated_in_arg2 (x TEXT);
@@ -16828,11 +17296,13 @@ DECLARE PROC mutated_in_arg2 (x TEXT);
 void mutated_in_arg2(cql_string_ref _Nullable _in__x) {
   cql_string_ref x = NULL;
 
+  cql_profile_start(CRC_mutated_in_arg2, &mutated_in_arg2_perf_index);
   cql_set_string_ref(&x, _in__x);
   cql_set_string_ref(&x, NULL);
   clobber2(&x);
 
   cql_string_release(x);
+  cql_profile_stop(CRC_mutated_in_arg2, &mutated_in_arg2_perf_index);
 }
 #undef _PROC_
 
@@ -16847,6 +17317,7 @@ END;
 */
 
 #define _PROC_ "mutated_in_arg3"
+cql_profile_index_declaration(mutated_in_arg3_perf_index);
 /*
 export:
 DECLARE PROC mutated_in_arg3 (x TEXT) USING TRANSACTION;
@@ -16858,6 +17329,7 @@ CQL_WARN_UNUSED cql_code mutated_in_arg3(sqlite3 *_Nonnull _db_, cql_string_ref 
   sqlite3_stmt *C_stmt = NULL;
   cql_bool _C_has_row_ = 0;
 
+  cql_profile_start(CRC_mutated_in_arg3, &mutated_in_arg3_perf_index);
   cql_set_string_ref(&x, _in__x);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT 'x'");
@@ -16873,6 +17345,7 @@ cql_cleanup:
   cql_error_report();
   cql_string_release(x);
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_mutated_in_arg3, &mutated_in_arg3_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -16887,6 +17360,7 @@ END;
 */
 
 #define _PROC_ "mutated_not_null"
+cql_profile_index_declaration(mutated_not_null_perf_index);
 /*
 export:
 DECLARE PROC mutated_not_null (x TEXT NOT NULL);
@@ -16896,10 +17370,12 @@ void mutated_not_null(cql_string_ref _Nonnull _in__x) {
 
   cql_string_ref x = NULL;
 
+  cql_profile_start(CRC_mutated_not_null, &mutated_not_null_perf_index);
   cql_set_string_ref(&x, _in__x);
   cql_set_string_ref(&x, _literal_25_xyzzy_clobber1);
 
   cql_string_release(x);
+  cql_profile_stop(CRC_mutated_not_null, &mutated_not_null_perf_index);
 }
 #undef _PROC_
 
@@ -17026,13 +17502,16 @@ END;
 */
 
 #define _PROC_ "another_proc_that_needs_dependents"
+cql_profile_index_declaration(another_proc_that_needs_dependents_perf_index);
 /*
 export:
 DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
 DECLARE PROC another_proc_that_needs_dependents (a_foo OBJECT<a_proc_we_need SET>);
 */
 void another_proc_that_needs_dependents(cql_object_ref _Nullable a_foo) {
+  cql_profile_start(CRC_another_proc_that_needs_dependents, &another_proc_that_needs_dependents_perf_index);
 
+  cql_profile_stop(CRC_another_proc_that_needs_dependents, &another_proc_that_needs_dependents_perf_index);
 }
 #undef _PROC_
 
@@ -17261,6 +17740,7 @@ END;
 */
 
 #define _PROC_ "use_cql_blob_get_backed"
+cql_profile_index_declaration(use_cql_blob_get_backed_perf_index);
 /*
 export:
 DECLARE PROC use_cql_blob_get_backed () USING TRANSACTION;
@@ -17270,6 +17750,7 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
 
+  cql_profile_start(CRC_use_cql_blob_get_backed, &use_cql_blob_get_backed_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT bgetkey(k, 0), bgetval(v, 1055660242183705531), bgetval(v, -7635294210585028660), bgetval(v, -9155171551243524439), bgetval(v, -6946718245010482247), bgetval(v, -3683705396192132539) "
       "FROM backing");
@@ -17279,6 +17760,7 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_use_cql_blob_get_backed, &use_cql_blob_get_backed_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -17294,6 +17776,7 @@ END;
 */
 
 #define _PROC_ "use_cql_blob_get_backed2"
+cql_profile_index_declaration(use_cql_blob_get_backed2_perf_index);
 /*
 export:
 DECLARE PROC use_cql_blob_get_backed2 () USING TRANSACTION;
@@ -17303,6 +17786,7 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
 
+  cql_profile_start(CRC_use_cql_blob_get_backed2, &use_cql_blob_get_backed2_perf_index);
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT bgetkey(k, 1), bgetkey(k, 0), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
       "FROM backing");
@@ -17312,6 +17796,7 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_use_cql_blob_get_backed2, &use_cql_blob_get_backed2_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -17329,6 +17814,7 @@ END;
 */
 
 #define _PROC_ "insert_into_backed2"
+cql_profile_index_declaration(insert_into_backed2_perf_index);
 /*
 export:
 DECLARE PROC insert_into_backed2 () USING TRANSACTION;
@@ -17337,6 +17823,7 @@ CQL_WARN_UNUSED cql_code insert_into_backed2(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_insert_into_backed2, &insert_into_backed2_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "_vals (pk1, pk2, flag, id, name, extra) AS (VALUES(1, 2, 1, 1000, 'hi', 5)) "
@@ -17347,6 +17834,7 @@ CQL_WARN_UNUSED cql_code insert_into_backed2(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_insert_into_backed2, &insert_into_backed2_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -17367,6 +17855,7 @@ END;
 */
 
 #define _PROC_ "update_backed2"
+cql_profile_index_declaration(update_backed2_perf_index);
 /*
 export:
 DECLARE PROC update_backed2 () USING TRANSACTION;
@@ -17375,6 +17864,7 @@ CQL_WARN_UNUSED cql_code update_backed2(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_update_backed2, &update_backed2_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -17394,6 +17884,7 @@ CQL_WARN_UNUSED cql_code update_backed2(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_update_backed2, &update_backed2_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -17707,6 +18198,7 @@ END;
 */
 
 #define _PROC_ "use_backed_table_with_cursor"
+cql_profile_index_declaration(use_backed_table_with_cursor_perf_index);
 /*
 export:
 DECLARE PROC use_backed_table_with_cursor () USING TRANSACTION;
@@ -17716,6 +18208,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_cursor(sqlite3 *_Nonnull _db_) {
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
 
+  cql_profile_start(CRC_use_backed_table_with_cursor, &use_backed_table_with_cursor_perf_index);
   _rc_ = cql_prepare_var(_db_, &C_stmt,
     3, NULL,
   "WITH "
@@ -17733,6 +18226,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_cursor(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_use_backed_table_with_cursor, &use_backed_table_with_cursor_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -17904,6 +18398,7 @@ END;
 */
 
 #define _PROC_ "use_backed_table_with_select_and_cursor"
+cql_profile_index_declaration(use_backed_table_with_select_and_cursor_perf_index);
 /*
 export:
 DECLARE PROC use_backed_table_with_select_and_cursor () USING TRANSACTION;
@@ -17913,6 +18408,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnu
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
 
+  cql_profile_start(CRC_use_backed_table_with_select_and_cursor, &use_backed_table_with_select_and_cursor_perf_index);
   _rc_ = cql_prepare_var(_db_, &C_stmt,
     3, NULL,
   "WITH "
@@ -17932,6 +18428,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnu
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
+  cql_profile_stop(CRC_use_backed_table_with_select_and_cursor, &use_backed_table_with_select_and_cursor_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -17949,6 +18446,7 @@ END;
 */
 
 #define _PROC_ "use_backed_table_select_expr"
+cql_profile_index_declaration(use_backed_table_select_expr_perf_index);
 /*
 export:
 DECLARE PROC use_backed_table_select_expr (OUT x BOOL NOT NULL) USING TRANSACTION;
@@ -17960,6 +18458,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cq
   cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_use_backed_table_select_expr, &use_backed_table_select_expr_perf_index);
   *x = 0; // set out arg to non-garbage
   _rc_ = cql_prepare_var(_db_, &_temp_stmt,
     3, NULL,
@@ -17982,6 +18481,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cq
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_use_backed_table_select_expr, &use_backed_table_select_expr_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18046,6 +18546,7 @@ END;
 */
 
 #define _PROC_ "use_backed_table_select_expr_value_offsets"
+cql_profile_index_declaration(use_backed_table_select_expr_value_offsets_perf_index);
 /*
 export:
 DECLARE PROC use_backed_table_select_expr_value_offsets (OUT x BOOL NOT NULL) USING TRANSACTION;
@@ -18057,6 +18558,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
   cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_use_backed_table_select_expr_value_offsets, &use_backed_table_select_expr_value_offsets_perf_index);
   *x = 0; // set out arg to non-garbage
   _rc_ = cql_prepare_var(_db_, &_temp_stmt,
     3, NULL,
@@ -18079,6 +18581,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_use_backed_table_select_expr_value_offsets, &use_backed_table_select_expr_value_offsets_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18096,6 +18599,7 @@ END;
 */
 
 #define _PROC_ "insert_backed_values"
+cql_profile_index_declaration(insert_backed_values_perf_index);
 /*
 export:
 DECLARE PROC insert_backed_values () USING TRANSACTION;
@@ -18104,6 +18608,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_insert_backed_values, &insert_backed_values_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "_vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7)) "
@@ -18114,6 +18619,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_insert_backed_values, &insert_backed_values_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18134,6 +18640,7 @@ END;
 */
 
 #define _PROC_ "insert_backed_values_using_with"
+cql_profile_index_declaration(insert_backed_values_using_with_perf_index);
 /*
 export:
 DECLARE PROC insert_backed_values_using_with () USING TRANSACTION;
@@ -18142,6 +18649,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_)
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_insert_backed_values_using_with, &insert_backed_values_using_with_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "U (x, y, z) AS (VALUES(1, '2', 3.14)), "
@@ -18155,6 +18663,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_with(sqlite3 *_Nonnull _db_)
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_insert_backed_values_using_with, &insert_backed_values_using_with_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18172,6 +18681,7 @@ END;
 */
 
 #define _PROC_ "insert_backed_values_using_form"
+cql_profile_index_declaration(insert_backed_values_using_form_perf_index);
 /*
 export:
 DECLARE PROC insert_backed_values_using_form () USING TRANSACTION;
@@ -18180,6 +18690,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnull _db_)
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_insert_backed_values_using_form, &insert_backed_values_using_form_perf_index);
   _rc_ = cql_exec(_db_,
     "WITH "
     "_vals (pk, x, y) AS (VALUES(1, '2', 3.14)) "
@@ -18190,6 +18701,7 @@ CQL_WARN_UNUSED cql_code insert_backed_values_using_form(sqlite3 *_Nonnull _db_)
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_insert_backed_values_using_form, &insert_backed_values_using_form_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18209,6 +18721,7 @@ END;
 */
 
 #define _PROC_ "inserted_backed_from_select"
+cql_profile_index_declaration(inserted_backed_from_select_perf_index);
 /*
 export:
 DECLARE PROC inserted_backed_from_select () USING TRANSACTION;
@@ -18217,6 +18730,7 @@ CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_inserted_backed_from_select, &inserted_backed_from_select_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -18235,6 +18749,7 @@ CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_inserted_backed_from_select, &inserted_backed_from_select_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18253,6 +18768,7 @@ END;
 */
 
 #define _PROC_ "delete_from_backed"
+cql_profile_index_declaration(delete_from_backed_perf_index);
 /*
 export:
 DECLARE PROC delete_from_backed () USING TRANSACTION;
@@ -18261,6 +18777,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_delete_from_backed, &delete_from_backed_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -18278,6 +18795,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_delete_from_backed, &delete_from_backed_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18296,6 +18814,7 @@ END;
 */
 
 #define _PROC_ "delete_from_backed_no_where_clause"
+cql_profile_index_declaration(delete_from_backed_no_where_clause_perf_index);
 /*
 export:
 DECLARE PROC delete_from_backed_no_where_clause () USING TRANSACTION;
@@ -18304,6 +18823,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _d
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_delete_from_backed_no_where_clause, &delete_from_backed_no_where_clause_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -18321,6 +18841,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _d
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_delete_from_backed_no_where_clause, &delete_from_backed_no_where_clause_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18337,6 +18858,7 @@ END;
 */
 
 #define _PROC_ "test_blob_update_expand"
+cql_profile_index_declaration(test_blob_update_expand_perf_index);
 /*
 export:
 DECLARE PROC test_blob_update_expand () USING TRANSACTION;
@@ -18349,6 +18871,7 @@ CQL_WARN_UNUSED cql_code test_blob_update_expand(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *_temp_stmt = NULL;
   cql_blob_ref z = NULL;
 
+  cql_profile_start(CRC_test_blob_update_expand, &test_blob_update_expand_perf_index);
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "SELECT bupdatekey(?, 0, 1)");
   cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
@@ -18375,6 +18898,7 @@ cql_cleanup:
   cql_blob_release(x);
   cql_finalize_stmt(&_temp_stmt);
   cql_blob_release(z);
+  cql_profile_stop(CRC_test_blob_update_expand, &test_blob_update_expand_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18395,6 +18919,7 @@ END;
 */
 
 #define _PROC_ "update_backed_set_value"
+cql_profile_index_declaration(update_backed_set_value_perf_index);
 /*
 export:
 DECLARE PROC update_backed_set_value () USING TRANSACTION;
@@ -18403,6 +18928,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_update_backed_set_value, &update_backed_set_value_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -18422,6 +18948,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_update_backed_set_value, &update_backed_set_value_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18443,6 +18970,7 @@ END;
 */
 
 #define _PROC_ "update_backed_with_clause"
+cql_profile_index_declaration(update_backed_with_clause_perf_index);
 /*
 export:
 DECLARE PROC update_backed_with_clause () USING TRANSACTION;
@@ -18451,6 +18979,7 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_update_backed_with_clause, &update_backed_with_clause_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -18471,6 +19000,7 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_update_backed_with_clause, &update_backed_with_clause_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18491,6 +19021,7 @@ END;
 */
 
 #define _PROC_ "update_backed_set_key"
+cql_profile_index_declaration(update_backed_set_key_perf_index);
 /*
 export:
 DECLARE PROC update_backed_set_key () USING TRANSACTION;
@@ -18499,6 +19030,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_update_backed_set_key, &update_backed_set_key_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -18518,6 +19050,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_update_backed_set_key, &update_backed_set_key_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18541,6 +19074,7 @@ END;
 */
 
 #define _PROC_ "update_backed_set_both"
+cql_profile_index_declaration(update_backed_set_both_perf_index);
 /*
 export:
 DECLARE PROC update_backed_set_both () USING TRANSACTION;
@@ -18549,6 +19083,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
+  cql_profile_start(CRC_update_backed_set_both, &update_backed_set_both_perf_index);
   _rc_ = cql_exec_var(_db_,
     3, NULL,
   "WITH "
@@ -18571,6 +19106,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
 
 cql_cleanup:
   cql_error_report();
+  cql_profile_stop(CRC_update_backed_set_both, &update_backed_set_both_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18592,6 +19128,7 @@ END;
 */
 
 #define _PROC_ "stmt_in_loop"
+cql_profile_index_declaration(stmt_in_loop_perf_index);
 /*
 export:
 DECLARE PROC stmt_in_loop () USING TRANSACTION;
@@ -18604,6 +19141,7 @@ CQL_WARN_UNUSED cql_code stmt_in_loop(sqlite3 *_Nonnull _db_) {
   cql_bool x = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_stmt_in_loop, &stmt_in_loop_perf_index);
   i = 0;
   for (;;) {
     if (!(i < 10)) break;
@@ -18636,6 +19174,7 @@ cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp1_stmt);
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_stmt_in_loop, &stmt_in_loop_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18660,6 +19199,7 @@ END;
 */
 
 #define _PROC_ "cursor_in_loop"
+cql_profile_index_declaration(cursor_in_loop_perf_index);
 /*
 export:
 DECLARE PROC cursor_in_loop () USING TRANSACTION;
@@ -18680,6 +19220,7 @@ CQL_WARN_UNUSED cql_code cursor_in_loop(sqlite3 *_Nonnull _db_) {
   cql_bool x = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_cursor_in_loop, &cursor_in_loop_perf_index);
   i = 0;
   for (;;) {
     if (!(i < 10)) break;
@@ -18712,6 +19253,7 @@ cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_cursor_in_loop, &cursor_in_loop_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18729,6 +19271,7 @@ END;
 */
 
 #define _PROC_ "select_in_loop"
+cql_profile_index_declaration(select_in_loop_perf_index);
 /*
 export:
 DECLARE PROC select_in_loop () USING TRANSACTION;
@@ -18739,6 +19282,7 @@ CQL_WARN_UNUSED cql_code select_in_loop(sqlite3 *_Nonnull _db_) {
   cql_int32 z = 0;
   sqlite3_stmt *_temp1_stmt = NULL;
 
+  cql_profile_start(CRC_select_in_loop, &select_in_loop_perf_index);
   for (;;) {
     if (!(1)) break;
     if (!_temp1_stmt) {
@@ -18759,6 +19303,7 @@ CQL_WARN_UNUSED cql_code select_in_loop(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp1_stmt);
+  cql_profile_stop(CRC_select_in_loop, &select_in_loop_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18776,6 +19321,7 @@ END;
 */
 
 #define _PROC_ "select_if_nothing_in_loop"
+cql_profile_index_declaration(select_if_nothing_in_loop_perf_index);
 /*
 export:
 DECLARE PROC select_if_nothing_in_loop () USING TRANSACTION;
@@ -18787,6 +19333,7 @@ CQL_WARN_UNUSED cql_code select_if_nothing_in_loop(sqlite3 *_Nonnull _db_) {
   cql_int32 z = 0;
   sqlite3_stmt *_temp1_stmt = NULL;
 
+  cql_profile_start(CRC_select_if_nothing_in_loop, &select_if_nothing_in_loop_perf_index);
   for (;;) {
     if (!(1)) break;
     if (!_temp1_stmt) {
@@ -18813,6 +19360,7 @@ CQL_WARN_UNUSED cql_code select_if_nothing_in_loop(sqlite3 *_Nonnull _db_) {
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp1_stmt);
+  cql_profile_stop(CRC_select_if_nothing_in_loop, &select_if_nothing_in_loop_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18830,6 +19378,7 @@ END;
 */
 
 #define _PROC_ "select_if_nothing_or_null_in_loop"
+cql_profile_index_declaration(select_if_nothing_or_null_in_loop_perf_index);
 /*
 export:
 DECLARE PROC select_if_nothing_or_null_in_loop () USING TRANSACTION;
@@ -18841,6 +19390,7 @@ CQL_WARN_UNUSED cql_code select_if_nothing_or_null_in_loop(sqlite3 *_Nonnull _db
   cql_int32 z = 0;
   sqlite3_stmt *_temp1_stmt = NULL;
 
+  cql_profile_start(CRC_select_if_nothing_or_null_in_loop, &select_if_nothing_or_null_in_loop_perf_index);
   for (;;) {
     if (!(1)) break;
     if (!_temp1_stmt) {
@@ -18869,6 +19419,7 @@ CQL_WARN_UNUSED cql_code select_if_nothing_or_null_in_loop(sqlite3 *_Nonnull _db
 cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&_temp1_stmt);
+  cql_profile_stop(CRC_select_if_nothing_or_null_in_loop, &select_if_nothing_or_null_in_loop_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18887,6 +19438,7 @@ END;
 */
 
 #define _PROC_ "my_proc_check_type"
+cql_profile_index_declaration(my_proc_check_type_perf_index);
 /*
 export:
 DECLARE PROC my_proc_check_type () USING TRANSACTION;
@@ -18901,6 +19453,7 @@ CQL_WARN_UNUSED cql_code my_proc_check_type(sqlite3 *_Nonnull _db_) {
   cql_int32 int_sql_val = 0;
   sqlite3_stmt *_temp_stmt = NULL;
 
+  cql_profile_start(CRC_my_proc_check_type, &my_proc_check_type_perf_index);
   int_lit_foo = 1;
   cql_set_string_ref(&a_string, _literal_26_abc_my_proc_check_type);
   cql_set_string_ref(&str_foo, a_string);
@@ -18919,6 +19472,7 @@ cql_cleanup:
   cql_string_release(a_string);
   cql_string_release(str_foo);
   cql_finalize_stmt(&_temp_stmt);
+  cql_profile_stop(CRC_my_proc_check_type, &my_proc_check_type_perf_index);
   return _rc_;
 }
 #undef _PROC_
@@ -18933,12 +19487,15 @@ END;
 */
 
 #define _PROC_ "end_proc"
+cql_profile_index_declaration(end_proc_perf_index);
 /*
 export:
 DECLARE PROC end_proc ();
 */
 void end_proc(void) {
+  cql_profile_start(CRC_end_proc, &end_proc_perf_index);
 
+  cql_profile_stop(CRC_end_proc, &end_proc_perf_index);
 }
 #undef _PROC_
 

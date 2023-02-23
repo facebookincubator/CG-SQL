@@ -319,8 +319,10 @@ end if;
 
 -- TEST: simple procedure with external call
 -- + void test(cql_int32 i) {
+-- + cql_profile_start(CRC_test, &test_perf_index);
 -- + if (i) {
 -- + puts("true");
+-- + cql_profile_stop(CRC_test, &test_perf_index);
 create procedure test(i integer not null)
 begin
   if i then
@@ -329,9 +331,11 @@ begin
 end;
 
 -- TEST: guard statements are simply rewritten to if statements
+-- + cql_profile_start(CRC_proc_with_return_guard, &proc_with_return_guard_perf_index);
 -- + if (!a.is_null) {
 -- + goto cql_cleanup; // return
 -- + cql_set_nullable(x, a.is_null, a.value);
+-- + cql_profile_stop(CRC_proc_with_return_guard, &proc_with_return_guard_perf_index);
 create proc proc_with_return_guard(a int)
 begin
   if a is not null return;
@@ -428,8 +432,10 @@ set i0_nullable := i1_nullable not between r2 and i0_nullable;
 
 -- TEST: out parameter test
 -- + void out_test(cql_int32 *_Nonnull i, cql_nullable_int32 *_Nonnull ii) {
+-- + cql_profile_start(CRC_out_test, &out_test_perf_index);
 -- + *i = i2;
 -- + cql_set_nullable(*ii, i0_nullable.is_null, i0_nullable.value);
+-- + cql_profile_stop(CRC_out_test, &out_test_perf_index);
 -- + }
 create procedure out_test(out i integer not null, out ii integer)
 begin
@@ -519,12 +525,29 @@ set i0_nullable := (select i0_nullable+1);
 delete from bar where name like '\\ " \n';
 
 -- TEST: binding an out parameter
+-- + cql_profile_start(CRC_outparm_test, &outparm_test_perf_index);
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, *foo);
+-- + cql_profile_stop(CRC_outparm_test, &outparm_test_perf_index);
 create procedure outparm_test(out foo integer not null)
 begin
  set foo := 1;
  delete from bar where id = foo;
+end;
+
+-- TEST: no profiling on a private sproc
+-- - cql_profile_start
+-- - cql_profile_end
+-- + ; // label requires some statement
+@attribute(cql:private)
+create procedure profile_on_private_proc(inout num int not null)
+begin
+  if num == 1 then
+    set num := 2;
+    return;
+  else
+    set num := 5;
+  end if;
 end;
 
 -- TEST: a simple stored proc that throws
@@ -1606,6 +1629,7 @@ begin
 end;
 
 -- TEST: value cursor fetch
+-- + cql_profile_start(CRC_fetch_values_dummy, &fetch_values_dummy_perf_index);
 -- + _seed_ = 123;
 -- + C._has_row_ = 1;
 -- + C.id = _seed_;
@@ -1619,7 +1643,8 @@ end;
 -- + cql_set_notnull(C.size, _seed_);
 -- This should not be a dml proc, it doesn't actually use the db
 -- + fetch_values_dummy(void)
--- - _rc_
+-- + cql_profile_stop(CRC_fetch_values_dummy, &fetch_values_dummy_perf_index);
+-- - return _rc_;
 -- - cql_cleanup
 create proc fetch_values_dummy()
 begin
@@ -2584,6 +2609,7 @@ end;
 -- +2 if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
 -- + cql_results_from_data(SQLITE_OK, &_rows_, &out_union_two_info, (cql_result_set_ref *)_result_set_);
 -- + cql_teardown_row(C);
+-- - cql_profile_stop
 create proc out_union_two()
 begin
  declare C cursor like select 1 x, '2' y;
@@ -2901,6 +2927,7 @@ end;
 -- + extern void emit_object_with_setters_set_bl(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_blob_ref _Nonnull new_value) {
 -- +   cql_contract_argument_notnull((void *)new_value, 2);
 -- +   cql_result_set_set_blob_col((cql_result_set_ref)result_set, 0, 7, new_value);
+-- - cql_profile_stop
 @attribute(cql:emit_setters)
 create proc emit_object_with_setters(
   o object not null,
@@ -3894,6 +3921,8 @@ set t2 := (select name from bar if nothing or null "garbonzo");
 -- TEST: verify private exports and binding
 -- + DECLARE PROC private_proc (OUT x INTEGER);
 -- + static void private_proc(cql_nullable_int32 *_Nonnull x)
+-- - cql_profile_start
+-- - cql_profile_stop
 @attribute(cql:private)
 create proc private_proc(out x integer)
 begin
@@ -3907,6 +3936,7 @@ end;
 -- + static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
 -- - private_out_union_get_a_field
+-- - cql_profile_stop
 @attribute(cql:private)
 create proc private_out_union()
 begin
@@ -4375,6 +4405,7 @@ end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for result set procs
 -- +1 cql_contract_argument_notnull((void *)t, 1);
+-- - cql_profile_stop
 create proc result_set_proc_with_contract_in_fetch_results(t text not null)
 begin
   select * from bar;
@@ -4382,6 +4413,7 @@ end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for out procs
 -- +1 cql_contract_argument_notnull((void *)t, 1);
+-- - cql_profile_stop
 create proc out_proc_with_contract_in_fetch_results(t text not null)
 begin
   declare C cursor like bar;

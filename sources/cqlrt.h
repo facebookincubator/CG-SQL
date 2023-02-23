@@ -235,6 +235,7 @@ SQLITE_API cql_code mockable_sqlite3_step(sqlite3_stmt *_Nonnull);
 //   you could emit any junk in the call and it would still compile.
 #define cql_profile_start(crc, index) (void)crc; (void)index;
 #define cql_profile_stop(crc, index)  (void)crc; (void)index;
+#define cql_profile_index_declaration(index) static int32_t index;
 
 // the basic version doesn't use column getters
 #define CQL_NO_GETTERS 1
