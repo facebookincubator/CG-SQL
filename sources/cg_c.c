@@ -3807,7 +3807,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
 
   CG_CHARBUF_OPEN_SYM(proc_name_base, name);
   CG_CHARBUF_OPEN_SYM(proc_sym, name, suffix);
-  CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
 
   bprintf(cg_declarations_output, "#define _PROC_ \"%s\"\n", proc_sym.ptr);
 
@@ -3819,16 +3818,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   if (out_stmt_proc || out_union_proc || result_set_proc) {
     cg_proc_result_set(ast);
   }
-  else if (!private_proc) {
-    // proc that are out_stmt_proc or out_union_proc or result_set_proc gets profiling emitted in
-    // cg_proc_result_set(...) for the rest we have to do it here.
-    // private proc doesn't need profiling setup because the public proc calling the private proc already have one.
-    bprintf(cg_header_output, "#define CRC_%s %lldL\n", proc_name_base.ptr, (llint_t)crc_charbuf(&proc_name_base));
-    bprintf(cg_declarations_output, "cql_profile_index_declaration(%s);\n", perf_index.ptr);
-    // emit profiling start signal
-    bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
-  }
-
 
   if (options.test) {
     // echo the export where it can be sanity checked
@@ -3868,8 +3857,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
         bprintf(&proc_cleanup, "  %s_info.db = NULL;\n", proc_name_base.ptr);
       }
 
-      // emit profiling start signal
-      bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
+      CG_CHARBUF_OPEN_SYM(perf_index, name, "_perf_index");
+        // emit profiling start signal
+        bprintf(&proc_body, "  cql_profile_start(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
+      CHARBUF_CLOSE(perf_index);
     }
     else {
       // If this is a forwarding procedure then we have to ensure that we produce at least an empty
@@ -4005,13 +3996,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
     empty_statement_needed = false;
   }
 
-  if (!out_stmt_proc && !out_union_proc && !result_set_proc && !private_proc) {
-    // proc returning a resultset have their profiling stop in helpers functions cql_fetch_all_results(..),
-    // cql_results_from_data(..) and cql_one_row_result(...). Let's stop profiling for proc without resultset
-    bprintf(cg_declarations_output, "  cql_profile_stop(CRC_%s, &%s);\n", proc_name_base.ptr, perf_index.ptr);
-    empty_statement_needed = false;
-  }
-
   if (dml_proc) {
     bprintf(cg_declarations_output, "  return _rc_;\n");
     empty_statement_needed = false;
@@ -4025,7 +4009,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bprintf(cg_declarations_output, "#undef _PROC_\n");
 
   CHARBUF_CLOSE(proc_decl);
-  CHARBUF_CLOSE(perf_index);
   CHARBUF_CLOSE(proc_sym);
   CHARBUF_CLOSE(proc_name_base);
   CHARBUF_CLOSE(proc_cleanup);

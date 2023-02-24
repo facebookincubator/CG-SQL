@@ -36,7 +36,6 @@ END;
 */
 
 #define _PROC_ "p"
-cql_profile_index_declaration(p_perf_index);
 /*
 export:
 DECLARE PROC p (x BLOB<blobshape>) USING TRANSACTION;
@@ -45,14 +44,12 @@ CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
-  cql_profile_start(CRC_p, &p_perf_index);
   _rc_ = cql_deserialize_from_blob(x, &serialized_cursor_dyn);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
   cql_error_report();
-  cql_profile_stop(CRC_p, &p_perf_index);
   return _rc_;
 }
 #undef _PROC_

@@ -42,7 +42,6 @@ extern cql_dynamic_cursor serialized_cursor_dyn;
 #endif
 
 // The statement ending at line XXXX
-#define CRC_p -6643602732498616851L
 extern CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x);
 
 // The statement ending at line XXXX

@@ -37,15 +37,11 @@ a proc that starts at line 1 anyway.
 
 #define _PROC_ "based_statements"
 # 1
-cql_profile_index_declaration(based_statements_perf_index);
-# 1
 void based_statements(void) {
 # 1
   cql_int32 x = 0;
 # 1
 
-# 1
-  cql_profile_start(CRC_based_statements, &based_statements_perf_index);
 # 3 "test/linetest.sql"
 # 4 "test/linetest.sql"
   x = 1;
@@ -61,8 +57,6 @@ void based_statements(void) {
   x = 5;
 # 11 "test/linetest.sql"
 
-# 11
-  cql_profile_stop(CRC_based_statements, &based_statements_perf_index);
 # 11
 }
 #undef _PROC_
@@ -96,15 +90,11 @@ TEST: assorted if combinations
 
 #define _PROC_ "if_test"
 # 1
-cql_profile_index_declaration(if_test_perf_index);
-# 1
 void if_test(void) {
 # 1
   cql_int32 x = 0;
 # 1
 
-# 1
-  cql_profile_start(CRC_if_test, &if_test_perf_index);
 # 3 "x"
 # 4 "x"
 # 4 "x"
@@ -152,8 +142,6 @@ void if_test(void) {
 # 21 "x"
 
 # 21
-  cql_profile_stop(CRC_if_test, &if_test_perf_index);
-# 21
 }
 #undef _PROC_
 
@@ -184,8 +172,6 @@ TEST: some case, coalesce and if statements
 
 #define _PROC_ "case_if"
 # 1
-cql_profile_index_declaration(case_if_perf_index);
-# 1
 void case_if(void) {
 # 1
   cql_nullable_int32 x = { .is_null = 1 };
@@ -195,8 +181,6 @@ void case_if(void) {
   cql_nullable_int32 _tmp_n_int_1 = { .is_null = 1 };
 # 1
 
-# 1
-  cql_profile_start(CRC_case_if, &case_if_perf_index);
 # 3 "test/linetest.sql"
 # 3 "test/linetest.sql"
   if (1) {
@@ -254,8 +238,6 @@ void case_if(void) {
 # 18 "test/linetest.sql"
 
 # 18
-  cql_profile_stop(CRC_case_if, &case_if_perf_index);
-# 18
 }
 #undef _PROC_
 
@@ -275,8 +257,6 @@ TEST: IN predicate
 
 #define _PROC_ "in_pred_lines"
 # 1
-cql_profile_index_declaration(in_pred_lines_perf_index);
-# 1
 void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
   cql_contract_argument_notnull((void *)b, 2);
@@ -288,8 +268,6 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
   cql_int32 _tmp_int_1 = 0;
 # 1
 
-# 1
-  cql_profile_start(CRC_in_pred_lines, &in_pred_lines_perf_index);
 # 1
   *b = 0; // set out arg to non-garbage
 # 3 "x"
@@ -312,8 +290,6 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
   *b = _tmp_bool_0;
 # 7 "x"
 
-# 7
-  cql_profile_stop(CRC_in_pred_lines, &in_pred_lines_perf_index);
 # 7
 }
 #undef _PROC_
@@ -339,8 +315,6 @@ void in_pred_lines(cql_int32 i, cql_bool *_Nonnull b) {
 
 #define _PROC_ "in_pred_and_case"
 # 1
-cql_profile_index_declaration(in_pred_and_case_perf_index);
-# 1
 void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
 # 1
   cql_contract_argument_notnull((void *)b, 2);
@@ -352,8 +326,6 @@ void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
   cql_int32 _tmp_int_2 = 0;
 # 1
 
-# 1
-  cql_profile_start(CRC_in_pred_and_case, &in_pred_and_case_perf_index);
 # 1
   *b = 0; // set out arg to non-garbage
 # 3 "x"
@@ -405,8 +377,6 @@ void in_pred_and_case(cql_int32 i, cql_bool *_Nonnull b) {
   } while (0);
 # 16 "x"
 
-# 16
-  cql_profile_stop(CRC_in_pred_and_case, &in_pred_and_case_perf_index);
 # 16
 }
 #undef _PROC_

@@ -320,7 +320,6 @@ about parameters is provided, this is deliberate.
 //   you could emit any junk in the call and it would still compile.
 #define cql_profile_start(crc, index) (void)crc; (void)index;
 #define cql_profile_stop(crc, index)  (void)crc; (void)index;
-#define cql_profile_index_declaration(index) static int32_t index;
 ```
 
 The definitions in `cqlrt_common.c` can provide codegen than either has generic
