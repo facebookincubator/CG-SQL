@@ -660,6 +660,11 @@ static void cql_multinull(cql_int32 count, va_list *_Nonnull args) {
           cql_set_blob_ref(blob_ref, NULL);
           break;
         }
+        case CQL_DATA_TYPE_OBJECT: {
+          cql_object_ref *object_ref = va_arg(*args, cql_object_ref *);
+          cql_set_object_ref(object_ref, NULL);
+          break;
+        }
       }
     }
     else {
@@ -694,6 +699,12 @@ static void cql_multinull(cql_int32 count, va_list *_Nonnull args) {
           cql_set_blob_ref(blob_ref, NULL);
           break;
         }
+        // presently unreachable -- will add coverage when this is reachable
+        // case CQL_DATA_TYPE_OBJECT: {
+        //   cql_object_ref *object_ref = va_arg(*args, cql_object_ref *);
+        //   cql_set_object_ref(object_ref, NULL);
+        //   break;
+        // }
       }
     }
   }
