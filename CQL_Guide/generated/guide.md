@@ -1812,7 +1812,7 @@ So looking at that procedure we can see that it's reading sensitive data, so the
  * -sens is sensitive, that's more math
  * and the between expression is also sensitive
 
-Generally sensitivity is "radioactive" - anything it touches becomes sensitive.  This is very important because even a simple looking expression like `lgbtqia IS NOT NULL` must lead to a sensitive result or the whole process would be largely useless.  It has to be basically impossible to wash away sensitivity.[Careful here - this made me think that you believe in the notion that LGBTQIA is something that can/should be washed away...]
+Generally sensitivity is "radioactive" - anything it touches becomes sensitive.  This is very important because even a simple looking expression like `sens IS NOT NULL` must lead to a sensitive result or the whole process would be largely useless.  It has to be basically impossible to wash away sensitivity.
 
 These rules apply to normal expressions as well as expressions in the context of SQL.  Accordingly:
 
@@ -10075,6 +10075,12 @@ NOTE: different result types require a different number of output files with dif
 * some codegen features only make sense during development, this enables dev mode to turn those one
 ** example: [explain query plan](/cql-guide/ch15)
 
+### --java_package_name name
+* used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
+
+### --java_fragment_interface_mode
+* Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.
+
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
 * if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
@@ -10114,6 +10120,11 @@ These are the various outputs the compiler can produce.
 * objective C wrappers for result sets produced by the stored procedures in the input
 * these depend on the output of a standard codegen run so this is additive
 * requires one output file (foo.h)
+
+#### --rt java
+* java wrappers for result sets produced by the stored procedures in the input
+* these depend on the output of a standard codegen run so this is additive
+* requires one output file (foo.java)
 
 #### --rt schema
 * produces the canonical schema for the given input files
@@ -10175,7 +10186,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Jan 10 09:29:01 PST 2023
+Snapshot as of Tue Feb 28 17:57:39 PST 2023
 
 ### Operators and Literals
 
@@ -10211,45 +10222,44 @@ REALLIT /* floating point literal */
 ```
 ### Statement/Type Keywords
 ```
-"@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@BLOB_CREATE_KEY"
+"ABORT" "ACTION" "ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS"
+"AS" "ASC" "@ATTRIBUTE" "AUTOINCREMENT" "BEFORE" "BEGIN"
+"@BEGIN_SCHEMA_REGION" "BLOB" "@BLOB_CREATE_KEY"
 "@BLOB_CREATE_VAL" "@BLOB_GET_KEY" "@BLOB_GET_KEY_TYPE"
 "@BLOB_GET_VAL" "@BLOB_GET_VAL_TYPE" "@BLOB_UPDATE_KEY"
-"@BLOB_UPDATE_VAL" "@CREATE" "@DECLARE_DEPLOYABLE_REGION"
-"@DECLARE_SCHEMA_REGION" "@DELETE" "@DUMMY_SEED" "@ECHO"
-"@EMIT_CONSTANTS" "@EMIT_ENUMS" "@EMIT_GROUP"
-"@END_SCHEMA_REGION" "@ENFORCE_NORMAL" "@ENFORCE_POP"
-"@ENFORCE_PUSH" "@ENFORCE_RESET" "@ENFORCE_STRICT"
-"@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
-"@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
-"@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
-"@SENSITIVE" "@UNSUB" "ABORT" "ACTION" "ADD" "AFTER" "ALL"
-"ALTER" "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE"
-"BEGIN" "BLOB" "BY" "CALL" "CASCADE" "CASE" "CAST" "CATCH"
-"CHECK" "CLOSE" "COLUMN" "COLUMNS" "COMMIT" "CONST"
+"@BLOB_UPDATE_VAL" "BY" "CALL" "CASCADE" "CASE" "CAST"
+"CATCH" "CHECK" "CLOSE" "COLUMN" "COLUMNS" "COMMIT" "CONST"
 "CONSTRAINT" "CONTEXT COLUMN" "CONTEXT TYPE" "CONTINUE"
-"CREATE" "CROSS" "CURRENT ROW" "CURSOR HAS ROW" "CURSOR"
-"DECLARE" "DEFAULT" "DEFERRABLE" "DEFERRED" "DELETE" "DESC"
-"DISTINCT" "DISTINCTROW" "DO" "DROP" "ELSE IF" "ELSE"
-"ENCODE" "END" "ENUM" "EXCLUDE CURRENT ROW" "EXCLUDE GROUP"
-"EXCLUDE NO OTHERS" "EXCLUDE TIES" "EXCLUSIVE" "EXISTS"
-"EXPLAIN" "FAIL" "FETCH" "FILTER" "FIRST" "FOLLOWING" "FOR
-EACH ROW" "FOR" "FOREIGN" "FROM BLOB" "FROM" "FUNC"
+"@CREATE" "CREATE" "CROSS" "CURRENT ROW" "CURSOR" "CURSOR
+HAS ROW" "DECLARE" "@DECLARE_DEPLOYABLE_REGION"
+"@DECLARE_SCHEMA_REGION" "DEFAULT" "DEFERRABLE" "DEFERRED"
+"@DELETE" "DELETE" "DESC" "DISTINCT" "DISTINCTROW" "DO"
+"DROP" "@DUMMY_SEED" "@ECHO" "ELSE" "ELSE IF"
+"@EMIT_CONSTANTS" "@EMIT_ENUMS" "@EMIT_GROUP" "ENCODE"
+"END" "@END_SCHEMA_REGION" "@ENFORCE_NORMAL" "@ENFORCE_POP"
+"@ENFORCE_PUSH" "@ENFORCE_RESET" "@ENFORCE_STRICT" "ENUM"
+"@EPONYMOUS" "EXCLUDE CURRENT ROW" "EXCLUDE GROUP" "EXCLUDE
+NO OTHERS" "EXCLUDE TIES" "EXCLUSIVE" "EXISTS" "EXPLAIN"
+"FAIL" "FETCH" "@FILE" "FILTER" "FIRST" "FOLLOWING" "FOR"
+"FOR EACH ROW" "FOREIGN" "FROM" "FROM BLOB" "FUNC"
 "FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF" "IGNORE"
 "IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT" "INSERT"
 "INSTEAD" "INT" "INTEGER" "INTERFACE" "INTO" "JOIN" "KEY"
 "LAST" "LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
 "LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
-"NULL" "NULLS" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON"
+"NULL" "NULLS" "OBJECT" "OF" "OFFSET" "ON" "ON CONFLICT"
 "OPEN" "ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
-"PRIMARY" "PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE"
-"RANGE" "REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
+"@PREVIOUS_SCHEMA" "PRIMARY" "PRIVATE" "@PROC" "PROC"
+"PROCEDURE" "QUERY PLAN" "RAISE" "RANGE" "@RC" "REAL"
+"@RECREATE" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
 "REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
-"ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
-"STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
-"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "TYPE_CHECK"
-"UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES"
-"VAR" "VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW"
-"WITH" "WITHOUT"
+"ROWS" "SAVEPOINT" "@SCHEMA_AD_HOC_MIGRATION"
+"@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION" "SELECT"
+"@SENSITIVE" "SET" "SIGN FUNCTION" "STATEMENT" "SWITCH"
+"TABLE" "TEMP" "TEXT" "THEN" "THROW" "TO" "TRANSACTION"
+"TRIGGER" "TRY" "TYPE" "TYPE_CHECK" "UNBOUNDED" "UNIQUE"
+"@UNSUB" "UPDATE" "UPSERT" "USING" "VALUES" "VAR" "VIEW"
+"VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -12004,7 +12014,8 @@ The complete list (as of this writing) is:
   * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#shared-fragments))
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
-  * `@attribute(cql:query_plan_branch=[integer])` is by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](/cql-guide/ch15))
+  * `cql:query_plan_branch=[integer]` is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](/cql-guide/ch15))
+  * `cql:alias_of=[c_function_name]` are used on [function declarations](https://cgsql.dev/cql-guide/ch08/#ordinary-scalar-functions) to declare a function or procedure in CQL that calls a function of a different name. This is intended to used for aliasing native (C) functions. Both the aliased function name and the original function name may be declared in CQL at the same time. Note that the compiler does not enforce any consistency in typing between the original and aliased functions.
 
 
 
@@ -16614,8 +16625,23 @@ SQLite supports an extended format of the update statement with a FROM clause.  
 
 ### CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 
-@enforce_strict` has been use to enable strict update enforcement.  When enabled update statements may not include a FROM clause.
+`@enforce_strict` has been use to enable strict update enforcement.  When enabled update statements may not include a FROM clause.
 This is done if the code expects to target SQLite version 3.33 or lower.
+
+### CQL0499: alias_of attribute may only be added to a declare function statement
+
+`cql:alias_of` attributes may only be used in [`DECLARE FUNC` statements](https://cgsql.dev/cql-guide/ch08/#ordinary-scalar-functions) or [`DECLARE PROC` statements](https://cgsql.dev/cql-guide/ch06/#declaring-procedures-defined-elsewhere).
+
+### CQL0500: alias_of attribute must be a non-empty string argument
+
+`cql:alias_of` must have a string argument to indicate the underlying function name that the aliased function references. For example:
+
+```sql
+@attribute(cql:alias_of=foo)
+declare function bar() int
+```
+
+All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 
 
@@ -16629,7 +16655,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Jan 10 09:29:05 PST 2023
+Snapshot as of Tue Feb 28 17:57:41 PST 2023
 
 ### Rules
 
@@ -16677,6 +16703,7 @@ opt_type_hash: | '"typeHash"' ':' num_literal ','
 
 table: '{'
        '"name"' ':' STRING_LITERAL ','
+       SCHEMA STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -16713,6 +16740,7 @@ virtual_tables: virtual_table | virtual_table ',' virtual_tables
 
 virtual_table: '{'
        '"name"' ':' STRING_LITERAL ','
+       SCHEMA STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -19895,3 +19923,6 @@ unique to your runtime.
 
 There are tracing macros to help with debugability.  Providing some
 useful versions of those can be of great help in production environments.
+
+
+

@@ -32,6 +32,7 @@ int fileno(FILE *);
 \"tables\"[ \t]*:                { return TABLES; }
 \"virtualTables\"[ \t]*:         { return VIRTUAL_TABLES; }
 \"name\"[ \t]*:                  { return NAME; }
+\"schema\"[ \t]*:                { return SCHEMA; }
 \"module\"[ \t]*:                { return MODULE; }
 \"moduleArgs\"[ \t]*:            { return MODULE_ARGS; }
 \"argOrigin\"[ \t]*:             { return ARG_ORIGIN; }

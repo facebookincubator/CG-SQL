@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Jan 10 09:29:05 PST 2023
+Snapshot as of Tue Feb 28 17:57:41 PST 2023
 
 ### Rules
 
@@ -60,6 +60,7 @@ opt_type_hash: | '"typeHash"' ':' num_literal ','
 
 table: '{'
        '"name"' ':' STRING_LITERAL ','
+       SCHEMA STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -96,6 +97,7 @@ virtual_tables: virtual_table | virtual_table ',' virtual_tables
 
 virtual_table: '{'
        '"name"' ':' STRING_LITERAL ','
+       SCHEMA STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','

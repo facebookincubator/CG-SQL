@@ -746,7 +746,7 @@ end;
 
 -- TEST: declare a table with sensitive column
 -- + danger TEXT @SENSITIVE
--- +1 @SENSITIVE
+-- +2 @SENSITIVE
 -- +1 "isSensitive" : 1,
 create table radioactive(
  id integer not null,

@@ -11,6 +11,7 @@
 
     {
       "name" : "Foo",
+      "schema" : "CREATE TABLE Foo(\n  id INTEGER<ident> NOT NULL,\n  name TEXT\n)",
       "CRC" : "3234492599048457151",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -62,6 +63,7 @@
 
     {
       "name" : "T2",
+      "schema" : "CREATE TABLE T2(\n  id INTEGER PRIMARY KEY AUTOINCREMENT\n)",
       "CRC" : "2021161013616617031",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -99,6 +101,7 @@
 
     {
       "name" : "T3",
+      "schema" : "CREATE TABLE T3(\n  id INTEGER UNIQUE NOT NULL\n)",
       "CRC" : "-6018250782949692794",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -145,6 +148,7 @@
 
     {
       "name" : "T4",
+      "schema" : "CREATE TABLE T4(\n  @ATTRIBUTE(cool)\n  id INTEGER\n)",
       "CRC" : "-2149692277469775074",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -206,6 +210,7 @@
 
     {
       "name" : "T5",
+      "schema" : "CREATE TABLE T5(\n  r REAL,\n  bl BLOB,\n  b BOOL,\n  l LONG_INT\n)",
       "CRC" : "7011436198022389765",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -280,6 +285,7 @@
 
     {
       "name" : "T6",
+      "schema" : "CREATE TEMP TABLE IF NOT EXISTS T6(\n  id INTEGER NOT NULL\n) WITHOUT ROWID",
       "CRC" : "5029268292057128035",
       "isTemp" : 1,
       "ifNotExists" : 1,
@@ -323,6 +329,7 @@
 
     {
       "name" : "T7a",
+      "schema" : "CREATE TABLE T7a(\n  id INTEGER @CREATE(1) @DELETE(3)\n)",
       "CRC" : "-2088996992437173714",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -362,6 +369,7 @@
 
     {
       "name" : "T7b",
+      "schema" : "CREATE TABLE T7b(\n  id INTEGER @CREATE(1, t7_col_create) @DELETE(3, t7_col_delete)\n)",
       "CRC" : "-2469711812733478801",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -403,6 +411,7 @@
 
     {
       "name" : "T8a",
+      "schema" : "CREATE TABLE T8a(\n  id INTEGER\n) @CREATE(1) @DELETE(3)",
       "CRC" : "5732684105687845792",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -442,6 +451,7 @@
 
     {
       "name" : "T8b",
+      "schema" : "CREATE TABLE T8b(\n  id INTEGER\n) @CREATE(1, t8_table_create) @DELETE(3, t8_table_delete)",
       "CRC" : "8157465532859044321",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -493,6 +503,7 @@
 
     {
       "name" : "T9",
+      "schema" : "CREATE TABLE T9(\n  id1 INTEGER DEFAULT 3 PRIMARY KEY,\n  id2 INTEGER,\n  id3 INTEGER,\n  name TEXT DEFAULT \"xyzzy\",\n  val REAL DEFAULT -3.5,\n  val2 LONG_INT DEFAULT 123456789123456789L,\n  CONSTRAINT uk1 UNIQUE (id2 DESC, id3 ASC),\n  CONSTRAINT uk2 UNIQUE (id2 / 2 ASC, id3 + 2 DESC)\n)",
       "CRC" : "6457405878864377226",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -615,6 +626,7 @@
 
     {
       "name" : "T10",
+      "schema" : "CREATE TABLE T10(\n  id1 INTEGER UNIQUE,\n  id2 INTEGER,\n  id3 INTEGER,\n  id4 INTEGER UNIQUE,\n  CONSTRAINT pk1 PRIMARY KEY (id1 DESC, id2 ASC),\n  CONSTRAINT fk1 FOREIGN KEY (id1, id2) REFERENCES T9 (id2, id3),\n  CONSTRAINT uk1 UNIQUE (id2, id3),\n  UNIQUE (id3, id4)\n)",
       "CRC" : "7375818750484623977",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -715,6 +727,7 @@
 
     {
       "name" : "T11",
+      "schema" : "CREATE TABLE T11(\n  id1 INTEGER,\n  id2 INTEGER,\n  id3 INTEGER,\n  FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE CASCADE,\n  FOREIGN KEY (id1) REFERENCES T9 (id1) ON UPDATE SET NULL\n)",
       "CRC" : "-5566162567054761315",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -792,6 +805,7 @@
 
     {
       "name" : "T12",
+      "schema" : "CREATE TABLE T12(\n  id1 INTEGER,\n  id2 INTEGER,\n  id3 INTEGER,\n  FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE SET DEFAULT DEFERRABLE INITIALLY DEFERRED,\n  FOREIGN KEY (id2) REFERENCES T9 (id1) ON UPDATE NO ACTION\n)",
       "CRC" : "3766894366359324473",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -868,6 +882,7 @@
 
     {
       "name" : "T12a",
+      "schema" : "CREATE TABLE T12a(\n  id1 INTEGER,\n  id2 INTEGER,\n  id3 INTEGER,\n  FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE RESTRICT NOT DEFERRABLE\n)",
       "CRC" : "5622280100769593650",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -935,6 +950,7 @@
 
     {
       "name" : "T12b",
+      "schema" : "CREATE TABLE T12b(\n  id1 INTEGER,\n  id2 INTEGER,\n  FOREIGN KEY (id1) REFERENCES T9 (id1) NOT DEFERRABLE\n)",
       "CRC" : "2984315676194087904",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -992,6 +1008,7 @@
 
     {
       "name" : "with_fk_on_columns",
+      "schema" : "CREATE TABLE with_fk_on_columns(\n  id1 INTEGER NOT NULL REFERENCES T2 (id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,\n  id2 INTEGER NOT NULL REFERENCES T10 (id4) ON DELETE CASCADE,\n  FOREIGN KEY (id1, id2) REFERENCES T10 (id3, id4)\n)",
       "CRC" : "711224124431262369",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1063,6 +1080,7 @@
 
     {
       "name" : "recreated_in_a_group",
+      "schema" : "CREATE TABLE recreated_in_a_group(\n  id INTEGER\n) @RECREATE(my_recreate_group)",
       "CRC" : "-3666809099812167695",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1103,6 +1121,7 @@
 
     {
       "name" : "backing",
+      "schema" : "CREATE TABLE backing(\n  k BLOB PRIMARY KEY,\n  v BLOB NOT NULL\n)",
       "CRC" : "-6413948131567982202",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1160,6 +1179,7 @@
 
     {
       "name" : "backed",
+      "schema" : "CREATE TABLE backed(\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL,\n  details TEXT\n)",
       "CRC" : "8126202250363961562",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1229,6 +1249,7 @@
 
     {
       "name" : "radioactive",
+      "schema" : "CREATE TABLE radioactive(\n  id INTEGER NOT NULL,\n  danger TEXT @SENSITIVE\n)",
       "CRC" : "4798964007804907379",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1278,6 +1299,7 @@
 
     {
       "name" : "T1",
+      "schema" : "CREATE TABLE T1(\n  id INTEGER,\n  name TEXT\n)",
       "CRC" : "5967026926312045155",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1325,6 +1347,7 @@
 
     {
       "name" : "with_collate_and_check",
+      "schema" : "CREATE TABLE with_collate_and_check(\n  id TEXT COLLATE bar CHECK(id >= '_' AND id <= 'zzzzz') \n)",
       "CRC" : "2442132863554757907",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1366,6 +1389,7 @@
 
     {
       "name" : "with_check_constraints",
+      "schema" : "CREATE TABLE with_check_constraints(\n  v INTEGER,\n  CONSTRAINT x CHECK (v > 5)\n)",
       "CRC" : "3264027466860092402",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1409,6 +1433,7 @@
 
     {
       "name" : "with_unnamed_check_constraints",
+      "schema" : "CREATE TABLE with_unnamed_check_constraints(\n  w INTEGER<meters>,\n  CHECK (w > 5)\n)",
       "CRC" : "4543876486311618263",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1452,6 +1477,7 @@
 
     {
       "name" : "with_from_recreate",
+      "schema" : "CREATE TABLE with_from_recreate(\n  id INTEGER,\n  t TEXT\n) @CREATE(3, cql:from_recreate)",
       "CRC" : "772447308169098338",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1506,6 +1532,7 @@
 
     {
       "name" : "potato_table",
+      "schema" : "CREATE TABLE potato_table(\n  @ATTRIBUTE(cql:doc_comment=\"/** for the id column */\")\n  potato_id INTEGER,\n  @ATTRIBUTE(cql:doc_comment=\"/** for the name column */\")\n  @ATTRIBUTE(normal_attribute)\n  potato_name TEXT\n)",
       "CRC" : "-2522002868851592223",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1575,6 +1602,7 @@
 
     {
       "name" : "t_for_unsub",
+      "schema" : "CREATE TABLE t_for_unsub(\n  id INTEGER\n)",
       "CRC" : "7980008419978162777",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1619,6 +1647,7 @@
 
     {
       "name" : "name",
+      "schema" : "CREATE TABLE name(\n  first TEXT NOT NULL,\n  middle TEXT,\n  last TEXT NOT NULL,\n  PRIMARY KEY (first, last)\n)",
       "CRC" : "-8609840776327253249",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1694,6 +1723,7 @@
 
     {
       "name" : "every_type",
+      "schema" : "CREATE TABLE every_type(\n  bool_column BOOL NOT NULL,\n  int32_column INTEGER NOT NULL,\n  int64_column LONG_INT NOT NULL,\n  float_column REAL NOT NULL,\n  string_column TEXT NOT NULL,\n  blob_column BLOB NOT NULL,\n  PRIMARY KEY (bool_column)\n)",
       "CRC" : "2390264747603517131",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1804,6 +1834,7 @@
 
     {
       "name" : "continents",
+      "schema" : "CREATE TABLE continents(\n  country TEXT NOT NULL,\n  africa TEXT NOT NULL,\n  antarctica TEXT NOT NULL,\n  asia TEXT NOT NULL,\n  europe TEXT NOT NULL,\n  north_america TEXT NOT NULL,\n  oceania TEXT NOT NULL,\n  south_america TEXT NOT NULL,\n  PRIMARY KEY (country)\n)",
       "CRC" : "-6994876952747779156",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1934,6 +1965,7 @@
 
     {
       "name" : "pks_not_first_columns",
+      "schema" : "CREATE TABLE pks_not_first_columns(\n  a BOOL NOT NULL,\n  b INTEGER NOT NULL,\n  c LONG_INT NOT NULL,\n  d REAL NOT NULL,\n  e TEXT NOT NULL,\n  f BLOB NOT NULL,\n  PRIMARY KEY (b, d, f)\n)",
       "CRC" : "-784828766026158565",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2042,6 +2074,7 @@
 
     {
       "name" : "only_pks_nonnull",
+      "schema" : "CREATE TABLE only_pks_nonnull(\n  a BOOL NOT NULL,\n  b INTEGER NOT NULL,\n  c LONG_INT NOT NULL,\n  d REAL,\n  e TEXT,\n  f BLOB,\n  PRIMARY KEY (a, b, c)\n)",
       "CRC" : "1556579366916686542",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2150,6 +2183,7 @@
 
     {
       "name" : "some_non_pk_nonnull",
+      "schema" : "CREATE TABLE some_non_pk_nonnull(\n  a BOOL NOT NULL,\n  b INTEGER NOT NULL,\n  c LONG_INT NOT NULL,\n  d REAL,\n  e TEXT NOT NULL,\n  f BLOB,\n  PRIMARY KEY (a, b, c)\n)",
       "CRC" : "-5133815292676357233",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2253,6 +2287,7 @@
 
     {
       "name" : "_starts_with_underscore",
+      "schema" : "CREATE TABLE _starts_with_underscore(\n  foo INTEGER NOT NULL PRIMARY KEY,\n  bar TEXT\n)",
       "CRC" : "8638244384366221103",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2312,6 +2347,7 @@
 
     {
       "name" : "ends_with_underscore_",
+      "schema" : "CREATE TABLE ends_with_underscore_(\n  foo TEXT PRIMARY KEY,\n  bar INTEGER\n)",
       "CRC" : "-633676795809399280",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2373,6 +2409,7 @@
 
     {
       "name" : "a_virtual_table",
+      "schema" : "CREATE TABLE a_virtual_table(\n  id INTEGER,\n  t TEXT\n) @RECREATE",
       "CRC" : "3010990788603065896",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2431,6 +2468,7 @@
 
     {
       "name" : "a_second_virtual_table",
+      "schema" : "CREATE TABLE a_second_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT\n) @RECREATE",
       "CRC" : "-8286429800647299700",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2484,6 +2522,7 @@
 
     {
       "name" : "a_third_virtual_table",
+      "schema" : "CREATE TABLE a_third_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n) @RECREATE",
       "CRC" : "-6640301384858104825",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2548,6 +2587,7 @@
 
     {
       "name" : "a_deleted_virtual_table",
+      "schema" : "CREATE TABLE a_deleted_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n) @DELETE(2, cql:module_must_not_be_deleted_see_docs_for_CQL0392)",
       "CRC" : "-4336016932503752576",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2613,6 +2653,7 @@
 
     {
       "name" : "epon_virt_table",
+      "schema" : "CREATE TABLE epon_virt_table(\n  id INTEGER,\n  t TEXT\n) WITHOUT ROWID @RECREATE",
       "CRC" : "-1341152214091400811",
       "isTemp" : 0,
       "ifNotExists" : 0,
