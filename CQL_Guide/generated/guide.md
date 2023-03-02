@@ -10075,12 +10075,6 @@ NOTE: different result types require a different number of output files with dif
 * some codegen features only make sense during development, this enables dev mode to turn those one
 ** example: [explain query plan](/cql-guide/ch15)
 
-### --java_package_name name
-* used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
-
-### --java_fragment_interface_mode
-* Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.
-
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
 * if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
@@ -10120,11 +10114,6 @@ These are the various outputs the compiler can produce.
 * objective C wrappers for result sets produced by the stored procedures in the input
 * these depend on the output of a standard codegen run so this is additive
 * requires one output file (foo.h)
-
-#### --rt java
-* java wrappers for result sets produced by the stored procedures in the input
-* these depend on the output of a standard codegen run so this is additive
-* requires one output file (foo.java)
 
 #### --rt schema
 * produces the canonical schema for the given input files
@@ -10186,7 +10175,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Feb 28 17:57:39 PST 2023
+Snapshot as of Thu Mar  2 00:09:01 PST 2023
 
 ### Operators and Literals
 
@@ -16655,7 +16644,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Feb 28 17:57:41 PST 2023
+Snapshot as of Thu Mar  2 00:09:04 PST 2023
 
 ### Rules
 
