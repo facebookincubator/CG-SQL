@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar  2 00:09:04 PST 2023
+Snapshot as of Thu Mar  2 14:37:09 PST 2023
 
 ### Rules
 
@@ -32,8 +32,8 @@ json_schema: '{'
          '"updates"' ':' '[' opt_updates ']' ','
          '"deletes"' ':' '[' opt_deletes ']' ','
          '"general"' ':' '[' opt_generals ']' ','
-         DECLARE_PROCS '[' opt_declare_procs']' ','
-         DECLARE_FUNCS '[' opt_declare_funcs']' ','
+         '"declare_procs"' ':' '[' opt_declare_procs']' ','
+         '"declare_funcs"' ':' '[' opt_declare_funcs']' ','
          '"interfaces"' ':' '[' opt_interfaces ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
@@ -60,7 +60,7 @@ opt_type_hash: | '"typeHash"' ':' num_literal ','
 
 table: '{'
        '"name"' ':' STRING_LITERAL ','
-       SCHEMA STRING_LITERAL ','
+       '"schema"' ':' STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -97,7 +97,7 @@ virtual_tables: virtual_table | virtual_table ',' virtual_tables
 
 virtual_table: '{'
        '"name"' ':' STRING_LITERAL ','
-       SCHEMA STRING_LITERAL ','
+       '"schema"' ':' STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','

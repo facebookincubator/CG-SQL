@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
 VIRTUAL_TABLES                        { printf("'\"virtualTables\"' ':'"); }
 TABLES                                { printf("'\"tables\"' ':'"); }
 NAME                                  { printf("'\"name\"' ':'"); }
+SCHEMA                                { printf("'\"schema\"' ':'"); }
 WHERE                                 { printf("'\"where\"' ':'"); }
 ARG_ORIGIN                            { printf("'\"argOrigin\"' ':'"); }
 ENUMS                                 { printf("'\"enums\"' ':'"); }
@@ -122,6 +123,8 @@ HAS_OUT_UNION_RESULT                  { printf("'\"hasOutUnionResult\"' ':'"); }
 HAS_OUT_RESULT                        { printf("'\"hasOutResult\"' ':'"); }
 GENERAL                               { printf("'\"general\"' ':'"); }
 INTERFACES                            { printf("'\"interfaces\"' ':'"); }
+DECLARE_PROCS                         { printf("'\"declare_procs\"' ':'"); }
+DECLARE_FUNCS                         { printf("'\"declare_funcs\"' ':'"); }
 REGIONS                               { printf("'\"regions\"' ':'"); }
 USING                                 { printf("'\"using\"' ':'"); }
 USING_PRIVATELY                       { printf("'\"usingPrivately\"' ':'"); }
