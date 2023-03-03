@@ -8887,6 +8887,32 @@ Generates:
     }
 ```
 
+## Procecdure Declarations
+The `declareProcs` section contains a list of procedure declaractions. Each declaration is of the form:
+
+* **name** : the name of the procedure
+* **args** : _procedure arguments_ see the relevant section
+* **attributes** : optional, see the section on attributes, they appear in many places
+* **projection** : An array of projections. See [the section on projections](#projections)
+* **usesDatabase** : true if the procedure requires you to pass in a sqlite connection to call it
+
+## Function Declarations
+
+The `declareFuncs` section contains a list of function declarations, Each declaration is of the form:
+
+* **name** : the name of the function
+* **args** : see [the relevant section](#procedure-arguments)
+* **attributes** : optional, see the section on attributes, they appear in many places
+* **returnType** : see the relevant section below.
+* **createsObject** : true if the function will create a new object (e.g. `declare function dict_create() create object;`)
+
+### Return Type
+
+* **type** : base type of the return value (e.g. INT, LONG)
+* **kind** : optional, if the type is qualified by a discriminator such as int<task_id> it appears here
+* **isSensitive** : optional, true if the result is sensitive (e.g. PII)
+* **isNotNull** : true if the result is known to be not null
+
 ## Regions
 
 The regions section contains a list of all the region definitions.  Each region is of the form:
@@ -10175,7 +10201,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar  2 14:37:07 PST 2023
+Snapshot as of Fri Mar  3 10:23:53 PST 2023
 
 ### Operators and Literals
 
@@ -16644,7 +16670,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Mar  2 14:37:09 PST 2023
+Snapshot as of Fri Mar  3 10:23:55 PST 2023
 
 ### Rules
 

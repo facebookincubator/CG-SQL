@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Mar  2 14:37:07 PST 2023
+Snapshot as of Fri Mar  3 10:23:53 PST 2023
 
 ### Operators and Literals
 
