@@ -8887,6 +8887,32 @@ Generates:
     }
 ```
 
+## Procecdure Declarations
+The `declareProcs` section contains a list of procedure declaractions. Each declaration is of the form:
+
+* **name** : the name of the procedure
+* **args** : _procedure arguments_ see the relevant section
+* **attributes** : optional, see the section on attributes, they appear in many places
+* **projection** : An array of projections. See [the section on projections](#projections)
+* **usesDatabase** : true if the procedure requires you to pass in a sqlite connection to call it
+
+## Function Declarations
+
+The `declareFuncs` section contains a list of function declarations, Each declaration is of the form:
+
+* **name** : the name of the function
+* **args** : see [the relevant section](#procedure-arguments)
+* **attributes** : optional, see the section on attributes, they appear in many places
+* **returnType** : see the relevant section below.
+* **createsObject** : true if the function will create a new object (e.g. `declare function dict_create() create object;`)
+
+### Return Type
+
+* **type** : base type of the return value (e.g. INT, LONG)
+* **kind** : optional, if the type is qualified by a discriminator such as int<task_id> it appears here
+* **isSensitive** : optional, true if the result is sensitive (e.g. PII)
+* **isNotNull** : true if the result is known to be not null
+
 ## Regions
 
 The regions section contains a list of all the region definitions.  Each region is of the form:
@@ -10075,12 +10101,6 @@ NOTE: different result types require a different number of output files with dif
 * some codegen features only make sense during development, this enables dev mode to turn those one
 ** example: [explain query plan](/cql-guide/ch15)
 
-### --java_package_name name
-* used by java code generators when they output a class. Allows to specify the name of package the class will be a part of
-
-### --java_fragment_interface_mode
-* Sets the Java codegen mode to generate interfaces for base and extension fragments instead of classes.
-
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
 * if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
@@ -10120,11 +10140,6 @@ These are the various outputs the compiler can produce.
 * objective C wrappers for result sets produced by the stored procedures in the input
 * these depend on the output of a standard codegen run so this is additive
 * requires one output file (foo.h)
-
-#### --rt java
-* java wrappers for result sets produced by the stored procedures in the input
-* these depend on the output of a standard codegen run so this is additive
-* requires one output file (foo.java)
 
 #### --rt schema
 * produces the canonical schema for the given input files
@@ -10186,7 +10201,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Feb 28 17:57:39 PST 2023
+Snapshot as of Fri Mar  3 10:23:53 PST 2023
 
 ### Operators and Literals
 
@@ -16655,7 +16670,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Feb 28 17:57:41 PST 2023
+Snapshot as of Fri Mar  3 10:23:55 PST 2023
 
 ### Rules
 
@@ -16675,8 +16690,8 @@ json_schema: '{'
          '"updates"' ':' '[' opt_updates ']' ','
          '"deletes"' ':' '[' opt_deletes ']' ','
          '"general"' ':' '[' opt_generals ']' ','
-         DECLARE_PROCS '[' opt_declare_procs']' ','
-         DECLARE_FUNCS '[' opt_declare_funcs']' ','
+         '"declare_procs"' ':' '[' opt_declare_procs']' ','
+         '"declare_funcs"' ':' '[' opt_declare_funcs']' ','
          '"interfaces"' ':' '[' opt_interfaces ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
@@ -16703,7 +16718,7 @@ opt_type_hash: | '"typeHash"' ':' num_literal ','
 
 table: '{'
        '"name"' ':' STRING_LITERAL ','
-       SCHEMA STRING_LITERAL ','
+       '"schema"' ':' STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' BOOL_LITERAL ','
        '"ifNotExists"' ':' BOOL_LITERAL ','
@@ -16740,7 +16755,7 @@ virtual_tables: virtual_table | virtual_table ',' virtual_tables
 
 virtual_table: '{'
        '"name"' ':' STRING_LITERAL ','
-       SCHEMA STRING_LITERAL ','
+       '"schema"' ':' STRING_LITERAL ','
        '"crc"' ':' STRING_LITERAL ','
        '"isTemp"' ':' '0' ','
        '"ifNotExists"' ':' BOOL_LITERAL ','

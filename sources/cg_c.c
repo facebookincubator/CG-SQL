@@ -5273,8 +5273,10 @@ static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg
     bprintf(cg_main_output, ");\n");
   }
 
-  if (!is_ast_rollback_trans_stmt(stmt) && !is_ast_rollback_return_stmt(stmt))
+  // if rollback fails we still need to release any savepoints, cannot exit to report error
+  if (!is_ast_rollback_trans_stmt(stmt) && !is_ast_rollback_return_stmt(stmt)) {
     cg_error_on_not_sqlite_ok();
+  }
 
   if (exec_only && vars) {
     bprintf(cg_main_output, "_rc_ = sqlite3_step(%s_stmt);\n", stmt_name);
@@ -6747,6 +6749,8 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   if (proc_as_func) {
     // just do the function call, the result variable assignment happens as part of the call
     bprintf(cg_main_output, "%s;\n", invocation.ptr);
+
+    // if rollback fails we still need to release any savepoints, cannot exit to report error
     bool rollback_stmt = is_ast_rollback_trans_stmt(ast) || is_ast_rollback_return_stmt(ast);
     if (dml_proc && !rollback_stmt) {
       // cascade the failure
@@ -6981,6 +6985,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
     bprintf(cg_main_output, "%s_row_num_ = %s_row_count_ = -1;\n", cursor_name, cursor_name);
   }
 
+  // if rollback fails we still need to release any savepoints, cannot exit to report error
   bool rollback_stmt = is_ast_rollback_trans_stmt(ast) || is_ast_rollback_return_stmt(ast);
   if (dml_proc && !rollback_stmt) {
     // if there is an error code, check it, and cascade the failure
