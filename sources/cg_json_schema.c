@@ -2237,26 +2237,23 @@ static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
   }
 
   // emit return type.
-  ast_node *data_type_ast = func_params_return->right;
-  if (is_ast_create_data_type(data_type_ast)) {
-    data_type_ast = data_type_ast->left;
+  EXTRACT_ANY_NOTNULL(data_type, func_params_return->right);
+  bool_t creates_object = false;
+  if (is_ast_create_data_type(data_type)) {
+    creates_object = true;
+    data_type = data_type->left;
   }
 
-  if (data_type_ast) {
-    EXTRACT_ANY_NOTNULL(data_type, data_type_ast);
-    bprintf(output, ",\n\"returnType\" : {\n");
-    BEGIN_INDENT(type, 2);
-    cg_json_data_type(output, data_type->sem->sem_type, data_type->sem->kind);
-    END_INDENT(type);
-    bprintf(output, "\n}");
-  }
+  Invariant(data_type);
+  bprintf(output, ",\n\"returnType\" : {\n");
+  BEGIN_INDENT(type, 2);
+  cg_json_data_type(output, data_type->sem->sem_type, data_type->sem->kind);
+  END_INDENT(type);
+  bprintf(output, "\n}");
 
   // emit whether this function is a "create" function or not.
-  if (is_ast_create_data_type(func_params_return->right)) {
-    bprintf(output, ",\n\"createsObject\" : %d", 1);
-  } else {
-    bprintf(output, ",\n\"createsObject\" : %d", 0);
-  }
+  // (this means its return value begins with a +1 ref that the caller now owns)
+  bprintf(output, ",\n\"createsObject\" : %d", (int)creates_object);
 
   // add this function to the list.
   output = declare_funcs;
