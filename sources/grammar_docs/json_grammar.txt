@@ -1,4 +1,4 @@
-json_schema ::= '{' '"tables"' ':' '[' opt_tables ']' ',' '"virtualTables"' ':' '[' opt_virtual_tables ']' ',' '"views"' ':' '[' opt_views ']' ',' '"indices"' ':' '[' opt_indices ']' ',' '"triggers"' ':' '[' opt_triggers ']' ',' '"attributes"' ':' '[' opt_attribute_list ']' ',' '"queries"' ':' '[' opt_queries ']' ',' '"inserts"' ':' '[' opt_inserts ']' ',' '"generalInserts"' ':' '[' opt_inserts_general ']' ',' '"updates"' ':' '[' opt_updates ']' ',' '"deletes"' ':' '[' opt_deletes ']' ',' '"general"' ':' '[' opt_generals ']' ',' '"declare_procs"' ':' '[' opt_declare_procs']' ',' '"declare_funcs"' ':' '[' opt_declare_funcs']' ',' '"interfaces"' ':' '[' opt_interfaces ']' ',' '"regions"' ':' '[' opt_regions ']' ',' '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ',' '"enums"' ':' '[' opt_enums ']' ',' '"constantGroups"' ':' '[' opt_const_groups ']' ',' '"subscriptions"' ':' '[' opt_subscriptions ']' '}'
+json_schema ::= '{' '"tables"' ':' '[' opt_tables ']' ',' '"virtualTables"' ':' '[' opt_virtual_tables ']' ',' '"views"' ':' '[' opt_views ']' ',' '"indices"' ':' '[' opt_indices ']' ',' '"triggers"' ':' '[' opt_triggers ']' ',' '"attributes"' ':' '[' opt_attribute_list ']' ',' '"queries"' ':' '[' opt_queries ']' ',' '"inserts"' ':' '[' opt_inserts ']' ',' '"generalInserts"' ':' '[' opt_inserts_general ']' ',' '"updates"' ':' '[' opt_updates ']' ',' '"deletes"' ':' '[' opt_deletes ']' ',' '"general"' ':' '[' opt_generals ']' ',' '"declareProcs"' ':' '[' opt_declare_procs']' ',' '"declareFuncs"' ':' '[' opt_declare_funcs']' ',' '"interfaces"' ':' '[' opt_interfaces ']' ',' '"regions"' ':' '[' opt_regions ']' ',' '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ',' '"enums"' ':' '[' opt_enums ']' ',' '"constantGroups"' ':' '[' opt_const_groups ']' ',' '"subscriptions"' ':' '[' opt_subscriptions ']' '}'
 opt_tables ::= | tables
 tables ::= table | table ',' tables
 opt_backing_details ::= | '"isBacking"' ':' '1' ',' | '"isBacked"' ':' '1' ',' '"typeHash"' ':' num_literal ','
@@ -128,8 +128,8 @@ declare_procs ::= declare_proc | declare_proc ',' declare_procs
 declare_proc ::= '{' '"name"' ':' STRING_LITERAL ',' '"args"' ':' '[' opt_complex_args ']' ',' opt_attributes opt_projection '"usesDatabase"' ':' BOOL_LITERAL '}'
 opt_declare_funcs ::= | declare_funcs
 declare_funcs ::= declare_func | declare_func ',' declare_funcs
-declare_func ::= '{' '"name"' ':' STRING_LITERAL ',' '"args"' ':' '[' opt_complex_args ']' ',' opt_attributes opt_return_type CREATES_OBJECT BOOL_LITERAL '}'
-opt_return_type ::= | RETURN_'"type"' ':' return_type ','
+declare_func ::= '{' '"name"' ':' STRING_LITERAL ',' '"args"' ':' '[' opt_complex_args ']' ',' opt_attributes opt_return_type '"createsObject"' ':' BOOL_LITERAL '}'
+opt_return_type ::= | '"returnType"' ':' return_type ','
 return_type ::= '{' '"type"' ':' STRING_LITERAL ',' opt_kind opt_is_sensitive '"isNotNull"' ':' BOOL_LITERAL '}'
 opt_interfaces ::= | interfaces
 interfaces ::= interface | interface ',' interfaces
