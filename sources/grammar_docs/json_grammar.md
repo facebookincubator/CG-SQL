@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Mar  3 10:23:55 PST 2023
+Snapshot as of Fri Mar  3 21:02:20 PST 2023
 
 ### Rules
 
@@ -32,8 +32,8 @@ json_schema: '{'
          '"updates"' ':' '[' opt_updates ']' ','
          '"deletes"' ':' '[' opt_deletes ']' ','
          '"general"' ':' '[' opt_generals ']' ','
-         '"declare_procs"' ':' '[' opt_declare_procs']' ','
-         '"declare_funcs"' ':' '[' opt_declare_funcs']' ','
+         '"declareProcs"' ':' '[' opt_declare_procs']' ','
+         '"declareFuncs"' ':' '[' opt_declare_funcs']' ','
          '"interfaces"' ':' '[' opt_interfaces ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
@@ -669,11 +669,11 @@ declare_func: '{'
           '"args"' ':' '[' opt_complex_args ']' ','
           opt_attributes
           opt_return_type
-          CREATES_OBJECT BOOL_LITERAL
+          '"createsObject"' ':' BOOL_LITERAL
          '}'
   ;
 
-opt_return_type: | RETURN_'"type"' ':' return_type ','
+opt_return_type: | '"returnType"' ':' return_type ','
   ;
 
 return_type: '{'
