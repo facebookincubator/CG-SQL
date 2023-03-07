@@ -717,15 +717,12 @@ declare_func: '{'
           NAME STRING_LITERAL ','
           ARGS '[' opt_complex_args ']' ','
           opt_attributes
-          opt_return_type
+          return_type ','
           CREATES_OBJECT BOOL_LITERAL
          '}'
   ;
 
-opt_return_type: | RETURN_TYPE return_type ','
-  ;
-
-return_type: '{'
+return_type: RETURN_TYPE '{'
           TYPE STRING_LITERAL ','
           opt_kind
           opt_is_sensitive
