@@ -1577,7 +1577,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   CHARBUF_OPEN(table_schema);
   gen_sql_callbacks schema_callbacks;
   init_gen_sql_callbacks(&schema_callbacks);
-  schema_callbacks.mode = gen_mode_echo;
+  schema_callbacks.mode = gen_mode_no_annotations;
   gen_set_output_buffer(&table_schema);
   gen_statement_with_callbacks(ast, &schema_callbacks);
   bprintf(output, ",\n\"schema\" : ");

@@ -148,7 +148,7 @@
 
     {
       "name" : "T4",
-      "schema" : "CREATE TABLE T4(\n  @ATTRIBUTE(cool)\n  id INTEGER\n)",
+      "schema" : "CREATE TABLE T4(\n  id INTEGER\n)",
       "CRC" : "-2149692277469775074",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -329,7 +329,7 @@
 
     {
       "name" : "T7a",
-      "schema" : "CREATE TABLE T7a(\n  id INTEGER @CREATE(1) @DELETE(3)\n)",
+      "schema" : "CREATE TABLE T7a(\n  id INTEGER\n)",
       "CRC" : "-2088996992437173714",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -369,7 +369,7 @@
 
     {
       "name" : "T7b",
-      "schema" : "CREATE TABLE T7b(\n  id INTEGER @CREATE(1, t7_col_create) @DELETE(3, t7_col_delete)\n)",
+      "schema" : "CREATE TABLE T7b(\n  id INTEGER\n)",
       "CRC" : "-2469711812733478801",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -411,7 +411,7 @@
 
     {
       "name" : "T8a",
-      "schema" : "CREATE TABLE T8a(\n  id INTEGER\n) @CREATE(1) @DELETE(3)",
+      "schema" : "CREATE TABLE T8a(\n  id INTEGER\n)",
       "CRC" : "5732684105687845792",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -451,7 +451,7 @@
 
     {
       "name" : "T8b",
-      "schema" : "CREATE TABLE T8b(\n  id INTEGER\n) @CREATE(1, t8_table_create) @DELETE(3, t8_table_delete)",
+      "schema" : "CREATE TABLE T8b(\n  id INTEGER\n)",
       "CRC" : "8157465532859044321",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1080,7 +1080,7 @@
 
     {
       "name" : "recreated_in_a_group",
-      "schema" : "CREATE TABLE recreated_in_a_group(\n  id INTEGER\n) @RECREATE(my_recreate_group)",
+      "schema" : "CREATE TABLE recreated_in_a_group(\n  id INTEGER\n)",
       "CRC" : "-3666809099812167695",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1477,7 +1477,7 @@
 
     {
       "name" : "with_from_recreate",
-      "schema" : "CREATE TABLE with_from_recreate(\n  id INTEGER,\n  t TEXT\n) @CREATE(3, cql:from_recreate)",
+      "schema" : "CREATE TABLE with_from_recreate(\n  id INTEGER,\n  t TEXT\n)",
       "CRC" : "772447308169098338",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1532,7 +1532,7 @@
 
     {
       "name" : "potato_table",
-      "schema" : "CREATE TABLE potato_table(\n  @ATTRIBUTE(cql:doc_comment=\"/** for the id column */\")\n  potato_id INTEGER,\n  @ATTRIBUTE(cql:doc_comment=\"/** for the name column */\")\n  @ATTRIBUTE(normal_attribute)\n  potato_name TEXT\n)",
+      "schema" : "CREATE TABLE potato_table(\n  potato_id INTEGER,\n  potato_name TEXT\n)",
       "CRC" : "-2522002868851592223",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2409,7 +2409,7 @@
 
     {
       "name" : "a_virtual_table",
-      "schema" : "CREATE TABLE a_virtual_table(\n  id INTEGER,\n  t TEXT\n) @RECREATE",
+      "schema" : "CREATE TABLE a_virtual_table(\n  id INTEGER,\n  t TEXT\n)",
       "CRC" : "3010990788603065896",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2468,7 +2468,7 @@
 
     {
       "name" : "a_second_virtual_table",
-      "schema" : "CREATE TABLE a_second_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT\n) @RECREATE",
+      "schema" : "CREATE TABLE a_second_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT\n)",
       "CRC" : "-8286429800647299700",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2522,7 +2522,7 @@
 
     {
       "name" : "a_third_virtual_table",
-      "schema" : "CREATE TABLE a_third_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n) @RECREATE",
+      "schema" : "CREATE TABLE a_third_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n)",
       "CRC" : "-6640301384858104825",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2587,7 +2587,7 @@
 
     {
       "name" : "a_deleted_virtual_table",
-      "schema" : "CREATE TABLE a_deleted_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n) @DELETE(2, cql:module_must_not_be_deleted_see_docs_for_CQL0392)",
+      "schema" : "CREATE TABLE a_deleted_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n)",
       "CRC" : "-4336016932503752576",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2653,7 +2653,7 @@
 
     {
       "name" : "epon_virt_table",
-      "schema" : "CREATE TABLE epon_virt_table(\n  id INTEGER,\n  t TEXT\n) WITHOUT ROWID @RECREATE",
+      "schema" : "CREATE TABLE epon_virt_table(\n  id INTEGER,\n  t TEXT\n) WITHOUT ROWID",
       "CRC" : "-1341152214091400811",
       "isTemp" : 0,
       "ifNotExists" : 0,
