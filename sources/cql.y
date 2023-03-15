@@ -232,7 +232,7 @@ static void cql_reset_globals(void);
 
 %type <aval> col_key_list col_key_def col_def col_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
-%type <aval> misc_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
+%type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
 %type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args opt_conflict_clause
 %type <aval> col_calc col_calcs column_calculation
@@ -686,6 +686,11 @@ misc_attr_key:
   | name[lhs] ':' name[rhs]  { $misc_attr_key = new_ast_dot($lhs, $rhs); }
   ;
 
+cql_attr_key:
+  name { $cql_attr_key = new_ast_dot(new_ast_str("cql"), $name); }
+  | name[lhs] ':' name[rhs]  { $cql_attr_key = new_ast_dot($lhs, $rhs); }
+  ;
+
 misc_attr_value_list[result]:
   misc_attr_value  { $result = new_ast_misc_attr_value_list($misc_attr_value, NULL); }
   | misc_attr_value ',' misc_attr_value_list[mav]  { $result = new_ast_misc_attr_value_list($misc_attr_value, $mav); }
@@ -703,6 +708,8 @@ misc_attr_value:
 misc_attr:
   AT_ATTRIBUTE '(' misc_attr_key ')'  { $misc_attr = new_ast_misc_attr($misc_attr_key, NULL); }
   | AT_ATTRIBUTE '(' misc_attr_key '=' misc_attr_value ')'  { $misc_attr = new_ast_misc_attr($misc_attr_key, $misc_attr_value); }
+  | '[' '[' cql_attr_key ']' ']' { $misc_attr = new_ast_misc_attr($cql_attr_key, NULL); }
+  | '[' '[' cql_attr_key  '=' misc_attr_value ']' ']' { $misc_attr = new_ast_misc_attr($cql_attr_key, $misc_attr_value); }
   ;
 
 misc_attrs[result]:
@@ -1815,6 +1822,8 @@ declare_interface_stmt:
 
 create_proc_stmt:
   CREATE procedure name '(' params ')' BEGIN_ opt_stmt_list END  {
+    $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
+  | procedure name '(' params ')' BEGIN_ opt_stmt_list END  {
     $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
   ;
 

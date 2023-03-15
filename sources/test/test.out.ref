@@ -1858,3 +1858,11 @@ UPDATE foo
 SET name = baz.name FROM bar
   INNER JOIN baz ON bar.id = baz.id
   WHERE bar.name = 'x' AND foo.id = bar.id;
+
+@ATTRIBUTE(cql:private)
+@ATTRIBUTE(cql:potato=bar)
+@ATTRIBUTE(cql:garbonzo=(bar, baz))
+@ATTRIBUTE(other:something)
+CREATE PROC foo ()
+BEGIN
+END;

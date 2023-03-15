@@ -1706,3 +1706,12 @@ create table backing(
 @enforce_strict UPDATE FROM;
 
 update foo set name = baz.name from bar join baz on bar.id = baz.id where bar.name = 'x' and foo.id = bar.id;
+
+/* test abbreviated cql: attributes  and abbreviated proc */
+[[private]] -- gets cql: 
+[[potato=bar]]  -- gets cql:
+[[garbonzo=(bar, baz)]] -- gets cql:
+[[other:something]]  -- does not get cql:
+proc foo() -- equivalent to create proc 
+begin
+end;

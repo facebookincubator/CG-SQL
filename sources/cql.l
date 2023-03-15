@@ -340,6 +340,8 @@ CURSOR{sp}HAS{sp}ROW/{stop}  { return CURSOR_HAS_ROW; }
 '(''|[^'\n])*'               { yylval.sval = Strdup(yytext); return STRLIT; }
 X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
 [-+&~|^/%*(),.;!<>:=]        { return yytext[0]; }
+\[                           { return yytext[0]; }
+\]                           { return yytext[0]; }
 [_A-Z][A-Z0-9_]*             { yylval.sval = Strdup(yytext); return ID; }
 
 [ \t\n]                      ;
