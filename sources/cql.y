@@ -351,7 +351,7 @@ opt_stmt_list:
   ;
 
 stmt_list[result]:
-  stmt ';'  {
+  stmt {
      // We're going to do this cheesy thing with the stmt_list structures so that we can
      // code the stmt_list rules using left recursion.  We're doing this because it's
      // possible that there could be a LOT of statements and this minimizes the use
@@ -372,7 +372,7 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
-  | stmt_list[slist] stmt ';'  {
+  | stmt_list[slist] stmt {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
@@ -387,7 +387,7 @@ stmt_list[result]:
   ;
 
 stmt:
-  misc_attrs any_stmt  { $stmt = make_statement_node($misc_attrs, $any_stmt); }
+  misc_attrs any_stmt ';' { $stmt = make_statement_node($misc_attrs, $any_stmt); }
   ;
 
 any_stmt:
