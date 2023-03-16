@@ -15,20 +15,7 @@ make_clean_msg() {
 }
 
 colordiff() {
-  diff \
-          --old-line-format=$'\e[0;31m< %l\e[0m
-' \
-          --new-line-format=$'\e[0;32m> %l\e[0m
-' \
-          --old-group-format='-------- %dn line%(n=1?:s) deleted at %df:
-%<' \
-          --new-group-format='-------- %dN line%(N=1?:s) added after %de:
-%>' \
-          --changed-group-format='-------- %dn line%(n=1?:s) changed at %df:
-%<-------- to:
-%>' \
-          --unchanged-group-format='' \
-          "$@"
+  diff --color "$@"
   return $?
 }
 
