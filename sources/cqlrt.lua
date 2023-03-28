@@ -907,10 +907,14 @@ function cql_rebuild_recreate_group(db, tables, indices, deletes)
   local deleteList = _cql_create_upgrader_input_statement_list(deletes, "DROP ");
 
   local rc = sqlite3.OK
-  for i = 1, #deleteList, -1 do
+  -- these are deleted or unsubscribed tables
+  -- note that tables in the list are in create order, so we reverse to get drop order
+  for i = #deleteList, 1, -1 do 
     rc = cql_exec(db, deleteList[i])
     if rc ~= sqlite3.OK then return rc end
   end
+  -- drop all the tables we are going to recreate, we have to drop in the reverse order
+  -- tables are in create order in this list
   for i = #tableList, 1, -1 do
     local table_name = _cql_create_table_name_from_table_creation_statement(tableList[i])
     local drop = "DROP TABLE IF EXISTS "
@@ -918,6 +922,7 @@ function cql_rebuild_recreate_group(db, tables, indices, deletes)
     rc = cql_exec(db, drop)
     if rc ~= sqlite3.OK then return rc end
   end
+  -- now create all the tables we need (list is in create order)
   for i = 1, #tableList do
     rc = cql_exec(db, tableList[i])
     if rc ~= sqlite3.OK then return rc end

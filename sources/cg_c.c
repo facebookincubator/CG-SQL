@@ -916,7 +916,13 @@ static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_ty
   CHARBUF_OPEN(adjusted_value);
   CG_BEGIN_ADJUST_FOR_OUTARG(var, sem_type_var);
 
-  // Most types convert correctly with no help, the C compiler will convert.  This is not true for bool.
+  // Normalize floats and bools for storage
+  if (is_real(sem_type_var) && !is_real(sem_type_expr)) {
+    bprintf(&adjusted_value, "(%s)(%s)", rt->cql_double, value);
+    value = adjusted_value.ptr;
+  }
+
+  // Normalize bools for storage
   if (is_bool(sem_type_var) && !is_bool(sem_type_expr)) {
     // exclude some things that are already normalized
     if (strcmp("0", value) && strcmp("1", value) && value[0] != '!') {

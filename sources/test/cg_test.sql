@@ -1616,7 +1616,7 @@ end;
 -- + cql_set_string_ref(&C.name, _tmp_text_0);
 -- + cql_set_notnull(C.rate, _seed_);
 -- + cql_set_notnull(C.type, _seed_);
--- + cql_set_notnull(C.size, _seed_);
+-- + cql_set_notnull(C.size, (cql_double)(_seed_));
 -- This should not be a dml proc, it doesn't actually use the db
 -- + fetch_values_dummy(void)
 -- - _rc_
@@ -1640,8 +1640,8 @@ end;
 -- + cql_set_string_ref(&C.name, _tmp_text_0);
 -- + cql_set_notnull(C.rate, _seed_);
 -- + cql_set_notnull(C.type, _seed_);
--- + cql_set_notnull(C.size, _seed_);
--- + cql_set_notnull(C.xx, _seed_);
+-- + cql_set_notnull(C.size, (cql_double)(_seed_));
+-- + cql_set_notnull(C.xx, (cql_double)(_seed_));
 -- + fetch_values_extended(void)
 create proc fetch_values_extended()
 begin
@@ -1692,7 +1692,7 @@ end;
 -- + out_no_db_C_row C = { 0 };
 -- + C._has_row_ = 1;
 -- + C.A = 3;
--- + C.B = 12;
+-- + C.B = (cql_double)(12);
 -- + _result_->_has_row_ = C._has_row_;
 -- + _result_->A = C.A;
 -- + _result_->B = C.B;
@@ -1710,7 +1710,7 @@ end;
 -- + memset(_result_, 0, sizeof(*_result_));
 -- + C1._has_row_ = 1;
 -- + C1.A = 3;
--- + C1.B = 12;
+-- + C1.B = (cql_double)(12);
 -- + _result_->_has_row_ = C1._has_row_;
 -- + _result_->A = C1.A;
 -- + _result_->B = C1.B;
