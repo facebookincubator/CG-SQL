@@ -7,10 +7,13 @@
  * @format
  */
 
-const path = require('path');
+const {fbContent} = require('docusaurus-plugin-internaldocs-fb/internal');
 
 module.exports = {
-  title: 'CG/SQL',
+  title: fbContent({
+    internal: 'CQL Internal',
+    external: 'CG/SQL',
+  }),
   tagline: 'Code Generator for SQLite',
   url: 'https://cgsql.dev',
   baseUrl: '/',
@@ -28,7 +31,10 @@ module.exports = {
       isCloseable: false,
     },
     navbar: {
-      title: 'CG/SQL',
+      title:fbContent({
+        internal: 'CQL',
+        external: 'CG/SQL',
+      }),
       items: [
         {
           to: 'docs/introduction',
@@ -116,16 +122,19 @@ module.exports = {
       // Please do not remove the credits, help to publicize Docusaurus :)
       copyright: `Copyright © ${new Date().getFullYear()} Meta Platforms, Inc. Built with Docusaurus.`,
     },
-    algolia: {
-      // The application ID provided by Algolia
-      appId: '1HF376U378',
+    algolia: fbContent({
+      internal: undefined,
+      external: {
+        // The application ID provided by Algolia
+        appId: '1HF376U378',
 
-      // Public API key: it is safe to commit it
-      apiKey: '0e77fa21bce01bba99cad9686e21decb',
+        // Public API key: it is safe to commit it
+        apiKey: '0e77fa21bce01bba99cad9686e21decb',
 
-      indexName: 'cgsql',
-      searchPagePath: 'search',
-    },
+        indexName: 'cgsql',
+        searchPagePath: 'search',
+      },
+    }),
   },
   plugins: [
     [
@@ -143,7 +152,7 @@ module.exports = {
   ],
   presets: [
     [
-      '@docusaurus/preset-classic',
+      require.resolve('docusaurus-plugin-internaldocs-fb/docusaurus-preset'),
       {
         docs: {
           path: '../docs',
@@ -162,10 +171,15 @@ module.exports = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
+        staticDocsProject: 'cql',
+        trackingFile: 'xplat/staticdocs/WATCHED_FILES',
         sitemap: {
           ignorePatterns: ['/cql-guide/generated/*'],
         },
       },
     ],
   ],
+  customFields: {
+    fbRepoName: 'fbsource',
+  },
 };
