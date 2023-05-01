@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[4625],{2004:function(s){s.exports=JSON.parse('{"label":"cg-sql","permalink":"/blog/tags/cg-sql","allTagsPath":"/blog/tags","count":23}')}}]);
